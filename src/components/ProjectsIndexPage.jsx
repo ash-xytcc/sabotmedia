@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
 import { getProjectMeta } from '../lib/content'
 import { getProjectTheme } from '../lib/projectTheme'
+import { EditableText } from './EditableText'
+import { usePublicEdit } from './PublicEditContext'
+import { getConfiguredBlock } from '../lib/publicConfig'
 
 function ProjectIndexCard({ project }) {
   const meta = getProjectMeta(project.slug)
@@ -27,15 +30,22 @@ function ProjectIndexCard({ project }) {
 }
 
 export function ProjectsIndexPage({ projectMap }) {
+  const { effectiveConfig } = usePublicEdit()
+  const heroBlock = getConfiguredBlock(effectiveConfig, 'projects.hero')
+  const indexBlock = getConfiguredBlock(effectiveConfig, 'projects.index')
+
   return (
     <main className="page projects-index-page">
       <section className="project-hero">
-        <div className="project-hero__eyebrow">federation / lenses / routes</div>
-        <h1>Projects</h1>
-        <p className="project-hero__description">
-          Sabot Media is not one stream. It is a federation of smaller publishing routes,
-          each with its own emphasis, rhythm, and medium.
-        </p>
+        <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'projects.hero.eyebrow'}>
+          federation / lenses / routes
+        </EditableText>
+        <EditableText as="h1" field={heroBlock?.titleField || 'projects.hero.title'}>
+          Projects
+        </EditableText>
+        <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'projects.hero.description'}>
+          Sabot Media is not one stream. It is a federation of smaller publishing routes, each with its own emphasis, rhythm, and medium.
+        </EditableText>
         <div className="project-hero__meta">
           <span>{projectMap.length} project lenses</span>
           <span>archive + native-ready structure</span>
@@ -43,8 +53,12 @@ export function ProjectsIndexPage({ projectMap }) {
       </section>
 
       <section className="section-heading">
-        <p>Browse by project</p>
-        <h2>Publishing routes</h2>
+        <EditableText as="p" field={indexBlock?.eyebrowField || 'projects.index.eyebrow'}>
+          Browse by project
+        </EditableText>
+        <EditableText as="h2" field={indexBlock?.titleField || 'projects.index.title'}>
+          Publishing routes
+        </EditableText>
       </section>
 
       <section className="project-index-grid">

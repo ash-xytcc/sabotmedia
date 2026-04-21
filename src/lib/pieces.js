@@ -3,7 +3,9 @@ import overrides from '../content/piece-overrides.json'
 
 export function getPieces() {
   const items = imported.items || []
-  return items.map((piece) => mergePiece(piece, overrides[piece.slug] || {}))
+  return items
+    .map((piece) => mergePiece(piece, overrides[piece.slug] || {}))
+    .filter((piece) => piece.hidden !== true)
 }
 
 export function mergePiece(piece, override) {
@@ -18,6 +20,7 @@ export function mergePiece(piece, override) {
     sourceNotes: override.sourceNotes || piece.sourceNotes || '',
     heroImage: override.heroImage || piece.heroImage || '',
     featured: override.featured === true || piece.featured === true,
+    hidden: override.hidden === true || piece.hidden === true,
   }
 
   return {
@@ -40,6 +43,9 @@ export function getReviewFlags(piece) {
   }
   if ((piece.type === 'comic' || piece.type === 'zine') && !piece.hasPrintAssets) {
     flags.push('print asset missing')
+  }
+  if (piece.hidden === true) {
+    flags.push('hidden')
   }
 
   return flags

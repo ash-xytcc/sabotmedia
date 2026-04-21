@@ -1,10 +1,15 @@
 import { Link } from 'react-router-dom'
+import { usePublicEdit } from './PublicEditContext'
 
 export function AdminPage({ pieces }) {
   const total = pieces.length
   const needsReview = pieces.filter((piece) => piece.reviewFlags?.length).length
   const podcasts = pieces.filter((piece) => piece.type === 'podcast').length
   const printReady = pieces.filter((piece) => piece.hasPrintAssets).length
+  const { changedFields, effectiveConfig, loadState, saveState } = usePublicEdit()
+
+  const configuredTextFields = Object.keys(effectiveConfig?.text || {}).length
+  const configuredStyleFields = Object.keys(effectiveConfig?.styles || {}).length
 
   return (
     <main className="page admin-page">
@@ -19,6 +24,8 @@ export function AdminPage({ pieces }) {
           <span>{needsReview} need review</span>
           <span>{podcasts} podcasts</span>
           <span>{printReady} print-ready</span>
+          <span>load: {loadState}</span>
+          <span>save: {saveState}</span>
         </div>
       </section>
 
@@ -31,6 +38,13 @@ export function AdminPage({ pieces }) {
         </article>
 
         <article className="admin-card">
+          <div className="admin-card__eyebrow">public config</div>
+          <h2>Inline public edits</h2>
+          <p>{changedFields.length} unsaved draft fields. {configuredTextFields} configured text fields. {configuredStyleFields} configured style fields.</p>
+          <Link className="button button--primary" to="/draft">open draft</Link>
+        </article>
+
+        <article className="admin-card">
           <div className="admin-card__eyebrow">project lane</div>
           <h2>Project routes</h2>
           <p>Browse public project lenses and verify archive distribution across Sabot’s publishing structure.</p>
@@ -38,10 +52,10 @@ export function AdminPage({ pieces }) {
         </article>
 
         <article className="admin-card">
-          <div className="admin-card__eyebrow">next stage</div>
-          <h2>Overrides + native tools</h2>
-          <p>This page is the bridge toward real admin editing, not just archive rendering and manual override snippets.</p>
-          <span className="admin-card__status">skeleton online</span>
+          <div className="admin-card__eyebrow">override lane</div>
+          <h2>Override layer</h2>
+          <p>Inspect manual metadata overrides used to patch imported archive entries before deeper editing lands.</p>
+          <Link className="button button--primary" to="/overrides">open overrides</Link>
         </article>
       </section>
     </main>

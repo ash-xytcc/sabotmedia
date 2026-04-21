@@ -2,6 +2,10 @@ import { useMemo, useState, useEffect } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { getProjectMeta, splitDisplayTitle, isPublicProjectSlug, buildTypeOptions } from '../lib/content'
 import { getProjectTheme } from '../lib/projectTheme'
+import { getFeaturedPieceForProject } from '../lib/projectFeatured'
+import { EditableText } from './EditableText'
+import { usePublicEdit } from './PublicEditContext'
+import { getConfiguredBlock } from '../lib/publicConfig'
 
 const PAGE_SIZE = 24
 
@@ -30,6 +34,11 @@ function ProjectPieceCard({ piece }) {
 export function ProjectPage({ pieces }) {
   const { slug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { effectiveConfig } = usePublicEdit()
+
+  const heroBlock = getConfiguredBlock(effectiveConfig, 'projectPage.hero')
+  const featuredBlock = getConfiguredBlock(effectiveConfig, 'projectPage.featured')
+  const archiveBlock = getConfiguredBlock(effectiveConfig, 'projectPage.archive')
 
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || 'all')
@@ -47,6 +56,7 @@ export function ProjectPage({ pieces }) {
     () => pieces.filter((piece) => (piece.primaryProjectSlug || '') === slug),
     [pieces, slug]
   )
+  const featuredPiece = useMemo(() => getFeaturedPieceForProject(pieces, slug), [pieces, slug])
 
   const typeOptions = useMemo(() => buildTypeOptions(basePieces), [basePieces])
 
@@ -94,18 +104,36 @@ export function ProjectPage({ pieces }) {
   return (
     <main className={`page project-page ${theme.className}`}>
       <section className="project-hero">
-        <div className="project-hero__eyebrow">{theme.accent}</div>
+        <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'projectPage.hero.eyebrow'}>
+          project archive
+        </EditableText>
         <h1>{meta.name}</h1>
-        <p className="project-hero__description">{meta.description}</p>
+        <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'projectPage.hero.description'}>
+          {meta.description}
+        </EditableText>
         <div className="project-hero__meta">
           <span>{filtered.length} pieces</span>
           <span>imported archive + native-ready structure</span>
         </div>
       </section>
 
+      {featuredPiece ? (
+        <section className="project-featured-callout">
+          <EditableText as="div" className="project-featured-callout__eyebrow" field={featuredBlock?.eyebrowField || 'projectPage.featured.eyebrow'}>
+            featured in this lane
+          </EditableText>
+          <h2><Link to={`/piece/${featuredPiece.slug}`}>{splitDisplayTitle(featuredPiece).title}</Link></h2>
+          {featuredPiece.excerpt ? <p>{featuredPiece.excerpt}</p> : null}
+        </section>
+      ) : null}
+
       <section className="section-heading">
-        <p>Project archive</p>
-        <h2>Browse pieces</h2>
+        <EditableText as="p" field={archiveBlock?.eyebrowField || 'projectPage.archive.eyebrow'}>
+          Project archive
+        </EditableText>
+        <EditableText as="h2" field={archiveBlock?.titleField || 'projectPage.archive.title'}>
+          Browse pieces
+        </EditableText>
       </section>
 
       <section className="archive-controls">

@@ -103,7 +103,14 @@ export function PiecePage({ pieces }) {
 
   return (
     <main className={`page piece-page piece-page--${mode} ${theme.className}`}>
-      <header className="piece-header">
+      <header
+        className={`piece-header${piece.heroImage ? ' piece-header--image' : ''}`}
+        style={piece.heroImage ? {
+          backgroundImage: `linear-gradient(180deg, rgba(8,8,8,0.42), rgba(8,8,8,0.78)), url(${piece.heroImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        } : undefined}
+      >
         <div className="piece-header__eyebrow">{theme.accent}</div>
         <h1>{display.title}</h1>
         {display.subtitle ? <p className="piece-header__subtitle">{display.subtitle}</p> : null}

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { splitDisplayTitle, buildTypeOptions } from '../lib/content'
+import { EditableText } from './EditableText'
+import { usePublicEdit } from './PublicEditContext'
+import { getConfiguredBlock } from '../lib/publicConfig'
 
 const PAGE_SIZE = 24
 
@@ -29,6 +32,10 @@ function PieceCard({ piece }) {
 export function HomePage({ featured, latest, projectMap, allPieces }) {
   const featuredDisplay = splitDisplayTitle(featured)
   const [searchParams, setSearchParams] = useSearchParams()
+  const { effectiveConfig } = usePublicEdit()
+
+  const featuredBlock = getConfiguredBlock(effectiveConfig, 'home.featured')
+  const archiveBlock = getConfiguredBlock(effectiveConfig, 'home.archive')
 
   const initialQuery = searchParams.get('q') || ''
   const initialType = searchParams.get('type') || 'all'
@@ -48,7 +55,6 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
       .filter((piece) => {
         if (typeFilter !== 'all' && piece.type !== typeFilter) return false
         if (projectFilter !== 'all' && piece.primaryProjectSlug !== projectFilter) return false
-
         if (!q) return true
 
         const haystack = [
@@ -92,15 +98,31 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
         } : undefined}
       >
         <div className="hero__content">
-          <div className="hero__eyebrow">Featured drop</div>
-          <h1>{featuredDisplay.title || 'Sabot Media'}</h1>
-          {featuredDisplay.subtitle ? <p className="hero__subtitle">{featuredDisplay.subtitle}</p> : null}
+          <EditableText as="div" className="hero__eyebrow" field={featuredBlock?.eyebrowField || 'home.featured.eyebrow'}>
+            Featured drop
+          </EditableText>
+
+          <EditableText as="h1" field={featuredBlock?.titleField || 'home.featured.title'}>
+            {featuredDisplay.title || 'Sabot Media'}
+          </EditableText>
+
+          {featuredDisplay.subtitle ? (
+            <EditableText as="p" className="hero__subtitle" field={featuredBlock?.subtitleField || 'home.featured.subtitle'}>
+              {featuredDisplay.subtitle}
+            </EditableText>
+          ) : null}
+
           <div className="hero__meta">
             <span>{featured?.primaryProject}</span>
             <span>{featured?.type}</span>
             <span>{featured?.publishedDateLabel}</span>
           </div>
-          {featured?.excerpt ? <p className="hero__excerpt">{featured.excerpt}</p> : null}
+
+          {featured?.excerpt ? (
+            <EditableText as="p" className="hero__excerpt" field={featuredBlock?.excerptField || 'home.featured.excerpt'}>
+              {featured.excerpt}
+            </EditableText>
+          ) : null}
 
           {featured ? (
             <div className="hero__actions">
@@ -113,7 +135,9 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
 
         <aside className="hero__rail">
           <div className="manifesto-card">
-            <div className="manifesto-card__eyebrow">Projects</div>
+            <EditableText as="div" className="manifesto-card__eyebrow" field="home.projects.eyebrow">
+              Projects
+            </EditableText>
             <ul className="project-list">
               {projectMap.map((project) => (
                 <li key={project.slug}>
@@ -129,8 +153,12 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
       </section>
 
       <section className="section-heading">
-        <p>Archive flow</p>
-        <h2>Browse imported pieces</h2>
+        <EditableText as="p" field={archiveBlock?.eyebrowField || 'home.archive.eyebrow'}>
+          Archive flow
+        </EditableText>
+        <EditableText as="h2" field={archiveBlock?.titleField || 'home.archive.title'}>
+          Browse imported pieces
+        </EditableText>
       </section>
 
       <section className="archive-controls">

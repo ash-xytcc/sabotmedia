@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { splitDisplayTitle } from '../lib/content'
+import { CopyButton } from './CopyButton'
 
 function buildOverrideSnippet(piece) {
   const out = {
@@ -14,6 +15,7 @@ function buildOverrideSnippet(piece) {
   if (piece.type === 'podcast' && !piece.audioSummary) out.audioSummary = 'replace me'
   if (piece.type === 'podcast' && !piece.transcriptExcerpt) out.transcriptExcerpt = 'replace me'
   if (!piece.featured) out.featured = false
+  if (!piece.hidden) out.hidden = false
 
   return `"${piece.slug}": ${JSON.stringify(out, null, 2)}`
 }
@@ -21,6 +23,12 @@ function buildOverrideSnippet(piece) {
 function getFlagOptions(pieces) {
   return [...new Set(
     pieces.flatMap((piece) => piece.reviewFlags || [])
+  )].sort((a, b) => a.localeCompare(b))
+}
+
+function getProjectOptions(pieces) {
+  return [...new Set(
+    pieces.map((piece) => piece.primaryProject).filter(Boolean)
   )].sort((a, b) => a.localeCompare(b))
 }
 
@@ -51,8 +59,10 @@ export function ReviewQueuePage({ pieces }) {
 
   const [query, setQuery] = useState('')
   const [flagFilter, setFlagFilter] = useState('all')
+  const [projectFilter, setProjectFilter] = useState('all')
 
   const flagOptions = useMemo(() => getFlagOptions(queued), [queued])
+  const projectOptions = useMemo(() => getProjectOptions(queued), [queued])
   const summary = useMemo(() => buildSummary(queued), [queued])
 
   const filtered = useMemo(() => {
@@ -60,6 +70,7 @@ export function ReviewQueuePage({ pieces }) {
 
     return queued.filter((piece) => {
       if (flagFilter !== 'all' && !(piece.reviewFlags || []).includes(flagFilter)) return false
+      if (projectFilter !== 'all' && piece.primaryProject !== projectFilter) return false
 
       if (!q) return true
 
@@ -75,7 +86,7 @@ export function ReviewQueuePage({ pieces }) {
 
       return haystack.includes(q)
     })
-  }, [queued, query, flagFilter])
+  }, [queued, query, flagFilter, projectFilter])
 
   return (
     <main className="page review-page">
@@ -131,11 +142,23 @@ export function ReviewQueuePage({ pieces }) {
             ))}
           </select>
         </label>
+
+        <label className="archive-control">
+          <span>project</span>
+          <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
+            <option value="all">all</option>
+            {projectOptions.map((project) => (
+              <option key={project} value={project}>{project}</option>
+            ))}
+          </select>
+        </label>
       </section>
 
       <section className="review-queue">
         {filtered.map((piece) => {
           const display = splitDisplayTitle(piece)
+          const snippet = buildOverrideSnippet(piece)
+
           return (
             <article className="review-card" key={piece.slug}>
               <div className="review-card__meta">
@@ -157,7 +180,11 @@ export function ReviewQueuePage({ pieces }) {
                 ))}
               </div>
 
-              <pre className="review-card__snippet">{buildOverrideSnippet(piece)}</pre>
+              <div className="review-card__actions">
+                <CopyButton text={snippet} />
+              </div>
+
+              <pre className="review-card__snippet">{snippet}</pre>
             </article>
           )
         })}
