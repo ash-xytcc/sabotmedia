@@ -132,7 +132,7 @@ a { color: inherit; }
   text-transform: uppercase;
   font-family: var(--headline-font);
 }
-.hero h1 { font-size: clamp(3.8rem, 8.3vw, 7.6rem); color: var(--yellow); max-width: 8.5ch; }
+.hero h1 { font-size: clamp(3rem, 7.5vw, 5rem); color: var(--yellow); max-width: 8.5ch; }
 .hero__subtitle {
   font-size: clamp(1.1rem, 2.6vw, 1.9rem);
   max-width: 36rem;
@@ -244,7 +244,7 @@ a { color: inherit; }
 .piece-header { max-width: var(--reading-width); margin: 0 auto 2rem; }
 .piece-header__eyebrow { color: var(--red); margin-bottom: 0.65rem; }
 .piece-header h1 {
-  font-size: clamp(3.2rem, 7vw, 5.8rem);
+  font-size: clamp(3rem, 7.5vw, 5rem);
   color: var(--yellow);
   max-width: 10ch;
 }
