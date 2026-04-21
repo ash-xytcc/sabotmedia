@@ -1,21 +1,32 @@
-import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { splitDisplayTitle } from '../lib/content'
+import { extractPodcastEmbeds, isPodcastPiece } from '../lib/podcast'
+import { PodcastEmbedBlock } from './PodcastEmbedBlock'
+import { getProjectTheme } from '../lib/projectTheme'
+import { getAdjacentPieces, getRelatedPieces } from '../lib/pieces-nav'
 
-function ModeToggle({ slug, mode }) {
+function RelatedPieceCard({ piece }) {
+  const display = splitDisplayTitle(piece)
   return (
-    <div className="mode-toggle" role="tablist" aria-label="Piece display mode">
-      <Link className={mode === 'reading' ? 'is-active' : ''} to={`/piece/${slug}?mode=reading`}>Reading</Link>
-      <Link className={mode === 'experience' ? 'is-active' : ''} to={`/piece/${slug}?mode=experience`}>Experience</Link>
-      <Link to={`/piece/${slug}/print`}>Print</Link>
-    </div>
+    <article className="piece-card">
+      <div className="piece-card__meta">
+        <span>{piece.primaryProject}</span>
+        <span>{piece.type}</span>
+      </div>
+      <h3>
+        <Link to={`/piece/${piece.slug}`}>{display.title}</Link>
+      </h3>
+      {display.subtitle ? <p className="piece-card__subtitle">{display.subtitle}</p> : null}
+    </article>
   )
 }
 
 export function PiecePage({ pieces }) {
   const { slug } = useParams()
-  const [params] = useSearchParams()
-  const mode = params.get('mode') === 'experience' ? 'experience' : 'reading'
-  const piece = useMemo(() => pieces.find((entry) => entry.slug === slug), [pieces, slug])
+  const [searchParams] = useSearchParams()
+  const mode = searchParams.get('mode') === 'experience' ? 'experience' : 'reading'
+
+  const piece = pieces.find((entry) => entry.slug === slug)
 
   if (!piece) {
     return (
@@ -28,60 +39,82 @@ export function PiecePage({ pieces }) {
     )
   }
 
+  const display = splitDisplayTitle(piece)
+  const podcastEmbeds = extractPodcastEmbeds(piece)
+  const podcastLike = isPodcastPiece(piece)
+  const theme = getProjectTheme(piece.primaryProjectSlug || piece.primaryProject)
+  const { previous, next } = getAdjacentPieces(pieces, piece.slug)
+  const related = getRelatedPieces(pieces, piece)
+
   return (
-    <main className={`page piece-page piece-page--${mode}`}>
-      <article className="piece-shell">
-        <header className="piece-header">
-          <div className="piece-header__eyebrow">{piece.primaryProject}</div>
-          <h1>{piece.title}</h1>
-          {piece.subtitle && <p className="piece-header__subtitle">{piece.subtitle}</p>}
-          <div className="piece-header__meta">
-            <span>{piece.author || 'Sabot Media'}</span>
-            <span>{piece.publishedDateLabel}</span>
-            <span>{piece.type}</span>
-          </div>
-          <ModeToggle slug={piece.slug} mode={mode} />
-        </header>
-
-        <div className="piece-layout">
-          <aside className="piece-sidebar">
-            <div className="info-card">
-              <div className="info-card__label">Projects</div>
-              <ul>
-                {piece.projects.map((project) => <li key={project}>{project}</li>)}
-              </ul>
-            </div>
-            {piece.sourceUrl && (
-              <div className="info-card">
-                <div className="info-card__label">Source</div>
-                <a href={piece.sourceUrl} target="_blank" rel="noreferrer">Original NoBlogs post</a>
-              </div>
-            )}
-            {piece.relatedPrintLinks?.length > 0 && (
-              <div className="info-card">
-                <div className="info-card__label">Print assets</div>
-                <ul>
-                  {piece.relatedPrintLinks.map((asset) => (
-                    <li key={asset.url}><a href={asset.url} target="_blank" rel="noreferrer">{asset.title}</a></li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </aside>
-
-          <section className="piece-body-wrap">
-            {mode === 'experience' && (
-              <div className="experience-banner">
-                <div className="experience-banner__inner">
-                  <span>THIS IS NOT A CONCLUSION.</span>
-                  <span>IT IS A BEGINNING.</span>
-                </div>
-              </div>
-            )}
-            <div className="piece-body" dangerouslySetInnerHTML={{ __html: piece.bodyHtml }} />
-          </section>
+    <main className={`page piece-page piece-page--${mode} ${theme.className}`}>
+      <header className="piece-header">
+        <div className="piece-header__eyebrow">{theme.accent}</div>
+        <h1>{display.title}</h1>
+        {display.subtitle ? <p className="piece-header__subtitle">{display.subtitle}</p> : null}
+        <div className="hero__meta">
+          <span>{piece.primaryProject}</span>
+          <span>{piece.type}</span>
+          <span>{piece.publishedDateLabel}</span>
+          <span>{piece.author}</span>
         </div>
-      </article>
+
+        <nav className="mode-toggle">
+          <Link to={`/piece/${piece.slug}`}>reading</Link>
+          <Link to={`/piece/${piece.slug}?mode=experience`}>experience</Link>
+          <Link to={`/piece/${piece.slug}/print`}>print</Link>
+        </nav>
+      </header>
+
+      {podcastLike ? <PodcastEmbedBlock embeds={podcastEmbeds} piece={piece} /> : null}
+
+      {mode === 'experience' ? (
+        <section className="experience-banner">
+          <div className="experience-banner__inner">
+            <span>this is not a conclusion</span>
+            <span>it is a beginning</span>
+          </div>
+        </section>
+      ) : null}
+
+      <section className={`piece-layout piece-layout--${mode}`}>
+        <article
+          className="piece-body-wrap"
+          dangerouslySetInnerHTML={{ __html: piece.bodyHtml }}
+        />
+      </section>
+
+      {(previous || next) ? (
+        <section className="piece-nav-grid">
+          {previous ? (
+            <Link className="piece-nav-card" to={`/piece/${previous.slug}`}>
+              <span className="piece-nav-card__label">older</span>
+              <strong>{splitDisplayTitle(previous).title}</strong>
+            </Link>
+          ) : <div />}
+
+          {next ? (
+            <Link className="piece-nav-card piece-nav-card--next" to={`/piece/${next.slug}`}>
+              <span className="piece-nav-card__label">newer</span>
+              <strong>{splitDisplayTitle(next).title}</strong>
+            </Link>
+          ) : <div />}
+        </section>
+      ) : null}
+
+      {related.length ? (
+        <>
+          <section className="section-heading">
+            <p>Keep going</p>
+            <h2>Related pieces</h2>
+          </section>
+          <section className="piece-grid">
+            {related.map((entry) => (
+              <RelatedPieceCard key={entry.slug} piece={entry} />
+            ))}
+          </section>
+        </>
+      ) : null}
     </main>
   )
 }
