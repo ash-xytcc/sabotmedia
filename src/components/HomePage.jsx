@@ -83,7 +83,14 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
 
   return (
     <main className="page page-home">
-      <section className="hero hero--featured">
+      <section
+        className="hero hero--featured"
+        style={featured?.heroImage ? {
+          backgroundImage: `linear-gradient(180deg, rgba(8,8,8,0.55), rgba(8,8,8,0.82)), url(${featured.heroImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        } : undefined}
+      >
         <div className="hero__content">
           <div className="hero__eyebrow">Featured drop</div>
           <h1>{featuredDisplay.title || 'Sabot Media'}</h1>

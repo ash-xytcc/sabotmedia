@@ -21,6 +21,61 @@ function RelatedPieceCard({ piece }) {
   )
 }
 
+function PieceMetaPanel({ piece }) {
+  const tags = piece.tags || []
+  const printLinks = piece.relatedPrintLinks || []
+
+  return (
+    <aside className="piece-meta-panel">
+      <div className="piece-meta-panel__section">
+        <div className="piece-meta-panel__label">project</div>
+        <p>{piece.primaryProject}</p>
+      </div>
+
+      <div className="piece-meta-panel__section">
+        <div className="piece-meta-panel__label">type</div>
+        <p>{piece.type}</p>
+      </div>
+
+      <div className="piece-meta-panel__section">
+        <div className="piece-meta-panel__label">published</div>
+        <p>{piece.publishedDateLabel}</p>
+      </div>
+
+      {piece.sourceUrl ? (
+        <div className="piece-meta-panel__section">
+          <div className="piece-meta-panel__label">source</div>
+          <p><a href={piece.sourceUrl} target="_blank" rel="noreferrer">original post</a></p>
+        </div>
+      ) : null}
+
+      {printLinks.length ? (
+        <div className="piece-meta-panel__section">
+          <div className="piece-meta-panel__label">print assets</div>
+          <ul className="piece-meta-panel__list">
+            {printLinks.map((entry, index) => (
+              <li key={`${entry.url}-${index}`}>
+                <a href={entry.url} target="_blank" rel="noreferrer">{entry.title || 'print link'}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {tags.length ? (
+        <div className="piece-meta-panel__section">
+          <div className="piece-meta-panel__label">tags</div>
+          <div className="piece-tag-list">
+            {tags.slice(0, 14).map((tag) => (
+              <span className="piece-tag" key={tag}>{tag}</span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </aside>
+  )
+}
+
 export function PiecePage({ pieces }) {
   const { slug } = useParams()
   const [searchParams] = useSearchParams()
@@ -77,11 +132,12 @@ export function PiecePage({ pieces }) {
         </section>
       ) : null}
 
-      <section className={`piece-layout piece-layout--${mode}`}>
+      <section className={`piece-layout piece-layout--${mode} piece-layout--with-meta`}>
         <article
           className="piece-body-wrap"
           dangerouslySetInnerHTML={{ __html: piece.bodyHtml }}
         />
+        <PieceMetaPanel piece={piece} />
       </section>
 
       {(previous || next) ? (

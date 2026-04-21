@@ -13,6 +13,11 @@ export function mergePiece(piece, override) {
     tags: override.tags || piece.tags || [],
     relatedPrintLinks: override.relatedPrintLinks || piece.relatedPrintLinks || [],
     relatedAssets: override.relatedAssets || piece.relatedAssets || [],
+    audioSummary: override.audioSummary || piece.audioSummary || '',
+    transcriptExcerpt: override.transcriptExcerpt || piece.transcriptExcerpt || '',
+    sourceNotes: override.sourceNotes || piece.sourceNotes || '',
+    heroImage: override.heroImage || piece.heroImage || '',
+    featured: override.featured === true || piece.featured === true,
   }
 
   return {
@@ -29,6 +34,9 @@ export function getReviewFlags(piece) {
   if (!piece.primaryProjectSlug || piece.primaryProjectSlug === 'general') flags.push('unassigned project')
   if (piece.type === 'podcast' && !(piece.bodyHtml || '').match(/youtube|spotify|soundcloud|acast|peertube/i)) {
     flags.push('podcast without media source')
+  }
+  if (piece.type === 'podcast' && !piece.transcriptExcerpt && !piece.audioSummary) {
+    flags.push('podcast needs transcript or summary')
   }
   if ((piece.type === 'comic' || piece.type === 'zine') && !piece.hasPrintAssets) {
     flags.push('print asset missing')

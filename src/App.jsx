@@ -5,6 +5,7 @@ import { PrintPage } from './components/PrintPage'
 import { ProjectPage } from './components/ProjectPage'
 import { ProjectsIndexPage } from './components/ProjectsIndexPage'
 import { ReviewQueuePage } from './components/ReviewQueuePage'
+import { AdminPage } from './components/AdminPage'
 import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/content'
 import { getPieces } from './lib/pieces'
 
@@ -27,6 +28,7 @@ function Layout({ children }) {
           <Link to="/">Drops</Link>
           <Link to="/projects">Projects</Link>
           <Link to="/review">Review {reviewCount ? `(${reviewCount})` : ''}</Link>
+          <Link to="/admin">Admin</Link>
         </nav>
       </header>
 
@@ -49,6 +51,7 @@ function Layout({ children }) {
               <li><Link to="/projects">browse projects</Link></li>
               <li><Link to="/">browse archive</Link></li>
               <li><Link to="/review">review queue</Link></li>
+              <li><Link to="/admin">admin</Link></li>
             </ul>
           </section>
 
@@ -72,6 +75,7 @@ export default function App() {
         <Route path="/piece/:slug" element={<PiecePage pieces={pieces} />} />
         <Route path="/piece/:slug/print" element={<PrintPage pieces={pieces} />} />
         <Route path="/review" element={<ReviewQueuePage pieces={pieces} />} />
+        <Route path="/admin" element={<AdminPage pieces={pieces} />} />
       </Routes>
     </Layout>
   )
