@@ -103,39 +103,56 @@ export function AdminPage({ pieces }) {
 
       <AdminPublicConfigCard />
 
-      
       <section className="admin-grid">
-
         <article className="admin-card">
-          <div className="admin-card__eyebrow">content</div>
-          <h2>Editor</h2>
-          <p>Create, revise, schedule, and manage native content.</p>
-          <Link className="button button--primary" to="/native-bridge">open editor</Link>
+          <div className="admin-card__eyebrow">{reviewEyebrow}</div>
+          <h2>{reviewTitle}</h2>
+          <p>{reviewBody}</p>
+          <Link className="button button--primary" to="/review">{reviewAction}</Link>
         </article>
 
         <article className="admin-card">
-          <div className="admin-card__eyebrow">content</div>
-          <h2>Updates</h2>
-          <p>View the live public content feed and make sure publishing is actually rendering.</p>
+          <div className="admin-card__eyebrow">{publicConfigEyebrow}</div>
+          <h2>{publicConfigTitle}</h2>
+          <p>{changedFields.length} unsaved draft fields. {configuredTextFields} configured text fields. {configuredStyleFields} configured style fields.</p>
+          <Link className="button button--primary" to="/draft">{publicConfigAction}</Link>
+        </article>
+
+        <article className="admin-card">
+          <div className="admin-card__eyebrow">{projectEyebrow}</div>
+          <h2>{projectTitle}</h2>
+          <p>{projectBody}</p>
+          <Link className="button button--primary" to="/projects">{projectAction}</Link>
+        </article>
+
+        <article className="admin-card">
+          <div className="admin-card__eyebrow">{overrideEyebrow}</div>
+          <h2>{overrideTitle}</h2>
+          <p>{overrideBody}</p>
+          <Link className="button button--primary" to="/overrides">{overrideAction}</Link>
+        </article>
+
+        <article className="admin-card">
+          <div className="admin-card__eyebrow">{podcastEyebrow}</div>
+          <h2>{podcastTitle}</h2>
+          <p>{podcastBody}</p>
+          <Link className="button button--primary" to="/podcasts">{podcastAction}</Link>
+        </article>
+
+        <article className="admin-card">
+          <div className="admin-card__eyebrow">native lane</div>
+          <h2>Native publishing bridge</h2>
+          <p>Define and compose native content with richer blocks, reusable media assets, and real public rendering instead of staying trapped in imported archive logic.</p>
+          <Link className="button button--primary" to="/native-bridge">open bridge</Link>
+        </article>
+
+        <article className="admin-card">
+          <div className="admin-card__eyebrow">public lane</div>
+          <h2>Native updates surface</h2>
+          <p>Review the real public rendering lane for published native entries and verify that publishing now appears on a live route.</p>
           <Link className="button button--primary" to="/updates">open updates</Link>
         </article>
-
-        <article className="admin-card">
-          <div className="admin-card__eyebrow">tools</div>
-          <h2>Search</h2>
-          <p>Browse imported archive material and find pieces without digging through chaos.</p>
-          <Link className="button button--primary" to="/search">open search</Link>
-        </article>
-
-        <article className="admin-card">
-          <div className="admin-card__eyebrow">system</div>
-          <h2>System Backup</h2>
-          <p>Export a recovery snapshot and keep one lifeboat around in case the app decides to become sentient and malicious.</p>
-          <Link className="button button--primary" to="/system-backup">open backup</Link>
-        </article>
-
       </section>
-
     </main>
   )
 }
