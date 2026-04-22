@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { usePublicEdit } from './PublicEditContext'
 import { getConfiguredStyle, getConfiguredText } from '../lib/publicConfig'
+import { useResolvedConfig } from '../lib/useResolvedConfig'
 
 export function EditableText({ as: Tag = 'div', className = '', children, field }) {
   const {
@@ -8,12 +9,18 @@ export function EditableText({ as: Tag = 'div', className = '', children, field 
     isAdmin,
     selectedField,
     setSelectedField,
-    effectiveConfig,
     updateText,
   } = usePublicEdit()
 
-  const configuredText = getConfiguredText(effectiveConfig, field, typeof children === 'string' ? children : '')
-  const draftStyle = getConfiguredStyle(effectiveConfig, field)
+  const resolvedConfig = useResolvedConfig()
+
+  const configuredText = getConfiguredText(
+    resolvedConfig,
+    field,
+    typeof children === 'string' ? children : ''
+  )
+
+  const draftStyle = getConfiguredStyle(resolvedConfig, field)
   const isSelected = isEditing && isAdmin && selectedField === field
 
   const style = useMemo(() => {
@@ -21,6 +28,8 @@ export function EditableText({ as: Tag = 'div', className = '', children, field 
     if (draftStyle.fontSize) out.fontSize = draftStyle.fontSize
     if (draftStyle.lineHeight) out.lineHeight = draftStyle.lineHeight
     if (draftStyle.maxWidth) out.maxWidth = draftStyle.maxWidth
+    if (draftStyle.letterSpacing) out.letterSpacing = draftStyle.letterSpacing
+    if (draftStyle.textTransform) out.textTransform = draftStyle.textTransform
     return out
   }, [draftStyle])
 

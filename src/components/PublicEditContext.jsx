@@ -1,23 +1,41 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { clearStoredPublicConfig, getStoredPublicConfig, mergePublicConfig, setStoredPublicConfig } from '../lib/publicConfig'
-import { loadPublicConfigPayload, savePublicConfigPayload } from '../lib/publicConfigApi'
+import { getPublicConfigPermissions, loadPublicConfigPayload, savePublicConfigPayload } from '../lib/publicConfigApi'
 import { buildPublicConfigPayload } from '../lib/publicDraftExport'
+import { normalizePublicConfig } from '../lib/publicConfigSchema'
 
 const STORAGE_KEY = 'sabot-public-edit-draft-v2'
 const PublicEditContext = createContext(null)
 
+function emptyConfig() {
+  return { text: {}, styles: {}, blocks: {} }
+}
+
+function emptyDraft() {
+  return { text: {}, styles: {} }
+}
+
+function toDraftShape(config) {
+  return {
+    text: config?.text || {},
+    styles: config?.styles || {},
+  }
+}
+
 export function PublicEditProvider({ children }) {
   const [isEditing, setIsEditing] = useState(false)
   const [isAdmin] = useState(true)
+  const [canSave, setCanSave] = useState(false)
+  const [backendMode, setBackendMode] = useState('unknown')
   const [selectedField, setSelectedField] = useState(null)
 
-  const [savedConfig, setSavedConfig] = useState(() => getStoredPublicConfig() || { text: {}, styles: {}, blocks: {} })
+  const [savedConfig, setSavedConfig] = useState(() => getStoredPublicConfig() || emptyConfig())
   const [draft, setDraft] = useState(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY)
-      return raw ? JSON.parse(raw) : { text: {}, styles: {} }
+      return raw ? JSON.parse(raw) : emptyDraft()
     } catch {
-      return { text: {}, styles: {} }
+      return emptyDraft()
     }
   })
 
@@ -25,6 +43,13 @@ export function PublicEditProvider({ children }) {
   const [saveState, setSaveState] = useState('idle')
   const [loadError, setLoadError] = useState('')
   const [saveError, setSaveError] = useState('')
+  const [permissionState, setPermissionState] = useState('idle')
+  const [permissionError, setPermissionError] = useState('')
+
+  const [lastLoadedAt, setLastLoadedAt] = useState('')
+  const [lastSavedAt, setLastSavedAt] = useState('')
+  const [configVersion, setConfigVersion] = useState(1)
+  const [schemaVersion, setSchemaVersion] = useState(2)
 
   useEffect(() => {
     try {
@@ -34,24 +59,51 @@ export function PublicEditProvider({ children }) {
     }
   }, [draft])
 
+  async function reloadFromBackend() {
+    try {
+      setLoadState('loading')
+      setLoadError('')
+      const data = await loadPublicConfigPayload()
+      const config = data?.config || emptyConfig()
+
+      setSavedConfig(config)
+      setStoredPublicConfig(config)
+      setBackendMode(data?.mode || 'unknown')
+      setLastLoadedAt(data?.updatedAt || new Date().toISOString())
+      setConfigVersion(Number(data?.version || 1))
+      setSchemaVersion(Number(data?.schemaVersion || 2))
+      setLoadState('loaded')
+    } catch (error) {
+      setLoadState('error')
+      setLoadError(String(error?.message || error))
+    }
+  }
+
   useEffect(() => {
     let cancelled = false
 
     async function boot() {
       try {
-        setLoadState('loading')
-        setLoadError('')
-        const data = await loadPublicConfigPayload()
-        const config = data?.config || { text: {}, styles: {}, blocks: {} }
+        setPermissionState('loading')
+        setPermissionError('')
+        const permissionData = await getPublicConfigPermissions()
 
-        if (cancelled) return
-        setSavedConfig(config)
-        setStoredPublicConfig(config)
-        setLoadState('loaded')
+        if (!cancelled) {
+          setCanSave(permissionData?.canEdit === true)
+          setBackendMode(permissionData?.mode || 'unknown')
+          setPermissionState('loaded')
+        }
       } catch (error) {
-        if (cancelled) return
-        setLoadState('error')
-        setLoadError(String(error?.message || error))
+        if (!cancelled) {
+          setPermissionState('error')
+          setPermissionError(String(error?.message || error))
+          setCanSave(false)
+          setBackendMode('unknown')
+        }
+      }
+
+      if (!cancelled) {
+        await reloadFromBackend()
       }
     }
 
@@ -61,30 +113,79 @@ export function PublicEditProvider({ children }) {
     }
   }, [])
 
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        setSelectedField(null)
+        setIsEditing(false)
+      }
+    }
+
+    if (isEditing) {
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isEditing])
+
+  const changedTextFields = useMemo(() => Object.keys(draft?.text || {}).sort(), [draft])
+  const changedStyleFields = useMemo(() => Object.keys(draft?.styles || {}).sort(), [draft])
+
   const changedFields = useMemo(() => {
-    const textFields = Object.keys(draft?.text || {})
-    const styleFields = Object.keys(draft?.styles || {})
-    return [...new Set([...textFields, ...styleFields])].sort()
-  }, [draft])
+    return [...new Set([...changedTextFields, ...changedStyleFields])].sort()
+  }, [changedTextFields, changedStyleFields])
+
+  const draftStats = useMemo(() => ({
+    textCount: changedTextFields.length,
+    styleCount: changedStyleFields.length,
+    totalCount: changedFields.length,
+  }), [changedTextFields, changedStyleFields, changedFields])
+
+  const savedStats = useMemo(() => ({
+    textCount: Object.keys(savedConfig?.text || {}).length,
+    styleCount: Object.keys(savedConfig?.styles || {}).length,
+    blockCount: Object.keys(savedConfig?.blocks || {}).length,
+  }), [savedConfig])
 
   const effectiveConfig = useMemo(
-    () => mergePublicConfig(savedConfig || { text: {}, styles: {}, blocks: {} }, draft || { text: {}, styles: {} }),
+    () => mergePublicConfig(savedConfig || emptyConfig(), draft || emptyDraft()),
     [savedConfig, draft]
   )
+
+  const effectiveStats = useMemo(() => ({
+    textCount: Object.keys(effectiveConfig?.text || {}).length,
+    styleCount: Object.keys(effectiveConfig?.styles || {}).length,
+    blockCount: Object.keys(effectiveConfig?.blocks || {}).length,
+  }), [effectiveConfig])
+
+  const hasDraftChanges = changedFields.length > 0
 
   const value = useMemo(() => ({
     isEditing,
     isAdmin,
+    canSave,
+    backendMode,
     selectedField,
     setSelectedField,
     draft,
     savedConfig,
     effectiveConfig,
     changedFields,
+    changedTextFields,
+    changedStyleFields,
+    draftStats,
+    savedStats,
+    effectiveStats,
+    hasDraftChanges,
     loadState,
     saveState,
     loadError,
     saveError,
+    permissionState,
+    permissionError,
+    lastLoadedAt,
+    lastSavedAt,
+    configVersion,
+    schemaVersion,
     setSavedConfig,
     toggleEditing: () => {
       setIsEditing((v) => {
@@ -92,6 +193,24 @@ export function PublicEditProvider({ children }) {
         if (!next) setSelectedField(null)
         return next
       })
+    },
+    stopEditing() {
+      setSelectedField(null)
+      setIsEditing(false)
+    },
+    async reloadFromBackend() {
+      await reloadFromBackend()
+    },
+    discardDraftAndReload() {
+      const fresh = emptyDraft()
+      setDraft(fresh)
+      try {
+        window.localStorage.removeItem(STORAGE_KEY)
+      } catch {
+        // ignore
+      }
+      setSelectedField(null)
+      return reloadFromBackend()
     },
     updateText(field, value) {
       setDraft((prev) => ({
@@ -124,35 +243,46 @@ export function PublicEditProvider({ children }) {
       })
     },
     applyDraftLocally() {
-      const next = mergePublicConfig(savedConfig || { text: {}, styles: {}, blocks: {} }, draft || { text: {}, styles: {} })
+      const next = mergePublicConfig(savedConfig || emptyConfig(), draft || emptyDraft())
       setSavedConfig(next)
       setStoredPublicConfig(next)
-      setDraft({ text: {}, styles: {} })
+      setDraft(emptyDraft())
       try {
         window.localStorage.removeItem(STORAGE_KEY)
       } catch {
         // ignore
       }
+      setLastSavedAt(new Date().toISOString())
     },
     async saveDraftToBackend() {
+      if (!canSave) {
+        setSaveState('error')
+        setSaveError('save not allowed')
+        return
+      }
+
       try {
         setSaveState('saving')
         setSaveError('')
 
-        const next = mergePublicConfig(savedConfig || { text: {}, styles: {}, blocks: {} }, draft || { text: {}, styles: {} })
+        const next = mergePublicConfig(savedConfig || emptyConfig(), draft || emptyDraft())
         const payload = buildPublicConfigPayload(next)
         const data = await savePublicConfigPayload(payload)
         const saved = data?.received?.publicSite || next
 
         setSavedConfig(saved)
         setStoredPublicConfig(saved)
-        setDraft({ text: {}, styles: {} })
+        setDraft(emptyDraft())
         try {
           window.localStorage.removeItem(STORAGE_KEY)
         } catch {
           // ignore
         }
 
+        setBackendMode(data?.mode || backendMode || 'unknown')
+        setLastSavedAt(data?.updatedAt || new Date().toISOString())
+        setConfigVersion(Number(data?.version || configVersion || 1))
+        setSchemaVersion(Number(data?.schemaVersion || schemaVersion || 2))
         setSaveState('saved')
         window.setTimeout(() => setSaveState('idle'), 1500)
       } catch (error) {
@@ -161,8 +291,8 @@ export function PublicEditProvider({ children }) {
       }
     },
     clearDraft() {
-      const empty = { text: {}, styles: {} }
-      setDraft(empty)
+      const fresh = emptyDraft()
+      setDraft(fresh)
       try {
         window.localStorage.removeItem(STORAGE_KEY)
       } catch {
@@ -170,13 +300,53 @@ export function PublicEditProvider({ children }) {
       }
     },
     clearSavedConfig() {
-      setSavedConfig({ text: {}, styles: {}, blocks: {} })
+      setSavedConfig(emptyConfig())
       clearStoredPublicConfig()
+    },
+    importDraftPatch(configLike) {
+      const normalized = normalizePublicConfig(configLike)
+      setDraft((prev) => mergePublicConfig(prev || emptyDraft(), toDraftShape(normalized)))
+    },
+    replaceDraftWithImported(configLike) {
+      const normalized = normalizePublicConfig(configLike)
+      setDraft(toDraftShape(normalized))
+    },
+    replaceSavedConfigLocally(configLike) {
+      const normalized = normalizePublicConfig(configLike)
+      setSavedConfig(normalized)
+      setStoredPublicConfig(normalized)
+      setLastSavedAt(new Date().toISOString())
     },
     exportDraft() {
       return JSON.stringify(draft, null, 2)
     },
-  }), [isEditing, isAdmin, selectedField, draft, savedConfig, effectiveConfig, changedFields, loadState, saveState, loadError, saveError])
+  }), [
+    isEditing,
+    isAdmin,
+    canSave,
+    backendMode,
+    selectedField,
+    draft,
+    savedConfig,
+    effectiveConfig,
+    changedFields,
+    changedTextFields,
+    changedStyleFields,
+    draftStats,
+    savedStats,
+    effectiveStats,
+    hasDraftChanges,
+    loadState,
+    saveState,
+    loadError,
+    saveError,
+    permissionState,
+    permissionError,
+    lastLoadedAt,
+    lastSavedAt,
+    configVersion,
+    schemaVersion,
+  ])
 
   return (
     <PublicEditContext.Provider value={value}>

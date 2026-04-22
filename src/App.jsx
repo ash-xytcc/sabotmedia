@@ -7,6 +7,8 @@ import { ProjectsIndexPage } from './components/ProjectsIndexPage'
 import { ReviewQueuePage } from './components/ReviewQueuePage'
 import { AdminPage } from './components/AdminPage'
 import { OverridesPage } from './components/OverridesPage'
+import { PodcastAdminPage } from './components/PodcastAdminPage'
+import { NativeContentBridgePage } from './components/NativeContentBridgePage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PublicEditProvider, usePublicEdit } from './components/PublicEditContext'
 import { PublicEditPanel } from './components/PublicEditPanel'
@@ -21,10 +23,15 @@ const projectMap = buildProjectMap(pieces)
 const reviewCount = pieces.filter((piece) => piece.reviewFlags?.length).length
 
 function Layout({ children }) {
-  const { isAdmin, isEditing, toggleEditing } = usePublicEdit()
+  const { isAdmin, isEditing, toggleEditing, changedFields, setSelectedField } = usePublicEdit()
 
   return (
-    <div className={`site-shell${isEditing ? ' site-shell--editing' : ''}`}>
+    <div
+      className={`site-shell${isEditing ? ' site-shell--editing' : ''}`}
+      onClick={() => {
+        if (isEditing) setSelectedField(null)
+      }}
+    >
       <header className="app-header">
         <Link className="brand" to="/">
           <span className="brand-kicker">sabot</span>
@@ -37,7 +44,7 @@ function Layout({ children }) {
           <Link to="/review">Review {reviewCount ? `(${reviewCount})` : ''}</Link>
           <Link to="/admin">Admin</Link>
           <Link to="/overrides">Overrides</Link>
-          <Link to="/draft">Draft</Link>
+          <Link to="/draft">Draft{changedFields.length ? <span className="header-nav__dirty">{changedFields.length}</span> : ''}</Link>
           {isAdmin ? (
             <button className="button button--primary" type="button" onClick={toggleEditing}>
               {isEditing ? 'exit edit' : 'edit site'}
@@ -105,6 +112,8 @@ export default function App() {
           <Route path="/review" element={<ReviewQueuePage pieces={pieces} />} />
           <Route path="/admin" element={<AdminPage pieces={pieces} />} />
           <Route path="/overrides" element={<OverridesPage />} />
+        <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
+        <Route path="/native-bridge" element={<NativeContentBridgePage />} />
           <Route path="/draft" element={<PublicDraftPage />} />
         </Routes>
       </Layout>

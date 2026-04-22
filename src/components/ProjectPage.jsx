@@ -4,8 +4,9 @@ import { getProjectMeta, splitDisplayTitle, isPublicProjectSlug, buildTypeOption
 import { getProjectTheme } from '../lib/projectTheme'
 import { getFeaturedPieceForProject } from '../lib/projectFeatured'
 import { EditableText } from './EditableText'
-import { usePublicEdit } from './PublicEditContext'
-import { getConfiguredBlock } from '../lib/publicConfig'
+import { useResolvedConfig } from '../lib/useResolvedConfig'
+import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
+import { getProjectTitleField, getProjectDescriptionField } from '../lib/projectConfigFields'
 
 const PAGE_SIZE = 24
 
@@ -34,11 +35,31 @@ function ProjectPieceCard({ piece }) {
 export function ProjectPage({ pieces }) {
   const { slug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { effectiveConfig } = usePublicEdit()
+  const resolvedConfig = useResolvedConfig()
 
-  const heroBlock = getConfiguredBlock(effectiveConfig, 'projectPage.hero')
-  const featuredBlock = getConfiguredBlock(effectiveConfig, 'projectPage.featured')
-  const archiveBlock = getConfiguredBlock(effectiveConfig, 'projectPage.archive')
+  const heroBlock = getConfiguredBlock(resolvedConfig, 'projectPage.hero')
+  const featuredBlock = getConfiguredBlock(resolvedConfig, 'projectPage.featured')
+  const archiveBlock = getConfiguredBlock(resolvedConfig, 'projectPage.archive')
+  const filtersBlock = getConfiguredBlock(resolvedConfig, 'projectPage.filters')
+
+  const projectTitleField = getProjectTitleField(slug)
+  const projectDescriptionField = getProjectDescriptionField(slug)
+
+  const searchLabel = getConfiguredText(resolvedConfig, filtersBlock?.searchLabelField || 'projectPage.filters.searchLabel', 'search')
+  const searchPlaceholder = getConfiguredText(resolvedConfig, filtersBlock?.searchPlaceholderField || 'projectPage.filters.searchPlaceholder', 'title, excerpt, tag...')
+  const typeLabel = getConfiguredText(resolvedConfig, filtersBlock?.typeLabelField || 'projectPage.filters.typeLabel', 'type')
+  const sortLabel = getConfiguredText(resolvedConfig, filtersBlock?.sortLabelField || 'projectPage.filters.sortLabel', 'sort')
+  const allLabel = getConfiguredText(resolvedConfig, filtersBlock?.allLabelField || 'projectPage.filters.allLabel', 'all')
+  const newestLabel = getConfiguredText(resolvedConfig, filtersBlock?.newestLabelField || 'projectPage.filters.newestLabel', 'newest')
+  const oldestLabel = getConfiguredText(resolvedConfig, filtersBlock?.oldestLabelField || 'projectPage.filters.oldestLabel', 'oldest')
+  const titleLabel = getConfiguredText(resolvedConfig, filtersBlock?.titleLabelField || 'projectPage.filters.titleLabel', 'title')
+  const loadMoreLabel = getConfiguredText(resolvedConfig, filtersBlock?.loadMoreLabelField || 'projectPage.filters.loadMoreLabel', 'load more')
+  const noMatchesTitle = getConfiguredText(resolvedConfig, filtersBlock?.noMatchesTitleField || 'projectPage.filters.noMatchesTitle', 'No matching pieces')
+  const noMatchesBody = getConfiguredText(resolvedConfig, filtersBlock?.noMatchesBodyField || 'projectPage.filters.noMatchesBody', 'Try changing the search or filters.')
+  const resultsPrefix = getConfiguredText(resolvedConfig, filtersBlock?.resultsPrefixField || 'projectPage.filters.resultsPrefix', 'showing')
+  const featuredEmptyTitle = getConfiguredText(resolvedConfig, featuredBlock?.emptyTitleField || 'projectPage.featured.emptyTitle', 'No featured piece selected')
+  const featuredEmptyBody = getConfiguredText(resolvedConfig, featuredBlock?.emptyBodyField || 'projectPage.featured.emptyBody', 'This lane is using archive fallback rules until an explicit featured piece is chosen.')
+  const featuredReadLabel = getConfiguredText(resolvedConfig, featuredBlock?.readLabelField || 'projectPage.featured.readLabel', 'read featured')
 
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || 'all')
@@ -56,7 +77,7 @@ export function ProjectPage({ pieces }) {
     () => pieces.filter((piece) => (piece.primaryProjectSlug || '') === slug),
     [pieces, slug]
   )
-  const featuredPiece = useMemo(() => getFeaturedPieceForProject(pieces, slug), [pieces, slug])
+  const featuredResult = useMemo(() => getFeaturedPieceForProject(pieces, slug), [pieces, slug])
 
   const typeOptions = useMemo(() => buildTypeOptions(basePieces), [basePieces])
 
@@ -107,25 +128,42 @@ export function ProjectPage({ pieces }) {
         <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'projectPage.hero.eyebrow'}>
           project archive
         </EditableText>
-        <h1>{meta.name}</h1>
-        <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'projectPage.hero.description'}>
+
+        <EditableText as="h1" field={projectTitleField}>
+          {meta.name}
+        </EditableText>
+
+        <EditableText as="p" className="project-hero__description" field={projectDescriptionField}>
           {meta.description}
         </EditableText>
+
         <div className="project-hero__meta">
           <span>{filtered.length} pieces</span>
           <span>imported archive + native-ready structure</span>
+          <span>{featuredResult?.source === 'explicit' ? 'explicit feature' : featuredResult?.source === 'fallback' ? 'fallback feature' : 'no feature'}</span>
         </div>
       </section>
 
-      {featuredPiece ? (
+      {featuredResult?.piece ? (
         <section className="project-featured-callout">
           <EditableText as="div" className="project-featured-callout__eyebrow" field={featuredBlock?.eyebrowField || 'projectPage.featured.eyebrow'}>
             featured in this lane
           </EditableText>
-          <h2><Link to={`/piece/${featuredPiece.slug}`}>{splitDisplayTitle(featuredPiece).title}</Link></h2>
-          {featuredPiece.excerpt ? <p>{featuredPiece.excerpt}</p> : null}
+          <h2><Link to={`/piece/${featuredResult.piece.slug}`}>{splitDisplayTitle(featuredResult.piece).title}</Link></h2>
+          {featuredResult.piece.excerpt ? <p>{featuredResult.piece.excerpt}</p> : null}
+          <div className="project-featured-callout__actions">
+            <Link className="button button--primary" to={`/piece/${featuredResult.piece.slug}`}>{featuredReadLabel}</Link>
+          </div>
         </section>
-      ) : null}
+      ) : (
+        <section className="project-featured-callout project-featured-callout--empty">
+          <EditableText as="div" className="project-featured-callout__eyebrow" field={featuredBlock?.eyebrowField || 'projectPage.featured.eyebrow'}>
+            featured in this lane
+          </EditableText>
+          <h2>{featuredEmptyTitle}</h2>
+          <p>{featuredEmptyBody}</p>
+        </section>
+      )}
 
       <section className="section-heading">
         <EditableText as="p" field={archiveBlock?.eyebrowField || 'projectPage.archive.eyebrow'}>
@@ -138,19 +176,19 @@ export function ProjectPage({ pieces }) {
 
       <section className="archive-controls">
         <label className="archive-control">
-          <span>search</span>
+          <span>{searchLabel}</span>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="title, excerpt, tag..."
+            placeholder={searchPlaceholder}
           />
         </label>
 
         <label className="archive-control">
-          <span>type</span>
+          <span>{typeLabel}</span>
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="all">all</option>
+            <option value="all">{allLabel}</option>
             {typeOptions.map((type) => (
               <option key={type} value={type}>{type}</option>
             ))}
@@ -158,11 +196,11 @@ export function ProjectPage({ pieces }) {
         </label>
 
         <label className="archive-control">
-          <span>sort</span>
+          <span>{sortLabel}</span>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="newest">newest</option>
-            <option value="oldest">oldest</option>
-            <option value="title">title</option>
+            <option value="newest">{newestLabel}</option>
+            <option value="oldest">{oldestLabel}</option>
+            <option value="title">{titleLabel}</option>
           </select>
         </label>
       </section>
@@ -176,18 +214,18 @@ export function ProjectPage({ pieces }) {
           </section>
 
           <section className="archive-results-bar">
-            <span>showing {visiblePieces.length} of {filtered.length}</span>
+            <span>{resultsPrefix} {visiblePieces.length} of {filtered.length}</span>
             {hasMore ? (
               <button className="button button--primary" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
-                load more
+                {loadMoreLabel}
               </button>
             ) : null}
           </section>
         </>
       ) : (
         <section className="missing-state">
-          <h2>No matching pieces</h2>
-          <p>Try changing the search or filters.</p>
+          <h2>{noMatchesTitle}</h2>
+          <p>{noMatchesBody}</p>
         </section>
       )}
     </main>

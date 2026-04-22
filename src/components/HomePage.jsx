@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { splitDisplayTitle, buildTypeOptions } from '../lib/content'
 import { EditableText } from './EditableText'
-import { usePublicEdit } from './PublicEditContext'
-import { getConfiguredBlock } from '../lib/publicConfig'
+import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
+import { useResolvedConfig } from '../lib/useResolvedConfig'
 
 const PAGE_SIZE = 24
 
@@ -30,12 +30,27 @@ function PieceCard({ piece }) {
 }
 
 export function HomePage({ featured, latest, projectMap, allPieces }) {
-  const featuredDisplay = splitDisplayTitle(featured)
+  const featuredDisplay = splitDisplayTitle(featured?.piece)
   const [searchParams, setSearchParams] = useSearchParams()
-  const { effectiveConfig } = usePublicEdit()
+  const resolvedConfig = useResolvedConfig()
 
-  const featuredBlock = getConfiguredBlock(effectiveConfig, 'home.featured')
-  const archiveBlock = getConfiguredBlock(effectiveConfig, 'home.archive')
+  const featuredBlock = getConfiguredBlock(resolvedConfig, 'home.featured')
+  const projectsBlock = getConfiguredBlock(resolvedConfig, 'home.projects')
+  const archiveBlock = getConfiguredBlock(resolvedConfig, 'home.archive')
+  const filtersBlock = getConfiguredBlock(resolvedConfig, 'home.filters')
+
+  const searchLabel = getConfiguredText(resolvedConfig, filtersBlock?.searchLabelField || 'home.filters.searchLabel', 'search')
+  const searchPlaceholder = getConfiguredText(resolvedConfig, filtersBlock?.searchPlaceholderField || 'home.filters.searchPlaceholder', 'title, excerpt, tag...')
+  const typeLabel = getConfiguredText(resolvedConfig, filtersBlock?.typeLabelField || 'home.filters.typeLabel', 'type')
+  const projectLabel = getConfiguredText(resolvedConfig, filtersBlock?.projectLabelField || 'home.filters.projectLabel', 'project')
+  const allLabel = getConfiguredText(resolvedConfig, filtersBlock?.allLabelField || 'home.filters.allLabel', 'all')
+  const loadMoreLabel = getConfiguredText(resolvedConfig, filtersBlock?.loadMoreLabelField || 'home.filters.loadMoreLabel', 'load more')
+  const noMatchesTitle = getConfiguredText(resolvedConfig, filtersBlock?.noMatchesTitleField || 'home.filters.noMatchesTitle', 'No matching pieces')
+  const noMatchesBody = getConfiguredText(resolvedConfig, filtersBlock?.noMatchesBodyField || 'home.filters.noMatchesBody', 'Try changing the search or filters.')
+  const resultsPrefix = getConfiguredText(resolvedConfig, filtersBlock?.resultsPrefixField || 'home.filters.resultsPrefix', 'showing')
+  const readLabel = getConfiguredText(resolvedConfig, featuredBlock?.readLabelField || 'home.featured.readLabel', 'read')
+  const experienceLabel = getConfiguredText(resolvedConfig, featuredBlock?.experienceLabelField || 'home.featured.experienceLabel', 'experience')
+  const printLabel = getConfiguredText(resolvedConfig, featuredBlock?.printLabelField || 'home.featured.printLabel', 'print')
 
   const initialQuery = searchParams.get('q') || ''
   const initialType = searchParams.get('type') || 'all'
@@ -55,6 +70,7 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
       .filter((piece) => {
         if (typeFilter !== 'all' && piece.type !== typeFilter) return false
         if (projectFilter !== 'all' && piece.primaryProjectSlug !== projectFilter) return false
+
         if (!q) return true
 
         const haystack = [
@@ -91,51 +107,71 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
     <main className="page page-home">
       <section
         className="hero hero--featured"
-        style={featured?.heroImage ? {
-          backgroundImage: `linear-gradient(180deg, rgba(8,8,8,0.55), rgba(8,8,8,0.82)), url(${featured.heroImage})`,
+        style={featured?.piece?.heroImage ? {
+          backgroundImage: `linear-gradient(180deg, rgba(8,8,8,0.55), rgba(8,8,8,0.82)), url(${featured.piece.heroImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         } : undefined}
       >
         <div className="hero__content">
-          <EditableText as="div" className="hero__eyebrow" field={featuredBlock?.eyebrowField || 'home.featured.eyebrow'}>
+          <EditableText
+            as="div"
+            className="hero__eyebrow"
+            field={featuredBlock?.eyebrowField || 'home.featured.eyebrow'}
+          >
             Featured drop
           </EditableText>
 
-          <EditableText as="h1" field={featuredBlock?.titleField || 'home.featured.title'}>
+          <EditableText
+            as="h1"
+            field={featuredBlock?.titleField || 'home.featured.title'}
+          >
             {featuredDisplay.title || 'Sabot Media'}
           </EditableText>
 
           {featuredDisplay.subtitle ? (
-            <EditableText as="p" className="hero__subtitle" field={featuredBlock?.subtitleField || 'home.featured.subtitle'}>
+            <EditableText
+              as="p"
+              className="hero__subtitle"
+              field={featuredBlock?.subtitleField || 'home.featured.subtitle'}
+            >
               {featuredDisplay.subtitle}
             </EditableText>
           ) : null}
 
           <div className="hero__meta">
-            <span>{featured?.primaryProject}</span>
-            <span>{featured?.type}</span>
-            <span>{featured?.publishedDateLabel}</span>
+            <span>{featured?.piece?.primaryProject}</span>
+            <span>{featured?.piece?.type}</span>
+            <span>{featured?.piece?.publishedDateLabel}</span>
+            <span>{featured?.source === 'explicit' ? 'explicit feature' : featured?.source === 'fallback' ? 'fallback feature' : 'no feature'}</span>
           </div>
 
-          {featured?.excerpt ? (
-            <EditableText as="p" className="hero__excerpt" field={featuredBlock?.excerptField || 'home.featured.excerpt'}>
-              {featured.excerpt}
+          {featured?.piece?.excerpt ? (
+            <EditableText
+              as="p"
+              className="hero__excerpt"
+              field={featuredBlock?.excerptField || 'home.featured.excerpt'}
+            >
+              {featured.piece.excerpt}
             </EditableText>
           ) : null}
 
-          {featured ? (
+          {featured?.piece ? (
             <div className="hero__actions">
-              <Link className="button button--primary" to={`/piece/${featured.slug}`}>read</Link>
-              <Link className="button" to={`/piece/${featured.slug}?mode=experience`}>experience</Link>
-              <Link className="button" to={`/piece/${featured.slug}/print`}>print</Link>
+              <Link className="button button--primary" to={`/piece/${featured.piece.slug}`}>{readLabel}</Link>
+              <Link className="button" to={`/piece/${featured.piece.slug}?mode=experience`}>{experienceLabel}</Link>
+              <Link className="button" to={`/piece/${featured.piece.slug}/print`}>{printLabel}</Link>
             </div>
           ) : null}
         </div>
 
         <aside className="hero__rail">
           <div className="manifesto-card">
-            <EditableText as="div" className="manifesto-card__eyebrow" field="home.projects.eyebrow">
+            <EditableText
+              as="div"
+              className="manifesto-card__eyebrow"
+              field={projectsBlock?.eyebrowField || 'home.projects.eyebrow'}
+            >
               Projects
             </EditableText>
             <ul className="project-list">
@@ -163,19 +199,19 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
 
       <section className="archive-controls">
         <label className="archive-control">
-          <span>search</span>
+          <span>{searchLabel}</span>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="title, excerpt, tag..."
+            placeholder={searchPlaceholder}
           />
         </label>
 
         <label className="archive-control">
-          <span>type</span>
+          <span>{typeLabel}</span>
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="all">all</option>
+            <option value="all">{allLabel}</option>
             {typeOptions.map((type) => (
               <option key={type} value={type}>{type}</option>
             ))}
@@ -183,9 +219,9 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
         </label>
 
         <label className="archive-control">
-          <span>project</span>
+          <span>{projectLabel}</span>
           <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
-            <option value="all">all</option>
+            <option value="all">{allLabel}</option>
             {projectMap.map((project) => (
               <option key={project.slug} value={project.slug}>{project.name}</option>
             ))}
@@ -201,17 +237,17 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
 
       {filteredPieces.length ? (
         <section className="archive-results-bar">
-          <span>showing {visiblePieces.length} of {filteredPieces.length}</span>
+          <span>{resultsPrefix} {visiblePieces.length} of {filteredPieces.length}</span>
           {hasMore ? (
             <button className="button button--primary" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
-              load more
+              {loadMoreLabel}
             </button>
           ) : null}
         </section>
       ) : (
         <section className="missing-state">
-          <h2>No matching pieces</h2>
-          <p>Try changing the search or filters.</p>
+          <h2>{noMatchesTitle}</h2>
+          <p>{noMatchesBody}</p>
         </section>
       )}
     </main>

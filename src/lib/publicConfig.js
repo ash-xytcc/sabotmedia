@@ -1,11 +1,12 @@
 import { publicSiteDefaults } from '../content/publicSiteDefaults'
+import { mergePublicConfig as mergeSchemaConfigs, normalizePublicConfig } from './publicConfigSchema'
 
 const STORAGE_KEY = 'sabot-public-site-config-v1'
 
 export function getStoredPublicConfig() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : null
+    return raw ? normalizePublicConfig(JSON.parse(raw)) : null
   } catch {
     return null
   }
@@ -13,7 +14,7 @@ export function getStoredPublicConfig() {
 
 export function setStoredPublicConfig(config) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizePublicConfig(config)))
   } catch {
     // ignore
   }
@@ -28,24 +29,11 @@ export function clearStoredPublicConfig() {
 }
 
 export function mergePublicConfig(base, patch) {
-  return {
-    text: {
-      ...(base?.text || {}),
-      ...(patch?.text || {}),
-    },
-    styles: {
-      ...(base?.styles || {}),
-      ...(patch?.styles || {}),
-    },
-    blocks: {
-      ...(base?.blocks || {}),
-      ...(patch?.blocks || {}),
-    },
-  }
+  return mergeSchemaConfigs(base, patch)
 }
 
 export function resolvePublicConfig(runtimeConfig) {
-  return mergePublicConfig(publicSiteDefaults, runtimeConfig || getStoredPublicConfig() || {})
+  return mergeSchemaConfigs(publicSiteDefaults, runtimeConfig || getStoredPublicConfig() || {})
 }
 
 export function getConfiguredText(config, field, fallback = '') {
