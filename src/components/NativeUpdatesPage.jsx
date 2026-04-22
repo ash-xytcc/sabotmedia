@@ -4,6 +4,7 @@ import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { EditableText } from './EditableText'
 import { getConfiguredText } from '../lib/publicConfig'
 import { fetchNativeEntries } from '../lib/nativePublicContentApi'
+import { listSurfaceConfigs } from '../lib/publicSurfaceTargets'
 
 function NativeUpdateCard({ item }) {
   return (
@@ -68,6 +69,8 @@ export function NativeUpdatesPage() {
     [items]
   )
 
+  const surfaceNav = listSurfaceConfigs().filter((entry) => entry.key !== 'general')
+
   return (
     <main className="page native-updates-page">
       <section className="project-hero">
@@ -91,6 +94,9 @@ export function NativeUpdatesPage() {
         <>
         <section className="archive-results-bar">
           <Link className="button button--primary" to="/search">search everything</Link>
+          {surfaceNav.map((entry) => (
+            <Link className="button" key={entry.key} to={entry.route}>{entry.title}</Link>
+          ))}
         </section>
         <section className="piece-grid">
           {homeAndGeneral.map((item) => (

@@ -9,6 +9,7 @@ import {
   saveRevisionSnapshot,
 } from './_lib/nativePublicContent.js'
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
+import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 
 export async function onRequestOptions(context) {
   const permission = await resolvePublicSitePermission(context)
@@ -117,6 +118,13 @@ export async function onRequestDelete(context) {
     }
 
     const result = await deleteNativeEntry(context.env.BF_DB, id)
+    await writeAuditLog(context.env.BF_DB, {
+      action: 'native_content.delete',
+      entityType: 'native_content',
+      entityId: id,
+      actor: inferActorFromRequest(context.request),
+      detail: result,
+    })
 
     return json({
       ok: true,
@@ -165,6 +173,19 @@ async function handleWrite(context) {
 
     const saved = await upsertNativeEntry(context.env.BF_DB, item)
     await saveRevisionSnapshot(context.env.BF_DB, saved, revisionNote)
+    await writeAuditLog(context.env.BF_DB, {
+      action: 'native_content.upsert',
+      entityType: 'native_content',
+      entityId: saved.id,
+      actor: inferActorFromRequest(context.request),
+      detail: {
+        revisionNote,
+        status: saved.status,
+        workflowState: saved.workflowState,
+        target: saved.target,
+        slug: saved.slug,
+      },
+    })
 
     return json({
       ok: true,

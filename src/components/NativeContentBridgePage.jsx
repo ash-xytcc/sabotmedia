@@ -17,6 +17,7 @@ import { RichNativeEditor } from './RichNativeEditor'
 import { MediaAssetManagerCard } from './MediaAssetManagerCard'
 import { NativeSourceBridgeCard } from './NativeSourceBridgeCard'
 import { TranscriptBridgeCard } from './TranscriptBridgeCard'
+import { NativeTaxonomyBridgeCard } from './NativeTaxonomyBridgeCard'
 import { fetchNativeRevisions, restoreNativeRevision } from '../lib/nativePublicContentApi'
 
 function NativeEntryEditor({
@@ -470,6 +471,8 @@ export function NativeContentBridgePage() {
           <TranscriptBridgeCard draft={draft} setDraft={setDraft} />
 
           <NativeSourceBridgeCard nativeContentId={draft?.id || ''} />
+
+          <NativeTaxonomyBridgeCard nativeContentId={draft?.id || ''} />
 
           <section className="review-summary-grid">
             <article className="review-summary-card">

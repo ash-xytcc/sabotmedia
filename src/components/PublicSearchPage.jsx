@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { fetchNativeEntries } from '../lib/nativePublicContentApi'
 import { splitDisplayTitle } from '../lib/content'
+import { listSurfaceConfigs } from '../lib/publicSurfaceTargets'
 
 function makeNativeResult(item) {
   const haystack = [
@@ -89,6 +90,8 @@ export function PublicSearchPage({ pieces }) {
     setSearchParams(next, { replace: true })
   }, [q, kindFilter, setSearchParams])
 
+  const surfaceLinks = listSurfaceConfigs()
+
   const results = useMemo(() => {
     const query = q.trim().toLowerCase()
 
@@ -120,6 +123,12 @@ export function PublicSearchPage({ pieces }) {
           <span>{results.length} results</span>
           <span>native load: {state}</span>
         </div>
+      </section>
+
+      <section className="archive-results-bar">
+        {surfaceLinks.map((entry) => (
+          <Link className="button" key={entry.key} to={entry.route}>{entry.title}</Link>
+        ))}
       </section>
 
       <section className="archive-controls">
