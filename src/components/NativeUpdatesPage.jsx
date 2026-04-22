@@ -1,44 +1,55 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useResolvedConfig } from '../lib/useResolvedConfig'
-import { EditableText } from './EditableText'
-import { getConfiguredText } from '../lib/publicConfig'
 import { fetchNativeEntries } from '../lib/nativePublicContentApi'
-import { listSurfaceConfigs } from '../lib/publicSurfaceTargets'
+import { PublicationFooter } from './PublicationFooter'
 
-function NativeUpdateCard({ item }) {
+function formatDate(value) {
+  const d = new Date(value || '')
+  if (!Number.isFinite(d.getTime())) return ''
+  return d.toISOString().slice(0, 10)
+}
+
+function HeroFeature({ item }) {
   return (
-    <article className="piece-card">
-      <div className="piece-card__meta">
-        <span>{item.target}</span>
-        <span>{item.contentType}</span>
-      </div>
-      <h3>
-        <Link to={`/updates/${item.slug}`}>{item.title || item.slug}</Link>
-      </h3>
-      {item.excerpt ? <p>{item.excerpt}</p> : null}
-      <div className="piece-card__footer">
-        <span>{item.publishedAt || item.updatedAt}</span>
-      </div>
+    <article className="publication-hero-card">
+      <Link className="publication-hero-card__image-wrap" to={`/updates/${item.slug}`}>
+        <div className="publication-hero-card__image-fill" />
+        <div className="publication-hero-card__overlay">
+          <div className="publication-hero-card__meta">
+            <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
+            <span>{item.target}</span>
+            <span>{item.contentType}</span>
+          </div>
+          <h1>{item.title || item.slug}</h1>
+          {item.excerpt ? <p>{item.excerpt}</p> : null}
+        </div>
+      </Link>
+    </article>
+  )
+}
+
+function RecentCard({ item }) {
+  return (
+    <article className="publication-post-card">
+      <Link className="publication-post-card__link" to={`/updates/${item.slug}`}>
+        <div className="publication-post-card__image-fill" />
+        <div className="publication-post-card__overlay">
+          <div className="publication-post-card__meta">
+            <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
+            <span>{item.target}</span>
+          </div>
+          <h2>{item.title || item.slug}</h2>
+          {item.excerpt ? <p>{item.excerpt}</p> : null}
+        </div>
+      </Link>
     </article>
   )
 }
 
 export function NativeUpdatesPage() {
-  const resolvedConfig = useResolvedConfig()
   const [items, setItems] = useState([])
   const [state, setState] = useState('loading')
   const [error, setError] = useState('')
-
-  const eyebrow = getConfiguredText(resolvedConfig, 'nativeUpdates.eyebrow', 'native / updates / publishing')
-  const title = getConfiguredText(resolvedConfig, 'nativeUpdates.title', 'Updates')
-  const description = getConfiguredText(
-    resolvedConfig,
-    'nativeUpdates.description',
-    'Published native entries from inside Sabot. This is the first real public rendering lane for native content.'
-  )
-  const emptyTitle = getConfiguredText(resolvedConfig, 'nativeUpdates.emptyTitle', 'No published updates yet')
-  const emptyBody = getConfiguredText(resolvedConfig, 'nativeUpdates.emptyBody', 'Native publishing exists now, but nothing has been published to the public updates surface yet.')
 
   useEffect(() => {
     let cancelled = false
@@ -49,10 +60,17 @@ export function NativeUpdatesPage() {
         setError('')
         const data = await fetchNativeEntries({ status: 'published' })
         if (cancelled) return
-        setItems(Array.isArray(data?.items) ? data.items : [])
+
+        const all = Array.isArray(data?.items) ? data.items : []
+        const visible = all.filter((item) =>
+          ['general', 'home', 'press', 'projects'].includes(item.target)
+        )
+
+        setItems(visible)
         setState('loaded')
       } catch (err) {
         if (cancelled) return
+        setItems([])
         setError(String(err?.message || err))
         setState('error')
       }
@@ -64,52 +82,60 @@ export function NativeUpdatesPage() {
     }
   }, [])
 
-  const homeAndGeneral = useMemo(
-    () => items.filter((item) => item.target === 'general' || item.target === 'home' || item.target === 'press' || item.target === 'projects'),
-    [items]
-  )
-
-  const surfaceNav = listSurfaceConfigs().filter((entry) => entry.key !== 'general')
+  const featured = useMemo(() => items[0] || null, [items])
+  const recent = useMemo(() => items.slice(1, 7), [items])
 
   return (
-    <main className="page native-updates-page">
-      <section className="project-hero">
-        <EditableText as="div" className="project-hero__eyebrow" field="nativeUpdates.eyebrow">
-          {eyebrow}
-        </EditableText>
-        <EditableText as="h1" field="nativeUpdates.title">
-          {title}
-        </EditableText>
-        <EditableText as="p" className="project-hero__description" field="nativeUpdates.description">
-          {description}
-        </EditableText>
-        <div className="project-hero__meta">
-          <span>{homeAndGeneral.length} published native entries</span>
-          <span>status: {state}</span>
+    <main className="page publication-homepage">
+      <header className="publication-topbar">
+        <div className="publication-topbar__brand">
+          <Link to="/updates">Sabot Media</Link>
         </div>
-        {error ? <p className="review-card__excerpt">{error}</p> : null}
-      </section>
 
-      {homeAndGeneral.length ? (
+        <nav className="publication-topbar__nav">
+          <Link to="/updates">Home</Link>
+          <Link to="/search">Archive</Link>
+          <Link to="/press-updates">Press</Link>
+          <Link to="/project-updates">Projects</Link>
+        </nav>
+      </header>
+
+      {error ? (
+        <section className="missing-state">
+          <h1>Recent posts unavailable</h1>
+          <p>{error}</p>
+        </section>
+      ) : null}
+
+      {featured ? (
         <>
-        <section className="archive-results-bar">
-          <Link className="button button--primary" to="/search">search everything</Link>
-          {surfaceNav.map((entry) => (
-            <Link className="button" key={entry.key} to={entry.route}>{entry.title}</Link>
-          ))}
-        </section>
-        <section className="piece-grid">
-          {homeAndGeneral.map((item) => (
-            <NativeUpdateCard key={item.id} item={item} />
-          ))}
-        </section>
+          <HeroFeature item={featured} />
+
+          <section className="publication-recent-grid">
+            {recent.map((item) => (
+              <RecentCard key={item.id} item={item} />
+            ))}
+          </section>
+
+          <section className="publication-next-row">
+            <Link className="publication-next-link" to="/search">
+              Next →
+            </Link>
+          </section>
         </>
+      ) : state === 'loading' ? (
+        <section className="missing-state">
+          <h1>Loading recent posts</h1>
+          <p>Pulling together the latest published material.</p>
+        </section>
       ) : (
         <section className="missing-state">
-          <h2>{emptyTitle}</h2>
-          <p>{emptyBody}</p>
+          <h1>No published posts yet</h1>
+          <p>Publish a few native entries and this page will become the public front page.</p>
         </section>
       )}
+
+      <PublicationFooter />
     </main>
   )
 }
