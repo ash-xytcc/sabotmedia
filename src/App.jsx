@@ -107,7 +107,7 @@ export default function App() {
     <PublicEditProvider>
       <Layout>
         <Routes>
-          <Route path="/" element={<HomePage featured={featured} latest={latest} projectMap={projectMap} allPieces={pieces} />} />
+          <Route path="/" element={<NativeUpdatesPage />} />
           <Route path="/projects" element={<ProjectsIndexPage projectMap={projectMap} />} />
           <Route path="/projects/:slug" element={<ProjectPage pieces={pieces} />} />
           <Route path="/piece/:slug" element={<PiecePage pieces={pieces} />} />
