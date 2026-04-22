@@ -1,4 +1,4 @@
-import { normalizePublicConfig, PUBLIC_CONFIG_SCHEMA_VERSION } from '../../src/lib/publicConfigSchema.js'
+import { DEFAULT_PUBLIC_CONFIG, PUBLIC_CONFIG_SCHEMA_VERSION } from './publicConfigSchema.js'
 
 export async function ensurePublicSiteConfigTable(db) {
   await db.exec(`
