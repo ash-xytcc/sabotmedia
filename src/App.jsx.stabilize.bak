@@ -1,4 +1,4 @@
-import { Link, Route, Routes , Navigate } from 'react-router-dom'
+import { Link, Route, Routes } from 'react-router-dom'
 import { HomePage } from './components/HomePage'
 import { PiecePage } from './components/PiecePage'
 import { PrintPage } from './components/PrintPage'
