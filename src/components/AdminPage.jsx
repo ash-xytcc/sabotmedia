@@ -6,6 +6,7 @@ import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 import { getFeaturedPiece, buildProjectFeaturedMap, countFeaturedSources } from '../lib/projectFeatured'
 import { buildProjectMap } from '../lib/content'
 import { AdminPublicConfigCard } from './AdminPublicConfigCard'
+import { AdminWorkflowCard } from './AdminWorkflowCard'
 
 export function AdminPage({ pieces }) {
   const total = pieces.length
@@ -98,6 +99,8 @@ export function AdminPage({ pieces }) {
         </article>
       </section>
 
+      <AdminWorkflowCard />
+
       <AdminPublicConfigCard />
 
       <section className="admin-grid">
@@ -139,8 +142,15 @@ export function AdminPage({ pieces }) {
         <article className="admin-card">
           <div className="admin-card__eyebrow">native lane</div>
           <h2>Native publishing bridge</h2>
-          <p>Define the first native content objects inside Sabot so public publishing can move beyond imported archive rendering.</p>
+          <p>Define and compose native content with richer blocks, reusable media assets, and real public rendering instead of staying trapped in imported archive logic.</p>
           <Link className="button button--primary" to="/native-bridge">open bridge</Link>
+        </article>
+
+        <article className="admin-card">
+          <div className="admin-card__eyebrow">public lane</div>
+          <h2>Native updates surface</h2>
+          <p>Review the real public rendering lane for published native entries and verify that publishing now appears on a live route.</p>
+          <Link className="button button--primary" to="/updates">open updates</Link>
         </article>
       </section>
     </main>

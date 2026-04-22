@@ -1,9 +1,12 @@
 import {
   ensureNativePublicContentTable,
+  ensureNativeRevisionTable,
   listNativeEntries,
   getNativeEntry,
+  getExistingNativeEntry,
   upsertNativeEntry,
   deleteNativeEntry,
+  saveRevisionSnapshot,
 } from './_lib/nativePublicContent.js'
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 
@@ -21,11 +24,14 @@ export async function onRequestOptions(context) {
 
 export async function onRequestGet(context) {
   try {
+    const permission = await resolvePublicSitePermission(context)
     const url = new URL(context.request.url)
     const id = url.searchParams.get('id') || ''
     const slug = url.searchParams.get('slug') || ''
     const status = url.searchParams.get('status') || ''
     const target = url.searchParams.get('target') || ''
+    const workflowState = url.searchParams.get('workflowState') || ''
+    const includeFuture = permission.canEdit || url.searchParams.get('includeFuture') === '1'
 
     if (!hasDb(context)) {
       return json({
@@ -36,9 +42,10 @@ export async function onRequestGet(context) {
     }
 
     await ensureNativePublicContentTable(context.env.BF_DB)
+    await ensureNativeRevisionTable(context.env.BF_DB)
 
     if (id || slug) {
-      const item = await getNativeEntry(context.env.BF_DB, id || slug)
+      const item = await getNativeEntry(context.env.BF_DB, id || slug, { includeFuture })
       return json({
         ok: true,
         mode: 'd1',
@@ -49,6 +56,8 @@ export async function onRequestGet(context) {
     const items = await listNativeEntries(context.env.BF_DB, {
       status: status || undefined,
       target: target || undefined,
+      workflowState: workflowState || undefined,
+      includeFuture,
     })
 
     return json({
@@ -102,6 +111,11 @@ export async function onRequestDelete(context) {
       })
     }
 
+    const existing = await getExistingNativeEntry(context.env.BF_DB, id)
+    if (existing) {
+      await saveRevisionSnapshot(context.env.BF_DB, existing, 'delete:before')
+    }
+
     const result = await deleteNativeEntry(context.env.BF_DB, id)
 
     return json({
@@ -131,6 +145,7 @@ async function handleWrite(context) {
 
     const body = await context.request.json()
     const item = body?.item || body || {}
+    const revisionNote = String(body?.revisionNote || item?.revisionNote || 'save')
 
     if (!hasDb(context)) {
       return json({
@@ -140,7 +155,16 @@ async function handleWrite(context) {
       })
     }
 
+    await ensureNativePublicContentTable(context.env.BF_DB)
+    await ensureNativeRevisionTable(context.env.BF_DB)
+
+    const existing = item?.id ? await getExistingNativeEntry(context.env.BF_DB, item.id) : null
+    if (existing) {
+      await saveRevisionSnapshot(context.env.BF_DB, existing, `before:${revisionNote}`)
+    }
+
     const saved = await upsertNativeEntry(context.env.BF_DB, item)
+    await saveRevisionSnapshot(context.env.BF_DB, saved, revisionNote)
 
     return json({
       ok: true,

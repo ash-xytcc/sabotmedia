@@ -12,6 +12,12 @@ import {
   slugify,
   getLatestPublishedNativeEntry,
 } from '../lib/nativePublicContent'
+import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
+import { RichNativeEditor } from './RichNativeEditor'
+import { MediaAssetManagerCard } from './MediaAssetManagerCard'
+import { NativeSourceBridgeCard } from './NativeSourceBridgeCard'
+import { TranscriptBridgeCard } from './TranscriptBridgeCard'
+import { fetchNativeRevisions, restoreNativeRevision } from '../lib/nativePublicContentApi'
 
 function NativeEntryEditor({
   value,
@@ -63,6 +69,19 @@ function NativeEntryEditor({
         </label>
 
         <label className="archive-control">
+          <span>workflow state</span>
+          <select value={value.workflowState || 'draft'} onChange={(e) => onChange({ ...value, workflowState: e.target.value })}>
+            <option value="draft">draft</option>
+            <option value="in_review">in_review</option>
+            <option value="needs_revision">needs_revision</option>
+            <option value="ready">ready</option>
+            <option value="scheduled">scheduled</option>
+            <option value="published">published</option>
+            <option value="archived">archived</option>
+          </select>
+        </label>
+
+        <label className="archive-control">
           <span>{targetLabel}</span>
           <select value={value.target} onChange={(e) => onChange({ ...value, target: e.target.value })}>
             <option value="general">general</option>
@@ -79,6 +98,15 @@ function NativeEntryEditor({
             value={value.author}
             onChange={(e) => onChange({ ...value, author: e.target.value })}
             placeholder="author"
+          />
+        </label>
+
+        <label className="archive-control">
+          <span>scheduled for</span>
+          <input
+            type="datetime-local"
+            value={toLocalDateTime(value.scheduledFor)}
+            onChange={(e) => onChange({ ...value, scheduledFor: fromLocalDateTime(e.target.value) })}
           />
         </label>
       </div>
@@ -107,14 +135,20 @@ function NativeEntryEditor({
       </label>
 
       <label className="archive-control">
-        <span>body</span>
+        <span>body summary</span>
         <textarea
-          className="native-content-editor__textarea"
+          className="native-content-editor__textarea native-content-editor__textarea--sm"
           value={value.body}
           onChange={(e) => onChange({ ...value, body: e.target.value })}
-          placeholder="body"
+          placeholder="plain text fallback body"
         />
       </label>
+
+      <RichNativeEditor
+        value={value.richBody || []}
+        onChange={(next) => onChange({ ...value, richBody: next })}
+        mediaAssetsSlot={({ onPick }) => <MediaAssetManagerCard onPick={onPick} />}
+      />
     </section>
   )
 }
@@ -126,11 +160,36 @@ function NativeEntryCard({ entry, isActive, onSelect }) {
       className={`native-entry-card${isActive ? ' native-entry-card--active' : ''}`}
       onClick={onSelect}
     >
-      <span className="native-entry-card__meta">{entry.contentType} / {entry.status} / {entry.target}</span>
+      <span className="native-entry-card__meta">{entry.contentType} / {entry.status} / {entry.workflowState} / {entry.target}</span>
       <strong>{entry.title || 'untitled'}</strong>
       <span className="native-entry-card__slug">{entry.slug || 'no-slug'}</span>
       <span className="native-entry-card__date">{entry.updatedAt}</span>
     </button>
+  )
+}
+
+function RevisionList({ revisions, onRestore, state }) {
+  return (
+    <section className="review-summary-card">
+      <div className="review-summary-card__eyebrow">revisions</div>
+      <p className="review-card__excerpt">status: {state}</p>
+      <div className="native-revision-list">
+        {revisions.map((rev) => (
+          <article className="native-revision-item" key={rev.id}>
+            <div className="native-revision-item__meta">
+              <strong>{rev.revisionNote}</strong>
+              <span>{rev.createdAt}</span>
+            </div>
+            <div className="review-card__actions">
+              <button className="button button--primary" type="button" onClick={() => onRestore(rev.id)}>
+                restore
+              </button>
+            </div>
+          </article>
+        ))}
+        {!revisions.length ? <p className="review-card__excerpt">No revisions yet.</p> : null}
+      </div>
+    </section>
   )
 }
 
@@ -166,12 +225,28 @@ export function NativeContentBridgePage() {
   const [importText, setImportText] = useState('')
   const [copied, setCopied] = useState(false)
   const [importStatus, setImportStatus] = useState('')
+  const [permissionState, setPermissionState] = useState('loading')
+  const [canEdit, setCanEdit] = useState(false)
+  const [revisionState, setRevisionState] = useState('idle')
+  const [revisions, setRevisions] = useState([])
 
   useEffect(() => {
     let cancelled = false
 
     async function boot() {
-      const loaded = await loadNativeCollection()
+      try {
+        const perms = await getEditorPermissionsSnapshot()
+        if (cancelled) return
+        setCanEdit(Boolean(perms?.nativeContent?.canEdit))
+        setPermissionState('loaded')
+      } catch {
+        if (!cancelled) {
+          setCanEdit(false)
+          setPermissionState('error')
+        }
+      }
+
+      const loaded = await loadNativeCollection({ includeFuture: 1 })
       if (cancelled) return
       setItems(loaded)
       if (loaded.length) {
@@ -185,6 +260,34 @@ export function NativeContentBridgePage() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadRevisions() {
+      if (!draft?.id || !canEdit) {
+        setRevisions([])
+        return
+      }
+
+      try {
+        setRevisionState('loading')
+        const data = await fetchNativeRevisions({ nativeId: draft.id })
+        if (cancelled) return
+        setRevisions(Array.isArray(data?.items) ? data.items : [])
+        setRevisionState('loaded')
+      } catch {
+        if (cancelled) return
+        setRevisions([])
+        setRevisionState('error')
+      }
+    }
+
+    loadRevisions()
+    return () => {
+      cancelled = true
+    }
+  }, [draft?.id, canEdit])
 
   const latestHome = useMemo(() => getLatestPublishedNativeEntry(items, 'home'), [items])
   const latestGeneral = useMemo(() => getLatestPublishedNativeEntry(items, 'general'), [items])
@@ -200,8 +303,8 @@ export function NativeContentBridgePage() {
     setDraft(fresh)
   }
 
-  async function handleSave() {
-    const next = await upsertNativeEntry(items, draft)
+  async function handleSave(note = 'save') {
+    const next = await upsertNativeEntry(items, draft, note)
     setItems(next)
     const saved = next.find((item) => item.id === draft.id) || next[0]
     if (saved) {
@@ -233,7 +336,9 @@ export function NativeContentBridgePage() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       publishedAt: '',
+      scheduledFor: '',
       status: 'draft',
+      workflowState: 'draft',
     }
     setActiveId(copy.id)
     setDraft(copy)
@@ -264,6 +369,20 @@ export function NativeContentBridgePage() {
     }
   }
 
+  async function handleRestoreRevision(revisionId) {
+    try {
+      const data = await restoreNativeRevision(revisionId)
+      const restored = data?.item
+      if (!restored) return
+      const refreshed = await loadNativeCollection({ includeFuture: 1 })
+      setItems(refreshed)
+      setActiveId(restored.id)
+      setDraft(restored)
+    } catch {
+      // ignore visible error path for now
+    }
+  }
+
   return (
     <main className="page native-bridge-page">
       <section className="project-hero">
@@ -280,6 +399,7 @@ export function NativeContentBridgePage() {
           <span>{items.length} {collectionLabel}</span>
           <span>{latestHome ? `${latestHomeLabel}: ${latestHome.title || latestHome.slug}` : `${latestHomeLabel}: none`}</span>
           <span>{latestGeneral ? `${latestGeneralLabel}: ${latestGeneral.title || latestGeneral.slug}` : `${latestGeneralLabel}: none`}</span>
+          <span>permission: {permissionState === 'loaded' ? (canEdit ? 'can edit' : 'read only') : permissionState}</span>
         </div>
       </section>
 
@@ -318,16 +438,24 @@ export function NativeContentBridgePage() {
           </label>
 
           <div className="review-card__actions">
-            <button className="button" type="button" onClick={handleImport}>{importLabel}</button>
+            <button className="button" type="button" onClick={handleImport} disabled={!canEdit}>{importLabel}</button>
           </div>
           {importStatus ? <p className="review-card__excerpt">{importStatus}</p> : null}
+
+          <RevisionList revisions={revisions} onRestore={handleRestoreRevision} state={revisionState} />
         </aside>
 
         <section className="native-bridge-main">
           <div className="review-card__actions">
-            <button className="button button--primary" type="button" onClick={handleSave}>{saveEntryLabel}</button>
+            <button className="button button--primary" type="button" onClick={() => handleSave('save')} disabled={!canEdit}>{saveEntryLabel}</button>
             <button className="button" type="button" onClick={handleDuplicate}>{duplicateEntryLabel}</button>
-            <button className="button" type="button" onClick={handleDelete}>{deleteEntryLabel}</button>
+            <button className="button" type="button" onClick={handleDelete} disabled={!canEdit}>{deleteEntryLabel}</button>
+            <button className="button" type="button" onClick={() => setDraft((d) => ({ ...d, status: 'published', workflowState: d.scheduledFor ? 'scheduled' : 'published' }))}>
+              mark publish-ready
+            </button>
+            <button className="button" type="button" onClick={() => setDraft((d) => ({ ...d, status: 'archived', workflowState: 'archived' }))}>
+              archive draft
+            </button>
           </div>
 
           <NativeEntryEditor
@@ -339,6 +467,10 @@ export function NativeContentBridgePage() {
             tagsLabel={tagsLabel}
           />
 
+          <TranscriptBridgeCard draft={draft} setDraft={setDraft} />
+
+          <NativeSourceBridgeCard nativeContentId={draft?.id || ''} />
+
           <section className="review-summary-grid">
             <article className="review-summary-card">
               <div className="review-summary-card__eyebrow">{previewLabel}</div>
@@ -347,7 +479,9 @@ export function NativeContentBridgePage() {
                 <li><span>slug</span><strong>{draft.slug || 'no-slug'}</strong></li>
                 <li><span>type</span><strong>{draft.contentType}</strong></li>
                 <li><span>status</span><strong>{draft.status}</strong></li>
+                <li><span>workflow</span><strong>{draft.workflowState || 'draft'}</strong></li>
                 <li><span>target</span><strong>{draft.target}</strong></li>
+                <li><span>scheduled</span><strong>{draft.scheduledFor || 'none'}</strong></li>
               </ul>
             </article>
 
@@ -360,4 +494,20 @@ export function NativeContentBridgePage() {
       </section>
     </main>
   )
+}
+
+function toLocalDateTime(value) {
+  const str = String(value || '').trim()
+  if (!str) return ''
+  const d = new Date(str)
+  if (!Number.isFinite(d.getTime())) return ''
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function fromLocalDateTime(value) {
+  const str = String(value || '').trim()
+  if (!str) return ''
+  const d = new Date(str)
+  return Number.isFinite(d.getTime()) ? d.toISOString() : ''
 }

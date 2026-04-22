@@ -9,6 +9,9 @@ import { AdminPage } from './components/AdminPage'
 import { OverridesPage } from './components/OverridesPage'
 import { PodcastAdminPage } from './components/PodcastAdminPage'
 import { NativeContentBridgePage } from './components/NativeContentBridgePage'
+import { NativeUpdatesPage } from './components/NativeUpdatesPage'
+import { NativeUpdateDetailPage } from './components/NativeUpdateDetailPage'
+import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PublicEditProvider, usePublicEdit } from './components/PublicEditContext'
 import { PublicEditPanel } from './components/PublicEditPanel'
@@ -114,6 +117,9 @@ export default function App() {
           <Route path="/overrides" element={<OverridesPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
         <Route path="/native-bridge" element={<NativeContentBridgePage />} />
+        <Route path="/updates" element={<NativeUpdatesPage />} />
+        <Route path="/updates/:slug" element={<NativeUpdateDetailPage />} />
+        <Route path="/search" element={<PublicSearchPage pieces={pieces} />} />
           <Route path="/draft" element={<PublicDraftPage />} />
         </Routes>
       </Layout>
