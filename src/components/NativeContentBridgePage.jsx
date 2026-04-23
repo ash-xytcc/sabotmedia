@@ -388,6 +388,7 @@ export function NativeContentBridgePage() {
   const [permissionState, setPermissionState] = useState('loading')
   const [canEdit, setCanEdit] = useState(false)
   const [revisionState, setRevisionState] = useState('idle')
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [revisions, setRevisions] = useState([])
 
   useEffect(() => {
@@ -409,6 +410,17 @@ export function NativeContentBridgePage() {
       const loaded = await loadNativeCollection({ includeFuture: 1 })
       if (cancelled) return
       setItems(loaded)
+
+      const requestedEditId = searchParams.get('edit')
+      if (requestedEditId) {
+        const found = loaded.find((item) => item.id === requestedEditId)
+        if (found) {
+          setActiveId(found.id)
+          setDraft(found)
+          setCreationKind(inferCreationKind(found))
+          return
+        }
+      }
 
       const requestedKind = searchParams.get('new')
       if (requestedKind && CREATION_MODES[requestedKind]) {
@@ -673,29 +685,19 @@ export function NativeContentBridgePage() {
         </aside>
 
         <section className="native-bridge-main">
-          <div className="review-card__actions">
+          <div className="review-card__actions native-editor-primary-actions">
             <button className="button button--primary" type="button" onClick={() => handleSave(`save ${creationKind}`)} disabled={!canEdit}>
               {saveEntryLabel}
             </button>
-            <button className="button" type="button" onClick={handleDuplicate}>
-              {duplicateEntryLabel}
-            </button>
-            <button className="button" type="button" onClick={handleDelete} disabled={!canEdit}>
-              {deleteEntryLabel}
-            </button>
             <button
-              className="button"
+              className="button button--primary"
               type="button"
               onClick={() => setDraft((d) => ({ ...d, status: 'published', workflowState: d.scheduledFor ? 'scheduled' : 'published' }))}
             >
-              mark publish-ready
+              Publish / mark ready
             </button>
-            <button
-              className="button"
-              type="button"
-              onClick={() => setDraft((d) => ({ ...d, status: 'archived', workflowState: 'archived' }))}
-            >
-              archive draft
+            <button className="button" type="button" onClick={() => setShowAdvanced((value) => !value)}>
+              {showAdvanced ? 'Hide advanced' : 'Show advanced'}
             </button>
           </div>
 
@@ -707,30 +709,56 @@ export function NativeContentBridgePage() {
             tagsLabel={tagsLabel}
           />
 
-          {creationKind === 'podcast' ? <TranscriptBridgeCard draft={draft} setDraft={setDraft} /> : null}
+          {showAdvanced ? (
+            <section className="native-editor-advanced">
+              <div className="native-editor-advanced__header">
+                <div>
+                  <div className="review-summary-card__eyebrow">advanced</div>
+                  <h2>Workflow, bridges, and raw shape</h2>
+                </div>
+                <div className="review-card__actions">
+                  <button className="button" type="button" onClick={handleDuplicate}>
+                    {duplicateEntryLabel}
+                  </button>
+                  <button className="button" type="button" onClick={handleDelete} disabled={!canEdit}>
+                    {deleteEntryLabel}
+                  </button>
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => setDraft((d) => ({ ...d, status: 'archived', workflowState: 'archived' }))}
+                  >
+                    archive draft
+                  </button>
+                </div>
+              </div>
 
-          <NativeSourceBridgeCard nativeContentId={draft?.id || ''} />
-          <NativeTaxonomyBridgeCard nativeContentId={draft?.id || ''} />
+              {creationKind === 'podcast' ? <TranscriptBridgeCard draft={draft} setDraft={setDraft} /> : null}
 
-          <section className="review-summary-grid">
-            <article className="review-summary-card">
-              <div className="review-summary-card__eyebrow">{previewLabel}</div>
-              <ul>
-                <li><span>title</span><strong>{draft.title || 'untitled'}</strong></li>
-                <li><span>slug</span><strong>{draft.slug || 'no-slug'}</strong></li>
-                <li><span>type</span><strong>{draft.contentType}</strong></li>
-                <li><span>status</span><strong>{draft.status}</strong></li>
-                <li><span>workflow</span><strong>{draft.workflowState || 'draft'}</strong></li>
-                <li><span>target</span><strong>{draft.target}</strong></li>
-                <li><span>scheduled</span><strong>{draft.scheduledFor || 'none'}</strong></li>
-              </ul>
-            </article>
+              <NativeSourceBridgeCard nativeContentId={draft?.id || ''} />
+              <NativeTaxonomyBridgeCard nativeContentId={draft?.id || ''} />
 
-            <article className="review-summary-card">
-              <div className="review-summary-card__eyebrow">shape</div>
-              <pre className="review-card__snippet">{JSON.stringify(draft, null, 2)}</pre>
-            </article>
-          </section>
+              <section className="review-summary-grid">
+                <article className="review-summary-card">
+                  <div className="review-summary-card__eyebrow">{previewLabel}</div>
+                  <ul>
+                    <li><span>title</span><strong>{draft.title || 'untitled'}</strong></li>
+                    <li><span>slug</span><strong>{draft.slug || 'no-slug'}</strong></li>
+                    <li><span>type</span><strong>{draft.contentType}</strong></li>
+                    <li><span>status</span><strong>{draft.status}</strong></li>
+                    <li><span>workflow</span><strong>{draft.workflowState || 'draft'}</strong></li>
+                    <li><span>target</span><strong>{draft.target}</strong></li>
+                    <li><span>scheduled</span><strong>{draft.scheduledFor || 'none'}</strong></li>
+                  </ul>
+                </article>
+
+                <article className="review-summary-card">
+                  <div className="review-summary-card__eyebrow">raw shape</div>
+                  <pre className="review-card__snippet">{JSON.stringify(draft, null, 2)}</pre>
+                </article>
+              </section>
+            </section>
+          ) : null}
         </section>
       </section>
     </main>

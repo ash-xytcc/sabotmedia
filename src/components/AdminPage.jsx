@@ -91,7 +91,7 @@ export function AdminPage({ pieces = [] }) {
           <h2>Content Workflow</h2>
           <p>Work on drafts, review items, and publishing-ready content from one place.</p>
           <div className="creator-panel-card__actions">
-            <Link className="button button--primary" to="/native-bridge?new=article">Open content editor</Link>
+            <Link className="button button--primary" to="/content">Open content queue</Link>
             <Link className="button" to="/review">Review queue</Link>
           </div>
         </article>
@@ -133,7 +133,7 @@ export function AdminPage({ pieces = [] }) {
           <div className="creator-panel-secondary__links">
             <Link to="/review">Review queue</Link>
             <Link to="/podcasts">Podcast workspace</Link>
-            <Link to="/native-bridge?new=article">Native content editor</Link>
+            <Link to="/content">Content queue</Link>
             <Link to="/draft">Site draft</Link>
             <Link to="/overrides">Overrides</Link>
             <Link to="/system-backup">Backup</Link>

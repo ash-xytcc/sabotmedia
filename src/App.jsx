@@ -6,6 +6,7 @@ import { ProjectPage } from './components/ProjectPage'
 import { ProjectsIndexPage } from './components/ProjectsIndexPage'
 import { ReviewQueuePage } from './components/ReviewQueuePage'
 import { AdminPage } from './components/AdminPage'
+import { ContentListPage } from './components/ContentListPage'
 import { OverridesPage } from './components/OverridesPage'
 import { PodcastAdminPage } from './components/PodcastAdminPage'
 import { NativeContentBridgePage } from './components/NativeContentBridgePage'
@@ -116,6 +117,7 @@ export default function App() {
           <Route path="/piece/:slug/print" element={<PrintPage pieces={pieces} />} />
           <Route path="/review" element={<ReviewQueuePage pieces={pieces} />} />
           <Route path="/admin" element={<AdminPage pieces={pieces} />} />
+          <Route path="/content" element={<ContentListPage />} />
           <Route path="/overrides" element={<OverridesPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
         <Route path="/native-bridge" element={<NativeContentBridgePage />} />
