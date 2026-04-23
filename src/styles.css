@@ -5785,3 +5785,256 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
     flex-direction: column;
   }
 }
+
+
+/* WRITING_FIRST_NATIVE_EDITOR */
+
+/* Make the editor page read like a CMS writing surface, not a database schema. */
+.native-bridge-page {
+  max-width: 1360px;
+  padding: 0;
+}
+
+.native-bridge-layout {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1.5rem 2.5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* The old left rail becomes an advanced drawer instead of dead weight. */
+.native-bridge-sidebar {
+  display: none;
+}
+
+.native-bridge-sidebar--open {
+  display: grid;
+  gap: 1rem;
+  order: 2;
+  padding-top: 1rem;
+  border-top: 1px solid var(--sabot-border);
+}
+
+.native-bridge-main {
+  min-width: 0;
+}
+
+/* Primary actions stay available, but stop consuming half the page like a throne. */
+.native-editor-primary-actions {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0;
+  padding: 0;
+  margin: 0 0 0.75rem;
+  background: rgba(0, 0, 0, 0.92);
+  border: 1px solid rgba(211, 166, 44, 0.28);
+  backdrop-filter: blur(8px);
+}
+
+.native-editor-primary-actions .button {
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 0;
+}
+
+/* Turn the native editor into a document-first surface. */
+.native-content-editor {
+  border: 1px solid var(--sabot-border);
+  background:
+    radial-gradient(circle at top left, rgba(219, 200, 170, 0.045), transparent 38%),
+    rgba(12, 12, 12, 0.96);
+  box-shadow: var(--sabot-shadow-2);
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+.native-content-editor__type-header {
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(211, 166, 44, 0.22);
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Calm the red down. Red is for emphasis, not every label screaming at once. */
+.native-content-editor__eyebrow,
+.native-bridge-wizard__eyebrow,
+.review-summary-card__eyebrow,
+.archive-control span {
+  color: var(--sabot-gold) !important;
+}
+
+.native-content-editor__type-header h2 {
+  font-size: clamp(1.7rem, 3vw, 2.7rem);
+  line-height: 0.95;
+}
+
+/* Simple grid: title/slug first, secondary fields less aggressive. */
+.native-content-editor__grid--simple {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.7fr);
+  gap: 0.9rem;
+}
+
+.native-content-editor__grid--simple .archive-control:first-child {
+  grid-column: 1 / -1;
+}
+
+.native-content-editor__grid--simple .archive-control:first-child input {
+  min-height: 4.1rem;
+  font-size: clamp(1.7rem, 3vw, 2.9rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Non-essential simple fields recede instead of competing with writing. */
+.native-content-editor__grid--simple .archive-control:nth-child(n+3) {
+  opacity: 0.72;
+}
+
+.native-content-editor__grid--simple .archive-control:nth-child(n+3):focus-within {
+  opacity: 1;
+}
+
+/* Excerpt/body fields should feel like editorial fields. */
+.native-content-editor > .archive-control textarea {
+  min-height: 120px;
+}
+
+/* Rich editor becomes the writing surface. */
+.rich-native-editor {
+  margin-top: 1.25rem;
+  border: 1px solid rgba(219, 200, 170, 0.18);
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.rich-native-editor__toolbar {
+  position: sticky;
+  top: 3.8rem;
+  z-index: 15;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(219, 200, 170, 0.18);
+  background: rgba(8, 8, 8, 0.94);
+  backdrop-filter: blur(8px);
+}
+
+.rich-native-editor__toolbar .button {
+  min-height: 2.55rem;
+  border-radius: 0;
+}
+
+.rich-native-editor__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.rich-native-editor__blocks {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/* The writing block now feels like a page, not another little form row. */
+.rich-native-block {
+  border: 1px solid rgba(219, 200, 170, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012)),
+    rgba(20, 20, 20, 0.98);
+  padding: clamp(1rem, 2vw, 1.4rem);
+}
+
+.rich-native-block__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.78;
+}
+
+.rich-native-block__meta strong {
+  color: var(--sabot-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+.rich-native-block textarea.native-content-editor__textarea {
+  min-height: 260px;
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.26);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+/* Sidebar becomes grouped support settings, not a wall of shouting controls. */
+.rich-native-editor__sidebar {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.rich-native-editor__sidebar .review-summary-card,
+.rich-native-editor__sidebar .media-asset-manager-card {
+  border-color: rgba(219, 200, 170, 0.16);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.rich-native-editor__plain-preview {
+  display: none;
+}
+
+/* Advanced remains available but visibly subordinate. */
+.native-editor-advanced {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 1px solid rgba(219, 200, 170, 0.18);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.native-editor-advanced__header {
+  border-bottom: 1px solid rgba(219, 200, 170, 0.16);
+  padding-bottom: 0.75rem;
+}
+
+/* Content-type distinction without inventing a new app every time. */
+.native-content-editor__podcast {
+  border: 1px solid rgba(211, 166, 44, 0.22);
+  background: rgba(211, 166, 44, 0.045);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.native-bridge-page:has(.native-content-editor__podcast) .rich-native-block textarea.native-content-editor__textarea {
+  min-height: 180px;
+}
+
+/* Mobile: one column, because human thumbs exist despite our objections. */
+@media (max-width: 980px) {
+  .native-content-editor__grid--simple,
+  .rich-native-editor__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rich-native-editor__toolbar {
+    top: 0;
+  }
+
+  .native-editor-primary-actions {
+    position: static;
+    flex-wrap: wrap;
+  }
+
+  .native-editor-primary-actions .button {
+    border: 1px solid rgba(211, 166, 44, 0.28);
+  }
+}

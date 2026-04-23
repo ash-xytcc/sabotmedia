@@ -131,7 +131,7 @@ function NativeEntryEditor({
         <TypeSwitch creationKind={creationKind} onPick={onPickCreationKind} />
       </div>
 
-      <div className="native-content-editor__grid">
+      <div className="native-content-editor__grid native-content-editor__grid--simple">
         <label className="archive-control">
           <span>title</span>
           <input
@@ -636,8 +636,8 @@ export function NativeContentBridgePage() {
         </div>
       </section>
 
-      <section className="native-bridge-layout">
-        <aside className="native-bridge-sidebar">
+      <section className={`native-bridge-layout${showAdvanced ? " native-bridge-layout--advanced" : ""}`}>
+        <aside className={`native-bridge-sidebar${showAdvanced ? " native-bridge-sidebar--open" : ""}`}>
           <div className="review-card__actions">
             <button className="button button--primary" type="button" onClick={() => handleNew(creationKind)}>
               {newEntryLabel}
@@ -681,7 +681,7 @@ export function NativeContentBridgePage() {
           </div>
           {importStatus ? <p className="review-card__excerpt">{importStatus}</p> : null}
 
-          <RevisionList revisions={revisions} onRestore={handleRestoreRevision} state={revisionState} />
+          {showAdvanced && revisions.length ? <RevisionList revisions={revisions} onRestore={handleRestoreRevision} state={revisionState} /> : null}
         </aside>
 
         <section className="native-bridge-main">

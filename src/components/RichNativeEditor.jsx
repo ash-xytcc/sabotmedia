@@ -50,7 +50,7 @@ export function RichNativeEditor({ value, onChange, mediaAssetsSlot }) {
 
   return (
     <section className="rich-native-editor">
-      <div className="rich-native-editor__toolbar">
+      <div className="rich-native-editor__toolbar" aria-label="block insertion tools">
         <button className="button" type="button" onClick={() => addBlock('paragraph')}>+ paragraph</button>
         <button className="button" type="button" onClick={() => addBlock('heading')}>+ heading</button>
         <button className="button" type="button" onClick={() => addBlock('quote')}>+ quote</button>
@@ -115,7 +115,7 @@ export function RichNativeEditor({ value, onChange, mediaAssetsSlot }) {
         <div className="rich-native-editor__sidebar">
           {mediaAssetsSlot ? mediaAssetsSlot({ onPick: insertAsset }) : null}
 
-          <section className="review-summary-card">
+          <section className="review-summary-card rich-native-editor__plain-preview">
             <div className="review-summary-card__eyebrow">plain text preview</div>
             <pre className="review-card__snippet">{serializeRichDocToPlainText(doc)}</pre>
           </section>
