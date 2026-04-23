@@ -3714,3 +3714,121 @@ body:has(.print-page) .site-footer {
   max-width: 1360px;
   padding: 0;
 }
+
+
+/* CREATOR_PANEL_SIMPLIFY_PASS */
+
+.admin-page--creator {
+  max-width: 1180px;
+  padding: 2rem 1rem 3rem;
+}
+
+.admin-page--creator .project-hero__description {
+  max-width: 54rem;
+}
+
+.creator-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.creator-panel-card {
+  border: 1px solid var(--sabot-line, var(--panel-border));
+  background: var(--sabot-surface, rgba(13,13,13,0.95));
+  color: var(--sabot-text, inherit);
+  box-shadow: var(--sabot-shadow, var(--shadow));
+  padding: 1.15rem;
+  min-height: 15rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.creator-panel-card--primary {
+  background:
+    linear-gradient(135deg, rgba(216,195,165,0.08), rgba(157,78,221,0.05)),
+    var(--sabot-surface, rgba(13,13,13,0.95));
+}
+
+.creator-panel-card__eyebrow,
+.creator-panel-secondary__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.78rem;
+  color: var(--sabot-dim, var(--text-dim));
+  margin-bottom: 0.6rem;
+}
+
+.creator-panel-card h2 {
+  margin: 0 0 0.65rem;
+  line-height: 1;
+  font-size: clamp(1.5rem, 2vw, 2.1rem);
+}
+
+.creator-panel-card p {
+  margin: 0;
+  max-width: 32rem;
+  line-height: 1.45;
+  color: var(--sabot-muted, inherit);
+}
+
+.creator-panel-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.15rem;
+}
+
+.creator-panel-secondary {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.creator-panel-secondary__card {
+  border: 1px solid var(--sabot-line, var(--panel-border));
+  background: var(--sabot-surface, rgba(13,13,13,0.95));
+  box-shadow: var(--sabot-shadow, var(--shadow));
+  padding: 1rem;
+}
+
+.creator-panel-secondary__links {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.creator-panel-secondary__links a {
+  color: var(--sabot-muted, inherit);
+  text-decoration: none;
+}
+
+.creator-panel-secondary__links a:hover,
+.creator-panel-secondary__links a:focus-visible {
+  color: var(--sabot-text, inherit);
+  text-decoration: underline;
+}
+
+.creator-panel-secondary .admin-public-config-card {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.creator-panel-secondary .admin-public-config-card__eyebrow {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .creator-panel-grid,
+  .creator-panel-secondary {
+    grid-template-columns: 1fr;
+  }
+
+  .creator-panel-card {
+    min-height: auto;
+  }
+}
