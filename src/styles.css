@@ -4380,3 +4380,50 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
     padding-bottom: 0;
   }
 }
+
+
+/* MASTHEAD_ALIGNMENT_FIX */
+
+.publication-topbar__inner {
+  display: flex;
+  align-items: center; /* align everything to same center line */
+  gap: 32px;
+  padding: 8px 24px;
+}
+
+.publication-topbar__brand {
+  display: flex;
+  align-items: center;
+}
+
+.publication-topbar__brand-image {
+  height: 160px; /* slightly reduced from 180 for balance */
+  width: auto;
+  display: block;
+  transform: translateY(0); /* remove previous offset hack */
+}
+
+.publication-topbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0;
+  margin-left: auto; /* push nav to the right cleanly */
+}
+
+/* mobile */
+@media (max-width: 900px) {
+  .publication-topbar__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .publication-topbar__brand-image {
+    height: 100px;
+  }
+
+  .publication-topbar__nav {
+    margin-left: 0;
+  }
+}
