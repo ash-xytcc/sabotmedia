@@ -3914,3 +3914,17 @@ body:has(.podcast-admin-page) .site-footer {
   margin: 0 auto;
   padding: 2rem 1rem 3rem;
 }
+
+
+/* SYSTEM_BACKUP_FORCE_HIDE_CHROME */
+
+body:has(.system-backup-page) header:not(.publication-topbar),
+body:has(.system-backup-page) footer:not(.publication-footer) {
+  display: none !important;
+}
+
+body:has(.system-backup-page) .system-backup-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
