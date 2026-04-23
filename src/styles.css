@@ -5335,3 +5335,20 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
     font-size: 0.95rem;
   }
 }
+
+
+/* LOCK_CARD_RATIO */
+
+.publication-post-card__image-fill,
+.publication-hero-card__image-fill {
+  aspect-ratio: 5 / 3;
+}
+
+.publication-hero-card {
+  aspect-ratio: 5 / 3;
+  min-height: unset;
+}
+
+.publication-post-card {
+  aspect-ratio: 5 / 3;
+}
