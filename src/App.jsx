@@ -18,6 +18,7 @@ import { PublicEditPanel } from './components/PublicEditPanel'
 import { EditableText } from './components/EditableText'
 import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/content'
 import { getPieces } from './lib/pieces'
+import { PublicSurfacePage } from './components/PublicSurfacePage'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
