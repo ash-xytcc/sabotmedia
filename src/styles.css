@@ -4336,3 +4336,47 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
     height: 90px;
   }
 }
+
+
+/* MASTHEAD_FINAL_TUNING */
+
+.publication-topbar__inner {
+  display: flex;
+  align-items: flex-end; /* anchor logo lower */
+  padding: 0 24px 6px 24px; /* remove top padding, keep slight bottom */
+}
+
+.publication-topbar__brand {
+  display: flex;
+  align-items: flex-end;
+}
+
+.publication-topbar__brand-image {
+  height: 180px; /* bigger */
+  width: auto;
+  max-width: none;
+  object-fit: contain;
+  transform: translateY(8px); /* drop it slightly */
+}
+
+.publication-topbar__nav {
+  margin-left: 32px;
+  padding-bottom: 18px; /* aligns nav with logo baseline */
+}
+
+/* mobile sanity */
+@media (max-width: 900px) {
+  .publication-topbar__inner {
+    align-items: center;
+    padding: 8px 16px;
+  }
+
+  .publication-topbar__brand-image {
+    height: 100px;
+    transform: none;
+  }
+
+  .publication-topbar__nav {
+    padding-bottom: 0;
+  }
+}
