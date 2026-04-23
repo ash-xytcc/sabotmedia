@@ -7,6 +7,8 @@ import { getAdjacentPieces, getRelatedPieces } from '../lib/pieces-nav'
 import { EditableText } from './EditableText'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
+import { PublicationTopbar } from './PublicationTopbar'
+import { PublicationFooter } from './PublicationFooter'
 
 function RelatedPieceCard({ piece }) {
   const display = splitDisplayTitle(piece)
