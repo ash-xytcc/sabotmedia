@@ -5489,3 +5489,35 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* CARD_TITLE_CLIP_FIX */
+
+.publication-hero-card__overlay {
+  padding-left: clamp(28px, 3.8vw, 54px) !important;
+  padding-bottom: clamp(28px, 3.6vw, 52px) !important;
+}
+
+.publication-post-card__overlay {
+  padding-left: clamp(18px, 2.4vw, 28px) !important;
+  padding-bottom: clamp(18px, 2.2vw, 28px) !important;
+}
+
+.publication-hero-card h1,
+.publication-post-card h2 {
+  line-height: 1.01 !important;
+  padding-left: 0.02em;
+  padding-bottom: 0.06em;
+}
+
+@media (max-width: 900px) {
+  .publication-hero-card__overlay {
+    padding-left: 24px !important;
+    padding-bottom: 24px !important;
+  }
+
+  .publication-post-card__overlay {
+    padding-left: 16px !important;
+    padding-bottom: 16px !important;
+  }
+}
