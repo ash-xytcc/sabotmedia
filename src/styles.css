@@ -4427,3 +4427,37 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
     margin-left: 0;
   }
 }
+
+
+/* PIECE_BODY_IMPORTED */
+
+.piece-body {
+  max-width: 760px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.piece-body__content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5rem auto;
+}
+
+.piece-body__content p {
+  line-height: 1.6;
+  margin: 1rem 0;
+}
+
+.piece-body__content h1,
+.piece-body__content h2,
+.piece-body__content h3 {
+  margin-top: 2rem;
+}
+
+.piece-body__content blockquote {
+  border-left: 2px solid var(--sabot-gold, #d3a62c);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  color: var(--sabot-muted-2);
+}

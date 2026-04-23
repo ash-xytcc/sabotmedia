@@ -1,3 +1,4 @@
+import { getImportedImage } from '../lib/getImportedImage'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchNativeEntries } from '../lib/nativePublicContentApi'

@@ -1,3 +1,4 @@
+import { getImportedImage } from '../lib/getImportedImage'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
