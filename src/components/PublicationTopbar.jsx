@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import mastheadLogo from '../assets/sabot-masthead-logo.png'
 
 export function PublicationTopbar() {
   return (
@@ -6,7 +7,11 @@ export function PublicationTopbar() {
       <div className="publication-topbar__inner">
         <div className="publication-topbar__brand">
           <Link to="/" className="publication-topbar__brand-link" aria-label="Sabot Media home">
-            <span className="publication-topbar__brand-stamp">Sab<span className="masthead-o">o</span>t <span className="masthead-media">Media</span></span>
+            <img
+              src={mastheadLogo}
+              alt="Sabot Media"
+              className="publication-topbar__brand-image"
+            />
           </Link>
         </div>
 
