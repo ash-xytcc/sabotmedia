@@ -4159,3 +4159,118 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
     var(--sabot-paper-dark);
   color: var(--sabot-ink);
 }
+
+
+/* UNIVERSAL_MASTHEAD_AND_BACKUP_FIX */
+
+.publication-topbar--masthead {
+  position: relative;
+  z-index: 10;
+  padding: 1.2rem 1.5rem 1rem;
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,0.82), rgba(0,0,0,0.58)),
+    linear-gradient(90deg, #060606, #101010 58%, #090909);
+  border-bottom: 1px solid rgba(211,166,44,0.24);
+}
+
+.publication-topbar__inner {
+  max-width: 1360px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+}
+
+.publication-topbar__brand-link {
+  text-decoration: none;
+}
+
+.publication-topbar__brand-stamp {
+  display: inline-block;
+  font-family: "Stamp", "GriffosFont", "VanillaExtractRegular", serif;
+  font-size: clamp(2.8rem, 6vw, 5.6rem);
+  line-height: 0.9;
+  color: var(--sabot-ink, #f3eadb);
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.55),
+    0 0 18px rgba(0,0,0,0.2);
+  letter-spacing: 0.01em;
+}
+
+.publication-topbar__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  align-items: center;
+  padding-bottom: 0.4rem;
+}
+
+.publication-topbar__nav a {
+  color: var(--sabot-muted-2, #d8cbb5);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.publication-topbar__nav a:hover,
+.publication-topbar__nav a:focus-visible {
+  color: var(--sabot-gold, #d3a62c);
+}
+
+body:has(.system-backup-page) .app-header,
+body:has(.system-backup-page) .app-shell__header,
+body:has(.system-backup-page) .site-header,
+body:has(.system-backup-page) .admin-header,
+body:has(.system-backup-page) .app-footer,
+body:has(.system-backup-page) .app-shell__footer,
+body:has(.system-backup-page) .site-footer,
+body:has(.system-backup-page) header:not(.publication-topbar),
+body:has(.system-backup-page) footer:not(.publication-footer) {
+  display: none !important;
+}
+
+.system-backup-page {
+  background:
+    radial-gradient(circle at top center, rgba(194,43,38,0.09), transparent 26%),
+    radial-gradient(circle at top left, rgba(211,166,44,0.08), transparent 20%),
+    var(--sabot-paper-dark, #080808);
+  color: var(--sabot-ink, #f3eadb);
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.system-backup-page .project-hero,
+.system-backup-page .review-summary-card,
+.system-backup-page .review-summary-grid {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.system-backup-page .project-hero {
+  padding-top: 2rem;
+}
+
+.system-backup-page .review-summary-grid {
+  padding-bottom: 3rem;
+}
+
+@media (max-width: 900px) {
+  .publication-topbar__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .publication-topbar__brand-stamp {
+    font-size: clamp(2.4rem, 10vw, 4.2rem);
+  }
+
+  .publication-topbar__nav {
+    padding-bottom: 0;
+  }
+}

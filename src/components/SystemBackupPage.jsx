@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { downloadSnapshot, exportSystemSnapshot, summarizeSnapshot } from '../lib/systemBackup'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
+import { downloadSnapshot, exportSystemSnapshot, summarizeSnapshot } from '../lib/systemBackup'
+import { useState } from 'react'
 
 export function SystemBackupPage() {
   const [state, setState] = useState('idle')
@@ -25,11 +25,12 @@ export function SystemBackupPage() {
   return (
     <main className="page system-backup-page">
       <PublicationTopbar />
+
       <section className="project-hero">
-        <div className="project-hero__eyebrow">backup / recovery / export</div>
+        <div className="project-hero__eyebrow">system / backup / recovery</div>
         <h1>System Backup</h1>
         <p className="project-hero__description">
-          Export a pragmatic system snapshot covering native content, revisions, taxonomy, roles, and audit data. Because eventually somebody will swear nothing changed right after changing everything.
+          Export a full JSON snapshot of the publication system for safekeeping, recovery, or inspection.
         </p>
         <div className="project-hero__meta">
           <span>status: {state}</span>
@@ -60,6 +61,7 @@ export function SystemBackupPage() {
           </article>
         </section>
       ) : null}
+
       <PublicationFooter />
     </main>
   )
