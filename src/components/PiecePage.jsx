@@ -1,263 +1,184 @@
-import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { splitDisplayTitle } from '../lib/content'
-import { extractPodcastEmbeds, isPodcastPiece } from '../lib/podcast'
-import { PodcastEmbedBlock } from './PodcastEmbedBlock'
-import { getProjectTheme } from '../lib/projectTheme'
-import { getAdjacentPieces, getRelatedPieces } from '../lib/pieces-nav'
-import { EditableText } from './EditableText'
-import { useResolvedConfig } from '../lib/useResolvedConfig'
-import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
+import { useEffect, useMemo } from 'react'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
+import { getImportedImage } from '../lib/getImportedImage'
+import { renderImportedBody } from '../lib/renderImportedBody'
+import { splitDisplayTitle } from '../lib/content'
 
-function RelatedPieceCard({ piece }) {
-  const display = splitDisplayTitle(piece)
+const MODE_STORAGE_KEY = 'sabot.postMode'
+
+function PublicationModeSwitch({ slug, mode }) {
   return (
-    <article className="piece-card">
-      <div className="piece-card__meta">
-        <span>{piece.primaryProject}</span>
-        <span>{piece.type}</span>
-      </div>
-      <h3>
-        <Link to={`/post/${piece.slug}`}>{display.title}</Link>
-      </h3>
-      {display.subtitle ? <p className="piece-card__subtitle">{display.subtitle}</p> : null}
-    </article>
+    <nav className="publication-mode-switch" aria-label="reading modes">
+      <Link
+        className={`publication-mode-switch__link${mode === 'read' ? ' is-active' : ''}`}
+        to={`/post/${slug}`}
+      >
+        Read
+      </Link>
+      <Link
+        className={`publication-mode-switch__link${mode === 'experience' ? ' is-active' : ''}`}
+        to={`/post/${slug}?mode=experience`}
+      >
+        Experience
+      </Link>
+      <Link
+        className="publication-mode-switch__link"
+        to={`/piece/${slug}/print`}
+      >
+        Print
+      </Link>
+    </nav>
   )
 }
 
-function PieceMetaPanel({
-  piece,
-  metaBlock,
-  resolvedConfig,
-}) {
-  const tags = piece.tags || []
-  const printLinks = piece.relatedPrintLinks || []
-
-  const projectLabel = getConfiguredText(resolvedConfig, metaBlock?.projectLabelField || 'piecePage.meta.projectLabel', 'project')
-  const typeLabel = getConfiguredText(resolvedConfig, metaBlock?.typeLabelField || 'piecePage.meta.typeLabel', 'type')
-  const publishedLabel = getConfiguredText(resolvedConfig, metaBlock?.publishedLabelField || 'piecePage.meta.publishedLabel', 'published')
-  const sourceLabel = getConfiguredText(resolvedConfig, metaBlock?.sourceLabelField || 'piecePage.meta.sourceLabel', 'source')
-  const sourceLinkLabel = getConfiguredText(resolvedConfig, metaBlock?.sourceLinkLabelField || 'piecePage.meta.sourceLinkLabel', 'original post')
-  const printAssetsLabel = getConfiguredText(resolvedConfig, metaBlock?.printAssetsLabelField || 'piecePage.meta.printAssetsLabel', 'print assets')
-  const tagsLabel = getConfiguredText(resolvedConfig, metaBlock?.tagsLabelField || 'piecePage.meta.tagsLabel', 'tags')
-  const audioSummaryLabel = getConfiguredText(resolvedConfig, metaBlock?.audioSummaryLabelField || 'piecePage.meta.audioSummaryLabel', 'audio summary')
-  const transcriptExcerptLabel = getConfiguredText(resolvedConfig, metaBlock?.transcriptExcerptLabelField || 'piecePage.meta.transcriptExcerptLabel', 'transcript excerpt')
-  const mediaStatusLabel = getConfiguredText(resolvedConfig, metaBlock?.mediaStatusLabelField || 'piecePage.meta.mediaStatusLabel', 'media status')
-
-  const mediaStatus = !isPodcastPiece(piece)
-    ? null
-    : piece.audioSummary && piece.transcriptExcerpt
-      ? 'ready'
-      : 'needs enrichment'
-
-  return (
-    <aside className="piece-meta-panel">
-      <div className="piece-meta-panel__section">
-        <div className="piece-meta-panel__label">{projectLabel}</div>
-        <p>{piece.primaryProject}</p>
-      </div>
-
-      <div className="piece-meta-panel__section">
-        <div className="piece-meta-panel__label">{typeLabel}</div>
-        <p>{piece.type}</p>
-      </div>
-
-      <div className="piece-meta-panel__section">
-        <div className="piece-meta-panel__label">{publishedLabel}</div>
-        <p>{piece.publishedDateLabel}</p>
-      </div>
-
-      {mediaStatus ? (
-        <div className="piece-meta-panel__section">
-          <div className="piece-meta-panel__label">{mediaStatusLabel}</div>
-          <p>{mediaStatus}</p>
-        </div>
-      ) : null}
-
-      {piece.audioSummary ? (
-        <div className="piece-meta-panel__section">
-          <div className="piece-meta-panel__label">{audioSummaryLabel}</div>
-          <p>{piece.audioSummary}</p>
-        </div>
-      ) : null}
-
-      {piece.transcriptExcerpt ? (
-        <div className="piece-meta-panel__section">
-          <div className="piece-meta-panel__label">{transcriptExcerptLabel}</div>
-          <p>{piece.transcriptExcerpt}</p>
-        </div>
-      ) : null}
-
-      {piece.sourceUrl ? (
-        <div className="piece-meta-panel__section">
-          <div className="piece-meta-panel__label">{sourceLabel}</div>
-          <p><a href={piece.sourceUrl} target="_blank" rel="noreferrer">{sourceLinkLabel}</a></p>
-        </div>
-      ) : null}
-
-      {printLinks.length ? (
-        <div className="piece-meta-panel__section">
-          <div className="piece-meta-panel__label">{printAssetsLabel}</div>
-          <ul className="piece-meta-panel__list">
-            {printLinks.map((entry, index) => (
-              <li key={`${entry.url}-${index}`}>
-                <a href={entry.url} target="_blank" rel="noreferrer">{entry.title || 'print link'}</a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      {tags.length ? (
-        <div className="piece-meta-panel__section">
-          <div className="piece-meta-panel__label">{tagsLabel}</div>
-          <div className="piece-tag-list">
-            {tags.slice(0, 14).map((tag) => (
-              <span className="piece-tag" key={tag}>{tag}</span>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </aside>
-  )
+function getPreferredMode(searchParams) {
+  const explicit = searchParams.get('mode')
+  if (explicit === 'experience') return 'experience'
+  return 'read'
 }
 
-export function PiecePage({ pieces }) {
-  const { slug } = useParams()
-  const [searchParams] = useSearchParams()
-  const mode = searchParams.get('mode') === 'experience' ? 'experience' : 'reading'
-  const resolvedConfig = useResolvedConfig()
+function getPieceBySlug(pieces, slug) {
+  return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
+}
 
-  const metaBlock = getConfiguredBlock(resolvedConfig, 'piecePage.meta')
-  const actionsBlock = getConfiguredBlock(resolvedConfig, 'piecePage.actions')
-  const experienceBlock = getConfiguredBlock(resolvedConfig, 'piecePage.experience')
-  const navBlock = getConfiguredBlock(resolvedConfig, 'piecePage.nav')
-  const relatedBlock = getConfiguredBlock(resolvedConfig, 'piecePage.related')
-  const notFoundBlock = getConfiguredBlock(resolvedConfig, 'piecePage.notFound')
+function getOrderedPieces(pieces) {
+  return (Array.isArray(pieces) ? pieces : [])
+    .filter((piece) => piece?.slug)
+    .slice()
+    .sort((a, b) => {
+      const aTime = new Date(a?.publishedAt || a?.updatedAt || 0).getTime()
+      const bTime = new Date(b?.publishedAt || b?.updatedAt || 0).getTime()
+      return bTime - aTime
+    })
+}
 
-  const readingLabel = getConfiguredText(resolvedConfig, actionsBlock?.readingLabelField || 'piecePage.actions.readingLabel', 'reading')
-  const experienceLabel = getConfiguredText(resolvedConfig, actionsBlock?.experienceLabelField || 'piecePage.actions.experienceLabel', 'experience')
-  const printLabel = getConfiguredText(resolvedConfig, actionsBlock?.printLabelField || 'piecePage.actions.printLabel', 'print')
-  const experienceLeft = getConfiguredText(resolvedConfig, experienceBlock?.leftField || 'piecePage.experience.left', 'this is not a conclusion')
-  const experienceRight = getConfiguredText(resolvedConfig, experienceBlock?.rightField || 'piecePage.experience.right', 'it is a beginning')
-  const olderLabel = getConfiguredText(resolvedConfig, navBlock?.olderLabelField || 'piecePage.nav.olderLabel', 'older')
-  const newerLabel = getConfiguredText(resolvedConfig, navBlock?.newerLabelField || 'piecePage.nav.newerLabel', 'newer')
-  const notFoundTitle = getConfiguredText(resolvedConfig, notFoundBlock?.titleField || 'piecePage.notFound.title', 'Piece not found')
-  const notFoundBody = getConfiguredText(resolvedConfig, notFoundBlock?.bodyField || 'piecePage.notFound.body', 'This archive entry has not been imported yet or the slug changed during migration.')
-  const bylinePrefix = getConfiguredText(resolvedConfig, metaBlock?.bylinePrefixField || 'piecePage.meta.bylinePrefix', 'by')
+export function PiecePage({ pieces = [] }) {
+  const { slug = '' } = useParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const piece = pieces.find((entry) => entry.slug === slug)
+  const mode = useMemo(() => getPreferredMode(searchParams), [searchParams])
+
+  useEffect(() => {
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem(MODE_STORAGE_KEY) : null
+    if (!searchParams.get('mode') && stored === 'experience') {
+      const next = new URLSearchParams(searchParams)
+      next.set('mode', 'experience')
+      setSearchParams(next, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(MODE_STORAGE_KEY, mode)
+    }
+  }, [mode])
+
+  const orderedPieces = useMemo(() => getOrderedPieces(pieces), [pieces])
+  const piece = useMemo(() => getPieceBySlug(orderedPieces, slug), [orderedPieces, slug])
+
+  const index = useMemo(
+    () => orderedPieces.findIndex((item) => item?.slug === slug),
+    [orderedPieces, slug]
+  )
+
+  const previous = index >= 0 ? orderedPieces[index + 1] || null : null
+  const next = index > 0 ? orderedPieces[index - 1] || null : null
+
+  const display = useMemo(
+    () =>
+      piece
+        ? splitDisplayTitle(piece)
+        : {
+            title: '',
+            subtitle: '',
+          },
+    [piece]
+  )
+
+  const heroImage = useMemo(() => (piece ? getImportedImage(piece) : ''), [piece])
+  const bodyNodes = useMemo(
+    () => renderImportedBody(piece?.bodyHtml || '', mode),
+    [piece?.bodyHtml, mode]
+  )
 
   if (!piece) {
-    return (
-      <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
-      <PublicationTopbar />
-        <div className="missing-state">
-          <h1>{notFoundTitle}</h1>
-          <p>{notFoundBody}</p>
-        </div>
-        <PublicationFooter />
-    </main>
-    )
+    return <Navigate to="/archive" replace />
   }
 
-  const display = splitDisplayTitle(piece)
-  const podcastEmbeds = extractPodcastEmbeds(piece)
-  const podcastLike = isPodcastPiece(piece)
-  const theme = getProjectTheme(piece.primaryProjectSlug || piece.primaryProject)
-  const { previous, next } = getAdjacentPieces(pieces, piece.slug)
-  const related = getRelatedPieces(pieces, piece)
-
   return (
-    <main className={`page piece-page piece-page--${mode} ${theme.className}`}>
-      <header
-        className={`piece-header${piece.heroImage ? ' piece-header--image' : ''}`}
-        style={piece.heroImage ? {
-          backgroundImage: `linear-gradient(180deg, rgba(8,8,8,0.38), rgba(8,8,8,0.80)), url(${piece.heroImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        } : undefined}
-      >
-        <EditableText
-          as="div"
-          className="piece-header__eyebrow"
-          field={metaBlock?.eyebrowField || 'piecePage.meta.eyebrow'}
-        >
-          {theme.accent}
-        </EditableText>
+    <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
+      <PublicationTopbar />
 
-        <h1>{display.title}</h1>
-
-        {display.subtitle ? (
-          <p className="piece-header__subtitle">{display.subtitle}</p>
+      <header className="piece-header">
+        <div className="piece-header__eyebrow">
+          {piece.primaryProject || piece.type || 'publication'}
+        </div>
+        <h1>{display.title || piece.title || piece.slug}</h1>
+        {display.subtitle || piece.subtitle || piece.excerpt ? (
+          <p className="piece-header__subtitle">
+            {display.subtitle || piece.subtitle || piece.excerpt}
+          </p>
         ) : null}
 
         <div className="piece-header__meta">
-          <span>{piece.primaryProject}</span>
-          <span>{piece.type}</span>
-          <span>{piece.publishedDateLabel}</span>
-          {piece.author ? <span>{bylinePrefix} {piece.author}</span> : null}
+          <span>{piece.author || 'Sabot Media'}</span>
+          {piece.publishedDateLabel ? <span>{piece.publishedDateLabel}</span> : null}
+          {piece.type ? <span>{piece.type}</span> : null}
         </div>
 
-        <nav className="mode-toggle">
-          <Link to={`/post/${piece.slug}`}>{readingLabel}</Link>
-          <Link to={`/post/${piece.slug}?mode=experience`}>{experienceLabel}</Link>
-          <Link to={`/piece/${piece.slug}/print`}>{printLabel}</Link>
-        </nav>
+        <PublicationModeSwitch slug={piece.slug} mode={mode} />
       </header>
 
-      {podcastLike ? <PodcastEmbedBlock embeds={podcastEmbeds} piece={piece} /> : null}
-
-      {mode === 'experience' ? (
-        <section className="experience-banner">
-          <div className="experience-banner__inner">
-            <span>{experienceLeft}</span>
-            <span>{experienceRight}</span>
-          </div>
+      {heroImage ? (
+        <section className={`piece-hero${mode === 'experience' ? ' piece-hero--experience' : ''}`}>
+          <img className="piece-hero__image" src={heroImage} alt={display.title || piece.title || piece.slug} />
         </section>
       ) : null}
 
-      <section className={`piece-layout piece-layout--${mode} piece-layout--with-meta`}>
-        <article className="piece-body-wrap" dangerouslySetInnerHTML={{ __html: piece.bodyHtml }} />
-        <PieceMetaPanel piece={piece} metaBlock={metaBlock} resolvedConfig={resolvedConfig} />
+      <section className="piece-layout">
+        <article className="piece-body-wrap">
+          <div className="piece-body__content">
+            {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{piece.excerpt || ''}</p>}
+          </div>
+        </article>
+
+        {mode === 'read' ? (
+          <aside className="piece-meta-panel">
+            <section className="piece-meta-panel__section">
+              <h2>Details</h2>
+              <ul className="piece-meta-panel__list">
+                {piece.author ? <li><strong>Author:</strong> {piece.author}</li> : null}
+                {piece.publishedDateLabel ? <li><strong>Published:</strong> {piece.publishedDateLabel}</li> : null}
+                {piece.primaryProject ? <li><strong>Project:</strong> {piece.primaryProject}</li> : null}
+                {Array.isArray(piece.tags) && piece.tags.length ? (
+                  <li><strong>Tags:</strong> {piece.tags.join(', ')}</li>
+                ) : null}
+              </ul>
+            </section>
+          </aside>
+        ) : null}
       </section>
 
-      {(previous || next) ? (
-        <section className="piece-nav-grid">
+      <section className="piece-nav">
+        <div className="piece-nav-grid">
           {previous ? (
             <Link className="piece-nav-card publication-piece-nav-card" to={`/post/${previous.slug}`}>
-              <span className="piece-nav-card__label">{olderLabel}</span>
-              <strong>{splitDisplayTitle(previous).title}</strong>
+              <div className="piece-nav-card__eyebrow">Previous</div>
+              <strong>{splitDisplayTitle(previous).title || previous.title}</strong>
             </Link>
-          ) : <div />}
+          ) : null}
 
           {next ? (
             <Link className="piece-nav-card piece-nav-card--next publication-piece-nav-card" to={`/post/${next.slug}`}>
-              <span className="piece-nav-card__label">{newerLabel}</span>
-              <strong>{splitDisplayTitle(next).title}</strong>
+              <div className="piece-nav-card__eyebrow">Next</div>
+              <strong>{splitDisplayTitle(next).title || next.title}</strong>
             </Link>
-          ) : <div />}
-        </section>
-      ) : null}
+          ) : null}
+        </div>
+      </section>
 
-      {related.length ? (
-        <>
-          <section className="section-heading">
-            <EditableText as="p" field={relatedBlock?.eyebrowField || 'piecePage.related.eyebrow'}>
-              Keep going
-            </EditableText>
-            <EditableText as="h2" field={relatedBlock?.titleField || 'piecePage.related.title'}>
-              Related pieces
-            </EditableText>
-          </section>
-          <section className="piece-grid">
-            {related.map((entry) => (
-              <RelatedPieceCard key={entry.slug} piece={entry} />
-            ))}
-          </section>
-        </>
-      ) : null}
       <PublicationFooter />
     </main>
   )

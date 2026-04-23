@@ -1,47 +1,54 @@
-import { Link, useParams } from 'react-router-dom'
-import { PublicationTopbar } from './PublicationTopbar'
+import { Link, Navigate, useParams } from 'react-router-dom'
+import { getImportedImage } from '../lib/getImportedImage'
+import { renderImportedBody } from '../lib/renderImportedBody'
 import { splitDisplayTitle } from '../lib/content'
 
-export function PrintPage({ pieces }) {
-  const { slug } = useParams()
-  const piece = pieces.find((entry) => entry.slug === slug)
+function getPieceBySlug(pieces, slug) {
+  return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
+}
+
+export function PrintPage({ pieces = [] }) {
+  const { slug = '' } = useParams()
+  const piece = getPieceBySlug(pieces, slug)
 
   if (!piece) {
-    return (
-      <main className="page print-page">
-      <PublicationTopbar />
-        <div className="missing-state">
-          <h1>Print view unavailable</h1>
-          <p>This piece could not be found in the imported archive.</p>
-        </div>
-      </main>
-    )
+    return <Navigate to="/archive" replace />
   }
 
   const display = splitDisplayTitle(piece)
+  const heroImage = getImportedImage(piece)
+  const bodyNodes = renderImportedBody(piece.bodyHtml || '', 'print')
 
   return (
     <main className="page print-page">
-      <PublicationTopbar />
-      <header className="piece-header">
-        <div className="piece-header__eyebrow">{piece.primaryProject}</div>
-        <h1>{display.title}</h1>
-        {display.subtitle ? <p className="piece-header__subtitle">{display.subtitle}</p> : null}
-        <div className="hero__meta">
-          <span>{piece.type}</span>
-          <span>{piece.publishedDateLabel}</span>
-          <span>{piece.author}</span>
+      <header className="print-header">
+        <div className="print-header__actions">
+          <Link to={`/post/${piece.slug}`}>Read</Link>
+          <Link to={`/post/${piece.slug}?mode=experience`}>Experience</Link>
+          <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
         </div>
 
-        <nav className="mode-toggle">
-          <Link to={`/post/${piece.slug}`}>reading</Link>
-          <Link to={`/post/${piece.slug}?mode=experience`}>experience</Link>
-          <Link to={`/piece/${piece.slug}/print`}>print</Link>
-        </nav>
+        <div className="print-header__eyebrow">{piece.primaryProject || piece.type || 'publication'}</div>
+        <h1>{display.title || piece.title || piece.slug}</h1>
+        {display.subtitle || piece.subtitle || piece.excerpt ? (
+          <p>{display.subtitle || piece.subtitle || piece.excerpt}</p>
+        ) : null}
+        <div className="print-header__meta">
+          <span>{piece.author || 'Sabot Media'}</span>
+          {piece.publishedDateLabel ? <span>{piece.publishedDateLabel}</span> : null}
+        </div>
       </header>
 
-      <section className="print-layout">
-        <article className="print-body-wrap" dangerouslySetInnerHTML={{ __html: piece.bodyHtml }} />
+      {heroImage ? (
+        <section className="print-hero">
+          <img className="print-hero__image" src={heroImage} alt={display.title || piece.title || piece.slug} />
+        </section>
+      ) : null}
+
+      <section className="print-wrap">
+        <div className="piece-body__content">
+          {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{piece.excerpt || ''}</p>}
+        </div>
       </section>
     </main>
   )
