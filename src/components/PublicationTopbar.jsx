@@ -6,7 +6,7 @@ export function PublicationTopbar() {
       <div className="publication-topbar__inner">
         <div className="publication-topbar__brand">
           <Link to="/" className="publication-topbar__brand-link" aria-label="Sabot Media home">
-            <span className="publication-topbar__brand-stamp">Sabot Media</span>
+            <span className="publication-topbar__brand-stamp">Sab<span className="masthead-o">o</span>t <span className="masthead-media">Media</span></span>
           </Link>
         </div>
 

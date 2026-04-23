@@ -4274,3 +4274,14 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
     padding-bottom: 0;
   }
 }
+
+
+/* MASTHEAD_COLOR_DETAIL */
+
+.publication-topbar__brand-stamp .masthead-o {
+  color: var(--sabot-gold, #d3a62c);
+}
+
+.publication-topbar__brand-stamp .masthead-media {
+  color: var(--sabot-red, #c22b26);
+}
