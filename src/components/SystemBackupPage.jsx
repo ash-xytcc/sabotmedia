@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { downloadSnapshot, exportSystemSnapshot, summarizeSnapshot } from '../lib/systemBackup'
+import { PublicationTopbar } from './PublicationTopbar'
+import { PublicationFooter } from './PublicationFooter'
 
 export function SystemBackupPage() {
   const [state, setState] = useState('idle')
@@ -22,6 +24,7 @@ export function SystemBackupPage() {
 
   return (
     <main className="page system-backup-page">
+      <PublicationTopbar />
       <section className="project-hero">
         <div className="project-hero__eyebrow">backup / recovery / export</div>
         <h1>System Backup</h1>
@@ -57,6 +60,7 @@ export function SystemBackupPage() {
           </article>
         </section>
       ) : null}
+      <PublicationFooter />
     </main>
   )
 }

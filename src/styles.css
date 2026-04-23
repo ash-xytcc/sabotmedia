@@ -3928,3 +3928,234 @@ body:has(.system-backup-page) .system-backup-page {
   margin: 0 auto;
   padding: 2rem 1rem 3rem;
 }
+
+
+/* SABOT_BRAND_RESTORATION_PASS */
+
+:root {
+  --sabot-ink: #f3eadb;
+  --sabot-paper-dark: #080808;
+  --sabot-paper-mid: #101010;
+  --sabot-panel: rgba(14, 14, 14, 0.96);
+  --sabot-panel-2: rgba(22, 16, 14, 0.94);
+  --sabot-gold: #d3a62c;
+  --sabot-red: #c22b26;
+  --sabot-border: rgba(243, 234, 219, 0.12);
+  --sabot-muted-2: #d8cbb5;
+  --sabot-shadow-2: 0 16px 40px rgba(0,0,0,0.45);
+}
+
+/* public surfaces keep your expressive identity */
+.publication-homepage,
+.public-search-page,
+.piece-page,
+.print-page,
+.public-surface-page,
+.projects-index-page,
+.project-page,
+.system-backup-page {
+  background:
+    radial-gradient(circle at top center, rgba(194,43,38,0.10), transparent 28%),
+    radial-gradient(circle at top left, rgba(211,166,44,0.08), transparent 22%),
+    var(--sabot-paper-dark);
+  color: var(--sabot-ink);
+}
+
+.publication-topbar {
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,0.76), rgba(0,0,0,0.55)),
+    linear-gradient(90deg, #070707, #111111 60%, #0b0b0b);
+  border-bottom: 1px solid rgba(211,166,44,0.22);
+}
+
+.publication-topbar__brand a {
+  color: var(--sabot-ink);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.45);
+}
+
+.publication-topbar__nav a {
+  color: var(--sabot-muted-2);
+}
+
+.publication-topbar__nav a:hover,
+.publication-topbar__nav a:focus-visible {
+  color: var(--sabot-gold);
+}
+
+.publication-hero-card,
+.publication-post-card,
+.review-card,
+.review-summary-card,
+.missing-state,
+.piece-nav-card,
+.piece-meta-panel,
+.publication-status-note,
+.creator-panel-card,
+.creator-panel-secondary__card,
+.system-backup-page .review-summary-card {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0)),
+    var(--sabot-panel);
+  border: 1px solid var(--sabot-border);
+  box-shadow: var(--sabot-shadow-2);
+  color: var(--sabot-ink);
+}
+
+.creator-panel-card--primary {
+  background:
+    radial-gradient(circle at top left, rgba(194,43,38,0.10), transparent 38%),
+    radial-gradient(circle at bottom right, rgba(211,166,44,0.08), transparent 42%),
+    var(--sabot-panel-2);
+}
+
+.project-hero__eyebrow,
+.publication-footer__eyebrow,
+.creator-panel-card__eyebrow,
+.creator-panel-secondary__eyebrow,
+.public-search-page .project-hero__eyebrow,
+.piece-page .piece-header__eyebrow,
+.print-page .print-header__eyebrow {
+  color: var(--sabot-red);
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+}
+
+.publication-hero-card__meta,
+.publication-post-card__meta,
+.public-search-page .review-card__meta,
+.project-hero__meta {
+  color: var(--sabot-gold);
+}
+
+.publication-hero-card h1,
+.publication-post-card h2,
+.public-search-page h1,
+.piece-page .piece-header h1,
+.system-backup-page h1,
+.creator-panel-card h2,
+.publication-footer__brand h2 {
+  color: var(--sabot-ink);
+}
+
+.publication-hero-card p,
+.publication-post-card p,
+.public-search-page .project-hero__description,
+.piece-page .piece-header__subtitle,
+.creator-panel-card p,
+.publication-footer__brand p,
+.publication-footer__bottom,
+.system-backup-page p,
+.review-card__excerpt {
+  color: var(--sabot-muted-2);
+}
+
+.publication-next-row {
+  background:
+    linear-gradient(90deg, rgba(194,43,38,0.06), rgba(211,166,44,0.04)),
+    #111;
+  border-top: 1px solid rgba(211,166,44,0.16);
+  border-bottom: 1px solid rgba(211,166,44,0.16);
+}
+
+.publication-next-link {
+  color: var(--sabot-gold);
+}
+
+.publication-next-link:hover,
+.publication-next-link:focus-visible {
+  color: var(--sabot-red);
+}
+
+.publication-footer {
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.01), rgba(255,255,255,0)),
+    #0a0a0a;
+  border-top: 1px solid rgba(211,166,44,0.16);
+}
+
+.publication-footer__section a,
+.creator-panel-secondary__links a {
+  color: var(--sabot-muted-2);
+}
+
+.publication-footer__section a:hover,
+.publication-footer__section a:focus-visible,
+.creator-panel-secondary__links a:hover,
+.creator-panel-secondary__links a:focus-visible {
+  color: var(--sabot-gold);
+}
+
+/* buttons: keep your rougher branded feel */
+.button,
+.publication-mode-switch__link {
+  border-radius: 0;
+  border: 1px solid rgba(211,166,44,0.22);
+  box-shadow: none;
+}
+
+.button.button--primary,
+.creator-panel-card__actions .button.button--primary,
+.publication-mode-switch__link.is-active {
+  background: #dbc8aa;
+  color: #111;
+  border-color: rgba(219,200,170,0.82);
+}
+
+.button:not(.button--primary),
+.publication-mode-switch__link:not(.is-active) {
+  background: rgba(255,255,255,0.02);
+  color: var(--sabot-ink);
+}
+
+.button:hover,
+.button:focus-visible,
+.publication-mode-switch__link:hover,
+.publication-mode-switch__link:focus-visible {
+  border-color: var(--sabot-gold);
+}
+
+/* backup page specific: absolutely kill the old shell if anything remains */
+body:has(.system-backup-page) .app-header,
+body:has(.system-backup-page) .app-shell__header,
+body:has(.system-backup-page) .site-header,
+body:has(.system-backup-page) .admin-header,
+body:has(.system-backup-page) .app-footer,
+body:has(.system-backup-page) .app-shell__footer,
+body:has(.system-backup-page) .site-footer,
+body:has(.system-backup-page) header:not(.publication-topbar),
+body:has(.system-backup-page) footer:not(.publication-footer) {
+  display: none !important;
+}
+
+.system-backup-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.system-backup-page .project-hero,
+.system-backup-page .review-summary-grid,
+.system-backup-page .review-summary-card {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.system-backup-page .review-summary-grid {
+  padding-bottom: 3rem;
+}
+
+/* backstage pages keep your style, but calmer */
+.admin-page--creator,
+.native-content-bridge-page,
+.public-draft-page,
+.overrides-page,
+.review-queue-page,
+.podcast-admin-page {
+  background:
+    radial-gradient(circle at top left, rgba(211,166,44,0.05), transparent 24%),
+    var(--sabot-paper-dark);
+  color: var(--sabot-ink);
+}
