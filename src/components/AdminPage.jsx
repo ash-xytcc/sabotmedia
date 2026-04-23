@@ -5,25 +5,25 @@ const CREATE_TYPES = [
     key: 'article',
     label: 'Article / Dispatch',
     description: 'Write and publish a new written piece.',
-    to: '/native-bridge',
+    to: '/native-bridge?new=article',
   },
   {
     key: 'podcast',
     label: 'Podcast',
-    description: 'Create or enrich a podcast entry.',
-    to: '/podcasts',
+    description: 'Create a podcast entry and then enrich it in the podcast workspace.',
+    to: '/native-bridge?new=podcast',
   },
   {
     key: 'print',
     label: 'Print / Zine',
     description: 'Prepare print-oriented material and archive metadata.',
-    to: '/native-bridge',
+    to: '/native-bridge?new=print',
   },
   {
     key: 'block',
     label: 'Public Block',
     description: 'Create a homepage or public-surface content block.',
-    to: '/native-bridge',
+    to: '/native-bridge?new=publicBlock',
   },
 ]
 
@@ -91,7 +91,7 @@ export function AdminPage({ pieces = [] }) {
           <h2>Content Workflow</h2>
           <p>Work on drafts, review items, and publishing-ready content from one place.</p>
           <div className="creator-panel-card__actions">
-            <Link className="button button--primary" to="/native-bridge">Open content editor</Link>
+            <Link className="button button--primary" to="/native-bridge?new=article">Open content editor</Link>
             <Link className="button" to="/review">Review queue</Link>
           </div>
         </article>
@@ -111,8 +111,8 @@ export function AdminPage({ pieces = [] }) {
           <h2>Podcast Workflow</h2>
           <p>Create, enrich, and clean up podcast pieces instead of burying them in generic archive tooling.</p>
           <div className="creator-panel-card__actions">
-            <Link className="button button--primary" to="/podcasts">Podcast workspace</Link>
-            <Link className="button" to="/native-bridge">New podcast entry</Link>
+            <Link className="button button--primary" to="/native-bridge?new=podcast">New podcast</Link>
+            <Link className="button" to="/podcasts">Podcast workspace</Link>
           </div>
         </article>
 
@@ -133,7 +133,7 @@ export function AdminPage({ pieces = [] }) {
           <div className="creator-panel-secondary__links">
             <Link to="/review">Review queue</Link>
             <Link to="/podcasts">Podcast workspace</Link>
-            <Link to="/native-bridge">Native content editor</Link>
+            <Link to="/native-bridge?new=article">Native content editor</Link>
             <Link to="/draft">Site draft</Link>
             <Link to="/overrides">Overrides</Link>
             <Link to="/system-backup">Backup</Link>

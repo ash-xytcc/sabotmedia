@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { EditableText } from './EditableText'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { getConfiguredText } from '../lib/publicConfig'
@@ -20,16 +21,116 @@ import { TranscriptBridgeCard } from './TranscriptBridgeCard'
 import { NativeTaxonomyBridgeCard } from './NativeTaxonomyBridgeCard'
 import { fetchNativeRevisions, restoreNativeRevision } from '../lib/nativePublicContentApi'
 
+const CREATION_MODES = {
+  article: {
+    label: 'Article / Dispatch',
+    description: 'Write a public article, dispatch, or written piece.',
+    contentType: 'dispatch',
+    target: 'general',
+  },
+  podcast: {
+    label: 'Podcast',
+    description: 'Create a podcast entry with summary, transcript notes, and episode metadata.',
+    contentType: 'podcast',
+    target: 'general',
+  },
+  print: {
+    label: 'Print / Zine',
+    description: 'Prepare a print-oriented piece, handout, or zine item.',
+    contentType: 'print',
+    target: 'general',
+  },
+  publicBlock: {
+    label: 'Public Block',
+    description: 'Create a homepage or public-surface block without forcing it through article structure.',
+    contentType: 'publicBlock',
+    target: 'home',
+  },
+}
+
+function inferCreationKind(entry) {
+  const type = String(entry?.contentType || '').toLowerCase()
+  if (type === 'podcast') return 'podcast'
+  if (type === 'print') return 'print'
+  if (type === 'publicblock') return 'publicBlock'
+  return 'article'
+}
+
+function createTypedEntry(kind) {
+  const base = createEmptyNativeEntry()
+  const mode = CREATION_MODES[kind] || CREATION_MODES.article
+
+  return {
+    ...base,
+    contentType: mode.contentType,
+    target: mode.target,
+    workflowState: 'draft',
+    status: 'draft',
+    tags: [],
+    excerpt: '',
+    body: '',
+    richBody: [],
+    audioSummary: '',
+    transcriptExcerpt: '',
+    sourceNotes: '',
+    heroImage: '',
+    hasPrintAssets: kind === 'print',
+  }
+}
+
+function applyModeToDraft(draft, kind) {
+  const mode = CREATION_MODES[kind] || CREATION_MODES.article
+  return {
+    ...draft,
+    contentType: mode.contentType,
+    target: draft.target || mode.target,
+    hasPrintAssets: kind === 'print' ? true : draft.hasPrintAssets,
+    audioSummary: kind === 'podcast' ? (draft.audioSummary || '') : '',
+    transcriptExcerpt: kind === 'podcast' ? (draft.transcriptExcerpt || '') : '',
+    sourceNotes: kind === 'podcast' ? (draft.sourceNotes || '') : '',
+    heroImage: kind === 'podcast' ? (draft.heroImage || '') : draft.heroImage || '',
+  }
+}
+
+function TypeSwitch({ creationKind, onPick }) {
+  return (
+    <div className="native-type-switch" role="tablist" aria-label="content type chooser">
+      {Object.entries(CREATION_MODES).map(([key, mode]) => (
+        <button
+          key={key}
+          type="button"
+          className={`native-type-switch__button${creationKind === key ? ' is-active' : ''}`}
+          onClick={() => onPick(key)}
+        >
+          {mode.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function NativeEntryEditor({
   value,
   onChange,
-  contentTypeLabel,
-  statusLabel,
-  targetLabel,
+  creationKind,
+  onPickCreationKind,
   tagsLabel,
 }) {
+  const isPodcast = creationKind === 'podcast'
+  const isPublicBlock = creationKind === 'publicBlock'
+  const isPrint = creationKind === 'print'
+
   return (
     <section className="native-content-editor">
+      <div className="native-content-editor__type-header">
+        <div>
+          <div className="native-content-editor__eyebrow">entry type</div>
+          <h2>{CREATION_MODES[creationKind]?.label || 'Article / Dispatch'}</h2>
+          <p>{CREATION_MODES[creationKind]?.description || ''}</p>
+        </div>
+        <TypeSwitch creationKind={creationKind} onPick={onPickCreationKind} />
+      </div>
+
       <div className="native-content-editor__grid">
         <label className="archive-control">
           <span>title</span>
@@ -52,16 +153,7 @@ function NativeEntryEditor({
         </label>
 
         <label className="archive-control">
-          <span>{contentTypeLabel}</span>
-          <select value={value.contentType} onChange={(e) => onChange({ ...value, contentType: e.target.value })}>
-            <option value="note">note</option>
-            <option value="publicBlock">publicBlock</option>
-            <option value="dispatch">dispatch</option>
-          </select>
-        </label>
-
-        <label className="archive-control">
-          <span>{statusLabel}</span>
+          <span>status</span>
           <select value={value.status} onChange={(e) => onChange({ ...value, status: e.target.value })}>
             <option value="draft">draft</option>
             <option value="published">published</option>
@@ -83,7 +175,7 @@ function NativeEntryEditor({
         </label>
 
         <label className="archive-control">
-          <span>{targetLabel}</span>
+          <span>target</span>
           <select value={value.target} onChange={(e) => onChange({ ...value, target: e.target.value })}>
             <option value="general">general</option>
             <option value="home">home</option>
@@ -102,23 +194,30 @@ function NativeEntryEditor({
           />
         </label>
 
+        {!isPublicBlock ? (
+          <label className="archive-control">
+            <span>scheduled for</span>
+            <input
+              type="datetime-local"
+              value={toLocalDateTime(value.scheduledFor)}
+              onChange={(e) => onChange({ ...value, scheduledFor: fromLocalDateTime(e.target.value) })}
+            />
+          </label>
+        ) : null}
+
         <label className="archive-control">
-          <span>scheduled for</span>
-          <input
-            type="datetime-local"
-            value={toLocalDateTime(value.scheduledFor)}
-            onChange={(e) => onChange({ ...value, scheduledFor: fromLocalDateTime(e.target.value) })}
-          />
+          <span>{isPodcast ? 'content type' : 'entry mode'}</span>
+          <input type="text" value={CREATION_MODES[creationKind]?.label || ''} readOnly />
         </label>
       </div>
 
       <label className="archive-control">
-        <span>excerpt</span>
+        <span>{isPodcast ? 'listing summary' : 'excerpt'}</span>
         <textarea
           className="native-content-editor__textarea native-content-editor__textarea--sm"
           value={value.excerpt}
           onChange={(e) => onChange({ ...value, excerpt: e.target.value })}
-          placeholder="excerpt"
+          placeholder={isPodcast ? 'short episode summary for cards and listing views' : 'excerpt'}
         />
       </label>
 
@@ -135,15 +234,73 @@ function NativeEntryEditor({
         />
       </label>
 
-      <label className="archive-control">
-        <span>body summary</span>
-        <textarea
-          className="native-content-editor__textarea native-content-editor__textarea--sm"
-          value={value.body}
-          onChange={(e) => onChange({ ...value, body: e.target.value })}
-          placeholder="plain text fallback body"
-        />
-      </label>
+      {isPodcast ? (
+        <section className="native-content-editor__podcast">
+          <div className="native-content-editor__grid">
+            <label className="archive-control">
+              <span>audio summary</span>
+              <input
+                type="text"
+                value={value.audioSummary || ''}
+                onChange={(e) => onChange({ ...value, audioSummary: e.target.value })}
+                placeholder="short audio summary"
+              />
+            </label>
+
+            <label className="archive-control">
+              <span>hero image url</span>
+              <input
+                type="text"
+                value={value.heroImage || ''}
+                onChange={(e) => onChange({ ...value, heroImage: e.target.value })}
+                placeholder="hero image url"
+              />
+            </label>
+          </div>
+
+          <label className="archive-control">
+            <span>transcript excerpt</span>
+            <textarea
+              className="native-content-editor__textarea native-content-editor__textarea--sm"
+              value={value.transcriptExcerpt || ''}
+              onChange={(e) => onChange({ ...value, transcriptExcerpt: e.target.value })}
+              placeholder="transcript excerpt"
+            />
+          </label>
+
+          <label className="archive-control">
+            <span>source notes</span>
+            <textarea
+              className="native-content-editor__textarea native-content-editor__textarea--sm"
+              value={value.sourceNotes || ''}
+              onChange={(e) => onChange({ ...value, sourceNotes: e.target.value })}
+              placeholder="notes about source audio, transcript quality, or publish state"
+            />
+          </label>
+        </section>
+      ) : null}
+
+      {!isPublicBlock ? (
+        <label className="archive-control">
+          <span>{isPrint ? 'print notes / fallback body' : 'body summary'}</span>
+          <textarea
+            className="native-content-editor__textarea native-content-editor__textarea--sm"
+            value={value.body}
+            onChange={(e) => onChange({ ...value, body: e.target.value })}
+            placeholder={isPrint ? 'plain text print notes or fallback body' : 'plain text fallback body'}
+          />
+        </label>
+      ) : (
+        <label className="archive-control">
+          <span>public block summary</span>
+          <textarea
+            className="native-content-editor__textarea native-content-editor__textarea--sm"
+            value={value.body}
+            onChange={(e) => onChange({ ...value, body: e.target.value })}
+            placeholder="plain text summary of the block"
+          />
+        </label>
+      )}
 
       <RichNativeEditor
         value={value.richBody || []}
@@ -161,7 +318,9 @@ function NativeEntryCard({ entry, isActive, onSelect }) {
       className={`native-entry-card${isActive ? ' native-entry-card--active' : ''}`}
       onClick={onSelect}
     >
-      <span className="native-entry-card__meta">{entry.contentType} / {entry.status} / {entry.workflowState} / {entry.target}</span>
+      <span className="native-entry-card__meta">
+        {entry.contentType} / {entry.status} / {entry.workflowState} / {entry.target}
+      </span>
       <strong>{entry.title || 'untitled'}</strong>
       <span className="native-entry-card__slug">{entry.slug || 'no-slug'}</span>
       <span className="native-entry-card__date">{entry.updatedAt}</span>
@@ -196,17 +355,16 @@ function RevisionList({ revisions, onRestore, state }) {
 
 export function NativeContentBridgePage() {
   const resolvedConfig = useResolvedConfig()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const eyebrow = getConfiguredText(resolvedConfig, 'nativeBridge.eyebrow', 'native / publish / bridge')
   const title = getConfiguredText(resolvedConfig, 'nativeBridge.title', 'Native Publishing Bridge')
   const description = getConfiguredText(
     resolvedConfig,
     'nativeBridge.description',
-    'Define the first native public content objects inside Sabot so publishing can move from imported archive toward a real internal system.'
+    'Choose what you are making first, then work inside a type-specific creation flow instead of a generic backend form.'
   )
-  const contentTypeLabel = getConfiguredText(resolvedConfig, 'nativeBridge.contentTypeLabel', 'content type')
-  const statusLabel = getConfiguredText(resolvedConfig, 'nativeBridge.statusLabel', 'status')
-  const targetLabel = getConfiguredText(resolvedConfig, 'nativeBridge.targetLabel', 'target')
+
   const tagsLabel = getConfiguredText(resolvedConfig, 'nativeBridge.tagsLabel', 'tags')
   const newEntryLabel = getConfiguredText(resolvedConfig, 'nativeBridge.newEntryAction', 'new entry')
   const saveEntryLabel = getConfiguredText(resolvedConfig, 'nativeBridge.saveEntryAction', 'save entry')
@@ -218,11 +376,12 @@ export function NativeContentBridgePage() {
   const latestGeneralLabel = getConfiguredText(resolvedConfig, 'nativeBridge.latestGeneralLabel', 'latest published general item')
   const collectionLabel = getConfiguredText(resolvedConfig, 'nativeBridge.collectionLabel', 'collection')
   const previewLabel = getConfiguredText(resolvedConfig, 'nativeBridge.previewLabel', 'preview')
-  const emptyLabel = getConfiguredText(resolvedConfig, 'nativeBridge.emptyLabel', 'No native entries yet. Start with a note, dispatch, or publicBlock.')
+  const emptyLabel = getConfiguredText(resolvedConfig, 'nativeBridge.emptyLabel', 'No native entries yet. Start with a content type instead of opening a raw empty object.')
 
   const [items, setItems] = useState([])
   const [activeId, setActiveId] = useState('')
-  const [draft, setDraft] = useState(createEmptyNativeEntry())
+  const [draft, setDraft] = useState(createTypedEntry('article'))
+  const [creationKind, setCreationKind] = useState('article')
   const [importText, setImportText] = useState('')
   const [copied, setCopied] = useState(false)
   const [importStatus, setImportStatus] = useState('')
@@ -250,9 +409,20 @@ export function NativeContentBridgePage() {
       const loaded = await loadNativeCollection({ includeFuture: 1 })
       if (cancelled) return
       setItems(loaded)
+
+      const requestedKind = searchParams.get('new')
+      if (requestedKind && CREATION_MODES[requestedKind]) {
+        const fresh = createTypedEntry(requestedKind)
+        setActiveId(fresh.id)
+        setDraft(fresh)
+        setCreationKind(requestedKind)
+        return
+      }
+
       if (loaded.length) {
         setActiveId(loaded[0].id)
         setDraft(loaded[0])
+        setCreationKind(inferCreationKind(loaded[0]))
       }
     }
 
@@ -260,7 +430,7 @@ export function NativeContentBridgePage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [searchParams])
 
   useEffect(() => {
     let cancelled = false
@@ -296,12 +466,22 @@ export function NativeContentBridgePage() {
   function selectEntry(entry) {
     setActiveId(entry.id)
     setDraft(entry)
+    setCreationKind(inferCreationKind(entry))
+    if (searchParams.get('new')) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('new')
+      setSearchParams(next, { replace: true })
+    }
   }
 
-  function handleNew() {
-    const fresh = createEmptyNativeEntry()
+  function handleNew(kind = creationKind) {
+    const fresh = createTypedEntry(kind)
     setActiveId(fresh.id)
     setDraft(fresh)
+    setCreationKind(kind)
+    const next = new URLSearchParams(searchParams)
+    next.set('new', kind)
+    setSearchParams(next, { replace: true })
   }
 
   async function handleSave(note = 'save') {
@@ -311,6 +491,7 @@ export function NativeContentBridgePage() {
     if (saved) {
       setActiveId(saved.id)
       setDraft(saved)
+      setCreationKind(inferCreationKind(saved))
     }
   }
 
@@ -321,8 +502,9 @@ export function NativeContentBridgePage() {
     if (next.length) {
       setActiveId(next[0].id)
       setDraft(next[0])
+      setCreationKind(inferCreationKind(next[0]))
     } else {
-      const fresh = createEmptyNativeEntry()
+      const fresh = createTypedEntry(creationKind)
       setActiveId(fresh.id)
       setDraft(fresh)
     }
@@ -343,6 +525,7 @@ export function NativeContentBridgePage() {
     }
     setActiveId(copy.id)
     setDraft(copy)
+    setCreationKind(inferCreationKind(copy))
   }
 
   async function handleExport() {
@@ -363,6 +546,7 @@ export function NativeContentBridgePage() {
       if (next.length) {
         setActiveId(next[0].id)
         setDraft(next[0])
+        setCreationKind(inferCreationKind(next[0]))
       }
       setImportStatus('imported')
     } catch {
@@ -379,9 +563,18 @@ export function NativeContentBridgePage() {
       setItems(refreshed)
       setActiveId(restored.id)
       setDraft(restored)
+      setCreationKind(inferCreationKind(restored))
     } catch {
       // ignore visible error path for now
     }
+  }
+
+  function pickCreationKind(kind) {
+    setCreationKind(kind)
+    setDraft((current) => applyModeToDraft(current, kind))
+    const next = new URLSearchParams(searchParams)
+    next.set('new', kind)
+    setSearchParams(next, { replace: true })
   }
 
   return (
@@ -404,11 +597,42 @@ export function NativeContentBridgePage() {
         </div>
       </section>
 
+      <section className="native-bridge-wizard">
+        <div className="native-bridge-wizard__header">
+          <div>
+            <div className="native-bridge-wizard__eyebrow">step 1</div>
+            <h2>Choose what you are making</h2>
+            <p>Pick a content type first. The form below changes shape around that choice.</p>
+          </div>
+          <button className="button button--primary" type="button" onClick={() => handleNew(creationKind)}>
+            {newEntryLabel}: {CREATION_MODES[creationKind]?.label || 'Article / Dispatch'}
+          </button>
+        </div>
+
+        <div className="native-bridge-wizard__grid">
+          {Object.entries(CREATION_MODES).map(([key, mode]) => (
+            <button
+              key={key}
+              type="button"
+              className={`native-bridge-wizard__card${creationKind === key ? ' is-active' : ''}`}
+              onClick={() => pickCreationKind(key)}
+            >
+              <strong>{mode.label}</strong>
+              <span>{mode.description}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <section className="native-bridge-layout">
         <aside className="native-bridge-sidebar">
           <div className="review-card__actions">
-            <button className="button button--primary" type="button" onClick={handleNew}>{newEntryLabel}</button>
-            <button className="button" type="button" onClick={handleExport}>{copied ? 'copied' : exportLabel}</button>
+            <button className="button button--primary" type="button" onClick={() => handleNew(creationKind)}>
+              {newEntryLabel}
+            </button>
+            <button className="button" type="button" onClick={handleExport}>
+              {copied ? 'copied' : exportLabel}
+            </button>
           </div>
 
           {items.length ? (
@@ -439,7 +663,9 @@ export function NativeContentBridgePage() {
           </label>
 
           <div className="review-card__actions">
-            <button className="button" type="button" onClick={handleImport} disabled={!canEdit}>{importLabel}</button>
+            <button className="button" type="button" onClick={handleImport} disabled={!canEdit}>
+              {importLabel}
+            </button>
           </div>
           {importStatus ? <p className="review-card__excerpt">{importStatus}</p> : null}
 
@@ -448,13 +674,27 @@ export function NativeContentBridgePage() {
 
         <section className="native-bridge-main">
           <div className="review-card__actions">
-            <button className="button button--primary" type="button" onClick={() => handleSave('save')} disabled={!canEdit}>{saveEntryLabel}</button>
-            <button className="button" type="button" onClick={handleDuplicate}>{duplicateEntryLabel}</button>
-            <button className="button" type="button" onClick={handleDelete} disabled={!canEdit}>{deleteEntryLabel}</button>
-            <button className="button" type="button" onClick={() => setDraft((d) => ({ ...d, status: 'published', workflowState: d.scheduledFor ? 'scheduled' : 'published' }))}>
+            <button className="button button--primary" type="button" onClick={() => handleSave(`save ${creationKind}`)} disabled={!canEdit}>
+              {saveEntryLabel}
+            </button>
+            <button className="button" type="button" onClick={handleDuplicate}>
+              {duplicateEntryLabel}
+            </button>
+            <button className="button" type="button" onClick={handleDelete} disabled={!canEdit}>
+              {deleteEntryLabel}
+            </button>
+            <button
+              className="button"
+              type="button"
+              onClick={() => setDraft((d) => ({ ...d, status: 'published', workflowState: d.scheduledFor ? 'scheduled' : 'published' }))}
+            >
               mark publish-ready
             </button>
-            <button className="button" type="button" onClick={() => setDraft((d) => ({ ...d, status: 'archived', workflowState: 'archived' }))}>
+            <button
+              className="button"
+              type="button"
+              onClick={() => setDraft((d) => ({ ...d, status: 'archived', workflowState: 'archived' }))}
+            >
               archive draft
             </button>
           </div>
@@ -462,16 +702,14 @@ export function NativeContentBridgePage() {
           <NativeEntryEditor
             value={draft}
             onChange={setDraft}
-            contentTypeLabel={contentTypeLabel}
-            statusLabel={statusLabel}
-            targetLabel={targetLabel}
+            creationKind={creationKind}
+            onPickCreationKind={pickCreationKind}
             tagsLabel={tagsLabel}
           />
 
-          <TranscriptBridgeCard draft={draft} setDraft={setDraft} />
+          {creationKind === 'podcast' ? <TranscriptBridgeCard draft={draft} setDraft={setDraft} /> : null}
 
           <NativeSourceBridgeCard nativeContentId={draft?.id || ''} />
-
           <NativeTaxonomyBridgeCard nativeContentId={draft?.id || ''} />
 
           <section className="review-summary-grid">

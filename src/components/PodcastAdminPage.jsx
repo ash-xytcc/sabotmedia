@@ -215,6 +215,9 @@ export function PodcastAdminPage({ pieces }) {
           </EditableText>
         </section>
 
+        <div className="review-card__actions podcast-admin-page__hero-actions">
+          <Link className="button button--primary" to="/native-bridge?new=podcast">new podcast episode</Link>
+        </div>
         <section className="missing-state">
           <h2>{emptyTitle}</h2>
           <p>{emptyBody}</p>
@@ -235,6 +238,10 @@ export function PodcastAdminPage({ pieces }) {
         <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'podcastAdmin.description'}>
           Track which podcast pieces need summaries, transcript excerpts, or richer bridge metadata before native transcription lands.
         </EditableText>
+        <div className="review-card__actions podcast-admin-page__hero-actions">
+          <Link className="button button--primary" to="/native-bridge?new=podcast">new podcast episode</Link>
+          <Link className="button" to="/review">review queue</Link>
+        </div>
         <div className="project-hero__meta">
           <span>{filtered.length} {visibleLabel}</span>
           <span>{podcasts.length} {totalLabel}</span>
