@@ -4258,7 +4258,6 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
 
 .system-backup-page .review-summary-grid {
   padding-bottom: 3rem;
-}
 
 @media (max-width: 900px) {
   .publication-topbar__inner {
@@ -4287,10 +4286,39 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
 }
 
 
-/* IMAGE_MASTHEAD_LOGO */
+
+/* tighter vertical space */
 
 .publication-topbar__brand-link {
-  display: inline-flex;
+  display: flex;
+  align-items: center;
+}
+
+.publication-topbar__brand-image {
+  display: block;
+  height: 140px; /* BIG. like an actual masthead */
+  width: auto;
+  max-width: none; /* remove artificial cap */
+  object-fit: contain;
+}
+
+/* reduce on smaller screens */
+@media (max-width: 900px) {
+  .publication-topbar__brand-image {
+    height: 90px;
+  }
+}
+
+}
+
+/* IMAGE_MASTHEAD_LOGO */
+
+.publication-topbar__inner {
+  padding: 8px 24px;
+}
+
+.publication-topbar__brand-link {
+  display: flex;
   align-items: center;
   text-decoration: none;
 }
@@ -4298,14 +4326,13 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
 .publication-topbar__brand-image {
   display: block;
   width: auto;
-  height: clamp(72px, 10vw, 120px);
-  max-width: min(48vw, 420px);
+  height: 140px;
+  max-width: none;
   object-fit: contain;
 }
 
 @media (max-width: 900px) {
   .publication-topbar__brand-image {
-    height: clamp(56px, 14vw, 88px);
-    max-width: 72vw;
+    height: 90px;
   }
 }
