@@ -439,7 +439,7 @@ export function ReviewQueuePage({ pieces }) {
                   </div>
 
                   <h2>
-                    <Link to={`/piece/${piece.slug}`}>{display.title}</Link>
+                    <Link to={`/post/${piece.slug}`}>{display.title}</Link>
                   </h2>
 
                   {display.subtitle ? <p className="review-card__subtitle">{display.subtitle}</p> : null}

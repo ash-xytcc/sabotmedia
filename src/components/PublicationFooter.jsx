@@ -4,27 +4,27 @@ const footerSections = [
   {
     title: 'Archive',
     links: [
-      ['/search', 'Search archives'],
+      ['/archive', 'Browse archive'],
       ['/updates', 'Recent posts'],
-      ['/press-updates', 'Press'],
-      ['/project-updates', 'Projects'],
+      ['/press', 'Press'],
+      ['/projects', 'Projects'],
     ],
   },
   {
     title: 'Formats',
     links: [
-      ['/search', 'Articles'],
-      ['/search', 'Dispatches'],
-      ['/search', 'Podcasts'],
-      ['/search', 'Print materials'],
+      ['/archive', 'Articles'],
+      ['/archive', 'Dispatches'],
+      ['/archive', 'Podcasts'],
+      ['/archive', 'Print materials'],
     ],
   },
   {
     title: 'About',
     links: [
-      ['/platform-map', 'About this publication'],
-      ['/admin', 'Admin'],
-      ['/system-backup', 'System backup'],
+      ['/archive', 'About the publication'],
+      ['/archive', 'Contact'],
+      ['/archive', 'Topics and tags'],
     ],
   },
 ]
@@ -34,11 +34,11 @@ export function PublicationFooter() {
     <footer className="publication-footer">
       <div className="publication-footer__top">
         <div className="publication-footer__brand">
-          <div className="publication-footer__eyebrow">publication / archive / other routes</div>
+          <div className="publication-footer__eyebrow">independent media / archive / public publication</div>
           <h2>Sabot Media</h2>
           <p>
-            Public-facing media publication for recent writing, dispatches, and archive material.
-            The content is the product. Everything else stays backstage where it belongs.
+            An independent media publication for recent writing, dispatches, print material, and archive work.
+            The public site is for reading. The tools stay backstage.
           </p>
         </div>
 
@@ -55,7 +55,7 @@ export function PublicationFooter() {
       </div>
 
       <div className="publication-footer__bottom">
-        <p>Read mode, experience mode, and print mode live on each piece page.</p>
+        <p>Each piece supports read mode, experience mode, and print mode.</p>
       </div>
     </footer>
   )

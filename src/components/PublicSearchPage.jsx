@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { PublicationTopbar } from './PublicationTopbar'
+import { PublicationFooter } from './PublicationFooter'
 import { fetchNativeEntries } from '../lib/nativePublicContentApi'
 import { splitDisplayTitle } from '../lib/content'
 import { listSurfaceConfigs } from '../lib/publicSurfaceTargets'
@@ -48,7 +50,7 @@ function makeArchiveResult(item) {
     title: display.title,
     excerpt: item.excerpt || item.audioSummary || item.transcriptExcerpt || '',
     meta: `${item.primaryProject} / ${item.type}`,
-    href: `/piece/${item.slug}`,
+    href: `/post/${item.slug}`,
     haystack,
   }
 }
@@ -113,11 +115,12 @@ export function PublicSearchPage({ pieces }) {
 
   return (
     <main className="page public-search-page">
+      <PublicationTopbar />
       <section className="project-hero">
-        <div className="project-hero__eyebrow">search / archive / discovery</div>
-        <h1>Search</h1>
+        <div className="project-hero__eyebrow">archive / browse / discovery</div>
+        <h1>Archive</h1>
         <p className="project-hero__description">
-          Search across public native updates and the imported archive. A shocking concept, apparently, but useful if readers are expected to find anything.
+          Browse the archive of articles, dispatches, and imported media pieces. Search is still available, but this page should feel like an archive first and a tool second.
         </p>
         <div className="project-hero__meta">
           <span>{results.length} results</span>
@@ -162,10 +165,11 @@ export function PublicSearchPage({ pieces }) {
         </section>
       ) : (
         <section className="missing-state">
-          <h2>No results</h2>
+          <h2>No archive results</h2>
           <p>Try a broader query or remove the kind filter.</p>
         </section>
       )}
+      <PublicationFooter />
     </main>
   )
 }

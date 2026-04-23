@@ -107,18 +107,21 @@ export default function App() {
     <PublicEditProvider>
       <Layout>
         <Routes>
-          <Route path="/" element={<NativeUpdatesPage />} />
+          <Route path="/" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
           <Route path="/projects" element={<ProjectsIndexPage projectMap={projectMap} />} />
           <Route path="/projects/:slug" element={<ProjectPage pieces={pieces} />} />
           <Route path="/piece/:slug" element={<PiecePage pieces={pieces} />} />
+          <Route path="/post/:slug" element={<PiecePage pieces={pieces} />} />
           <Route path="/piece/:slug/print" element={<PrintPage pieces={pieces} />} />
           <Route path="/review" element={<ReviewQueuePage pieces={pieces} />} />
           <Route path="/admin" element={<AdminPage pieces={pieces} />} />
           <Route path="/overrides" element={<OverridesPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
         <Route path="/native-bridge" element={<NativeContentBridgePage />} />
-        <Route path="/updates" element={<NativeUpdatesPage />} />
+        <Route path="/updates" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
         <Route path="/updates/:slug" element={<NativeUpdateDetailPage />} />
+        <Route path="/press" element={<PublicSurfacePage target="press" />} />
+        <Route path="/archive" element={<PublicSearchPage pieces={pieces} />} />
         <Route path="/search" element={<PublicSearchPage pieces={pieces} />} />
           <Route path="/draft" element={<PublicDraftPage />} />
         </Routes>

@@ -11,7 +11,7 @@ function SurfaceCard({ item }) {
         <span>{item.contentType}</span>
       </div>
       <h3>
-        <Link to={`/updates/${item.slug}`}>{item.title || item.slug}</Link>
+        <Link to={`/post/${item.slug}`}>{item.title || item.slug}</Link>
       </h3>
       {item.excerpt ? <p>{item.excerpt}</p> : null}
       <div className="piece-card__footer">
@@ -71,7 +71,7 @@ export function PublicSurfacePage({ target = 'general' }) {
       </section>
 
       <section className="archive-results-bar">
-        <Link className="button button--primary" to="/search">search</Link>
+        <Link className="button button--primary" to="/archive">search</Link>
         {navTargets.map((entry) => (
           <Link className="button" key={entry.key} to={entry.route}>{entry.title}</Link>
         ))}

@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { PublicationTopbar } from './PublicationTopbar'
 import { splitDisplayTitle } from '../lib/content'
 
 export function PrintPage({ pieces }) {
@@ -8,6 +9,7 @@ export function PrintPage({ pieces }) {
   if (!piece) {
     return (
       <main className="page print-page">
+      <PublicationTopbar />
         <div className="missing-state">
           <h1>Print view unavailable</h1>
           <p>This piece could not be found in the imported archive.</p>
@@ -20,6 +22,7 @@ export function PrintPage({ pieces }) {
 
   return (
     <main className="page print-page">
+      <PublicationTopbar />
       <header className="piece-header">
         <div className="piece-header__eyebrow">{piece.primaryProject}</div>
         <h1>{display.title}</h1>
@@ -31,8 +34,8 @@ export function PrintPage({ pieces }) {
         </div>
 
         <nav className="mode-toggle">
-          <Link to={`/piece/${piece.slug}`}>reading</Link>
-          <Link to={`/piece/${piece.slug}?mode=experience`}>experience</Link>
+          <Link to={`/post/${piece.slug}`}>reading</Link>
+          <Link to={`/post/${piece.slug}?mode=experience`}>experience</Link>
           <Link to={`/piece/${piece.slug}/print`}>print</Link>
         </nav>
       </header>

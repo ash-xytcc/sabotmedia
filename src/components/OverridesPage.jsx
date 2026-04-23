@@ -49,7 +49,7 @@ export function OverridesPage() {
                 </div>
 
                 <h2>
-                  <Link to={`/piece/${slug}`}>{slug}</Link>
+                  <Link to={`/post/${slug}`}>{slug}</Link>
                 </h2>
 
                 <div className="review-card__actions">

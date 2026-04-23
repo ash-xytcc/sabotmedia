@@ -17,7 +17,7 @@ function RelatedPieceCard({ piece }) {
         <span>{piece.type}</span>
       </div>
       <h3>
-        <Link to={`/piece/${piece.slug}`}>{display.title}</Link>
+        <Link to={`/post/${piece.slug}`}>{display.title}</Link>
       </h3>
       {display.subtitle ? <p className="piece-card__subtitle">{display.subtitle}</p> : null}
     </article>
@@ -149,12 +149,14 @@ export function PiecePage({ pieces }) {
 
   if (!piece) {
     return (
-      <main className="page piece-page">
+      <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
+      <PublicationTopbar />
         <div className="missing-state">
           <h1>{notFoundTitle}</h1>
           <p>{notFoundBody}</p>
         </div>
-      </main>
+        <PublicationFooter />
+    </main>
     )
   }
 
@@ -197,8 +199,8 @@ export function PiecePage({ pieces }) {
         </div>
 
         <nav className="mode-toggle">
-          <Link to={`/piece/${piece.slug}`}>{readingLabel}</Link>
-          <Link to={`/piece/${piece.slug}?mode=experience`}>{experienceLabel}</Link>
+          <Link to={`/post/${piece.slug}`}>{readingLabel}</Link>
+          <Link to={`/post/${piece.slug}?mode=experience`}>{experienceLabel}</Link>
           <Link to={`/piece/${piece.slug}/print`}>{printLabel}</Link>
         </nav>
       </header>
@@ -222,14 +224,14 @@ export function PiecePage({ pieces }) {
       {(previous || next) ? (
         <section className="piece-nav-grid">
           {previous ? (
-            <Link className="piece-nav-card" to={`/piece/${previous.slug}`}>
+            <Link className="piece-nav-card publication-piece-nav-card" to={`/post/${previous.slug}`}>
               <span className="piece-nav-card__label">{olderLabel}</span>
               <strong>{splitDisplayTitle(previous).title}</strong>
             </Link>
           ) : <div />}
 
           {next ? (
-            <Link className="piece-nav-card piece-nav-card--next" to={`/piece/${next.slug}`}>
+            <Link className="piece-nav-card piece-nav-card--next publication-piece-nav-card" to={`/post/${next.slug}`}>
               <span className="piece-nav-card__label">{newerLabel}</span>
               <strong>{splitDisplayTitle(next).title}</strong>
             </Link>
@@ -254,6 +256,7 @@ export function PiecePage({ pieces }) {
           </section>
         </>
       ) : null}
+      <PublicationFooter />
     </main>
   )
 }

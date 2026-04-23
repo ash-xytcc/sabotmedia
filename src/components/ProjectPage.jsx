@@ -20,7 +20,7 @@ function ProjectPieceCard({ piece }) {
         <span>{piece.type}</span>
       </div>
       <h3>
-        <Link to={`/piece/${piece.slug}`}>{display.title}</Link>
+        <Link to={`/post/${piece.slug}`}>{display.title}</Link>
       </h3>
       {display.subtitle ? <p className="piece-card__subtitle">{display.subtitle}</p> : null}
       {piece.excerpt ? <p>{piece.excerpt}</p> : null}
@@ -149,10 +149,10 @@ export function ProjectPage({ pieces }) {
           <EditableText as="div" className="project-featured-callout__eyebrow" field={featuredBlock?.eyebrowField || 'projectPage.featured.eyebrow'}>
             featured in this lane
           </EditableText>
-          <h2><Link to={`/piece/${featuredResult.piece.slug}`}>{splitDisplayTitle(featuredResult.piece).title}</Link></h2>
+          <h2><Link to={`/post/${featuredResult.piece.slug}`}>{splitDisplayTitle(featuredResult.piece).title}</Link></h2>
           {featuredResult.piece.excerpt ? <p>{featuredResult.piece.excerpt}</p> : null}
           <div className="project-featured-callout__actions">
-            <Link className="button button--primary" to={`/piece/${featuredResult.piece.slug}`}>{featuredReadLabel}</Link>
+            <Link className="button button--primary" to={`/post/${featuredResult.piece.slug}`}>{featuredReadLabel}</Link>
           </div>
         </section>
       ) : (

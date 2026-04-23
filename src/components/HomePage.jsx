@@ -17,7 +17,7 @@ function PieceCard({ piece }) {
         <span>{piece.type}</span>
       </div>
       <h3>
-        <Link to={`/piece/${piece.slug}`}>{display.title}</Link>
+        <Link to={`/post/${piece.slug}`}>{display.title}</Link>
       </h3>
       {display.subtitle ? <p className="piece-card__subtitle">{display.subtitle}</p> : null}
       {piece.excerpt ? <p>{piece.excerpt}</p> : null}
