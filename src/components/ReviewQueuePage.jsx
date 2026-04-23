@@ -337,7 +337,7 @@ export function ReviewQueuePage({ pieces }) {
   const grouped = useMemo(() => groupPieces(filtered, groupMode), [filtered, groupMode])
 
   return (
-    <main className="page review-page">
+    <main className="page review-queue-page review-page">
       <section className="project-hero">
         <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'review.hero.eyebrow'}>
           review / overrides / cleanup

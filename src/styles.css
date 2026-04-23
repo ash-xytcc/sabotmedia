@@ -3850,3 +3850,67 @@ body:has(.admin-page--creator) .page.admin-page--creator {
   max-width: 1180px;
   margin: 0 auto;
 }
+
+
+/* BACKSTAGE_TOOL_CHROME_HIDE */
+
+body:has(.native-content-bridge-page) .app-header,
+body:has(.native-content-bridge-page) .app-shell__header,
+body:has(.native-content-bridge-page) .site-header,
+body:has(.native-content-bridge-page) .admin-header,
+body:has(.native-content-bridge-page) .app-footer,
+body:has(.native-content-bridge-page) .app-shell__footer,
+body:has(.native-content-bridge-page) .site-footer,
+
+body:has(.public-draft-page) .app-header,
+body:has(.public-draft-page) .app-shell__header,
+body:has(.public-draft-page) .site-header,
+body:has(.public-draft-page) .admin-header,
+body:has(.public-draft-page) .app-footer,
+body:has(.public-draft-page) .app-shell__footer,
+body:has(.public-draft-page) .site-footer,
+
+body:has(.overrides-page) .app-header,
+body:has(.overrides-page) .app-shell__header,
+body:has(.overrides-page) .site-header,
+body:has(.overrides-page) .admin-header,
+body:has(.overrides-page) .app-footer,
+body:has(.overrides-page) .app-shell__footer,
+body:has(.overrides-page) .site-footer,
+
+body:has(.system-backup-page) .app-header,
+body:has(.system-backup-page) .app-shell__header,
+body:has(.system-backup-page) .site-header,
+body:has(.system-backup-page) .admin-header,
+body:has(.system-backup-page) .app-footer,
+body:has(.system-backup-page) .app-shell__footer,
+body:has(.system-backup-page) .site-footer,
+
+body:has(.review-queue-page) .app-header,
+body:has(.review-queue-page) .app-shell__header,
+body:has(.review-queue-page) .site-header,
+body:has(.review-queue-page) .admin-header,
+body:has(.review-queue-page) .app-footer,
+body:has(.review-queue-page) .app-shell__footer,
+body:has(.review-queue-page) .site-footer,
+
+body:has(.podcast-admin-page) .app-header,
+body:has(.podcast-admin-page) .app-shell__header,
+body:has(.podcast-admin-page) .site-header,
+body:has(.podcast-admin-page) .admin-header,
+body:has(.podcast-admin-page) .app-footer,
+body:has(.podcast-admin-page) .app-shell__footer,
+body:has(.podcast-admin-page) .site-footer {
+  display: none !important;
+}
+
+.native-content-bridge-page,
+.public-draft-page,
+.overrides-page,
+.system-backup-page,
+.review-queue-page,
+.podcast-admin-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}

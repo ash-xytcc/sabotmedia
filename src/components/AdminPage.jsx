@@ -46,7 +46,7 @@ export function AdminPage({ pieces = [] }) {
           <p>Check the public-facing site and recent posts before and after publishing.</p>
           <div className="creator-panel-card__actions">
             <Link className="button button--primary" to="/">View homepage</Link>
-            <Link className="button" to="/updates">Recent posts</Link>
+            <Link className="button" to="/archive">Browse archive</Link>
           </div>
         </article>
 

@@ -385,7 +385,7 @@ export function NativeContentBridgePage() {
   }
 
   return (
-    <main className="page native-bridge-page">
+    <main className="page native-content-bridge-page native-bridge-page">
       <section className="project-hero">
         <EditableText as="div" className="project-hero__eyebrow" field="nativeBridge.eyebrow">
           {eyebrow}
