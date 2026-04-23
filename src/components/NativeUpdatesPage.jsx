@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchNativeEntries } from '../lib/nativePublicContentApi'
 import { PublicationFooter } from './PublicationFooter'
 import { splitDisplayTitle } from '../lib/content'
+import { PublicationTopbar } from './PublicationTopbar'
 
 function formatDate(value) {
   const d = new Date(value || '')
@@ -204,18 +205,7 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
 
   return (
     <main className="page publication-homepage">
-      <header className="publication-topbar">
-        <div className="publication-topbar__brand">
-          <Link to="/updates">Sabot Media</Link>
-        </div>
-
-        <nav className="publication-topbar__nav">
-          <Link to="/updates">Home</Link>
-          <Link to="/archive">Archive</Link>
-          <Link to="/press">Press</Link>
-          <Link to="/projects">Projects</Link>
-        </nav>
-      </header>
+      <PublicationTopbar />
 
       {usingArchiveFallback ? (
         <section className="publication-status-note">
