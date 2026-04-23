@@ -23,16 +23,24 @@ function normalizeNativeItem(item) {
     publishedAt: item.publishedAt || item.updatedAt || '',
     updatedAt: item.updatedAt || item.publishedAt || '',
     href: `/updates/${item.slug}`,
-    imageUrl: item.heroImage || item.imageUrl || '',
+    imageUrl:
+      item.heroImage ||
+      item.imageUrl ||
+      item.image ||
+      item.featuredImage ||
+      getImportedImage(item) ||
+      '',
     sourceKind: 'native',
   }
 }
 
 function normalizeArchivePiece(piece) {
-  const display = typeof splitDisplayTitle === 'function' ? splitDisplayTitle(piece) : {
-    title: piece?.title || piece?.slug || 'Untitled',
-    subtitle: piece?.subtitle || '',
-  }
+  const display = typeof splitDisplayTitle === 'function'
+    ? splitDisplayTitle(piece)
+    : {
+        title: piece?.title || piece?.slug || 'Untitled',
+        subtitle: piece?.subtitle || '',
+      }
 
   const title = display?.title || piece?.title || piece?.slug || 'Untitled'
   const subtitle = display?.subtitle || piece?.subtitle || ''
@@ -40,8 +48,11 @@ function normalizeArchivePiece(piece) {
   const slug = piece?.slug || ''
   const type = piece?.type || 'article'
   const target = inferTargetFromPiece(piece)
-  const publishedAt = piece?.publishedAt || piece?.date || piece?.createdAt || piece?.updatedAt || ''
+  const publishedAt =
+    piece?.publishedAt || piece?.date || piece?.createdAt || piece?.updatedAt || ''
+
   const imageUrl =
+    getImportedImage(piece) ||
     piece?.heroImage ||
     piece?.hero_image ||
     piece?.image ||
@@ -51,12 +62,6 @@ function normalizeArchivePiece(piece) {
     piece?.featuredImage ||
     piece?.featured_image ||
     (Array.isArray(piece?.images) && piece.images[0]) ||
-
-    piece?.heroImage ||
-    piece?.hero_image ||
-    piece?.image ||
-    piece?.coverImage ||
-    piece?.featuredImage ||
     ''
 
   return {
@@ -68,7 +73,7 @@ function normalizeArchivePiece(piece) {
     contentType: type,
     publishedAt,
     updatedAt: piece?.updatedAt || publishedAt || '',
-    href: slug ? `/post/${slug}` : '/search',
+    href: slug ? `/post/${slug}` : '/archive',
     imageUrl,
     sourceKind: 'archive',
   }
@@ -85,10 +90,9 @@ function pickArchiveFeed({ pieces = [], featured = null, latest = [] }) {
   const latestList = Array.isArray(latest) && latest.length ? latest : pieces
   const normalizedLatest = latestList.map(normalizeArchivePiece)
 
-  const featuredPiece =
-    featured
-      ? normalizeArchivePiece(featured)
-      : normalizedLatest[0] || null
+  const featuredPiece = featured
+    ? normalizeArchivePiece(featured)
+    : normalizedLatest[0] || null
 
   const recent = normalizedLatest
     .filter((item) => item.id !== featuredPiece?.id)
@@ -193,16 +197,19 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
   )
 
   const featuredItem = useMemo(() => {
+    // Prefer archive until native image handling is fully real
+    if (archiveFeed.featured?.imageUrl) return archiveFeed.featured
     if (nativeItems.length) return nativeItems[0]
     return archiveFeed.featured
   }, [nativeItems, archiveFeed])
 
   const recentItems = useMemo(() => {
+    if (archiveFeed.recent?.length) return archiveFeed.recent
     if (nativeItems.length) return nativeItems.slice(1, 7)
     return archiveFeed.recent
   }, [nativeItems, archiveFeed])
 
-  const usingArchiveFallback = !nativeItems.length && !!archiveFeed.featured
+  const usingArchiveFallback = !!archiveFeed.featured
 
   return (
     <main className="page publication-homepage">
