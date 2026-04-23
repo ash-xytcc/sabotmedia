@@ -97,7 +97,11 @@ export function PiecePage({ pieces = [] }) {
     [piece]
   )
 
-  const heroImage = useMemo(() => (piece ? getImportedImage(piece) : ''), [piece])
+  const heroImage = useMemo(() => {
+    if (!piece) return ''
+    return piece.featuredImage || getImportedImage(piece) || ''
+  }, [piece])
+
   const bodyNodes = useMemo(
     () => renderImportedBody(piece?.bodyHtml || '', mode),
     [piece?.bodyHtml, mode]

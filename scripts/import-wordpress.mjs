@@ -8,12 +8,16 @@ if (!inputPath) {
 
 const xml = fs.readFileSync(inputPath, 'utf8')
 
-const items = extractItems(xml)
+const parsedItems = extractItems(xml)
   .map(parseItem)
   .filter(Boolean)
+
+const attachmentMap = buildAttachmentMap(parsedItems)
+
+const items = parsedItems
   .filter((item) => item.status === 'publish')
   .filter((item) => item.postType === 'post')
-  .map(normalizePiece)
+  .map((item) => normalizePiece(item, attachmentMap))
   .filter(Boolean)
   .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
 
@@ -36,8 +40,15 @@ function extractItems(source) {
 }
 
 function parseItem(block) {
-  const categories = [...block.matchAll(/<category[^>]*domain="category"[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/category>/g)].map((m) => decodeXml(m[1]).trim()).filter(Boolean)
-  const tags = [...block.matchAll(/<category[^>]*domain="post_tag"[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/category>/g)].map((m) => decodeXml(m[1]).trim()).filter(Boolean)
+  const categories = [...block.matchAll(/<category[^>]*domain="category"[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/category>/g)]
+    .map((m) => decodeXml(m[1]).trim())
+    .filter(Boolean)
+
+  const tags = [...block.matchAll(/<category[^>]*domain="post_tag"[^>]*><!\[CDATA\[([\s\S]*?)\]\]><\/category>/g)]
+    .map((m) => decodeXml(m[1]).trim())
+    .filter(Boolean)
+
+  const postMeta = parsePostMeta(block)
 
   return {
     title: readCdata(block, 'title'),
@@ -52,12 +63,62 @@ function parseItem(block) {
     postName: readCdata(block, 'wp:post_name'),
     status: readCdata(block, 'wp:status'),
     postType: readCdata(block, 'wp:post_type'),
+    attachmentUrl: readCdata(block, 'wp:attachment_url'),
     categories,
     tags,
+    postMeta,
   }
 }
 
-function normalizePiece(item) {
+function parsePostMeta(block) {
+  return [...block.matchAll(/<wp:postmeta>([\s\S]*?)<\/wp:postmeta>/g)]
+    .map((m) => {
+      const metaBlock = m[1]
+      return {
+        key: readCdata(metaBlock, 'wp:meta_key'),
+        value: readCdata(metaBlock, 'wp:meta_value'),
+      }
+    })
+    .filter((entry) => entry.key)
+}
+
+function buildAttachmentMap(items) {
+  const map = new Map()
+
+  for (const item of items) {
+    if (item.postType !== 'attachment') continue
+    if (!item.postId) continue
+
+    const alt = getPostMetaValue(item.postMeta, '_wp_attachment_image_alt')
+    map.set(String(item.postId), {
+      id: String(item.postId),
+      title: cleanText(item.title),
+      slug: cleanSlug(item.postName || item.title),
+      url: cleanText(item.attachmentUrl),
+      alt: cleanText(alt),
+      sourceUrl: cleanText(item.link) || cleanText(item.guid),
+    })
+  }
+
+  return map
+}
+
+function getPostMetaValue(postMeta, key) {
+  const found = (Array.isArray(postMeta) ? postMeta : []).find((entry) => entry.key === key)
+  return found?.value || ''
+}
+
+function resolveFeaturedImage(item, attachmentMap) {
+  const thumbnailId = cleanText(getPostMetaValue(item.postMeta, '_thumbnail_id'))
+  if (!thumbnailId) return ''
+
+  const attachment = attachmentMap.get(thumbnailId)
+  if (!attachment?.url) return ''
+
+  return attachment.url
+}
+
+function normalizePiece(item, attachmentMap) {
   const title = cleanText(item.title)
   const slug = cleanSlug(item.postName || title)
   if (!title || !slug) return null
@@ -74,6 +135,7 @@ function normalizePiece(item) {
     /reader|imposed|print|zine|booklet|bw/i.test(asset.url) ||
     /reader|imposed|print|zine|booklet|bw/i.test(asset.title)
   )
+  const featuredImage = resolveFeaturedImage(item, attachmentMap)
 
   return {
     id: item.postId || slug,
@@ -92,7 +154,9 @@ function normalizePiece(item) {
     bodyHtml,
     sourceUrl: cleanText(item.link) || cleanText(item.guid),
     sourcePostType: cleanText(item.postType),
+    featuredImage,
     sourcePostId: cleanText(item.postId),
+    featuredImage,
     relatedPrintLinks,
     relatedAssets,
     hasPrintAssets: relatedPrintLinks.length > 0,
@@ -100,25 +164,52 @@ function normalizePiece(item) {
 }
 
 function readCdata(block, tag) {
-  const cdata = block.match(new RegExp(`<${escapeTag(tag)}><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${escapeTag(tag)}>`, 'i'))
-  if (cdata) return decodeXml(cdata[1])
+  const cdataOpen = `<${tag}><![CDATA[`
+  const cdataClose = `]]></${tag}>`
+  const cdataStart = block.indexOf(cdataOpen)
+  if (cdataStart !== -1) {
+    const innerStart = cdataStart + cdataOpen.length
+    const innerEnd = block.indexOf(cdataClose, innerStart)
+    if (innerEnd !== -1) return decodeXml(block.slice(innerStart, innerEnd))
+  }
 
-  const plain = block.match(new RegExp(`<${escapeTag(tag)}>([\\s\\S]*?)<\\/${escapeTag(tag)}>`, 'i'))
-  return plain ? decodeXml(plain[1]) : ''
+  const open = `<${tag}>`
+  const close = `</${tag}>`
+  const start = block.indexOf(open)
+  if (start !== -1) {
+    const innerStart = start + open.length
+    const innerEnd = block.indexOf(close, innerStart)
+    if (innerEnd !== -1) return decodeXml(block.slice(innerStart, innerEnd))
+  }
+
+  return ''
 }
 
 function readText(block, tag) {
-  const m = block.match(new RegExp(`<${escapeTag(tag)}>([\\s\\S]*?)<\\/${escapeTag(tag)}>`, 'i'))
-  return m ? decodeXml(m[1]) : ''
+  const open = `<${tag}>`
+  const close = `</${tag}>`
+  const start = block.indexOf(open)
+  if (start === -1) return ''
+  const innerStart = start + open.length
+  const innerEnd = block.indexOf(close, innerStart)
+  if (innerEnd === -1) return ''
+  return decodeXml(block.slice(innerStart, innerEnd))
 }
 
 function readTextWithAttr(block, tag) {
-  const m = block.match(new RegExp(`<${escapeTag(tag)}[^>]*>([\\s\\S]*?)<\\/${escapeTag(tag)}>`, 'i'))
-  return m ? decodeXml(m[1]) : ''
-}
+  const openNeedle = `<${tag}`
+  const start = block.indexOf(openNeedle)
+  if (start === -1) return ''
 
-function escapeTag(tag) {
-  return tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const tagEnd = block.indexOf('>', start)
+  if (tagEnd === -1) return ''
+
+  const close = `</${tag}>`
+  const innerStart = tagEnd + 1
+  const innerEnd = block.indexOf(close, innerStart)
+  if (innerEnd === -1) return ''
+
+  return decodeXml(block.slice(innerStart, innerEnd))
 }
 
 function decodeXml(value) {

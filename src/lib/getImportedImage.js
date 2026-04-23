@@ -1,5 +1,10 @@
 export function getImportedImage(piece) {
-  // 1. relatedAssets
+  if (piece?.featuredImage) return piece.featuredImage
+  if (piece?.featured_image) return piece.featured_image
+  if (piece?.heroImage) return piece.heroImage
+  if (piece?.imageUrl) return piece.imageUrl
+  if (piece?.image) return piece.image
+
   const assets = Array.isArray(piece?.relatedAssets) ? piece.relatedAssets : []
 
   const imgAsset = assets.find((a) => {
@@ -10,7 +15,6 @@ export function getImportedImage(piece) {
   if (imgAsset?.url) return imgAsset.url
   if (imgAsset?.src) return imgAsset.src
 
-  // 2. fallback: first <img> in bodyHtml
   const html = String(piece?.bodyHtml || '')
   const match = html.match(/<img[^>]+src=["']([^"']+)["']/i)
   if (match) return match[1]

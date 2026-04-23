@@ -40,7 +40,7 @@ function normalizePiece(piece) {
   const subtitle = display?.subtitle || piece?.subtitle || ''
   const excerpt = piece?.excerpt || subtitle || ''
   const project = piece?.primaryProject || ''
-  const imageUrl = getImportedImage(piece) || ''
+  const imageUrl = piece?.featuredImage || getImportedImage(piece) || ''
 
   return {
     id: piece?.id || piece?.slug || title,
