@@ -3832,3 +3832,21 @@ body:has(.print-page) .site-footer {
     min-height: auto;
   }
 }
+
+
+/* ADMIN_CREATOR_HIDE_OLD_CHROME */
+
+body:has(.admin-page--creator) .app-header,
+body:has(.admin-page--creator) .app-shell__header,
+body:has(.admin-page--creator) .site-header,
+body:has(.admin-page--creator) .admin-header,
+body:has(.admin-page--creator) .app-footer,
+body:has(.admin-page--creator) .app-shell__footer,
+body:has(.admin-page--creator) .site-footer {
+  display: none !important;
+}
+
+body:has(.admin-page--creator) .page.admin-page--creator {
+  max-width: 1180px;
+  margin: 0 auto;
+}
