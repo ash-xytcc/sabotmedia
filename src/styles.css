@@ -5104,3 +5104,158 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
 .publication-hero-card:hover {
   transform: translateY(-3px);
 }
+
+
+/* HOMEPAGE_HIERARCHY_PATCH */
+
+.publication-homepage {
+  --homepage-gutter: clamp(16px, 2vw, 28px);
+}
+
+/* featured card gets stronger editorial treatment */
+.publication-hero-card {
+  position: relative;
+  min-height: clamp(420px, 58vw, 760px);
+  margin-bottom: var(--homepage-gutter);
+}
+
+.publication-hero-card__image-wrap {
+  position: relative;
+  display: block;
+  min-height: inherit;
+  text-decoration: none;
+  color: inherit;
+}
+
+.publication-hero-card__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: clamp(20px, 3.2vw, 46px);
+  background:
+    linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.90) 0%,
+      rgba(0, 0, 0, 0.55) 38%,
+      rgba(0, 0, 0, 0.18) 68%,
+      rgba(0, 0, 0, 0.00) 100%
+    );
+}
+
+.publication-hero-card__meta {
+  margin-bottom: 0.8rem;
+}
+
+.publication-hero-card h1 {
+  max-width: 11ch;
+  margin: 0;
+  font-size: clamp(2.6rem, 6.3vw, 6.2rem);
+  line-height: 0.92;
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* six-card row/grid gets calmer and more uniform */
+.publication-recent-grid {
+  gap: var(--homepage-gutter);
+  margin-top: 0;
+}
+
+.publication-post-card {
+  position: relative;
+  min-height: clamp(220px, 28vw, 360px);
+}
+
+.publication-post-card__link {
+  position: relative;
+  display: block;
+  min-height: inherit;
+  text-decoration: none;
+  color: inherit;
+}
+
+.publication-post-card__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: clamp(14px, 2vw, 22px);
+  background:
+    linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.92) 0%,
+      rgba(0, 0, 0, 0.58) 42%,
+      rgba(0, 0, 0, 0.16) 72%,
+      rgba(0, 0, 0, 0.00) 100%
+    );
+}
+
+.publication-post-card__meta {
+  margin-bottom: 0.45rem;
+}
+
+.publication-post-card h2 {
+  max-width: 13ch;
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw, 2.35rem);
+  line-height: 0.96;
+  text-wrap: balance;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* calm the metadata so the titles lead */
+.publication-post-card__meta,
+.publication-hero-card__meta {
+  opacity: 0.92;
+  font-size: 0.78rem;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+/* slightly stronger separation under the hero */
+.publication-next-row {
+  margin-top: calc(var(--homepage-gutter) * 1.15);
+}
+
+/* keep hover subtle and editorial, not app-y */
+.publication-hero-card:hover,
+.publication-post-card:hover {
+  transform: translateY(-2px);
+}
+
+.publication-hero-card:hover .publication-hero-card__image-fill,
+.publication-post-card:hover .publication-post-card__image-fill {
+  transform: scale(1.025);
+}
+
+/* mobile tightening */
+@media (max-width: 900px) {
+  .publication-hero-card {
+    min-height: 420px;
+  }
+
+  .publication-hero-card h1 {
+    max-width: 10ch;
+    -webkit-line-clamp: 5;
+  }
+
+  .publication-post-card {
+    min-height: 240px;
+  }
+
+  .publication-post-card h2 {
+    max-width: 12ch;
+    -webkit-line-clamp: 4;
+  }
+}
