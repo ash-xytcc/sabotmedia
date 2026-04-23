@@ -4,6 +4,8 @@ import { getProjectTheme } from '../lib/projectTheme'
 import { EditableText } from './EditableText'
 import { usePublicEdit } from './PublicEditContext'
 import { getConfiguredBlock } from '../lib/publicConfig'
+import { PublicationTopbar } from './PublicationTopbar'
+import { PublicationFooter } from './PublicationFooter'
 
 function ProjectIndexCard({ project }) {
   const meta = getProjectMeta(project.slug)
@@ -36,6 +38,7 @@ export function ProjectsIndexPage({ projectMap }) {
 
   return (
     <main className="page projects-index-page">
+      <PublicationTopbar />
       <section className="project-hero">
         <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'projects.hero.eyebrow'}>
           federation / lenses / routes
@@ -66,6 +69,7 @@ export function ProjectsIndexPage({ projectMap }) {
           <ProjectIndexCard key={project.slug} project={project} />
         ))}
       </section>
+      <PublicationFooter />
     </main>
   )
 }

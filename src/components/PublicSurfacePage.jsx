@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchNativeEntries } from '../lib/nativePublicContentApi'
 import { getSurfaceConfig, listSurfaceConfigs } from '../lib/publicSurfaceTargets'
+import { PublicationTopbar } from './PublicationTopbar'
+import { PublicationFooter } from './PublicationFooter'
 
 function SurfaceCard({ item }) {
   return (
@@ -59,6 +61,7 @@ export function PublicSurfacePage({ target = 'general' }) {
 
   return (
     <main className="page public-surface-page">
+      <PublicationTopbar />
       <section className="project-hero">
         <div className="project-hero__eyebrow">{surface.eyebrow}</div>
         <h1>{surface.title}</h1>
@@ -89,6 +92,7 @@ export function PublicSurfacePage({ target = 'general' }) {
           <p>This surface is live, but nothing has been published into it yet.</p>
         </section>
       )}
+      <PublicationFooter />
     </main>
   )
 }

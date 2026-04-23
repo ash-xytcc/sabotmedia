@@ -3643,3 +3643,74 @@ a {
     min-height: 18rem;
   }
 }
+
+
+/* PUBLIC_SHELL_HIDE_OLD_CHROME_GLOBAL */
+
+body:has(.publication-homepage) .app-header,
+body:has(.publication-homepage) .app-shell__header,
+body:has(.publication-homepage) .site-header,
+body:has(.publication-homepage) .admin-header,
+body:has(.publication-homepage) .app-footer,
+body:has(.publication-homepage) .app-shell__footer,
+body:has(.publication-homepage) .site-footer,
+
+body:has(.public-search-page) .app-header,
+body:has(.public-search-page) .app-shell__header,
+body:has(.public-search-page) .site-header,
+body:has(.public-search-page) .admin-header,
+body:has(.public-search-page) .app-footer,
+body:has(.public-search-page) .app-shell__footer,
+body:has(.public-search-page) .site-footer,
+
+body:has(.piece-page) .app-header,
+body:has(.piece-page) .app-shell__header,
+body:has(.piece-page) .site-header,
+body:has(.piece-page) .admin-header,
+body:has(.piece-page) .app-footer,
+body:has(.piece-page) .app-shell__footer,
+body:has(.piece-page) .site-footer,
+
+body:has(.project-page) .app-header,
+body:has(.project-page) .app-shell__header,
+body:has(.project-page) .site-header,
+body:has(.project-page) .admin-header,
+body:has(.project-page) .app-footer,
+body:has(.project-page) .app-shell__footer,
+body:has(.project-page) .site-footer,
+
+body:has(.projects-index-page) .app-header,
+body:has(.projects-index-page) .app-shell__header,
+body:has(.projects-index-page) .site-header,
+body:has(.projects-index-page) .admin-header,
+body:has(.projects-index-page) .app-footer,
+body:has(.projects-index-page) .app-shell__footer,
+body:has(.projects-index-page) .site-footer,
+
+body:has(.public-surface-page) .app-header,
+body:has(.public-surface-page) .app-shell__header,
+body:has(.public-surface-page) .site-header,
+body:has(.public-surface-page) .admin-header,
+body:has(.public-surface-page) .app-footer,
+body:has(.public-surface-page) .app-shell__footer,
+body:has(.public-surface-page) .site-footer,
+
+body:has(.print-page) .app-header,
+body:has(.print-page) .app-shell__header,
+body:has(.print-page) .site-header,
+body:has(.print-page) .admin-header,
+body:has(.print-page) .app-footer,
+body:has(.print-page) .app-shell__footer,
+body:has(.print-page) .site-footer {
+  display: none !important;
+}
+
+.public-search-page,
+.piece-page,
+.project-page,
+.projects-index-page,
+.public-surface-page,
+.print-page {
+  max-width: 1360px;
+  padding: 0;
+}

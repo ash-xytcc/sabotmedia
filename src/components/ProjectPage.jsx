@@ -7,6 +7,8 @@ import { EditableText } from './EditableText'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 import { getProjectTitleField, getProjectDescriptionField } from '../lib/projectConfigFields'
+import { PublicationTopbar } from './PublicationTopbar'
+import { PublicationFooter } from './PublicationFooter'
 
 const PAGE_SIZE = 24
 
@@ -228,6 +230,7 @@ export function ProjectPage({ pieces }) {
           <p>{noMatchesBody}</p>
         </section>
       )}
+      <PublicationFooter />
     </main>
   )
 }

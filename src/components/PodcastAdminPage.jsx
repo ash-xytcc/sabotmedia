@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 import { splitDisplayTitle } from '../lib/content'
+import { EditableText } from './EditableText'
 
 function buildPodcastOverride(piece, form) {
   const out = {}
