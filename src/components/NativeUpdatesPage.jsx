@@ -123,7 +123,7 @@ function HeroFeature({ item }) {
             <span>{item.contentType}</span>
           </div>
           <h1>{item.title}</h1>
-          {item.excerpt ? <p>{item.excerpt}</p> : null}
+          
         </div>
       </Link>
     </article>
@@ -148,7 +148,7 @@ function RecentCard({ item }) {
             <span>{item.target}</span>
           </div>
           <h2>{item.title}</h2>
-          {item.excerpt ? <p>{item.excerpt}</p> : null}
+          
         </div>
       </Link>
     </article>

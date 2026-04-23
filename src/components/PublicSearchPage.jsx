@@ -89,7 +89,7 @@ function ArchiveCard({ item, featured = false }) {
           <Link to={item.href}>{item.title}</Link>
         </h2>
 
-        {item.excerpt ? <p className="archive-card__excerpt">{item.excerpt}</p> : null}
+        
       </div>
     </article>
   )
