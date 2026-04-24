@@ -6,6 +6,7 @@ import { getPieces } from '../lib/pieces'
 const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
 const MENU_KEY = 'sabot-wp-clone-menu-v1'
 const USER_ROLE_SETTINGS_KEY = 'sabot-wp-clone-user-role-settings-v1'
+const CUSTOMIZER_KEY = 'sabot-wp-clone-customizer-v1'
 
 function loadJson(key, fallback) {
   try {
@@ -128,13 +129,261 @@ export function MenusAdminPage() {
 }
 
 export function CustomizeAdminPage() {
-  const sections = [
-    ['Site Identity', 'Title, tagline, icon, and publication identity.'],
-    ['Colors', 'Theme colors and editorial color controls.'],
-    ['Header / Masthead', 'Logo, masthead placement, and header layout.'],
-    ['Navigation', 'Public nav placement and menu behavior.'],
-    ['Homepage', 'Featured content, feed source, and layout.'],
-  ]
+  const sections = useMemo(() => ([
+    { id: 'siteIdentity', title: 'Site Identity', body: 'Title, tagline, icon, and publication identity.' },
+    { id: 'colors', title: 'Colors', body: 'Theme colors and editorial color controls.' },
+    { id: 'masthead', title: 'Header / Masthead', body: 'Logo, masthead placement, and header layout.' },
+    { id: 'navigation', title: 'Navigation', body: 'Public nav placement and menu behavior.' },
+    { id: 'homepage', title: 'Homepage', body: 'Featured content, feed source, and layout.' },
+  ]), [])
+  const [activeSection, setActiveSection] = useState('siteIdentity')
+  const [settings, setSettings] = useState(() => loadJson(CUSTOMIZER_KEY, {
+    siteIdentity: {
+      siteTitle: 'Sabot Media',
+      tagline: 'Radical media and publishing',
+      logoUrl: '',
+    },
+    colors: {
+      backgroundColor: '#ffffff',
+      accentColor: '#3858e9',
+      textColor: '#1d2327',
+    },
+    masthead: {
+      mastheadSize: 'medium',
+      navPosition: 'below',
+      logoUrl: '',
+    },
+    navigation: {
+      menuItems: [
+        { label: 'Archive', path: '/archive' },
+        { label: 'Press', path: '/press' },
+        { label: 'Projects', path: '/projects' },
+      ],
+    },
+    homepage: {
+      homepageSource: 'latest',
+      featuredLayout: 'grid',
+      postsPerPage: 12,
+    },
+  }))
+  const [saveMessage, setSaveMessage] = useState('')
+
+  function updateSection(section, field, value) {
+    setSettings((current) => ({
+      ...current,
+      [section]: {
+        ...current[section],
+        [field]: value,
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function updateNavigationItem(index, patch) {
+    setSettings((current) => ({
+      ...current,
+      navigation: {
+        ...current.navigation,
+        menuItems: current.navigation.menuItems.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function addNavigationItem() {
+    setSettings((current) => ({
+      ...current,
+      navigation: {
+        ...current.navigation,
+        menuItems: [...current.navigation.menuItems, { label: 'New Item', path: '/' }],
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function removeNavigationItem(index) {
+    setSettings((current) => ({
+      ...current,
+      navigation: {
+        ...current.navigation,
+        menuItems: current.navigation.menuItems.filter((_, i) => i !== index),
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function saveSection(section) {
+    saveJson(CUSTOMIZER_KEY, settings)
+    const sectionName = sections.find((entry) => entry.id === section)?.title || 'Section'
+    setSaveMessage(`${sectionName} saved locally.`)
+  }
+
+  function renderPanel() {
+    if (activeSection === 'siteIdentity') {
+      return (
+        <div className="wp-customize-panel" key="siteIdentity">
+          <h3>Site Identity</h3>
+          <label>
+            <span>Site title</span>
+            <input
+              value={settings.siteIdentity.siteTitle}
+              onChange={(e) => updateSection('siteIdentity', 'siteTitle', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Tagline</span>
+            <input
+              value={settings.siteIdentity.tagline}
+              onChange={(e) => updateSection('siteIdentity', 'tagline', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Logo / masthead URL</span>
+            <input
+              value={settings.siteIdentity.logoUrl}
+              onChange={(e) => updateSection('siteIdentity', 'logoUrl', e.target.value)}
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => saveSection('siteIdentity')}>Save</button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'colors') {
+      return (
+        <div className="wp-customize-panel" key="colors">
+          <h3>Colors</h3>
+          <label>
+            <span>Background color</span>
+            <input
+              value={settings.colors.backgroundColor}
+              onChange={(e) => updateSection('colors', 'backgroundColor', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Accent color</span>
+            <input
+              value={settings.colors.accentColor}
+              onChange={(e) => updateSection('colors', 'accentColor', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Text color</span>
+            <input
+              value={settings.colors.textColor}
+              onChange={(e) => updateSection('colors', 'textColor', e.target.value)}
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => saveSection('colors')}>Save</button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'masthead') {
+      return (
+        <div className="wp-customize-panel" key="masthead">
+          <h3>Header / Masthead</h3>
+          <label>
+            <span>Masthead size</span>
+            <select
+              value={settings.masthead.mastheadSize}
+              onChange={(e) => updateSection('masthead', 'mastheadSize', e.target.value)}
+            >
+              <option value="compact">Compact</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          <label>
+            <span>Nav position</span>
+            <select
+              value={settings.masthead.navPosition}
+              onChange={(e) => updateSection('masthead', 'navPosition', e.target.value)}
+            >
+              <option value="below">Below masthead</option>
+              <option value="inline">Inline with logo</option>
+              <option value="above">Above masthead</option>
+            </select>
+          </label>
+          <label>
+            <span>Logo URL</span>
+            <input
+              value={settings.masthead.logoUrl}
+              onChange={(e) => updateSection('masthead', 'logoUrl', e.target.value)}
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => saveSection('masthead')}>Save</button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'navigation') {
+      return (
+        <div className="wp-customize-panel" key="navigation">
+          <h3>Navigation</h3>
+          <div className="wp-customize-nav-list">
+            {settings.navigation.menuItems.map((item, index) => (
+              <div className="wp-customize-nav-row" key={`${item.path}-${index}`}>
+                <input
+                  value={item.label}
+                  onChange={(e) => updateNavigationItem(index, { label: e.target.value })}
+                  aria-label={`Menu item ${index + 1} label`}
+                />
+                <input
+                  value={item.path}
+                  onChange={(e) => updateNavigationItem(index, { path: e.target.value })}
+                  aria-label={`Menu item ${index + 1} path`}
+                />
+                <button type="button" className="button" onClick={() => removeNavigationItem(index)}>Remove</button>
+              </div>
+            ))}
+          </div>
+          <p>
+            <button type="button" className="button" onClick={addNavigationItem}>Add item</button>
+          </p>
+          <button className="button button--primary" type="button" onClick={() => saveSection('navigation')}>Save</button>
+        </div>
+      )
+    }
+
+    return (
+      <div className="wp-customize-panel" key="homepage">
+        <h3>Homepage</h3>
+        <label>
+          <span>Homepage source</span>
+          <select
+            value={settings.homepage.homepageSource}
+            onChange={(e) => updateSection('homepage', 'homepageSource', e.target.value)}
+          >
+            <option value="latest">Latest posts</option>
+            <option value="featured">Featured feed</option>
+            <option value="mixed">Mixed curation</option>
+          </select>
+        </label>
+        <label>
+          <span>Featured layout</span>
+          <select
+            value={settings.homepage.featuredLayout}
+            onChange={(e) => updateSection('homepage', 'featuredLayout', e.target.value)}
+          >
+            <option value="grid">Grid</option>
+            <option value="list">List</option>
+            <option value="stack">Stack</option>
+          </select>
+        </label>
+        <label>
+          <span>Posts per page</span>
+          <input
+            type="number"
+            min="1"
+            value={settings.homepage.postsPerPage}
+            onChange={(e) => updateSection('homepage', 'postsPerPage', Number(e.target.value) || 1)}
+          />
+        </label>
+        <button className="button button--primary" type="button" onClick={() => saveSection('homepage')}>Save</button>
+      </div>
+    )
+  }
 
   return (
     <AdminFrame>
@@ -147,14 +396,26 @@ export function CustomizeAdminPage() {
         <section className="wp-meta-box wp-customize-shell">
           <h2>Customizer</h2>
           <p className="description">WordPress-style customizer scaffold for Sabot.</p>
+          <WpNotice>Customizer settings are local scaffold until public wiring lands.</WpNotice>
 
-          <div className="wp-customize-section-list">
-            {sections.map(([title, body]) => (
-              <button className="wp-customize-section" type="button" key={title}>
-                <span>{title}</span>
-                <small>{body}</small>
-              </button>
-            ))}
+          <div className="wp-customize-layout">
+            <div className="wp-customize-section-list">
+              {sections.map((section) => (
+                <button
+                  className={`wp-customize-section${section.id === activeSection ? ' is-active' : ''}`}
+                  type="button"
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                >
+                  <span>{section.title}</span>
+                  <small>{section.body}</small>
+                </button>
+              ))}
+            </div>
+            <div className="wp-customize-panel-wrap">
+              {renderPanel()}
+              {saveMessage && <p className="description">{saveMessage}</p>}
+            </div>
           </div>
 
           <p className="description">
@@ -165,6 +426,7 @@ export function CustomizeAdminPage() {
     </AdminFrame>
   )
 }
+
 
 export function SiteEditorAdminPage() {
   return (
