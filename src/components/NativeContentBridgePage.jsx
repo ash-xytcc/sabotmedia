@@ -32,6 +32,9 @@ function createTypedEntry(kind = 'article') {
     categories: [],
     featuredImage: '',
     heroImage: '',
+    featuredImageTitle: '',
+    featuredImageAlt: '',
+    featuredImageCaption: '',
   }
 }
 
@@ -107,48 +110,12 @@ export function NativeContentBridgePage() {
   const [categoryTab, setCategoryTab] = useState('all')
   const [openMediaFor, setOpenMediaFor] = useState('')
   const [allowComments, setAllowComments] = useState(true)
+  const [isPermalinkEditing, setIsPermalinkEditing] = useState(false)
+  const [permalinkDraft, setPermalinkDraft] = useState('')
   const textareaRef = useRef(null)
 
-  const importedPieces = useMemo(() => getPieces(), [])
-  const categoryOptions = useMemo(() => (
-    [...new Set([
-      ...importedPieces.flatMap((piece) => piece.categories || piece.projects || [piece.primaryProject]).filter(Boolean),
-      ...items.flatMap((item) => item.categories || item.projects || []).filter(Boolean),
-      ...(draft.categories || []),
-    ])]
-  ), [draft.categories, importedPieces, items])
-  const mostUsedCategories = useMemo(() => {
-    const counts = new Map()
-    for (const piece of importedPieces) {
-      for (const category of (piece.categories || piece.projects || [piece.primaryProject])) {
-        if (!category) continue
-        counts.set(category, (counts.get(category) || 0) + 1)
-      }
-    }
-    for (const item of items) {
-      for (const category of (item.categories || item.projects || [])) {
-        if (!category) continue
-        counts.set(category, (counts.get(category) || 0) + 1)
-      }
-    }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name).slice(0, 12)
-  }, [importedPieces, items])
-  const mostUsedTags = useMemo(() => {
-    const counts = new Map()
-    for (const piece of importedPieces) {
-      for (const tag of (piece.tags || [])) {
-        if (!tag) continue
-        counts.set(tag, (counts.get(tag) || 0) + 1)
-      }
-    }
-    for (const item of items) {
-      for (const tag of (item.tags || [])) {
-        if (!tag) continue
-        counts.set(tag, (counts.get(tag) || 0) + 1)
-      }
-    }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name).slice(0, 20)
-  }, [importedPieces, items])
+  const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
+  const publicPieceSlugSet = useMemo(() => new Set(getPieces().map((piece) => piece.slug).filter(Boolean)), [])
 
   useEffect(() => {
     async function boot() {
@@ -159,17 +126,14 @@ export function NativeContentBridgePage() {
       const found = (loaded || []).find((item) => item.id === editId)
       if (found) {
         setActiveId(found.id)
-        setDraft({
-          ...found,
-          tags: normalizeTermList(found.tags),
-          categories: normalizeTermList(found.categories || found.projects),
-          projects: normalizeTermList(found.projects || found.categories),
-        })
+        setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [] })
+        setPermalinkDraft(found.slug || '')
         setAllowComments(found.allowComments ?? true)
       } else {
         const fresh = createTypedEntry(mode)
         setActiveId(fresh.id)
         setDraft(fresh)
+        setPermalinkDraft(fresh.slug || '')
         setAllowComments(true)
       }
     }
@@ -193,6 +157,9 @@ export function NativeContentBridgePage() {
       projects: normalizedCategories,
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
+      featuredImageTitle: draft.featuredImageTitle || '',
+      featuredImageAlt: draft.featuredImageAlt || '',
+      featuredImageCaption: draft.featuredImageCaption || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, note)
@@ -201,7 +168,9 @@ export function NativeContentBridgePage() {
     if (saved) {
       setActiveId(saved.id)
       setDraft(saved)
+      setPermalinkDraft(saved.slug || '')
     }
+    return saved || null
   }
 
   async function handleMoveToTrash() {
@@ -227,6 +196,9 @@ export function NativeContentBridgePage() {
       projects: normalizedCategories,
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
+      featuredImageTitle: draft.featuredImageTitle || '',
+      featuredImageAlt: draft.featuredImageAlt || '',
+      featuredImageCaption: draft.featuredImageCaption || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, 'preview')
@@ -235,7 +207,10 @@ export function NativeContentBridgePage() {
     if (!saved) return
     setActiveId(saved.id)
     setDraft(saved)
-    window.open(`/native-preview/${saved.id}`, '_blank', 'noopener,noreferrer')
+    setPermalinkDraft(saved.slug || '')
+    const canResolvePublicRoute = saved.status === 'published' && Boolean(saved.slug) && publicPieceSlugSet.has(saved.slug)
+    const previewPath = canResolvePublicRoute ? `/post/${saved.slug}` : `/native-preview/${saved.id}`
+    window.open(previewPath, '_blank', 'noopener,noreferrer')
   }
 
   function applyEditorMutation(mutator) {
@@ -263,6 +238,28 @@ export function NativeContentBridgePage() {
     })
   }
 
+  function handleTitleChange(nextTitle) {
+    setDraft((current) => {
+      const manuallyEditedSlug = current.slugManuallyEdited === true
+      if (manuallyEditedSlug) return { ...current, title: nextTitle }
+      const nextSlug = slugify(nextTitle)
+      setPermalinkDraft(nextSlug)
+      return { ...current, title: nextTitle, slug: nextSlug }
+    })
+  }
+
+  function handlePermalinkConfirm() {
+    const nextSlug = slugify(permalinkDraft)
+    setDraft((current) => ({ ...current, slug: nextSlug, slugManuallyEdited: true }))
+    setPermalinkDraft(nextSlug)
+    setIsPermalinkEditing(false)
+  }
+
+  function handlePermalinkCancel() {
+    setPermalinkDraft(draft.slug || '')
+    setIsPermalinkEditing(false)
+  }
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen wp-edit-screen">
@@ -273,8 +270,24 @@ export function NativeContentBridgePage() {
 
         <section className="wp-edit-main">
           <div className="wp-edit-content">
-            <input className="wp-title-input" value={draft.title || ''} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value, slug: slugify(d.slug || e.target.value) }))} placeholder="Add title" />
-            <div className="wp-permalink-row">Permalink: /post/{draft.slug || 'sample-post'}</div>
+            <input className="wp-title-input" value={draft.title || ''} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Add title" />
+            <div className="wp-permalink-row">
+              <span>Permalink: /post/{draft.slug || 'sample-post'}</span>
+              {!isPermalinkEditing ? (
+                <button type="button" className="button button-link" onClick={() => setIsPermalinkEditing(true)}>Edit</button>
+              ) : (
+                <span className="wp-permalink-edit-controls">
+                  <input
+                    type="text"
+                    value={permalinkDraft}
+                    onChange={(e) => setPermalinkDraft(e.target.value)}
+                    aria-label="Edit permalink slug"
+                  />
+                  <button type="button" className="button button-small" onClick={handlePermalinkConfirm}>OK</button>
+                  <button type="button" className="button button-small" onClick={handlePermalinkCancel}>Cancel</button>
+                </span>
+              )}
+            </div>
 
             <div className="wp-editor-actions">
               <button type="button" className="button" onClick={() => setOpenMediaFor('body')}>Add Media</button>
@@ -316,7 +329,22 @@ export function NativeContentBridgePage() {
               <div className="wp-meta-actions">
                 <button type="button" className="button" onClick={handlePreviewChanges}>Preview Changes</button>
                 <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
-                <button type="button" className="button button--primary" onClick={async () => { const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }; setDraft(next); await handleSave('publish') }}>Publish / Update</button>
+                <button type="button" className="button button--primary" onClick={async () => {
+                  const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }
+                  setDraft(next)
+                  const saved = await handleSave('publish')
+                  if (saved) setDraft(saved)
+                }}>Publish / Update</button>
+                {draft?.id && draft?.status === 'published' ? (
+                  <Link
+                    className="button"
+                    to={draft.slug && publicPieceSlugSet.has(draft.slug) ? `/post/${draft.slug}` : `/native-preview/${draft.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View Post
+                  </Link>
+                ) : null}
                 <button type="button" className="button" onClick={handleMoveToTrash}>Move to Trash</button>
               </div>
             </article>
@@ -353,9 +381,30 @@ export function NativeContentBridgePage() {
 
             <article className="wp-meta-box">
               <h2>Featured Image</h2>
-              <button type="button" className="button" onClick={() => setOpenMediaFor('featured')}>{draft.featuredImage ? 'Replace featured image' : 'Set featured image'}</button>
-              {draft.featuredImage ? <img className="wp-featured-preview" src={draft.featuredImage} alt="Featured" /> : null}
-              {draft.featuredImage ? <button type="button" className="button" onClick={() => setDraft((d) => ({ ...d, featuredImage: '', heroImage: '' }))}>Remove featured image</button> : null}
+              {!draft.featuredImage ? (
+                <button type="button" className="wp-link-button" onClick={() => setOpenMediaFor('featured')}>Set featured image</button>
+              ) : (
+                <>
+                  <img className="wp-featured-preview" src={draft.featuredImage} alt={draft.featuredImageAlt || draft.featuredImageTitle || 'Featured image'} />
+                  <div className="wp-featured-actions">
+                    <button
+                      type="button"
+                      className="wp-link-button"
+                      onClick={() => setDraft((d) => ({
+                        ...d,
+                        featuredImage: '',
+                        heroImage: '',
+                        featuredImageTitle: '',
+                        featuredImageAlt: '',
+                        featuredImageCaption: '',
+                      }))}
+                    >
+                      Remove featured image
+                    </button>
+                    <button type="button" className="wp-link-button" onClick={() => setOpenMediaFor('featured')}>Replace featured image</button>
+                  </div>
+                </>
+              )}
             </article>
           </aside>
         </section>
@@ -364,11 +413,24 @@ export function NativeContentBridgePage() {
           open={Boolean(openMediaFor)}
           onClose={() => setOpenMediaFor('')}
           onPick={(media) => {
+            const selectedMedia = {
+              url: String(media?.url || ''),
+              title: String(media?.title || ''),
+              alt: String(media?.alt || ''),
+              caption: String(media?.caption || ''),
+            }
             if (openMediaFor === 'featured') {
-              setDraft((d) => ({ ...d, featuredImage: media.url, heroImage: media.url }))
+              setDraft((d) => ({
+                ...d,
+                featuredImage: selectedMedia.url,
+                heroImage: selectedMedia.url,
+                featuredImageTitle: selectedMedia.title,
+                featuredImageAlt: selectedMedia.alt,
+                featuredImageCaption: selectedMedia.caption,
+              }))
             }
             if (openMediaFor === 'body') {
-              insertAtCursor(`\n<img src="${media.url}" alt="${media.alt || ''}" />\n`)
+              insertAtCursor(`\n<img src="${selectedMedia.url}" alt="${selectedMedia.alt}" />\n`)
             }
             setOpenMediaFor('')
           }}
