@@ -8176,3 +8176,51 @@ a.button {
     grid-template-columns: 1fr;
   }
 }
+
+/* HOMEPAGE_ABOVE_THE_FOLD_HERO_TITLE_PASS */
+
+.public-route-shell .publication-home .publication-topbar__inner,
+.public-route-shell .native-updates-page .publication-topbar__inner,
+.public-route-shell .updates-page .publication-topbar__inner {
+  padding-top: 4px !important;
+  padding-bottom: 2px !important;
+}
+
+.public-route-shell .publication-home .publication-topbar__brand-image,
+.public-route-shell .native-updates-page .publication-topbar__brand-image,
+.public-route-shell .updates-page .publication-topbar__brand-image {
+  height: clamp(104px, 10vw, 148px) !important;
+}
+
+.public-route-shell .publication-home .publication-topbar__nav,
+.public-route-shell .native-updates-page .publication-topbar__nav,
+.public-route-shell .updates-page .publication-topbar__nav {
+  margin-top: -14px !important;
+}
+
+.public-route-shell .publication-home .publication-home__hero,
+.public-route-shell .native-updates-page .publication-home__hero,
+.public-route-shell .updates-page .publication-home__hero {
+  margin-top: 0 !important;
+}
+
+.public-route-shell .publication-hero-card {
+  min-height: clamp(420px, calc(100vh - 210px), 620px);
+}
+
+.public-route-shell .publication-hero-card__content {
+  justify-content: flex-start !important;
+  padding-top: clamp(34px, 6vh, 72px) !important;
+}
+
+@media (max-width: 900px) {
+  .public-route-shell .publication-home .publication-topbar__brand-image,
+  .public-route-shell .native-updates-page .publication-topbar__brand-image,
+  .public-route-shell .updates-page .publication-topbar__brand-image {
+    height: clamp(82px, 20vw, 112px) !important;
+  }
+
+  .public-route-shell .publication-hero-card {
+    min-height: clamp(390px, calc(100vh - 170px), 560px);
+  }
+}
