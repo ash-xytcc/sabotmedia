@@ -23,9 +23,17 @@ export function createEmptyNativeEntry() {
     body: '',
     richBody: [],
     author: '',
+    sourceType: 'manual',
+    sourceKind: 'manual',
+    sourceLabel: '',
+    sourceUrl: '',
+    sourceExternalId: '',
+    sourcePostId: '',
+    sourceNotes: '',
     categories: [],
     projects: [],
     tags: [],
+    bodyHtml: '',
     featuredImage: '',
     heroImage: '',
     featuredImageTitle: '',
@@ -40,7 +48,7 @@ export function createEmptyNativeEntry() {
 
 export function normalizeNativeEntry(input) {
   const raw = input || {}
-  const status = normalizeEnum(raw.status, ['draft', 'published', 'archived', 'trash']) || 'draft'
+  const status = normalizeEnum(raw.status, ['draft', 'published', 'scheduled', 'archived', 'trash']) || 'draft'
   const workflowState =
     normalizeEnum(raw.workflowState, ['draft', 'in_review', 'needs_revision', 'ready', 'scheduled', 'published', 'archived']) ||
     inferWorkflowState(raw, status)
@@ -59,10 +67,13 @@ export function normalizeNativeEntry(input) {
     richBody: Array.isArray(raw.richBody) ? raw.richBody : [],
     author: String(raw.author || ''),
     sourceType: String(raw.sourceType || 'manual'),
+    sourceKind: String(raw.sourceKind || raw.sourceType || 'manual'),
     sourceLabel: String(raw.sourceLabel || ''),
     sourceUrl: String(raw.sourceUrl || ''),
     sourceExternalId: String(raw.sourceExternalId || ''),
+    sourcePostId: String(raw.sourcePostId || raw.sourceExternalId || ''),
     sourceNotes: String(raw.sourceNotes || ''),
+    bodyHtml: String(raw.bodyHtml || raw.body || ''),
     heroImage: String(raw.heroImage || raw.featuredImage || ''),
     featuredImage: String(raw.featuredImage || raw.heroImage || ''),
     featuredImageTitle: String(raw.featuredImageTitle || ''),
@@ -150,7 +161,7 @@ export function upsertNativeEntryLocal(items, entry) {
   const normalizedEntry = normalizeNativeEntry({
     ...entry,
     updatedAt: new Date().toISOString(),
-    publishedAt: entry?.status === 'published'
+    publishedAt: ['published', 'scheduled'].includes(String(entry?.status || ''))
       ? String(entry.publishedAt || new Date().toISOString())
       : String(entry?.publishedAt || ''),
   })
@@ -174,7 +185,7 @@ export async function upsertNativeEntry(items, entry, revisionNote = 'save') {
   const normalizedEntry = normalizeNativeEntry({
     ...entry,
     updatedAt: new Date().toISOString(),
-    publishedAt: entry?.status === 'published'
+    publishedAt: ['published', 'scheduled'].includes(String(entry?.status || ''))
       ? String(entry.publishedAt || new Date().toISOString())
       : String(entry?.publishedAt || ''),
   })
@@ -226,7 +237,7 @@ export function importNativeCollection(raw) {
 }
 
 export function getPublishedNativeEntries(items) {
-  return normalizeNativeCollection(items).filter((item) => item.status === 'published' && isScheduledVisible(item))
+  return normalizeNativeCollection(items).filter((item) => ['published', 'scheduled'].includes(item.status) && isScheduledVisible(item))
 }
 
 export function getLatestPublishedNativeEntry(items, target = '') {

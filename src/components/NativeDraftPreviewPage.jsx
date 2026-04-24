@@ -3,31 +3,8 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
-
-function renderRichBody(blocks = []) {
-  if (!Array.isArray(blocks) || !blocks.length) return null
-
-  return blocks.map((block) => {
-    if (block.type === 'heading') return <h2 key={block.id}>{block.text}</h2>
-    if (block.type === 'quote') return <blockquote key={block.id}>{block.text}</blockquote>
-    if (block.type === 'image') {
-      return (
-        <figure key={block.id}>
-          {block.url ? <img src={block.url} alt={block.alt || ''} /> : null}
-          {block.caption ? <figcaption>{block.caption}</figcaption> : null}
-        </figure>
-      )
-    }
-    if (block.type === 'embed') {
-      return (
-        <p key={block.id}>
-          <a href={block.url}>{block.caption || block.url}</a>
-        </p>
-      )
-    }
-    return <p key={block.id}>{block.text}</p>
-  })
-}
+import { renderImportedBody } from '../lib/renderImportedBody'
+import { resolveNativeBodyHtml } from '../lib/nativePublicFeed'
 
 export function NativeDraftPreviewPage() {
   const { id = '' } = useParams()
@@ -62,6 +39,7 @@ export function NativeDraftPreviewPage() {
   if (state === 'loaded' && !entry) return <Navigate to="/content" replace />
 
   const image = entry?.featuredImage || entry?.heroImage || ''
+  const bodyNodes = useMemo(() => renderImportedBody(resolveNativeBodyHtml(entry || {}), 'read'), [entry])
 
   return (
     <main className="page native-draft-preview-page">
@@ -97,8 +75,7 @@ export function NativeDraftPreviewPage() {
       <section className="piece-layout">
         <article className="piece-body-wrap">
           <div className="piece-body__content">
-            {renderRichBody(entry?.richBody)}
-            {!entry?.richBody?.length && entry?.body ? <p>{entry.body}</p> : null}
+            {bodyNodes.length ? bodyNodes : <p>No body content yet.</p>}
           </div>
         </article>
       </section>

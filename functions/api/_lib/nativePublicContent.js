@@ -74,7 +74,7 @@ export function normalizeNativeEntry(input) {
   const raw = input || {}
   const now = new Date().toISOString()
 
-  const status = normalizeEnum(raw.status, ['draft', 'published', 'archived']) || 'draft'
+  const status = normalizeEnum(raw.status, ['draft', 'published', 'scheduled', 'archived', 'trash']) || 'draft'
   const workflowState =
     normalizeEnum(raw.workflowState || raw.workflow_state, [
       'draft',
@@ -134,8 +134,13 @@ export async function listNativeEntries(db, options = {}) {
   const binds = []
 
   if (options.status) {
-    clauses.push('status = ?')
-    binds.push(options.status)
+    if (options.status === 'published') {
+      clauses.push('(status = ? OR status = ?)')
+      binds.push('published', 'scheduled')
+    } else {
+      clauses.push('status = ?')
+      binds.push(options.status)
+    }
   }
 
   if (options.target) {
@@ -410,8 +415,10 @@ export async function restoreRevisionSnapshot(db, revisionId) {
 
 export function isPubliclyVisible(item) {
   if (!item) return false
-  if (item.status !== 'published') return false
+  const status = String(item.status || '')
+  if (!['published', 'scheduled'].includes(status)) return false
   if (item.workflowState === 'archived') return false
+  if (item.workflowState === 'trash') return false
   if (item.workflowState && !['published', 'scheduled', 'ready'].includes(item.workflowState)) return false
 
   const now = Date.now()
@@ -426,14 +433,14 @@ function computePublishedAt(entry) {
   const existing = String(entry?.publishedAt || '')
   const scheduled = normalizeDateString(entry?.scheduledFor || '')
 
-  if (status !== 'published') return existing || ''
+  if (!['published', 'scheduled'].includes(status)) return existing || ''
   if (scheduled) return scheduled
   return existing || new Date().toISOString()
 }
 
 function inferWorkflowState(raw, status) {
   if (status === 'archived') return 'archived'
-  if (status === 'published') {
+  if (status === 'published' || status === 'scheduled') {
     const scheduled = normalizeDateString(raw?.scheduledFor || raw?.scheduled_for || '')
     if (scheduled && new Date(scheduled).getTime() > Date.now()) return 'scheduled'
     return 'published'

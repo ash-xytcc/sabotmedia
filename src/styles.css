@@ -7807,6 +7807,16 @@ a.button {
 .wp-admin-screen { padding: 20px; }
 .wp-screen-header { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .wp-screen-header h1 { font-size: 23px; margin: 0; }
+
+.wp-admin-notices { display: grid; gap: 10px; margin: 0 0 16px; }
+.wp-notice { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-left: 4px solid #72aee6; background: #fff; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04); padding: 10px 12px; }
+.wp-notice p { margin: 0; }
+.wp-notice__dismiss { border: 0; background: transparent; color: #50575e; cursor: pointer; font-size: 20px; line-height: 1; padding: 0 2px; }
+.wp-notice__dismiss:hover { color: #1d2327; }
+.wp-notice--success { border-left-color: #00a32a; }
+.wp-notice--warning { border-left-color: #dba617; }
+.wp-notice--error { border-left-color: #d63638; }
+.wp-notice--info { border-left-color: #72aee6; }
 .wp-dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .wp-meta-box { background: #fff; border: 1px solid #c3c4c7; border-radius: 0; padding: 12px; }
 .wp-meta-box h2 { font-size: 14px; margin: 0 0 10px; }
