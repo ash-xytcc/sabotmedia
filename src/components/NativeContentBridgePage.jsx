@@ -5,6 +5,7 @@ import {
   createEmptyNativeEntry,
   loadNativeCollection,
   slugify,
+  upsertNativeEntryLocal,
   upsertNativeEntry,
 } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
@@ -90,6 +91,78 @@ function wrapSelectionWithHtmlBlock(textarea, style) {
   return { next, cursorStart, cursorEnd }
 }
 
+const AUTOSAVE_DEBOUNCE_MS = 1200
+const LOCAL_REVISIONS_KEY_PREFIX = 'sabot-native-local-revisions-v1'
+
+function getLocalRevisionsStorageKey(id) {
+  return `${LOCAL_REVISIONS_KEY_PREFIX}:${String(id || '')}`
+}
+
+function loadLocalRevisions(postId) {
+  if (!postId) return []
+  try {
+    const raw = window.localStorage.getItem(getLocalRevisionsStorageKey(postId))
+    const parsed = JSON.parse(raw || '[]')
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(Boolean).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+  } catch {
+    return []
+  }
+}
+
+function saveLocalRevision(postId, draft, note) {
+  if (!postId) return { ok: false, revisions: [] }
+  const snapshot = {
+    id: `revision-${Math.random().toString(36).slice(2, 10)}`,
+    createdAt: new Date().toISOString(),
+    note: String(note || 'manual save'),
+    draft: {
+      title: String(draft?.title || ''),
+      slug: String(draft?.slug || ''),
+      body: String(draft?.body || ''),
+      excerpt: String(draft?.excerpt || ''),
+      tags: Array.isArray(draft?.tags) ? draft.tags : [],
+      categories: Array.isArray(draft?.categories) ? draft.categories : [],
+      featuredImage: String(draft?.featuredImage || ''),
+      heroImage: String(draft?.heroImage || ''),
+      status: String(draft?.status || 'draft'),
+      workflowState: String(draft?.workflowState || 'draft'),
+    },
+  }
+
+  const nextRevisions = [snapshot, ...loadLocalRevisions(postId)].slice(0, 25)
+  try {
+    window.localStorage.setItem(getLocalRevisionsStorageKey(postId), JSON.stringify(nextRevisions))
+    return { ok: true, revisions: nextRevisions }
+  } catch {
+    return { ok: false, revisions: loadLocalRevisions(postId) }
+  }
+}
+
+function toAutosaveFingerprint(draft, allowComments) {
+  return JSON.stringify({
+    title: draft?.title || '',
+    slug: draft?.slug || '',
+    excerpt: draft?.excerpt || '',
+    body: draft?.body || '',
+    contentType: draft?.contentType || 'dispatch',
+    status: draft?.status || 'draft',
+    workflowState: draft?.workflowState || 'draft',
+    scheduledFor: draft?.scheduledFor || '',
+    tags: Array.isArray(draft?.tags) ? draft.tags : [],
+    categories: Array.isArray(draft?.categories) ? draft.categories : [],
+    featuredImage: draft?.featuredImage || '',
+    heroImage: draft?.heroImage || '',
+    allowComments: Boolean(allowComments),
+  })
+}
+
+function formatAutosaveTime(value) {
+  const d = new Date(String(value || ''))
+  if (!Number.isFinite(d.getTime())) return ''
+  return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
 export function NativeContentBridgePage() {
   const [searchParams] = useSearchParams()
   const [items, setItems] = useState([])
@@ -100,7 +173,12 @@ export function NativeContentBridgePage() {
   const [newCategory, setNewCategory] = useState('')
   const [openMediaFor, setOpenMediaFor] = useState('')
   const [allowComments, setAllowComments] = useState(true)
+  const [autosaveState, setAutosaveState] = useState({ status: 'idle', at: '' })
+  const [revisions, setRevisions] = useState([])
   const textareaRef = useRef(null)
+  const autosaveTimerRef = useRef(null)
+  const suppressAutosaveRef = useRef(false)
+  const lastAutosaveFingerprintRef = useRef('')
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
 
@@ -113,14 +191,20 @@ export function NativeContentBridgePage() {
       const found = (loaded || []).find((item) => item.id === editId)
       if (found) {
         setActiveId(found.id)
-        setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [] })
+        const nextDraft = { ...found, tags: found.tags || [], categories: found.categories || found.projects || [] }
+        setDraft(nextDraft)
         setAllowComments(found.allowComments ?? true)
+        setRevisions(loadLocalRevisions(found.id))
+        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(nextDraft, found.allowComments ?? true)
       } else {
         const fresh = createTypedEntry(mode)
         setActiveId(fresh.id)
         setDraft(fresh)
         setAllowComments(true)
+        setRevisions(loadLocalRevisions(fresh.id))
+        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(fresh, true)
       }
+      setAutosaveState({ status: 'idle', at: '' })
     }
     boot()
   }, [searchParams])
@@ -140,6 +224,11 @@ export function NativeContentBridgePage() {
     if (saved) {
       setActiveId(saved.id)
       setDraft(saved)
+      lastAutosaveFingerprintRef.current = toAutosaveFingerprint(saved, allowComments)
+      if (note === 'save draft' || note === 'publish') {
+        const revisionResult = saveLocalRevision(saved.id, saved, note)
+        setRevisions(revisionResult.revisions)
+      }
     }
   }
 
@@ -191,6 +280,59 @@ export function NativeContentBridgePage() {
     })
   }
 
+  function restoreRevision(revision) {
+    if (!revision?.draft) return
+    suppressAutosaveRef.current = true
+    setDraft((current) => ({
+      ...current,
+      ...revision.draft,
+      tags: Array.isArray(revision.draft.tags) ? revision.draft.tags : [],
+      categories: Array.isArray(revision.draft.categories) ? revision.draft.categories : [],
+    }))
+    requestAnimationFrame(() => {
+      suppressAutosaveRef.current = false
+    })
+    setAutosaveState({ status: 'idle', at: autosaveState.at || '' })
+  }
+
+  useEffect(() => {
+    if (!draft?.id || suppressAutosaveRef.current) return
+    const fingerprint = toAutosaveFingerprint(draft, allowComments)
+    if (fingerprint === lastAutosaveFingerprintRef.current) return
+
+    if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current)
+    autosaveTimerRef.current = window.setTimeout(() => {
+      async function runAutosave() {
+        try {
+          setAutosaveState({ status: 'saving', at: autosaveState.at || '' })
+          const normalized = {
+            ...draft,
+            slug: slugify(draft.slug || draft.title),
+            tags: Array.isArray(draft.tags) ? draft.tags : [],
+            featuredImage: draft.featuredImage || draft.heroImage || '',
+            heroImage: draft.heroImage || draft.featuredImage || '',
+            allowComments,
+          }
+          const result = upsertNativeEntryLocal(items, normalized)
+          setItems(result.items)
+          lastAutosaveFingerprintRef.current = toAutosaveFingerprint(normalized, allowComments)
+          if (result.ok) {
+            setAutosaveState({ status: 'saved', at: new Date().toISOString() })
+          } else {
+            setAutosaveState({ status: 'failed', at: '' })
+          }
+        } catch {
+          setAutosaveState({ status: 'failed', at: '' })
+        }
+      }
+      runAutosave()
+    }, AUTOSAVE_DEBOUNCE_MS)
+
+    return () => {
+      if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current)
+    }
+  }, [allowComments, draft, items, autosaveState.at])
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen wp-edit-screen">
@@ -203,6 +345,11 @@ export function NativeContentBridgePage() {
           <div className="wp-edit-content">
             <input className="wp-title-input" value={draft.title || ''} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value, slug: slugify(d.slug || e.target.value) }))} placeholder="Add title" />
             <div className="wp-permalink-row">Permalink: /post/{draft.slug || 'sample-post'}</div>
+            <div className="wp-autosave-status" role="status" aria-live="polite">
+              {autosaveState.status === 'saving' ? 'Saving…' : null}
+              {autosaveState.status === 'saved' ? `Autosaved at ${formatAutosaveTime(autosaveState.at)}` : null}
+              {autosaveState.status === 'failed' ? 'Save failed' : null}
+            </div>
 
             <div className="wp-editor-actions">
               <button type="button" className="button" onClick={() => setOpenMediaFor('body')}>Add Media</button>
@@ -231,7 +378,24 @@ export function NativeContentBridgePage() {
 
             <article className="wp-meta-box"><h2>Excerpt</h2><textarea value={draft.excerpt || ''} onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))} /></article>
             <article className="wp-meta-box"><h2>Discussion</h2><label><input type="checkbox" checked={allowComments} onChange={(e) => setAllowComments(e.target.checked)} /> Allow comments</label></article>
-            <article className="wp-meta-box"><h2>Revisions</h2><p>Revision history placeholder. Saved notes: save draft, publish, trash, quick edit.</p></article>
+            <article className="wp-meta-box">
+              <h2>Revisions</h2>
+              {revisions.length ? (
+                <ul className="wp-revisions-list">
+                  {revisions.map((revision) => (
+                    <li key={revision.id} className="wp-revisions-item">
+                      <div>
+                        <strong>{new Date(revision.createdAt).toLocaleString()}</strong>
+                        <div className="wp-revisions-note">{revision.note}</div>
+                      </div>
+                      <button type="button" className="button" onClick={() => restoreRevision(revision)}>Restore</button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No local revision snapshots yet. Save Draft or Publish/Update to create one.</p>
+              )}
+            </article>
             <article className="wp-meta-box"><h2>Custom Fields / Advanced</h2><p>Advanced bridge fields remain available in native storage.</p></article>
           </div>
 

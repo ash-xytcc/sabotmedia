@@ -7825,6 +7825,7 @@ a.button {
 .wp-edit-main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
 .wp-title-input { width: 100%; font-size: 1.7em; padding: 8px; margin-bottom: 8px; }
 .wp-permalink-row { color: #50575e; margin-bottom: 10px; }
+.wp-autosave-status { color: #50575e; font-size: 12px; margin-bottom: 10px; min-height: 18px; }
 .wp-editor-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; }
 .wp-classic-toolbar { border: 1px solid #c3c4c7; border-bottom: 0; background: #f6f7f7; padding: 6px; color: #50575e; display: flex; gap: 4px; flex-wrap: wrap; }
 .wp-toolbar-btn { min-width: 30px; height: 30px; border: 1px solid #c3c4c7; background: #fff; color: #1d2327; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -7836,6 +7837,9 @@ a.button {
 .wp-tag-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .wp-tag-chips button { background: #f0f0f1; border: 1px solid #c3c4c7; }
 .wp-featured-preview { width: 100%; margin: 8px 0; border: 1px solid #c3c4c7; }
+.wp-revisions-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.wp-revisions-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #dcdcde; padding-top: 8px; }
+.wp-revisions-note { color: #646970; font-size: 12px; text-transform: capitalize; }
 
 .wp-media-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .wp-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; align-content: start; }

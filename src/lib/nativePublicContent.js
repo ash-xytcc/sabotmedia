@@ -134,6 +134,30 @@ export function saveNativeCollection(items) {
   return normalized
 }
 
+export function upsertNativeEntryLocal(items, entry) {
+  const normalizedEntry = normalizeNativeEntry({
+    ...entry,
+    updatedAt: new Date().toISOString(),
+    publishedAt: entry?.status === 'published'
+      ? String(entry.publishedAt || new Date().toISOString())
+      : String(entry?.publishedAt || ''),
+  })
+
+  const localBase = mergeNativeCollections(items || [], loadLocalNativeCollection())
+  const nextItems = normalizeNativeCollection(
+    localBase.some((item) => item.id === normalizedEntry.id)
+      ? localBase.map((item) => (item.id === normalizedEntry.id ? normalizedEntry : item))
+      : [normalizedEntry, ...localBase]
+  )
+
+  try {
+    window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(nextItems))
+    return { items: nextItems, item: normalizedEntry, ok: true }
+  } catch {
+    return { items: nextItems, item: normalizedEntry, ok: false }
+  }
+}
+
 export async function upsertNativeEntry(items, entry, revisionNote = 'save') {
   const normalizedEntry = normalizeNativeEntry({
     ...entry,
