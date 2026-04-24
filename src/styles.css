@@ -7835,7 +7835,25 @@ a.button {
 .wp-add-row { display: flex; gap: 8px; margin-top: 8px; }
 .wp-tag-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .wp-tag-chips button { background: #f0f0f1; border: 1px solid #c3c4c7; }
-.wp-featured-preview { width: 100%; margin: 8px 0; border: 1px solid #c3c4c7; }
+.wp-link-button {
+  border: 0;
+  background: transparent;
+  color: #2271b1;
+  padding: 0;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.wp-link-button:hover { color: #135e96; }
+.wp-featured-preview {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px 0;
+  border: 1px solid #c3c4c7;
+  object-fit: contain;
+}
+.wp-featured-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
 .wp-media-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .wp-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; align-content: start; }
