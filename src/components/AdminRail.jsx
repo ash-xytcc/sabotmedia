@@ -26,6 +26,14 @@ function AdminBarMenu({ label, children, className = '' }) {
 }
 
 export function AdminRail() {
+  const location = useLocation()
+  const [sites, setSites] = useState(() => loadSites())
+  const primarySite = sites[0]
+
+  useEffect(() => {
+    setSites(loadSites())
+  }, [location.pathname])
+
   return (
     <>
       <div className="wp-admin-topbar" role="navigation" aria-label="WordPress admin bar">
