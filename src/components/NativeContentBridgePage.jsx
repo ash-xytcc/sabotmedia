@@ -26,6 +26,9 @@ function createTypedEntry(kind = 'article') {
     categories: [],
     featuredImage: '',
     heroImage: '',
+    featuredImageTitle: '',
+    featuredImageAlt: '',
+    featuredImageCaption: '',
   }
 }
 
@@ -137,6 +140,9 @@ export function NativeContentBridgePage() {
       tags: Array.isArray(draft.tags) ? draft.tags : [],
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
+      featuredImageTitle: draft.featuredImageTitle || '',
+      featuredImageAlt: draft.featuredImageAlt || '',
+      featuredImageCaption: draft.featuredImageCaption || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, note)
@@ -162,6 +168,9 @@ export function NativeContentBridgePage() {
       tags: Array.isArray(draft.tags) ? draft.tags : [],
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
+      featuredImageTitle: draft.featuredImageTitle || '',
+      featuredImageAlt: draft.featuredImageAlt || '',
+      featuredImageCaption: draft.featuredImageCaption || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, 'preview')
@@ -339,9 +348,30 @@ export function NativeContentBridgePage() {
 
             <article className="wp-meta-box">
               <h2>Featured Image</h2>
-              <button type="button" className="button" onClick={() => setOpenMediaFor('featured')}>{draft.featuredImage ? 'Replace featured image' : 'Set featured image'}</button>
-              {draft.featuredImage ? <img className="wp-featured-preview" src={draft.featuredImage} alt="Featured" /> : null}
-              {draft.featuredImage ? <button type="button" className="button" onClick={() => setDraft((d) => ({ ...d, featuredImage: '', heroImage: '' }))}>Remove featured image</button> : null}
+              {!draft.featuredImage ? (
+                <button type="button" className="wp-link-button" onClick={() => setOpenMediaFor('featured')}>Set featured image</button>
+              ) : (
+                <>
+                  <img className="wp-featured-preview" src={draft.featuredImage} alt={draft.featuredImageAlt || draft.featuredImageTitle || 'Featured image'} />
+                  <div className="wp-featured-actions">
+                    <button
+                      type="button"
+                      className="wp-link-button"
+                      onClick={() => setDraft((d) => ({
+                        ...d,
+                        featuredImage: '',
+                        heroImage: '',
+                        featuredImageTitle: '',
+                        featuredImageAlt: '',
+                        featuredImageCaption: '',
+                      }))}
+                    >
+                      Remove featured image
+                    </button>
+                    <button type="button" className="wp-link-button" onClick={() => setOpenMediaFor('featured')}>Replace featured image</button>
+                  </div>
+                </>
+              )}
             </article>
           </aside>
         </section>
@@ -350,11 +380,24 @@ export function NativeContentBridgePage() {
           open={Boolean(openMediaFor)}
           onClose={() => setOpenMediaFor('')}
           onPick={(media) => {
+            const selectedMedia = {
+              url: String(media?.url || ''),
+              title: String(media?.title || ''),
+              alt: String(media?.alt || ''),
+              caption: String(media?.caption || ''),
+            }
             if (openMediaFor === 'featured') {
-              setDraft((d) => ({ ...d, featuredImage: media.url, heroImage: media.url }))
+              setDraft((d) => ({
+                ...d,
+                featuredImage: selectedMedia.url,
+                heroImage: selectedMedia.url,
+                featuredImageTitle: selectedMedia.title,
+                featuredImageAlt: selectedMedia.alt,
+                featuredImageCaption: selectedMedia.caption,
+              }))
             }
             if (openMediaFor === 'body') {
-              insertAtCursor(`\n<img src="${media.url}" alt="${media.alt || ''}" />\n`)
+              insertAtCursor(`\n<img src="${selectedMedia.url}" alt="${selectedMedia.alt}" />\n`)
             }
             setOpenMediaFor('')
           }}
