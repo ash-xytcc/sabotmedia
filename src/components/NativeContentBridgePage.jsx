@@ -485,7 +485,7 @@ export function NativeContentBridgePage() {
   }, [draft?.id, canEdit])
 
   useEffect(() => {
-    if (!canEdit || !draft?.id) return
+    if (!draft?.id) return
 
     const signature = JSON.stringify({
       id: draft.id,
@@ -858,7 +858,7 @@ export function NativeContentBridgePage() {
               ) : null}
 
               <div className="native-publish-panel__actions">
-                <button className="button button--primary" type="button" onClick={() => handleSave(`save ${creationKind}`)} disabled={!canEdit}>
+                <button className="button button--primary" type="button" onClick={() => handleSave(`save ${creationKind}`)}>
                   Save draft
                 </button>
                 <button
@@ -875,7 +875,6 @@ export function NativeContentBridgePage() {
                     setDraft(nextDraft)
                     await handleSave('publish', nextDraft)
                   }}
-                  disabled={!canEdit}
                 >
                   Publish / mark ready
                 </button>
