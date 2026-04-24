@@ -5,6 +5,7 @@ const NAV_GROUPS = [
   { to: '/content', label: 'Posts' },
   { to: '/media', label: 'Media' },
   { to: '/pages', label: 'Pages' },
+  { to: '/users', label: 'Users' },
   {
     label: 'Appearance',
     children: [

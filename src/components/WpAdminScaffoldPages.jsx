@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
@@ -419,6 +419,147 @@ export function SettingsAdminPage() {
           </select>
         </label>
         {status ? <p>{status}</p> : null}
+      </section>
+    </Screen>
+  )
+}
+
+const ROLE_PERMISSION_ROWS = [
+  {
+    role: 'Administrator',
+    publish: 'Yes',
+    manageUsers: 'Yes',
+    manageSettings: 'Yes',
+    note: 'Full local admin access in this scaffold.',
+  },
+  {
+    role: 'Editor',
+    publish: 'Yes',
+    manageUsers: 'No',
+    manageSettings: 'No',
+    note: 'Can publish and manage content.',
+  },
+  {
+    role: 'Author',
+    publish: 'Own posts',
+    manageUsers: 'No',
+    manageSettings: 'No',
+    note: 'Can write + publish own posts.',
+  },
+  {
+    role: 'Contributor',
+    publish: 'No',
+    manageUsers: 'No',
+    manageSettings: 'No',
+    note: 'Can draft posts pending review.',
+  },
+  {
+    role: 'Subscriber',
+    publish: 'No',
+    manageUsers: 'No',
+    manageSettings: 'No',
+    note: 'Read-only local account placeholder.',
+  },
+]
+
+export function UsersAdminPage() {
+  const [users, setUsers] = useState(() => loadUserRoleSettings())
+  const [status, setStatus] = useState('')
+  const [permissionsStatus, setPermissionsStatus] = useState('Checking current editor permission checks...')
+
+  useEffect(() => {
+    getEditorPermissionsSnapshot()
+      .then((snapshot) => {
+        setPermissionsStatus(snapshot?.canEditAnything
+          ? 'Current editor permission checks: editable.'
+          : 'Current editor permission checks: read-only fallback.')
+      })
+      .catch(() => {
+        setPermissionsStatus('Current editor permission checks unavailable. Local role storage still active.')
+      })
+  }, [])
+
+  function updateRole(id, role) {
+    setUsers((rows) => rows.map((row) => (row.id === id ? { ...row, role } : row)))
+  }
+
+  return (
+    <Screen
+      title="Users"
+      action={(
+        <button
+          type="button"
+          className="button button--primary"
+          onClick={() => {
+            saveUserRoleSettings(users)
+            setStatus('Users and role settings saved to local storage.')
+          }}
+        >
+          Save Local Roles
+        </button>
+      )}
+    >
+      <section className="wp-meta-box">
+        <h2>All Users</h2>
+        <p>{permissionsStatus}</p>
+        <table className="wp-list-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td><strong>{user.username}</strong></td>
+                <td>{user.displayName}</td>
+                <td>{user.email}</td>
+                <td>
+                  <select value={user.role} onChange={(e) => updateRole(user.id, e.target.value)}>
+                    {WP_ROLE_OPTIONS.map((role) => <option key={role} value={role}>{role}</option>)}
+                  </select>
+                </td>
+                <td>{user.source}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {status ? <p>{status}</p> : null}
+      </section>
+
+      <section className="wp-meta-box">
+        <h2>Roles and Permissions</h2>
+        <p>WordPress-like role model scaffold for Bondfire expansion planning. No production auth changes are applied here.</p>
+        <table className="wp-list-table">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Publish</th>
+              <th>Manage users</th>
+              <th>Manage settings</th>
+              <th>Explanation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ROLE_PERMISSION_ROWS.map((row) => (
+              <tr key={row.role}>
+                <td><strong>{row.role}</strong></td>
+                <td>{row.publish}</td>
+                <td>{row.manageUsers}</td>
+                <td>{row.manageSettings}</td>
+                <td>{row.note}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p><button type="button" className="button" onClick={() => {
+          setUsers(DEFAULT_LOCAL_USERS)
+          setStatus('Reset local users to placeholder profile.')
+        }}>Reset to placeholder user</button></p>
       </section>
     </Screen>
   )
