@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { usePublicEdit } from './PublicEditContext'
+import { WORDPRESS_ADMIN_LINKS } from '../lib/wordpressClient'
 
 export function PublicAdminToolbar() {
   const {
@@ -20,19 +21,19 @@ export function PublicAdminToolbar() {
         <Link className="wp-public-admin-bar__item wp-public-admin-bar__brand" to="/">
           ◉ Sabot Media
         </Link>
-        <Link className="wp-public-admin-bar__item" to="/content">
+        <Link className="wp-public-admin-bar__item" to={WORDPRESS_ADMIN_LINKS.posts}>
           Posts
         </Link>
-        <Link className="wp-public-admin-bar__item" to="/native-bridge?new=article">
+        <Link className="wp-public-admin-bar__item" to={WORDPRESS_ADMIN_LINKS.newPost}>
           + New
         </Link>
-        <Link className="wp-public-admin-bar__item" to="/native-bridge?new=podcast">
-          New Podcast
+        <Link className="wp-public-admin-bar__item" to={WORDPRESS_ADMIN_LINKS.media}>
+          Media
         </Link>
         <button className="wp-public-admin-bar__item" type="button" onClick={toggleEditing}>
           {isEditing ? 'Exit Edit Site' : 'Edit Site'}
         </button>
-        <Link className="wp-public-admin-bar__item" to="/admin">
+        <Link className="wp-public-admin-bar__item" to={WORDPRESS_ADMIN_LINKS.dashboard}>
           Admin
         </Link>
       </div>

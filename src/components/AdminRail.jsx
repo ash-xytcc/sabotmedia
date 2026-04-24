@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom'
+import { WORDPRESS_ADMIN_LINKS } from '../lib/wordpressClient'
 
 const LINKS = [
   { to: '/admin', label: 'Dashboard' },
-  { to: '/content', label: 'Posts' },
-  { to: '/native-bridge?new=article', label: 'Add New' },
-  { to: '/native-bridge?new=podcast', label: 'New Podcast' },
+  { to: WORDPRESS_ADMIN_LINKS.posts, label: 'Posts' },
+  { to: WORDPRESS_ADMIN_LINKS.newPost, label: 'Add New' },
+  { to: WORDPRESS_ADMIN_LINKS.media, label: 'Media' },
   { to: '/podcasts', label: 'Podcasts' },
   { to: '/draft', label: 'Site Editor' },
   { to: '/overrides', label: 'Overrides' },
