@@ -6544,3 +6544,180 @@ a.button {
     position: static;
   }
 }
+
+
+/* NATIVE_EDITOR_DENSITY_PASS */
+
+.native-bridge-page .project-hero {
+  padding-top: 1.25rem;
+  padding-bottom: 0.85rem;
+}
+
+.native-bridge-page .project-hero h1 {
+  font-size: clamp(2.2rem, 4.2vw, 4rem);
+}
+
+.native-bridge-wizard {
+  padding-bottom: 0.85rem;
+}
+
+.native-bridge-wizard__header {
+  margin-bottom: 0.65rem;
+}
+
+.native-bridge-wizard__header h2,
+.native-content-editor__type-header h2 {
+  font-size: clamp(1.3rem, 2vw, 1.9rem);
+}
+
+.native-bridge-wizard__grid {
+  gap: 0.7rem;
+}
+
+.native-bridge-wizard__card {
+  padding: 0.75rem;
+  border-radius: 14px;
+}
+
+.native-bridge-wizard__card span {
+  font-size: 0.86rem;
+}
+
+.native-publish-shell {
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+  gap: 0.85rem;
+}
+
+.native-content-editor,
+.native-publish-panel,
+.native-editor-advanced,
+.rich-native-editor {
+  border-radius: 16px;
+}
+
+.native-content-editor {
+  padding: 0.85rem;
+}
+
+.native-content-editor__type-header {
+  padding-bottom: 0.7rem;
+  margin-bottom: 0.85rem;
+}
+
+.native-type-switch__button {
+  min-height: 2.1rem;
+  padding: 0.42rem 0.68rem;
+  font-size: 0.72rem;
+}
+
+.native-content-editor__grid--simple .archive-control:first-child input {
+  min-height: 3.15rem;
+  font-size: clamp(1.25rem, 2.1vw, 2rem);
+}
+
+.archive-control {
+  gap: 0.32rem;
+}
+
+.archive-control input,
+.archive-control textarea,
+.archive-control select {
+  min-height: 2.35rem;
+  padding: 0.52rem 0.68rem;
+  font-size: 0.92rem;
+  border-radius: 10px;
+}
+
+.native-content-editor > .archive-control textarea,
+.native-content-editor__textarea {
+  min-height: 84px;
+}
+
+.rich-native-editor {
+  margin-top: 0.85rem;
+}
+
+.rich-native-editor__toolbar {
+  padding: 0.48rem;
+  gap: 0.35rem;
+}
+
+.rich-native-editor__toolbar .button {
+  min-height: 2.1rem;
+  padding: 0.42rem 0.68rem;
+  font-size: 0.82rem;
+}
+
+.rich-native-editor__layout {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: 0.85rem;
+  padding: 0.85rem;
+}
+
+.rich-native-block {
+  padding: 0.85rem;
+  border-radius: 14px;
+}
+
+.rich-native-block textarea.native-content-editor__textarea {
+  min-height: 170px;
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+.rich-native-block__meta {
+  margin-bottom: 0.5rem;
+}
+
+.rich-native-block__meta .button {
+  min-height: 1.95rem;
+  padding: 0.34rem 0.56rem;
+  font-size: 0.78rem;
+}
+
+.native-publish-panel {
+  top: 3.4rem;
+  gap: 0.62rem;
+  padding: 0.78rem;
+}
+
+.native-publish-panel h2 {
+  font-size: 1.05rem;
+}
+
+.native-publish-panel__image {
+  border-radius: 12px;
+}
+
+.native-publish-panel__actions {
+  gap: 0.42rem;
+}
+
+.native-publish-panel__actions .button,
+.native-editor-primary-actions .button {
+  min-height: 2.15rem;
+  padding: 0.42rem 0.68rem;
+  font-size: 0.82rem;
+}
+
+.native-editor-primary-actions {
+  padding: 0.45rem;
+  margin-bottom: 0.65rem;
+  border-radius: 14px;
+}
+
+.admin-frame {
+  grid-template-columns: 158px minmax(0, 1fr);
+}
+
+.admin-rail__link {
+  padding: 0.52rem 0.58rem;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 1050px) {
+  .native-publish-shell,
+  .rich-native-editor__layout {
+    grid-template-columns: 1fr;
+  }
+}
