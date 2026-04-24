@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { getPieces } from '../lib/pieces'
+import { loadLocalMediaItems } from '../lib/localMediaLibrary'
+import { exportNativeCollection, loadNativeCollection } from '../lib/nativePublicContent'
+import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
 
 const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
 const MENU_KEY = 'sabot-wp-clone-menu-v1'
@@ -27,6 +30,26 @@ function saveJson(key, value) {
 
 function WpNotice({ children }) {
   return <div className="notice notice-info"><p>{children}</p></div>
+}
+
+function downloadJson(filename, payload) {
+  const blob = new Blob([payload], { type: 'application/json' })
+  const url = window.URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  window.URL.revokeObjectURL(url)
+}
+
+async function copyToClipboard(value) {
+  if (!navigator?.clipboard?.writeText) return false
+  try {
+    await navigator.clipboard.writeText(value)
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function PagesAdminPage() {
@@ -450,12 +473,104 @@ export function SiteEditorAdminPage() {
 }
 
 export function ToolsAdminPage() {
+  const [notices, setNotices] = useState([])
+
+  function addNotice(type, message) {
+    setNotices((current) => [{ id: `${Date.now()}-${Math.random()}`, type, message }, ...current].slice(0, 6))
+  }
+
+  async function runNativeExport() {
+    const collection = await loadNativeCollection()
+    const payload = exportNativeCollection(collection)
+    const stamp = new Date().toISOString().slice(0, 10)
+    downloadJson(`native-content-export-${stamp}.json`, payload)
+    const copied = await copyToClipboard(payload)
+    addNotice('success', `Native content export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+  }
+
+  async function runPublicSettingsExport() {
+    const runtime = getStoredPublicConfig()
+    const payload = JSON.stringify(
+      {
+        exportedAt: new Date().toISOString(),
+        config: resolvePublicConfig(runtime),
+      },
+      null,
+      2
+    )
+    const stamp = new Date().toISOString().slice(0, 10)
+    downloadJson(`public-settings-export-${stamp}.json`, payload)
+    const copied = await copyToClipboard(payload)
+    addNotice('success', `Public settings export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+  }
+
+  function runMediaAudit() {
+    const pieces = getPieces()
+    const localMedia = loadLocalMediaItems()
+    const importedMediaCount = pieces.filter((piece) => String(piece.sourceType || '').toLowerCase() !== 'manual').length
+    const missingFeaturedImages = pieces.filter((piece) => !String(piece.heroImage || piece.featuredImage || '').trim()).length
+    addNotice(
+      'success',
+      `Media audit complete. Total media items: ${localMedia.length + importedMediaCount}. Local uploads: ${localMedia.length}. Imported media references: ${importedMediaCount}. Missing featured images: ${missingFeaturedImages}.`
+    )
+  }
+
+  function runBrokenImageAudit() {
+    addNotice('warning', 'Broken image audit scaffold is in place, but URL validation checks are not implemented yet.')
+  }
+
+  function runLocalStorageInventory() {
+    const inventory = []
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index)
+      if (!key) continue
+      const value = window.localStorage.getItem(key) || ''
+      inventory.push({ key, bytes: new Blob([value]).size })
+    }
+    inventory.sort((a, b) => b.bytes - a.bytes)
+    const summary = inventory.map((entry) => `${entry.key}: ${entry.bytes} bytes`).join('\n')
+    addNotice('success', `LocalStorage inventory complete. ${inventory.length} keys scanned.`)
+    if (summary) {
+      copyToClipboard(summary)
+    }
+  }
+
   const tools = [
-    ['Import', 'Bring content into the internal Sabot clone. Not wired yet.'],
-    ['Export', 'Export local/native content snapshots. Scaffolded.'],
-    ['Native content export', 'Future direct export of internal posts and media.'],
-    ['Public config export', 'Future export of public site settings and customizer state.'],
-    ['Media audit', 'Check missing featured images, broken URLs, and local media records.'],
+    {
+      name: 'Export native content JSON',
+      status: 'Ready',
+      notes: 'Downloads current native content collection and copies JSON when clipboard access is allowed.',
+      actionLabel: 'Run export',
+      action: runNativeExport,
+    },
+    {
+      name: 'Export public settings JSON',
+      status: 'Ready',
+      notes: 'Exports resolved public settings from browser storage as JSON.',
+      actionLabel: 'Run export',
+      action: runPublicSettingsExport,
+    },
+    {
+      name: 'Run media audit',
+      status: 'Ready',
+      notes: 'Summarizes media totals, local uploads, imported references, and missing featured images.',
+      actionLabel: 'Run audit',
+      action: runMediaAudit,
+    },
+    {
+      name: 'Run broken image audit',
+      status: 'Scaffolded',
+      notes: 'Audit flow exists, but URL reachability checks are intentionally not implemented yet.',
+      actionLabel: 'Run scaffold',
+      action: runBrokenImageAudit,
+    },
+    {
+      name: 'Run localStorage inventory',
+      status: 'Ready',
+      notes: 'Scans localStorage keys, sizes values in bytes, and copies a text summary.',
+      actionLabel: 'Run inventory',
+      action: runLocalStorageInventory,
+    },
   ]
 
   return (
@@ -464,6 +579,12 @@ export function ToolsAdminPage() {
         <div className="wp-screen-header">
           <h1>Tools</h1>
         </div>
+
+        {notices.map((notice) => (
+          <div className={`notice ${notice.type === 'warning' ? 'notice-warning' : 'notice-success'}`} key={notice.id}>
+            <p>{notice.message}</p>
+          </div>
+        ))}
 
         <section className="wp-meta-box">
           <h2>Available tools</h2>
@@ -475,14 +596,18 @@ export function ToolsAdminPage() {
                 <th>Tool</th>
                 <th>Status</th>
                 <th>Notes</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {tools.map(([tool, notes]) => (
-                <tr key={tool}>
-                  <td><strong>{tool}</strong></td>
-                  <td>Scaffolded</td>
-                  <td>{notes}</td>
+              {tools.map((tool) => (
+                <tr key={tool.name}>
+                  <td><strong>{tool.name}</strong></td>
+                  <td>{tool.status}</td>
+                  <td>{tool.notes}</td>
+                  <td>
+                    <button className="button" type="button" onClick={tool.action}>{tool.actionLabel}</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
