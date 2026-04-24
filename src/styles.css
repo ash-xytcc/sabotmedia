@@ -7791,6 +7791,17 @@ a.button {
 .admin-rail__label { color: #c3c4c7; }
 .admin-rail__link.is-active,
 .admin-rail__link:hover { background: #2271b1; color: #fff; }
+.admin-rail__group-label {
+  cursor: default;
+  font-weight: 600;
+}
+.admin-rail__subnav {
+  display: grid;
+}
+.admin-rail__sublink {
+  padding-left: 26px;
+  font-size: 12px;
+}
 
 .wp-admin-screen { padding: 20px; }
 .wp-screen-header { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -7798,6 +7809,7 @@ a.button {
 .wp-dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .wp-meta-box { background: #fff; border: 1px solid #c3c4c7; border-radius: 0; padding: 12px; }
 .wp-meta-box h2 { font-size: 14px; margin: 0 0 10px; }
+.wp-checklist { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
 
 .wp-list-filters { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .wp-view-tabs { display: flex; gap: 8px; }
@@ -7889,3 +7901,29 @@ a.button {
 .wp-list-table thead th { background: #f6f7f7; }
 .wp-settings-form { display: grid; gap: 10px; max-width: 560px; }
 .wp-settings-form label { display: grid; gap: 6px; }
+.admin-frame .button {
+  min-width: 0;
+  padding: 4px 10px;
+  border: 1px solid #2271b1;
+  border-radius: 3px;
+  background: #f6f7f7;
+  color: #2271b1;
+  font-family: Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.6;
+}
+.admin-frame .button--primary {
+  background: #2271b1;
+  color: #fff;
+  border-color: #135e96;
+}
+.admin-frame input,
+.admin-frame select,
+.admin-frame textarea {
+  font: inherit;
+  padding: 4px 8px;
+  border: 1px solid #8c8f94;
+  border-radius: 2px;
+}
