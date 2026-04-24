@@ -1,58 +1,40 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 
-const NAV_GROUPS = [
+const MENU = [
   { to: '/admin', label: 'Dashboard' },
   { to: '/content', label: 'Posts' },
+  { to: '/native-bridge?new=article', label: 'Add New' },
   { to: '/media', label: 'Media' },
   { to: '/pages', label: 'Pages' },
-  { to: '/users', label: 'Users' },
-  {
-    label: 'Appearance',
-    children: [
-      { to: '/menus', label: 'Menus' },
-      { to: '/customize', label: 'Customize' },
-    ],
-  },
+  { to: '/menus', label: 'Menus' },
+  { to: '/customize', label: 'Customize' },
+  { to: '/draft', label: 'Site Editor' },
   { to: '/tools', label: 'Tools' },
   { to: '/settings', label: 'Settings' },
+  { to: '/users', label: 'Users' },
 ]
 
 export function AdminRail() {
-  const location = useLocation()
-
   return (
     <>
       <div className="wp-admin-topbar">
-        <Link to="/" className="wp-admin-topbar__link">● My Sites</Link>
-        <Link to="/" className="wp-admin-topbar__link">🏠 Sabot Media</Link>
-        <Link to="/native-bridge?new=article" className="wp-admin-topbar__link">+ New</Link>
+        <NavLink to="/" className="wp-admin-topbar__link">● My Sites</NavLink>
+        <NavLink to="/" className="wp-admin-topbar__link">🏠 Sabot Media</NavLink>
+        <NavLink to="/native-bridge?new=article" className="wp-admin-topbar__link">+ New</NavLink>
       </div>
+
       <aside className="admin-rail" aria-label="Admin navigation">
         <div className="admin-rail__label">wp-admin</div>
         <nav className="admin-rail__nav">
-          {NAV_GROUPS.map((group) => {
-            if (!group.children) {
-              return (
-                <NavLink key={group.to} to={group.to} className={({ isActive }) => `admin-rail__link${isActive ? ' is-active' : ''}`}>
-                  {group.label}
-                </NavLink>
-              )
-            }
-
-            const isOpen = group.children.some((entry) => location.pathname.startsWith(entry.to))
-            return (
-              <div key={group.label} className={`admin-rail__group${isOpen ? ' is-open' : ''}`}>
-                <div className="admin-rail__link admin-rail__group-label">{group.label}</div>
-                <div className="admin-rail__subnav">
-                  {group.children.map((entry) => (
-                    <NavLink key={entry.to} to={entry.to} className={({ isActive }) => `admin-rail__link admin-rail__sublink${isActive ? ' is-active' : ''}`}>
-                      {entry.label}
-                    </NavLink>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
+          {MENU.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => `admin-rail__link${isActive ? ' is-active' : ''}`}
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
       </aside>
     </>
