@@ -1,9 +1,11 @@
 import { getImportedImage } from './getImportedImage'
 import { loadNativeCollection } from './nativePublicContent'
+import { classicEditorBodyToHtml } from './classicEditorBody'
 
 export function isPublishedNativeEntry(item) {
   if (!item) return false
-  if (item.status !== 'published') return false
+  const status = String(item.status || '')
+  if (!['published', 'scheduled'].includes(status)) return false
   if (item.scheduledFor) {
     const ms = new Date(item.scheduledFor).getTime()
     if (Number.isFinite(ms) && ms > Date.now()) return false
@@ -46,7 +48,7 @@ export function normalizeNativePublicPiece(item) {
     primaryProject: item.target || 'General',
     primaryProjectSlug: item.target || 'general',
     tags: Array.isArray(item.tags) ? item.tags : [],
-    bodyHtml: richBodyToHtml(item),
+    bodyHtml: resolveNativeBodyHtml(item),
     richBody: Array.isArray(item.richBody) ? item.richBody : [],
     sourceKind: 'native',
     sourcePostType: 'native',
@@ -87,11 +89,10 @@ export function mergeNativeAndImportedPieces(importedPieces = [], nativePieces =
     .sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0) - new Date(a.publishedAt || a.updatedAt || 0))
 }
 
-function richBodyToHtml(item) {
+export function resolveNativeBodyHtml(item) {
   const blocks = Array.isArray(item.richBody) ? item.richBody : []
   if (!blocks.length) {
-    const body = String(item.body || '').trim()
-    return body ? `<p>${escapeHtml(body)}</p>` : ''
+    return classicEditorBodyToHtml(item?.body || '')
   }
 
   return blocks.map((block) => {

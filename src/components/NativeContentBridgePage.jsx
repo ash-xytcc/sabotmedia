@@ -497,7 +497,8 @@ export function NativeContentBridgePage() {
                 <button type="button" className="button" onClick={handlePreviewChanges}>Preview Changes</button>
                 <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
                 <button type="button" className="button button--primary" onClick={async () => {
-                  const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }
+                  const isScheduled = Boolean(draft.scheduledFor) && new Date(draft.scheduledFor).getTime() > Date.now()
+                  const next = { ...draft, status: isScheduled ? 'scheduled' : 'published', workflowState: isScheduled ? 'scheduled' : 'published' }
                   setDraft(next)
                   const saved = await handleSave('publish')
                   if (saved) {
@@ -505,7 +506,7 @@ export function NativeContentBridgePage() {
                     pushNotice('Post published.', 'success')
                   }
                 }}>Publish / Update</button>
-                {draft?.id && draft?.status === 'published' ? (
+                {draft?.id && ['published', 'scheduled'].includes(draft?.status) ? (
                   <Link
                     className="button"
                     to={draft.slug && publicPieceSlugSet.has(draft.slug) ? `/post/${draft.slug}` : `/native-preview/${draft.id}`}

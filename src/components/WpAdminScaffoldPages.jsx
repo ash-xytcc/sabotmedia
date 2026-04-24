@@ -4,6 +4,8 @@ import { AdminFrame } from './AdminRail'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { listSurfaceConfigs } from '../lib/publicSurfaceTargets'
 import { DEFAULT_MENU_ITEMS, loadMenuDraft, loadWpSettings, saveMenuDraft, saveWpSettings } from '../lib/wpAdminLocal'
+import { fetchWordPressPieces } from '../lib/wordpressClient'
+import { loadNativeCollection, slugify, upsertNativeEntry } from '../lib/nativePublicContent'
 
 function Screen({ title, children, action }) {
   return (
@@ -198,7 +200,104 @@ const TOOL_ROWS = [
 ]
 
 export function ToolsAdminPage() {
-  const { pushNotice } = useAdminNotices()
+  const [rows, setRows] = useState([])
+  const [selected, setSelected] = useState({})
+  const [nativeItems, setNativeItems] = useState([])
+  const [status, setStatus] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  function getMatch(post, items = nativeItems) {
+    return items.find((item) => {
+      const samePostId = String(item.sourcePostId || item.sourceExternalId || '') === String(post.sourcePostId || '')
+      const sameSource = item.sourceUrl && post.sourceUrl && item.sourceUrl === post.sourceUrl
+      const sameSlug = item.slug && post.slug && item.slug === post.slug
+      return samePostId || sameSource || sameSlug
+    })
+  }
+
+  function isLikelyLocallyEdited(item) {
+    if (!item) return false
+    if (item.sourceKind !== 'wordpress') return true
+    const createdAt = new Date(item.createdAt || 0).getTime()
+    const updatedAt = new Date(item.updatedAt || 0).getTime()
+    if (!Number.isFinite(createdAt) || !Number.isFinite(updatedAt)) return false
+    return updatedAt - createdAt > 60_000
+  }
+
+  async function fetchPreview() {
+    setBusy(true)
+    setStatus('Fetching WordPress posts…')
+    try {
+      const [wpRows, native] = await Promise.all([
+        fetchWordPressPieces({ perPage: 100 }),
+        loadNativeCollection(),
+      ])
+      setNativeItems(native)
+      setRows(wpRows)
+      const defaults = {}
+      wpRows.forEach((row) => {
+        const existing = getMatch(row, native)
+        defaults[row.id] = !existing || !isLikelyLocallyEdited(existing)
+      })
+      setSelected(defaults)
+      setStatus(`Loaded ${wpRows.length} WordPress posts for preview.`)
+    } catch (err) {
+      setStatus(`WordPress sync failed: ${String(err?.message || err)}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function importSelected() {
+    const picked = rows.filter((row) => selected[row.id])
+    if (!picked.length) {
+      setStatus('Select at least one post to import.')
+      return
+    }
+
+    setBusy(true)
+    setStatus(`Importing ${picked.length} posts…`)
+
+    try {
+      let working = [...nativeItems]
+      for (const post of picked) {
+        const existing = getMatch(post, working)
+        const entry = {
+          ...(existing || {}),
+          id: existing?.id || `wp-${post.sourcePostId}`,
+          contentType: 'dispatch',
+          status: existing?.status || 'draft',
+          workflowState: existing?.workflowState || 'draft',
+          target: existing?.target || 'general',
+          title: post.title,
+          slug: slugify(post.slug || post.title),
+          excerpt: post.excerpt || '',
+          body: post.bodyHtml || post.body || '',
+          bodyHtml: post.bodyHtml || post.body || '',
+          publishedAt: post.publishedAt || existing?.publishedAt || '',
+          categories: Array.isArray(post.projects) ? post.projects : [],
+          projects: Array.isArray(post.projects) ? post.projects : [],
+          tags: Array.isArray(post.tags) ? post.tags : [],
+          featuredImage: post.featuredImage || '',
+          heroImage: post.featuredImage || '',
+          sourceType: 'wordpress',
+          sourceKind: 'wordpress',
+          sourceLabel: 'WordPress',
+          sourceUrl: post.sourceUrl || '',
+          sourceExternalId: String(post.sourcePostId || ''),
+          sourcePostId: String(post.sourcePostId || ''),
+        }
+        working = await upsertNativeEntry(working, entry, 'wordpress import sync')
+      }
+
+      setNativeItems(working)
+      setStatus(`Imported ${picked.length} posts into native content.`)
+    } catch (err) {
+      setStatus(`Import failed: ${String(err?.message || err)}`)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <Screen title="Tools">
@@ -218,6 +317,65 @@ export function ToolsAdminPage() {
             ))}
           </tbody>
         </table>
+      </section>
+      <section className="wp-meta-box">
+        <h2>WordPress Sync</h2>
+        <p>Preview posts from <code>https://sabotmedia.noblogs.org/wp-json/wp/v2/posts?_embed=1</code> and import selected rows into native content.</p>
+        <div className="wp-meta-actions">
+          <button type="button" className="button" onClick={fetchPreview} disabled={busy}>
+            {busy ? 'Working…' : 'Fetch preview'}
+          </button>
+          <button type="button" className="button button--primary" onClick={importSelected} disabled={busy || !rows.length}>
+            Import selected
+          </button>
+        </div>
+        {status ? <p>{status}</p> : null}
+        {rows.length ? (
+          <table className="wp-list-table">
+            <thead>
+              <tr>
+                <th style={{ width: 40 }}>
+                  <input
+                    type="checkbox"
+                    aria-label="Select all imported posts"
+                    checked={rows.length > 0 && rows.every((row) => selected[row.id])}
+                    onChange={(e) => {
+                      const next = {}
+                      rows.forEach((row) => { next[row.id] = e.target.checked })
+                      setSelected(next)
+                    }}
+                  />
+                </th>
+                <th>Title</th>
+                <th>Slug</th>
+                <th>Published</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const existing = getMatch(row)
+                const locallyEdited = isLikelyLocallyEdited(existing)
+                return (
+                  <tr key={row.id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(selected[row.id])}
+                        onChange={(e) => setSelected((state) => ({ ...state, [row.id]: e.target.checked }))}
+                        aria-label={`Select ${row.title}`}
+                      />
+                    </td>
+                    <td>{row.title}</td>
+                    <td>{row.slug}</td>
+                    <td>{row.publishedDateLabel || '—'}</td>
+                    <td>{existing ? (locallyEdited ? 'Existing (locally edited)' : 'Existing') : 'New'}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        ) : null}
       </section>
     </Screen>
   )

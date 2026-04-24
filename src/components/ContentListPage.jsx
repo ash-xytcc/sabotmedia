@@ -14,7 +14,7 @@ function normalizeTermList(value) {
 
 function getBucket(item) {
   if (item.status === 'trash') return 'trash'
-  if (item.workflowState === 'scheduled' || item.scheduledFor) return 'scheduled'
+  if (item.status === 'scheduled' || item.workflowState === 'scheduled' || item.scheduledFor) return 'scheduled'
   if (item.status === 'published' || item.workflowState === 'published') return 'published'
   return 'drafts'
 }
@@ -72,15 +72,21 @@ export function ContentListPage() {
     if (!bulkAction) return
     if (bulkAction !== 'empty-trash' && !selectedIds.length) return
     if (bulkAction === 'trash') {
-      const next = items.map((item) => (
-        selectedIds.includes(item.id) ? { ...item, status: 'trash' } : item
-      ))
-      const persisted = saveNativeCollection(next)
-      setItems(persisted)
-      pushNotice('Post moved to Trash.', 'warning')
+      let next = items
+      for (const id of selectedIds) {
+        const row = next.find((item) => item.id === id)
+        if (!row) continue
+        next = await upsertNativeEntry(next, { ...row, status: 'trash', workflowState: 'draft' }, 'bulk trash')
+      }
+      setItems(next)
     }
     if (bulkAction === 'restore') {
-      const next = saveNativeCollection(items.map((item) => (selectedIds.includes(item.id) ? { ...item, status: 'draft' } : item)))
+      let next = items
+      for (const id of selectedIds) {
+        const row = next.find((item) => item.id === id)
+        if (!row) continue
+        next = await upsertNativeEntry(next, { ...row, status: 'draft', workflowState: 'draft' }, 'bulk restore')
+      }
       setItems(next)
     }
     if (bulkAction === 'empty-trash') {
@@ -161,7 +167,7 @@ export function ContentListPage() {
                         <div className="wp-quick-edit">
                           <input value={quickEdit.title} onChange={(e) => setQuickEdit((c) => ({ ...c, title: e.target.value }))} placeholder="Title" />
                           <input value={quickEdit.slug} onChange={(e) => setQuickEdit((c) => ({ ...c, slug: e.target.value }))} placeholder="Slug" />
-                          <select value={quickEdit.status} onChange={(e) => setQuickEdit((c) => ({ ...c, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option><option value="trash">Trash</option></select>
+                          <select value={quickEdit.status} onChange={(e) => setQuickEdit((c) => ({ ...c, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option><option value="scheduled">Scheduled</option><option value="trash">Trash</option></select>
                           <input value={quickEdit.tags} onChange={(e) => setQuickEdit((c) => ({ ...c, tags: e.target.value }))} placeholder="Tags: tag1, tag2" />
                           <input value={quickEdit.categories} onChange={(e) => setQuickEdit((c) => ({ ...c, categories: e.target.value }))} placeholder="Categories: cat1, cat2" />
                           <button type="button" className="button button--primary" onClick={() => saveQuickEdit(item.id)}>Update</button>
