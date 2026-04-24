@@ -7600,8 +7600,8 @@ a.button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 0 10px;
+  gap: 8px;
+  padding: 0 6px;
   background: #1d2327;
   color: #f0f0f1;
   font-family: Arial, sans-serif;
@@ -7627,12 +7627,13 @@ a.button {
   display: inline-flex;
   align-items: center;
   min-height: 32px;
-  padding: 0 8px;
+  padding: 0 7px;
   font-family: Arial, sans-serif;
   font-size: 13px;
   line-height: 32px;
   text-decoration: none;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .wp-public-admin-bar__item:hover,

@@ -216,4 +216,21 @@ export const WORDPRESS_ADMIN_LINKS = {
   posts: `${WP_BASE}/wp-admin/edit.php`,
   newPost: `${WP_BASE}/wp-admin/post-new.php`,
   media: `${WP_BASE}/wp-admin/upload.php`,
+  customize: `${WP_BASE}/wp-admin/customize.php`,
+}
+
+export function buildWordPressPostEditLink(postId, sourceUrl = '') {
+  const id = String(postId || '').trim()
+  if (!id) return ''
+
+  try {
+    if (sourceUrl) {
+      const base = new URL(sourceUrl)
+      return `${base.origin}/wp-admin/post.php?post=${encodeURIComponent(id)}&action=edit`
+    }
+  } catch {
+    // fall through to default base
+  }
+
+  return `${WP_BASE}/wp-admin/post.php?post=${encodeURIComponent(id)}&action=edit`
 }
