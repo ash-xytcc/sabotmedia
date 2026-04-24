@@ -2,29 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { listSurfaceConfigs } from '../lib/publicSurfaceTargets'
-
-const MENU_STORAGE_KEY = 'sabot.wpClone.navMenu.v1'
-
-function loadMenu() {
-  if (typeof window === 'undefined') return []
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(MENU_STORAGE_KEY) || '[]')
-    if (Array.isArray(parsed) && parsed.length) return parsed
-  } catch {
-    // noop
-  }
-  return [
-    { id: 'home', label: 'Home', path: '/' },
-    { id: 'updates', label: 'Updates', path: '/updates' },
-    { id: 'projects', label: 'Projects', path: '/projects' },
-    { id: 'archive', label: 'Archive', path: '/archive' },
-  ]
-}
-
-function saveMenu(items) {
-  if (typeof window === 'undefined') return
-  window.localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(items))
-}
+import { DEFAULT_MENU_ITEMS, loadMenuDraft, loadWpSettings, saveMenuDraft, saveWpSettings } from '../lib/wpAdminLocal'
 
 function Screen({ title, children, action }) {
   return (
@@ -40,43 +18,65 @@ function Screen({ title, children, action }) {
   )
 }
 
+function dedupeByTitle(rows) {
+  const map = new Map()
+  rows.forEach((row) => {
+    if (!map.has(row.title)) map.set(row.title, row)
+  })
+  return [...map.values()]
+}
+
 export function PagesAdminPage() {
-  const surfaces = listSurfaceConfigs()
-  const corePages = [
-    { title: 'Home', route: '/', status: 'published' },
-    { title: 'Projects', route: '/projects', status: 'published' },
-    { title: 'Search', route: '/search', status: 'published' },
-    { title: 'Archive', route: '/archive', status: 'published' },
-  ]
+  const publicSurfaces = listSurfaceConfigs()
+
+  const pages = dedupeByTitle([
+    { id: 'home', title: 'Home', slug: '/', source: 'core' },
+    { id: 'archive', title: 'Archive', slug: '/archive', source: 'core' },
+    { id: 'press', title: 'Press', slug: '/press', source: 'core' },
+    { id: 'projects', title: 'Projects', slug: '/projects', source: 'core' },
+    ...publicSurfaces.map((surface) => ({
+      id: `surface-${surface.key}`,
+      title: surface.title,
+      slug: surface.route,
+      source: 'public surface',
+    })),
+  ])
+
+  const today = new Date().toLocaleDateString()
 
   return (
-    <Screen title="Pages" action={<Link className="button" to="/draft">Add New</Link>}>
+    <Screen title="Pages" action={<Link className="button button--primary" to="/draft">Add New</Link>}>
       <section className="wp-meta-box">
-        <h2>Public Pages</h2>
+        <div className="wp-list-filters">
+          <div className="wp-view-tabs">
+            <button type="button" className="wp-view-tab is-active">All ({pages.length})</button>
+          </div>
+        </div>
         <table className="wp-list-table">
-          <thead><tr><th>Title</th><th>Route</th><th>Status</th><th>Action</th></tr></thead>
+          <thead>
+            <tr>
+              <th style={{ width: 40 }}><input type="checkbox" aria-label="Select all pages" /></th>
+              <th>Title</th>
+              <th>Slug</th>
+              <th>Source</th>
+              <th>Date</th>
+            </tr>
+          </thead>
           <tbody>
-            {corePages.map((page) => (
-              <tr key={page.route}>
-                <td>{page.title}</td>
-                <td><code>{page.route}</code></td>
-                <td>{page.status}</td>
-                <td><Link to="/draft">Edit</Link></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-      <section className="wp-meta-box">
-        <h2>Public Surfaces</h2>
-        <table className="wp-list-table">
-          <thead><tr><th>Surface</th><th>Description</th><th>Route</th></tr></thead>
-          <tbody>
-            {surfaces.map((surface) => (
-              <tr key={surface.key}>
-                <td>{surface.title}</td>
-                <td>{surface.description}</td>
-                <td><code>{surface.route}</code></td>
+            {pages.map((page) => (
+              <tr key={page.id}>
+                <td><input type="checkbox" aria-label={`Select ${page.title}`} /></td>
+                <td>
+                  <strong>{page.title}</strong>
+                  <div className="wp-row-actions">
+                    <Link to="/draft">Edit</Link>
+                    <Link to={page.slug}>View</Link>
+                    <Link to="/customize">Customize</Link>
+                  </div>
+                </td>
+                <td>{page.slug}</td>
+                <td>{page.source}</td>
+                <td>{today}</td>
               </tr>
             ))}
           </tbody>
@@ -87,59 +87,89 @@ export function PagesAdminPage() {
 }
 
 export function MenusAdminPage() {
-  const [items, setItems] = useState(loadMenu)
-  const [label, setLabel] = useState('')
-  const [path, setPath] = useState('')
-  const changed = useMemo(() => JSON.stringify(items) !== JSON.stringify(loadMenu()), [items])
+  const [items, setItems] = useState(() => loadMenuDraft())
+  const [status, setStatus] = useState('')
 
-  function updateItem(id, patch) {
-    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)))
+  const changed = useMemo(() => JSON.stringify(items) !== JSON.stringify(loadMenuDraft()), [items])
+
+  function move(index, direction) {
+    const target = index + direction
+    if (target < 0 || target >= items.length) return
+    setItems((current) => {
+      const next = [...current]
+      const [moved] = next.splice(index, 1)
+      next.splice(target, 0, moved)
+      return next
+    })
   }
 
   return (
-    <Screen title="Menus" action={<button type="button" className="button button--primary" onClick={() => saveMenu(items)}>{changed ? 'Save Menu' : 'Saved'}</button>}>
+    <Screen title="Menus" action={<button type="button" className="button button--primary" onClick={() => {
+      saveMenuDraft(items)
+      setStatus('Menu saved to local storage.')
+    }}>{changed ? 'Save Menu' : 'Saved'}</button>}>
       <section className="wp-meta-box">
-        <h2>Main Navigation</h2>
-        <p>Edit nav labels and routes locally for clone behavior.</p>
+        <h2>Edit Menus</h2>
+        <p>Primary menu scaffold (Archive / Press / Projects) with local reorder + label edits.</p>
         <table className="wp-list-table">
-          <thead><tr><th>Label</th><th>Path</th><th /></tr></thead>
+          <thead>
+            <tr>
+              <th>Label</th>
+              <th>Path</th>
+              <th style={{ width: 140 }}>Order</th>
+            </tr>
+          </thead>
           <tbody>
-            {items.map((item) => (
+            {items.map((item, index) => (
               <tr key={item.id}>
-                <td><input value={item.label} onChange={(e) => updateItem(item.id, { label: e.target.value })} /></td>
-                <td><input value={item.path} onChange={(e) => updateItem(item.id, { path: e.target.value })} /></td>
-                <td><button type="button" className="button" onClick={() => setItems((prev) => prev.filter((x) => x.id !== item.id))}>Remove</button></td>
+                <td><input value={item.label} onChange={(e) => setItems((rows) => rows.map((row, i) => i === index ? { ...row, label: e.target.value } : row))} /></td>
+                <td><input value={item.to} onChange={(e) => setItems((rows) => rows.map((row, i) => i === index ? { ...row, to: e.target.value } : row))} /></td>
+                <td className="wp-list-controls">
+                  <button type="button" className="button" onClick={() => move(index, -1)} aria-label={`Move ${item.label} up`}>↑</button>
+                  <button type="button" className="button" onClick={() => move(index, 1)} aria-label={`Move ${item.label} down`}>↓</button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
-        <div className="wp-add-row">
-          <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Label" />
-          <input value={path} onChange={(e) => setPath(e.target.value)} placeholder="/route" />
+        <div className="wp-meta-actions">
           <button
             type="button"
             className="button"
             onClick={() => {
-              if (!label.trim() || !path.trim()) return
-              setItems((prev) => [...prev, { id: `menu-${Date.now()}`, label: label.trim(), path: path.trim() }])
-              setLabel('')
-              setPath('')
+              setItems(DEFAULT_MENU_ITEMS)
+              setStatus('Reset menu draft to default scaffold.')
             }}
           >
-            Add Item
+            Reset to default
           </button>
+          {status ? <p>{status}</p> : null}
+          {changed ? <p><em>You have unsaved menu changes.</em></p> : null}
         </div>
       </section>
     </Screen>
   )
 }
 
+const CUSTOMIZER_ITEMS = [
+  'Site Identity',
+  'Colors',
+  'Header / Masthead',
+  'Navigation',
+  'Homepage',
+]
+
 export function CustomizeAdminPage() {
   return (
-    <Screen title="Customize" action={<Link className="button button--primary" to="/draft">Open Customizer</Link>}>
+    <Screen title="Customize" action={<Link className="button button--primary" to="/draft">Open /draft editor</Link>}>
       <section className="wp-meta-box">
-        <h2>Theme Customizer</h2>
-        <p>Use the public draft editor for local-first customization and preview workflow.</p>
+        <h2>Customizer</h2>
+        <p>Jump to existing draft editing while keeping WordPress-like panel groupings.</p>
+        <ul className="wp-checklist">
+          {CUSTOMIZER_ITEMS.map((item) => (
+            <li key={item}><Link to="/draft">{item}</Link></li>
+          ))}
+        </ul>
       </section>
     </Screen>
   )
@@ -150,38 +180,79 @@ export function SiteEditorAdminPage() {
     <Screen title="Site Editor" action={<Link className="button button--primary" to="/draft">Open Site Editor</Link>}>
       <section className="wp-meta-box">
         <h2>Templates and Patterns</h2>
-        <p>Site-wide layout editing is currently bridged to the existing /draft interface.</p>
+        <p>Site-wide template editing remains bridged to the existing /draft route.</p>
       </section>
     </Screen>
   )
 }
 
+const TOOL_ROWS = [
+  { label: 'Import', note: 'WordPress importer scaffold placeholder' },
+  { label: 'Export', note: 'WordPress export scaffold placeholder' },
+  { label: 'Native content export', note: 'Use Native bridge and JSON export helpers' },
+  { label: 'Public config export', note: 'Use public config API export helper' },
+  { label: 'Media audit', note: 'Use media manager + local media inventory' },
+  { label: 'WordPress REST audit', note: 'Placeholder for REST parity checks' },
+]
+
 export function ToolsAdminPage() {
   return (
     <Screen title="Tools">
       <section className="wp-meta-box">
-        <h2>Available Tools</h2>
-        <ul>
-          <li><Link to="/overrides">Content Overrides</Link></li>
-          <li><Link to="/system-backup">System Backup</Link></li>
-          <li><Link to="/platform-map">Platform Map</Link></li>
-        </ul>
+        <h2>Available tools</h2>
+        <table className="wp-list-table">
+          <thead><tr><th>Tool</th><th>Status</th><th>Notes</th></tr></thead>
+          <tbody>
+            {TOOL_ROWS.map((tool) => (
+              <tr key={tool.label}>
+                <td>{tool.label}</td>
+                <td>Scaffolded</td>
+                <td>{tool.note}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
     </Screen>
   )
 }
 
 export function SettingsAdminPage() {
+  const [form, setForm] = useState(() => loadWpSettings())
+  const [status, setStatus] = useState('')
+
   return (
-    <Screen title="Settings">
+    <Screen title="Settings" action={<button type="button" className="button button--primary" onClick={() => {
+      saveWpSettings(form)
+      setStatus('Settings saved locally.')
+    }}>Save Changes</button>}>
       <section className="wp-meta-box wp-settings-form">
         <h2>General</h2>
-        <label>Site Title <input defaultValue="Sabot Media" /></label>
-        <label>Tagline <input defaultValue="Internal WordPress-classic clone" /></label>
-        <label>Timezone
-          <select defaultValue="UTC"><option>UTC</option><option>America/New_York</option><option>America/Chicago</option><option>America/Los_Angeles</option></select>
+        <label>Site title <input value={form.siteTitle} onChange={(e) => setForm((state) => ({ ...state, siteTitle: e.target.value }))} /></label>
+        <label>Tagline <input value={form.tagline} onChange={(e) => setForm((state) => ({ ...state, tagline: e.target.value }))} /></label>
+        <label>Homepage source
+          <select value={form.homepageSource} onChange={(e) => setForm((state) => ({ ...state, homepageSource: e.target.value }))}>
+            <option value="updates">Updates feed</option>
+            <option value="static">Static page</option>
+          </select>
         </label>
-        <button type="button" className="button button--primary">Save Changes</button>
+        <label>Posts per page
+          <input type="number" min="1" max="100" value={form.postsPerPage} onChange={(e) => setForm((state) => ({ ...state, postsPerPage: Number(e.target.value) || 10 }))} />
+        </label>
+        <label>Default post type
+          <select value={form.defaultPostType} onChange={(e) => setForm((state) => ({ ...state, defaultPostType: e.target.value }))}>
+            <option value="dispatch">Dispatch</option>
+            <option value="podcast">Podcast</option>
+            <option value="print">Print</option>
+          </select>
+        </label>
+        <label>Media mode
+          <select value={form.mediaMode} onChange={(e) => setForm((state) => ({ ...state, mediaMode: e.target.value }))}>
+            <option value="local-only">Local only</option>
+            <option value="future-cloud">Future cloud</option>
+          </select>
+        </label>
+        {status ? <p>{status}</p> : null}
       </section>
     </Screen>
   )
