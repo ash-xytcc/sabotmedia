@@ -80,18 +80,47 @@ export function normalizeNativeCollection(input) {
   })
 }
 
+function loadLocalNativeCollection() {
+  try {
+    const raw = window.localStorage.getItem(FALLBACK_STORAGE_KEY)
+    if (!raw) return []
+    return normalizeNativeCollection(JSON.parse(raw))
+  } catch {
+    return []
+  }
+}
+
+function mergeNativeCollections(primary = [], secondary = []) {
+  const byId = new Map()
+
+  for (const item of normalizeNativeCollection(secondary)) {
+    byId.set(item.id, item)
+  }
+
+  for (const item of normalizeNativeCollection(primary)) {
+    byId.set(item.id, item)
+  }
+
+  return normalizeNativeCollection([...byId.values()])
+}
+
 export async function loadNativeCollection(params = {}) {
+  const localItems = loadLocalNativeCollection()
+
   try {
     const data = await fetchNativeEntries(params)
-    return normalizeNativeCollection(data?.items || [])
-  } catch {
+    const remoteItems = normalizeNativeCollection(data?.items || [])
+    const merged = mergeNativeCollections(remoteItems, localItems)
+
     try {
-      const raw = window.localStorage.getItem(FALLBACK_STORAGE_KEY)
-      if (!raw) return []
-      return normalizeNativeCollection(JSON.parse(raw))
+      window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(merged))
     } catch {
-      return []
+      // ignore
     }
+
+    return merged
+  } catch {
+    return localItems
   }
 }
 
@@ -109,28 +138,29 @@ export async function upsertNativeEntry(items, entry, revisionNote = 'save') {
   const normalizedEntry = normalizeNativeEntry({
     ...entry,
     updatedAt: new Date().toISOString(),
+    publishedAt: entry?.status === 'published'
+      ? String(entry.publishedAt || new Date().toISOString())
+      : String(entry?.publishedAt || ''),
   })
+
+  const localBase = mergeNativeCollections(items || [], loadLocalNativeCollection())
+  const locallySaved = saveNativeCollection(
+    localBase.some((item) => item.id === normalizedEntry.id)
+      ? localBase.map((item) => (item.id === normalizedEntry.id ? normalizedEntry : item))
+      : [normalizedEntry, ...localBase]
+  )
 
   try {
     const data = await saveNativeEntry(normalizedEntry, revisionNote)
     const saved = normalizeNativeEntry(data?.item || normalizedEntry)
-    const current = await loadNativeCollection({ includeFuture: 1 })
-    return normalizeNativeCollection(
-      current.some((item) => item.id === saved.id)
-        ? current.map((item) => (item.id === saved.id ? saved : item))
-        : [saved, ...current]
+    const merged = saveNativeCollection(
+      locallySaved.some((item) => item.id === saved.id)
+        ? locallySaved.map((item) => (item.id === saved.id ? saved : item))
+        : [saved, ...locallySaved]
     )
+    return merged
   } catch {
-    const next = [...(items || [])]
-    const index = next.findIndex((item) => item.id === normalizedEntry.id)
-
-    if (index >= 0) {
-      next[index] = normalizedEntry
-    } else {
-      next.unshift(normalizedEntry)
-    }
-
-    return saveNativeCollection(next)
+    return locallySaved
   }
 }
 
