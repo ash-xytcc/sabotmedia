@@ -8040,3 +8040,80 @@ a.button {
 .admin-frame .wp-row-actions {
   gap: 6px;
 }
+
+/* INTERNAL_WP_CLONE_REPAIR_PASS */
+
+.wp-admin-topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 9000;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #1d2327;
+  color: #f0f0f1;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  line-height: 32px;
+}
+
+.wp-admin-topbar__link {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 8px;
+  color: #f0f0f1 !important;
+  text-decoration: none;
+}
+
+.wp-admin-topbar__link:hover,
+.wp-admin-topbar__link:focus-visible {
+  background: #2c3338;
+  color: #72aee6 !important;
+}
+
+.wp-customize-shell {
+  max-width: 980px;
+}
+
+.wp-customize-section-list {
+  display: grid;
+  gap: 0;
+  margin: 14px 0;
+  border: 1px solid #c3c4c7;
+  background: #fff;
+}
+
+.wp-customize-section {
+  appearance: none;
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 13px 15px;
+  border: 0;
+  border-bottom: 1px solid #dcdcde;
+  background: #fff;
+  color: #1d2327;
+  text-align: left;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+}
+
+.wp-customize-section:last-child {
+  border-bottom: 0;
+}
+
+.wp-customize-section:hover {
+  background: #f6f7f7;
+}
+
+.wp-customize-section span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wp-customize-section small {
+  color: #646970;
+  font-size: 13px;
+}

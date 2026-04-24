@@ -1,7 +1,13 @@
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 
-const SECTIONS = ['Site Identity', 'Colors', 'Header / Masthead', 'Navigation', 'Homepage']
+const SECTIONS = [
+  ['Site Identity', 'Edit title, tagline, and publication identity scaffolding.'],
+  ['Colors', 'Theme color controls will live here.'],
+  ['Header / Masthead', 'Masthead logo and header layout controls.'],
+  ['Navigation', 'Public nav items and menu placement.'],
+  ['Homepage', 'Homepage source, featured layout, and feed behavior.'],
+]
 
 export function CustomizePage() {
   return (
@@ -9,19 +15,27 @@ export function CustomizePage() {
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <h1>Customize</h1>
-          <Link className="button" to="/draft">Open Site Editor</Link>
+          <Link className="button" to="/">View site</Link>
         </div>
 
-        <section className="wp-meta-box">
+        <section className="wp-meta-box wp-customize-shell">
           <h2>Customizer</h2>
-          <p>Use these panels to jump into the existing inline public editing and draft system.</p>
-          <ul>
-            {SECTIONS.map((section) => (
-              <li key={section}>
-                <Link to="/draft">{section}</Link>
-              </li>
+          <p className="description">
+            WordPress-style customizer scaffold for Sabot. These sections are local UI placeholders until each control is wired.
+          </p>
+
+          <div className="wp-customize-section-list">
+            {SECTIONS.map(([title, body]) => (
+              <button className="wp-customize-section" type="button" key={title}>
+                <span>{title}</span>
+                <small>{body}</small>
+              </button>
             ))}
-          </ul>
+          </div>
+
+          <p className="description">
+            Existing legacy draft/config tools are still available under <Link to="/draft">Site Editor</Link>, but Customize should become the primary friendly surface.
+          </p>
         </section>
       </main>
     </AdminFrame>

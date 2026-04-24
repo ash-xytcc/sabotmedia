@@ -23,8 +23,9 @@ export function AdminRail() {
   return (
     <>
       <div className="wp-admin-topbar">
-        <span>My Site</span>
-        <span>Howdy, admin</span>
+        <Link to="/" className="wp-admin-topbar__link">● My Sites</Link>
+        <Link to="/" className="wp-admin-topbar__link">🏠 Sabot Media</Link>
+        <Link to="/native-bridge?new=article" className="wp-admin-topbar__link">+ New</Link>
       </div>
       <aside className="admin-rail" aria-label="Admin navigation">
         <div className="admin-rail__label">wp-admin</div>

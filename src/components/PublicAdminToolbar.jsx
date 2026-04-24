@@ -65,11 +65,11 @@ export function PublicAdminToolbar() {
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
       <div className="wp-public-admin-bar__left">
-        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={WORDPRESS_ADMIN_LINKS.dashboard}>Sabot Media</a>
-        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.dashboard}>Dashboard</a>
-        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.newPost}>New</a>
-        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.posts}>Posts</a>
-        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.media}>Media</a>
+        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/admin'}>Sabot Media</a>
+        <a className="wp-public-admin-bar__item" href={'/admin'}>Dashboard</a>
+        <a className="wp-public-admin-bar__item" href={'/native-bridge?new=article'}>New</a>
+        <a className="wp-public-admin-bar__item" href={'/content'}>Posts</a>
+        <a className="wp-public-admin-bar__item" href={'/media'}>Media</a>
         <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.customize}>Customize</a>
         {editPostLink ? <Link className="wp-public-admin-bar__item" to={editPostLink}>Edit Post</Link> : null}
         {editSourceLink ? <a className="wp-public-admin-bar__item" href={editSourceLink}>Edit Source</a> : null}
