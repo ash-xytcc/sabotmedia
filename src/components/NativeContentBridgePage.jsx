@@ -100,9 +100,12 @@ export function NativeContentBridgePage() {
   const [newCategory, setNewCategory] = useState('')
   const [openMediaFor, setOpenMediaFor] = useState('')
   const [allowComments, setAllowComments] = useState(true)
+  const [isPermalinkEditing, setIsPermalinkEditing] = useState(false)
+  const [permalinkDraft, setPermalinkDraft] = useState('')
   const textareaRef = useRef(null)
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
+  const publicPieceSlugSet = useMemo(() => new Set(getPieces().map((piece) => piece.slug).filter(Boolean)), [])
 
   useEffect(() => {
     async function boot() {
@@ -114,11 +117,13 @@ export function NativeContentBridgePage() {
       if (found) {
         setActiveId(found.id)
         setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [] })
+        setPermalinkDraft(found.slug || '')
         setAllowComments(found.allowComments ?? true)
       } else {
         const fresh = createTypedEntry(mode)
         setActiveId(fresh.id)
         setDraft(fresh)
+        setPermalinkDraft(fresh.slug || '')
         setAllowComments(true)
       }
     }
@@ -140,7 +145,9 @@ export function NativeContentBridgePage() {
     if (saved) {
       setActiveId(saved.id)
       setDraft(saved)
+      setPermalinkDraft(saved.slug || '')
     }
+    return saved || null
   }
 
   async function handleMoveToTrash() {
@@ -163,7 +170,10 @@ export function NativeContentBridgePage() {
     if (!saved) return
     setActiveId(saved.id)
     setDraft(saved)
-    window.open(`/native-preview/${saved.id}`, '_blank', 'noopener,noreferrer')
+    setPermalinkDraft(saved.slug || '')
+    const canResolvePublicRoute = saved.status === 'published' && Boolean(saved.slug) && publicPieceSlugSet.has(saved.slug)
+    const previewPath = canResolvePublicRoute ? `/post/${saved.slug}` : `/native-preview/${saved.id}`
+    window.open(previewPath, '_blank', 'noopener,noreferrer')
   }
 
   function applyEditorMutation(mutator) {
@@ -191,6 +201,28 @@ export function NativeContentBridgePage() {
     })
   }
 
+  function handleTitleChange(nextTitle) {
+    setDraft((current) => {
+      const manuallyEditedSlug = current.slugManuallyEdited === true
+      if (manuallyEditedSlug) return { ...current, title: nextTitle }
+      const nextSlug = slugify(nextTitle)
+      setPermalinkDraft(nextSlug)
+      return { ...current, title: nextTitle, slug: nextSlug }
+    })
+  }
+
+  function handlePermalinkConfirm() {
+    const nextSlug = slugify(permalinkDraft)
+    setDraft((current) => ({ ...current, slug: nextSlug, slugManuallyEdited: true }))
+    setPermalinkDraft(nextSlug)
+    setIsPermalinkEditing(false)
+  }
+
+  function handlePermalinkCancel() {
+    setPermalinkDraft(draft.slug || '')
+    setIsPermalinkEditing(false)
+  }
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen wp-edit-screen">
@@ -201,8 +233,24 @@ export function NativeContentBridgePage() {
 
         <section className="wp-edit-main">
           <div className="wp-edit-content">
-            <input className="wp-title-input" value={draft.title || ''} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value, slug: slugify(d.slug || e.target.value) }))} placeholder="Add title" />
-            <div className="wp-permalink-row">Permalink: /post/{draft.slug || 'sample-post'}</div>
+            <input className="wp-title-input" value={draft.title || ''} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Add title" />
+            <div className="wp-permalink-row">
+              <span>Permalink: /post/{draft.slug || 'sample-post'}</span>
+              {!isPermalinkEditing ? (
+                <button type="button" className="button button-link" onClick={() => setIsPermalinkEditing(true)}>Edit</button>
+              ) : (
+                <span className="wp-permalink-edit-controls">
+                  <input
+                    type="text"
+                    value={permalinkDraft}
+                    onChange={(e) => setPermalinkDraft(e.target.value)}
+                    aria-label="Edit permalink slug"
+                  />
+                  <button type="button" className="button button-small" onClick={handlePermalinkConfirm}>OK</button>
+                  <button type="button" className="button button-small" onClick={handlePermalinkCancel}>Cancel</button>
+                </span>
+              )}
+            </div>
 
             <div className="wp-editor-actions">
               <button type="button" className="button" onClick={() => setOpenMediaFor('body')}>Add Media</button>
@@ -244,7 +292,22 @@ export function NativeContentBridgePage() {
               <div className="wp-meta-actions">
                 <button type="button" className="button" onClick={handlePreviewChanges}>Preview Changes</button>
                 <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
-                <button type="button" className="button button--primary" onClick={async () => { const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }; setDraft(next); await handleSave('publish') }}>Publish / Update</button>
+                <button type="button" className="button button--primary" onClick={async () => {
+                  const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }
+                  setDraft(next)
+                  const saved = await handleSave('publish')
+                  if (saved) setDraft(saved)
+                }}>Publish / Update</button>
+                {draft?.id && draft?.status === 'published' ? (
+                  <Link
+                    className="button"
+                    to={draft.slug && publicPieceSlugSet.has(draft.slug) ? `/post/${draft.slug}` : `/native-preview/${draft.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View Post
+                  </Link>
+                ) : null}
                 <button type="button" className="button" onClick={handleMoveToTrash}>Move to Trash</button>
               </div>
             </article>
