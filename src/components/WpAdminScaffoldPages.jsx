@@ -5,6 +5,7 @@ import { getPieces } from '../lib/pieces'
 import { loadLocalMediaItems } from '../lib/localMediaLibrary'
 import { exportNativeCollection, loadNativeCollection } from '../lib/nativePublicContent'
 import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
+import { loadSites } from '../lib/siteDomains'
 
 const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
 const MENU_KEY = 'sabot-wp-clone-menu-v1'
@@ -606,6 +607,7 @@ export function SettingsAdminPage() {
     defaultPostType: 'article',
     mediaMode: 'local',
   }))
+  const siteScaffolds = useMemo(() => loadSites(), [])
 
   function update(field, value) {
     setSettings((current) => ({ ...current, [field]: value }))
@@ -634,6 +636,12 @@ export function SettingsAdminPage() {
             <label><span>Default post type</span><select value={settings.defaultPostType} onChange={(e) => update('defaultPostType', e.target.value)}><option value="article">Article</option><option value="podcast">Podcast</option><option value="print">Print</option></select></label>
             <label><span>Media mode</span><select value={settings.mediaMode} onChange={(e) => update('mediaMode', e.target.value)}><option value="local">Local only</option><option value="future-cloud">Future cloud</option></select></label>
           </div>
+        </section>
+
+        <section className="wp-meta-box">
+          <h2>Sites & Domains</h2>
+          <p className="description">Manage local multisite-inspired scaffolds ({siteScaffolds.length} total). No DNS provider integration yet.</p>
+          <p><Link to="/settings/sites">Open Sites &amp; Domains manager</Link></p>
         </section>
       </main>
     </AdminFrame>
