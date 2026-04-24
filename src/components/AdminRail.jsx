@@ -1,4 +1,6 @@
-import { NavLink } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
+import { loadSites } from '../lib/siteDomains'
 
 const MENU = [
   { to: '/admin', label: 'Dashboard' },
@@ -13,11 +15,31 @@ const MENU = [
 ]
 
 export function AdminRail() {
+  const location = useLocation()
+  const [sites, setSites] = useState(() => loadSites())
+  const primarySite = sites[0]
+
+  useEffect(() => {
+    setSites(loadSites())
+  }, [location.pathname])
+
   return (
     <>
       <div className="wp-admin-topbar">
-        <NavLink to="/" className="wp-admin-topbar__link">● My Sites</NavLink>
-        <NavLink to="/" className="wp-admin-topbar__link">🏠 Sabot Media</NavLink>
+        <details className="wp-admin-topbar__sites-dropdown">
+          <summary className="wp-admin-topbar__link">● My Sites</summary>
+          <div className="wp-admin-topbar__dropdown-menu" role="menu" aria-label="My Sites">
+            {sites.map((site) => (
+              <div className="wp-admin-topbar__site-row" key={site.id}>
+                <strong>{site.name}</strong>
+                <span>{site.domain}</span>
+                <small>{site.status} · {site.basePath}</small>
+              </div>
+            ))}
+            <Link to="/sites" className="wp-admin-topbar__dropdown-link">Connect another domain</Link>
+          </div>
+        </details>
+        <NavLink to="/" className="wp-admin-topbar__link">🏠 {primarySite?.name || 'Sabot Media'}</NavLink>
         <NavLink to="/native-bridge?new=article" className="wp-admin-topbar__link">+ New</NavLink>
       </div>
 

@@ -26,6 +26,7 @@ import { PublicSurfacePage } from './components/PublicSurfacePage'
 import { AdminNoticeProvider } from './components/WpAdminNotices'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
 import { CustomizeAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminScaffoldPages'
+import { SitesAdminPage } from './components/SitesAdminPage'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -58,6 +59,7 @@ const ADMIN_SHELL_PATHS = [
   '/advanced-draft-tools',
   '/tools',
   '/settings',
+  '/sites',
 ]
 
 function shouldUseBareShell(pathname) {
@@ -160,6 +162,8 @@ export default function App() {
           <Route path="/advanced-draft-tools" element={<SiteEditorAdminPage />} />
           <Route path="/tools" element={<ToolsAdminPage />} />
           <Route path="/settings" element={<SettingsAdminPage />} />
+          <Route path="/settings/sites" element={<SitesAdminPage />} />
+          <Route path="/sites" element={<SitesAdminPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
         <Route path="/native-bridge" element={<NativeContentBridgePage />} />
         <Route path="/updates" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
