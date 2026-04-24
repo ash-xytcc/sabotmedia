@@ -7,6 +7,7 @@ const MENU = [
   { to: '/media', label: 'Media' },
   { to: '/pages', label: 'Pages' },
   { to: '/customize', label: 'Customize' },
+  { to: '/analytics', label: 'Analytics' },
   { to: '/tools', label: 'Tools' },
   { to: '/settings', label: 'Settings' },
   { to: '/users', label: 'Users' },
