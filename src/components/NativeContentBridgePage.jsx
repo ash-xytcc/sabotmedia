@@ -75,6 +75,7 @@ function createTypedEntry(kind) {
     transcriptExcerpt: '',
     sourceNotes: '',
     heroImage: '',
+    featuredImage: '',
     hasPrintAssets: kind === 'print',
   }
 }
@@ -89,7 +90,8 @@ function applyModeToDraft(draft, kind) {
     audioSummary: kind === 'podcast' ? (draft.audioSummary || '') : '',
     transcriptExcerpt: kind === 'podcast' ? (draft.transcriptExcerpt || '') : '',
     sourceNotes: kind === 'podcast' ? (draft.sourceNotes || '') : '',
-    heroImage: kind === 'podcast' ? (draft.heroImage || '') : draft.heroImage || '',
+    heroImage: draft.heroImage || '',
+    featuredImage: draft.featuredImage || draft.heroImage || '',
   }
 }
 
@@ -688,28 +690,113 @@ export function NativeContentBridgePage() {
 
         <section className="native-bridge-main">
           <div className="review-card__actions native-editor-primary-actions">
-            <button className="button button--primary" type="button" onClick={() => handleSave(`save ${creationKind}`)} disabled={!canEdit}>
-              {saveEntryLabel}
-            </button>
-            <button
-              className="button button--primary"
-              type="button"
-              onClick={() => setDraft((d) => ({ ...d, status: 'published', workflowState: d.scheduledFor ? 'scheduled' : 'published' }))}
-            >
-              Publish / mark ready
-            </button>
+            <Link className="button" to="/content">Back to posts</Link>
             <button className="button" type="button" onClick={() => setShowAdvanced((value) => !value)}>
               {showAdvanced ? 'Hide advanced' : 'Show advanced'}
             </button>
           </div>
 
-          <NativeEntryEditor
-            value={draft}
-            onChange={setDraft}
-            creationKind={creationKind}
-            onPickCreationKind={pickCreationKind}
-            tagsLabel={tagsLabel}
-          />
+          <section className="native-publish-shell">
+            <div className="native-publish-shell__editor">
+              <NativeEntryEditor
+                value={draft}
+                onChange={setDraft}
+                creationKind={creationKind}
+                onPickCreationKind={pickCreationKind}
+                tagsLabel={tagsLabel}
+              />
+            </div>
+
+            <aside className="native-publish-panel" aria-label="Publish settings">
+              <div className="native-publish-panel__header">
+                <div className="native-publish-panel__eyebrow">publish</div>
+                <h2>Publish settings</h2>
+              </div>
+
+              <label className="archive-control">
+                <span>status</span>
+                <select value={draft.status} onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value }))}>
+                  <option value="draft">draft</option>
+                  <option value="published">published</option>
+                  <option value="archived">archived</option>
+                </select>
+              </label>
+
+              <label className="archive-control">
+                <span>workflow</span>
+                <select value={draft.workflowState || 'draft'} onChange={(e) => setDraft((d) => ({ ...d, workflowState: e.target.value }))}>
+                  <option value="draft">draft</option>
+                  <option value="in_review">in_review</option>
+                  <option value="needs_revision">needs_revision</option>
+                  <option value="ready">ready</option>
+                  <option value="scheduled">scheduled</option>
+                  <option value="published">published</option>
+                  <option value="archived">archived</option>
+                </select>
+              </label>
+
+              <label className="archive-control">
+                <span>slug</span>
+                <input
+                  type="text"
+                  value={draft.slug}
+                  onChange={(e) => setDraft((d) => ({ ...d, slug: slugify(e.target.value) }))}
+                  placeholder="slug"
+                />
+              </label>
+
+              <label className="archive-control">
+                <span>target</span>
+                <select value={draft.target} onChange={(e) => setDraft((d) => ({ ...d, target: e.target.value }))}>
+                  <option value="general">general</option>
+                  <option value="home">home</option>
+                  <option value="press">press</option>
+                  <option value="projects">projects</option>
+                </select>
+              </label>
+
+              <label className="archive-control">
+                <span>scheduled for</span>
+                <input
+                  type="datetime-local"
+                  value={toLocalDateTime(draft.scheduledFor)}
+                  onChange={(e) => setDraft((d) => ({ ...d, scheduledFor: fromLocalDateTime(e.target.value) }))}
+                />
+              </label>
+
+              <label className="archive-control">
+                <span>featured image</span>
+                <input
+                  type="text"
+                  value={draft.featuredImage || draft.heroImage || ''}
+                  onChange={(e) => setDraft((d) => ({ ...d, featuredImage: e.target.value, heroImage: e.target.value }))}
+                  placeholder="featured image url"
+                />
+              </label>
+
+              {(draft.featuredImage || draft.heroImage) ? (
+                <img className="native-publish-panel__image" src={draft.featuredImage || draft.heroImage} alt="" />
+              ) : null}
+
+              <div className="native-publish-panel__actions">
+                <button className="button button--primary" type="button" onClick={() => handleSave(`save ${creationKind}`)} disabled={!canEdit}>
+                  Save draft
+                </button>
+                <button
+                  className="button button--primary"
+                  type="button"
+                  onClick={() => setDraft((d) => ({ ...d, status: 'published', workflowState: d.scheduledFor ? 'scheduled' : 'published' }))}
+                >
+                  Publish / mark ready
+                </button>
+                {draft.slug ? (
+                  <Link className="button" to={draft.status === 'published' ? `/updates/${draft.slug}` : `/native-bridge?edit=${draft.id}`}>
+                    Preview
+                  </Link>
+                ) : null}
+              </div>
+            </aside>
+          </section>
 
           {showAdvanced ? (
             <section className="native-editor-advanced">
