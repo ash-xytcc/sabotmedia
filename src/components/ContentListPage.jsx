@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { loadNativeCollection, slugify, upsertNativeEntry } from '../lib/nativePublicContent'
+import { loadNativeCollection, slugify, upsertNativeEntry, saveNativeCollection } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
 
 function getBucket(item) {
@@ -18,7 +18,8 @@ export function ContentListPage() {
   const [tab, setTab] = useState('all')
   const [selectedIds, setSelectedIds] = useState([])
   const [quickEditId, setQuickEditId] = useState('')
-  const [quickEdit, setQuickEdit] = useState({ title: '', slug: '', status: 'draft', tags: '' })
+  const [bulkAction, setBulkAction] = useState('')
+  const [quickEdit, setQuickEdit] = useState({ title: '', slug: '', status: 'draft', tags: '', categories: '' })
 
   useEffect(() => {
     loadNativeCollection({ includeFuture: 1 }).then((loaded) => setItems(Array.isArray(loaded) ? loaded : []))
@@ -46,10 +47,31 @@ export function ContentListPage() {
       slug: slugify(quickEdit.slug || quickEdit.title),
       status: quickEdit.status,
       tags: quickEdit.tags.split(',').map((item) => item.trim()).filter(Boolean),
+      categories: quickEdit.categories.split(',').map((item) => item.trim()).filter(Boolean),
     }
     const next = await upsertNativeEntry(items, nextItem, 'quick edit')
     setItems(next)
     setQuickEditId('')
+  }
+
+  async function applyBulkAction() {
+    if (!bulkAction || !selectedIds.length) return
+    if (bulkAction === 'trash') {
+      const next = await Promise.all(items.map(async (item) => (
+        selectedIds.includes(item.id) ? { ...item, status: 'trash' } : item
+      )))
+      const persisted = saveNativeCollection(next)
+      setItems(persisted)
+    }
+    if (bulkAction === 'restore') {
+      const next = saveNativeCollection(items.map((item) => (selectedIds.includes(item.id) ? { ...item, status: 'draft' } : item)))
+      setItems(next)
+    }
+    if (bulkAction === 'empty-trash') {
+      const next = saveNativeCollection(items.filter((item) => !(selectedIds.includes(item.id) && item.status === 'trash')))
+      setItems(next)
+    }
+    setSelectedIds([])
   }
 
   return (
@@ -68,8 +90,13 @@ export function ContentListPage() {
               ))}
             </div>
             <div className="wp-list-controls">
-              <select><option>Bulk actions</option><option>Edit</option><option>Move to Trash</option></select>
-              <button type="button" className="button">Apply</button>
+              <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)}>
+                <option value="">Bulk actions</option>
+                <option value="trash">Move to Trash</option>
+                <option value="restore">Restore from Trash</option>
+                <option value="empty-trash">Empty Trash</option>
+              </select>
+              <button type="button" className="button" onClick={applyBulkAction}>Apply</button>
               <select><option>All dates</option></select>
               <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}><option value="all">All categories</option>{categories.map((c) => <option key={c} value={c}>{c}</option>)}</select>
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search Posts" />
@@ -96,9 +123,9 @@ export function ContentListPage() {
                       <strong className="content-table__title">{item.title || 'Untitled'}</strong>
                       <div className="wp-row-actions">
                         <Link to={`/native-bridge?edit=${item.id}`}>Edit</Link>
-                        <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', ') }) }}>Quick Edit</button>
-                        <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash'))}>Trash</button>
-                        <Link to={`/post/${item.slug}`}>View</Link>
+                        <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || []).join(', ') }) }}>Quick Edit</button>
+                        {item.status !== 'trash' ? <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash'))}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
+                        <Link to={item.status === 'published' ? `/post/${item.slug}` : `/native-preview/${item.id}`}>View</Link>
                       </div>
                     </td>
                     <td>{item.author || 'sabotmedia'}</td>
@@ -114,6 +141,7 @@ export function ContentListPage() {
                           <input value={quickEdit.slug} onChange={(e) => setQuickEdit((c) => ({ ...c, slug: e.target.value }))} placeholder="Slug" />
                           <select value={quickEdit.status} onChange={(e) => setQuickEdit((c) => ({ ...c, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option><option value="trash">Trash</option></select>
                           <input value={quickEdit.tags} onChange={(e) => setQuickEdit((c) => ({ ...c, tags: e.target.value }))} placeholder="tag1, tag2" />
+                          <input value={quickEdit.categories} onChange={(e) => setQuickEdit((c) => ({ ...c, categories: e.target.value }))} placeholder="cat1, cat2" />
                           <button type="button" className="button button--primary" onClick={() => saveQuickEdit(item.id)}>Update</button>
                           <button type="button" className="button" onClick={() => setQuickEditId('')}>Cancel</button>
                         </div>

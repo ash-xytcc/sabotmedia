@@ -87,10 +87,12 @@ export function NativeContentBridgePage() {
       if (found) {
         setActiveId(found.id)
         setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [] })
+        setAllowComments(found.allowComments ?? true)
       } else {
         const fresh = createTypedEntry(mode)
         setActiveId(fresh.id)
         setDraft(fresh)
+        setAllowComments(true)
       }
     }
     boot()
@@ -103,6 +105,7 @@ export function NativeContentBridgePage() {
       tags: Array.isArray(draft.tags) ? draft.tags : [],
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
+      allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, note)
     setItems(next)
@@ -182,8 +185,8 @@ export function NativeContentBridgePage() {
             <textarea ref={textareaRef} className="wp-editor-textarea" value={draft.body || ''} onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} placeholder="Start writing…" />
 
             <article className="wp-meta-box"><h2>Excerpt</h2><textarea value={draft.excerpt || ''} onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))} /></article>
-            <article className="wp-meta-box"><h2>Discussion</h2><label><input type="checkbox" defaultChecked /> Allow comments</label></article>
-            <article className="wp-meta-box"><h2>Revisions</h2><p>Revision history available through native content save notes.</p></article>
+            <article className="wp-meta-box"><h2>Discussion</h2><label><input type="checkbox" checked={allowComments} onChange={(e) => setAllowComments(e.target.checked)} /> Allow comments</label></article>
+            <article className="wp-meta-box"><h2>Revisions</h2><p>Revision history placeholder. Saved notes: save draft, publish, trash, quick edit.</p></article>
             <article className="wp-meta-box"><h2>Custom Fields / Advanced</h2><p>Advanced bridge fields remain available in native storage.</p></article>
           </div>
 
@@ -203,8 +206,12 @@ export function NativeContentBridgePage() {
 
             <article className="wp-meta-box">
               <h2>Format</h2>
-              {['standard', 'dispatch/article', 'podcast', 'print/zine'].map((format) => (
-                <label key={format}><input type="radio" checked={(draft.postFormat || 'standard') === format} onChange={() => setDraft((d) => ({ ...d, postFormat: format }))} /> {format}</label>
+              {[
+                { label: 'Standard', value: 'dispatch' },
+                { label: 'Podcast', value: 'podcast' },
+                { label: 'Print / Zine', value: 'print' },
+              ].map((format) => (
+                <label key={format.value}><input type="radio" checked={(draft.contentType || 'dispatch') === format.value} onChange={() => setDraft((d) => ({ ...d, contentType: format.value }))} /> {format.label}</label>
               ))}
             </article>
 
