@@ -17,6 +17,7 @@ import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PublicEditProvider, usePublicEdit } from './components/PublicEditContext'
 import { PublicEditPanel } from './components/PublicEditPanel'
+import { PublicAdminToolbar } from './components/PublicAdminToolbar'
 import { EditableText } from './components/EditableText'
 import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/content'
 import { getPieces } from './lib/pieces'
@@ -30,6 +31,7 @@ const reviewCount = pieces.filter((piece) => piece.reviewFlags?.length).length
 
 const ADMIN_SHELL_PATHS = [
   '/admin',
+  '/review',
   '/content',
   '/native-bridge',
   '/native-preview',
@@ -51,7 +53,7 @@ function shouldUseBareShell(pathname) {
 
 
 function Layout({ children }) {
-  const { isAdmin, isEditing, toggleEditing, changedFields, setSelectedField } = usePublicEdit()
+  const { isEditing, setSelectedField } = usePublicEdit()
   const location = useLocation()
   const bareShell = shouldUseBareShell(location.pathname)
 
@@ -66,77 +68,18 @@ function Layout({ children }) {
 
   return (
     <div
-      className={`site-shell${isEditing ? ' site-shell--editing' : ''}`}
+      className={`public-route-shell${isEditing ? ' public-route-shell--editing' : ''}`}
       onClick={() => {
         if (isEditing) setSelectedField(null)
       }}
     >
-      <header className="app-header">
-        <Link className="brand" to="/">
-          <span className="brand-kicker">sabot</span>
-          <span className="brand-title">media</span>
-        </Link>
-
-        <nav className="header-nav">
-          <Link to="/">Drops</Link>
-          <Link to="/projects">Projects</Link>
-          <Link to="/review">Review {reviewCount ? `(${reviewCount})` : ''}</Link>
-          <Link to="/admin">Admin</Link>
-          <Link to="/overrides">Overrides</Link>
-          <Link to="/draft">Draft{changedFields.length ? <span className="header-nav__dirty">{changedFields.length}</span> : ''}</Link>
-          {isAdmin ? (
-            <button className="button button--primary" type="button" onClick={toggleEditing}>
-              {isEditing ? 'exit edit' : 'edit site'}
-            </button>
-          ) : null}
-        </nav>
-      </header>
-
+      <PublicAdminToolbar />
       <PublicEditPanel />
-
       {children}
-
-      <footer className="site-footer" id="about">
-        <div className="site-footer__grid">
-          <section className="site-footer__block">
-            <EditableText as="div" className="site-footer__eyebrow" field="footer.about.eyebrow">
-              about
-            </EditableText>
-            <EditableText as="h2" field="footer.about.title">
-              Sabot Media
-            </EditableText>
-            <EditableText as="p" field="footer.about.body">
-              An open collective of radical media makers working across writing, print, graphics, comics, newsletters, and broadcast.
-            </EditableText>
-          </section>
-
-          <section className="site-footer__block">
-            <EditableText as="div" className="site-footer__eyebrow" field="footer.routes.eyebrow">
-              routes
-            </EditableText>
-            <ul>
-              <li><Link to="/projects">browse projects</Link></li>
-              <li><Link to="/">browse archive</Link></li>
-              <li><Link to="/review">review queue</Link></li>
-              <li><Link to="/admin">admin</Link></li>
-              <li><Link to="/overrides">overrides</Link></li>
-              <li><Link to="/draft">draft</Link></li>
-            </ul>
-          </section>
-
-          <section className="site-footer__block">
-            <EditableText as="div" className="site-footer__eyebrow" field="footer.state.eyebrow">
-              state
-            </EditableText>
-            <EditableText as="p" field="footer.state.body">
-              Imported archive online. Native publishing and deeper tooling next.
-            </EditableText>
-          </section>
-        </div>
-      </footer>
     </div>
   )
 }
+
 
 export default function App() {
   return (

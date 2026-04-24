@@ -13,15 +13,13 @@ export function PublicationTopbar() {
               className="publication-topbar__brand-image"
             />
           </Link>
-        </div>
 
-        <nav className="publication-topbar__nav" aria-label="Primary">
-          <Link to="/">Home</Link>
-          <Link to="/archive">Archive</Link>
-          <Link to="/press">Press</Link>
-          <Link to="/projects">Projects</Link>
-          <Link to="/admin">Admin</Link>
-        </nav>
+          <nav className="publication-topbar__nav" aria-label="Primary">
+            <Link to="/archive">Archive</Link>
+            <Link to="/press">Press</Link>
+            <Link to="/projects">Projects</Link>
+          </nav>
+        </div>
       </div>
     </header>
   )
