@@ -91,6 +91,7 @@ function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSele
           {selected ? (
             <>
               <img src={selected.url} alt={selected.alt || ''} />
+              <p><strong>Source:</strong> {selected.source === 'local-upload' ? 'Local browser storage only' : (selected.source || 'unknown')}</p>
               <p><strong>URL:</strong> {selected.url}</p>
               <p><strong>Title:</strong> {selected.title || 'Untitled'}</p>
               <p><strong>Alt:</strong> {selected.alt || '—'}</p>
@@ -150,6 +151,7 @@ export function MediaPickerModal({ open, onClose, onPick }) {
           <h2>Media Library</h2>
           <button type="button" className="button" onClick={onClose}>Close</button>
         </div>
+        <p className="wp-media-local-note">Uploads are stored locally in this browser only (localStorage). No cloud upload is performed.</p>
         <MediaLibrarySurface
           mode={mode}
           setMode={setMode}
@@ -217,6 +219,7 @@ export function MediaLibraryPage() {
           <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Add New</button>
         </div>
         <section className="wp-meta-box">
+          <p className="wp-media-local-note">Add New / Upload stores images in local browser storage only. These files are not sent to a server.</p>
           <div className="wp-media-toolbar">
             <button type="button" className={`button${mode === 'grid' ? ' button--primary' : ''}`} onClick={() => setMode('grid')}>Grid View</button>
             <button type="button" className={`button${mode === 'list' ? ' button--primary' : ''}`} onClick={() => setMode('list')}>List View</button>
@@ -239,11 +242,11 @@ export function MediaLibraryPage() {
               {selected ? (
                 <>
                   <img src={selected.url} alt={selected.alt || ''} />
+                  <p><strong>Source:</strong> {selected.source === 'local-upload' ? 'Local browser storage only' : (selected.source || 'unknown')}</p>
                   <p><strong>URL:</strong> {selected.url}</p>
                   <p><strong>Title:</strong> {selected.title || 'Untitled'}</p>
                   <p><strong>Alt:</strong> {selected.alt || '—'}</p>
                   <p><strong>Caption:</strong> {selected.caption || '—'}</p>
-                  <p><strong>Source:</strong> {selected.source || 'unknown'}</p>
                 </>
               ) : <p>Select media to view details.</p>}
             </aside>
