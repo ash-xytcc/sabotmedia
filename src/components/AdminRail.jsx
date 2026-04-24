@@ -4,10 +4,13 @@ const LINKS = [
   { to: '/admin', label: 'Dashboard' },
   { to: '/content', label: 'Posts' },
   { to: '/native-bridge?new=article', label: 'Add New' },
+  { to: '/pages', label: 'Pages' },
   { to: '/media', label: 'Media' },
-  { to: '/draft', label: 'Pages / Site Editor' },
-  { to: '/overrides', label: 'Tools' },
-  { to: '/system-backup', label: 'Settings' },
+  { to: '/menus', label: 'Menus' },
+  { to: '/customize', label: 'Customize' },
+  { to: '/site-editor', label: 'Site Editor' },
+  { to: '/tools', label: 'Tools' },
+  { to: '/settings', label: 'Settings' },
 ]
 
 export function AdminRail() {
