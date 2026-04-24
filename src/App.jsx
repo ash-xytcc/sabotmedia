@@ -23,7 +23,7 @@ import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/conten
 import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
-import { CustomizeAdminPage, MenusAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage } from './components/WpAdminScaffoldPages'
+import { CustomizeAdminPage, MenusAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminScaffoldPages'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -49,6 +49,7 @@ const ADMIN_SHELL_PATHS = [
   '/platform-map',
   '/media',
   '/pages',
+  '/users',
   '/menus',
   '/customize',
   '/site-editor',
@@ -107,6 +108,7 @@ export default function App() {
           <Route path="/overrides" element={<OverridesPage />} />
           <Route path="/media" element={<MediaLibraryPage />} />
           <Route path="/pages" element={<PagesAdminPage />} />
+          <Route path="/users" element={<UsersAdminPage />} />
           <Route path="/menus" element={<MenusAdminPage />} />
           <Route path="/customize" element={<CustomizeAdminPage />} />
           <Route path="/site-editor" element={<SiteEditorAdminPage />} />
