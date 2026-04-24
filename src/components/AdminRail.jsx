@@ -22,8 +22,8 @@ export function AdminRail() {
   return (
     <>
       <div className="wp-admin-topbar">
-        <span>Sabot Media</span>
-        <span>Classic Admin</span>
+        <span>My Site</span>
+        <span>Howdy, admin</span>
       </div>
       <aside className="admin-rail" aria-label="Admin navigation">
         <div className="admin-rail__label">wp-admin</div>
