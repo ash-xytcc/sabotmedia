@@ -7824,8 +7824,9 @@ a.button {
 
 .wp-edit-main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
 .wp-title-input { width: 100%; font-size: 1.7em; padding: 8px; margin-bottom: 8px; }
-.wp-permalink-row { color: #50575e; margin-bottom: 10px; }
-.wp-autosave-status { color: #50575e; font-size: 12px; margin-bottom: 10px; min-height: 18px; }
+.wp-permalink-row { color: #50575e; margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.wp-permalink-edit-controls { display: inline-flex; align-items: center; gap: 6px; }
+.wp-permalink-edit-controls input { height: 30px; min-width: 180px; }
 .wp-editor-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; }
 .wp-classic-toolbar { border: 1px solid #c3c4c7; border-bottom: 0; background: #f6f7f7; padding: 6px; color: #50575e; display: flex; gap: 4px; flex-wrap: wrap; }
 .wp-toolbar-btn { min-width: 30px; height: 30px; border: 1px solid #c3c4c7; background: #fff; color: #1d2327; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
@@ -7836,10 +7837,25 @@ a.button {
 .wp-add-row { display: flex; gap: 8px; margin-top: 8px; }
 .wp-tag-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .wp-tag-chips button { background: #f0f0f1; border: 1px solid #c3c4c7; }
-.wp-featured-preview { width: 100%; margin: 8px 0; border: 1px solid #c3c4c7; }
-.wp-revisions-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-.wp-revisions-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #dcdcde; padding-top: 8px; }
-.wp-revisions-note { color: #646970; font-size: 12px; text-transform: capitalize; }
+.wp-link-button {
+  border: 0;
+  background: transparent;
+  color: #2271b1;
+  padding: 0;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.wp-link-button:hover { color: #135e96; }
+.wp-featured-preview {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 8px 0;
+  border: 1px solid #c3c4c7;
+  object-fit: contain;
+}
+.wp-featured-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
 .wp-media-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
 .wp-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; align-content: start; }

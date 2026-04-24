@@ -27,6 +27,9 @@ function createTypedEntry(kind = 'article') {
     categories: [],
     featuredImage: '',
     heroImage: '',
+    featuredImageTitle: '',
+    featuredImageAlt: '',
+    featuredImageCaption: '',
   }
 }
 
@@ -173,14 +176,15 @@ export function NativeContentBridgePage() {
   const [newCategory, setNewCategory] = useState('')
   const [openMediaFor, setOpenMediaFor] = useState('')
   const [allowComments, setAllowComments] = useState(true)
-  const [autosaveState, setAutosaveState] = useState({ status: 'idle', at: '' })
-  const [revisions, setRevisions] = useState([])
+  const [isPermalinkEditing, setIsPermalinkEditing] = useState(false)
+  const [permalinkDraft, setPermalinkDraft] = useState('')
   const textareaRef = useRef(null)
   const autosaveTimerRef = useRef(null)
   const suppressAutosaveRef = useRef(false)
   const lastAutosaveFingerprintRef = useRef('')
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
+  const publicPieceSlugSet = useMemo(() => new Set(getPieces().map((piece) => piece.slug).filter(Boolean)), [])
 
   useEffect(() => {
     async function boot() {
@@ -191,8 +195,8 @@ export function NativeContentBridgePage() {
       const found = (loaded || []).find((item) => item.id === editId)
       if (found) {
         setActiveId(found.id)
-        const nextDraft = { ...found, tags: found.tags || [], categories: found.categories || found.projects || [] }
-        setDraft(nextDraft)
+        setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [] })
+        setPermalinkDraft(found.slug || '')
         setAllowComments(found.allowComments ?? true)
         setRevisions(loadLocalRevisions(found.id))
         lastAutosaveFingerprintRef.current = toAutosaveFingerprint(nextDraft, found.allowComments ?? true)
@@ -200,6 +204,7 @@ export function NativeContentBridgePage() {
         const fresh = createTypedEntry(mode)
         setActiveId(fresh.id)
         setDraft(fresh)
+        setPermalinkDraft(fresh.slug || '')
         setAllowComments(true)
         setRevisions(loadLocalRevisions(fresh.id))
         lastAutosaveFingerprintRef.current = toAutosaveFingerprint(fresh, true)
@@ -216,6 +221,9 @@ export function NativeContentBridgePage() {
       tags: Array.isArray(draft.tags) ? draft.tags : [],
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
+      featuredImageTitle: draft.featuredImageTitle || '',
+      featuredImageAlt: draft.featuredImageAlt || '',
+      featuredImageCaption: draft.featuredImageCaption || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, note)
@@ -224,12 +232,9 @@ export function NativeContentBridgePage() {
     if (saved) {
       setActiveId(saved.id)
       setDraft(saved)
-      lastAutosaveFingerprintRef.current = toAutosaveFingerprint(saved, allowComments)
-      if (note === 'save draft' || note === 'publish') {
-        const revisionResult = saveLocalRevision(saved.id, saved, note)
-        setRevisions(revisionResult.revisions)
-      }
+      setPermalinkDraft(saved.slug || '')
     }
+    return saved || null
   }
 
   async function handleMoveToTrash() {
@@ -244,6 +249,9 @@ export function NativeContentBridgePage() {
       tags: Array.isArray(draft.tags) ? draft.tags : [],
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
+      featuredImageTitle: draft.featuredImageTitle || '',
+      featuredImageAlt: draft.featuredImageAlt || '',
+      featuredImageCaption: draft.featuredImageCaption || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, 'preview')
@@ -252,7 +260,10 @@ export function NativeContentBridgePage() {
     if (!saved) return
     setActiveId(saved.id)
     setDraft(saved)
-    window.open(`/native-preview/${saved.id}`, '_blank', 'noopener,noreferrer')
+    setPermalinkDraft(saved.slug || '')
+    const canResolvePublicRoute = saved.status === 'published' && Boolean(saved.slug) && publicPieceSlugSet.has(saved.slug)
+    const previewPath = canResolvePublicRoute ? `/post/${saved.slug}` : `/native-preview/${saved.id}`
+    window.open(previewPath, '_blank', 'noopener,noreferrer')
   }
 
   function applyEditorMutation(mutator) {
@@ -280,58 +291,27 @@ export function NativeContentBridgePage() {
     })
   }
 
-  function restoreRevision(revision) {
-    if (!revision?.draft) return
-    suppressAutosaveRef.current = true
-    setDraft((current) => ({
-      ...current,
-      ...revision.draft,
-      tags: Array.isArray(revision.draft.tags) ? revision.draft.tags : [],
-      categories: Array.isArray(revision.draft.categories) ? revision.draft.categories : [],
-    }))
-    requestAnimationFrame(() => {
-      suppressAutosaveRef.current = false
+  function handleTitleChange(nextTitle) {
+    setDraft((current) => {
+      const manuallyEditedSlug = current.slugManuallyEdited === true
+      if (manuallyEditedSlug) return { ...current, title: nextTitle }
+      const nextSlug = slugify(nextTitle)
+      setPermalinkDraft(nextSlug)
+      return { ...current, title: nextTitle, slug: nextSlug }
     })
-    setAutosaveState({ status: 'idle', at: autosaveState.at || '' })
   }
 
-  useEffect(() => {
-    if (!draft?.id || suppressAutosaveRef.current) return
-    const fingerprint = toAutosaveFingerprint(draft, allowComments)
-    if (fingerprint === lastAutosaveFingerprintRef.current) return
+  function handlePermalinkConfirm() {
+    const nextSlug = slugify(permalinkDraft)
+    setDraft((current) => ({ ...current, slug: nextSlug, slugManuallyEdited: true }))
+    setPermalinkDraft(nextSlug)
+    setIsPermalinkEditing(false)
+  }
 
-    if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current)
-    autosaveTimerRef.current = window.setTimeout(() => {
-      async function runAutosave() {
-        try {
-          setAutosaveState({ status: 'saving', at: autosaveState.at || '' })
-          const normalized = {
-            ...draft,
-            slug: slugify(draft.slug || draft.title),
-            tags: Array.isArray(draft.tags) ? draft.tags : [],
-            featuredImage: draft.featuredImage || draft.heroImage || '',
-            heroImage: draft.heroImage || draft.featuredImage || '',
-            allowComments,
-          }
-          const result = upsertNativeEntryLocal(items, normalized)
-          setItems(result.items)
-          lastAutosaveFingerprintRef.current = toAutosaveFingerprint(normalized, allowComments)
-          if (result.ok) {
-            setAutosaveState({ status: 'saved', at: new Date().toISOString() })
-          } else {
-            setAutosaveState({ status: 'failed', at: '' })
-          }
-        } catch {
-          setAutosaveState({ status: 'failed', at: '' })
-        }
-      }
-      runAutosave()
-    }, AUTOSAVE_DEBOUNCE_MS)
-
-    return () => {
-      if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current)
-    }
-  }, [allowComments, draft, items, autosaveState.at])
+  function handlePermalinkCancel() {
+    setPermalinkDraft(draft.slug || '')
+    setIsPermalinkEditing(false)
+  }
 
   return (
     <AdminFrame>
@@ -343,12 +323,23 @@ export function NativeContentBridgePage() {
 
         <section className="wp-edit-main">
           <div className="wp-edit-content">
-            <input className="wp-title-input" value={draft.title || ''} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value, slug: slugify(d.slug || e.target.value) }))} placeholder="Add title" />
-            <div className="wp-permalink-row">Permalink: /post/{draft.slug || 'sample-post'}</div>
-            <div className="wp-autosave-status" role="status" aria-live="polite">
-              {autosaveState.status === 'saving' ? 'Saving…' : null}
-              {autosaveState.status === 'saved' ? `Autosaved at ${formatAutosaveTime(autosaveState.at)}` : null}
-              {autosaveState.status === 'failed' ? 'Save failed' : null}
+            <input className="wp-title-input" value={draft.title || ''} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Add title" />
+            <div className="wp-permalink-row">
+              <span>Permalink: /post/{draft.slug || 'sample-post'}</span>
+              {!isPermalinkEditing ? (
+                <button type="button" className="button button-link" onClick={() => setIsPermalinkEditing(true)}>Edit</button>
+              ) : (
+                <span className="wp-permalink-edit-controls">
+                  <input
+                    type="text"
+                    value={permalinkDraft}
+                    onChange={(e) => setPermalinkDraft(e.target.value)}
+                    aria-label="Edit permalink slug"
+                  />
+                  <button type="button" className="button button-small" onClick={handlePermalinkConfirm}>OK</button>
+                  <button type="button" className="button button-small" onClick={handlePermalinkCancel}>Cancel</button>
+                </span>
+              )}
             </div>
 
             <div className="wp-editor-actions">
@@ -408,7 +399,22 @@ export function NativeContentBridgePage() {
               <div className="wp-meta-actions">
                 <button type="button" className="button" onClick={handlePreviewChanges}>Preview Changes</button>
                 <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
-                <button type="button" className="button button--primary" onClick={async () => { const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }; setDraft(next); await handleSave('publish') }}>Publish / Update</button>
+                <button type="button" className="button button--primary" onClick={async () => {
+                  const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }
+                  setDraft(next)
+                  const saved = await handleSave('publish')
+                  if (saved) setDraft(saved)
+                }}>Publish / Update</button>
+                {draft?.id && draft?.status === 'published' ? (
+                  <Link
+                    className="button"
+                    to={draft.slug && publicPieceSlugSet.has(draft.slug) ? `/post/${draft.slug}` : `/native-preview/${draft.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View Post
+                  </Link>
+                ) : null}
                 <button type="button" className="button" onClick={handleMoveToTrash}>Move to Trash</button>
               </div>
             </article>
@@ -440,9 +446,30 @@ export function NativeContentBridgePage() {
 
             <article className="wp-meta-box">
               <h2>Featured Image</h2>
-              <button type="button" className="button" onClick={() => setOpenMediaFor('featured')}>{draft.featuredImage ? 'Replace featured image' : 'Set featured image'}</button>
-              {draft.featuredImage ? <img className="wp-featured-preview" src={draft.featuredImage} alt="Featured" /> : null}
-              {draft.featuredImage ? <button type="button" className="button" onClick={() => setDraft((d) => ({ ...d, featuredImage: '', heroImage: '' }))}>Remove featured image</button> : null}
+              {!draft.featuredImage ? (
+                <button type="button" className="wp-link-button" onClick={() => setOpenMediaFor('featured')}>Set featured image</button>
+              ) : (
+                <>
+                  <img className="wp-featured-preview" src={draft.featuredImage} alt={draft.featuredImageAlt || draft.featuredImageTitle || 'Featured image'} />
+                  <div className="wp-featured-actions">
+                    <button
+                      type="button"
+                      className="wp-link-button"
+                      onClick={() => setDraft((d) => ({
+                        ...d,
+                        featuredImage: '',
+                        heroImage: '',
+                        featuredImageTitle: '',
+                        featuredImageAlt: '',
+                        featuredImageCaption: '',
+                      }))}
+                    >
+                      Remove featured image
+                    </button>
+                    <button type="button" className="wp-link-button" onClick={() => setOpenMediaFor('featured')}>Replace featured image</button>
+                  </div>
+                </>
+              )}
             </article>
           </aside>
         </section>
@@ -451,11 +478,24 @@ export function NativeContentBridgePage() {
           open={Boolean(openMediaFor)}
           onClose={() => setOpenMediaFor('')}
           onPick={(media) => {
+            const selectedMedia = {
+              url: String(media?.url || ''),
+              title: String(media?.title || ''),
+              alt: String(media?.alt || ''),
+              caption: String(media?.caption || ''),
+            }
             if (openMediaFor === 'featured') {
-              setDraft((d) => ({ ...d, featuredImage: media.url, heroImage: media.url }))
+              setDraft((d) => ({
+                ...d,
+                featuredImage: selectedMedia.url,
+                heroImage: selectedMedia.url,
+                featuredImageTitle: selectedMedia.title,
+                featuredImageAlt: selectedMedia.alt,
+                featuredImageCaption: selectedMedia.caption,
+              }))
             }
             if (openMediaFor === 'body') {
-              insertAtCursor(`\n<img src="${media.url}" alt="${media.alt || ''}" />\n`)
+              insertAtCursor(`\n<img src="${selectedMedia.url}" alt="${selectedMedia.alt}" />\n`)
             }
             setOpenMediaFor('')
           }}
