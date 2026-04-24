@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getPieces } from '../lib/pieces'
 import {
   createEmptyNativeEntry,
-  deleteNativeEntry,
   loadNativeCollection,
   slugify,
   upsertNativeEntry,
@@ -42,6 +41,29 @@ function fromLocalDateTime(value) {
   return Number.isFinite(d.getTime()) ? d.toISOString() : ''
 }
 
+function wrapSelected(textarea, opener, closer = opener) {
+  if (!textarea) return null
+  const start = textarea.selectionStart ?? 0
+  const end = textarea.selectionEnd ?? 0
+  const value = textarea.value || ''
+  const selected = value.slice(start, end) || 'text'
+  const next = `${value.slice(0, start)}${opener}${selected}${closer}${value.slice(end)}`
+  const cursorStart = start + opener.length
+  const cursorEnd = cursorStart + selected.length
+  return { next, cursorStart, cursorEnd }
+}
+
+function prefixSelectedLines(textarea, prefix) {
+  if (!textarea) return null
+  const start = textarea.selectionStart ?? 0
+  const end = textarea.selectionEnd ?? 0
+  const value = textarea.value || ''
+  const segment = value.slice(start, end)
+  const nextSegment = segment.split('\n').map((line) => `${prefix}${line}`).join('\n')
+  const next = `${value.slice(0, start)}${nextSegment}${value.slice(end)}`
+  return { next, cursorStart: start, cursorEnd: start + nextSegment.length }
+}
+
 export function NativeContentBridgePage() {
   const [searchParams] = useSearchParams()
   const [items, setItems] = useState([])
@@ -51,7 +73,7 @@ export function NativeContentBridgePage() {
   const [tagInput, setTagInput] = useState('')
   const [newCategory, setNewCategory] = useState('')
   const [openMediaFor, setOpenMediaFor] = useState('')
-  const [allowComments, setAllowComments] = useState(true)
+  const textareaRef = useRef(null)
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
 
@@ -99,6 +121,31 @@ export function NativeContentBridgePage() {
     setItems(next)
   }
 
+  function applyEditorMutation(mutator) {
+    const el = textareaRef.current
+    const result = mutator(el)
+    if (!result) return
+    setDraft((d) => ({ ...d, body: result.next }))
+    requestAnimationFrame(() => {
+      if (!textareaRef.current) return
+      textareaRef.current.focus()
+      textareaRef.current.selectionStart = result.cursorStart
+      textareaRef.current.selectionEnd = result.cursorEnd
+    })
+  }
+
+  function insertAtCursor(snippet) {
+    applyEditorMutation((textarea) => {
+      if (!textarea) return null
+      const start = textarea.selectionStart ?? 0
+      const end = textarea.selectionEnd ?? 0
+      const value = textarea.value || ''
+      const next = `${value.slice(0, start)}${snippet}${value.slice(end)}`
+      const cursor = start + snippet.length
+      return { next, cursorStart: cursor, cursorEnd: cursor }
+    })
+  }
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen wp-edit-screen">
@@ -120,8 +167,22 @@ export function NativeContentBridgePage() {
               </div>
             </div>
 
-            <div className="wp-classic-toolbar">B I link ul ol blockquote alignleft aligncenter alignright</div>
-            <textarea className="wp-editor-textarea" value={draft.body || ''} onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} placeholder="Start writing…" />
+            <div className="wp-classic-toolbar" role="toolbar" aria-label="Classic formatting toolbar">
+              <button type="button" className="wp-toolbar-btn" onClick={() => applyEditorMutation((el) => wrapSelected(el, '**'))}><strong>B</strong></button>
+              <button type="button" className="wp-toolbar-btn" onClick={() => applyEditorMutation((el) => wrapSelected(el, '*'))}><em>I</em></button>
+              <button type="button" className="wp-toolbar-btn" onClick={() => {
+                const href = window.prompt('Enter URL for link', 'https://')
+                if (!href) return
+                applyEditorMutation((el) => wrapSelected(el, '[', `](${href})`))
+              }}>🔗</button>
+              <button type="button" className="wp-toolbar-btn" onClick={() => applyEditorMutation((el) => prefixSelectedLines(el, '- '))}>•</button>
+              <button type="button" className="wp-toolbar-btn" onClick={() => applyEditorMutation((el) => prefixSelectedLines(el, '1. '))}>1.</button>
+              <button type="button" className="wp-toolbar-btn" onClick={() => applyEditorMutation((el) => prefixSelectedLines(el, '> '))}>❝</button>
+              <button type="button" className="wp-toolbar-btn" onClick={() => insertAtCursor('\n<div style="text-align:left;">text</div>\n')}>⟸</button>
+              <button type="button" className="wp-toolbar-btn" onClick={() => insertAtCursor('\n<div style="text-align:center;">text</div>\n')}>≡</button>
+              <button type="button" className="wp-toolbar-btn" onClick={() => insertAtCursor('\n<div style="text-align:right;">text</div>\n')}>⟹</button>
+            </div>
+            <textarea ref={textareaRef} className="wp-editor-textarea" value={draft.body || ''} onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} placeholder="Start writing…" />
 
             <article className="wp-meta-box"><h2>Excerpt</h2><textarea value={draft.excerpt || ''} onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))} /></article>
             <article className="wp-meta-box"><h2>Discussion</h2><label><input type="checkbox" checked={allowComments} onChange={(e) => setAllowComments(e.target.checked)} /> Allow comments</label></article>
@@ -136,7 +197,7 @@ export function NativeContentBridgePage() {
               <label>Visibility <select><option>Public</option><option>Private</option></select></label>
               <label>Publish <input type="datetime-local" value={toLocalDateTime(draft.scheduledFor)} onChange={(e) => setDraft((d) => ({ ...d, scheduledFor: fromLocalDateTime(e.target.value) }))} /></label>
               <div className="wp-meta-actions">
-                <Link className="button" to={`/native-preview/${draft.id}`}>Preview Changes</Link>
+                <Link className="button" to={`/native-preview/${activeId || draft.id}`}>Preview</Link>
                 <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
                 <button type="button" className="button button--primary" onClick={async () => { const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }; setDraft(next); await handleSave('publish') }}>Publish / Update</button>
                 <button type="button" className="button" onClick={handleMoveToTrash}>Move to Trash</button>
@@ -185,7 +246,7 @@ export function NativeContentBridgePage() {
               setDraft((d) => ({ ...d, featuredImage: media.url, heroImage: media.url }))
             }
             if (openMediaFor === 'body') {
-              setDraft((d) => ({ ...d, body: `${d.body || ''}\n\n<img src=\"${media.url}\" alt=\"${media.alt || ''}\" />` }))
+              insertAtCursor(`\n<img src="${media.url}" alt="${media.alt || ''}" />\n`)
             }
             setOpenMediaFor('')
           }}
