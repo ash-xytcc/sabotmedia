@@ -22,6 +22,7 @@ import { EditableText } from './components/EditableText'
 import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/content'
 import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
+import { MediaLibraryPage } from './components/MediaLibraryPage'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -45,6 +46,7 @@ const ADMIN_SHELL_PATHS = [
   '/analytics',
   '/design-system',
   '/platform-map',
+  '/media',
 ]
 
 function shouldUseBareShell(pathname) {
@@ -96,6 +98,7 @@ export default function App() {
           <Route path="/admin" element={<AdminPage pieces={pieces} />} />
           <Route path="/content" element={<ContentListPage />} />
           <Route path="/overrides" element={<OverridesPage />} />
+          <Route path="/media" element={<MediaLibraryPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
         <Route path="/native-bridge" element={<NativeContentBridgePage />} />
         <Route path="/updates" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
