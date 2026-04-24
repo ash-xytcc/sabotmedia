@@ -4,12 +4,12 @@ import { loadNativeCollection } from '../lib/nativePublicContent'
 import { usePublicEdit } from './PublicEditContext'
 import { getPieces } from '../lib/pieces'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
-import { WORDPRESS_ADMIN_LINKS, buildWordPressPostEditLink } from '../lib/wordpressClient'
+import { buildWordPressPostEditLink } from '../lib/wordpressClient'
 
 const IMPORTED_PIECES = getPieces()
 
 export function PublicAdminToolbar() {
-  const { canSave, isEditing, toggleEditing, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
+  const { canSave, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
   const location = useLocation()
   const [nativeItems, setNativeItems] = useState([])
   const [canUseToolbar, setCanUseToolbar] = useState(false)
@@ -65,15 +65,16 @@ export function PublicAdminToolbar() {
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
       <div className="wp-public-admin-bar__left">
-        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/admin'}>Sabot Media</a>
+        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/'}>Sabot Media</a>
         <a className="wp-public-admin-bar__item" href={'/admin'}>Dashboard</a>
         <a className="wp-public-admin-bar__item" href={'/native-bridge?new=article'}>New</a>
         <a className="wp-public-admin-bar__item" href={'/content'}>Posts</a>
         <a className="wp-public-admin-bar__item" href={'/media'}>Media</a>
-        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.customize}>Customize</a>
+        {/* Live inline editing remains deferred; use Customize as the active internal site-editing entry point. */}
+        <a className="wp-public-admin-bar__item" href={'/customize'}>Customize</a>
         {editPostLink ? <Link className="wp-public-admin-bar__item" to={editPostLink}>Edit Post</Link> : null}
         {editSourceLink ? <a className="wp-public-admin-bar__item" href={editSourceLink}>Edit Source</a> : null}
-        <a className="wp-public-admin-bar__item" href="/?edit=site">Edit Site</a>
+        <a className="wp-public-admin-bar__item" href="/customize">Edit Site</a>
       </div>
       <div className="wp-public-admin-bar__right">
         {canSave && changedFields.length ? (
