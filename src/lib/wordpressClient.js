@@ -211,14 +211,6 @@ export function mergeWordPressWithFallback(wordpressPieces = [], fallbackPieces 
   return merged.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0))
 }
 
-export const WORDPRESS_ADMIN_LINKS = {
-  dashboard: `${WP_BASE}/wp-admin/`,
-  posts: `${WP_BASE}/wp-admin/edit.php`,
-  newPost: `${WP_BASE}/wp-admin/post-new.php`,
-  media: `${WP_BASE}/wp-admin/upload.php`,
-  customize: `${WP_BASE}/wp-admin/customize.php`,
-}
-
 export function buildWordPressPostEditLink(postId, sourceUrl = '') {
   const id = String(postId || '').trim()
   if (!id) return ''
