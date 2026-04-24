@@ -1,11 +1,15 @@
-import { useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { getPieces } from '../lib/pieces'
+import { loadLocalMediaItems } from '../lib/localMediaLibrary'
+import { exportNativeCollection, loadNativeCollection } from '../lib/nativePublicContent'
+import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
 
 const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
 const MENU_KEY = 'sabot-wp-clone-menu-v1'
 const USER_ROLE_SETTINGS_KEY = 'sabot-wp-clone-user-role-settings-v1'
+const CUSTOMIZER_KEY = 'sabot-wp-clone-customizer-v1'
 
 function loadJson(key, fallback) {
   try {
@@ -26,6 +30,26 @@ function saveJson(key, value) {
 
 function WpNotice({ children }) {
   return <div className="notice notice-info"><p>{children}</p></div>
+}
+
+function downloadJson(filename, payload) {
+  const blob = new Blob([payload], { type: 'application/json' })
+  const url = window.URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  window.URL.revokeObjectURL(url)
+}
+
+async function copyToClipboard(value) {
+  if (!navigator?.clipboard?.writeText) return false
+  try {
+    await navigator.clipboard.writeText(value)
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function PagesAdminPage() {
@@ -134,15 +158,261 @@ export function MenusAdminPage() {
 }
 
 export function CustomizeAdminPage() {
-  const location = useLocation()
-  const activeSection = new URLSearchParams(location.search).get('section') || ''
-  const sections = [
-    ['site-identity', 'Site Identity', 'Title, tagline, icon, and publication identity.'],
-    ['colors', 'Colors', 'Theme colors and editorial color controls.'],
-    ['header-masthead', 'Header / Masthead', 'Logo, masthead placement, and header layout.'],
-    ['navigation', 'Navigation', 'Public nav placement and menu behavior.'],
-    ['homepage', 'Homepage', 'Featured content, feed source, and layout.'],
-  ]
+  const sections = useMemo(() => ([
+    { id: 'siteIdentity', title: 'Site Identity', body: 'Title, tagline, icon, and publication identity.' },
+    { id: 'colors', title: 'Colors', body: 'Theme colors and editorial color controls.' },
+    { id: 'masthead', title: 'Header / Masthead', body: 'Logo, masthead placement, and header layout.' },
+    { id: 'navigation', title: 'Navigation', body: 'Public nav placement and menu behavior.' },
+    { id: 'homepage', title: 'Homepage', body: 'Featured content, feed source, and layout.' },
+  ]), [])
+  const [activeSection, setActiveSection] = useState('siteIdentity')
+  const [settings, setSettings] = useState(() => loadJson(CUSTOMIZER_KEY, {
+    siteIdentity: {
+      siteTitle: 'Sabot Media',
+      tagline: 'Radical media and publishing',
+      logoUrl: '',
+    },
+    colors: {
+      backgroundColor: '#ffffff',
+      accentColor: '#3858e9',
+      textColor: '#1d2327',
+    },
+    masthead: {
+      mastheadSize: 'medium',
+      navPosition: 'below',
+      logoUrl: '',
+    },
+    navigation: {
+      menuItems: [
+        { label: 'Archive', path: '/archive' },
+        { label: 'Press', path: '/press' },
+        { label: 'Projects', path: '/projects' },
+      ],
+    },
+    homepage: {
+      homepageSource: 'latest',
+      featuredLayout: 'grid',
+      postsPerPage: 12,
+    },
+  }))
+  const [saveMessage, setSaveMessage] = useState('')
+
+  function updateSection(section, field, value) {
+    setSettings((current) => ({
+      ...current,
+      [section]: {
+        ...current[section],
+        [field]: value,
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function updateNavigationItem(index, patch) {
+    setSettings((current) => ({
+      ...current,
+      navigation: {
+        ...current.navigation,
+        menuItems: current.navigation.menuItems.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function addNavigationItem() {
+    setSettings((current) => ({
+      ...current,
+      navigation: {
+        ...current.navigation,
+        menuItems: [...current.navigation.menuItems, { label: 'New Item', path: '/' }],
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function removeNavigationItem(index) {
+    setSettings((current) => ({
+      ...current,
+      navigation: {
+        ...current.navigation,
+        menuItems: current.navigation.menuItems.filter((_, i) => i !== index),
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function saveSection(section) {
+    saveJson(CUSTOMIZER_KEY, settings)
+    const sectionName = sections.find((entry) => entry.id === section)?.title || 'Section'
+    setSaveMessage(`${sectionName} saved locally.`)
+  }
+
+  function renderPanel() {
+    if (activeSection === 'siteIdentity') {
+      return (
+        <div className="wp-customize-panel" key="siteIdentity">
+          <h3>Site Identity</h3>
+          <label>
+            <span>Site title</span>
+            <input
+              value={settings.siteIdentity.siteTitle}
+              onChange={(e) => updateSection('siteIdentity', 'siteTitle', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Tagline</span>
+            <input
+              value={settings.siteIdentity.tagline}
+              onChange={(e) => updateSection('siteIdentity', 'tagline', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Logo / masthead URL</span>
+            <input
+              value={settings.siteIdentity.logoUrl}
+              onChange={(e) => updateSection('siteIdentity', 'logoUrl', e.target.value)}
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => saveSection('siteIdentity')}>Save</button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'colors') {
+      return (
+        <div className="wp-customize-panel" key="colors">
+          <h3>Colors</h3>
+          <label>
+            <span>Background color</span>
+            <input
+              value={settings.colors.backgroundColor}
+              onChange={(e) => updateSection('colors', 'backgroundColor', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Accent color</span>
+            <input
+              value={settings.colors.accentColor}
+              onChange={(e) => updateSection('colors', 'accentColor', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Text color</span>
+            <input
+              value={settings.colors.textColor}
+              onChange={(e) => updateSection('colors', 'textColor', e.target.value)}
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => saveSection('colors')}>Save</button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'masthead') {
+      return (
+        <div className="wp-customize-panel" key="masthead">
+          <h3>Header / Masthead</h3>
+          <label>
+            <span>Masthead size</span>
+            <select
+              value={settings.masthead.mastheadSize}
+              onChange={(e) => updateSection('masthead', 'mastheadSize', e.target.value)}
+            >
+              <option value="compact">Compact</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          <label>
+            <span>Nav position</span>
+            <select
+              value={settings.masthead.navPosition}
+              onChange={(e) => updateSection('masthead', 'navPosition', e.target.value)}
+            >
+              <option value="below">Below masthead</option>
+              <option value="inline">Inline with logo</option>
+              <option value="above">Above masthead</option>
+            </select>
+          </label>
+          <label>
+            <span>Logo URL</span>
+            <input
+              value={settings.masthead.logoUrl}
+              onChange={(e) => updateSection('masthead', 'logoUrl', e.target.value)}
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => saveSection('masthead')}>Save</button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'navigation') {
+      return (
+        <div className="wp-customize-panel" key="navigation">
+          <h3>Navigation</h3>
+          <div className="wp-customize-nav-list">
+            {settings.navigation.menuItems.map((item, index) => (
+              <div className="wp-customize-nav-row" key={`${item.path}-${index}`}>
+                <input
+                  value={item.label}
+                  onChange={(e) => updateNavigationItem(index, { label: e.target.value })}
+                  aria-label={`Menu item ${index + 1} label`}
+                />
+                <input
+                  value={item.path}
+                  onChange={(e) => updateNavigationItem(index, { path: e.target.value })}
+                  aria-label={`Menu item ${index + 1} path`}
+                />
+                <button type="button" className="button" onClick={() => removeNavigationItem(index)}>Remove</button>
+              </div>
+            ))}
+          </div>
+          <p>
+            <button type="button" className="button" onClick={addNavigationItem}>Add item</button>
+          </p>
+          <button className="button button--primary" type="button" onClick={() => saveSection('navigation')}>Save</button>
+        </div>
+      )
+    }
+
+    return (
+      <div className="wp-customize-panel" key="homepage">
+        <h3>Homepage</h3>
+        <label>
+          <span>Homepage source</span>
+          <select
+            value={settings.homepage.homepageSource}
+            onChange={(e) => updateSection('homepage', 'homepageSource', e.target.value)}
+          >
+            <option value="latest">Latest posts</option>
+            <option value="featured">Featured feed</option>
+            <option value="mixed">Mixed curation</option>
+          </select>
+        </label>
+        <label>
+          <span>Featured layout</span>
+          <select
+            value={settings.homepage.featuredLayout}
+            onChange={(e) => updateSection('homepage', 'featuredLayout', e.target.value)}
+          >
+            <option value="grid">Grid</option>
+            <option value="list">List</option>
+            <option value="stack">Stack</option>
+          </select>
+        </label>
+        <label>
+          <span>Posts per page</span>
+          <input
+            type="number"
+            min="1"
+            value={settings.homepage.postsPerPage}
+            onChange={(e) => updateSection('homepage', 'postsPerPage', Number(e.target.value) || 1)}
+          />
+        </label>
+        <button className="button button--primary" type="button" onClick={() => saveSection('homepage')}>Save</button>
+      </div>
+    )
+  }
 
   return (
     <AdminFrame>
@@ -155,15 +425,26 @@ export function CustomizeAdminPage() {
         <section className="wp-meta-box wp-customize-shell">
           <h2>Customizer</h2>
           <p className="description">WordPress-style customizer scaffold for Sabot.</p>
-          {activeSection ? <p className="description"><strong>Selected section:</strong> {activeSection}</p> : null}
+          <WpNotice>Customizer settings are local scaffold until public wiring lands.</WpNotice>
 
-          <div className="wp-customize-section-list">
-            {sections.map(([id, title, body]) => (
-              <button className="wp-customize-section" type="button" key={id} aria-current={activeSection === id ? 'true' : undefined}>
-                <span>{title}</span>
-                <small>{body}</small>
-              </button>
-            ))}
+          <div className="wp-customize-layout">
+            <div className="wp-customize-section-list">
+              {sections.map((section) => (
+                <button
+                  className={`wp-customize-section${section.id === activeSection ? ' is-active' : ''}`}
+                  type="button"
+                  key={section.id}
+                  onClick={() => setActiveSection(section.id)}
+                >
+                  <span>{section.title}</span>
+                  <small>{section.body}</small>
+                </button>
+              ))}
+            </div>
+            <div className="wp-customize-panel-wrap">
+              {renderPanel()}
+              {saveMessage && <p className="description">{saveMessage}</p>}
+            </div>
           </div>
 
           <p className="description">
@@ -174,6 +455,7 @@ export function CustomizeAdminPage() {
     </AdminFrame>
   )
 }
+
 
 export function SiteEditorAdminPage() {
   return (
@@ -197,12 +479,104 @@ export function SiteEditorAdminPage() {
 }
 
 export function ToolsAdminPage() {
+  const [notices, setNotices] = useState([])
+
+  function addNotice(type, message) {
+    setNotices((current) => [{ id: `${Date.now()}-${Math.random()}`, type, message }, ...current].slice(0, 6))
+  }
+
+  async function runNativeExport() {
+    const collection = await loadNativeCollection()
+    const payload = exportNativeCollection(collection)
+    const stamp = new Date().toISOString().slice(0, 10)
+    downloadJson(`native-content-export-${stamp}.json`, payload)
+    const copied = await copyToClipboard(payload)
+    addNotice('success', `Native content export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+  }
+
+  async function runPublicSettingsExport() {
+    const runtime = getStoredPublicConfig()
+    const payload = JSON.stringify(
+      {
+        exportedAt: new Date().toISOString(),
+        config: resolvePublicConfig(runtime),
+      },
+      null,
+      2
+    )
+    const stamp = new Date().toISOString().slice(0, 10)
+    downloadJson(`public-settings-export-${stamp}.json`, payload)
+    const copied = await copyToClipboard(payload)
+    addNotice('success', `Public settings export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+  }
+
+  function runMediaAudit() {
+    const pieces = getPieces()
+    const localMedia = loadLocalMediaItems()
+    const importedMediaCount = pieces.filter((piece) => String(piece.sourceType || '').toLowerCase() !== 'manual').length
+    const missingFeaturedImages = pieces.filter((piece) => !String(piece.heroImage || piece.featuredImage || '').trim()).length
+    addNotice(
+      'success',
+      `Media audit complete. Total media items: ${localMedia.length + importedMediaCount}. Local uploads: ${localMedia.length}. Imported media references: ${importedMediaCount}. Missing featured images: ${missingFeaturedImages}.`
+    )
+  }
+
+  function runBrokenImageAudit() {
+    addNotice('warning', 'Broken image audit scaffold is in place, but URL validation checks are not implemented yet.')
+  }
+
+  function runLocalStorageInventory() {
+    const inventory = []
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index)
+      if (!key) continue
+      const value = window.localStorage.getItem(key) || ''
+      inventory.push({ key, bytes: new Blob([value]).size })
+    }
+    inventory.sort((a, b) => b.bytes - a.bytes)
+    const summary = inventory.map((entry) => `${entry.key}: ${entry.bytes} bytes`).join('\n')
+    addNotice('success', `LocalStorage inventory complete. ${inventory.length} keys scanned.`)
+    if (summary) {
+      copyToClipboard(summary)
+    }
+  }
+
   const tools = [
-    ['Import', 'Bring content into the internal Sabot clone. Not wired yet.'],
-    ['Export', 'Export local/native content snapshots. Scaffolded.'],
-    ['Native content export', 'Future direct export of internal posts and media.'],
-    ['Public config export', 'Future export of public site settings and customizer state.'],
-    ['Media audit', 'Check missing featured images, broken URLs, and local media records.'],
+    {
+      name: 'Export native content JSON',
+      status: 'Ready',
+      notes: 'Downloads current native content collection and copies JSON when clipboard access is allowed.',
+      actionLabel: 'Run export',
+      action: runNativeExport,
+    },
+    {
+      name: 'Export public settings JSON',
+      status: 'Ready',
+      notes: 'Exports resolved public settings from browser storage as JSON.',
+      actionLabel: 'Run export',
+      action: runPublicSettingsExport,
+    },
+    {
+      name: 'Run media audit',
+      status: 'Ready',
+      notes: 'Summarizes media totals, local uploads, imported references, and missing featured images.',
+      actionLabel: 'Run audit',
+      action: runMediaAudit,
+    },
+    {
+      name: 'Run broken image audit',
+      status: 'Scaffolded',
+      notes: 'Audit flow exists, but URL reachability checks are intentionally not implemented yet.',
+      actionLabel: 'Run scaffold',
+      action: runBrokenImageAudit,
+    },
+    {
+      name: 'Run localStorage inventory',
+      status: 'Ready',
+      notes: 'Scans localStorage keys, sizes values in bytes, and copies a text summary.',
+      actionLabel: 'Run inventory',
+      action: runLocalStorageInventory,
+    },
   ]
 
   return (
@@ -211,6 +585,12 @@ export function ToolsAdminPage() {
         <div className="wp-screen-header">
           <h1>Tools</h1>
         </div>
+
+        {notices.map((notice) => (
+          <div className={`notice ${notice.type === 'warning' ? 'notice-warning' : 'notice-success'}`} key={notice.id}>
+            <p>{notice.message}</p>
+          </div>
+        ))}
 
         <section className="wp-meta-box">
           <h2>Available tools</h2>
@@ -222,14 +602,18 @@ export function ToolsAdminPage() {
                 <th>Tool</th>
                 <th>Status</th>
                 <th>Notes</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {tools.map(([tool, notes]) => (
-                <tr key={tool}>
-                  <td><strong>{tool}</strong></td>
-                  <td>Scaffolded</td>
-                  <td>{notes}</td>
+              {tools.map((tool) => (
+                <tr key={tool.name}>
+                  <td><strong>{tool.name}</strong></td>
+                  <td>{tool.status}</td>
+                  <td>{tool.notes}</td>
+                  <td>
+                    <button className="button" type="button" onClick={tool.action}>{tool.actionLabel}</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -285,9 +669,32 @@ export function SettingsAdminPage() {
 
 export function UsersAdminPage() {
   const [settings, setSettings] = useState(() => loadJson(USER_ROLE_SETTINGS_KEY, {
-    users: [{ id: 'local-admin', name: 'sabotmedia', email: 'local@sabotmedia', role: 'Administrator' }],
+    users: [{
+      id: 'local-admin',
+      username: 'sabotmedia',
+      email: 'local@sabotmedia',
+      displayName: 'sabotmedia',
+      role: 'Administrator',
+    }],
     roles: ['Administrator', 'Editor', 'Author', 'Contributor', 'Subscriber'],
   }))
+  const [isAddingUser, setIsAddingUser] = useState(false)
+  const [newUser, setNewUser] = useState({
+    username: '',
+    email: '',
+    displayName: '',
+    role: 'Subscriber',
+  })
+
+  const normalizedUsers = useMemo(() => settings.users.map((user) => ({
+    ...user,
+    username: user.username || user.name || '',
+    displayName: user.displayName || user.name || user.username || '',
+  })), [settings.users])
+
+  useEffect(() => {
+    saveJson(USER_ROLE_SETTINGS_KEY, settings)
+  }, [settings])
 
   function updateRole(id, role) {
     setSettings((current) => ({
@@ -300,30 +707,98 @@ export function UsersAdminPage() {
     saveJson(USER_ROLE_SETTINGS_KEY, settings)
   }
 
+  function updateNewUser(field, value) {
+    setNewUser((current) => ({ ...current, [field]: value }))
+  }
+
+  function addUser(event) {
+    event.preventDefault()
+    const username = newUser.username.trim()
+    const email = newUser.email.trim()
+    const displayName = newUser.displayName.trim()
+
+    if (!username || !email || !displayName) return
+
+    setSettings((current) => ({
+      ...current,
+      users: [...current.users, {
+        id: `local-${Date.now()}`,
+        username,
+        email,
+        displayName,
+        role: newUser.role,
+      }],
+    }))
+    setNewUser({ username: '', email: '', displayName: '', role: 'Subscriber' })
+    setIsAddingUser(false)
+  }
+
+  function deleteUser(id) {
+    setSettings((current) => ({
+      ...current,
+      users: current.users.filter((user) => user.id !== id),
+    }))
+  }
+
+  const hasRequiredNewUserFields = newUser.username.trim() && newUser.email.trim() && newUser.displayName.trim()
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <h1>Users</h1>
-          <button className="button button--primary" type="button" onClick={saveUsers}>Save Roles</button>
+          <div>
+            <button className="button" type="button" onClick={() => setIsAddingUser((current) => !current)}>Add New</button>{' '}
+            <button className="button button--primary" type="button" onClick={saveUsers}>Save Users</button>
+          </div>
         </div>
+
+        {isAddingUser && (
+          <section className="wp-meta-box">
+            <h2>Add New User</h2>
+            <form className="wp-settings-form" onSubmit={addUser}>
+              <label><span>Username</span><input value={newUser.username} onChange={(e) => updateNewUser('username', e.target.value)} /></label>
+              <label><span>Email</span><input type="email" value={newUser.email} onChange={(e) => updateNewUser('email', e.target.value)} /></label>
+              <label><span>Display name</span><input value={newUser.displayName} onChange={(e) => updateNewUser('displayName', e.target.value)} /></label>
+              <label>
+                <span>Role</span>
+                <select value={newUser.role} onChange={(e) => updateNewUser('role', e.target.value)}>
+                  {settings.roles.map((role) => <option key={role} value={role}>{role}</option>)}
+                </select>
+              </label>
+              <p>
+                <button className="button button--primary" type="submit" disabled={!hasRequiredNewUserFields}>Create User</button>{' '}
+                <button className="button" type="button" onClick={() => setIsAddingUser(false)}>Cancel</button>
+              </p>
+            </form>
+          </section>
+        )}
 
         <section className="wp-meta-box">
           <h2>Users</h2>
           <table className="content-table wp-posts-table">
-            <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+            <thead><tr><th>Username</th><th>Email</th><th>Display name</th><th>Role</th><th>Actions</th></tr></thead>
             <tbody>
-              {settings.users.map((user) => (
+              {normalizedUsers.map((user) => {
+                const isProtectedUser = user.id === 'local-admin' || (user.username === 'sabotmedia' && user.role === 'Administrator')
+                return (
                 <tr key={user.id}>
-                  <td>{user.name}</td>
+                  <td>{user.username}</td>
                   <td>{user.email}</td>
+                  <td>{user.displayName}</td>
                   <td>
                     <select value={user.role} onChange={(e) => updateRole(user.id, e.target.value)}>
                       {settings.roles.map((role) => <option key={role} value={role}>{role}</option>)}
                     </select>
                   </td>
+                  <td>
+                    {!isProtectedUser && (
+                      <button className="button button-link-delete" type="button" onClick={() => deleteUser(user.id)}>Delete</button>
+                    )}
+                  </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </section>
