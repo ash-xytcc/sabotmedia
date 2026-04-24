@@ -54,10 +54,10 @@ async function copyToClipboard(value) {
 
 export function PagesAdminPage() {
   const pages = [
-    { title: 'Home', slug: 'home', path: '/', status: 'Published' },
-    { title: 'Archive', slug: 'archive', path: '/archive', status: 'Published' },
-    { title: 'Press', slug: 'press', path: '/press', status: 'Published' },
-    { title: 'Projects', slug: 'projects', path: '/projects', status: 'Published' },
+    { title: 'Home', slug: 'home', path: '/', status: 'Published', modified: '2026-04-22', customizeSection: 'homepage' },
+    { title: 'Archive', slug: 'archive', path: '/archive', status: 'Published', modified: '2026-04-21', customizeSection: 'navigation' },
+    { title: 'Press', slug: 'press', path: '/press', status: 'Published', modified: '2026-04-23', customizeSection: 'colors' },
+    { title: 'Projects', slug: 'projects', path: '/projects', status: 'Published', modified: '2026-04-20', customizeSection: 'homepage' },
   ]
 
   return (
@@ -65,8 +65,12 @@ export function PagesAdminPage() {
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <h1>Pages</h1>
-          <Link className="button button--primary" to="/draft">Add New</Link>
+          <button className="button button--primary" type="button" title="Local scaffold only — page creation is not wired yet.">
+            Add New (Scaffold)
+          </button>
         </div>
+
+        <WpNotice>Page creation is local scaffold only for now. Use existing public routes to edit live content.</WpNotice>
 
         <section className="wp-meta-box">
           <table className="content-table wp-posts-table">
@@ -75,6 +79,7 @@ export function PagesAdminPage() {
                 <th>Title</th>
                 <th>Slug</th>
                 <th>Status</th>
+                <th>Last modified</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -84,11 +89,12 @@ export function PagesAdminPage() {
                   <td><strong>{page.title}</strong></td>
                   <td>{page.slug}</td>
                   <td>{page.status}</td>
+                  <td>{new Date(page.modified).toLocaleDateString()}</td>
                   <td>
                     <div className="wp-row-actions">
-                      <Link to="/draft">Edit Site</Link>
+                      <Link to={`${page.path}?edit=site`}>Edit Live</Link>
                       <Link to={page.path}>View</Link>
-                      <Link to="/customize">Customize</Link>
+                      <Link to={`/customize?section=${page.customizeSection}`}>Customize</Link>
                     </div>
                   </td>
                 </tr>
