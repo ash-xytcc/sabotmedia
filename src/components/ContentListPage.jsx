@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadNativeCollection, slugify, upsertNativeEntry, saveNativeCollection } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
+import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -28,6 +29,7 @@ export function ContentListPage() {
   const [quickEditId, setQuickEditId] = useState('')
   const [bulkAction, setBulkAction] = useState('')
   const [quickEdit, setQuickEdit] = useState({ title: '', slug: '', status: 'draft', tags: '', categories: '' })
+  const { pushNotice } = useAdminNotices()
 
   useEffect(() => {
     loadNativeCollection({ includeFuture: 1 }).then((loaded) => setItems(Array.isArray(loaded) ? loaded : []))
@@ -63,6 +65,7 @@ export function ContentListPage() {
     const next = await upsertNativeEntry(items, nextItem, 'quick edit')
     setItems(next)
     setQuickEditId('')
+    pushNotice('Post saved.', 'success')
   }
 
   async function applyBulkAction() {
@@ -89,6 +92,7 @@ export function ContentListPage() {
     if (bulkAction === 'empty-trash') {
       const next = saveNativeCollection(items.filter((item) => item.status !== 'trash'))
       setItems(next)
+      pushNotice('Post moved to Trash.', 'warning')
     }
     setSelectedIds([])
     setBulkAction('')
@@ -101,6 +105,7 @@ export function ContentListPage() {
           <h1>Posts</h1>
           <Link className="button button--primary" to="/native-bridge?new=article">Add New</Link>
         </div>
+        <WpAdminNotices />
 
         <section className="wp-meta-box">
           <div className="wp-list-filters">
@@ -147,7 +152,7 @@ export function ContentListPage() {
                       <div className="wp-row-actions">
                         <Link to={`/native-bridge?edit=${item.id}`}>Edit</Link>
                         <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || item.projects || []).join(', ') }) }}>Quick Edit</button>
-                        {item.status !== 'trash' ? <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash'))}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
+                        {item.status !== 'trash' ? <button type="button" onClick={async () => { setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash')); pushNotice('Post moved to Trash.', 'warning') }}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
                         <Link to={item.status === 'published' ? `/updates/${item.slug}` : `/native-preview/${item.id}`}>View</Link>
                       </div>
                     </td>

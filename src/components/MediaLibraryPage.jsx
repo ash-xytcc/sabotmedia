@@ -9,6 +9,7 @@ import {
   updateLocalMediaItem,
 } from '../lib/localMediaLibrary'
 import { AdminFrame } from './AdminRail'
+import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 
 function collectMediaFromPieces(pieces) {
   const list = []
@@ -154,6 +155,7 @@ export function MediaPickerModal({ open, onClose, onPick }) {
   const [selected, setSelected] = useState(null)
   const [items, setItems] = useState([])
   const fileInputRef = useRef(null)
+  const { pushNotice } = useAdminNotices()
 
   useEffect(() => {
     if (!open) return
@@ -182,6 +184,7 @@ export function MediaPickerModal({ open, onClose, onPick }) {
       const merged = [...created, ...items]
       setItems(dedupeMedia(merged))
       setSelected(created[0])
+      pushNotice('Media uploaded.', 'success')
     }
     event.target.value = ''
   }
@@ -220,6 +223,7 @@ export function MediaLibraryPage() {
   const [items, setItems] = useState([])
   const [selected, setSelected] = useState(null)
   const fileInputRef = useRef(null)
+  const { pushNotice } = useAdminNotices()
 
   useEffect(() => {
     let cancelled = false
@@ -253,6 +257,7 @@ export function MediaLibraryPage() {
       const merged = [...created, ...items]
       setItems(dedupeMedia(merged))
       setSelected(created[0])
+      pushNotice('Media uploaded.', 'success')
     }
     event.target.value = ''
   }
@@ -264,6 +269,7 @@ export function MediaLibraryPage() {
           <h1>Media Library</h1>
           <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Add New</button>
         </div>
+        <WpAdminNotices />
         <section className="wp-meta-box">
           <p className="wp-media-local-note">Add New / Upload stores images in this browser only using localStorage. No cloud upload is performed.</p>
           <div className="wp-media-toolbar">

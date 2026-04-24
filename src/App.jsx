@@ -22,6 +22,7 @@ import { EditableText } from './components/EditableText'
 import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/content'
 import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
+import { AdminNoticeProvider } from './components/WpAdminNotices'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
 import { CustomizeAdminPage, MenusAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage } from './components/WpAdminScaffoldPages'
 
@@ -93,6 +94,7 @@ function Layout({ children }) {
 export default function App() {
   return (
     <PublicEditProvider>
+      <AdminNoticeProvider>
       <Layout>
         <Routes>
           <Route path="/" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
@@ -123,6 +125,7 @@ export default function App() {
           <Route path="/draft" element={<PublicDraftPage />} />
         </Routes>
       </Layout>
+      </AdminNoticeProvider>
     </PublicEditProvider>
   )
 }
