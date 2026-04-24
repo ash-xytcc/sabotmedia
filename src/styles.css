@@ -8245,3 +8245,61 @@ a.button {
     min-height: clamp(390px, calc(100vh - 170px), 560px);
   }
 }
+
+/* MEDIA_PICKER_ACTUAL_THUMBNAIL_FORCE_FIX */
+/* Force the Add Media / Media Library modal to render real WP-like square tiles. */
+
+.wp-media-modal [class*="grid"],
+.media-library-modal [class*="grid"],
+.media-picker-modal [class*="grid"],
+.media-modal [class*="grid"] {
+  align-items: start !important;
+}
+
+.wp-media-modal button,
+.media-library-modal button,
+.media-picker-modal button,
+.media-modal button {
+  max-height: none !important;
+}
+
+.wp-media-modal [class*="tile"],
+.wp-media-modal [class*="card"],
+.wp-media-modal [class*="item"],
+.media-library-modal [class*="tile"],
+.media-library-modal [class*="card"],
+.media-library-modal [class*="item"],
+.media-picker-modal [class*="tile"],
+.media-picker-modal [class*="card"],
+.media-picker-modal [class*="item"],
+.media-modal [class*="tile"],
+.media-modal [class*="card"],
+.media-modal [class*="item"] {
+  min-height: 132px !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+  overflow: hidden !important;
+}
+
+.wp-media-modal img,
+.media-library-modal img,
+.media-picker-modal img,
+.media-modal img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 132px !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+.wp-media-modal [class*="title"],
+.wp-media-modal [class*="caption"],
+.media-library-modal [class*="title"],
+.media-library-modal [class*="caption"],
+.media-picker-modal [class*="title"],
+.media-picker-modal [class*="caption"],
+.media-modal [class*="title"],
+.media-modal [class*="caption"] {
+  display: none !important;
+}
