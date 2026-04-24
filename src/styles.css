@@ -7889,13 +7889,13 @@ a.button {
   position: relative;
   display: block;
   width: 100%;
-  height: auto;
-  min-height: 120px;
+  height: 100%;
+  min-height: 140px;
   aspect-ratio: 1 / 1;
   background: #dcdcde;
   overflow: hidden;
 }
-.wp-media-item img {
+.wp-media-item__thumb-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -7926,6 +7926,28 @@ a.button {
 .wp-media-modal__library { overflow: auto; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; align-content: start; }
 .wp-media-modal__details { overflow: auto; padding: 10px; background: #fff; border-left: 1px solid #c3c4c7; }
 .wp-media-modal__details img { width: 100%; margin-bottom: 8px; max-height: 220px; object-fit: contain; background: #f0f0f1; }
+/* MEDIA_PICKER_ACTUAL_THUMBNAIL_FIX */
+.wp-media-layout--grid .wp-media-item,
+.wp-media-modal__body--grid .wp-media-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.wp-media-layout--grid .wp-media-item__thumb-wrap,
+.wp-media-modal__body--grid .wp-media-item__thumb-wrap {
+  width: 100%;
+  min-height: 140px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+.wp-media-layout--grid .wp-media-item__thumb-wrap img,
+.wp-media-modal__body--grid .wp-media-item__thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 .wp-media-layout--list .wp-media-grid,
 .wp-media-modal__body--list .wp-media-modal__library { grid-template-columns: 1fr; }
 .wp-media-layout--list .wp-media-item,
