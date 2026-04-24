@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { EditableText } from './EditableText'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
@@ -122,6 +122,11 @@ function NativeEntryEditor({
   const isPodcast = creationKind === 'podcast'
   const isPublicBlock = creationKind === 'publicBlock'
   const isPrint = creationKind === 'print'
+  const [tagsText, setTagsText] = useState((value.tags || []).join(', '))
+
+  useEffect(() => {
+    setTagsText((value.tags || []).join(', '))
+  }, [value.id])
 
   return (
     <section className="native-content-editor">
@@ -228,10 +233,11 @@ function NativeEntryEditor({
         <span>{tagsLabel}</span>
         <input
           type="text"
-          value={(value.tags || []).join(', ')}
-          onChange={(e) => onChange({
+          value={tagsText}
+          onChange={(e) => setTagsText(e.target.value)}
+          onBlur={() => onChange({
             ...value,
-            tags: e.target.value.split(',').map((item) => item.trim()).filter(Boolean),
+            tags: tagsText.split(',').map((item) => item.trim()).filter(Boolean),
           })}
           placeholder="tag1, tag2"
         />
@@ -393,6 +399,9 @@ export function NativeContentBridgePage() {
   const [revisionState, setRevisionState] = useState('idle')
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [revisions, setRevisions] = useState([])
+  const autosaveTimerRef = useRef(null)
+  const lastAutosaveSignatureRef = useRef('')
+  const bootedRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -475,6 +484,50 @@ export function NativeContentBridgePage() {
     }
   }, [draft?.id, canEdit])
 
+  useEffect(() => {
+    if (!canEdit || !draft?.id) return
+
+    const signature = JSON.stringify({
+      id: draft.id,
+      title: draft.title,
+      slug: draft.slug,
+      excerpt: draft.excerpt,
+      body: draft.body,
+      richBody: draft.richBody,
+      tags: draft.tags,
+      status: draft.status,
+      workflowState: draft.workflowState,
+      target: draft.target,
+      scheduledFor: draft.scheduledFor,
+      featuredImage: draft.featuredImage,
+      heroImage: draft.heroImage,
+      audioSummary: draft.audioSummary,
+      transcriptExcerpt: draft.transcriptExcerpt,
+      sourceNotes: draft.sourceNotes,
+    })
+
+    if (!bootedRef.current) {
+      bootedRef.current = true
+      lastAutosaveSignatureRef.current = signature
+      return
+    }
+
+    if (signature === lastAutosaveSignatureRef.current) return
+
+    window.clearTimeout(autosaveTimerRef.current)
+    autosaveTimerRef.current = window.setTimeout(async () => {
+      try {
+        const next = await upsertNativeEntry(items, draft, 'autosave')
+        setItems(next)
+        lastAutosaveSignatureRef.current = signature
+      } catch {
+        // autosave failure should not destroy the draft in memory
+      }
+    }, 1800)
+
+    return () => window.clearTimeout(autosaveTimerRef.current)
+  }, [canEdit, draft, items])
+
   const latestHome = useMemo(() => getLatestPublishedNativeEntry(items, 'home'), [items])
   const latestGeneral = useMemo(() => getLatestPublishedNativeEntry(items, 'general'), [items])
 
@@ -499,14 +552,40 @@ export function NativeContentBridgePage() {
     setSearchParams(next, { replace: true })
   }
 
-  async function handleSave(note = 'save') {
-    const next = await upsertNativeEntry(items, draft, note)
+  async function handleSave(note = 'save', override = null) {
+    const source = override || draft
+    const normalized = {
+      ...source,
+      featuredImage: source.featuredImage || source.heroImage || '',
+      heroImage: source.heroImage || source.featuredImage || '',
+      tags: Array.isArray(source.tags) ? source.tags : [],
+    }
+
+    const next = await upsertNativeEntry(items, normalized, note)
     setItems(next)
-    const saved = next.find((item) => item.id === draft.id) || next[0]
+    const saved = next.find((item) => item.id === normalized.id) || next[0]
     if (saved) {
       setActiveId(saved.id)
       setDraft(saved)
       setCreationKind(inferCreationKind(saved))
+      lastAutosaveSignatureRef.current = JSON.stringify({
+        id: saved.id,
+        title: saved.title,
+        slug: saved.slug,
+        excerpt: saved.excerpt,
+        body: saved.body,
+        richBody: saved.richBody,
+        tags: saved.tags,
+        status: saved.status,
+        workflowState: saved.workflowState,
+        target: saved.target,
+        scheduledFor: saved.scheduledFor,
+        featuredImage: saved.featuredImage,
+        heroImage: saved.heroImage,
+        audioSummary: saved.audioSummary,
+        transcriptExcerpt: saved.transcriptExcerpt,
+        sourceNotes: saved.sourceNotes,
+      })
     }
   }
 
@@ -785,12 +864,23 @@ export function NativeContentBridgePage() {
                 <button
                   className="button button--primary"
                   type="button"
-                  onClick={() => setDraft((d) => ({ ...d, status: 'published', workflowState: d.scheduledFor ? 'scheduled' : 'published' }))}
+                  onClick={async () => {
+                    const nextDraft = {
+                      ...draft,
+                      status: 'published',
+                      workflowState: draft.scheduledFor ? 'scheduled' : 'published',
+                      featuredImage: draft.featuredImage || draft.heroImage || '',
+                      heroImage: draft.heroImage || draft.featuredImage || '',
+                    }
+                    setDraft(nextDraft)
+                    await handleSave('publish', nextDraft)
+                  }}
+                  disabled={!canEdit}
                 >
                   Publish / mark ready
                 </button>
                 {draft.slug ? (
-                  <Link className="button" to={draft.status === 'published' ? `/updates/${draft.slug}` : `/native-bridge?edit=${draft.id}`}>
+                  <Link className="button" to={`/native-preview/${draft.id || draft.slug}`}>
                     Preview
                   </Link>
                 ) : null}

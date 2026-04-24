@@ -12,6 +12,7 @@ import { PodcastAdminPage } from './components/PodcastAdminPage'
 import { NativeContentBridgePage } from './components/NativeContentBridgePage'
 import { NativeUpdatesPage } from './components/NativeUpdatesPage'
 import { NativeUpdateDetailPage } from './components/NativeUpdateDetailPage'
+import { NativeDraftPreviewPage } from './components/NativeDraftPreviewPage'
 import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PublicEditProvider, usePublicEdit } from './components/PublicEditContext'
@@ -123,6 +124,7 @@ export default function App() {
         <Route path="/native-bridge" element={<NativeContentBridgePage />} />
         <Route path="/updates" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
         <Route path="/updates/:slug" element={<NativeUpdateDetailPage />} />
+        <Route path="/native-preview/:id" element={<NativeDraftPreviewPage />} />
         <Route path="/press" element={<PublicSurfacePage target="press" />} />
         <Route path="/archive" element={<PublicSearchPage pieces={pieces} />} />
         <Route path="/search" element={<PublicSearchPage pieces={pieces} />} />
