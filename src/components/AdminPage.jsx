@@ -90,7 +90,7 @@ export function AdminPage({ pieces = [] }) {
           <article className="wp-meta-box">
             <h2>Site Health Status</h2>
             <p>Local-first persistence active. Native preview and content routes enabled.</p>
-            <p><Link to="/customize">Customize</Link> · <Link to="/draft">Site Editor</Link></p>
+            <p><Link to="/customize">Customize</Link> · <Link to="/tools#advanced-draft-tools">Advanced Draft Tools</Link></p>
           </article>
         </section>
       </main>
