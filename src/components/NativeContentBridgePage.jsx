@@ -20,6 +20,7 @@ import { NativeSourceBridgeCard } from './NativeSourceBridgeCard'
 import { TranscriptBridgeCard } from './TranscriptBridgeCard'
 import { NativeTaxonomyBridgeCard } from './NativeTaxonomyBridgeCard'
 import { fetchNativeRevisions, restoreNativeRevision } from '../lib/nativePublicContentApi'
+import { AdminFrame } from './AdminRail'
 
 const CREATION_MODES = {
   article: {
@@ -590,6 +591,7 @@ export function NativeContentBridgePage() {
   }
 
   return (
+    <AdminFrame>
     <main className="page native-content-bridge-page native-bridge-page">
       <section className="project-hero">
         <EditableText as="div" className="project-hero__eyebrow" field="nativeBridge.eyebrow">
@@ -762,6 +764,7 @@ export function NativeContentBridgePage() {
         </section>
       </section>
     </main>
+    </AdminFrame>
   )
 }
 
