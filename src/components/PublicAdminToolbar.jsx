@@ -21,21 +21,21 @@ export function PublicAdminToolbar() {
         <Link className="wp-public-admin-bar__item wp-public-admin-bar__brand" to="/">
           ◉ Sabot Media
         </Link>
-        <Link className="wp-public-admin-bar__item" to={WORDPRESS_ADMIN_LINKS.posts}>
+        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.posts} target="_blank" rel="noreferrer">
           Posts
-        </Link>
-        <Link className="wp-public-admin-bar__item" to={WORDPRESS_ADMIN_LINKS.newPost}>
+        </a>
+        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.newPost} target="_blank" rel="noreferrer">
           + New
-        </Link>
-        <Link className="wp-public-admin-bar__item" to={WORDPRESS_ADMIN_LINKS.media}>
+        </a>
+        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.media} target="_blank" rel="noreferrer">
           Media
-        </Link>
+        </a>
         <button className="wp-public-admin-bar__item" type="button" onClick={toggleEditing}>
           {isEditing ? 'Exit Edit Site' : 'Edit Site'}
         </button>
-        <Link className="wp-public-admin-bar__item" to={WORDPRESS_ADMIN_LINKS.dashboard}>
-          Admin
-        </Link>
+        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.dashboard} target="_blank" rel="noreferrer">
+          WP Admin
+        </a>
       </div>
 
       <div className="wp-public-admin-bar__right">

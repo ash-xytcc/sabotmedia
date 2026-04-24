@@ -1,6 +1,10 @@
 import { NavLink } from 'react-router-dom'
 import { WORDPRESS_ADMIN_LINKS } from '../lib/wordpressClient'
 
+function isExternal(to) {
+  return String(to || '').startsWith('http')
+}
+
 const LINKS = [
   { to: '/admin', label: 'Dashboard' },
   { to: WORDPRESS_ADMIN_LINKS.posts, label: 'Posts' },
@@ -18,13 +22,25 @@ export function AdminRail() {
       <div className="admin-rail__label">backstage</div>
       <nav className="admin-rail__nav">
         {LINKS.map((link) => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            className={({ isActive }) => `admin-rail__link${isActive ? ' is-active' : ''}`}
-          >
-            {link.label}
-          </NavLink>
+          isExternal(link.to) ? (
+            <a
+              key={link.to}
+              href={link.to}
+              target="_blank"
+              rel="noreferrer"
+              className="admin-rail__link"
+            >
+              {link.label}
+            </a>
+          ) : (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) => `admin-rail__link${isActive ? ' is-active' : ''}`}
+            >
+              {link.label}
+            </NavLink>
+          )
         ))}
       </nav>
     </aside>
