@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getPieces } from '../lib/pieces'
 import { loadNativeCollection } from '../lib/nativePublicContent'
-import { addLocalMediaItem, fileToDataUrl, loadLocalMediaItems, makeLocalMediaFromFile } from '../lib/localMediaLibrary'
+import {
+  addLocalMediaItem,
+  fileToDataUrl,
+  loadLocalMediaItems,
+  makeLocalMediaFromFile,
+  updateLocalMediaItem,
+} from '../lib/localMediaLibrary'
 import { AdminFrame } from './AdminRail'
 
 function collectMediaFromPieces(pieces) {
@@ -13,9 +19,13 @@ function collectMediaFromPieces(pieces) {
       list.push({
         id: `imported-${clean}`,
         url: clean,
+        dataUrl: clean,
+        filename: '',
         title: piece.title || extra.title || 'Imported media',
         alt: extra.alt || '',
         caption: extra.caption || '',
+        description: '',
+        uploadedAt: '',
         source: 'imported',
       })
     }
@@ -39,9 +49,13 @@ function collectMediaFromNative(items) {
     list.push({
       id: `native-${entry.id}-${url}`,
       url,
-      title: entry.title || 'Native image',
-      alt: '',
-      caption: '',
+      dataUrl: url,
+      filename: '',
+      title: entry.featuredImageTitle || entry.title || 'Native image',
+      alt: entry.featuredImageAlt || '',
+      caption: entry.featuredImageCaption || '',
+      description: String(entry.excerpt || ''),
+      uploadedAt: '',
       source: 'native',
     })
   }
@@ -57,6 +71,20 @@ function dedupeMedia(items) {
   return [...byUrl.values()]
 }
 
+function persistSelectedMediaEdits(selected, fields, setItems, setSelected) {
+  if (!selected?.id) return
+  const updates = {
+    title: String(fields?.title ?? selected.title ?? ''),
+    alt: String(fields?.alt ?? selected.alt ?? ''),
+    caption: String(fields?.caption ?? selected.caption ?? ''),
+    description: String(fields?.description ?? selected.description ?? ''),
+  }
+  const updated = { ...selected, ...updates }
+  setItems((current) => current.map((item) => (item.id === selected.id ? updated : item)))
+  setSelected(updated)
+  if (selected.source === 'local-upload') updateLocalMediaItem(selected.id, updates)
+}
+
 export function loadMediaLibraryItems(nativeItems = null) {
   const importedMedia = collectMediaFromPieces(getPieces())
   const nativeMedia = collectMediaFromNative(nativeItems || [])
@@ -64,7 +92,7 @@ export function loadMediaLibraryItems(nativeItems = null) {
   return dedupeMedia([...localMedia, ...nativeMedia, ...importedMedia])
 }
 
-function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSelected, items, onUploadClick, onConfirm }) {
+function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSelected, items, setItems, onUploadClick, onConfirm }) {
   const visible = items.filter((item) => [item.title, item.url, item.caption, item.alt].join(' ').toLowerCase().includes(query.toLowerCase()))
 
   return (
@@ -92,10 +120,25 @@ function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSele
             <>
               <img src={selected.url} alt={selected.alt || ''} />
               <p><strong>Source:</strong> {selected.source === 'local-upload' ? 'Local browser storage only' : (selected.source || 'unknown')}</p>
+              {selected.filename ? <p><strong>File name:</strong> {selected.filename}</p> : null}
+              {selected.uploadedAt ? <p><strong>Uploaded:</strong> {new Date(selected.uploadedAt).toLocaleString()}</p> : null}
               <p><strong>URL:</strong> {selected.url}</p>
-              <p><strong>Title:</strong> {selected.title || 'Untitled'}</p>
-              <p><strong>Alt:</strong> {selected.alt || '—'}</p>
-              <p><strong>Caption:</strong> {selected.caption || '—'}</p>
+              <label>
+                Title
+                <input value={selected.title || ''} onChange={(e) => persistSelectedMediaEdits(selected, { title: e.target.value }, setItems, setSelected)} />
+              </label>
+              <label>
+                Alt text
+                <input value={selected.alt || ''} onChange={(e) => persistSelectedMediaEdits(selected, { alt: e.target.value }, setItems, setSelected)} />
+              </label>
+              <label>
+                Caption
+                <textarea value={selected.caption || ''} onChange={(e) => persistSelectedMediaEdits(selected, { caption: e.target.value }, setItems, setSelected)} />
+              </label>
+              <label>
+                Description
+                <textarea value={selected.description || ''} onChange={(e) => persistSelectedMediaEdits(selected, { description: e.target.value }, setItems, setSelected)} />
+              </label>
               {onConfirm ? <button type="button" className="button button--primary" onClick={() => onConfirm(selected)}>Select</button> : null}
             </>
           ) : <p>Select an item to see details.</p>}
@@ -131,6 +174,7 @@ export function MediaPickerModal({ open, onClose, onPick }) {
       if (!file.type.startsWith('image/')) continue
       const next = makeLocalMediaFromFile(file)
       next.url = await fileToDataUrl(file)
+      next.dataUrl = next.url
       created.push(next)
       addLocalMediaItem(next)
     }
@@ -151,7 +195,7 @@ export function MediaPickerModal({ open, onClose, onPick }) {
           <h2>Media Library</h2>
           <button type="button" className="button" onClick={onClose}>Close</button>
         </div>
-        <p className="wp-media-local-note">Uploads are stored locally in this browser only (localStorage). No cloud upload is performed.</p>
+        <p className="wp-media-local-note">Uploads are stored locally in this browser only using localStorage. No cloud upload is performed.</p>
         <MediaLibrarySurface
           mode={mode}
           setMode={setMode}
@@ -160,6 +204,7 @@ export function MediaPickerModal({ open, onClose, onPick }) {
           selected={selected}
           setSelected={setSelected}
           items={items}
+          setItems={setItems}
           onUploadClick={() => fileInputRef.current?.click()}
           onConfirm={onPick}
         />
@@ -200,6 +245,7 @@ export function MediaLibraryPage() {
       if (!file.type.startsWith('image/')) continue
       const next = makeLocalMediaFromFile(file)
       next.url = await fileToDataUrl(file)
+      next.dataUrl = next.url
       created.push(next)
       addLocalMediaItem(next)
     }
@@ -219,7 +265,7 @@ export function MediaLibraryPage() {
           <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Add New</button>
         </div>
         <section className="wp-meta-box">
-          <p className="wp-media-local-note">Add New / Upload stores images in local browser storage only. These files are not sent to a server.</p>
+          <p className="wp-media-local-note">Add New / Upload stores images in this browser only using localStorage. No cloud upload is performed.</p>
           <div className="wp-media-toolbar">
             <button type="button" className={`button${mode === 'grid' ? ' button--primary' : ''}`} onClick={() => setMode('grid')}>Grid View</button>
             <button type="button" className={`button${mode === 'list' ? ' button--primary' : ''}`} onClick={() => setMode('list')}>List View</button>
@@ -243,10 +289,25 @@ export function MediaLibraryPage() {
                 <>
                   <img src={selected.url} alt={selected.alt || ''} />
                   <p><strong>Source:</strong> {selected.source === 'local-upload' ? 'Local browser storage only' : (selected.source || 'unknown')}</p>
+                  {selected.filename ? <p><strong>File name:</strong> {selected.filename}</p> : null}
+                  {selected.uploadedAt ? <p><strong>Uploaded:</strong> {new Date(selected.uploadedAt).toLocaleString()}</p> : null}
                   <p><strong>URL:</strong> {selected.url}</p>
-                  <p><strong>Title:</strong> {selected.title || 'Untitled'}</p>
-                  <p><strong>Alt:</strong> {selected.alt || '—'}</p>
-                  <p><strong>Caption:</strong> {selected.caption || '—'}</p>
+                  <label>
+                    Title
+                    <input value={selected.title || ''} onChange={(e) => persistSelectedMediaEdits(selected, { title: e.target.value }, setItems, setSelected)} />
+                  </label>
+                  <label>
+                    Alt text
+                    <input value={selected.alt || ''} onChange={(e) => persistSelectedMediaEdits(selected, { alt: e.target.value }, setItems, setSelected)} />
+                  </label>
+                  <label>
+                    Caption
+                    <textarea value={selected.caption || ''} onChange={(e) => persistSelectedMediaEdits(selected, { caption: e.target.value }, setItems, setSelected)} />
+                  </label>
+                  <label>
+                    Description
+                    <textarea value={selected.description || ''} onChange={(e) => persistSelectedMediaEdits(selected, { description: e.target.value }, setItems, setSelected)} />
+                  </label>
                 </>
               ) : <p>Select media to view details.</p>}
             </aside>

@@ -110,6 +110,8 @@ export function normalizeNativeEntry(input) {
     audioSourceUrl: String(raw.audioSourceUrl || ''),
     fullTranscript: String(raw.fullTranscript || ''),
     transcriptNotes: String(raw.transcriptNotes || ''),
+    categories: normalizeTags(raw.categories || raw.projects),
+    projects: normalizeTags(raw.projects || raw.categories),
     tags: normalizeTags(raw.tags),
     createdAt: String(raw.createdAt || raw.created_at || now),
     updatedAt: String(raw.updatedAt || raw.updated_at || now),

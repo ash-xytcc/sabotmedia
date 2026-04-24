@@ -5,10 +5,17 @@ import {
   createEmptyNativeEntry,
   loadNativeCollection,
   slugify,
+  upsertNativeEntryLocal,
   upsertNativeEntry,
 } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
+
+function normalizeTermList(value) {
+  if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
+  if (typeof value === 'string') return [...new Set(value.split(',').map((item) => item.trim()).filter(Boolean))]
+  return []
+}
 
 function createTypedEntry(kind = 'article') {
   const base = createEmptyNativeEntry()
@@ -26,6 +33,9 @@ function createTypedEntry(kind = 'article') {
     categories: [],
     featuredImage: '',
     heroImage: '',
+    featuredImageTitle: '',
+    featuredImageAlt: '',
+    featuredImageCaption: '',
   }
 }
 
@@ -90,6 +100,78 @@ function wrapSelectionWithHtmlBlock(textarea, style) {
   return { next, cursorStart, cursorEnd }
 }
 
+const AUTOSAVE_DEBOUNCE_MS = 1200
+const LOCAL_REVISIONS_KEY_PREFIX = 'sabot-native-local-revisions-v1'
+
+function getLocalRevisionsStorageKey(id) {
+  return `${LOCAL_REVISIONS_KEY_PREFIX}:${String(id || '')}`
+}
+
+function loadLocalRevisions(postId) {
+  if (!postId) return []
+  try {
+    const raw = window.localStorage.getItem(getLocalRevisionsStorageKey(postId))
+    const parsed = JSON.parse(raw || '[]')
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(Boolean).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+  } catch {
+    return []
+  }
+}
+
+function saveLocalRevision(postId, draft, note) {
+  if (!postId) return { ok: false, revisions: [] }
+  const snapshot = {
+    id: `revision-${Math.random().toString(36).slice(2, 10)}`,
+    createdAt: new Date().toISOString(),
+    note: String(note || 'manual save'),
+    draft: {
+      title: String(draft?.title || ''),
+      slug: String(draft?.slug || ''),
+      body: String(draft?.body || ''),
+      excerpt: String(draft?.excerpt || ''),
+      tags: Array.isArray(draft?.tags) ? draft.tags : [],
+      categories: Array.isArray(draft?.categories) ? draft.categories : [],
+      featuredImage: String(draft?.featuredImage || ''),
+      heroImage: String(draft?.heroImage || ''),
+      status: String(draft?.status || 'draft'),
+      workflowState: String(draft?.workflowState || 'draft'),
+    },
+  }
+
+  const nextRevisions = [snapshot, ...loadLocalRevisions(postId)].slice(0, 25)
+  try {
+    window.localStorage.setItem(getLocalRevisionsStorageKey(postId), JSON.stringify(nextRevisions))
+    return { ok: true, revisions: nextRevisions }
+  } catch {
+    return { ok: false, revisions: loadLocalRevisions(postId) }
+  }
+}
+
+function toAutosaveFingerprint(draft, allowComments) {
+  return JSON.stringify({
+    title: draft?.title || '',
+    slug: draft?.slug || '',
+    excerpt: draft?.excerpt || '',
+    body: draft?.body || '',
+    contentType: draft?.contentType || 'dispatch',
+    status: draft?.status || 'draft',
+    workflowState: draft?.workflowState || 'draft',
+    scheduledFor: draft?.scheduledFor || '',
+    tags: Array.isArray(draft?.tags) ? draft.tags : [],
+    categories: Array.isArray(draft?.categories) ? draft.categories : [],
+    featuredImage: draft?.featuredImage || '',
+    heroImage: draft?.heroImage || '',
+    allowComments: Boolean(allowComments),
+  })
+}
+
+function formatAutosaveTime(value) {
+  const d = new Date(String(value || ''))
+  if (!Number.isFinite(d.getTime())) return ''
+  return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
 export function NativeContentBridgePage() {
   const [searchParams] = useSearchParams()
   const [items, setItems] = useState([])
@@ -98,11 +180,18 @@ export function NativeContentBridgePage() {
   const [editorTab, setEditorTab] = useState('visual')
   const [tagInput, setTagInput] = useState('')
   const [newCategory, setNewCategory] = useState('')
+  const [categoryTab, setCategoryTab] = useState('all')
   const [openMediaFor, setOpenMediaFor] = useState('')
   const [allowComments, setAllowComments] = useState(true)
+  const [isPermalinkEditing, setIsPermalinkEditing] = useState(false)
+  const [permalinkDraft, setPermalinkDraft] = useState('')
   const textareaRef = useRef(null)
+  const autosaveTimerRef = useRef(null)
+  const suppressAutosaveRef = useRef(false)
+  const lastAutosaveFingerprintRef = useRef('')
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
+  const publicPieceSlugSet = useMemo(() => new Set(getPieces().map((piece) => piece.slug).filter(Boolean)), [])
 
   useEffect(() => {
     async function boot() {
@@ -114,24 +203,44 @@ export function NativeContentBridgePage() {
       if (found) {
         setActiveId(found.id)
         setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [] })
+        setPermalinkDraft(found.slug || '')
         setAllowComments(found.allowComments ?? true)
+        setRevisions(loadLocalRevisions(found.id))
+        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(nextDraft, found.allowComments ?? true)
       } else {
         const fresh = createTypedEntry(mode)
         setActiveId(fresh.id)
         setDraft(fresh)
+        setPermalinkDraft(fresh.slug || '')
         setAllowComments(true)
+        setRevisions(loadLocalRevisions(fresh.id))
+        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(fresh, true)
       }
+      setAutosaveState({ status: 'idle', at: '' })
     }
     boot()
   }, [searchParams])
 
+  function addTagsFromInput(rawInput = tagInput) {
+    const nextTags = normalizeTermList(rawInput)
+    if (!nextTags.length) return
+    setDraft((d) => ({ ...d, tags: [...new Set([...(d.tags || []), ...nextTags])] }))
+    setTagInput('')
+  }
+
   async function handleSave(note = 'save') {
+    const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
     const normalized = {
       ...draft,
       slug: slugify(draft.slug || draft.title),
       tags: Array.isArray(draft.tags) ? draft.tags : [],
+      categories: normalizedCategories,
+      projects: normalizedCategories,
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
+      featuredImageTitle: draft.featuredImageTitle || '',
+      featuredImageAlt: draft.featuredImageAlt || '',
+      featuredImageCaption: draft.featuredImageCaption || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, note)
@@ -140,21 +249,37 @@ export function NativeContentBridgePage() {
     if (saved) {
       setActiveId(saved.id)
       setDraft(saved)
+      setPermalinkDraft(saved.slug || '')
     }
+    return saved || null
   }
 
   async function handleMoveToTrash() {
-    const next = await upsertNativeEntry(items, { ...draft, status: 'trash', workflowState: 'draft', allowComments }, 'trash')
+    const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
+    const next = await upsertNativeEntry(items, {
+      ...draft,
+      status: 'trash',
+      workflowState: 'draft',
+      categories: normalizedCategories,
+      projects: normalizedCategories,
+      allowComments,
+    }, 'trash')
     setItems(next)
   }
 
   async function handlePreviewChanges() {
+    const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
     const normalized = {
       ...draft,
       slug: slugify(draft.slug || draft.title),
       tags: Array.isArray(draft.tags) ? draft.tags : [],
+      categories: normalizedCategories,
+      projects: normalizedCategories,
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
+      featuredImageTitle: draft.featuredImageTitle || '',
+      featuredImageAlt: draft.featuredImageAlt || '',
+      featuredImageCaption: draft.featuredImageCaption || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, 'preview')
@@ -163,7 +288,10 @@ export function NativeContentBridgePage() {
     if (!saved) return
     setActiveId(saved.id)
     setDraft(saved)
-    window.open(`/native-preview/${saved.id}`, '_blank', 'noopener,noreferrer')
+    setPermalinkDraft(saved.slug || '')
+    const canResolvePublicRoute = saved.status === 'published' && Boolean(saved.slug) && publicPieceSlugSet.has(saved.slug)
+    const previewPath = canResolvePublicRoute ? `/post/${saved.slug}` : `/native-preview/${saved.id}`
+    window.open(previewPath, '_blank', 'noopener,noreferrer')
   }
 
   function applyEditorMutation(mutator) {
@@ -191,6 +319,28 @@ export function NativeContentBridgePage() {
     })
   }
 
+  function handleTitleChange(nextTitle) {
+    setDraft((current) => {
+      const manuallyEditedSlug = current.slugManuallyEdited === true
+      if (manuallyEditedSlug) return { ...current, title: nextTitle }
+      const nextSlug = slugify(nextTitle)
+      setPermalinkDraft(nextSlug)
+      return { ...current, title: nextTitle, slug: nextSlug }
+    })
+  }
+
+  function handlePermalinkConfirm() {
+    const nextSlug = slugify(permalinkDraft)
+    setDraft((current) => ({ ...current, slug: nextSlug, slugManuallyEdited: true }))
+    setPermalinkDraft(nextSlug)
+    setIsPermalinkEditing(false)
+  }
+
+  function handlePermalinkCancel() {
+    setPermalinkDraft(draft.slug || '')
+    setIsPermalinkEditing(false)
+  }
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen wp-edit-screen">
@@ -201,8 +351,24 @@ export function NativeContentBridgePage() {
 
         <section className="wp-edit-main">
           <div className="wp-edit-content">
-            <input className="wp-title-input" value={draft.title || ''} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value, slug: slugify(d.slug || e.target.value) }))} placeholder="Add title" />
-            <div className="wp-permalink-row">Permalink: /post/{draft.slug || 'sample-post'}</div>
+            <input className="wp-title-input" value={draft.title || ''} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Add title" />
+            <div className="wp-permalink-row">
+              <span>Permalink: /post/{draft.slug || 'sample-post'}</span>
+              {!isPermalinkEditing ? (
+                <button type="button" className="button button-link" onClick={() => setIsPermalinkEditing(true)}>Edit</button>
+              ) : (
+                <span className="wp-permalink-edit-controls">
+                  <input
+                    type="text"
+                    value={permalinkDraft}
+                    onChange={(e) => setPermalinkDraft(e.target.value)}
+                    aria-label="Edit permalink slug"
+                  />
+                  <button type="button" className="button button-small" onClick={handlePermalinkConfirm}>OK</button>
+                  <button type="button" className="button button-small" onClick={handlePermalinkCancel}>Cancel</button>
+                </span>
+              )}
+            </div>
 
             <div className="wp-editor-actions">
               <button type="button" className="button" onClick={() => setOpenMediaFor('body')}>Add Media</button>
@@ -231,7 +397,24 @@ export function NativeContentBridgePage() {
 
             <article className="wp-meta-box"><h2>Excerpt</h2><textarea value={draft.excerpt || ''} onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))} /></article>
             <article className="wp-meta-box"><h2>Discussion</h2><label><input type="checkbox" checked={allowComments} onChange={(e) => setAllowComments(e.target.checked)} /> Allow comments</label></article>
-            <article className="wp-meta-box"><h2>Revisions</h2><p>Revision history placeholder. Saved notes: save draft, publish, trash, quick edit.</p></article>
+            <article className="wp-meta-box">
+              <h2>Revisions</h2>
+              {revisions.length ? (
+                <ul className="wp-revisions-list">
+                  {revisions.map((revision) => (
+                    <li key={revision.id} className="wp-revisions-item">
+                      <div>
+                        <strong>{new Date(revision.createdAt).toLocaleString()}</strong>
+                        <div className="wp-revisions-note">{revision.note}</div>
+                      </div>
+                      <button type="button" className="button" onClick={() => restoreRevision(revision)}>Restore</button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No local revision snapshots yet. Save Draft or Publish/Update to create one.</p>
+              )}
+            </article>
             <article className="wp-meta-box"><h2>Custom Fields / Advanced</h2><p>Advanced bridge fields remain available in native storage.</p></article>
           </div>
 
@@ -244,7 +427,22 @@ export function NativeContentBridgePage() {
               <div className="wp-meta-actions">
                 <button type="button" className="button" onClick={handlePreviewChanges}>Preview Changes</button>
                 <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
-                <button type="button" className="button button--primary" onClick={async () => { const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }; setDraft(next); await handleSave('publish') }}>Publish / Update</button>
+                <button type="button" className="button button--primary" onClick={async () => {
+                  const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }
+                  setDraft(next)
+                  const saved = await handleSave('publish')
+                  if (saved) setDraft(saved)
+                }}>Publish / Update</button>
+                {draft?.id && draft?.status === 'published' ? (
+                  <Link
+                    className="button"
+                    to={draft.slug && publicPieceSlugSet.has(draft.slug) ? `/post/${draft.slug}` : `/native-preview/${draft.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    View Post
+                  </Link>
+                ) : null}
                 <button type="button" className="button" onClick={handleMoveToTrash}>Move to Trash</button>
               </div>
             </article>
@@ -262,23 +460,49 @@ export function NativeContentBridgePage() {
 
             <article className="wp-meta-box">
               <h2>Categories</h2>
-              {categoryOptions.map((category) => (
+              <div className="wp-taxonomy-tabs">
+                <button type="button" className={`wp-taxonomy-tab${categoryTab === 'all' ? ' is-active' : ''}`} onClick={() => setCategoryTab('all')}>All Categories</button>
+                <button type="button" className={`wp-taxonomy-tab${categoryTab === 'used' ? ' is-active' : ''}`} onClick={() => setCategoryTab('used')}>Most Used</button>
+              </div>
+              {(categoryTab === 'used' ? mostUsedCategories : categoryOptions).map((category) => (
                 <label key={category}><input type="checkbox" checked={(draft.categories || []).includes(category)} onChange={(e) => setDraft((d) => ({ ...d, categories: e.target.checked ? [...new Set([...(d.categories || []), category])] : (d.categories || []).filter((item) => item !== category) }))} /> {category}</label>
               ))}
-              <div className="wp-add-row"><input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Add New Category" /><button type="button" className="button" onClick={() => { if (!newCategory.trim()) return; setDraft((d) => ({ ...d, categories: [...new Set([...(d.categories || []), newCategory.trim()])] })); setNewCategory('') }}>Add</button></div>
+              <div className="wp-add-row"><input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Add New Category" /><button type="button" className="button" onClick={() => { if (!newCategory.trim()) return; setDraft((d) => ({ ...d, categories: [...new Set([...(d.categories || []), newCategory.trim()])] })); setNewCategory('') }}>Add New Category</button></div>
             </article>
 
             <article className="wp-meta-box">
               <h2>Tags</h2>
-              <div className="wp-add-row"><input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="Add tags" /><button type="button" className="button" onClick={() => { if (!tagInput.trim()) return; setDraft((d) => ({ ...d, tags: [...new Set([...(d.tags || []), tagInput.trim()])] })); setTagInput('') }}>Add</button></div>
+              <div className="wp-add-row"><input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTagsFromInput() } }} placeholder="Add tags (comma separated)" /><button type="button" className="button" onClick={() => addTagsFromInput()}>Add</button></div>
               <div className="wp-tag-chips">{(draft.tags || []).map((tag) => <button key={tag} type="button" onClick={() => setDraft((d) => ({ ...d, tags: (d.tags || []).filter((item) => item !== tag) }))}>{tag} ×</button>)}</div>
+              <button type="button" className="wp-view-tab" onClick={() => setDraft((d) => ({ ...d, tags: [...new Set([...(d.tags || []), ...mostUsedTags.slice(0, 8)])] }))}>Choose from the most used tags</button>
             </article>
 
             <article className="wp-meta-box">
               <h2>Featured Image</h2>
-              <button type="button" className="button" onClick={() => setOpenMediaFor('featured')}>{draft.featuredImage ? 'Replace featured image' : 'Set featured image'}</button>
-              {draft.featuredImage ? <img className="wp-featured-preview" src={draft.featuredImage} alt="Featured" /> : null}
-              {draft.featuredImage ? <button type="button" className="button" onClick={() => setDraft((d) => ({ ...d, featuredImage: '', heroImage: '' }))}>Remove featured image</button> : null}
+              {!draft.featuredImage ? (
+                <button type="button" className="wp-link-button" onClick={() => setOpenMediaFor('featured')}>Set featured image</button>
+              ) : (
+                <>
+                  <img className="wp-featured-preview" src={draft.featuredImage} alt={draft.featuredImageAlt || draft.featuredImageTitle || 'Featured image'} />
+                  <div className="wp-featured-actions">
+                    <button
+                      type="button"
+                      className="wp-link-button"
+                      onClick={() => setDraft((d) => ({
+                        ...d,
+                        featuredImage: '',
+                        heroImage: '',
+                        featuredImageTitle: '',
+                        featuredImageAlt: '',
+                        featuredImageCaption: '',
+                      }))}
+                    >
+                      Remove featured image
+                    </button>
+                    <button type="button" className="wp-link-button" onClick={() => setOpenMediaFor('featured')}>Replace featured image</button>
+                  </div>
+                </>
+              )}
             </article>
           </aside>
         </section>
@@ -287,11 +511,24 @@ export function NativeContentBridgePage() {
           open={Boolean(openMediaFor)}
           onClose={() => setOpenMediaFor('')}
           onPick={(media) => {
+            const selectedMedia = {
+              url: String(media?.url || ''),
+              title: String(media?.title || ''),
+              alt: String(media?.alt || ''),
+              caption: String(media?.caption || ''),
+            }
             if (openMediaFor === 'featured') {
-              setDraft((d) => ({ ...d, featuredImage: media.url, heroImage: media.url }))
+              setDraft((d) => ({
+                ...d,
+                featuredImage: selectedMedia.url,
+                heroImage: selectedMedia.url,
+                featuredImageTitle: selectedMedia.title,
+                featuredImageAlt: selectedMedia.alt,
+                featuredImageCaption: selectedMedia.caption,
+              }))
             }
             if (openMediaFor === 'body') {
-              insertAtCursor(`\n<img src="${media.url}" alt="${media.alt || ''}" />\n`)
+              insertAtCursor(`\n<img src="${selectedMedia.url}" alt="${selectedMedia.alt}" />\n`)
             }
             setOpenMediaFor('')
           }}

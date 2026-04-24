@@ -2,17 +2,47 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import { usePublicEdit } from './PublicEditContext'
-import { WORDPRESS_ADMIN_LINKS } from '../lib/wordpressClient'
+import { getPieces } from '../lib/pieces'
+import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
+import { WORDPRESS_ADMIN_LINKS, buildWordPressPostEditLink } from '../lib/wordpressClient'
+
+const IMPORTED_PIECES = getPieces()
 
 export function PublicAdminToolbar() {
   const { canSave, isEditing, toggleEditing, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
   const location = useLocation()
   const [nativeItems, setNativeItems] = useState([])
+  const [canUseToolbar, setCanUseToolbar] = useState(false)
 
   useEffect(() => {
-    if (!canSave) return
+    let cancelled = false
+
+    async function loadPermissions() {
+      try {
+        const snapshot = await getEditorPermissionsSnapshot()
+        if (!cancelled) setCanUseToolbar(Boolean(snapshot?.canEditAnything))
+      } catch {
+        if (!cancelled) setCanUseToolbar(false)
+      }
+    }
+
+    loadPermissions()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!canUseToolbar) return
     loadNativeCollection({ includeFuture: 1 }).then((items) => setNativeItems(Array.isArray(items) ? items : []))
-  }, [canSave])
+  }, [canUseToolbar])
+
+  const currentPiece = useMemo(() => {
+    const postMatch = location.pathname.match(/^\/(post|piece)\/([^/]+)/)
+    if (!postMatch) return null
+    const slug = postMatch[2]
+    return IMPORTED_PIECES.find((item) => item?.slug === slug) || null
+  }, [location.pathname])
 
   const editPostLink = useMemo(() => {
     const postMatch = location.pathname.match(/^\/(post|piece)\/([^/]+)/)
@@ -22,20 +52,31 @@ export function PublicAdminToolbar() {
     return found ? `/native-bridge?edit=${found.id}` : ''
   }, [location.pathname, nativeItems])
 
-  if (!canSave) return null
+  const editSourceLink = useMemo(() => {
+    const sourcePostId = String(currentPiece?.sourcePostId || '').trim()
+    const sourceUrl = String(currentPiece?.sourceUrl || '').trim()
+    if (!sourcePostId && !sourceUrl) return ''
+    if (sourcePostId) return buildWordPressPostEditLink(sourcePostId, sourceUrl)
+    return sourceUrl
+  }, [currentPiece])
+
+  if (!canUseToolbar) return null
 
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
       <div className="wp-public-admin-bar__left">
-        <Link className="wp-public-admin-bar__item wp-public-admin-bar__brand" to="/">Sabot Media</Link>
-        <Link className="wp-public-admin-bar__item" to="/customize">Customize</Link>
-        <Link className="wp-public-admin-bar__item" to="/native-bridge?new=article">New</Link>
+        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={WORDPRESS_ADMIN_LINKS.dashboard}>Sabot Media</a>
+        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.dashboard}>Dashboard</a>
+        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.newPost}>New</a>
+        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.posts}>Posts</a>
+        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.media}>Media</a>
+        <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.customize}>Customize</a>
         {editPostLink ? <Link className="wp-public-admin-bar__item" to={editPostLink}>Edit Post</Link> : null}
+        {editSourceLink ? <a className="wp-public-admin-bar__item" href={editSourceLink}>Edit Source</a> : null}
         <button className="wp-public-admin-bar__item" type="button" onClick={toggleEditing}>{isEditing ? 'Exit Edit Site' : 'Edit Site'}</button>
-        <Link className="wp-public-admin-bar__item" to="/admin">Dashboard</Link>
       </div>
       <div className="wp-public-admin-bar__right">
-        {changedFields.length ? (
+        {canSave && changedFields.length ? (
           <>
             <span className="wp-public-admin-bar__status">{changedFields.length} unsaved</span>
             <button className="wp-public-admin-bar__item" type="button" onClick={applyDraftLocally}>Apply Local</button>

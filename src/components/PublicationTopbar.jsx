@@ -4,6 +4,9 @@ import { loadMenuDraft } from '../lib/wpAdminLocal'
 
 export function PublicationTopbar() {
   const items = loadMenuDraft()
+  const publicItems = (Array.isArray(items) ? items : []).filter((item) => (
+    item?.id === 'archive' || item?.id === 'press' || item?.id === 'projects'
+  ))
 
   return (
     <header className="publication-topbar publication-topbar--masthead">
@@ -18,7 +21,7 @@ export function PublicationTopbar() {
           </Link>
 
           <nav className="publication-topbar__nav" aria-label="Primary">
-            {items.map((item) => (
+            {publicItems.map((item) => (
               <Link key={item.id} to={item.to}>{item.label}</Link>
             ))}
           </nav>

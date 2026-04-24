@@ -23,7 +23,14 @@ export function createEmptyNativeEntry() {
     body: '',
     richBody: [],
     author: '',
+    categories: [],
+    projects: [],
     tags: [],
+    featuredImage: '',
+    heroImage: '',
+    featuredImageTitle: '',
+    featuredImageAlt: '',
+    featuredImageCaption: '',
     createdAt: now,
     updatedAt: now,
     publishedAt: '',
@@ -58,6 +65,9 @@ export function normalizeNativeEntry(input) {
     sourceNotes: String(raw.sourceNotes || ''),
     heroImage: String(raw.heroImage || raw.featuredImage || ''),
     featuredImage: String(raw.featuredImage || raw.heroImage || ''),
+    featuredImageTitle: String(raw.featuredImageTitle || ''),
+    featuredImageAlt: String(raw.featuredImageAlt || ''),
+    featuredImageCaption: String(raw.featuredImageCaption || ''),
     audioSummary: String(raw.audioSummary || ''),
     transcriptExcerpt: String(raw.transcriptExcerpt || ''),
     hasPrintAssets: Boolean(raw.hasPrintAssets),
@@ -65,6 +75,8 @@ export function normalizeNativeEntry(input) {
     audioSourceUrl: String(raw.audioSourceUrl || ''),
     fullTranscript: String(raw.fullTranscript || ''),
     transcriptNotes: String(raw.transcriptNotes || ''),
+    categories: normalizeTags(raw.categories || raw.projects),
+    projects: normalizeTags(raw.projects || raw.categories),
     tags: normalizeTags(raw.tags),
     createdAt: String(raw.createdAt || new Date().toISOString()),
     updatedAt: String(raw.updatedAt || new Date().toISOString()),
@@ -132,6 +144,30 @@ export function saveNativeCollection(items) {
     // ignore
   }
   return normalized
+}
+
+export function upsertNativeEntryLocal(items, entry) {
+  const normalizedEntry = normalizeNativeEntry({
+    ...entry,
+    updatedAt: new Date().toISOString(),
+    publishedAt: entry?.status === 'published'
+      ? String(entry.publishedAt || new Date().toISOString())
+      : String(entry?.publishedAt || ''),
+  })
+
+  const localBase = mergeNativeCollections(items || [], loadLocalNativeCollection())
+  const nextItems = normalizeNativeCollection(
+    localBase.some((item) => item.id === normalizedEntry.id)
+      ? localBase.map((item) => (item.id === normalizedEntry.id ? normalizedEntry : item))
+      : [normalizedEntry, ...localBase]
+  )
+
+  try {
+    window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(nextItems))
+    return { items: nextItems, item: normalizedEntry, ok: true }
+  } catch {
+    return { items: nextItems, item: normalizedEntry, ok: false }
+  }
 }
 
 export async function upsertNativeEntry(items, entry, revisionNote = 'save') {
