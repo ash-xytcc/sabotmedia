@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { HomePage } from './components/HomePage'
 import { PiecePage } from './components/PiecePage'
 import { PrintPage } from './components/PrintPage'
@@ -68,6 +69,47 @@ function Layout({ children }) {
   const { isEditing, setSelectedField } = usePublicEdit()
   const location = useLocation()
   const bareShell = shouldUseBareShell(location.pathname)
+  const isHomepage = location.pathname === '/'
+
+  useEffect(() => {
+    document.body.classList.toggle('is-homepage', isHomepage)
+
+    return () => {
+      document.body.classList.remove('is-homepage')
+    }
+  }, [isHomepage])
+
+  useEffect(() => {
+    const root = document.documentElement
+
+    const updateViewportVars = () => {
+      const masthead = document.querySelector('.publication-topbar')
+      const adminBar = document.querySelector('.wp-public-admin-bar')
+
+      root.style.setProperty('--masthead-height', `${Math.round(masthead?.getBoundingClientRect().height || 0)}px`)
+      root.style.setProperty('--public-admin-bar-height', `${Math.round(adminBar?.getBoundingClientRect().height || 0)}px`)
+    }
+
+    updateViewportVars()
+
+    const observer = new ResizeObserver(updateViewportVars)
+    const mutationObserver = new MutationObserver(updateViewportVars)
+
+    const masthead = document.querySelector('.publication-topbar')
+    const adminBar = document.querySelector('.wp-public-admin-bar')
+
+    if (masthead) observer.observe(masthead)
+    if (adminBar) observer.observe(adminBar)
+
+    mutationObserver.observe(document.body, { childList: true, subtree: true })
+    window.addEventListener('resize', updateViewportVars)
+
+    return () => {
+      observer.disconnect()
+      mutationObserver.disconnect()
+      window.removeEventListener('resize', updateViewportVars)
+    }
+  }, [location.pathname])
 
   if (bareShell) {
     return (

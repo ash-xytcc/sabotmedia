@@ -110,21 +110,20 @@ function HeroFeature({ item }) {
     <article className="publication-hero-card">
       <Link className="publication-hero-card__image-wrap" to={item.href}>
         <div
-          className="publication-hero-card__image-fill"
+          className="publication-hero-card__image publication-hero-card__image-fill"
           style={item.imageUrl ? {
             backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.62)), url("${item.imageUrl}")`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           } : undefined}
         />
-        <div className="publication-hero-card__overlay">
+        <div className="publication-hero-card__content publication-hero-card__overlay">
           <div className="publication-hero-card__meta">
             <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
             <span>{item.target}</span>
             <span>{item.contentType}</span>
           </div>
           <h1>{item.title}</h1>
-          
         </div>
       </Link>
     </article>
