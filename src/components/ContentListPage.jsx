@@ -3,6 +3,14 @@ import { Link } from 'react-router-dom'
 import { loadNativeCollection, slugify, upsertNativeEntry, saveNativeCollection } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
 
+function normalizeTermList(value) {
+  if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 function getBucket(item) {
   if (item.status === 'trash') return 'trash'
   if (item.workflowState === 'scheduled' || item.scheduledFor) return 'scheduled'
@@ -42,13 +50,13 @@ export function ContentListPage() {
   async function saveQuickEdit(id) {
     const existing = items.find((item) => item.id === id)
     if (!existing) return
-    const parsedCategories = quickEdit.categories.split(',').map((item) => item.trim()).filter(Boolean)
+    const parsedCategories = normalizeTermList(quickEdit.categories)
     const nextItem = {
       ...existing,
       title: quickEdit.title,
       slug: slugify(quickEdit.slug || quickEdit.title),
       status: quickEdit.status,
-      tags: quickEdit.tags.split(',').map((item) => item.trim()).filter(Boolean),
+      tags: normalizeTermList(quickEdit.tags),
       categories: parsedCategories,
       projects: parsedCategories,
     }
@@ -131,7 +139,7 @@ export function ContentListPage() {
                       <strong className="content-table__title">{item.title || 'Untitled'}</strong>
                       <div className="wp-row-actions">
                         <Link to={`/native-bridge?edit=${item.id}`}>Edit</Link>
-                        <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || []).join(', ') }) }}>Quick Edit</button>
+                        <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || item.projects || []).join(', ') }) }}>Quick Edit</button>
                         {item.status !== 'trash' ? <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash'))}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
                         <Link to={item.status === 'published' ? `/updates/${item.slug}` : `/native-preview/${item.id}`}>View</Link>
                       </div>
@@ -148,8 +156,8 @@ export function ContentListPage() {
                           <input value={quickEdit.title} onChange={(e) => setQuickEdit((c) => ({ ...c, title: e.target.value }))} placeholder="Title" />
                           <input value={quickEdit.slug} onChange={(e) => setQuickEdit((c) => ({ ...c, slug: e.target.value }))} placeholder="Slug" />
                           <select value={quickEdit.status} onChange={(e) => setQuickEdit((c) => ({ ...c, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option><option value="trash">Trash</option></select>
-                          <input value={quickEdit.tags} onChange={(e) => setQuickEdit((c) => ({ ...c, tags: e.target.value }))} placeholder="tag1, tag2" />
-                          <input value={quickEdit.categories} onChange={(e) => setQuickEdit((c) => ({ ...c, categories: e.target.value }))} placeholder="cat1, cat2" />
+                          <input value={quickEdit.tags} onChange={(e) => setQuickEdit((c) => ({ ...c, tags: e.target.value }))} placeholder="Tags: tag1, tag2" />
+                          <input value={quickEdit.categories} onChange={(e) => setQuickEdit((c) => ({ ...c, categories: e.target.value }))} placeholder="Categories: cat1, cat2" />
                           <button type="button" className="button button--primary" onClick={() => saveQuickEdit(item.id)}>Update</button>
                           <button type="button" className="button" onClick={() => setQuickEditId('')}>Cancel</button>
                         </div>

@@ -7836,6 +7836,9 @@ a.button {
 .wp-edit-content .wp-meta-box { margin-top: 12px; }
 .wp-meta-actions { display: grid; gap: 8px; }
 .wp-add-row { display: flex; gap: 8px; margin-top: 8px; }
+.wp-taxonomy-tabs { display: flex; gap: 10px; margin-bottom: 8px; }
+.wp-taxonomy-tab { border: 0; background: transparent; color: #2271b1; padding: 0; cursor: pointer; }
+.wp-taxonomy-tab.is-active { color: #1d2327; font-weight: 600; }
 .wp-tag-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .wp-tag-chips button { background: #f0f0f1; border: 1px solid #c3c4c7; }
 .wp-link-button {

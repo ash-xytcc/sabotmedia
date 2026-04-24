@@ -11,6 +11,12 @@ import {
 import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
 
+function normalizeTermList(value) {
+  if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
+  if (typeof value === 'string') return [...new Set(value.split(',').map((item) => item.trim()).filter(Boolean))]
+  return []
+}
+
 function createTypedEntry(kind = 'article') {
   const base = createEmptyNativeEntry()
   return {
@@ -174,6 +180,7 @@ export function NativeContentBridgePage() {
   const [editorTab, setEditorTab] = useState('visual')
   const [tagInput, setTagInput] = useState('')
   const [newCategory, setNewCategory] = useState('')
+  const [categoryTab, setCategoryTab] = useState('all')
   const [openMediaFor, setOpenMediaFor] = useState('')
   const [allowComments, setAllowComments] = useState(true)
   const [isPermalinkEditing, setIsPermalinkEditing] = useState(false)
@@ -214,11 +221,21 @@ export function NativeContentBridgePage() {
     boot()
   }, [searchParams])
 
+  function addTagsFromInput(rawInput = tagInput) {
+    const nextTags = normalizeTermList(rawInput)
+    if (!nextTags.length) return
+    setDraft((d) => ({ ...d, tags: [...new Set([...(d.tags || []), ...nextTags])] }))
+    setTagInput('')
+  }
+
   async function handleSave(note = 'save') {
+    const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
     const normalized = {
       ...draft,
       slug: slugify(draft.slug || draft.title),
       tags: Array.isArray(draft.tags) ? draft.tags : [],
+      categories: normalizedCategories,
+      projects: normalizedCategories,
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
       featuredImageTitle: draft.featuredImageTitle || '',
@@ -238,15 +255,26 @@ export function NativeContentBridgePage() {
   }
 
   async function handleMoveToTrash() {
-    const next = await upsertNativeEntry(items, { ...draft, status: 'trash', workflowState: 'draft', allowComments }, 'trash')
+    const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
+    const next = await upsertNativeEntry(items, {
+      ...draft,
+      status: 'trash',
+      workflowState: 'draft',
+      categories: normalizedCategories,
+      projects: normalizedCategories,
+      allowComments,
+    }, 'trash')
     setItems(next)
   }
 
   async function handlePreviewChanges() {
+    const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
     const normalized = {
       ...draft,
       slug: slugify(draft.slug || draft.title),
       tags: Array.isArray(draft.tags) ? draft.tags : [],
+      categories: normalizedCategories,
+      projects: normalizedCategories,
       featuredImage: draft.featuredImage || draft.heroImage || '',
       heroImage: draft.heroImage || draft.featuredImage || '',
       featuredImageTitle: draft.featuredImageTitle || '',
@@ -432,16 +460,21 @@ export function NativeContentBridgePage() {
 
             <article className="wp-meta-box">
               <h2>Categories</h2>
-              {categoryOptions.map((category) => (
+              <div className="wp-taxonomy-tabs">
+                <button type="button" className={`wp-taxonomy-tab${categoryTab === 'all' ? ' is-active' : ''}`} onClick={() => setCategoryTab('all')}>All Categories</button>
+                <button type="button" className={`wp-taxonomy-tab${categoryTab === 'used' ? ' is-active' : ''}`} onClick={() => setCategoryTab('used')}>Most Used</button>
+              </div>
+              {(categoryTab === 'used' ? mostUsedCategories : categoryOptions).map((category) => (
                 <label key={category}><input type="checkbox" checked={(draft.categories || []).includes(category)} onChange={(e) => setDraft((d) => ({ ...d, categories: e.target.checked ? [...new Set([...(d.categories || []), category])] : (d.categories || []).filter((item) => item !== category) }))} /> {category}</label>
               ))}
-              <div className="wp-add-row"><input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Add New Category" /><button type="button" className="button" onClick={() => { if (!newCategory.trim()) return; setDraft((d) => ({ ...d, categories: [...new Set([...(d.categories || []), newCategory.trim()])] })); setNewCategory('') }}>Add</button></div>
+              <div className="wp-add-row"><input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="Add New Category" /><button type="button" className="button" onClick={() => { if (!newCategory.trim()) return; setDraft((d) => ({ ...d, categories: [...new Set([...(d.categories || []), newCategory.trim()])] })); setNewCategory('') }}>Add New Category</button></div>
             </article>
 
             <article className="wp-meta-box">
               <h2>Tags</h2>
-              <div className="wp-add-row"><input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="Add tags" /><button type="button" className="button" onClick={() => { if (!tagInput.trim()) return; setDraft((d) => ({ ...d, tags: [...new Set([...(d.tags || []), tagInput.trim()])] })); setTagInput('') }}>Add</button></div>
+              <div className="wp-add-row"><input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTagsFromInput() } }} placeholder="Add tags (comma separated)" /><button type="button" className="button" onClick={() => addTagsFromInput()}>Add</button></div>
               <div className="wp-tag-chips">{(draft.tags || []).map((tag) => <button key={tag} type="button" onClick={() => setDraft((d) => ({ ...d, tags: (d.tags || []).filter((item) => item !== tag) }))}>{tag} ×</button>)}</div>
+              <button type="button" className="wp-view-tab" onClick={() => setDraft((d) => ({ ...d, tags: [...new Set([...(d.tags || []), ...mostUsedTags.slice(0, 8)])] }))}>Choose from the most used tags</button>
             </article>
 
             <article className="wp-meta-box">
