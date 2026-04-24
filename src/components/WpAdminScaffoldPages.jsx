@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { getPieces } from '../lib/pieces'
 import { loadLocalMediaItems } from '../lib/localMediaLibrary'
@@ -65,12 +65,12 @@ export function PagesAdminPage() {
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <h1>Pages</h1>
-          <button className="button button--primary" type="button" title="Local scaffold only — page creation is not wired yet.">
-            Add New (Scaffold)
+          <button className="button button--primary" type="button">
+            Add New
           </button>
         </div>
 
-        <WpNotice>Page creation is local scaffold only for now. Use existing public routes to edit live content.</WpNotice>
+        <p className="description">Manage your primary public site surfaces and quick actions.</p>
 
         <section className="wp-meta-box">
           <table className="content-table wp-posts-table">
@@ -92,8 +92,8 @@ export function PagesAdminPage() {
                   <td>{new Date(page.modified).toLocaleDateString()}</td>
                   <td>
                     <div className="wp-row-actions">
-                      <Link to={`${page.path}?edit=site`}>Edit Live</Link>
                       <Link to={page.path}>View</Link>
+                      <Link to={`${page.path}?edit=site`}>Edit Live</Link>
                       <Link to={`/customize?section=${page.customizeSection}`}>Customize</Link>
                     </div>
                   </td>
@@ -101,56 +101,6 @@ export function PagesAdminPage() {
               ))}
             </tbody>
           </table>
-        </section>
-      </main>
-    </AdminFrame>
-  )
-}
-
-export function MenusAdminPage() {
-  const [items, setItems] = useState(() => loadJson(MENU_KEY, [
-    { label: 'Archive', to: '/archive' },
-    { label: 'Press', to: '/press' },
-    { label: 'Projects', to: '/projects' },
-  ]))
-
-  function updateItem(index, patch) {
-    setItems((current) => current.map((item, i) => i === index ? { ...item, ...patch } : item))
-  }
-
-  function saveMenu() {
-    saveJson(MENU_KEY, items)
-  }
-
-  return (
-    <AdminFrame>
-      <main className="page wp-admin-screen">
-        <div className="wp-screen-header">
-          <h1>Menus</h1>
-          <button className="button button--primary" type="button" onClick={saveMenu}>Save Menu</button>
-        </div>
-
-        <WpNotice>This is a local WordPress-style menu scaffold. Public masthead wiring can read this later.</WpNotice>
-
-        <section className="wp-meta-box">
-          <h2>Menu Structure</h2>
-          <p className="description">Edit the visible public navigation items.</p>
-
-          <div className="wp-menu-editor">
-            {items.map((item, index) => (
-              <div className="wp-menu-item" key={`${item.to}-${index}`}>
-                <input value={item.label} onChange={(e) => updateItem(index, { label: e.target.value })} />
-                <input value={item.to} onChange={(e) => updateItem(index, { to: e.target.value })} />
-                <button type="button" className="button" onClick={() => setItems((current) => current.filter((_, i) => i !== index))}>Remove</button>
-              </div>
-            ))}
-          </div>
-
-          <p>
-            <button type="button" className="button" onClick={() => setItems((current) => [...current, { label: 'New Item', to: '/' }])}>
-              Add menu item
-            </button>
-          </p>
         </section>
       </main>
     </AdminFrame>
@@ -165,7 +115,9 @@ export function CustomizeAdminPage() {
     { id: 'navigation', title: 'Navigation', body: 'Public nav placement and menu behavior.' },
     { id: 'homepage', title: 'Homepage', body: 'Featured content, feed source, and layout.' },
   ]), [])
-  const [activeSection, setActiveSection] = useState('siteIdentity')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const defaultSection = searchParams.get('section') || 'siteIdentity'
+  const [activeSection, setActiveSection] = useState(defaultSection)
   const [settings, setSettings] = useState(() => loadJson(CUSTOMIZER_KEY, {
     siteIdentity: {
       siteTitle: 'Sabot Media',
@@ -183,11 +135,11 @@ export function CustomizeAdminPage() {
       logoUrl: '',
     },
     navigation: {
-      menuItems: [
+      menuItems: loadJson(MENU_KEY, [
         { label: 'Archive', path: '/archive' },
         { label: 'Press', path: '/press' },
         { label: 'Projects', path: '/projects' },
-      ],
+      ]).map((item) => ({ label: item.label, path: item.path || item.to })),
     },
     homepage: {
       homepageSource: 'latest',
@@ -196,6 +148,19 @@ export function CustomizeAdminPage() {
     },
   }))
   const [saveMessage, setSaveMessage] = useState('')
+
+  useEffect(() => {
+    if (!sections.some((section) => section.id === activeSection)) {
+      setActiveSection('siteIdentity')
+    }
+  }, [activeSection, sections])
+
+  useEffect(() => {
+    const querySection = searchParams.get('section')
+    if (querySection && querySection !== activeSection && sections.some((section) => section.id === querySection)) {
+      setActiveSection(querySection)
+    }
+  }, [activeSection, searchParams, sections])
 
   function updateSection(section, field, value) {
     setSettings((current) => ({
@@ -243,6 +208,7 @@ export function CustomizeAdminPage() {
 
   function saveSection(section) {
     saveJson(CUSTOMIZER_KEY, settings)
+    saveJson(MENU_KEY, settings.navigation.menuItems.map((item) => ({ label: item.label, to: item.path })))
     const sectionName = sections.find((entry) => entry.id === section)?.title || 'Section'
     setSaveMessage(`${sectionName} saved locally.`)
   }
@@ -434,7 +400,10 @@ export function CustomizeAdminPage() {
                   className={`wp-customize-section${section.id === activeSection ? ' is-active' : ''}`}
                   type="button"
                   key={section.id}
-                  onClick={() => setActiveSection(section.id)}
+                  onClick={() => {
+                    setActiveSection(section.id)
+                    setSearchParams({ section: section.id })
+                  }}
                 >
                   <span>{section.title}</span>
                   <small>{section.body}</small>
@@ -447,9 +416,7 @@ export function CustomizeAdminPage() {
             </div>
           </div>
 
-          <p className="description">
-            Legacy draft/config editor remains available at <Link to="/draft">Site Editor</Link>.
-          </p>
+          <p className="description">Navigation menus are managed here under the Navigation panel.</p>
         </section>
       </main>
     </AdminFrame>
@@ -462,16 +429,16 @@ export function SiteEditorAdminPage() {
     <AdminFrame>
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
-          <h1>Site Editor</h1>
-          <Link className="button button--primary" to="/draft">Open Site Editor</Link>
+          <h1>Advanced Draft Tools</h1>
+          <Link className="button button--primary" to="/draft">Open Draft Tools</Link>
         </div>
 
         <section className="wp-meta-box">
-          <h2>Pages and public surface editing</h2>
+          <h2>Legacy developer surface</h2>
           <p className="description">
-            This wraps the existing public site editing tools in a WordPress-like entry point.
+            This legacy route stays available for developer workflows and is intentionally hidden from normal admin navigation.
           </p>
-          <p><Link to="/customize">Customize</Link> · <Link to="/menus">Menus</Link> · <Link to="/draft">Draft editor</Link></p>
+          <p><Link to="/customize?section=navigation">Customize Navigation</Link> · <Link to="/draft">Draft editor</Link></p>
         </section>
       </main>
     </AdminFrame>
@@ -618,6 +585,12 @@ export function ToolsAdminPage() {
               ))}
             </tbody>
           </table>
+        </section>
+
+        <section className="wp-meta-box" id="advanced-draft-tools">
+          <h2>Advanced Draft Tools</h2>
+          <p className="description">Legacy developer editing surface, hidden from the main admin sidebar.</p>
+          <p><Link to="/draft">Open Draft Tools</Link></p>
         </section>
       </main>
     </AdminFrame>

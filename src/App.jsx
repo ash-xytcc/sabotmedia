@@ -1,4 +1,4 @@
-import { Link, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { HomePage } from './components/HomePage'
 import { PiecePage } from './components/PiecePage'
 import { PrintPage } from './components/PrintPage'
@@ -24,7 +24,7 @@ import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
 import { AdminNoticeProvider } from './components/WpAdminNotices'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
-import { CustomizeAdminPage, MenusAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminScaffoldPages'
+import { CustomizeAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminScaffoldPages'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -54,6 +54,7 @@ const ADMIN_SHELL_PATHS = [
   '/menus',
   '/customize',
   '/site-editor',
+  '/advanced-draft-tools',
   '/tools',
   '/settings',
 ]
@@ -111,9 +112,10 @@ export default function App() {
           <Route path="/media" element={<MediaLibraryPage />} />
           <Route path="/pages" element={<PagesAdminPage />} />
           <Route path="/users" element={<UsersAdminPage />} />
-          <Route path="/menus" element={<MenusAdminPage />} />
+          <Route path="/menus" element={<Navigate to="/customize?section=navigation" replace />} />
           <Route path="/customize" element={<CustomizeAdminPage />} />
-          <Route path="/site-editor" element={<SiteEditorAdminPage />} />
+          <Route path="/site-editor" element={<Navigate to="/tools#advanced-draft-tools" replace />} />
+          <Route path="/advanced-draft-tools" element={<SiteEditorAdminPage />} />
           <Route path="/tools" element={<ToolsAdminPage />} />
           <Route path="/settings" element={<SettingsAdminPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
