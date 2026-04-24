@@ -37,17 +37,20 @@ export function ContentListPage() {
       return !q || [item.title, item.slug, item.author, ...(item.tags || [])].join(' ').toLowerCase().includes(q)
     })
   }, [items, tab, query, categoryFilter])
+  const trashCount = useMemo(() => items.filter((item) => item.status === 'trash').length, [items])
 
   async function saveQuickEdit(id) {
     const existing = items.find((item) => item.id === id)
     if (!existing) return
+    const parsedCategories = quickEdit.categories.split(',').map((item) => item.trim()).filter(Boolean)
     const nextItem = {
       ...existing,
       title: quickEdit.title,
       slug: slugify(quickEdit.slug || quickEdit.title),
       status: quickEdit.status,
       tags: quickEdit.tags.split(',').map((item) => item.trim()).filter(Boolean),
-      categories: quickEdit.categories.split(',').map((item) => item.trim()).filter(Boolean),
+      categories: parsedCategories,
+      projects: parsedCategories,
     }
     const next = await upsertNativeEntry(items, nextItem, 'quick edit')
     setItems(next)
@@ -55,11 +58,12 @@ export function ContentListPage() {
   }
 
   async function applyBulkAction() {
-    if (!bulkAction || !selectedIds.length) return
+    if (!bulkAction) return
+    if (bulkAction !== 'empty-trash' && !selectedIds.length) return
     if (bulkAction === 'trash') {
-      const next = await Promise.all(items.map(async (item) => (
+      const next = items.map((item) => (
         selectedIds.includes(item.id) ? { ...item, status: 'trash' } : item
-      )))
+      ))
       const persisted = saveNativeCollection(next)
       setItems(persisted)
     }
@@ -68,10 +72,11 @@ export function ContentListPage() {
       setItems(next)
     }
     if (bulkAction === 'empty-trash') {
-      const next = saveNativeCollection(items.filter((item) => !(selectedIds.includes(item.id) && item.status === 'trash')))
+      const next = saveNativeCollection(items.filter((item) => item.status !== 'trash'))
       setItems(next)
     }
     setSelectedIds([])
+    setBulkAction('')
   }
 
   return (
@@ -97,6 +102,9 @@ export function ContentListPage() {
                 <option value="empty-trash">Empty Trash</option>
               </select>
               <button type="button" className="button" onClick={applyBulkAction}>Apply</button>
+              {tab === 'trash' ? (
+                <button type="button" className="button" onClick={() => setItems(saveNativeCollection(items.filter((item) => item.status !== 'trash')))} disabled={trashCount === 0}>Empty Trash</button>
+              ) : null}
               <select><option>All dates</option></select>
               <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}><option value="all">All categories</option>{categories.map((c) => <option key={c} value={c}>{c}</option>)}</select>
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search Posts" />
@@ -125,7 +133,7 @@ export function ContentListPage() {
                         <Link to={`/native-bridge?edit=${item.id}`}>Edit</Link>
                         <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || []).join(', ') }) }}>Quick Edit</button>
                         {item.status !== 'trash' ? <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash'))}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
-                        <Link to={item.status === 'published' ? `/post/${item.slug}` : `/native-preview/${item.id}`}>View</Link>
+                        <Link to={item.status === 'published' ? `/updates/${item.slug}` : `/native-preview/${item.id}`}>View</Link>
                       </div>
                     </td>
                     <td>{item.author || 'sabotmedia'}</td>
