@@ -1,7 +1,7 @@
 import { getImportedImage } from '../lib/getImportedImage'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchNativeEntries } from '../lib/nativePublicContentApi'
+import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
 import { PublicationFooter } from './PublicationFooter'
 import { splitDisplayTitle } from '../lib/content'
 import { PublicationTopbar } from './PublicationTopbar'
@@ -167,15 +167,10 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
       try {
         setState('loading')
         setError('')
-        const data = await fetchNativeEntries({ status: 'published' })
+        const visible = await loadPublishedNativePieces()
         if (cancelled) return
 
-        const all = Array.isArray(data?.items) ? data.items : []
-        const visible = all
-          .filter((item) => ['general', 'home', 'press', 'projects'].includes(item.target))
-          .map(normalizeNativeItem)
-
-        setNativeItems(visible)
+        setNativeItems(visible.filter((item) => ['general', 'home', 'press', 'projects'].includes(item.target)))
         setState(visible.length ? 'loaded' : 'archive-fallback')
       } catch (err) {
         if (cancelled) return
@@ -196,30 +191,25 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
     [pieces, featured, latest]
   )
 
-  const featuredItem = useMemo(() => {
-    // Prefer archive until native image handling is fully real
-    if (archiveFeed.featured?.imageUrl) return archiveFeed.featured
-    if (nativeItems.length) return nativeItems[0]
-    return archiveFeed.featured
+  const mergedFeed = useMemo(() => {
+    const archiveItems = [
+      archiveFeed.featured,
+      ...(archiveFeed.recent || []),
+    ].filter(Boolean)
+
+    return mergeNativeAndImportedPieces(archiveItems, nativeItems)
   }, [nativeItems, archiveFeed])
 
-  const recentItems = useMemo(() => {
-    if (archiveFeed.recent?.length) return archiveFeed.recent
-    if (nativeItems.length) return nativeItems.slice(1, 7)
-    return archiveFeed.recent
-  }, [nativeItems, archiveFeed])
+  const featuredItem = mergedFeed[0] || archiveFeed.featured || null
+  const recentItems = mergedFeed.filter((item) => item.id !== featuredItem?.id).slice(0, 6)
 
-  const usingArchiveFallback = !!archiveFeed.featured
+  const usingArchiveFallback = !nativeItems.length && !!archiveFeed.featured
 
   return (
     <main className="page publication-homepage">
       <PublicationTopbar />
 
-      {usingArchiveFallback ? (
-        <section className="publication-status-note">
-          <p>Using imported archive content for the homepage while native publishing is still being wired up.</p>
-        </section>
-      ) : null}
+      {usingArchiveFallback ? null : null}
 
       {error && !usingArchiveFallback ? (
         <section className="missing-state">

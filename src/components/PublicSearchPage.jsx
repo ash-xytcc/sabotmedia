@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { getImportedImage } from '../lib/getImportedImage'
+import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
 import { splitDisplayTitle } from '../lib/content'
 
 const FILTERS = [
@@ -99,16 +100,31 @@ export function PublicSearchPage({ pieces = [] }) {
   const [query, setQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
   const [visibleCount, setVisibleCount] = useState(24)
+  const [nativePieces, setNativePieces] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function boot() {
+      const loaded = await loadPublishedNativePieces()
+      if (!cancelled) setNativePieces(loaded)
+    }
+
+    boot()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const normalized = useMemo(() => {
-    return (Array.isArray(pieces) ? pieces : [])
+    return mergeNativeAndImportedPieces(Array.isArray(pieces) ? pieces : [], nativePieces)
       .map(normalizePiece)
       .sort((a, b) => {
         const aTime = new Date(a.publishedAt || 0).getTime()
         const bTime = new Date(b.publishedAt || 0).getTime()
         return bTime - aTime
       })
-  }, [pieces])
+  }, [pieces, nativePieces])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { getImportedImage } from '../lib/getImportedImage'
+import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
 import { renderImportedBody } from '../lib/renderImportedBody'
 import { splitDisplayTitle } from '../lib/content'
 
@@ -57,6 +58,26 @@ function getOrderedPieces(pieces) {
 export function PiecePage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [nativePieces, setNativePieces] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function boot() {
+      const loaded = await loadPublishedNativePieces()
+      if (!cancelled) setNativePieces(loaded)
+    }
+
+    boot()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const mergedPieces = useMemo(
+    () => mergeNativeAndImportedPieces(Array.isArray(pieces) ? pieces : [], nativePieces),
+    [pieces, nativePieces]
+  )
 
   const mode = useMemo(() => getPreferredMode(searchParams), [searchParams])
 
@@ -75,7 +96,7 @@ export function PiecePage({ pieces = [] }) {
     }
   }, [mode])
 
-  const orderedPieces = useMemo(() => getOrderedPieces(pieces), [pieces])
+  const orderedPieces = useMemo(() => getOrderedPieces(mergedPieces), [mergedPieces])
   const piece = useMemo(() => getPieceBySlug(orderedPieces, slug), [orderedPieces, slug])
 
   const index = useMemo(

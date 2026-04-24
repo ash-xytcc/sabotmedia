@@ -1,4 +1,4 @@
-import { Link, Route, Routes , Navigate } from 'react-router-dom'
+import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import { HomePage } from './components/HomePage'
 import { PiecePage } from './components/PiecePage'
 import { PrintPage } from './components/PrintPage'
@@ -28,8 +28,41 @@ const latest = getLatestPieces(pieces, 12)
 const projectMap = buildProjectMap(pieces)
 const reviewCount = pieces.filter((piece) => piece.reviewFlags?.length).length
 
+const ADMIN_SHELL_PATHS = [
+  '/admin',
+  '/content',
+  '/native-bridge',
+  '/native-preview',
+  '/podcasts',
+  '/draft',
+  '/overrides',
+  '/system-backup',
+  '/taxonomy',
+  '/roles',
+  '/audit-log',
+  '/analytics',
+  '/design-system',
+  '/platform-map',
+]
+
+function shouldUseBareShell(pathname) {
+  return ADMIN_SHELL_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+}
+
+
 function Layout({ children }) {
   const { isAdmin, isEditing, toggleEditing, changedFields, setSelectedField } = usePublicEdit()
+  const location = useLocation()
+  const bareShell = shouldUseBareShell(location.pathname)
+
+  if (bareShell) {
+    return (
+      <div className="bare-route-shell">
+        <PublicEditPanel />
+        {children}
+      </div>
+    )
+  }
 
   return (
     <div
