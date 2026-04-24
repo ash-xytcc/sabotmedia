@@ -7825,24 +7825,53 @@ a.button {
 .wp-tag-chips button { background: #f0f0f1; border: 1px solid #c3c4c7; }
 .wp-featured-preview { width: 100%; margin: 8px 0; border: 1px solid #c3c4c7; }
 
-.wp-media-layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; }
-.wp-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
-.wp-media-item { border: 1px solid #c3c4c7; background: #fff; text-align: left; padding: 0; display: grid; overflow: hidden; }
+.wp-media-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; }
+.wp-media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; align-content: start; }
+.wp-media-item {
+  border: 1px solid #c3c4c7;
+  background: #fff;
+  text-align: left;
+  padding: 0;
+  display: grid;
+  overflow: hidden;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.wp-media-item:hover { border-color: #8c8f94; }
 .wp-media-item.is-selected { border-color: #2271b1; box-shadow: inset 0 0 0 2px #2271b1; }
-.wp-media-item__thumb-wrap { display: block; aspect-ratio: 1/1; background: #dcdcde; }
-.wp-media-item img { width: 100%; height: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
-.wp-media-item__meta { padding: 6px; border-top: 1px solid #dcdcde; font-size: 11px; line-height: 1.35; color: #50575e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.wp-media-details img { width: 100%; border: 1px solid #c3c4c7; }
+.wp-media-item__thumb-wrap { display: block; aspect-ratio: 1/1; background: #dcdcde; overflow: hidden; }
+.wp-media-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wp-media-item__meta {
+  padding: 6px 8px;
+  border-top: 1px solid #dcdcde;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #50575e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wp-media-details,
+.wp-media-modal__details { word-break: break-word; }
+.wp-media-details img { width: 100%; border: 1px solid #c3c4c7; max-height: 260px; object-fit: contain; background: #f6f7f7; }
 
 .wp-media-modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.66); z-index: 80; display: grid; place-items: center; }
 .wp-media-modal__panel { width: min(1200px, 95vw); height: min(90vh, 760px); background: #f0f0f1; border: 1px solid #1d2327; display: grid; grid-template-rows: auto auto 1fr; }
 .wp-media-modal__header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border-bottom: 1px solid #c3c4c7; }
+.wp-media-local-note { margin: 0; padding: 8px 10px; background: #f6f7f7; border-bottom: 1px solid #dcdcde; color: #50575e; font-size: 12px; }
 .wp-media-toolbar { display: flex; gap: 8px; align-items: center; padding: 10px; background: #fff; border-bottom: 1px solid #c3c4c7; }
 .wp-media-toolbar input { flex: 1; }
-.wp-media-modal__body { display: grid; grid-template-columns: 1fr 300px; min-height: 0; }
-.wp-media-modal__library { overflow: auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.wp-media-modal__body { display: grid; grid-template-columns: 1fr 320px; min-height: 0; }
+.wp-media-modal__library { overflow: auto; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; align-content: start; }
 .wp-media-modal__details { overflow: auto; padding: 10px; background: #fff; border-left: 1px solid #c3c4c7; }
 .wp-media-modal__details img { width: 100%; margin-bottom: 8px; max-height: 220px; object-fit: contain; background: #f0f0f1; }
+.wp-media-layout--list .wp-media-grid,
+.wp-media-modal__body--list .wp-media-modal__library { grid-template-columns: 1fr; }
+.wp-media-layout--list .wp-media-item,
+.wp-media-modal__body--list .wp-media-item { grid-template-columns: 72px minmax(0, 1fr); align-items: stretch; }
+.wp-media-layout--list .wp-media-item__thumb-wrap,
+.wp-media-modal__body--list .wp-media-item__thumb-wrap { aspect-ratio: auto; height: 72px; }
+.wp-media-layout--list .wp-media-item__meta,
+.wp-media-modal__body--list .wp-media-item__meta { border-top: 0; border-left: 1px solid #dcdcde; display: grid; align-items: center; }
 
 .wp-public-admin-bar { background: #1d2327; }
 .wp-public-admin-bar__item { color: #f0f0f1; }
