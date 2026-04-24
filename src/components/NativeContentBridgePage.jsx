@@ -10,6 +10,7 @@ import {
 } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
+import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -189,9 +190,30 @@ export function NativeContentBridgePage() {
   const autosaveTimerRef = useRef(null)
   const suppressAutosaveRef = useRef(false)
   const lastAutosaveFingerprintRef = useRef('')
+  const [revisions, setRevisions] = useState([])
+  const [autosaveState, setAutosaveState] = useState({ status: 'idle', at: '' })
+  const { pushNotice } = useAdminNotices()
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
   const publicPieceSlugSet = useMemo(() => new Set(getPieces().map((piece) => piece.slug).filter(Boolean)), [])
+  const mostUsedCategories = useMemo(() => {
+    const counts = new Map()
+    for (const item of items) {
+      for (const category of (item.categories || item.projects || [])) {
+        counts.set(category, (counts.get(category) || 0) + 1)
+      }
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name).slice(0, 10)
+  }, [items])
+  const mostUsedTags = useMemo(() => {
+    const counts = new Map()
+    for (const item of items) {
+      for (const tag of (item.tags || [])) {
+        counts.set(tag, (counts.get(tag) || 0) + 1)
+      }
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name)
+  }, [items])
 
   useEffect(() => {
     async function boot() {
@@ -206,7 +228,7 @@ export function NativeContentBridgePage() {
         setPermalinkDraft(found.slug || '')
         setAllowComments(found.allowComments ?? true)
         setRevisions(loadLocalRevisions(found.id))
-        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(nextDraft, found.allowComments ?? true)
+        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(found, found.allowComments ?? true)
       } else {
         const fresh = createTypedEntry(mode)
         setActiveId(fresh.id)
@@ -220,6 +242,47 @@ export function NativeContentBridgePage() {
     }
     boot()
   }, [searchParams])
+
+  function restoreRevision(revision) {
+    if (!revision?.draft) return
+    const restored = {
+      ...draft,
+      ...revision.draft,
+      tags: Array.isArray(revision.draft.tags) ? revision.draft.tags : [],
+      categories: Array.isArray(revision.draft.categories) ? revision.draft.categories : [],
+    }
+    setDraft(restored)
+    setPermalinkDraft(restored.slug || '')
+    pushNotice('Post saved.', 'info')
+  }
+
+  useEffect(() => {
+    if (!activeId) return
+    const fingerprint = toAutosaveFingerprint(draft, allowComments)
+    if (!fingerprint || fingerprint === lastAutosaveFingerprintRef.current || suppressAutosaveRef.current) return
+    if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current)
+    autosaveTimerRef.current = window.setTimeout(async () => {
+      try {
+        setAutosaveState({ status: 'saving', at: '' })
+        await upsertNativeEntryLocal(items, {
+          ...draft,
+          slug: slugify(draft.slug || draft.title),
+          categories: normalizeTermList(draft.categories || draft.projects),
+          projects: normalizeTermList(draft.categories || draft.projects),
+          allowComments,
+        }, 'autosave')
+        lastAutosaveFingerprintRef.current = fingerprint
+        setAutosaveState({ status: 'saved', at: new Date().toISOString() })
+      } catch {
+        setAutosaveState({ status: 'error', at: '' })
+        pushNotice('Autosave failed.', 'error')
+      }
+    }, AUTOSAVE_DEBOUNCE_MS)
+
+    return () => {
+      if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current)
+    }
+  }, [activeId, draft, allowComments, items, pushNotice])
 
   function addTagsFromInput(rawInput = tagInput) {
     const nextTags = normalizeTermList(rawInput)
@@ -250,6 +313,9 @@ export function NativeContentBridgePage() {
       setActiveId(saved.id)
       setDraft(saved)
       setPermalinkDraft(saved.slug || '')
+      const snapshot = saveLocalRevision(saved.id, saved, note)
+      setRevisions(snapshot.revisions)
+      pushNotice('Post saved.', 'success')
     }
     return saved || null
   }
@@ -265,6 +331,7 @@ export function NativeContentBridgePage() {
       allowComments,
     }, 'trash')
     setItems(next)
+    pushNotice('Post moved to Trash.', 'warning')
   }
 
   async function handlePreviewChanges() {
@@ -348,6 +415,7 @@ export function NativeContentBridgePage() {
           <h1>{searchParams.get('edit') ? 'Edit Post' : 'Add New Post'}</h1>
           <Link className="button" to="/native-bridge?new=article">Add New</Link>
         </div>
+        <WpAdminNotices />
 
         <section className="wp-edit-main">
           <div className="wp-edit-content">
@@ -422,6 +490,7 @@ export function NativeContentBridgePage() {
             <article className="wp-meta-box">
               <h2>Publish</h2>
               <p>Status: <strong>{draft.status || 'draft'}</strong></p>
+              <p>Autosave: <strong>{autosaveState.status === 'saved' && autosaveState.at ? `Saved at ${formatAutosaveTime(autosaveState.at)}` : autosaveState.status}</strong></p>
               <label>Visibility <select><option>Public</option><option>Private</option></select></label>
               <label>Publish <input type="datetime-local" value={toLocalDateTime(draft.scheduledFor)} onChange={(e) => setDraft((d) => ({ ...d, scheduledFor: fromLocalDateTime(e.target.value) }))} /></label>
               <div className="wp-meta-actions">
@@ -431,7 +500,10 @@ export function NativeContentBridgePage() {
                   const next = { ...draft, status: 'published', workflowState: draft.scheduledFor ? 'scheduled' : 'published' }
                   setDraft(next)
                   const saved = await handleSave('publish')
-                  if (saved) setDraft(saved)
+                  if (saved) {
+                    setDraft(saved)
+                    pushNotice('Post published.', 'success')
+                  }
                 }}>Publish / Update</button>
                 {draft?.id && draft?.status === 'published' ? (
                   <Link

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
+import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { listSurfaceConfigs } from '../lib/publicSurfaceTargets'
 import { DEFAULT_MENU_ITEMS, loadMenuDraft, loadWpSettings, saveMenuDraft, saveWpSettings } from '../lib/wpAdminLocal'
 
@@ -12,6 +13,7 @@ function Screen({ title, children, action }) {
           <h1>{title}</h1>
           {action || null}
         </div>
+        <WpAdminNotices />
         {children}
       </main>
     </AdminFrame>
@@ -196,10 +198,14 @@ const TOOL_ROWS = [
 ]
 
 export function ToolsAdminPage() {
+  const { pushNotice } = useAdminNotices()
+
   return (
     <Screen title="Tools">
       <section className="wp-meta-box">
         <h2>Available tools</h2>
+        <p>Use this scaffold button to verify WordPress-style warning/error feedback paths.</p>
+        <button type="button" className="button" onClick={() => pushNotice('Autosave failed.', 'error')}>Simulate autosave failure</button>
         <table className="wp-list-table">
           <thead><tr><th>Tool</th><th>Status</th><th>Notes</th></tr></thead>
           <tbody>
@@ -220,11 +226,13 @@ export function ToolsAdminPage() {
 export function SettingsAdminPage() {
   const [form, setForm] = useState(() => loadWpSettings())
   const [status, setStatus] = useState('')
+  const { pushNotice } = useAdminNotices()
 
   return (
     <Screen title="Settings" action={<button type="button" className="button button--primary" onClick={() => {
       saveWpSettings(form)
       setStatus('Settings saved locally.')
+      pushNotice('Settings saved.', 'success')
     }}>Save Changes</button>}>
       <section className="wp-meta-box wp-settings-form">
         <h2>General</h2>
