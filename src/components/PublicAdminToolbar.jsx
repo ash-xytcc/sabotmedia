@@ -73,7 +73,7 @@ export function PublicAdminToolbar() {
         <a className="wp-public-admin-bar__item" href={WORDPRESS_ADMIN_LINKS.customize}>Customize</a>
         {editPostLink ? <Link className="wp-public-admin-bar__item" to={editPostLink}>Edit Post</Link> : null}
         {editSourceLink ? <a className="wp-public-admin-bar__item" href={editSourceLink}>Edit Source</a> : null}
-        <button className="wp-public-admin-bar__item" type="button" onClick={toggleEditing}>{isEditing ? 'Exit Edit Site' : 'Edit Site'}</button>
+        <a className="wp-public-admin-bar__item" href="/?edit=site">Edit Site</a>
       </div>
       <div className="wp-public-admin-bar__right">
         {canSave && changedFields.length ? (
