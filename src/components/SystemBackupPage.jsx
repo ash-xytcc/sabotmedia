@@ -2,6 +2,7 @@ import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { downloadSnapshot, exportSystemSnapshot, summarizeSnapshot } from '../lib/systemBackup'
 import { useState } from 'react'
+import { AdminFrame } from './AdminRail'
 
 export function SystemBackupPage() {
   const [state, setState] = useState('idle')
@@ -23,6 +24,7 @@ export function SystemBackupPage() {
   }
 
   return (
+    <AdminFrame>
     <main className="page system-backup-page">
       <PublicationTopbar />
 
@@ -64,5 +66,6 @@ export function SystemBackupPage() {
 
       <PublicationFooter />
     </main>
+    </AdminFrame>
   )
 }

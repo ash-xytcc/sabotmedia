@@ -4,6 +4,7 @@ import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 import { splitDisplayTitle } from '../lib/content'
 import { EditableText } from './EditableText'
+import { AdminFrame } from './AdminRail'
 
 function buildPodcastOverride(piece, form) {
   const out = {}
@@ -227,6 +228,7 @@ export function PodcastAdminPage({ pieces }) {
   }
 
   return (
+    <AdminFrame>
     <main className="page podcast-admin-page">
       <section className="project-hero">
         <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'podcastAdmin.eyebrow'}>
@@ -306,5 +308,6 @@ export function PodcastAdminPage({ pieces }) {
         })}
       </section>
     </main>
+    </AdminFrame>
   )
 }

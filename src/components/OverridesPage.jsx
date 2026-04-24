@@ -4,6 +4,7 @@ import { CopyButton } from './CopyButton'
 import { EditableText } from './EditableText'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
+import { AdminFrame } from './AdminRail'
 
 export function OverridesPage() {
   const resolvedConfig = useResolvedConfig()
@@ -19,6 +20,7 @@ export function OverridesPage() {
   const entries = Object.entries(overrides || {}).sort((a, b) => a[0].localeCompare(b[0]))
 
   return (
+    <AdminFrame>
     <main className="page overrides-page">
       <section className="project-hero">
         <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'overrides.hero.eyebrow'}>
@@ -68,5 +70,6 @@ export function OverridesPage() {
         </section>
       )}
     </main>
+    </AdminFrame>
   )
 }

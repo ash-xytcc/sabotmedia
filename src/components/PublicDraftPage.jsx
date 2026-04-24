@@ -7,6 +7,7 @@ import { savePublicConfigPayload } from '../lib/publicConfigApi'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 import { validatePublicConfig } from '../lib/publicConfigSchema'
+import { AdminFrame } from './AdminRail'
 
 function unwrapImportedPayload(raw) {
   if (raw?.publicSite) return raw.publicSite
@@ -140,6 +141,7 @@ export function PublicDraftPage() {
   }
 
   return (
+    <AdminFrame>
     <main className="page public-draft-page">
       <section className="project-hero">
         <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'draft.hero.eyebrow'}>
@@ -325,5 +327,6 @@ export function PublicDraftPage() {
         </article>
       </section>
     </main>
+    </AdminFrame>
   )
 }

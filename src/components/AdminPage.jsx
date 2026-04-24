@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { AdminFrame } from './AdminRail'
 
 const CREATE_TYPES = [
   {
@@ -49,6 +50,7 @@ export function AdminPage({ pieces = [] }) {
     : 0
 
   return (
+    <AdminFrame>
     <main className="page admin-page admin-page--creator">
       <section className="project-hero admin-page__hero">
         <div className="project-hero__eyebrow">creator / publishing / backstage</div>
@@ -154,5 +156,6 @@ export function AdminPage({ pieces = [] }) {
         </article>
       </section>
     </main>
+    </AdminFrame>
   )
 }
