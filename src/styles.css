@@ -6935,3 +6935,50 @@ a.button {
     overflow: visible;
   }
 }
+
+
+/* MASTHEAD_REALIGN_AFTER_LOGO_UPDATE */
+
+.publication-topbar__inner {
+  align-items: center !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+  gap: clamp(24px, 3vw, 48px) !important;
+}
+
+.publication-topbar__brand,
+.publication-topbar__brand-link {
+  align-items: center !important;
+}
+
+.publication-topbar__brand-image {
+  height: clamp(118px, 12vw, 172px) !important;
+  max-height: 172px;
+  object-fit: contain;
+  object-position: center center;
+  transform: translateY(4px);
+}
+
+.publication-topbar__nav {
+  align-items: center !important;
+  padding-bottom: 0 !important;
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .publication-topbar__inner {
+    align-items: flex-start !important;
+    gap: 8px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+
+  .publication-topbar__brand-image {
+    height: clamp(88px, 24vw, 128px) !important;
+    transform: translateY(0);
+  }
+
+  .publication-topbar__nav {
+    margin-top: 0;
+  }
+}
