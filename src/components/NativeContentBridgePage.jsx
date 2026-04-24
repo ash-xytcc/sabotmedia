@@ -5,6 +5,7 @@ import {
   createEmptyNativeEntry,
   loadNativeCollection,
   slugify,
+  upsertNativeEntryLocal,
   upsertNativeEntry,
 } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
@@ -93,6 +94,78 @@ function wrapSelectionWithHtmlBlock(textarea, style) {
   return { next, cursorStart, cursorEnd }
 }
 
+const AUTOSAVE_DEBOUNCE_MS = 1200
+const LOCAL_REVISIONS_KEY_PREFIX = 'sabot-native-local-revisions-v1'
+
+function getLocalRevisionsStorageKey(id) {
+  return `${LOCAL_REVISIONS_KEY_PREFIX}:${String(id || '')}`
+}
+
+function loadLocalRevisions(postId) {
+  if (!postId) return []
+  try {
+    const raw = window.localStorage.getItem(getLocalRevisionsStorageKey(postId))
+    const parsed = JSON.parse(raw || '[]')
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(Boolean).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+  } catch {
+    return []
+  }
+}
+
+function saveLocalRevision(postId, draft, note) {
+  if (!postId) return { ok: false, revisions: [] }
+  const snapshot = {
+    id: `revision-${Math.random().toString(36).slice(2, 10)}`,
+    createdAt: new Date().toISOString(),
+    note: String(note || 'manual save'),
+    draft: {
+      title: String(draft?.title || ''),
+      slug: String(draft?.slug || ''),
+      body: String(draft?.body || ''),
+      excerpt: String(draft?.excerpt || ''),
+      tags: Array.isArray(draft?.tags) ? draft.tags : [],
+      categories: Array.isArray(draft?.categories) ? draft.categories : [],
+      featuredImage: String(draft?.featuredImage || ''),
+      heroImage: String(draft?.heroImage || ''),
+      status: String(draft?.status || 'draft'),
+      workflowState: String(draft?.workflowState || 'draft'),
+    },
+  }
+
+  const nextRevisions = [snapshot, ...loadLocalRevisions(postId)].slice(0, 25)
+  try {
+    window.localStorage.setItem(getLocalRevisionsStorageKey(postId), JSON.stringify(nextRevisions))
+    return { ok: true, revisions: nextRevisions }
+  } catch {
+    return { ok: false, revisions: loadLocalRevisions(postId) }
+  }
+}
+
+function toAutosaveFingerprint(draft, allowComments) {
+  return JSON.stringify({
+    title: draft?.title || '',
+    slug: draft?.slug || '',
+    excerpt: draft?.excerpt || '',
+    body: draft?.body || '',
+    contentType: draft?.contentType || 'dispatch',
+    status: draft?.status || 'draft',
+    workflowState: draft?.workflowState || 'draft',
+    scheduledFor: draft?.scheduledFor || '',
+    tags: Array.isArray(draft?.tags) ? draft.tags : [],
+    categories: Array.isArray(draft?.categories) ? draft.categories : [],
+    featuredImage: draft?.featuredImage || '',
+    heroImage: draft?.heroImage || '',
+    allowComments: Boolean(allowComments),
+  })
+}
+
+function formatAutosaveTime(value) {
+  const d = new Date(String(value || ''))
+  if (!Number.isFinite(d.getTime())) return ''
+  return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
 export function NativeContentBridgePage() {
   const [searchParams] = useSearchParams()
   const [items, setItems] = useState([])
@@ -106,6 +179,9 @@ export function NativeContentBridgePage() {
   const [isPermalinkEditing, setIsPermalinkEditing] = useState(false)
   const [permalinkDraft, setPermalinkDraft] = useState('')
   const textareaRef = useRef(null)
+  const autosaveTimerRef = useRef(null)
+  const suppressAutosaveRef = useRef(false)
+  const lastAutosaveFingerprintRef = useRef('')
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
   const publicPieceSlugSet = useMemo(() => new Set(getPieces().map((piece) => piece.slug).filter(Boolean)), [])
@@ -122,13 +198,18 @@ export function NativeContentBridgePage() {
         setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [] })
         setPermalinkDraft(found.slug || '')
         setAllowComments(found.allowComments ?? true)
+        setRevisions(loadLocalRevisions(found.id))
+        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(nextDraft, found.allowComments ?? true)
       } else {
         const fresh = createTypedEntry(mode)
         setActiveId(fresh.id)
         setDraft(fresh)
         setPermalinkDraft(fresh.slug || '')
         setAllowComments(true)
+        setRevisions(loadLocalRevisions(fresh.id))
+        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(fresh, true)
       }
+      setAutosaveState({ status: 'idle', at: '' })
     }
     boot()
   }, [searchParams])
@@ -288,7 +369,24 @@ export function NativeContentBridgePage() {
 
             <article className="wp-meta-box"><h2>Excerpt</h2><textarea value={draft.excerpt || ''} onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))} /></article>
             <article className="wp-meta-box"><h2>Discussion</h2><label><input type="checkbox" checked={allowComments} onChange={(e) => setAllowComments(e.target.checked)} /> Allow comments</label></article>
-            <article className="wp-meta-box"><h2>Revisions</h2><p>Revision history placeholder. Saved notes: save draft, publish, trash, quick edit.</p></article>
+            <article className="wp-meta-box">
+              <h2>Revisions</h2>
+              {revisions.length ? (
+                <ul className="wp-revisions-list">
+                  {revisions.map((revision) => (
+                    <li key={revision.id} className="wp-revisions-item">
+                      <div>
+                        <strong>{new Date(revision.createdAt).toLocaleString()}</strong>
+                        <div className="wp-revisions-note">{revision.note}</div>
+                      </div>
+                      <button type="button" className="button" onClick={() => restoreRevision(revision)}>Restore</button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No local revision snapshots yet. Save Draft or Publish/Update to create one.</p>
+              )}
+            </article>
             <article className="wp-meta-box"><h2>Custom Fields / Advanced</h2><p>Advanced bridge fields remain available in native storage.</p></article>
           </div>
 
