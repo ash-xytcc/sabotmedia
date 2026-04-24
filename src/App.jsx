@@ -25,6 +25,7 @@ import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
 import { AdminNoticeProvider } from './components/WpAdminNotices'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
+import { AnalyticsPage } from './components/AnalyticsPage'
 import { CustomizeAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminScaffoldPages'
 
 const pieces = getPieces()
@@ -160,6 +161,7 @@ export default function App() {
           <Route path="/advanced-draft-tools" element={<SiteEditorAdminPage />} />
           <Route path="/tools" element={<ToolsAdminPage />} />
           <Route path="/settings" element={<SettingsAdminPage />} />
+          <Route path="/analytics" element={<AnalyticsPage pieces={pieces} />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
         <Route path="/native-bridge" element={<NativeContentBridgePage />} />
         <Route path="/updates" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />

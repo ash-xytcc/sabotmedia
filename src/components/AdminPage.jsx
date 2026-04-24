@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import { loadQuickDrafts, saveQuickDraft } from '../lib/wpAdminLocal'
 import { AdminFrame } from './AdminRail'
+import { WpAnalyticsWidgets } from './WpAnalyticsWidgets'
 
 export function AdminPage({ pieces = [] }) {
   const total = pieces.length
@@ -92,6 +93,14 @@ export function AdminPage({ pieces = [] }) {
             <p>Local-first persistence active. Native preview and content routes enabled.</p>
             <p><Link to="/customize">Customize</Link> · <Link to="/tools#advanced-draft-tools">Advanced Draft Tools</Link></p>
           </article>
+        </section>
+
+        <section className="wp-dashboard-section">
+          <div className="wp-dashboard-section__header">
+            <h2>Analytics Overview</h2>
+            <Link to="/analytics">Open full analytics screen</Link>
+          </div>
+          <WpAnalyticsWidgets pieces={pieces} compact />
         </section>
       </main>
     </AdminFrame>
