@@ -33,7 +33,7 @@ export function createEmptyNativeEntry() {
 
 export function normalizeNativeEntry(input) {
   const raw = input || {}
-  const status = normalizeEnum(raw.status, ['draft', 'published', 'archived']) || 'draft'
+  const status = normalizeEnum(raw.status, ['draft', 'published', 'archived', 'trash']) || 'draft'
   const workflowState =
     normalizeEnum(raw.workflowState, ['draft', 'in_review', 'needs_revision', 'ready', 'scheduled', 'published', 'archived']) ||
     inferWorkflowState(raw, status)

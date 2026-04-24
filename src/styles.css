@@ -7850,3 +7850,8 @@ a.button {
   .wp-dashboard-grid { grid-template-columns: 1fr; }
   .wp-quick-edit { grid-template-columns: 1fr; }
 }
+
+.wp-menu-sort-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.wp-menu-sort-item { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; align-items: center; }
+.wp-quick-draft-form { display: grid; gap: 8px; }
+.wp-quick-draft-form textarea { min-height: 80px; }

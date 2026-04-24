@@ -23,6 +23,11 @@ import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/conten
 import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
+import { SettingsPage } from './components/SettingsPage'
+import { ToolsPage } from './components/ToolsPage'
+import { CustomizePage } from './components/CustomizePage'
+import { MenusPage } from './components/MenusPage'
+import { PagesListPage } from './components/PagesListPage'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -47,6 +52,11 @@ const ADMIN_SHELL_PATHS = [
   '/design-system',
   '/platform-map',
   '/media',
+  '/pages',
+  '/menus',
+  '/customize',
+  '/tools',
+  '/settings',
 ]
 
 function shouldUseBareShell(pathname) {
@@ -99,6 +109,11 @@ export default function App() {
           <Route path="/content" element={<ContentListPage />} />
           <Route path="/overrides" element={<OverridesPage />} />
           <Route path="/media" element={<MediaLibraryPage />} />
+          <Route path="/pages" element={<PagesListPage />} />
+          <Route path="/menus" element={<MenusPage />} />
+          <Route path="/customize" element={<CustomizePage />} />
+          <Route path="/tools" element={<ToolsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
         <Route path="/native-bridge" element={<NativeContentBridgePage />} />
         <Route path="/updates" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />

@@ -5,9 +5,11 @@ const LINKS = [
   { to: '/content', label: 'Posts' },
   { to: '/native-bridge?new=article', label: 'Add New' },
   { to: '/media', label: 'Media' },
-  { to: '/draft', label: 'Pages / Site Editor' },
-  { to: '/overrides', label: 'Tools' },
-  { to: '/system-backup', label: 'Settings' },
+  { to: '/pages', label: 'Pages' },
+  { to: '/draft', label: 'Site Editor / Customize' },
+  { to: '/menus', label: 'Appearance → Menus' },
+  { to: '/tools', label: 'Tools' },
+  { to: '/settings', label: 'Settings' },
 ]
 
 export function AdminRail() {
