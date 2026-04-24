@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { usePublicEdit } from './PublicEditContext'
+import { WORDPRESS_ADMIN_LINKS } from '../lib/wordpressClient'
 
 export function PublicAdminToolbar() {
   const { canSave, isEditing, toggleEditing, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()

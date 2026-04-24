@@ -1,4 +1,9 @@
 import { NavLink } from 'react-router-dom'
+import { WORDPRESS_ADMIN_LINKS } from '../lib/wordpressClient'
+
+function isExternal(to) {
+  return String(to || '').startsWith('http')
+}
 
 const LINKS = [
   { to: '/admin', label: 'Dashboard' },

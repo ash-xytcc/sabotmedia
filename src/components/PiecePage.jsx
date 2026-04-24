@@ -4,6 +4,7 @@ import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { getImportedImage } from '../lib/getImportedImage'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
+import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { renderImportedBody } from '../lib/renderImportedBody'
 import { splitDisplayTitle } from '../lib/content'
 
@@ -74,9 +75,12 @@ export function PiecePage({ pieces = [] }) {
     }
   }, [])
 
+  const wordpressFeed = useWordPressPieces(pieces)
+  const livePieces = wordpressFeed.pieces || pieces
+
   const mergedPieces = useMemo(
-    () => mergeNativeAndImportedPieces(Array.isArray(pieces) ? pieces : [], nativePieces),
-    [pieces, nativePieces]
+    () => mergeNativeAndImportedPieces(Array.isArray(livePieces) ? livePieces : [], nativePieces),
+    [livePieces, nativePieces]
   )
 
   const mode = useMemo(() => getPreferredMode(searchParams), [searchParams])

@@ -4,6 +4,7 @@ import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { getImportedImage } from '../lib/getImportedImage'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
+import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { splitDisplayTitle } from '../lib/content'
 
 const FILTERS = [
@@ -116,15 +117,18 @@ export function PublicSearchPage({ pieces = [] }) {
     }
   }, [])
 
+  const wordpressFeed = useWordPressPieces(pieces)
+  const livePieces = wordpressFeed.pieces || pieces
+
   const normalized = useMemo(() => {
-    return mergeNativeAndImportedPieces(Array.isArray(pieces) ? pieces : [], nativePieces)
+    return mergeNativeAndImportedPieces(Array.isArray(livePieces) ? livePieces : [], nativePieces)
       .map(normalizePiece)
       .sort((a, b) => {
         const aTime = new Date(a.publishedAt || 0).getTime()
         const bTime = new Date(b.publishedAt || 0).getTime()
         return bTime - aTime
       })
-  }, [pieces, nativePieces])
+  }, [livePieces, nativePieces])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

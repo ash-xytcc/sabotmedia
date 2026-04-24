@@ -2,6 +2,7 @@ import { getImportedImage } from '../lib/getImportedImage'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
+import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { PublicationFooter } from './PublicationFooter'
 import { splitDisplayTitle } from '../lib/content'
 import { PublicationTopbar } from './PublicationTopbar'
@@ -186,9 +187,17 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
     }
   }, [])
 
+  const wordpressFeed = useWordPressPieces(pieces)
+
+  const livePieces = wordpressFeed.pieces || pieces
+
   const archiveFeed = useMemo(
-    () => pickArchiveFeed({ pieces, featured, latest }),
-    [pieces, featured, latest]
+    () => pickArchiveFeed({
+      pieces: livePieces,
+      featured: wordpressFeed.usingWordPress ? livePieces[0] : featured,
+      latest: wordpressFeed.usingWordPress ? livePieces.slice(0, 12) : latest,
+    }),
+    [livePieces, wordpressFeed.usingWordPress, featured, latest]
   )
 
   const mergedFeed = useMemo(() => {
