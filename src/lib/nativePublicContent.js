@@ -40,7 +40,7 @@ export function createEmptyNativeEntry() {
 
 export function normalizeNativeEntry(input) {
   const raw = input || {}
-  const status = normalizeEnum(raw.status, ['draft', 'published', 'archived', 'trash']) || 'draft'
+  const status = normalizeEnum(raw.status, ['draft', 'published', 'scheduled', 'archived', 'trash']) || 'draft'
   const workflowState =
     normalizeEnum(raw.workflowState, ['draft', 'in_review', 'needs_revision', 'ready', 'scheduled', 'published', 'archived']) ||
     inferWorkflowState(raw, status)
@@ -150,7 +150,7 @@ export function upsertNativeEntryLocal(items, entry) {
   const normalizedEntry = normalizeNativeEntry({
     ...entry,
     updatedAt: new Date().toISOString(),
-    publishedAt: entry?.status === 'published'
+    publishedAt: ['published', 'scheduled'].includes(String(entry?.status || ''))
       ? String(entry.publishedAt || new Date().toISOString())
       : String(entry?.publishedAt || ''),
   })
@@ -174,7 +174,7 @@ export async function upsertNativeEntry(items, entry, revisionNote = 'save') {
   const normalizedEntry = normalizeNativeEntry({
     ...entry,
     updatedAt: new Date().toISOString(),
-    publishedAt: entry?.status === 'published'
+    publishedAt: ['published', 'scheduled'].includes(String(entry?.status || ''))
       ? String(entry.publishedAt || new Date().toISOString())
       : String(entry?.publishedAt || ''),
   })
@@ -226,7 +226,7 @@ export function importNativeCollection(raw) {
 }
 
 export function getPublishedNativeEntries(items) {
-  return normalizeNativeCollection(items).filter((item) => item.status === 'published' && isScheduledVisible(item))
+  return normalizeNativeCollection(items).filter((item) => ['published', 'scheduled'].includes(item.status) && isScheduledVisible(item))
 }
 
 export function getLatestPublishedNativeEntry(items, target = '') {

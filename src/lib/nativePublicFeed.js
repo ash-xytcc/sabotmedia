@@ -3,7 +3,8 @@ import { loadNativeCollection } from './nativePublicContent'
 
 export function isPublishedNativeEntry(item) {
   if (!item) return false
-  if (item.status !== 'published') return false
+  const status = String(item.status || '')
+  if (!['published', 'scheduled'].includes(status)) return false
   if (item.scheduledFor) {
     const ms = new Date(item.scheduledFor).getTime()
     if (Number.isFinite(ms) && ms > Date.now()) return false
