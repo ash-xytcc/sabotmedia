@@ -6721,3 +6721,165 @@ a.button {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* WORDPRESS_ADMIN_FINISH_PASS */
+
+.admin-frame {
+  grid-template-columns: 148px minmax(0, 1fr);
+}
+
+.admin-rail {
+  background: rgba(0,0,0,0.54);
+}
+
+.admin-rail__label {
+  font-size: 0.68rem;
+  opacity: 0.8;
+}
+
+.admin-rail__link {
+  font-size: 0.82rem;
+  padding: 0.48rem 0.55rem;
+}
+
+/* WordPress-ish page header rhythm */
+.admin-frame__main .project-hero {
+  max-width: 1120px;
+  padding-top: 1.15rem;
+  padding-bottom: 0.85rem;
+}
+
+.admin-frame__main .project-hero h1 {
+  font-size: clamp(2rem, 3.4vw, 3.4rem);
+}
+
+/* Posts table should feel like the main CMS object */
+.content-table-wrap {
+  max-width: 1120px;
+}
+
+.content-table-toolbar {
+  border-radius: 14px;
+  padding: 0.7rem;
+}
+
+.content-table-tab {
+  padding: 0.46rem 0.72rem;
+  font-size: 0.72rem;
+}
+
+.content-table th,
+.content-table td {
+  padding: 0.68rem 0.75rem;
+}
+
+.content-table__title {
+  font-size: 0.98rem;
+}
+
+.content-table__slug {
+  font-size: 0.76rem;
+}
+
+/* Editor should resemble: title + document + publish box */
+.native-bridge-wizard {
+  display: none;
+}
+
+.native-content-editor__type-header {
+  display: none;
+}
+
+.native-content-editor {
+  padding: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.native-content-editor__grid--simple {
+  margin-bottom: 0.7rem;
+}
+
+.native-content-editor__grid--simple .archive-control:first-child input {
+  border: 0 !important;
+  background: transparent !important;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(219,200,170,0.18) !important;
+  padding-left: 0;
+  padding-right: 0;
+  font-size: clamp(1.75rem, 3vw, 3rem);
+}
+
+.native-content-editor > .archive-control {
+  margin-bottom: 0.7rem;
+}
+
+/* Body editor as the central writing canvas */
+.rich-native-editor {
+  border-radius: 14px;
+  background: rgba(255,255,255,0.018) !important;
+}
+
+.rich-native-editor__toolbar {
+  position: relative;
+  top: auto;
+  border-radius: 14px 14px 0 0;
+}
+
+.rich-native-editor__layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rich-native-editor__sidebar {
+  display: none;
+}
+
+.rich-native-block {
+  background: rgba(12,12,12,0.74) !important;
+  border-radius: 12px;
+}
+
+.rich-native-block textarea.native-content-editor__textarea {
+  min-height: 240px;
+}
+
+/* Publish box: compact right-column meta box, very WP-like */
+.native-publish-shell {
+  grid-template-columns: minmax(0, 1fr) 280px;
+}
+
+.native-publish-panel {
+  border-radius: 14px;
+  padding: 0.75rem;
+}
+
+.native-publish-panel h2 {
+  font-size: 1rem;
+}
+
+.native-publish-panel .archive-control input,
+.native-publish-panel .archive-control select {
+  min-height: 2.15rem;
+}
+
+.native-publish-panel__actions .button {
+  min-height: 2.05rem;
+}
+
+/* Advanced should feel like the trapdoor it is */
+.native-editor-advanced {
+  border-radius: 14px;
+  opacity: 0.92;
+}
+
+@media (max-width: 1050px) {
+  .native-publish-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .native-publish-panel {
+    position: static;
+  }
+}
