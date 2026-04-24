@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { usePublicEdit } from './PublicEditContext'
 import { CopyButton } from './CopyButton'
@@ -14,6 +15,15 @@ function unwrapImportedPayload(raw) {
   if (raw?.config) return raw.config
   return raw
 }
+
+const SITE_PAGES = [
+  { label: 'Home', path: '/' },
+  { label: 'Archive', path: '/archive' },
+  { label: 'Press', path: '/press' },
+  { label: 'Projects', path: '/projects' },
+]
+
+const SITE_SECTIONS = ['Masthead', 'Navigation', 'Homepage layout', 'Public surfaces']
 
 export function PublicDraftPage() {
   const {
@@ -142,191 +152,227 @@ export function PublicDraftPage() {
 
   return (
     <AdminFrame>
-    <main className="page public-draft-page">
-      <section className="project-hero">
-        <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'draft.hero.eyebrow'}>
-          inline edit / draft / export
-        </EditableText>
-        <EditableText as="h1" field={heroBlock?.titleField || 'draft.hero.title'}>
-          Public Draft
-        </EditableText>
-        <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'draft.hero.description'}>
-          Current inline edit state for the public-facing site. This page shows the saved base, the local draft delta, and the effective merged result.
-        </EditableText>
-        <div className="project-hero__meta">
-          <span>{changedFields.length} {changedFieldsLabel}</span>
-          <span>backend: {backendMode}</span>
-          <span>v{configVersion}</span>
-          <span>schema: {schemaVersion}</span>
-          <span>load: {loadState}</span>
-          <span>save: {saveState}</span>
-          <span>perm: {permissionState}</span>
-          <span>can save: {canSave ? 'yes' : 'no'}</span>
-        </div>
-        {lastLoadedAt ? <p className="review-card__excerpt">last loaded: {lastLoadedAt}</p> : null}
-        {lastSavedAt ? <p className="review-card__excerpt">last saved: {lastSavedAt}</p> : null}
-        {loadError ? <p className="review-card__excerpt">{loadError}</p> : null}
-        {saveError ? <p className="review-card__excerpt">{saveError}</p> : null}
-      </section>
+      <main className="page public-draft-page">
+        <section className="project-hero">
+          <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'draft.hero.eyebrow'}>
+            wordpress-like entry screen
+          </EditableText>
+          <EditableText as="h1" field={heroBlock?.titleField || 'draft.hero.title'}>
+            Site Editor
+          </EditableText>
+          <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'draft.hero.description'}>
+            Choose a public page to edit live, view on the site, or customize. Advanced config import/export tools are available below for developers.
+          </EditableText>
+          <div className="project-hero__meta">
+            <span>{changedFields.length} {changedFieldsLabel}</span>
+            <span>backend: {backendMode}</span>
+            <span>v{configVersion}</span>
+            <span>schema: {schemaVersion}</span>
+            <span>load: {loadState}</span>
+            <span>save: {saveState}</span>
+            <span>perm: {permissionState}</span>
+            <span>can save: {canSave ? 'yes' : 'no'}</span>
+          </div>
+        </section>
 
-      <section className="review-summary-grid">
-        <article className="review-summary-card">
-          <div className="review-summary-card__eyebrow">{changedFieldsLabel}</div>
-          {changedFields.length ? (
+        <section className="review-summary-grid">
+          <article className="review-summary-card">
+            <div className="review-summary-card__eyebrow">Pages</div>
             <ul>
-              {changedFields.map((field) => (
-                <li key={field}><span>{field}</span></li>
+              {SITE_PAGES.map((page) => (
+                <li key={page.path}>
+                  <div>{page.label}</div>
+                  <div className="review-card__actions">
+                    <Link className="button button--primary" to={`${page.path}?edit=site`}>
+                      Edit live
+                    </Link>
+                    <Link className="button" to={page.path}>
+                      View
+                    </Link>
+                    <Link className="button" to="/customize">
+                      Customize
+                    </Link>
+                  </div>
+                </li>
               ))}
             </ul>
-          ) : (
-            <p className="review-card__excerpt">{emptyChanged}</p>
-          )}
-        </article>
+          </article>
 
-        <article className="review-summary-card">
-          <div className="review-summary-card__eyebrow">{actionsLabel}</div>
-          <div className="review-card__actions">
-            <CopyButton text={changedJson} />
-            <CopyButton text={fullJson} />
-            <button className="button button--primary" type="button" onClick={handleMockSave} disabled={!canSave || !hasDraftChanges}>
-              {mockSaveState === 'saving' ? 'saving...' : mockSaveState === 'saved' ? 'saved' : mockSaveState === 'error' ? 'save error' : testSaveLabel}
-            </button>
-            <button className="button" type="button" onClick={clearDraft} disabled={!hasDraftChanges}>{clearDraftLabel}</button>
-            <button className="button" type="button" onClick={discardDraftAndReload} disabled={!hasDraftChanges}>discard + reload</button>
-          </div>
-        </article>
-      </section>
-
-      <section className="review-summary-grid">
-        <article className="review-summary-card">
-          <div className="review-summary-card__eyebrow">saved config stats</div>
-          <ul>
-            <li><span>text fields</span><strong>{savedStats.textCount}</strong></li>
-            <li><span>style fields</span><strong>{savedStats.styleCount}</strong></li>
-            <li><span>blocks</span><strong>{savedStats.blockCount}</strong></li>
-          </ul>
-        </article>
-
-        <article className="review-summary-card">
-          <div className="review-summary-card__eyebrow">draft overlay stats</div>
-          <ul>
-            <li><span>text changes</span><strong>{draftStats.textCount}</strong></li>
-            <li><span>style changes</span><strong>{draftStats.styleCount}</strong></li>
-            <li><span>total changed</span><strong>{draftStats.totalCount}</strong></li>
-          </ul>
-        </article>
-
-        <article className="review-summary-card">
-          <div className="review-summary-card__eyebrow">effective config stats</div>
-          <ul>
-            <li><span>text fields</span><strong>{effectiveStats.textCount}</strong></li>
-            <li><span>style fields</span><strong>{effectiveStats.styleCount}</strong></li>
-            <li><span>blocks</span><strong>{effectiveStats.blockCount}</strong></li>
-          </ul>
-        </article>
-
-        <article className="review-summary-card">
-          <div className="review-summary-card__eyebrow">change split</div>
-          <ul>
-            <li><span>changed text fields</span><strong>{changedTextFields.length}</strong></li>
-            <li><span>changed style fields</span><strong>{changedStyleFields.length}</strong></li>
-            <li><span>has draft changes</span><strong>{hasDraftChanges ? 'yes' : 'no'}</strong></li>
-          </ul>
-        </article>
-      </section>
-
-      <section className="review-summary-grid">
-        <article className="review-summary-card public-import-card">
-          <div className="review-summary-card__eyebrow">import config</div>
-
-          <label className="archive-control">
-            <span>import mode</span>
-            <select value={importMode} onChange={(e) => setImportMode(e.target.value)}>
-              <option value="merge-draft">merge into draft</option>
-              <option value="replace-draft">replace draft</option>
-              <option value="replace-saved-local">replace saved local</option>
-            </select>
-          </label>
-
-          <label className="archive-control">
-            <span>import file</span>
-            <input type="file" accept=".json,application/json" onChange={handleImportFile} />
-          </label>
-
-          <label className="archive-control">
-            <span>paste json</span>
-            <textarea
-              className="public-import-card__textarea"
-              value={importText}
-              onChange={(e) => setImportText(e.target.value)}
-              placeholder="paste exported public config or payload here"
-            />
-          </label>
-
-          <div className="review-card__actions">
-            <button className="button button--primary" type="button" onClick={() => handleImport(importText)}>
-              import json
-            </button>
-          </div>
-
-          {importStatus ? <p className="review-card__excerpt">{importStatus}</p> : null}
-          {importErrors.length ? (
-            <ul className="public-import-card__messages public-import-card__messages--error">
-              {importErrors.map((item) => <li key={item}>{item}</li>)}
+          <article className="review-summary-card">
+            <div className="review-summary-card__eyebrow">Site sections</div>
+            <ul>
+              {SITE_SECTIONS.map((section) => (
+                <li key={section}><span>{section}</span></li>
+              ))}
             </ul>
-          ) : null}
-          {importWarnings.length ? (
-            <ul className="public-import-card__messages public-import-card__messages--warning">
-              {importWarnings.map((item) => <li key={item}>{item}</li>)}
-            </ul>
-          ) : null}
-        </article>
+          </article>
+        </section>
 
-        <article className="review-summary-card">
-          <div className="review-summary-card__eyebrow">export helpers</div>
-          <div className="review-card__actions">
-            <CopyButton text={changedJson} />
-            <CopyButton text={fullJson} />
-            <CopyButton text={effectiveJson} />
-            <CopyButton text={savedJson} />
-          </div>
-        </article>
-      </section>
+        <details className="review-card">
+          <summary><strong>Advanced / Developer Tools</strong></summary>
 
-      <section className="review-queue">
-        <article className="review-card">
-          <div className="review-card__meta">
-            <span>{stateLabel}</span>
-            <span>{savedLabel}</span>
-          </div>
-          <pre className="review-card__snippet">{savedJson}</pre>
-        </article>
+          <section className="review-summary-grid">
+            <article className="review-summary-card">
+              <div className="review-summary-card__eyebrow">{changedFieldsLabel}</div>
+              {changedFields.length ? (
+                <ul>
+                  {changedFields.map((field) => (
+                    <li key={field}><span>{field}</span></li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="review-card__excerpt">{emptyChanged}</p>
+              )}
+            </article>
 
-        <article className="review-card">
-          <div className="review-card__meta">
-            <span>{stateLabel}</span>
-            <span>{effectiveLabel}</span>
-          </div>
-          <pre className="review-card__snippet">{effectiveJson}</pre>
-        </article>
+            <article className="review-summary-card">
+              <div className="review-summary-card__eyebrow">{actionsLabel}</div>
+              <div className="review-card__actions">
+                <button className="button button--primary" type="button" onClick={handleMockSave} disabled={!canSave || !hasDraftChanges}>
+                  {mockSaveState === 'saving' ? 'saving...' : mockSaveState === 'saved' ? 'saved' : mockSaveState === 'error' ? 'save error' : testSaveLabel}
+                </button>
+                <button className="button" type="button" onClick={clearDraft} disabled={!hasDraftChanges}>{clearDraftLabel}</button>
+                <button className="button" type="button" onClick={discardDraftAndReload} disabled={!hasDraftChanges}>discard + reload</button>
+              </div>
+            </article>
+          </section>
 
-        <article className="review-card">
-          <div className="review-card__meta">
-            <span>{exportLabel}</span>
-            <span>{changedOnlyLabel}</span>
-          </div>
-          <pre className="review-card__snippet">{changedJson}</pre>
-        </article>
+          <section className="review-summary-grid">
+            <article className="review-summary-card">
+              <div className="review-summary-card__eyebrow">saved config stats</div>
+              <ul>
+                <li><span>text fields</span><strong>{savedStats.textCount}</strong></li>
+                <li><span>style fields</span><strong>{savedStats.styleCount}</strong></li>
+                <li><span>blocks</span><strong>{savedStats.blockCount}</strong></li>
+              </ul>
+            </article>
 
-        <article className="review-card">
-          <div className="review-card__meta">
-            <span>{exportLabel}</span>
-            <span>{fullLabel}</span>
-          </div>
-          <pre className="review-card__snippet">{fullJson}</pre>
-        </article>
-      </section>
-    </main>
+            <article className="review-summary-card">
+              <div className="review-summary-card__eyebrow">draft overlay stats</div>
+              <ul>
+                <li><span>text changes</span><strong>{draftStats.textCount}</strong></li>
+                <li><span>style changes</span><strong>{draftStats.styleCount}</strong></li>
+                <li><span>total changed</span><strong>{draftStats.totalCount}</strong></li>
+              </ul>
+            </article>
+
+            <article className="review-summary-card">
+              <div className="review-summary-card__eyebrow">effective config stats</div>
+              <ul>
+                <li><span>text fields</span><strong>{effectiveStats.textCount}</strong></li>
+                <li><span>style fields</span><strong>{effectiveStats.styleCount}</strong></li>
+                <li><span>blocks</span><strong>{effectiveStats.blockCount}</strong></li>
+              </ul>
+            </article>
+
+            <article className="review-summary-card">
+              <div className="review-summary-card__eyebrow">change split</div>
+              <ul>
+                <li><span>changed text fields</span><strong>{changedTextFields.length}</strong></li>
+                <li><span>changed style fields</span><strong>{changedStyleFields.length}</strong></li>
+                <li><span>has draft changes</span><strong>{hasDraftChanges ? 'yes' : 'no'}</strong></li>
+              </ul>
+            </article>
+          </section>
+
+          <section className="review-summary-grid">
+            <article className="review-summary-card public-import-card">
+              <div className="review-summary-card__eyebrow">import config</div>
+
+              <label className="archive-control">
+                <span>import mode</span>
+                <select value={importMode} onChange={(e) => setImportMode(e.target.value)}>
+                  <option value="merge-draft">merge into draft</option>
+                  <option value="replace-draft">replace draft</option>
+                  <option value="replace-saved-local">replace saved local</option>
+                </select>
+              </label>
+
+              <label className="archive-control">
+                <span>import file</span>
+                <input type="file" accept=".json,application/json" onChange={handleImportFile} />
+              </label>
+
+              <label className="archive-control">
+                <span>paste json</span>
+                <textarea
+                  className="public-import-card__textarea"
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                  placeholder="paste exported public config or payload here"
+                />
+              </label>
+
+              <div className="review-card__actions">
+                <button className="button button--primary" type="button" onClick={() => handleImport(importText)}>
+                  import json
+                </button>
+              </div>
+
+              {importStatus ? <p className="review-card__excerpt">{importStatus}</p> : null}
+              {importErrors.length ? (
+                <ul className="public-import-card__messages public-import-card__messages--error">
+                  {importErrors.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              ) : null}
+              {importWarnings.length ? (
+                <ul className="public-import-card__messages public-import-card__messages--warning">
+                  {importWarnings.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              ) : null}
+            </article>
+
+            <article className="review-summary-card">
+              <div className="review-summary-card__eyebrow">export helpers</div>
+              <div className="review-card__actions">
+                <CopyButton text={changedJson} />
+                <CopyButton text={fullJson} />
+                <CopyButton text={effectiveJson} />
+                <CopyButton text={savedJson} />
+              </div>
+            </article>
+          </section>
+
+          <section className="review-queue">
+            <article className="review-card">
+              <div className="review-card__meta">
+                <span>{stateLabel}</span>
+                <span>{savedLabel}</span>
+              </div>
+              <pre className="review-card__snippet">{savedJson}</pre>
+            </article>
+
+            <article className="review-card">
+              <div className="review-card__meta">
+                <span>{stateLabel}</span>
+                <span>{effectiveLabel}</span>
+              </div>
+              <pre className="review-card__snippet">{effectiveJson}</pre>
+            </article>
+
+            <article className="review-card">
+              <div className="review-card__meta">
+                <span>{exportLabel}</span>
+                <span>{changedOnlyLabel}</span>
+              </div>
+              <pre className="review-card__snippet">{changedJson}</pre>
+            </article>
+
+            <article className="review-card">
+              <div className="review-card__meta">
+                <span>{exportLabel}</span>
+                <span>{fullLabel}</span>
+              </div>
+              <pre className="review-card__snippet">{fullJson}</pre>
+            </article>
+          </section>
+
+          {lastLoadedAt ? <p className="review-card__excerpt">last loaded: {lastLoadedAt}</p> : null}
+          {lastSavedAt ? <p className="review-card__excerpt">last saved: {lastSavedAt}</p> : null}
+          {loadError ? <p className="review-card__excerpt">{loadError}</p> : null}
+          {saveError ? <p className="review-card__excerpt">{saveError}</p> : null}
+        </details>
+      </main>
     </AdminFrame>
   )
 }
