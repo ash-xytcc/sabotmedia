@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { getPieces } from '../lib/pieces'
@@ -663,9 +663,32 @@ export function SettingsAdminPage() {
 
 export function UsersAdminPage() {
   const [settings, setSettings] = useState(() => loadJson(USER_ROLE_SETTINGS_KEY, {
-    users: [{ id: 'local-admin', name: 'sabotmedia', email: 'local@sabotmedia', role: 'Administrator' }],
+    users: [{
+      id: 'local-admin',
+      username: 'sabotmedia',
+      email: 'local@sabotmedia',
+      displayName: 'sabotmedia',
+      role: 'Administrator',
+    }],
     roles: ['Administrator', 'Editor', 'Author', 'Contributor', 'Subscriber'],
   }))
+  const [isAddingUser, setIsAddingUser] = useState(false)
+  const [newUser, setNewUser] = useState({
+    username: '',
+    email: '',
+    displayName: '',
+    role: 'Subscriber',
+  })
+
+  const normalizedUsers = useMemo(() => settings.users.map((user) => ({
+    ...user,
+    username: user.username || user.name || '',
+    displayName: user.displayName || user.name || user.username || '',
+  })), [settings.users])
+
+  useEffect(() => {
+    saveJson(USER_ROLE_SETTINGS_KEY, settings)
+  }, [settings])
 
   function updateRole(id, role) {
     setSettings((current) => ({
@@ -678,30 +701,98 @@ export function UsersAdminPage() {
     saveJson(USER_ROLE_SETTINGS_KEY, settings)
   }
 
+  function updateNewUser(field, value) {
+    setNewUser((current) => ({ ...current, [field]: value }))
+  }
+
+  function addUser(event) {
+    event.preventDefault()
+    const username = newUser.username.trim()
+    const email = newUser.email.trim()
+    const displayName = newUser.displayName.trim()
+
+    if (!username || !email || !displayName) return
+
+    setSettings((current) => ({
+      ...current,
+      users: [...current.users, {
+        id: `local-${Date.now()}`,
+        username,
+        email,
+        displayName,
+        role: newUser.role,
+      }],
+    }))
+    setNewUser({ username: '', email: '', displayName: '', role: 'Subscriber' })
+    setIsAddingUser(false)
+  }
+
+  function deleteUser(id) {
+    setSettings((current) => ({
+      ...current,
+      users: current.users.filter((user) => user.id !== id),
+    }))
+  }
+
+  const hasRequiredNewUserFields = newUser.username.trim() && newUser.email.trim() && newUser.displayName.trim()
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <h1>Users</h1>
-          <button className="button button--primary" type="button" onClick={saveUsers}>Save Roles</button>
+          <div>
+            <button className="button" type="button" onClick={() => setIsAddingUser((current) => !current)}>Add New</button>{' '}
+            <button className="button button--primary" type="button" onClick={saveUsers}>Save Users</button>
+          </div>
         </div>
+
+        {isAddingUser && (
+          <section className="wp-meta-box">
+            <h2>Add New User</h2>
+            <form className="wp-settings-form" onSubmit={addUser}>
+              <label><span>Username</span><input value={newUser.username} onChange={(e) => updateNewUser('username', e.target.value)} /></label>
+              <label><span>Email</span><input type="email" value={newUser.email} onChange={(e) => updateNewUser('email', e.target.value)} /></label>
+              <label><span>Display name</span><input value={newUser.displayName} onChange={(e) => updateNewUser('displayName', e.target.value)} /></label>
+              <label>
+                <span>Role</span>
+                <select value={newUser.role} onChange={(e) => updateNewUser('role', e.target.value)}>
+                  {settings.roles.map((role) => <option key={role} value={role}>{role}</option>)}
+                </select>
+              </label>
+              <p>
+                <button className="button button--primary" type="submit" disabled={!hasRequiredNewUserFields}>Create User</button>{' '}
+                <button className="button" type="button" onClick={() => setIsAddingUser(false)}>Cancel</button>
+              </p>
+            </form>
+          </section>
+        )}
 
         <section className="wp-meta-box">
           <h2>Users</h2>
           <table className="content-table wp-posts-table">
-            <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+            <thead><tr><th>Username</th><th>Email</th><th>Display name</th><th>Role</th><th>Actions</th></tr></thead>
             <tbody>
-              {settings.users.map((user) => (
+              {normalizedUsers.map((user) => {
+                const isProtectedUser = user.id === 'local-admin' || (user.username === 'sabotmedia' && user.role === 'Administrator')
+                return (
                 <tr key={user.id}>
-                  <td>{user.name}</td>
+                  <td>{user.username}</td>
                   <td>{user.email}</td>
+                  <td>{user.displayName}</td>
                   <td>
                     <select value={user.role} onChange={(e) => updateRole(user.id, e.target.value)}>
                       {settings.roles.map((role) => <option key={role} value={role}>{role}</option>)}
                     </select>
                   </td>
+                  <td>
+                    {!isProtectedUser && (
+                      <button className="button button-link-delete" type="button" onClick={() => deleteUser(user.id)}>Delete</button>
+                    )}
+                  </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </section>
