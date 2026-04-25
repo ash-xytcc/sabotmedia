@@ -166,6 +166,7 @@ export default function App() {
           <Route path="/tools" element={<ToolsAdminPage />} />
           <Route path="/tools/print" element={<PrintLabPage />} />
           <Route path="/settings" element={<SettingsAdminPage />} />
+          <Route path="/settings/social" element={<SettingsAdminPage />} />
           <Route path="/settings/sites" element={<SitesAdminPage />} />
           <Route path="/sites" element={<SitesAdminPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />

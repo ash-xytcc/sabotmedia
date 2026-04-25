@@ -110,6 +110,21 @@ function wrapSelectionWithHtmlBlock(textarea, style) {
   return { next, cursorStart, cursorEnd }
 }
 
+function escapeHtmlAttribute(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+}
+
+function escapeHtmlText(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+}
+
 const AUTOSAVE_DEBOUNCE_MS = 1200
 const LOCAL_REVISIONS_KEY_PREFIX = 'sabot-native-local-revisions-v1'
 
@@ -138,6 +153,7 @@ function saveLocalRevision(postId, draft, note) {
     draft: {
       title: String(draft?.title || ''),
       slug: String(draft?.slug || ''),
+      contentType: String(draft?.contentType || 'dispatch'),
       body: String(draft?.body || ''),
       excerpt: String(draft?.excerpt || ''),
       tags: Array.isArray(draft?.tags) ? draft.tags : [],
@@ -151,6 +167,7 @@ function saveLocalRevision(postId, draft, note) {
       heroStyle: String(draft?.heroStyle || 'default'),
       status: String(draft?.status || 'draft'),
       workflowState: String(draft?.workflowState || 'draft'),
+      publishedAt: String(draft?.publishedAt || ''),
       podcastAudioUrl: String(draft?.podcastAudioUrl || ''),
       podcastRssEnclosureUrl: String(draft?.podcastRssEnclosureUrl || ''),
       podcastDuration: String(draft?.podcastDuration || ''),
@@ -334,22 +351,30 @@ export function NativeContentBridgePage() {
 
   const displaySettings = useMemo(() => normalizeNativeDisplaySettings(draft), [draft])
 
-  async function handleSave(note = 'save') {
-    const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
-    const normalized = {
-      ...draft,
-      slug: slugify(draft.slug || draft.title),
-      tags: Array.isArray(draft.tags) ? draft.tags : [],
+  function buildNormalizedDraft(baseDraft, patch = {}) {
+    const merged = {
+      ...baseDraft,
+      ...patch,
+    }
+    const normalizedCategories = normalizeTermList(merged.categories || merged.projects)
+    return {
+      ...merged,
+      slug: slugify(merged.slug || merged.title),
+      tags: Array.isArray(merged.tags) ? merged.tags : [],
       categories: normalizedCategories,
       projects: normalizedCategories,
-      featuredImage: draft.featuredImage || draft.heroImage || '',
-      heroImage: draft.heroImage || draft.featuredImage || '',
-      featuredImageTitle: draft.featuredImageTitle || '',
-      featuredImageAlt: draft.featuredImageAlt || '',
-      featuredImageCaption: draft.featuredImageCaption || '',
-      podcastCoverImage: draft.podcastCoverImage || draft.featuredImage || draft.heroImage || '',
+      featuredImage: merged.featuredImage || merged.heroImage || '',
+      heroImage: merged.heroImage || merged.featuredImage || '',
+      featuredImageTitle: merged.featuredImageTitle || '',
+      featuredImageAlt: merged.featuredImageAlt || '',
+      featuredImageCaption: merged.featuredImageCaption || '',
+      podcastCoverImage: merged.podcastCoverImage || merged.featuredImage || merged.heroImage || '',
       allowComments,
     }
+  }
+
+  async function handleSave(note = 'save', patch = {}, options = {}) {
+    const normalized = buildNormalizedDraft(draft, patch)
     const next = await upsertNativeEntry(items, normalized, note)
     setItems(next)
     const saved = next.find((item) => item.id === normalized.id)
@@ -359,48 +384,24 @@ export function NativeContentBridgePage() {
       setPermalinkDraft(saved.slug || '')
       const snapshot = saveLocalRevision(saved.id, saved, note)
       setRevisions(snapshot.revisions)
-      pushNotice('Post saved.', 'success')
+      if (options.successNotice !== false) {
+        pushNotice(options.successNotice || 'Post saved.', 'success')
+      }
     }
     return saved || null
   }
 
   async function handleMoveToTrash() {
-    const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
-    const next = await upsertNativeEntry(items, {
-      ...draft,
+    const saved = await handleSave('trash', {
       status: 'trash',
       workflowState: 'draft',
-      categories: normalizedCategories,
-      projects: normalizedCategories,
-      allowComments,
-    }, 'trash')
-    setItems(next)
-    pushNotice('Post moved to Trash.', 'warning')
+    }, { successNotice: false })
+    if (saved) pushNotice('Post moved to Trash.', 'warning')
   }
 
   async function handlePreviewChanges() {
-    const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
-    const normalized = {
-      ...draft,
-      slug: slugify(draft.slug || draft.title),
-      tags: Array.isArray(draft.tags) ? draft.tags : [],
-      categories: normalizedCategories,
-      projects: normalizedCategories,
-      featuredImage: draft.featuredImage || draft.heroImage || '',
-      heroImage: draft.heroImage || draft.featuredImage || '',
-      featuredImageTitle: draft.featuredImageTitle || '',
-      featuredImageAlt: draft.featuredImageAlt || '',
-      featuredImageCaption: draft.featuredImageCaption || '',
-      podcastCoverImage: draft.podcastCoverImage || draft.featuredImage || draft.heroImage || '',
-      allowComments,
-    }
-    const next = await upsertNativeEntry(items, normalized, 'preview')
-    setItems(next)
-    const saved = next.find((item) => item.id === normalized.id)
+    const saved = await handleSave('preview', {}, { successNotice: false })
     if (!saved) return
-    setActiveId(saved.id)
-    setDraft(saved)
-    setPermalinkDraft(saved.slug || '')
     const canResolvePublicRoute = saved.status === 'published' && Boolean(saved.slug) && publicPieceSlugSet.has(saved.slug)
     const previewPath = canResolvePublicRoute ? `/post/${saved.slug}` : `/native-preview/${saved.id}`
     window.open(previewPath, '_blank', 'noopener,noreferrer')
@@ -639,9 +640,10 @@ export function NativeContentBridgePage() {
                 <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
                 <button type="button" className="button button--primary" onClick={async () => {
                   const isScheduled = Boolean(draft.scheduledFor) && new Date(draft.scheduledFor).getTime() > Date.now()
-                  const next = { ...draft, status: isScheduled ? 'scheduled' : 'published', workflowState: isScheduled ? 'scheduled' : 'published' }
-                  setDraft(next)
-                  const saved = await handleSave('publish')
+                  const saved = await handleSave('publish', {
+                    status: isScheduled ? 'scheduled' : 'published',
+                    workflowState: isScheduled ? 'scheduled' : 'published',
+                  }, { successNotice: false })
                   if (saved) {
                     setDraft(saved)
                     pushNotice('Post published.', 'success')
@@ -773,7 +775,13 @@ export function NativeContentBridgePage() {
               }))
             }
             if (openMediaFor === 'body') {
-              insertAtCursor(`\n<img src="${selectedMedia.url}" alt="${selectedMedia.alt}" />\n`)
+              const escapedUrl = escapeHtmlAttribute(selectedMedia.url)
+              const escapedAlt = escapeHtmlAttribute(selectedMedia.alt)
+              const escapedCaption = escapeHtmlText(selectedMedia.caption)
+              const markup = escapedCaption
+                ? `\n<figure><img src="${escapedUrl}" alt="${escapedAlt}" /><figcaption>${escapedCaption}</figcaption></figure>\n`
+                : `\n<img src="${escapedUrl}" alt="${escapedAlt}" />\n`
+              insertAtCursor(markup)
             }
             setOpenMediaFor('')
           }}

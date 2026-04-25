@@ -153,7 +153,7 @@ export function ContentListPage() {
                         <Link to={`/native-bridge?edit=${item.id}`}>Edit</Link>
                         <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || item.projects || []).join(', ') }) }}>Quick Edit</button>
                         {item.status !== 'trash' ? <button type="button" onClick={async () => { setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash')); pushNotice('Post moved to Trash.', 'warning') }}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
-                        <Link to={item.status === 'published' ? `/updates/${item.slug}` : `/native-preview/${item.id}`}>View</Link>
+                        <Link to={item.status === 'published' ? `/post/${item.slug}` : `/native-preview/${item.id}`}>{item.status === 'published' ? 'View' : 'Preview'}</Link>
                       </div>
                     </td>
                     <td>{item.author || 'sabotmedia'}</td>

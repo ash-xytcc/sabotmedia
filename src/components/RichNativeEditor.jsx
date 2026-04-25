@@ -35,6 +35,8 @@ export function RichNativeEditor({ value, onChange, mediaAssetsSlot }) {
   }
 
   function insertAsset(asset) {
+    const alt = String(asset?.altText || asset?.alt || '')
+    const caption = String(asset?.caption || asset?.title || '')
     onChange([
       ...doc,
       {
@@ -42,8 +44,8 @@ export function RichNativeEditor({ value, onChange, mediaAssetsSlot }) {
         type: 'image',
         assetId: asset.id,
         url: asset.url,
-        alt: asset.altText || '',
-        caption: asset.caption || '',
+        alt,
+        caption,
       },
     ])
   }

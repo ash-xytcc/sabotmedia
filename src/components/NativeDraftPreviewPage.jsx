@@ -61,7 +61,7 @@ export function NativeDraftPreviewPage() {
             Back to editor
           </Link>
           {entry?.slug && entry?.status === 'published' ? (
-            <Link className="button" to={`/updates/${entry.slug}`}>Public URL</Link>
+            <Link className="button" to={`/post/${entry.slug}`}>Public URL</Link>
           ) : null}
         </div>
       </section>

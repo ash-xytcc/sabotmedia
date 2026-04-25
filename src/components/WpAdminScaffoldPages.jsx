@@ -4,7 +4,7 @@ import { AdminFrame } from './AdminRail'
 import { exportNativeCollection, loadNativeCollection } from '../lib/nativePublicContent'
 import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
 import { loadSites } from '../lib/siteDomains'
-import { buildLocalStorageInventory, buildMediaAuditSummary, exportLocalSiteBackupJson } from '../lib/localSiteBackup'
+import { DEFAULT_CUSTOMIZER_SETTINGS, loadCustomizerSettings, saveCustomizerSettings } from '../lib/customizerLocal'
 
 const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
 const MENU_KEY = 'sabot-wp-clone-menu-v1'
@@ -64,8 +64,8 @@ export function PagesAdminPage() {
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <h1>Pages</h1>
-          <button className="button button--primary" type="button">
-            Add New
+          <button className="button button--primary" type="button" disabled title="Static page list only in MVP">
+            Add New (not wired yet)
           </button>
         </div>
 
@@ -429,7 +429,7 @@ export function SiteEditorAdminPage() {
           <p className="description">
             This legacy route stays available for developer workflows and is intentionally hidden from normal admin navigation.
           </p>
-          <p><Link to="/customize?section=navigation">Customize Navigation</Link> · <Link to="/draft">Draft editor</Link></p>
+          <p><Link to="/customize?section=navigation">Customize Navigation</Link> · Draft editor (hidden legacy route)</p>
         </section>
       </main>
     </AdminFrame>
@@ -506,11 +506,48 @@ export function ToolsAdminPage() {
     )
   }
 
+  async function runSiteBackupExport() {
+    const nativePosts = await loadNativeCollection({ includeFuture: 1 })
+    const localMedia = loadLocalMediaItems()
+    const settings = loadJson(SETTINGS_KEY, {})
+    const customizer = loadCustomizerSettings()
+    const navMenu = loadJson(MENU_KEY, [])
+    const users = loadJson(USER_ROLE_SETTINGS_KEY, { users: [], roles: [] })
+    const runtimeConfig = getStoredPublicConfig()
+    const payload = JSON.stringify(
+      {
+        exportedAt: new Date().toISOString(),
+        app: 'Sabot Media WP Clone',
+        schemaVersion: 1,
+        backup: {
+          nativePosts,
+          localMedia,
+          settings,
+          customizer,
+          navMenu,
+          users,
+          publicConfig: resolvePublicConfig(runtimeConfig),
+        },
+      },
+      null,
+      2
+    )
+    const stamp = new Date().toISOString().slice(0, 10)
+    downloadJson(`sabot-site-backup-${stamp}.json`, payload)
+    addNotice('success', 'Site backup export downloaded as JSON.')
+  }
 
   const tools = [
     {
+      name: 'Export Site Backup JSON',
+      status: 'Ready',
+      notes: 'Downloads a local backup including native posts, local media, settings, customizer, menu/nav, and user scaffold data.',
+      actionLabel: 'Export backup',
+      action: runSiteBackupExport,
+    },
+    {
       name: 'Print Lab',
-      status: 'Scaffolded',
+      status: 'Not wired yet',
       notes: 'Publication print scaffolds including print PDF export path, zine imposition, button maker, and poster tiler.',
       actionLabel: 'Open Print Lab',
       action: () => {
@@ -547,7 +584,7 @@ export function ToolsAdminPage() {
     },
     {
       name: 'Run broken image audit',
-      status: 'Scaffolded',
+      status: 'Not wired yet',
       notes: 'Audit flow exists, but URL reachability checks are intentionally not implemented yet.',
       actionLabel: 'Run scaffold',
       action: runBrokenImageAudit,
@@ -604,8 +641,8 @@ export function ToolsAdminPage() {
 
         <section className="wp-meta-box" id="advanced-draft-tools">
           <h2>Advanced Draft Tools</h2>
-          <p className="description">Legacy developer editing surface, hidden from the main admin sidebar.</p>
-          <p><Link to="/draft">Open Draft Tools</Link></p>
+          <p className="description">Legacy developer editing surface is hidden from normal UI and not wired from primary tools.</p>
+          <p>Draft editor route remains hidden for legacy-only use.</p>
         </section>
       </main>
     </AdminFrame>
@@ -613,6 +650,8 @@ export function ToolsAdminPage() {
 }
 
 export function SettingsAdminPage() {
+  const location = useLocation()
+  const isSocialPath = location.pathname.startsWith('/settings/social')
   const [settings, setSettings] = useState(() => loadJson(SETTINGS_KEY, {
     siteTitle: 'Sabot Media',
     tagline: 'Radical media and publishing',
@@ -667,7 +706,7 @@ export function SettingsAdminPage() {
 
         <section className="wp-meta-box">
           <h2>Settings Sections</h2>
-          <p className="description">This area is scaffolded. Social autopost provider wiring has not been implemented yet.</p>
+          <p className="description">General settings are fully local; social provider fields are scaffold-only and not wired yet.</p>
           <p>
             <NavLink className="button" to="/settings">General</NavLink>{' '}
             <NavLink className="button" to="/settings/social">Social</NavLink>
@@ -689,17 +728,13 @@ export function SettingsAdminPage() {
               </div>
             </section>
 
-            <section className="wp-meta-box">
-              <h2>Sites & Domains</h2>
-              <p className="description">Manage local multisite-inspired scaffolds ({siteScaffolds.length} total). No DNS provider integration yet.</p>
-              <p><Link to="/settings/sites">Open Sites &amp; Domains manager</Link></p>
-            </section>
+            
+
           </>
         ) : (
           <section className="wp-meta-box">
-            <h2>Social Settings</h2>
-            <p className="description">Provider wiring is scaffold-only. Values are saved locally.</p>
-
+            <h2>Social Settings (not wired yet)</h2>
+            <p className="description">These fields are scaffolds only and do not publish to social providers yet.</p>
             <div className="wp-settings-form">
               <label><span>Mastodon instance URL</span><input value={settings.social?.mastodonInstanceUrl || ''} onChange={(e) => updateSocial('mastodonInstanceUrl', e.target.value)} /></label>
               <label><span>Mastodon access token</span><input value={settings.social?.mastodonAccessToken || ''} onChange={(e) => updateSocial('mastodonAccessToken', e.target.value)} /></label>

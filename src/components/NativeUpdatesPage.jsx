@@ -24,7 +24,7 @@ function normalizeNativeItem(item) {
     contentType: item.contentType || 'article',
     publishedAt: item.publishedAt || item.updatedAt || '',
     updatedAt: item.updatedAt || item.publishedAt || '',
-    href: `/updates/${item.slug}`,
+    href: `/post/${item.slug}`,
     imageUrl:
       item.heroImage ||
       item.imageUrl ||
