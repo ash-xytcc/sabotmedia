@@ -1,5 +1,40 @@
 const NATIVE_CONTENT_SCHEMA_VERSION = 2
 
+function normalizeBoolean(value, fallback = true) {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === 'true') return true
+    if (normalized === 'false') return false
+  }
+  return fallback
+}
+
+function normalizeDisplaySettings(input = {}) {
+  const settings = {
+    enableReadMode: normalizeBoolean(input.enableReadMode, true),
+    enableExperienceMode: normalizeBoolean(input.enableExperienceMode, true),
+    enablePrintMode: normalizeBoolean(input.enablePrintMode, true),
+    defaultMode: ['read', 'experience', 'print'].includes(String(input.defaultMode || 'read'))
+      ? String(input.defaultMode || 'read')
+      : 'read',
+    heroStyle: String(input.heroStyle || 'default').trim() || 'default',
+  }
+
+  if (!settings.enableReadMode && !settings.enableExperienceMode && !settings.enablePrintMode) settings.enableReadMode = true
+
+  if (settings.defaultMode === 'print' && !settings.enablePrintMode) {
+    settings.defaultMode = settings.enableReadMode ? 'read' : settings.enableExperienceMode ? 'experience' : 'read'
+  }
+  if (settings.defaultMode === 'experience' && !settings.enableExperienceMode) {
+    settings.defaultMode = settings.enableReadMode ? 'read' : settings.enablePrintMode ? 'print' : 'read'
+  }
+  if (settings.defaultMode === 'read' && !settings.enableReadMode) {
+    settings.defaultMode = settings.enableExperienceMode ? 'experience' : settings.enablePrintMode ? 'print' : 'read'
+  }
+  return settings
+}
+
 export async function ensureNativePublicContentTable(db) {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS native_public_content (
@@ -87,6 +122,7 @@ export function normalizeNativeEntry(input) {
     ]) || inferWorkflowState(raw, status)
 
   const scheduledFor = normalizeDateString(raw.scheduledFor || raw.scheduled_for || '')
+  const display = normalizeDisplaySettings(raw)
 
   return {
     id: String(raw.id || createNativeId()),
@@ -110,6 +146,11 @@ export function normalizeNativeEntry(input) {
     audioSourceUrl: String(raw.audioSourceUrl || ''),
     fullTranscript: String(raw.fullTranscript || ''),
     transcriptNotes: String(raw.transcriptNotes || ''),
+    enableReadMode: display.enableReadMode,
+    enableExperienceMode: display.enableExperienceMode,
+    enablePrintMode: display.enablePrintMode,
+    defaultMode: display.defaultMode,
+    heroStyle: display.heroStyle,
     categories: normalizeTags(raw.categories || raw.projects),
     projects: normalizeTags(raw.projects || raw.categories),
     tags: normalizeTags(raw.tags),

@@ -11,6 +11,7 @@ import {
 import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
+import { normalizeNativeDisplaySettings } from '../lib/publicDisplayModes'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -37,6 +38,14 @@ function createTypedEntry(kind = 'article') {
     featuredImageTitle: '',
     featuredImageAlt: '',
     featuredImageCaption: '',
+    podcastAudioUrl: '',
+    podcastRssEnclosureUrl: '',
+    podcastDuration: '',
+    podcastEpisodeNumber: '',
+    podcastSeason: '',
+    podcastTranscript: '',
+    podcastSummary: '',
+    podcastCoverImage: '',
   }
 }
 
@@ -135,8 +144,21 @@ function saveLocalRevision(postId, draft, note) {
       categories: Array.isArray(draft?.categories) ? draft.categories : [],
       featuredImage: String(draft?.featuredImage || ''),
       heroImage: String(draft?.heroImage || ''),
+      enableReadMode: Boolean(draft?.enableReadMode ?? true),
+      enableExperienceMode: Boolean(draft?.enableExperienceMode ?? true),
+      enablePrintMode: Boolean(draft?.enablePrintMode ?? true),
+      defaultMode: String(draft?.defaultMode || 'read'),
+      heroStyle: String(draft?.heroStyle || 'default'),
       status: String(draft?.status || 'draft'),
       workflowState: String(draft?.workflowState || 'draft'),
+      podcastAudioUrl: String(draft?.podcastAudioUrl || ''),
+      podcastRssEnclosureUrl: String(draft?.podcastRssEnclosureUrl || ''),
+      podcastDuration: String(draft?.podcastDuration || ''),
+      podcastEpisodeNumber: String(draft?.podcastEpisodeNumber || ''),
+      podcastSeason: String(draft?.podcastSeason || ''),
+      podcastTranscript: String(draft?.podcastTranscript || ''),
+      podcastSummary: String(draft?.podcastSummary || ''),
+      podcastCoverImage: String(draft?.podcastCoverImage || ''),
     },
   }
 
@@ -150,6 +172,7 @@ function saveLocalRevision(postId, draft, note) {
 }
 
 function toAutosaveFingerprint(draft, allowComments) {
+  const display = normalizeNativeDisplaySettings(draft)
   return JSON.stringify({
     title: draft?.title || '',
     slug: draft?.slug || '',
@@ -163,6 +186,14 @@ function toAutosaveFingerprint(draft, allowComments) {
     categories: Array.isArray(draft?.categories) ? draft.categories : [],
     featuredImage: draft?.featuredImage || '',
     heroImage: draft?.heroImage || '',
+    podcastAudioUrl: draft?.podcastAudioUrl || '',
+    podcastRssEnclosureUrl: draft?.podcastRssEnclosureUrl || '',
+    podcastDuration: draft?.podcastDuration || '',
+    podcastEpisodeNumber: draft?.podcastEpisodeNumber || '',
+    podcastSeason: draft?.podcastSeason || '',
+    podcastTranscript: draft?.podcastTranscript || '',
+    podcastSummary: draft?.podcastSummary || '',
+    podcastCoverImage: draft?.podcastCoverImage || '',
     allowComments: Boolean(allowComments),
   })
 }
@@ -171,6 +202,16 @@ function formatAutosaveTime(value) {
   const d = new Date(String(value || ''))
   if (!Number.isFinite(d.getTime())) return ''
   return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
+function applyDisplayPatch(current, patch) {
+  return {
+    ...current,
+    ...normalizeNativeDisplaySettings({
+      ...current,
+      ...patch,
+    }),
+  }
 }
 
 export function NativeContentBridgePage() {
@@ -291,6 +332,8 @@ export function NativeContentBridgePage() {
     setTagInput('')
   }
 
+  const displaySettings = useMemo(() => normalizeNativeDisplaySettings(draft), [draft])
+
   async function handleSave(note = 'save') {
     const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
     const normalized = {
@@ -304,6 +347,7 @@ export function NativeContentBridgePage() {
       featuredImageTitle: draft.featuredImageTitle || '',
       featuredImageAlt: draft.featuredImageAlt || '',
       featuredImageCaption: draft.featuredImageCaption || '',
+      podcastCoverImage: draft.podcastCoverImage || draft.featuredImage || draft.heroImage || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, note)
@@ -347,6 +391,7 @@ export function NativeContentBridgePage() {
       featuredImageTitle: draft.featuredImageTitle || '',
       featuredImageAlt: draft.featuredImageAlt || '',
       featuredImageCaption: draft.featuredImageCaption || '',
+      podcastCoverImage: draft.podcastCoverImage || draft.featuredImage || draft.heroImage || '',
       allowComments,
     }
     const next = await upsertNativeEntry(items, normalized, 'preview')
@@ -464,6 +509,80 @@ export function NativeContentBridgePage() {
             <textarea ref={textareaRef} className="wp-editor-textarea" value={draft.body || ''} onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} placeholder="Start writing…" />
 
             <article className="wp-meta-box"><h2>Excerpt</h2><textarea value={draft.excerpt || ''} onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))} /></article>
+            {(draft.contentType || 'dispatch') === 'podcast' ? (
+              <article className="wp-meta-box">
+                <h2>Podcast Episode Details</h2>
+                <div className="wp-settings-form">
+                  <label>
+                    <span>Audio URL</span>
+                    <input
+                      type="url"
+                      value={draft.podcastAudioUrl || ''}
+                      onChange={(e) => setDraft((d) => ({ ...d, podcastAudioUrl: e.target.value }))}
+                      placeholder="https://cdn.example.com/audio/episode-1.mp3"
+                    />
+                  </label>
+                  <label>
+                    <span>RSS enclosure URL</span>
+                    <input
+                      type="url"
+                      value={draft.podcastRssEnclosureUrl || ''}
+                      onChange={(e) => setDraft((d) => ({ ...d, podcastRssEnclosureUrl: e.target.value }))}
+                      placeholder="https://feeds.example.com/enclosure.mp3"
+                    />
+                  </label>
+                  <label>
+                    <span>Duration</span>
+                    <input
+                      value={draft.podcastDuration || ''}
+                      onChange={(e) => setDraft((d) => ({ ...d, podcastDuration: e.target.value }))}
+                      placeholder="00:42:30"
+                    />
+                  </label>
+                  <label>
+                    <span>Episode number</span>
+                    <input
+                      value={draft.podcastEpisodeNumber || ''}
+                      onChange={(e) => setDraft((d) => ({ ...d, podcastEpisodeNumber: e.target.value }))}
+                      placeholder="12"
+                    />
+                  </label>
+                  <label>
+                    <span>Season</span>
+                    <input
+                      value={draft.podcastSeason || ''}
+                      onChange={(e) => setDraft((d) => ({ ...d, podcastSeason: e.target.value }))}
+                      placeholder="2"
+                    />
+                  </label>
+                  <label>
+                    <span>Cover image</span>
+                    <input
+                      type="url"
+                      value={draft.podcastCoverImage || ''}
+                      onChange={(e) => setDraft((d) => ({ ...d, podcastCoverImage: e.target.value }))}
+                      placeholder="https://cdn.example.com/podcast-cover.jpg"
+                    />
+                  </label>
+                  <label>
+                    <span>Summary</span>
+                    <textarea
+                      value={draft.podcastSummary || ''}
+                      onChange={(e) => setDraft((d) => ({ ...d, podcastSummary: e.target.value }))}
+                      placeholder="Episode summary for show notes."
+                    />
+                  </label>
+                  <label>
+                    <span>Transcript</span>
+                    <textarea
+                      value={draft.podcastTranscript || ''}
+                      onChange={(e) => setDraft((d) => ({ ...d, podcastTranscript: e.target.value }))}
+                      placeholder="Full transcript text"
+                    />
+                  </label>
+                </div>
+              </article>
+            ) : null}
             <article className="wp-meta-box"><h2>Discussion</h2><label><input type="checkbox" checked={allowComments} onChange={(e) => setAllowComments(e.target.checked)} /> Allow comments</label></article>
             <article className="wp-meta-box">
               <h2>Revisions</h2>
@@ -484,6 +603,28 @@ export function NativeContentBridgePage() {
               )}
             </article>
             <article className="wp-meta-box"><h2>Custom Fields / Advanced</h2><p>Advanced bridge fields remain available in native storage.</p></article>
+            <article className="wp-meta-box">
+              <h2>Public Display</h2>
+              <label><input type="checkbox" checked={displaySettings.enableReadMode} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { enableReadMode: e.target.checked }))} /> Enable read mode</label>
+              <label><input type="checkbox" checked={displaySettings.enableExperienceMode} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { enableExperienceMode: e.target.checked }))} /> Enable experience mode</label>
+              <label><input type="checkbox" checked={displaySettings.enablePrintMode} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { enablePrintMode: e.target.checked }))} /> Enable print mode</label>
+              <label>
+                Default mode
+                <select value={displaySettings.defaultMode} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { defaultMode: e.target.value }))}>
+                  <option value="read">Read</option>
+                  <option value="experience">Experience</option>
+                  <option value="print">Print</option>
+                </select>
+              </label>
+              <label>
+                Hero style
+                <select value={displaySettings.heroStyle} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { heroStyle: e.target.value }))}>
+                  <option value="default">Default</option>
+                  <option value="immersive">Immersive</option>
+                  <option value="minimal">Minimal</option>
+                </select>
+              </label>
+            </article>
           </div>
 
           <aside className="wp-edit-sidebar">
@@ -595,6 +736,7 @@ export function NativeContentBridgePage() {
                 ...d,
                 featuredImage: selectedMedia.url,
                 heroImage: selectedMedia.url,
+                podcastCoverImage: (d.contentType || 'dispatch') === 'podcast' ? selectedMedia.url : d.podcastCoverImage || '',
                 featuredImageTitle: selectedMedia.title,
                 featuredImageAlt: selectedMedia.alt,
                 featuredImageCaption: selectedMedia.caption,

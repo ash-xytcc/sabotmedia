@@ -7,30 +7,22 @@ import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/
 import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { renderImportedBody } from '../lib/renderImportedBody'
 import { splitDisplayTitle } from '../lib/content'
+import { getPieceDisplaySettings, resolveFirstReadableMode } from '../lib/publicDisplayModes'
 
 const MODE_STORAGE_KEY = 'sabot.postMode'
 
-function PublicationModeSwitch({ slug, mode }) {
+function PublicationModeSwitch({ slug, mode, displaySettings }) {
+  const links = []
+  if (displaySettings.enableReadMode) links.push({ key: 'read', label: 'Read', to: `/post/${slug}` })
+  if (displaySettings.enableExperienceMode) links.push({ key: 'experience', label: 'Experience', to: `/post/${slug}?mode=experience` })
+  if (displaySettings.enablePrintMode) links.push({ key: 'print', label: 'Print', to: `/piece/${slug}/print` })
   return (
     <nav className="publication-mode-switch" aria-label="reading modes">
-      <Link
-        className={`publication-mode-switch__link${mode === 'read' ? ' is-active' : ''}`}
-        to={`/post/${slug}`}
-      >
-        Read
-      </Link>
-      <Link
-        className={`publication-mode-switch__link${mode === 'experience' ? ' is-active' : ''}`}
-        to={`/post/${slug}?mode=experience`}
-      >
-        Experience
-      </Link>
-      <Link
-        className="publication-mode-switch__link"
-        to={`/piece/${slug}/print`}
-      >
-        Print
-      </Link>
+      {links.map((link) => (
+        <Link key={link.key} className={`publication-mode-switch__link${mode === link.key ? ' is-active' : ''}`} to={link.to}>
+          {link.label}
+        </Link>
+      ))}
     </nav>
   )
 }
@@ -38,7 +30,8 @@ function PublicationModeSwitch({ slug, mode }) {
 function getPreferredMode(searchParams) {
   const explicit = searchParams.get('mode')
   if (explicit === 'experience') return 'experience'
-  return 'read'
+  if (explicit === 'read') return 'read'
+  return ''
 }
 
 function getPieceBySlug(pieces, slug) {
@@ -58,7 +51,7 @@ function getOrderedPieces(pieces) {
 
 export function PiecePage({ pieces = [] }) {
   const { slug = '' } = useParams()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const [nativePieces, setNativePieces] = useState([])
 
   useEffect(() => {
@@ -83,17 +76,6 @@ export function PiecePage({ pieces = [] }) {
     [livePieces, nativePieces]
   )
 
-  const mode = useMemo(() => getPreferredMode(searchParams), [searchParams])
-
-  useEffect(() => {
-    const stored = typeof window !== 'undefined' ? window.localStorage.getItem(MODE_STORAGE_KEY) : null
-    if (!searchParams.get('mode') && stored === 'experience') {
-      const next = new URLSearchParams(searchParams)
-      next.set('mode', 'experience')
-      setSearchParams(next, { replace: true })
-    }
-  }, [searchParams, setSearchParams])
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(MODE_STORAGE_KEY, mode)
@@ -102,6 +84,19 @@ export function PiecePage({ pieces = [] }) {
 
   const orderedPieces = useMemo(() => getOrderedPieces(mergedPieces), [mergedPieces])
   const piece = useMemo(() => getPieceBySlug(orderedPieces, slug), [orderedPieces, slug])
+  const displaySettings = useMemo(() => getPieceDisplaySettings(piece), [piece])
+  const mode = useMemo(() => {
+    if (!piece) return 'read'
+    const explicit = getPreferredMode(searchParams)
+    if (explicit === 'experience' && displaySettings.enableExperienceMode) return 'experience'
+    if (explicit === 'read' && displaySettings.enableReadMode) return 'read'
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem(MODE_STORAGE_KEY) : ''
+    if (stored === 'experience' && displaySettings.enableExperienceMode) return 'experience'
+    if (stored === 'read' && displaySettings.enableReadMode) return 'read'
+    if (displaySettings.defaultMode === 'experience' && displaySettings.enableExperienceMode) return 'experience'
+    if (displaySettings.defaultMode === 'print' && displaySettings.enablePrintMode) return 'print'
+    return resolveFirstReadableMode(displaySettings)
+  }, [piece, searchParams, displaySettings])
 
   const index = useMemo(
     () => orderedPieces.findIndex((item) => item?.slug === slug),
@@ -135,6 +130,9 @@ export function PiecePage({ pieces = [] }) {
   if (!piece) {
     return <Navigate to="/archive" replace />
   }
+  if (mode === 'print') {
+    return <Navigate to={`/piece/${piece.slug}/print`} replace />
+  }
 
   return (
     <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
@@ -157,11 +155,11 @@ export function PiecePage({ pieces = [] }) {
           {piece.type ? <span>{piece.type}</span> : null}
         </div>
 
-        <PublicationModeSwitch slug={piece.slug} mode={mode} />
+        <PublicationModeSwitch slug={piece.slug} mode={mode} displaySettings={displaySettings} />
       </header>
 
       {heroImage ? (
-        <section className={`piece-hero${mode === 'experience' ? ' piece-hero--experience' : ''}`}>
+        <section className={`piece-hero${mode === 'experience' ? ' piece-hero--experience' : ''}${displaySettings.heroStyle !== 'default' ? ` piece-hero--${displaySettings.heroStyle}` : ''}`}>
           <img className="piece-hero__image" src={heroImage} alt={display.title || piece.title || piece.slug} />
         </section>
       ) : null}
