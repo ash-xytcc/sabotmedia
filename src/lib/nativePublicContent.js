@@ -3,6 +3,7 @@ import {
   saveNativeEntry,
   removeNativeEntry,
 } from './nativePublicContentApi'
+import { normalizeNativeDisplaySettings } from './publicDisplayModes'
 
 const FALLBACK_STORAGE_KEY = 'sabot-native-public-content-v1'
 
@@ -60,6 +61,7 @@ export function normalizeNativeEntry(input) {
   const workflowState =
     normalizeEnum(raw.workflowState, ['draft', 'in_review', 'needs_revision', 'ready', 'scheduled', 'published', 'archived']) ||
     inferWorkflowState(raw, status)
+  const display = normalizeNativeDisplaySettings(raw)
 
   return {
     id: String(raw.id || `native-${Math.random().toString(36).slice(2, 10)}`),
@@ -87,6 +89,11 @@ export function normalizeNativeEntry(input) {
     featuredImageTitle: String(raw.featuredImageTitle || ''),
     featuredImageAlt: String(raw.featuredImageAlt || ''),
     featuredImageCaption: String(raw.featuredImageCaption || ''),
+    enableReadMode: display.enableReadMode,
+    enableExperienceMode: display.enableExperienceMode,
+    enablePrintMode: display.enablePrintMode,
+    defaultMode: display.defaultMode,
+    heroStyle: display.heroStyle,
     audioSummary: String(raw.audioSummary || ''),
     transcriptExcerpt: String(raw.transcriptExcerpt || ''),
     hasPrintAssets: Boolean(raw.hasPrintAssets),

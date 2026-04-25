@@ -11,6 +11,7 @@ import {
 import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
+import { normalizeNativeDisplaySettings } from '../lib/publicDisplayModes'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -143,6 +144,11 @@ function saveLocalRevision(postId, draft, note) {
       categories: Array.isArray(draft?.categories) ? draft.categories : [],
       featuredImage: String(draft?.featuredImage || ''),
       heroImage: String(draft?.heroImage || ''),
+      enableReadMode: Boolean(draft?.enableReadMode ?? true),
+      enableExperienceMode: Boolean(draft?.enableExperienceMode ?? true),
+      enablePrintMode: Boolean(draft?.enablePrintMode ?? true),
+      defaultMode: String(draft?.defaultMode || 'read'),
+      heroStyle: String(draft?.heroStyle || 'default'),
       status: String(draft?.status || 'draft'),
       workflowState: String(draft?.workflowState || 'draft'),
       podcastAudioUrl: String(draft?.podcastAudioUrl || ''),
@@ -166,6 +172,7 @@ function saveLocalRevision(postId, draft, note) {
 }
 
 function toAutosaveFingerprint(draft, allowComments) {
+  const display = normalizeNativeDisplaySettings(draft)
   return JSON.stringify({
     title: draft?.title || '',
     slug: draft?.slug || '',
@@ -195,6 +202,16 @@ function formatAutosaveTime(value) {
   const d = new Date(String(value || ''))
   if (!Number.isFinite(d.getTime())) return ''
   return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
+
+function applyDisplayPatch(current, patch) {
+  return {
+    ...current,
+    ...normalizeNativeDisplaySettings({
+      ...current,
+      ...patch,
+    }),
+  }
 }
 
 export function NativeContentBridgePage() {
@@ -314,6 +331,8 @@ export function NativeContentBridgePage() {
     setDraft((d) => ({ ...d, tags: [...new Set([...(d.tags || []), ...nextTags])] }))
     setTagInput('')
   }
+
+  const displaySettings = useMemo(() => normalizeNativeDisplaySettings(draft), [draft])
 
   async function handleSave(note = 'save') {
     const normalizedCategories = normalizeTermList(draft.categories || draft.projects)
@@ -584,6 +603,28 @@ export function NativeContentBridgePage() {
               )}
             </article>
             <article className="wp-meta-box"><h2>Custom Fields / Advanced</h2><p>Advanced bridge fields remain available in native storage.</p></article>
+            <article className="wp-meta-box">
+              <h2>Public Display</h2>
+              <label><input type="checkbox" checked={displaySettings.enableReadMode} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { enableReadMode: e.target.checked }))} /> Enable read mode</label>
+              <label><input type="checkbox" checked={displaySettings.enableExperienceMode} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { enableExperienceMode: e.target.checked }))} /> Enable experience mode</label>
+              <label><input type="checkbox" checked={displaySettings.enablePrintMode} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { enablePrintMode: e.target.checked }))} /> Enable print mode</label>
+              <label>
+                Default mode
+                <select value={displaySettings.defaultMode} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { defaultMode: e.target.value }))}>
+                  <option value="read">Read</option>
+                  <option value="experience">Experience</option>
+                  <option value="print">Print</option>
+                </select>
+              </label>
+              <label>
+                Hero style
+                <select value={displaySettings.heroStyle} onChange={(e) => setDraft((d) => applyDisplayPatch(d, { heroStyle: e.target.value }))}>
+                  <option value="default">Default</option>
+                  <option value="immersive">Immersive</option>
+                  <option value="minimal">Minimal</option>
+                </select>
+              </label>
+            </article>
           </div>
 
           <aside className="wp-edit-sidebar">
