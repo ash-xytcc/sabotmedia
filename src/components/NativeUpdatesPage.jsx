@@ -6,6 +6,7 @@ import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { PublicationFooter } from './PublicationFooter'
 import { splitDisplayTitle } from '../lib/content'
 import { PublicationTopbar } from './PublicationTopbar'
+import { loadCustomizerSettings } from '../lib/customizerLocal'
 
 function formatDate(value) {
   const d = new Date(value || '')
@@ -105,6 +106,21 @@ function pickArchiveFeed({ pieces = [], featured = null, latest = [] }) {
   }
 }
 
+
+function getHomepageDisplaySettings() {
+  const homepage = loadCustomizerSettings().homepage || {}
+  const featuredLayout = ['grid', 'list', 'stack'].includes(homepage.featuredLayout)
+    ? homepage.featuredLayout
+    : 'grid'
+
+  const rawCount = Number(homepage.postsPerPage)
+  const postsPerPage = Number.isFinite(rawCount)
+    ? Math.min(24, Math.max(1, Math.floor(rawCount)))
+    : 12
+
+  return { featuredLayout, postsPerPage }
+}
+
 function HeroFeature({ item }) {
   return (
     <article className="publication-hero-card">
@@ -160,6 +176,8 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
   const [state, setState] = useState('loading')
   const [error, setError] = useState('')
 
+  const homepageSettings = getHomepageDisplaySettings()
+
   useEffect(() => {
     let cancelled = false
 
@@ -209,7 +227,7 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
   }, [nativeItems, archiveFeed])
 
   const featuredItem = mergedFeed[0] || archiveFeed.featured || null
-  const recentItems = mergedFeed.filter((item) => item.id !== featuredItem?.id).slice(0, 6)
+  const recentItems = mergedFeed.filter((item) => item.id !== featuredItem?.id).slice(0, homepageSettings.postsPerPage)
 
   const usingArchiveFallback = !nativeItems.length && !!archiveFeed.featured
 
@@ -230,7 +248,7 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
         <>
           <HeroFeature item={featuredItem} />
 
-          <section className="publication-recent-grid">
+          <section className={`publication-recent-grid publication-recent-grid--${homepageSettings.featuredLayout}`}>
             {recentItems.map((item) => (
               <RecentCard key={item.id} item={item} />
             ))}

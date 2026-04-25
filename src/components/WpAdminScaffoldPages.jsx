@@ -5,11 +5,11 @@ import { getPieces } from '../lib/pieces'
 import { loadLocalMediaItems } from '../lib/localMediaLibrary'
 import { exportNativeCollection, loadNativeCollection } from '../lib/nativePublicContent'
 import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
+import { DEFAULT_CUSTOMIZER_SETTINGS, loadCustomizerSettings, saveCustomizerSettings } from '../lib/customizerLocal'
 
 const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
 const MENU_KEY = 'sabot-wp-clone-menu-v1'
 const USER_ROLE_SETTINGS_KEY = 'sabot-wp-clone-user-role-settings-v1'
-const CUSTOMIZER_KEY = 'sabot-wp-clone-customizer-v1'
 
 function loadJson(key, fallback) {
   try {
@@ -118,35 +118,27 @@ export function CustomizeAdminPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const defaultSection = searchParams.get('section') || 'siteIdentity'
   const [activeSection, setActiveSection] = useState(defaultSection)
-  const [settings, setSettings] = useState(() => loadJson(CUSTOMIZER_KEY, {
-    siteIdentity: {
-      siteTitle: 'Sabot Media',
-      tagline: 'Radical media and publishing',
-      logoUrl: '',
-    },
-    colors: {
-      backgroundColor: '#ffffff',
-      accentColor: '#3858e9',
-      textColor: '#1d2327',
-    },
-    masthead: {
-      mastheadSize: 'medium',
-      navPosition: 'below',
-      logoUrl: '',
-    },
-    navigation: {
-      menuItems: loadJson(MENU_KEY, [
-        { label: 'Archive', path: '/archive' },
-        { label: 'Press', path: '/press' },
-        { label: 'Projects', path: '/projects' },
-      ]).map((item) => ({ label: item.label, path: item.path || item.to })),
-    },
-    homepage: {
-      homepageSource: 'latest',
-      featuredLayout: 'grid',
-      postsPerPage: 12,
-    },
-  }))
+  const [settings, setSettings] = useState(() => {
+    const customizer = loadCustomizerSettings()
+    const menuDraft = loadJson(MENU_KEY, [])
+
+    return {
+      ...DEFAULT_CUSTOMIZER_SETTINGS,
+      ...customizer,
+      navigation: {
+        ...DEFAULT_CUSTOMIZER_SETTINGS.navigation,
+        ...customizer.navigation,
+        menuItems: (Array.isArray(menuDraft) && menuDraft.length
+          ? menuDraft
+          : customizer.navigation.menuItems
+        ).map((item, index) => ({
+          id: item.id || `menu-${index + 1}`,
+          label: item.label,
+          path: item.path || item.to,
+        })),
+      },
+    }
+  })
   const [saveMessage, setSaveMessage] = useState('')
 
   useEffect(() => {
@@ -207,8 +199,8 @@ export function CustomizeAdminPage() {
   }
 
   function saveSection(section) {
-    saveJson(CUSTOMIZER_KEY, settings)
-    saveJson(MENU_KEY, settings.navigation.menuItems.map((item) => ({ label: item.label, to: item.path })))
+    saveCustomizerSettings(settings)
+    saveJson(MENU_KEY, settings.navigation.menuItems.map((item, index) => ({ id: item.id || `menu-${index + 1}`, label: item.label, to: item.path })))
     const sectionName = sections.find((entry) => entry.id === section)?.title || 'Section'
     setSaveMessage(`${sectionName} saved locally.`)
   }

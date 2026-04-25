@@ -5,6 +5,7 @@ import { usePublicEdit } from './PublicEditContext'
 import { getPieces } from '../lib/pieces'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
 import { buildWordPressPostEditLink } from '../lib/wordpressClient'
+import { loadCustomizerSettings } from '../lib/customizerLocal'
 
 const IMPORTED_PIECES = getPieces()
 
@@ -13,6 +14,7 @@ export function PublicAdminToolbar() {
   const location = useLocation()
   const [nativeItems, setNativeItems] = useState([])
   const [canUseToolbar, setCanUseToolbar] = useState(false)
+  const siteTitle = String(loadCustomizerSettings().siteIdentity?.siteTitle || 'Sabot Media').trim() || 'Sabot Media'
 
   useEffect(() => {
     let cancelled = false
@@ -65,7 +67,7 @@ export function PublicAdminToolbar() {
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
       <div className="wp-public-admin-bar__left">
-        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/'}>Sabot Media</a>
+        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/'}>{siteTitle}</a>
         <a className="wp-public-admin-bar__item" href={'/admin'}>Dashboard</a>
         <a className="wp-public-admin-bar__item" href={'/native-bridge?new=article'}>New</a>
         <a className="wp-public-admin-bar__item" href={'/content'}>Posts</a>
