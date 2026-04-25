@@ -714,11 +714,8 @@ export function SettingsAdminPage() {
               </div>
             </section>
 
-            <section className="wp-meta-box">
-              <h2>Sites & Domains</h2>
-              <p className="description">Manage local multisite-inspired scaffolds ({siteScaffolds.length} total). No DNS provider integration yet.</p>
-              <p><Link to="/settings/sites">Open Sites &amp; Domains manager</Link></p>
-            </section>
+            
+
           </>
         ) : (
           <section className="wp-meta-box">
