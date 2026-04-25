@@ -669,8 +669,6 @@ export function SettingsAdminPage() {
     },
   }))
   const siteScaffolds = useMemo(() => loadSites(), [])
-  const location = useLocation()
-  const isSocialPath = location.pathname.includes('/settings/social')
 
   function update(field, value) {
     setSettings((current) => ({ ...current, [field]: value }))
