@@ -2,6 +2,7 @@ import { useMemo, useEffect, useState } from 'react'
 import { usePublicEdit } from './PublicEditContext'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
+import { loadNativeCollection } from '../lib/nativePublicContent'
 
 export function PublicAdminToolbar() {
   const [nativeItems, setNativeItems] = useState([])
