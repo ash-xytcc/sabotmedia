@@ -3,6 +3,7 @@ import {
   saveNativeEntry,
   removeNativeEntry,
 } from './nativePublicContentApi'
+import { normalizeNativeDisplaySettings } from './publicDisplayModes'
 
 const FALLBACK_STORAGE_KEY = 'sabot-native-public-content-v1'
 
@@ -39,6 +40,14 @@ export function createEmptyNativeEntry() {
     featuredImageTitle: '',
     featuredImageAlt: '',
     featuredImageCaption: '',
+    podcastAudioUrl: '',
+    podcastRssEnclosureUrl: '',
+    podcastDuration: '',
+    podcastEpisodeNumber: '',
+    podcastSeason: '',
+    podcastTranscript: '',
+    podcastSummary: '',
+    podcastCoverImage: '',
     createdAt: now,
     updatedAt: now,
     publishedAt: '',
@@ -52,6 +61,7 @@ export function normalizeNativeEntry(input) {
   const workflowState =
     normalizeEnum(raw.workflowState, ['draft', 'in_review', 'needs_revision', 'ready', 'scheduled', 'published', 'archived']) ||
     inferWorkflowState(raw, status)
+  const display = normalizeNativeDisplaySettings(raw)
 
   return {
     id: String(raw.id || `native-${Math.random().toString(36).slice(2, 10)}`),
@@ -79,11 +89,24 @@ export function normalizeNativeEntry(input) {
     featuredImageTitle: String(raw.featuredImageTitle || ''),
     featuredImageAlt: String(raw.featuredImageAlt || ''),
     featuredImageCaption: String(raw.featuredImageCaption || ''),
+    enableReadMode: display.enableReadMode,
+    enableExperienceMode: display.enableExperienceMode,
+    enablePrintMode: display.enablePrintMode,
+    defaultMode: display.defaultMode,
+    heroStyle: display.heroStyle,
     audioSummary: String(raw.audioSummary || ''),
     transcriptExcerpt: String(raw.transcriptExcerpt || ''),
     hasPrintAssets: Boolean(raw.hasPrintAssets),
     transcriptionStatus: String(raw.transcriptionStatus || 'none'),
     audioSourceUrl: String(raw.audioSourceUrl || ''),
+    podcastAudioUrl: String(raw.podcastAudioUrl || raw.audioSourceUrl || ''),
+    podcastRssEnclosureUrl: String(raw.podcastRssEnclosureUrl || ''),
+    podcastDuration: String(raw.podcastDuration || ''),
+    podcastEpisodeNumber: String(raw.podcastEpisodeNumber || ''),
+    podcastSeason: String(raw.podcastSeason || ''),
+    podcastTranscript: String(raw.podcastTranscript || raw.fullTranscript || ''),
+    podcastSummary: String(raw.podcastSummary || raw.audioSummary || ''),
+    podcastCoverImage: String(raw.podcastCoverImage || raw.featuredImage || raw.heroImage || ''),
     fullTranscript: String(raw.fullTranscript || ''),
     transcriptNotes: String(raw.transcriptNotes || ''),
     categories: normalizeTags(raw.categories || raw.projects),
