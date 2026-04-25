@@ -510,6 +510,15 @@ export function ToolsAdminPage() {
 
   const tools = [
     {
+      name: 'Print Lab',
+      status: 'Scaffolded',
+      notes: 'Publication print scaffolds including print PDF export path, zine imposition, button maker, and poster tiler.',
+      actionLabel: 'Open Print Lab',
+      action: () => {
+        window.location.assign('/tools/print')
+      },
+    },
+    {
       name: 'Export native content JSON',
       status: 'Ready',
       notes: 'Downloads current native content collection and copies JSON when clipboard access is allowed.',

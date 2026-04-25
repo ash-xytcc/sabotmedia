@@ -16,6 +16,7 @@ import { NativeUpdateDetailPage } from './components/NativeUpdateDetailPage'
 import { NativeDraftPreviewPage } from './components/NativeDraftPreviewPage'
 import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
+import { PrintLabPage } from './components/PrintLabPage'
 import { PublicEditProvider, usePublicEdit } from './components/PublicEditContext'
 import { PublicEditPanel } from './components/PublicEditPanel'
 import { PublicAdminToolbar } from './components/PublicAdminToolbar'
@@ -159,6 +160,7 @@ export default function App() {
           <Route path="/site-editor" element={<Navigate to="/tools#advanced-draft-tools" replace />} />
           <Route path="/advanced-draft-tools" element={<SiteEditorAdminPage />} />
           <Route path="/tools" element={<ToolsAdminPage />} />
+          <Route path="/tools/print" element={<PrintLabPage />} />
           <Route path="/settings" element={<SettingsAdminPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
         <Route path="/native-bridge" element={<NativeContentBridgePage />} />
