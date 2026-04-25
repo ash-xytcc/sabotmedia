@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { usePublicEdit } from './PublicEditContext'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
+import { loadCustomizerSettings } from '../lib/customizerLocal'
 
 export function PublicAdminToolbar() {
   const { canSave, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
@@ -24,17 +25,32 @@ export function PublicAdminToolbar() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!canUseToolbar) return
+    loadNativeCollection({ includeFuture: 1 }).then((items) => setNativeItems(Array.isArray(items) ? items : []))
+  }, [canUseToolbar])
+
+  const editPostLink = useMemo(() => {
+    const postMatch = location.pathname.match(/^\/(post|piece)\/([^/]+)/)
+    if (!postMatch) return ''
+    const slug = postMatch[2]
+    const found = nativeItems.find((item) => item.slug === slug)
+    return found ? `/native-bridge?edit=${found.id}` : ''
+  }, [location.pathname, nativeItems])
+
   if (!canUseToolbar) return null
 
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
       <div className="wp-public-admin-bar__left">
-        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href="/">Sabot Media</a>
-        <a className="wp-public-admin-bar__item" href="/admin">Dashboard</a>
-        <a className="wp-public-admin-bar__item" href="/native-bridge?new=article">New</a>
-        <a className="wp-public-admin-bar__item" href="/content">Posts</a>
-        <a className="wp-public-admin-bar__item" href="/media">Media</a>
-        <a className="wp-public-admin-bar__item" href="/customize">Customize</a>
+        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/'}>{siteTitle}</a>
+        <a className="wp-public-admin-bar__item" href={'/admin'}>Dashboard</a>
+        <a className="wp-public-admin-bar__item" href={'/native-bridge?new=article'}>New</a>
+        <a className="wp-public-admin-bar__item" href={'/content'}>Posts</a>
+        <a className="wp-public-admin-bar__item" href={'/media'}>Media</a>
+        {/* Live inline editing remains deferred; use Customize as the active internal site-editing entry point. */}
+        <a className="wp-public-admin-bar__item" href={'/customize'}>Customize</a>
+        {editPostLink ? <Link className="wp-public-admin-bar__item" to={editPostLink}>Edit Post</Link> : null}
         <a className="wp-public-admin-bar__item" href="/customize">Edit Site</a>
       </div>
       <div className="wp-public-admin-bar__right">

@@ -1,4 +1,6 @@
-import { NavLink, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
+import { loadSites } from '../lib/siteDomains'
 
 const MENU = [
   { to: '/admin', label: 'Dashboard' },
@@ -26,6 +28,16 @@ function AdminBarMenu({ label, children, className = '' }) {
 }
 
 export function AdminRail() {
+  const location = useLocation()
+  const [sites, setSites] = useState(() => loadSites())
+
+  useEffect(() => {
+    setSites(loadSites())
+  }, [location.pathname])
+
+  const primarySite = sites[0]
+  const primarySiteName = String(primarySite?.name || 'Sabot Media').trim() || 'Sabot Media'
+
   return (
     <>
       <div className="wp-admin-topbar" role="navigation" aria-label="WordPress admin bar">
@@ -35,9 +47,9 @@ export function AdminRail() {
           </Link>
 
           <AdminBarMenu label="My Sites ▾">
-            <Link to="/" className="wp-admin-topbar__dropdown-link">Sabot Media</Link>
-            <Link to="/settings/sites" className="wp-admin-topbar__dropdown-link">Site settings</Link>
-            <Link to="/admin" className="wp-admin-topbar__dropdown-link">Manage sites</Link>
+            <Link to="/" className="wp-admin-topbar__dropdown-link">{primarySiteName}</Link>
+            <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Manage Sites (not wired yet)</span>
+            <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Connect Domain (not wired yet)</span>
           </AdminBarMenu>
 
           <Link to="/" className="wp-admin-topbar__link">Sabot Media</Link>
@@ -53,10 +65,9 @@ export function AdminRail() {
         </div>
 
         <div className="wp-admin-topbar__right">
-          <AdminBarMenu label="Howdy sabotmedia ▾" className="wp-admin-topbar__menu--right">
-            <Link to="/users" className="wp-admin-topbar__dropdown-link">sabotmedia</Link>
-            <Link to="/users" className="wp-admin-topbar__dropdown-link">Edit Profile</Link>
-            <Link to="/admin" className="wp-admin-topbar__dropdown-link">Log Out</Link>
+          <AdminBarMenu label="Howdy, sabotmedia ▾" className="wp-admin-topbar__menu--right">
+            <Link to="/users" className="wp-admin-topbar__dropdown-link">Profile</Link>
+            <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Log Out (not wired yet)</span>
           </AdminBarMenu>
         </div>
       </div>
