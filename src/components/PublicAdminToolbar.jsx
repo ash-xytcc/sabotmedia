@@ -1,16 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { loadNativeCollection } from '../lib/nativePublicContent'
+import { useEffect, useState } from 'react'
 import { usePublicEdit } from './PublicEditContext'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
 
 export function PublicAdminToolbar() {
   const { canSave, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
-  const location = useLocation()
-  const [nativeItems, setNativeItems] = useState([])
   const [canUseToolbar, setCanUseToolbar] = useState(false)
-  const siteTitle = String(loadCustomizerSettings().siteIdentity?.siteTitle || 'Sabot Media').trim() || 'Sabot Media'
 
   useEffect(() => {
     let cancelled = false
