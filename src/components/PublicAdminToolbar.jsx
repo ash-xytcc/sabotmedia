@@ -5,6 +5,8 @@ import { loadCustomizerSettings } from '../lib/customizerLocal'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 
 export function PublicAdminToolbar() {
+  const siteTitle = 'Sabot Media'
+
   const [nativeItems, setNativeItems] = useState([])
 
   useEffect(() => {
