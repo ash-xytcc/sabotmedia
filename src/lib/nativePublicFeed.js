@@ -95,23 +95,34 @@ export function resolveNativeBodyHtml(item) {
     return classicEditorBodyToHtml(item?.body || '')
   }
 
-  return blocks.map((block) => {
-    const text = escapeHtml(block.text || '')
-    if (block.type === 'heading') return `<h2>${text}</h2>`
-    if (block.type === 'quote') return `<blockquote>${text}</blockquote>`
-    if (block.type === 'image') {
-      const url = escapeAttr(block.url || '')
-      const alt = escapeAttr(block.alt || '')
-      const caption = escapeHtml(block.caption || '')
-      return `<figure>${url ? `<img src="${url}" alt="${alt}" />` : ''}${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`
-    }
-    if (block.type === 'embed') {
-      const url = escapeAttr(block.url || '')
-      const caption = escapeHtml(block.caption || block.url || '')
-      return url ? `<p><a href="${url}">${caption}</a></p>` : ''
-    }
-    return `<p>${text}</p>`
-  }).join('\n')
+  const composed = blocks
+    .map((block) => {
+      const text = String(block?.text || '')
+
+      if (block?.type === 'heading') return `## ${text}`
+      if (block?.type === 'quote') return text.split(/\r?\n/g).map((line) => `> ${line}`).join('\n')
+
+      if (block?.type === 'image') {
+        const url = escapeAttr(block?.url || '')
+        const alt = escapeAttr(block?.alt || '')
+        const caption = escapeHtml(block?.caption || '')
+        if (!url) return ''
+        return `<figure><img src="${url}" alt="${alt}" />${caption ? `<figcaption>${caption}</figcaption>` : ''}</figure>`
+      }
+
+      if (block?.type === 'embed') {
+        const url = String(block?.url || '').trim()
+        if (!url) return ''
+        const caption = String(block?.caption || block?.url || '').trim()
+        return `[${caption}](${url})`
+      }
+
+      return text
+    })
+    .filter(Boolean)
+    .join('\n\n')
+
+  return classicEditorBodyToHtml(composed)
 }
 
 function formatDateLabel(value) {
