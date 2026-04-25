@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { usePublicEdit } from './PublicEditContext'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
