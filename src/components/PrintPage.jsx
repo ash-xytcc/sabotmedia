@@ -24,12 +24,19 @@ function PublicationModeSwitch({ slug }) {
 export function PrintPage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [nativePieces, setNativePieces] = useState([])
+  const [nativeFeedState, setNativeFeedState] = useState('loading')
 
   useEffect(() => {
     let cancelled = false
     async function boot() {
-      const loaded = await loadPublishedNativePieces()
-      if (!cancelled) setNativePieces(loaded)
+      setNativeFeedState('loading')
+      try {
+        const loaded = await loadPublishedNativePieces()
+        if (cancelled) return
+        setNativePieces(loaded)
+      } finally {
+        if (!cancelled) setNativeFeedState('loaded')
+      }
     }
     boot()
     return () => {
@@ -46,6 +53,9 @@ export function PrintPage({ pieces = [] }) {
 
   const piece = getPieceBySlug(mergedPieces, slug)
 
+  if (!piece && nativeFeedState === 'loading') {
+    return null
+  }
   if (!piece) {
     return <Navigate to="/archive" replace />
   }
