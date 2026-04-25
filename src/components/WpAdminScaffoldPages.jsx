@@ -5,6 +5,7 @@ import { getPieces } from '../lib/pieces'
 import { loadLocalMediaItems } from '../lib/localMediaLibrary'
 import { exportNativeCollection, loadNativeCollection } from '../lib/nativePublicContent'
 import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
+import { loadSites } from '../lib/siteDomains'
 
 const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
 const MENU_KEY = 'sabot-wp-clone-menu-v1'
@@ -614,8 +615,7 @@ export function SettingsAdminPage() {
       newsletterProvider: '',
     },
   }))
-  const location = useLocation()
-  const isSocialPath = location.pathname === '/settings/social'
+  const siteScaffolds = useMemo(() => loadSites(), [])
 
   function update(field, value) {
     setSettings((current) => ({ ...current, [field]: value }))
@@ -671,64 +671,12 @@ export function SettingsAdminPage() {
             <label><span>Media mode</span><select value={settings.mediaMode} onChange={(e) => update('mediaMode', e.target.value)}><option value="local">Local only</option><option value="future-cloud">Future cloud</option></select></label>
           </div>
         </section>
-        ) : (
-          <section className="wp-meta-box">
-            <h2>Social Sharing / Autopost (Scaffold)</h2>
-            <p className="description">Placeholder credentials only. No real API posting or outbound integrations are active yet.</p>
-            <div className="wp-settings-form">
-              <label>
-                <span>Fediverse / Mastodon instance URL</span>
-                <input
-                  placeholder="https://mastodon.social"
-                  value={settings.social?.mastodonInstanceUrl || ''}
-                  onChange={(e) => updateSocial('mastodonInstanceUrl', e.target.value)}
-                />
-              </label>
-              <label>
-                <span>Mastodon access token (placeholder)</span>
-                <input
-                  type="password"
-                  placeholder="mastodon-token-placeholder"
-                  value={settings.social?.mastodonAccessToken || ''}
-                  onChange={(e) => updateSocial('mastodonAccessToken', e.target.value)}
-                />
-              </label>
-              <label>
-                <span>Bluesky handle</span>
-                <input
-                  placeholder="you.bsky.social"
-                  value={settings.social?.blueskyHandle || ''}
-                  onChange={(e) => updateSocial('blueskyHandle', e.target.value)}
-                />
-              </label>
-              <label>
-                <span>Bluesky app password (placeholder)</span>
-                <input
-                  type="password"
-                  placeholder="xxxx-xxxx-xxxx-xxxx"
-                  value={settings.social?.blueskyAppPassword || ''}
-                  onChange={(e) => updateSocial('blueskyAppPassword', e.target.value)}
-                />
-              </label>
-              <label>
-                <span>RSS feed autopost</span>
-                <input
-                  type="checkbox"
-                  checked={Boolean(settings.social?.rssAutopostEnabled)}
-                  onChange={(e) => updateSocial('rssAutopostEnabled', e.target.checked)}
-                />
-              </label>
-              <label>
-                <span>Email / newsletter provider (placeholder)</span>
-                <input
-                  placeholder="ConvertKit, Ghost, Mailchimp, etc."
-                  value={settings.social?.newsletterProvider || ''}
-                  onChange={(e) => updateSocial('newsletterProvider', e.target.value)}
-                />
-              </label>
-            </div>
-          </section>
-        )}
+
+        <section className="wp-meta-box">
+          <h2>Sites & Domains</h2>
+          <p className="description">Manage local multisite-inspired scaffolds ({siteScaffolds.length} total). No DNS provider integration yet.</p>
+          <p><Link to="/settings/sites">Open Sites &amp; Domains manager</Link></p>
+        </section>
       </main>
     </AdminFrame>
   )
