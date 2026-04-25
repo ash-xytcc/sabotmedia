@@ -7817,6 +7817,23 @@ a.button {
   }
 }
 
+
+.publication-topbar--compact .publication-topbar__brand-image {
+  height: clamp(92px, 10vw, 132px) !important;
+}
+
+.publication-topbar--large .publication-topbar__brand-image {
+  height: clamp(150px, 16vw, 220px) !important;
+}
+
+.publication-recent-grid--list {
+  grid-template-columns: 1fr;
+}
+
+.publication-recent-grid--stack {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 /* WordPress classic internal admin clone */
 .admin-frame {
   font-family: Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
