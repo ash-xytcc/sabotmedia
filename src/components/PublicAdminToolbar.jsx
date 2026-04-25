@@ -4,6 +4,19 @@ import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
 
 export function PublicAdminToolbar() {
+  const [nativeItems, setNativeItems] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    loadNativeCollection({ includeFuture: 1 })
+      .then((items) => {
+        if (!cancelled) setNativeItems(Array.isArray(items) ? items : [])
+      })
+      .catch(() => {
+        if (!cancelled) setNativeItems([])
+      })
+    return () => { cancelled = true }
+  }, [])
   const { canSave, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
   const [canUseToolbar, setCanUseToolbar] = useState(false)
 
