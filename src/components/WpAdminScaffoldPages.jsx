@@ -658,7 +658,6 @@ export function SettingsAdminPage() {
           </p>
         </section>
 
-        {!isSocialPath ? (
         <section className="wp-meta-box">
           <h2>General Settings</h2>
 
