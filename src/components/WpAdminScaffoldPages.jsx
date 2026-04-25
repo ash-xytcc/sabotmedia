@@ -599,6 +599,8 @@ export function ToolsAdminPage() {
 }
 
 export function SettingsAdminPage() {
+  const location = useLocation()
+  const isSocialPath = location.pathname === '/settings/social'
   const [settings, setSettings] = useState(() => loadJson(SETTINGS_KEY, {
     siteTitle: 'Sabot Media',
     tagline: 'Radical media and publishing',
@@ -659,24 +661,38 @@ export function SettingsAdminPage() {
         </section>
 
         {!isSocialPath ? (
-        <section className="wp-meta-box">
-          <h2>General Settings</h2>
+          <>
+            <section className="wp-meta-box">
+              <h2>General Settings</h2>
 
-          <div className="wp-settings-form">
-            <label><span>Site Title</span><input value={settings.siteTitle} onChange={(e) => update('siteTitle', e.target.value)} /></label>
-            <label><span>Tagline</span><input value={settings.tagline} onChange={(e) => update('tagline', e.target.value)} /></label>
-            <label><span>Homepage source</span><select value={settings.homepageSource} onChange={(e) => update('homepageSource', e.target.value)}><option value="latest">Latest posts</option><option value="featured">Featured post</option></select></label>
-            <label><span>Posts per page</span><input type="number" value={settings.postsPerPage} onChange={(e) => update('postsPerPage', Number(e.target.value || 12))} /></label>
-            <label><span>Default post type</span><select value={settings.defaultPostType} onChange={(e) => update('defaultPostType', e.target.value)}><option value="article">Article</option><option value="podcast">Podcast</option><option value="print">Print</option></select></label>
-            <label><span>Media mode</span><select value={settings.mediaMode} onChange={(e) => update('mediaMode', e.target.value)}><option value="local">Local only</option><option value="future-cloud">Future cloud</option></select></label>
-          </div>
-        </section>
+              <div className="wp-settings-form">
+                <label><span>Site Title</span><input value={settings.siteTitle} onChange={(e) => update('siteTitle', e.target.value)} /></label>
+                <label><span>Tagline</span><input value={settings.tagline} onChange={(e) => update('tagline', e.target.value)} /></label>
+                <label><span>Homepage source</span><select value={settings.homepageSource} onChange={(e) => update('homepageSource', e.target.value)}><option value="latest">Latest posts</option><option value="featured">Featured post</option></select></label>
+                <label><span>Posts per page</span><input type="number" value={settings.postsPerPage} onChange={(e) => update('postsPerPage', Number(e.target.value || 12))} /></label>
+                <label><span>Default post type</span><select value={settings.defaultPostType} onChange={(e) => update('defaultPostType', e.target.value)}><option value="article">Article</option><option value="podcast">Podcast</option><option value="print">Print</option></select></label>
+                <label><span>Media mode</span><select value={settings.mediaMode} onChange={(e) => update('mediaMode', e.target.value)}><option value="local">Local only</option><option value="future-cloud">Future cloud</option></select></label>
+              </div>
+            </section>
 
-        <section className="wp-meta-box">
-          <h2>Sites & Domains</h2>
-          <p className="description">Manage local multisite-inspired scaffolds ({siteScaffolds.length} total). No DNS provider integration yet.</p>
-          <p><Link to="/settings/sites">Open Sites &amp; Domains manager</Link></p>
-        </section>
+            <section className="wp-meta-box">
+              <h2>Sites & Domains</h2>
+              <p className="description">Manage local multisite-inspired scaffolds ({siteScaffolds.length} total). No DNS provider integration yet.</p>
+              <p><Link to="/settings/sites">Open Sites &amp; Domains manager</Link></p>
+            </section>
+          </>
+        ) : (
+          <section className="wp-meta-box">
+            <h2>Social Settings</h2>
+            <p className="description">Social provider plumbing is scaffolded and currently local-only.</p>
+            <div className="wp-settings-form">
+              <label><span>Bluesky Handle</span><input value={settings.social?.blueskyHandle || ''} onChange={(e) => updateSocial('blueskyHandle', e.target.value)} placeholder="@sabotmedia.bsky.social" /></label>
+              <label><span>Bluesky App Password</span><input type="password" value={settings.social?.blueskyAppPassword || ''} onChange={(e) => updateSocial('blueskyAppPassword', e.target.value)} placeholder="•••• •••• •••• ••••" /></label>
+              <label><span>Newsletter Provider</span><input value={settings.social?.newsletterProvider || ''} onChange={(e) => updateSocial('newsletterProvider', e.target.value)} placeholder="Buttondown, Ghost, Mailchimp…" /></label>
+              <label><span>Enable RSS autopost</span><input type="checkbox" checked={Boolean(settings.social?.rssAutopostEnabled)} onChange={(e) => updateSocial('rssAutopostEnabled', e.target.checked)} /></label>
+            </div>
+          </section>
+        )}
       </main>
     </AdminFrame>
   )
