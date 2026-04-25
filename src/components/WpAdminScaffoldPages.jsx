@@ -671,6 +671,7 @@ export function SettingsAdminPage() {
             <label><span>Media mode</span><select value={settings.mediaMode} onChange={(e) => update('mediaMode', e.target.value)}><option value="local">Local only</option><option value="future-cloud">Future cloud</option></select></label>
           </div>
         </section>
+        ) : null}
 
         <section className="wp-meta-box">
           <h2>Sites & Domains</h2>
