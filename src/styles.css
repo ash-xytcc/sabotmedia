@@ -4806,6 +4806,66 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
   }
 }
 
+.print-lab-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.print-lab-card {
+  border: 1px solid var(--panel-border);
+  padding: 1rem;
+  background: var(--panel);
+}
+
+.print-lab-card h3 {
+  margin-top: 0;
+}
+
+.print-page {
+  background: #fff;
+  color: #111;
+}
+
+.print-page .print-wrap,
+.print-page .print-header,
+.print-page .print-hero {
+  background: #fff;
+  color: #111;
+  box-shadow: none;
+  border-color: #ddd;
+}
+
+.print-page .print-header__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.print-page .publication-mode-switch__link {
+  border-color: #c8c8c8;
+  color: #111;
+  background: #fff;
+}
+
+@media print {
+  .print-page,
+  .print-page .print-wrap,
+  .print-page .print-header,
+  .print-page .print-hero,
+  .print-page .piece-body__content,
+  .print-page .piece-body__content p,
+  .print-page .post-body__paragraph,
+  .print-page .post-body__heading,
+  .print-page .post-body__blockquote,
+  .print-page .post-body__caption {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+
 @media (max-width: 900px) {
   .piece-layout,
   .piece-page--experience .piece-layout {
