@@ -1,4 +1,6 @@
-import { NavLink, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
+import { loadSites } from '../lib/siteDomains'
 
 const MENU = [
   { to: '/admin', label: 'Dashboard' },
@@ -7,7 +9,6 @@ const MENU = [
   { to: '/media', label: 'Media' },
   { to: '/pages', label: 'Pages' },
   { to: '/customize', label: 'Customize' },
-  { to: '/analytics', label: 'Analytics' },
   { to: '/tools', label: 'Tools' },
   { to: '/settings', label: 'Settings' },
   { to: '/users', label: 'Users' },
@@ -29,11 +30,13 @@ function AdminBarMenu({ label, children, className = '' }) {
 export function AdminRail() {
   const location = useLocation()
   const [sites, setSites] = useState(() => loadSites())
-  const primarySite = sites[0]
 
   useEffect(() => {
     setSites(loadSites())
   }, [location.pathname])
+
+  const primarySite = sites[0]
+  const primarySiteName = String(primarySite?.name || 'Sabot Media').trim() || 'Sabot Media'
 
   return (
     <>
@@ -44,13 +47,12 @@ export function AdminRail() {
           </Link>
 
           <AdminBarMenu label="My Sites ▾">
-            <Link to="/" className="wp-admin-topbar__dropdown-link">Sabot Media</Link>
-            <Link to="/settings" className="wp-admin-topbar__dropdown-link">Add / connect another site or domain</Link>
-            <Link to="/admin" className="wp-admin-topbar__dropdown-link">Manage sites</Link>
+            <Link to="/" className="wp-admin-topbar__dropdown-link">{primarySiteName}</Link>
+            <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Manage Sites (not wired yet)</span>
+            <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Connect Domain (not wired yet)</span>
           </AdminBarMenu>
 
           <Link to="/" className="wp-admin-topbar__link">Sabot Media</Link>
-          <Link to="/admin" className="wp-admin-topbar__link" title="Comments (placeholder)">💬 0</Link>
 
           <AdminBarMenu label="+ New ▾">
             <Link to="/native-bridge?new=article" className="wp-admin-topbar__dropdown-link">Post</Link>
@@ -60,18 +62,12 @@ export function AdminRail() {
           </AdminBarMenu>
 
           <Link to="/customize" className="wp-admin-topbar__link">Customize</Link>
-          <Link to="/native-bridge" className="wp-admin-topbar__link">Edit Page</Link>
         </div>
 
         <div className="wp-admin-topbar__right">
-          <button type="button" className="wp-admin-topbar__link wp-admin-topbar__search" aria-label="Search placeholder" title="Search placeholder">
-            🔍
-          </button>
-
           <AdminBarMenu label="Howdy, sabotmedia ▾" className="wp-admin-topbar__menu--right">
-            <Link to="/users" className="wp-admin-topbar__dropdown-link">sabotmedia</Link>
-            <Link to="/users" className="wp-admin-topbar__dropdown-link">Edit Profile</Link>
-            <Link to="/admin" className="wp-admin-topbar__dropdown-link">Log Out</Link>
+            <Link to="/users" className="wp-admin-topbar__dropdown-link">Profile</Link>
+            <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Log Out (not wired yet)</span>
           </AdminBarMenu>
         </div>
       </div>
