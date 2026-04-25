@@ -37,6 +37,9 @@ function createTypedEntry(kind = 'article') {
     featuredImageTitle: '',
     featuredImageAlt: '',
     featuredImageCaption: '',
+    socialAutopostOnPublish: false,
+    socialContentWarning: '',
+    socialExcerpt: '',
   }
 }
 
@@ -163,6 +166,9 @@ function toAutosaveFingerprint(draft, allowComments) {
     categories: Array.isArray(draft?.categories) ? draft.categories : [],
     featuredImage: draft?.featuredImage || '',
     heroImage: draft?.heroImage || '',
+    socialAutopostOnPublish: Boolean(draft?.socialAutopostOnPublish),
+    socialContentWarning: draft?.socialContentWarning || '',
+    socialExcerpt: draft?.socialExcerpt || '',
     allowComments: Boolean(allowComments),
   })
 }
@@ -576,6 +582,36 @@ export function NativeContentBridgePage() {
                   </div>
                 </>
               )}
+            </article>
+
+            <article className="wp-meta-box">
+              <h2>Social Autopost (Scaffold)</h2>
+              <p className="description">No live posting yet. These fields prepare per-post social metadata only.</p>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={Boolean(draft.socialAutopostOnPublish)}
+                  onChange={(e) => setDraft((d) => ({ ...d, socialAutopostOnPublish: e.target.checked }))}
+                />{' '}
+                Autopost on publish
+              </label>
+              <label>
+                Content warning
+                <input
+                  type="text"
+                  value={draft.socialContentWarning || ''}
+                  placeholder="Optional CW for social scaffold"
+                  onChange={(e) => setDraft((d) => ({ ...d, socialContentWarning: e.target.value }))}
+                />
+              </label>
+              <label>
+                Social excerpt
+                <textarea
+                  value={draft.socialExcerpt || ''}
+                  placeholder="Optional social-specific excerpt"
+                  onChange={(e) => setDraft((d) => ({ ...d, socialExcerpt: e.target.value }))}
+                />
+              </label>
             </article>
           </aside>
         </section>

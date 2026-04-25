@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, NavLink, useLocation, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { getPieces } from '../lib/pieces'
 import { loadLocalMediaItems } from '../lib/localMediaLibrary'
@@ -605,10 +605,36 @@ export function SettingsAdminPage() {
     postsPerPage: 12,
     defaultPostType: 'article',
     mediaMode: 'local',
+    social: {
+      mastodonInstanceUrl: '',
+      mastodonAccessToken: '',
+      blueskyHandle: '',
+      blueskyAppPassword: '',
+      rssAutopostEnabled: true,
+      newsletterProvider: '',
+    },
   }))
+  const location = useLocation()
+  const isSocialPath = location.pathname === '/settings/social'
 
   function update(field, value) {
     setSettings((current) => ({ ...current, [field]: value }))
+  }
+
+  function updateSocial(field, value) {
+    setSettings((current) => ({
+      ...current,
+      social: {
+        mastodonInstanceUrl: '',
+        mastodonAccessToken: '',
+        blueskyHandle: '',
+        blueskyAppPassword: '',
+        rssAutopostEnabled: true,
+        newsletterProvider: '',
+        ...(current.social || {}),
+        [field]: value,
+      },
+    }))
   }
 
   function saveSettings() {
@@ -624,6 +650,16 @@ export function SettingsAdminPage() {
         </div>
 
         <section className="wp-meta-box">
+          <h2>Settings Sections</h2>
+          <p className="description">This area is scaffolded. Social autopost provider wiring has not been implemented yet.</p>
+          <p>
+            <NavLink className="button" to="/settings">General</NavLink>{' '}
+            <NavLink className="button" to="/settings/social">Social</NavLink>
+          </p>
+        </section>
+
+        {!isSocialPath ? (
+        <section className="wp-meta-box">
           <h2>General Settings</h2>
 
           <div className="wp-settings-form">
@@ -635,6 +671,64 @@ export function SettingsAdminPage() {
             <label><span>Media mode</span><select value={settings.mediaMode} onChange={(e) => update('mediaMode', e.target.value)}><option value="local">Local only</option><option value="future-cloud">Future cloud</option></select></label>
           </div>
         </section>
+        ) : (
+          <section className="wp-meta-box">
+            <h2>Social Sharing / Autopost (Scaffold)</h2>
+            <p className="description">Placeholder credentials only. No real API posting or outbound integrations are active yet.</p>
+            <div className="wp-settings-form">
+              <label>
+                <span>Fediverse / Mastodon instance URL</span>
+                <input
+                  placeholder="https://mastodon.social"
+                  value={settings.social?.mastodonInstanceUrl || ''}
+                  onChange={(e) => updateSocial('mastodonInstanceUrl', e.target.value)}
+                />
+              </label>
+              <label>
+                <span>Mastodon access token (placeholder)</span>
+                <input
+                  type="password"
+                  placeholder="mastodon-token-placeholder"
+                  value={settings.social?.mastodonAccessToken || ''}
+                  onChange={(e) => updateSocial('mastodonAccessToken', e.target.value)}
+                />
+              </label>
+              <label>
+                <span>Bluesky handle</span>
+                <input
+                  placeholder="you.bsky.social"
+                  value={settings.social?.blueskyHandle || ''}
+                  onChange={(e) => updateSocial('blueskyHandle', e.target.value)}
+                />
+              </label>
+              <label>
+                <span>Bluesky app password (placeholder)</span>
+                <input
+                  type="password"
+                  placeholder="xxxx-xxxx-xxxx-xxxx"
+                  value={settings.social?.blueskyAppPassword || ''}
+                  onChange={(e) => updateSocial('blueskyAppPassword', e.target.value)}
+                />
+              </label>
+              <label>
+                <span>RSS feed autopost</span>
+                <input
+                  type="checkbox"
+                  checked={Boolean(settings.social?.rssAutopostEnabled)}
+                  onChange={(e) => updateSocial('rssAutopostEnabled', e.target.checked)}
+                />
+              </label>
+              <label>
+                <span>Email / newsletter provider (placeholder)</span>
+                <input
+                  placeholder="ConvertKit, Ghost, Mailchimp, etc."
+                  value={settings.social?.newsletterProvider || ''}
+                  onChange={(e) => updateSocial('newsletterProvider', e.target.value)}
+                />
+              </label>
+            </div>
+          </section>
+        )}
       </main>
     </AdminFrame>
   )
