@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
-import { getPieces } from '../lib/pieces'
-import { loadLocalMediaItems } from '../lib/localMediaLibrary'
 import { exportNativeCollection, loadNativeCollection } from '../lib/nativePublicContent'
 import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
 import { loadSites } from '../lib/siteDomains'
@@ -445,6 +443,15 @@ export function ToolsAdminPage() {
     setNotices((current) => [{ id: `${Date.now()}-${Math.random()}`, type, message }, ...current].slice(0, 6))
   }
 
+  async function runSiteBackupExport() {
+    const nativeItems = await loadNativeCollection()
+    const payload = exportLocalSiteBackupJson({ nativeItems })
+    const stamp = new Date().toISOString().slice(0, 10)
+    downloadJson(`sabot-site-backup-${stamp}.json`, payload)
+    const copied = await copyToClipboard(payload)
+    addNotice('success', `Site backup export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+  }
+
   async function runNativeExport() {
     const collection = await loadNativeCollection()
     const payload = exportNativeCollection(collection)
@@ -470,35 +477,33 @@ export function ToolsAdminPage() {
     addNotice('success', `Public settings export downloaded${copied ? ' and copied to clipboard' : ''}.`)
   }
 
-  function runMediaAudit() {
-    const pieces = getPieces()
-    const localMedia = loadLocalMediaItems()
-    const importedMediaCount = pieces.filter((piece) => String(piece.sourceType || '').toLowerCase() !== 'manual').length
-    const missingFeaturedImages = pieces.filter((piece) => !String(piece.heroImage || piece.featuredImage || '').trim()).length
+  async function runMediaAudit() {
+    const nativeItems = await loadNativeCollection()
+    const summary = buildMediaAuditSummary({ nativeItems })
     addNotice(
       'success',
-      `Media audit complete. Total media items: ${localMedia.length + importedMediaCount}. Local uploads: ${localMedia.length}. Imported media references: ${importedMediaCount}. Missing featured images: ${missingFeaturedImages}.`
+      `Media audit complete. Total media items: ${summary.totalMediaItems}. Local uploads: ${summary.localUploads}. Imported media references: ${summary.importedMediaReferences}. Missing featured images: ${summary.missingFeaturedImages}.`
     )
   }
+
 
   function runBrokenImageAudit() {
     addNotice('warning', 'Broken image audit scaffold is in place, but URL validation checks are not implemented yet.')
   }
 
-  function runLocalStorageInventory() {
-    const inventory = []
-    for (let index = 0; index < window.localStorage.length; index += 1) {
-      const key = window.localStorage.key(index)
-      if (!key) continue
-      const value = window.localStorage.getItem(key) || ''
-      inventory.push({ key, bytes: new Blob([value]).size })
-    }
-    inventory.sort((a, b) => b.bytes - a.bytes)
-    const summary = inventory.map((entry) => `${entry.key}: ${entry.bytes} bytes`).join('\n')
-    addNotice('success', `LocalStorage inventory complete. ${inventory.length} keys scanned.`)
-    if (summary) {
-      copyToClipboard(summary)
-    }
+  async function runLocalStorageInventory() {
+    const inventory = buildLocalStorageInventory()
+    const summary = inventory.items.map((entry) => `${entry.key}: ${entry.bytes} bytes`).join('\n')
+    const payload = JSON.stringify(inventory, null, 2)
+    const stamp = new Date().toISOString().slice(0, 10)
+
+    downloadJson(`localstorage-inventory-${stamp}.json`, payload)
+    const copied = summary ? await copyToClipboard(summary) : false
+
+    addNotice(
+      'success',
+      `LocalStorage inventory complete. ${inventory.keyCount} keys scanned (${inventory.totalBytes} bytes total)${copied ? ' and copied to clipboard' : ''}.`
+    )
   }
 
   async function runSiteBackupExport() {
@@ -550,6 +555,13 @@ export function ToolsAdminPage() {
       },
     },
     {
+      name: 'Export Site Backup JSON',
+      status: 'Ready',
+      notes: 'Exports local native posts, media, settings, customizer, navigation, users/roles scaffold, localStorage inventory, and media audit summary.',
+      actionLabel: 'Run export',
+      action: runSiteBackupExport,
+    },
+    {
       name: 'Export native content JSON',
       status: 'Ready',
       notes: 'Downloads current native content collection and copies JSON when clipboard access is allowed.',
@@ -580,7 +592,7 @@ export function ToolsAdminPage() {
     {
       name: 'Run localStorage inventory',
       status: 'Ready',
-      notes: 'Scans localStorage keys, sizes values in bytes, and copies a text summary.',
+      notes: 'Scans localStorage keys, sizes values in bytes, downloads JSON, and copies a text summary.',
       actionLabel: 'Run inventory',
       action: runLocalStorageInventory,
     },
@@ -657,6 +669,8 @@ export function SettingsAdminPage() {
     },
   }))
   const siteScaffolds = useMemo(() => loadSites(), [])
+  const location = useLocation()
+  const isSocialPath = location.pathname.includes('/settings/social')
 
   function update(field, value) {
     setSettings((current) => ({ ...current, [field]: value }))
