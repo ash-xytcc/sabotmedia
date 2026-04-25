@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
-import { getPieces } from '../lib/pieces'
-import { loadLocalMediaItems } from '../lib/localMediaLibrary'
 import { exportNativeCollection, loadNativeCollection } from '../lib/nativePublicContent'
 import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
 import { loadSites } from '../lib/siteDomains'
+import { buildLocalStorageInventory, buildMediaAuditSummary, exportLocalSiteBackupJson } from '../lib/localSiteBackup'
 
 const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
 const MENU_KEY = 'sabot-wp-clone-menu-v1'
@@ -444,6 +443,15 @@ export function ToolsAdminPage() {
     setNotices((current) => [{ id: `${Date.now()}-${Math.random()}`, type, message }, ...current].slice(0, 6))
   }
 
+  async function runSiteBackupExport() {
+    const nativeItems = await loadNativeCollection()
+    const payload = exportLocalSiteBackupJson({ nativeItems })
+    const stamp = new Date().toISOString().slice(0, 10)
+    downloadJson(`sabot-site-backup-${stamp}.json`, payload)
+    const copied = await copyToClipboard(payload)
+    addNotice('success', `Site backup export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+  }
+
   async function runNativeExport() {
     const collection = await loadNativeCollection()
     const payload = exportNativeCollection(collection)
@@ -469,36 +477,35 @@ export function ToolsAdminPage() {
     addNotice('success', `Public settings export downloaded${copied ? ' and copied to clipboard' : ''}.`)
   }
 
-  function runMediaAudit() {
-    const pieces = getPieces()
-    const localMedia = loadLocalMediaItems()
-    const importedMediaCount = pieces.filter((piece) => String(piece.sourceType || '').toLowerCase() !== 'manual').length
-    const missingFeaturedImages = pieces.filter((piece) => !String(piece.heroImage || piece.featuredImage || '').trim()).length
+  async function runMediaAudit() {
+    const nativeItems = await loadNativeCollection()
+    const summary = buildMediaAuditSummary({ nativeItems })
     addNotice(
       'success',
-      `Media audit complete. Total media items: ${localMedia.length + importedMediaCount}. Local uploads: ${localMedia.length}. Imported media references: ${importedMediaCount}. Missing featured images: ${missingFeaturedImages}.`
+      `Media audit complete. Total media items: ${summary.totalMediaItems}. Local uploads: ${summary.localUploads}. Imported media references: ${summary.importedMediaReferences}. Missing featured images: ${summary.missingFeaturedImages}.`
     )
   }
+
 
   function runBrokenImageAudit() {
     addNotice('warning', 'Broken image audit scaffold is in place, but URL validation checks are not implemented yet.')
   }
 
-  function runLocalStorageInventory() {
-    const inventory = []
-    for (let index = 0; index < window.localStorage.length; index += 1) {
-      const key = window.localStorage.key(index)
-      if (!key) continue
-      const value = window.localStorage.getItem(key) || ''
-      inventory.push({ key, bytes: new Blob([value]).size })
-    }
-    inventory.sort((a, b) => b.bytes - a.bytes)
-    const summary = inventory.map((entry) => `${entry.key}: ${entry.bytes} bytes`).join('\n')
-    addNotice('success', `LocalStorage inventory complete. ${inventory.length} keys scanned.`)
-    if (summary) {
-      copyToClipboard(summary)
-    }
+  async function runLocalStorageInventory() {
+    const inventory = buildLocalStorageInventory()
+    const summary = inventory.items.map((entry) => `${entry.key}: ${entry.bytes} bytes`).join('\n')
+    const payload = JSON.stringify(inventory, null, 2)
+    const stamp = new Date().toISOString().slice(0, 10)
+
+    downloadJson(`localstorage-inventory-${stamp}.json`, payload)
+    const copied = summary ? await copyToClipboard(summary) : false
+
+    addNotice(
+      'success',
+      `LocalStorage inventory complete. ${inventory.keyCount} keys scanned (${inventory.totalBytes} bytes total)${copied ? ' and copied to clipboard' : ''}.`
+    )
   }
+
 
   const tools = [
     {
@@ -509,6 +516,13 @@ export function ToolsAdminPage() {
       action: () => {
         window.location.assign('/tools/print')
       },
+    },
+    {
+      name: 'Export Site Backup JSON',
+      status: 'Ready',
+      notes: 'Exports local native posts, media, settings, customizer, navigation, users/roles scaffold, localStorage inventory, and media audit summary.',
+      actionLabel: 'Run export',
+      action: runSiteBackupExport,
     },
     {
       name: 'Export native content JSON',
@@ -541,7 +555,7 @@ export function ToolsAdminPage() {
     {
       name: 'Run localStorage inventory',
       status: 'Ready',
-      notes: 'Scans localStorage keys, sizes values in bytes, and copies a text summary.',
+      notes: 'Scans localStorage keys, sizes values in bytes, downloads JSON, and copies a text summary.',
       actionLabel: 'Run inventory',
       action: runLocalStorageInventory,
     },
@@ -616,6 +630,8 @@ export function SettingsAdminPage() {
     },
   }))
   const siteScaffolds = useMemo(() => loadSites(), [])
+  const location = useLocation()
+  const isSocialPath = location.pathname.includes('/settings/social')
 
   function update(field, value) {
     setSettings((current) => ({ ...current, [field]: value }))
@@ -659,24 +675,40 @@ export function SettingsAdminPage() {
         </section>
 
         {!isSocialPath ? (
-        <section className="wp-meta-box">
-          <h2>General Settings</h2>
+          <>
+            <section className="wp-meta-box">
+              <h2>General Settings</h2>
 
-          <div className="wp-settings-form">
-            <label><span>Site Title</span><input value={settings.siteTitle} onChange={(e) => update('siteTitle', e.target.value)} /></label>
-            <label><span>Tagline</span><input value={settings.tagline} onChange={(e) => update('tagline', e.target.value)} /></label>
-            <label><span>Homepage source</span><select value={settings.homepageSource} onChange={(e) => update('homepageSource', e.target.value)}><option value="latest">Latest posts</option><option value="featured">Featured post</option></select></label>
-            <label><span>Posts per page</span><input type="number" value={settings.postsPerPage} onChange={(e) => update('postsPerPage', Number(e.target.value || 12))} /></label>
-            <label><span>Default post type</span><select value={settings.defaultPostType} onChange={(e) => update('defaultPostType', e.target.value)}><option value="article">Article</option><option value="podcast">Podcast</option><option value="print">Print</option></select></label>
-            <label><span>Media mode</span><select value={settings.mediaMode} onChange={(e) => update('mediaMode', e.target.value)}><option value="local">Local only</option><option value="future-cloud">Future cloud</option></select></label>
-          </div>
-        </section>
+              <div className="wp-settings-form">
+                <label><span>Site Title</span><input value={settings.siteTitle} onChange={(e) => update('siteTitle', e.target.value)} /></label>
+                <label><span>Tagline</span><input value={settings.tagline} onChange={(e) => update('tagline', e.target.value)} /></label>
+                <label><span>Homepage source</span><select value={settings.homepageSource} onChange={(e) => update('homepageSource', e.target.value)}><option value="latest">Latest posts</option><option value="featured">Featured post</option></select></label>
+                <label><span>Posts per page</span><input type="number" value={settings.postsPerPage} onChange={(e) => update('postsPerPage', Number(e.target.value || 12))} /></label>
+                <label><span>Default post type</span><select value={settings.defaultPostType} onChange={(e) => update('defaultPostType', e.target.value)}><option value="article">Article</option><option value="podcast">Podcast</option><option value="print">Print</option></select></label>
+                <label><span>Media mode</span><select value={settings.mediaMode} onChange={(e) => update('mediaMode', e.target.value)}><option value="local">Local only</option><option value="future-cloud">Future cloud</option></select></label>
+              </div>
+            </section>
 
-        <section className="wp-meta-box">
-          <h2>Sites & Domains</h2>
-          <p className="description">Manage local multisite-inspired scaffolds ({siteScaffolds.length} total). No DNS provider integration yet.</p>
-          <p><Link to="/settings/sites">Open Sites &amp; Domains manager</Link></p>
-        </section>
+            <section className="wp-meta-box">
+              <h2>Sites & Domains</h2>
+              <p className="description">Manage local multisite-inspired scaffolds ({siteScaffolds.length} total). No DNS provider integration yet.</p>
+              <p><Link to="/settings/sites">Open Sites &amp; Domains manager</Link></p>
+            </section>
+          </>
+        ) : (
+          <section className="wp-meta-box">
+            <h2>Social Settings</h2>
+            <p className="description">Provider wiring is scaffold-only. Values are saved locally.</p>
+
+            <div className="wp-settings-form">
+              <label><span>Mastodon instance URL</span><input value={settings.social?.mastodonInstanceUrl || ''} onChange={(e) => updateSocial('mastodonInstanceUrl', e.target.value)} /></label>
+              <label><span>Mastodon access token</span><input value={settings.social?.mastodonAccessToken || ''} onChange={(e) => updateSocial('mastodonAccessToken', e.target.value)} /></label>
+              <label><span>Bluesky handle</span><input value={settings.social?.blueskyHandle || ''} onChange={(e) => updateSocial('blueskyHandle', e.target.value)} /></label>
+              <label><span>Bluesky app password</span><input value={settings.social?.blueskyAppPassword || ''} onChange={(e) => updateSocial('blueskyAppPassword', e.target.value)} /></label>
+              <label><span>Newsletter provider</span><input value={settings.social?.newsletterProvider || ''} onChange={(e) => updateSocial('newsletterProvider', e.target.value)} /></label>
+            </div>
+          </section>
+        )}
       </main>
     </AdminFrame>
   )
