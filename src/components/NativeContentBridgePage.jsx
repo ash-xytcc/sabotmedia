@@ -110,6 +110,21 @@ function wrapSelectionWithHtmlBlock(textarea, style) {
   return { next, cursorStart, cursorEnd }
 }
 
+function escapeHtmlAttribute(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+}
+
+function escapeHtmlText(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+}
+
 const AUTOSAVE_DEBOUNCE_MS = 1200
 const LOCAL_REVISIONS_KEY_PREFIX = 'sabot-native-local-revisions-v1'
 
@@ -760,7 +775,13 @@ export function NativeContentBridgePage() {
               }))
             }
             if (openMediaFor === 'body') {
-              insertAtCursor(`\n<img src="${selectedMedia.url}" alt="${selectedMedia.alt}" />\n`)
+              const escapedUrl = escapeHtmlAttribute(selectedMedia.url)
+              const escapedAlt = escapeHtmlAttribute(selectedMedia.alt)
+              const escapedCaption = escapeHtmlText(selectedMedia.caption)
+              const markup = escapedCaption
+                ? `\n<figure><img src="${escapedUrl}" alt="${escapedAlt}" /><figcaption>${escapedCaption}</figcaption></figure>\n`
+                : `\n<img src="${escapedUrl}" alt="${escapedAlt}" />\n`
+              insertAtCursor(markup)
             }
             setOpenMediaFor('')
           }}
