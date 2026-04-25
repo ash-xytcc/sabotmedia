@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, NavLink, useLocation, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { getPieces } from '../lib/pieces'
 import { loadLocalMediaItems } from '../lib/localMediaLibrary'
@@ -606,11 +606,35 @@ export function SettingsAdminPage() {
     postsPerPage: 12,
     defaultPostType: 'article',
     mediaMode: 'local',
+    social: {
+      mastodonInstanceUrl: '',
+      mastodonAccessToken: '',
+      blueskyHandle: '',
+      blueskyAppPassword: '',
+      rssAutopostEnabled: true,
+      newsletterProvider: '',
+    },
   }))
   const siteScaffolds = useMemo(() => loadSites(), [])
 
   function update(field, value) {
     setSettings((current) => ({ ...current, [field]: value }))
+  }
+
+  function updateSocial(field, value) {
+    setSettings((current) => ({
+      ...current,
+      social: {
+        mastodonInstanceUrl: '',
+        mastodonAccessToken: '',
+        blueskyHandle: '',
+        blueskyAppPassword: '',
+        rssAutopostEnabled: true,
+        newsletterProvider: '',
+        ...(current.social || {}),
+        [field]: value,
+      },
+    }))
   }
 
   function saveSettings() {
@@ -625,6 +649,16 @@ export function SettingsAdminPage() {
           <button className="button button--primary" type="button" onClick={saveSettings}>Save Changes</button>
         </div>
 
+        <section className="wp-meta-box">
+          <h2>Settings Sections</h2>
+          <p className="description">This area is scaffolded. Social autopost provider wiring has not been implemented yet.</p>
+          <p>
+            <NavLink className="button" to="/settings">General</NavLink>{' '}
+            <NavLink className="button" to="/settings/social">Social</NavLink>
+          </p>
+        </section>
+
+        {!isSocialPath ? (
         <section className="wp-meta-box">
           <h2>General Settings</h2>
 
