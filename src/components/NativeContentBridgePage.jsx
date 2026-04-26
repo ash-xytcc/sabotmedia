@@ -6,7 +6,7 @@ import {
   loadNativeCollection,
   slugify,
   upsertNativeEntryLocal,
-  upsertNativeEntry,
+  upsertNativeEntryWithMeta,
 } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
@@ -253,7 +253,6 @@ export function NativeContentBridgePage() {
   const { pushNotice } = useAdminNotices()
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
-  const publicPieceSlugSet = useMemo(() => new Set(getPieces().map((piece) => piece.slug).filter(Boolean)), [])
   const mostUsedCategories = useMemo(() => {
     const counts = new Map()
     for (const item of items) {
@@ -375,36 +374,45 @@ export function NativeContentBridgePage() {
 
   async function handleSave(note = 'save', patch = {}, options = {}) {
     const normalized = buildNormalizedDraft(draft, patch)
-    const next = await upsertNativeEntry(items, normalized, note)
-    setItems(next)
-    const saved = next.find((item) => item.id === normalized.id)
+    const result = await upsertNativeEntryWithMeta(items, normalized, note)
+    setItems(result.items)
+    const saved = result.items.find((item) => item.id === normalized.id)
     if (saved) {
       setActiveId(saved.id)
       setDraft(saved)
       setPermalinkDraft(saved.slug || '')
       const snapshot = saveLocalRevision(saved.id, saved, note)
       setRevisions(snapshot.revisions)
+      if (!result.synced) {
+        pushNotice('Changes were saved locally, but syncing to the server failed.', 'warning')
+      }
       if (options.successNotice !== false) {
         pushNotice(options.successNotice || 'Post saved.', 'success')
       }
     }
-    return saved || null
+    if (!saved) {
+      pushNotice(options.failureNotice || 'Save failed.', 'error')
+    }
+    return { saved: saved || null, synced: result.synced }
   }
 
   async function handleMoveToTrash() {
-    const saved = await handleSave('trash', {
+    const { saved } = await handleSave('trash', {
       status: 'trash',
-      workflowState: 'draft',
-    }, { successNotice: false })
+      workflowState: 'trash',
+    }, { successNotice: false, failureNotice: 'Move to Trash failed.' })
     if (saved) pushNotice('Post moved to Trash.', 'warning')
   }
 
   async function handlePreviewChanges() {
-    const saved = await handleSave('preview', {}, { successNotice: false })
+    const { saved } = await handleSave('preview', {}, { successNotice: false, failureNotice: 'Preview failed to save changes.' })
     if (!saved) return
-    const canResolvePublicRoute = saved.status === 'published' && Boolean(saved.slug) && publicPieceSlugSet.has(saved.slug)
+    const canResolvePublicRoute = saved.status === 'published' && Boolean(saved.slug)
     const previewPath = canResolvePublicRoute ? `/post/${saved.slug}` : `/native-preview/${saved.id}`
-    window.open(previewPath, '_blank', 'noopener,noreferrer')
+    const nextWindow = window.open(previewPath, '_blank', 'noopener,noreferrer')
+    if (!nextWindow) {
+      pushNotice('Preview window was blocked by your browser.', 'error')
+    }
   }
 
   function applyEditorMutation(mutator) {
@@ -640,10 +648,10 @@ export function NativeContentBridgePage() {
                 <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
                 <button type="button" className="button button--primary" onClick={async () => {
                   const isScheduled = Boolean(draft.scheduledFor) && new Date(draft.scheduledFor).getTime() > Date.now()
-                  const saved = await handleSave('publish', {
+                  const { saved } = await handleSave('publish', {
                     status: isScheduled ? 'scheduled' : 'published',
                     workflowState: isScheduled ? 'scheduled' : 'published',
-                  }, { successNotice: false })
+                  }, { successNotice: false, failureNotice: 'Publish failed.' })
                   if (saved) {
                     setDraft(saved)
                     pushNotice('Post published.', 'success')
@@ -652,7 +660,7 @@ export function NativeContentBridgePage() {
                 {draft?.id && ['published', 'scheduled'].includes(draft?.status) ? (
                   <Link
                     className="button"
-                    to={draft.slug && publicPieceSlugSet.has(draft.slug) ? `/post/${draft.slug}` : `/native-preview/${draft.id}`}
+                    to={draft.slug ? `/post/${draft.slug}` : `/native-preview/${draft.id}`}
                     target="_blank"
                     rel="noreferrer"
                   >
