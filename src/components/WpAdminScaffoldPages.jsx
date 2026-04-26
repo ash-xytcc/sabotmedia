@@ -5,6 +5,7 @@ import { exportNativeCollection, loadNativeCollection } from '../lib/nativePubli
 import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
 import { loadSites } from '../lib/siteDomains'
 import { DEFAULT_CUSTOMIZER_SETTINGS, loadCustomizerSettings, saveCustomizerSettings } from '../lib/customizerLocal'
+import { buildLocalStorageInventory, buildMediaAuditSummary, exportLocalSiteBackupJson } from '../lib/localSiteBackup'
 
 const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
 const MENU_KEY = 'sabot-wp-clone-menu-v1'
@@ -438,116 +439,99 @@ export function SiteEditorAdminPage() {
 
 export function ToolsAdminPage() {
   const [notices, setNotices] = useState([])
+  const [running, setRunning] = useState('')
 
   function addNotice(type, message) {
     setNotices((current) => [{ id: `${Date.now()}-${Math.random()}`, type, message }, ...current].slice(0, 6))
   }
 
-  async function runSiteBackupExport() {
-    const nativeItems = await loadNativeCollection()
-    const payload = exportLocalSiteBackupJson({ nativeItems })
-    const stamp = new Date().toISOString().slice(0, 10)
-    downloadJson(`sabot-site-backup-${stamp}.json`, payload)
-    const copied = await copyToClipboard(payload)
-    addNotice('success', `Site backup export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+  async function withToolRun(toolName, fn) {
+    try {
+      setRunning(toolName)
+      await fn()
+    } catch (err) {
+      addNotice('warning', `${toolName} failed: ${String(err?.message || err)}`)
+    } finally {
+      setRunning('')
+    }
   }
 
-  async function runNativeExport() {
-    const collection = await loadNativeCollection()
-    const payload = exportNativeCollection(collection)
-    const stamp = new Date().toISOString().slice(0, 10)
-    downloadJson(`native-content-export-${stamp}.json`, payload)
-    const copied = await copyToClipboard(payload)
-    addNotice('success', `Native content export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+  function runSiteBackupExport() {
+    return withToolRun('Export Site Backup JSON', async () => {
+      const nativeItems = await loadNativeCollection({ includeFuture: 1 })
+      const payload = exportLocalSiteBackupJson({ nativeItems })
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadJson(`sabot-site-backup-${stamp}.json`, payload)
+      const copied = await copyToClipboard(payload)
+      addNotice('success', `Site backup export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+    })
   }
 
-  async function runPublicSettingsExport() {
-    const runtime = getStoredPublicConfig()
-    const payload = JSON.stringify(
-      {
-        exportedAt: new Date().toISOString(),
-        config: resolvePublicConfig(runtime),
-      },
-      null,
-      2
-    )
-    const stamp = new Date().toISOString().slice(0, 10)
-    downloadJson(`public-settings-export-${stamp}.json`, payload)
-    const copied = await copyToClipboard(payload)
-    addNotice('success', `Public settings export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+  function runNativeExport() {
+    return withToolRun('Export native content JSON', async () => {
+      const collection = await loadNativeCollection()
+      const payload = exportNativeCollection(collection)
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadJson(`native-content-export-${stamp}.json`, payload)
+      const copied = await copyToClipboard(payload)
+      addNotice('success', `Native content export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+    })
   }
 
-  async function runMediaAudit() {
-    const nativeItems = await loadNativeCollection()
-    const summary = buildMediaAuditSummary({ nativeItems })
-    addNotice(
-      'success',
-      `Media audit complete. Total media items: ${summary.totalMediaItems}. Local uploads: ${summary.localUploads}. Imported media references: ${summary.importedMediaReferences}. Missing featured images: ${summary.missingFeaturedImages}.`
-    )
+  function runPublicSettingsExport() {
+    return withToolRun('Export public settings JSON', async () => {
+      const runtime = getStoredPublicConfig()
+      const payload = JSON.stringify(
+        {
+          exportedAt: new Date().toISOString(),
+          config: resolvePublicConfig(runtime),
+        },
+        null,
+        2
+      )
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadJson(`public-settings-export-${stamp}.json`, payload)
+      const copied = await copyToClipboard(payload)
+      addNotice('success', `Public settings export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+    })
   }
 
+  function runMediaAudit() {
+    return withToolRun('Run media audit', async () => {
+      const nativeItems = await loadNativeCollection({ includeFuture: 1 })
+      const summary = buildMediaAuditSummary({ nativeItems })
+      addNotice(
+        'success',
+        `Media audit complete. Total media: ${summary.totalMedia}. Local uploaded media: ${summary.localUploadedMedia}. Imported media: ${summary.importedMedia}. Missing featured image count: ${summary.missingFeaturedImages}.`
+      )
+    })
+  }
 
   function runBrokenImageAudit() {
     addNotice('warning', 'Broken image audit scaffold is in place, but URL validation checks are not implemented yet.')
   }
 
-  async function runLocalStorageInventory() {
-    const inventory = buildLocalStorageInventory()
-    const summary = inventory.items.map((entry) => `${entry.key}: ${entry.bytes} bytes`).join('\n')
-    const payload = JSON.stringify(inventory, null, 2)
-    const stamp = new Date().toISOString().slice(0, 10)
+  function runLocalStorageInventory() {
+    return withToolRun('Run localStorage inventory', async () => {
+      const inventory = buildLocalStorageInventory()
+      const summary = inventory.items.map((entry) => `${entry.key}: ${entry.bytes} bytes`).join('\n')
+      const payload = JSON.stringify(inventory, null, 2)
+      const stamp = new Date().toISOString().slice(0, 10)
 
-    downloadJson(`localstorage-inventory-${stamp}.json`, payload)
-    const copied = summary ? await copyToClipboard(summary) : false
+      downloadJson(`localstorage-inventory-${stamp}.json`, payload)
+      const copied = summary ? await copyToClipboard(summary) : false
 
-    addNotice(
-      'success',
-      `LocalStorage inventory complete. ${inventory.keyCount} keys scanned (${inventory.totalBytes} bytes total)${copied ? ' and copied to clipboard' : ''}.`
-    )
-  }
-
-  async function runSiteBackupExport() {
-    const nativePosts = await loadNativeCollection({ includeFuture: 1 })
-    const localMedia = loadLocalMediaItems()
-    const settings = loadJson(SETTINGS_KEY, {})
-    const customizer = loadCustomizerSettings()
-    const navMenu = loadJson(MENU_KEY, [])
-    const users = loadJson(USER_ROLE_SETTINGS_KEY, { users: [], roles: [] })
-    const runtimeConfig = getStoredPublicConfig()
-    const payload = JSON.stringify(
-      {
-        exportedAt: new Date().toISOString(),
-        app: 'Sabot Media WP Clone',
-        schemaVersion: 1,
-        backup: {
-          nativePosts,
-          localMedia,
-          settings,
-          customizer,
-          navMenu,
-          users,
-          publicConfig: resolvePublicConfig(runtimeConfig),
-        },
-      },
-      null,
-      2
-    )
-    const stamp = new Date().toISOString().slice(0, 10)
-    downloadJson(`sabot-site-backup-${stamp}.json`, payload)
-    addNotice('success', 'Site backup export downloaded as JSON.')
+      addNotice(
+        'success',
+        `LocalStorage inventory complete. ${inventory.keyCount} keys scanned (${inventory.totalBytes} bytes total)${copied ? ' and copied to clipboard' : ''}.`
+      )
+    })
   }
 
   const tools = [
     {
-      name: 'Export Site Backup JSON',
-      status: 'Ready',
-      notes: 'Downloads a local backup including native posts, local media, settings, customizer, menu/nav, and user scaffold data.',
-      actionLabel: 'Export backup',
-      action: runSiteBackupExport,
-    },
-    {
       name: 'Print Lab',
-      status: 'Not wired yet',
+      status: 'Not wired',
       notes: 'Publication print scaffolds including print PDF export path, zine imposition, button maker, and poster tiler.',
       actionLabel: 'Open Print Lab',
       action: () => {
@@ -631,7 +615,9 @@ export function ToolsAdminPage() {
                   <td>{tool.status}</td>
                   <td>{tool.notes}</td>
                   <td>
-                    <button className="button" type="button" onClick={tool.action}>{tool.actionLabel}</button>
+                    <button className="button" type="button" onClick={tool.action} disabled={running === tool.name}>
+                      {running === tool.name ? 'Running…' : tool.actionLabel}
+                    </button>
                   </td>
                 </tr>
               ))}

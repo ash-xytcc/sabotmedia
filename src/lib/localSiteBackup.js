@@ -42,14 +42,30 @@ export function buildLocalStorageInventory() {
 
 export function buildMediaAuditSummary({ nativeItems = [] } = {}) {
   const localMedia = loadLocalMediaItems()
-  const importedMediaReferences = (nativeItems || []).filter((item) => String(item?.sourceType || '').toLowerCase() !== 'manual').length
+  const localUploadedMedia = localMedia.filter((item) => String(item?.source || '').toLowerCase() === 'local-upload').length
+  const importedLibraryMedia = localMedia.filter((item) => String(item?.source || '').toLowerCase() !== 'local-upload').length
+  const importedMediaReferences = (nativeItems || []).filter((item) => {
+    const featured = String(item?.heroImage || item?.featuredImage || '').trim()
+    if (!featured) return false
+    if (featured.startsWith('data:')) return false
+    if (featured.startsWith('/')) return false
+    return /^https?:\/\//i.test(featured)
+  }).length
   const missingFeaturedImages = (nativeItems || []).filter((item) => !String(item?.heroImage || item?.featuredImage || '').trim()).length
 
+  const importedMedia = importedLibraryMedia + importedMediaReferences
+  const totalMedia = localUploadedMedia + importedMedia
+
   return {
-    totalMediaItems: localMedia.length + importedMediaReferences,
-    localUploads: localMedia.length,
+    totalMedia,
+    localUploadedMedia,
+    importedMedia,
     importedMediaReferences,
+    importedLibraryMedia,
     missingFeaturedImages,
+    // Legacy aliases for existing UI scaffolds.
+    totalMediaItems: totalMedia,
+    localUploads: localUploadedMedia,
   }
 }
 
