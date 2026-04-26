@@ -92,7 +92,7 @@ export function PagesAdminPage() {
                   <td>
                     <div className="wp-row-actions">
                       <Link to={page.path}>View</Link>
-                      <Link to={`${page.path}?edit=site`}>Edit Live</Link>
+                      <Link to={`/customize?section=${page.customizeSection}`}>Edit Live</Link>
                       <Link to={`/customize?section=${page.customizeSection}`}>Customize</Link>
                     </div>
                   </td>
@@ -441,15 +441,6 @@ export function ToolsAdminPage() {
 
   function addNotice(type, message) {
     setNotices((current) => [{ id: `${Date.now()}-${Math.random()}`, type, message }, ...current].slice(0, 6))
-  }
-
-  async function runSiteBackupExport() {
-    const nativeItems = await loadNativeCollection()
-    const payload = exportLocalSiteBackupJson({ nativeItems })
-    const stamp = new Date().toISOString().slice(0, 10)
-    downloadJson(`sabot-site-backup-${stamp}.json`, payload)
-    const copied = await copyToClipboard(payload)
-    addNotice('success', `Site backup export downloaded${copied ? ' and copied to clipboard' : ''}.`)
   }
 
   async function runNativeExport() {
