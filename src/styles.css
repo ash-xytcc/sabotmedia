@@ -8030,7 +8030,7 @@ a.button {
 .wp-media-layout--list .wp-media-item,
 .wp-media-modal__body--list .wp-media-item { grid-template-columns: 72px minmax(0, 1fr); align-items: stretch; }
 .wp-media-layout--list .wp-media-item__thumb-wrap,
-.wp-media-modal__body--list .wp-media-item__thumb-wrap { aspect-ratio: auto; min-height: 72px; height: 72px; }
+.wp-media-modal__body--list .wp-media-item__thumb-wrap { width: 72px; aspect-ratio: 1 / 1; min-height: 72px; height: 72px; }
 .wp-media-layout--list .wp-media-item__meta,
 .wp-media-modal__body--list .wp-media-item__meta { border-top: 0; border-left: 1px solid #dcdcde; display: grid; align-items: center; }
 .wp-media-layout--grid .wp-media-item__meta,
