@@ -52,6 +52,47 @@ async function copyToClipboard(value) {
   }
 }
 
+
+function downloadJsonFile(filename, payload) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
+}
+
+function runSiteBackupExport() {
+  const keys = [
+    'sabot-native-content-v1',
+    'sabot-local-media-v1',
+    'sabot-wp-clone-settings-v1',
+    'sabot-wp-clone-menu-v1',
+    'sabot-wp-clone-user-role-settings-v1',
+    'sabot-public-config-draft-v1',
+  ]
+
+  const localStorageDump = {}
+  for (const key of keys) {
+    try {
+      localStorageDump[key] = JSON.parse(localStorage.getItem(key) || 'null')
+    } catch {
+      localStorageDump[key] = localStorage.getItem(key)
+    }
+  }
+
+  downloadJsonFile(`sabot-site-backup-${new Date().toISOString().slice(0, 10)}.json`, {
+    exportedAt: new Date().toISOString(),
+    app: 'sabot-media',
+    type: 'local-site-backup',
+    localStorage: localStorageDump,
+  })
+}
+
+
 export function PagesAdminPage() {
   const pages = [
     { title: 'Home', slug: 'home', path: '/', status: 'Published', modified: '2026-04-22', customizeSection: 'homepage' },
