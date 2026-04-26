@@ -27,6 +27,7 @@ export async function onRequestGet(context) {
         globalEmergency,
         orgLockdown,
         lastUpdated: pickLatest(globalEmergency.lastUpdated, orgLockdown.lastUpdated),
+        updatedAt: pickLatest(globalEmergency.updatedAt, orgLockdown.updatedAt),
       },
     })
   } catch {
@@ -41,9 +42,10 @@ export async function onRequestGet(context) {
 
 function createFallbackState() {
   return {
-    globalEmergency: { active: false },
-    orgLockdown: { active: false },
+    globalEmergency: { active: false, lastUpdated: null, updatedAt: null },
+    orgLockdown: { active: false, lastUpdated: null, updatedAt: null },
     lastUpdated: null,
+    updatedAt: null,
   }
 }
 
@@ -67,6 +69,7 @@ async function readGlobalEmergency(db) {
       return {
         active,
         lastUpdated: updatedAt,
+        updatedAt,
       }
     } catch {
       // Try next query shape.
@@ -76,6 +79,7 @@ async function readGlobalEmergency(db) {
   return {
     active: false,
     lastUpdated: null,
+    updatedAt: null,
   }
 }
 
@@ -84,6 +88,7 @@ async function readOrgLockdown(db, orgId) {
     return {
       active: false,
       lastUpdated: null,
+      updatedAt: null,
     }
   }
 
@@ -108,6 +113,7 @@ async function readOrgLockdown(db, orgId) {
       return {
         active,
         lastUpdated: updatedAt,
+        updatedAt,
       }
     } catch {
       // Try next query shape.
@@ -117,6 +123,7 @@ async function readOrgLockdown(db, orgId) {
   return {
     active: false,
     lastUpdated: null,
+    updatedAt: null,
   }
 }
 
