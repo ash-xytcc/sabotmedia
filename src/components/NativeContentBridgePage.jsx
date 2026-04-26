@@ -12,6 +12,8 @@ import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { normalizeNativeDisplaySettings } from '../lib/publicDisplayModes'
+import { classicEditorBodyToHtml } from '../lib/classicEditorBody'
+import { renderImportedBody } from '../lib/renderImportedBody'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -251,6 +253,11 @@ export function NativeContentBridgePage() {
   const [revisions, setRevisions] = useState([])
   const [autosaveState, setAutosaveState] = useState({ status: 'idle', at: '' })
   const { pushNotice } = useAdminNotices()
+  const visualPreviewHtml = useMemo(() => {
+    if (editorTab !== 'visual') return ''
+    return classicEditorBodyToHtml(draft.body || '')
+  }, [draft.body, editorTab])
+  const visualPreviewNodes = useMemo(() => renderImportedBody(visualPreviewHtml, 'read'), [visualPreviewHtml])
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
   const mostUsedCategories = useMemo(() => {
@@ -515,7 +522,21 @@ export function NativeContentBridgePage() {
               <button type="button" className="wp-toolbar-btn" aria-label="Align center" title="Align center" onClick={() => applyEditorMutation((el) => wrapSelectionWithHtmlBlock(el, 'text-align:center;'))}>≣</button>
               <button type="button" className="wp-toolbar-btn" aria-label="Align right" title="Align right" onClick={() => applyEditorMutation((el) => wrapSelectionWithHtmlBlock(el, 'text-align:right;'))}>☰</button>
             </div>
-            <textarea ref={textareaRef} className="wp-editor-textarea" value={draft.body || ''} onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} placeholder="Start writing…" />
+            <div className={`wp-editor-body${editorTab === 'visual' ? ' wp-editor-body--visual' : ''}`}>
+              <textarea ref={textareaRef} className="wp-editor-textarea" value={draft.body || ''} onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} placeholder="Start writing…" />
+              {editorTab === 'visual' ? (
+                <article className="wp-editor-rendered-preview" aria-label="Rendered preview">
+                  <h3>Rendered preview</h3>
+                  {visualPreviewNodes.length ? (
+                    <div className="wp-editor-rendered-preview__body post-body">
+                      {visualPreviewNodes}
+                    </div>
+                  ) : (
+                    <p className="wp-editor-rendered-preview__empty">Add content above to preview formatted output.</p>
+                  )}
+                </article>
+              ) : null}
+            </div>
 
             <article className="wp-meta-box"><h2>Excerpt</h2><textarea value={draft.excerpt || ''} onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))} /></article>
             {(draft.contentType || 'dispatch') === 'podcast' ? (
