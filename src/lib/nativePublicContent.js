@@ -205,6 +205,11 @@ export function upsertNativeEntryLocal(items, entry) {
 }
 
 export async function upsertNativeEntry(items, entry, revisionNote = 'save') {
+  const result = await upsertNativeEntryWithMeta(items, entry, revisionNote)
+  return result.items
+}
+
+export async function upsertNativeEntryWithMeta(items, entry, revisionNote = 'save') {
   const normalizedEntry = normalizeNativeEntry({
     ...entry,
     updatedAt: new Date().toISOString(),
@@ -228,9 +233,9 @@ export async function upsertNativeEntry(items, entry, revisionNote = 'save') {
         ? locallySaved.map((item) => (item.id === saved.id ? saved : item))
         : [saved, ...locallySaved]
     )
-    return merged
+    return { items: merged, item: saved, synced: true }
   } catch {
-    return locallySaved
+    return { items: locallySaved, item: normalizedEntry, synced: false }
   }
 }
 

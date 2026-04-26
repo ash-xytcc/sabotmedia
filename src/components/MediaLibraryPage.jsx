@@ -2,10 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { getPieces } from '../lib/pieces'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import {
+  applyLocalMediaMetadata,
   addLocalMediaItem,
   fileToDataUrl,
   loadLocalMediaItems,
   makeLocalMediaFromFile,
+  updateLocalMediaMetadata,
   updateLocalMediaItem,
 } from '../lib/localMediaLibrary'
 import { AdminFrame } from './AdminRail'
@@ -83,6 +85,7 @@ function persistSelectedMediaEdits(selected, fields, setItems, setSelected) {
   const updated = { ...selected, ...updates }
   setItems((current) => current.map((item) => (item.id === selected.id ? updated : item)))
   setSelected(updated)
+  updateLocalMediaMetadata(selected, updates)
   if (selected.source === 'local-upload') updateLocalMediaItem(selected.id, updates)
 }
 
@@ -90,7 +93,7 @@ export function loadMediaLibraryItems(nativeItems = null) {
   const importedMedia = collectMediaFromPieces(getPieces())
   const nativeMedia = collectMediaFromNative(nativeItems || [])
   const localMedia = loadLocalMediaItems()
-  return dedupeMedia([...localMedia, ...nativeMedia, ...importedMedia])
+  return dedupeMedia([...localMedia, ...nativeMedia, ...importedMedia]).map(applyLocalMediaMetadata)
 }
 
 function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSelected, items, setItems, onUploadClick, onConfirm }) {
@@ -198,7 +201,7 @@ export function MediaPickerModal({ open, onClose, onPick }) {
           <h2>Media Library</h2>
           <button type="button" className="button" onClick={onClose}>Close</button>
         </div>
-        <p className="wp-media-local-note">Uploads are stored locally in this browser only using localStorage. No cloud upload is performed.</p>
+        <p className="wp-media-local-note">Uploads are stored in this browser only using localStorage.</p>
         <MediaLibrarySurface
           mode={mode}
           setMode={setMode}
@@ -271,7 +274,7 @@ export function MediaLibraryPage() {
         </div>
         <WpAdminNotices />
         <section className="wp-meta-box">
-          <p className="wp-media-local-note">Add New / Upload stores images in this browser only using localStorage. No cloud upload is performed.</p>
+          <p className="wp-media-local-note">Add New / Upload stores images in this browser only using localStorage.</p>
           <div className="wp-media-toolbar">
             <button type="button" className={`button${mode === 'grid' ? ' button--primary' : ''}`} onClick={() => setMode('grid')}>Grid View</button>
             <button type="button" className={`button${mode === 'list' ? ' button--primary' : ''}`} onClick={() => setMode('list')}>List View</button>

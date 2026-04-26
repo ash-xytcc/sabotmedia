@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { loadSites } from '../lib/siteDomains'
 
@@ -15,12 +15,34 @@ const MENU = [
 ]
 
 function AdminBarMenu({ label, children, className = '' }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
   return (
-    <div className={`wp-admin-topbar__menu ${className}`.trim()}>
-      <button type="button" className="wp-admin-topbar__button" aria-haspopup="true">
+    <div ref={menuRef} className={`wp-admin-topbar__menu ${isOpen ? 'is-open' : ''} ${className}`.trim()}>
+      <button
+        type="button"
+        className="wp-admin-topbar__button"
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+      >
         {label}
       </button>
-      <div className="wp-admin-topbar__dropdown" role="menu" aria-label={typeof label === 'string' ? label : 'menu'}>
+      <div className="wp-admin-topbar__dropdown" role="menu" aria-label={typeof label === 'string' ? label : 'menu'} onClick={() => setIsOpen(false)}>
         {children}
       </div>
     </div>
@@ -46,7 +68,7 @@ export function AdminRail() {
             <span className="wp-admin-topbar__wpicon" aria-hidden="true">W</span>
           </Link>
 
-          <AdminBarMenu label="My Sites ▾">
+          <AdminBarMenu label="My Sites">
             <Link to="/" className="wp-admin-topbar__dropdown-link">{primarySiteName}</Link>
             <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Manage Sites (not wired yet)</span>
             <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Connect Domain (not wired yet)</span>
@@ -54,7 +76,7 @@ export function AdminRail() {
 
           <Link to="/" className="wp-admin-topbar__link">Sabot Media</Link>
 
-          <AdminBarMenu label="+ New ▾">
+          <AdminBarMenu label="+ New">
             <Link to="/native-bridge?new=article" className="wp-admin-topbar__dropdown-link">Post</Link>
             <Link to="/media" className="wp-admin-topbar__dropdown-link">Media</Link>
             <Link to="/pages" className="wp-admin-topbar__dropdown-link">Page</Link>
@@ -65,7 +87,7 @@ export function AdminRail() {
         </div>
 
         <div className="wp-admin-topbar__right">
-          <AdminBarMenu label="Howdy, sabotmedia ▾" className="wp-admin-topbar__menu--right">
+          <AdminBarMenu label="Howdy sabotmedia" className="wp-admin-topbar__menu--right">
             <Link to="/users" className="wp-admin-topbar__dropdown-link">Profile</Link>
             <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Log Out (not wired yet)</span>
           </AdminBarMenu>
