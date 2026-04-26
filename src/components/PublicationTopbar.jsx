@@ -9,6 +9,28 @@ function normalizePath(path) {
   return value.startsWith('/') ? value : `/${value}`
 }
 
+function isBlockedPublicPath(path = '') {
+  const value = String(path || '').trim().toLowerCase()
+  if (!value) return true
+  if (value.includes('/wp-admin') || value.includes('customize.php')) return true
+  if (value === '/draft' || value.startsWith('/draft/')) return true
+  if (value.startsWith('/admin') || value.startsWith('/customize') || value.startsWith('/site-editor')) return true
+  if (value.includes('noblogs.org/wp-admin')) return true
+  return false
+}
+
+function resolvePublicNavItems(customItems = [], fallbackItems = []) {
+  const normalizedCustomItems = (Array.isArray(customItems) ? customItems : [])
+    .map((item, index) => ({
+      id: item?.id || `menu-${index + 1}`,
+      label: String(item?.label || '').trim(),
+      to: normalizePath(item?.path || item?.to),
+    }))
+    .filter((item) => item.label && !isBlockedPublicPath(item.to))
+
+  return normalizedCustomItems.length ? normalizedCustomItems : fallbackItems
+}
+
 export function PublicationTopbar() {
   const customizer = loadCustomizerSettings()
   const menuDraft = loadMenuDraft()
@@ -25,14 +47,14 @@ export function PublicationTopbar() {
     { id: 'projects', label: 'Projects', path: '/projects' },
   ]
 
+  const fallbackItems = fallbackMenu.map((item) => ({
+    id: item.id,
+    label: item.label,
+    to: item.path,
+  }))
+
   const sourceMenu = customizer.navigation?.menuItems?.length ? customizer.navigation.menuItems : menuDraft
-  const publicItems = (Array.isArray(sourceMenu) ? sourceMenu : fallbackMenu)
-    .map((item, index) => ({
-      id: item?.id || `menu-${index + 1}`,
-      label: String(item?.label || '').trim(),
-      to: normalizePath(item?.path || item?.to),
-    }))
-    .filter((item) => item.label)
+  const publicItems = resolvePublicNavItems(sourceMenu, fallbackItems)
 
   return (
     <header className={`publication-topbar publication-topbar--masthead publication-topbar--${mastheadSize}`}>
