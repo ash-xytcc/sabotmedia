@@ -76,12 +76,6 @@ export function PiecePage({ pieces = [] }) {
     [livePieces, nativePieces]
   )
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(MODE_STORAGE_KEY, mode)
-    }
-  }, [mode])
-
   const orderedPieces = useMemo(() => getOrderedPieces(mergedPieces), [mergedPieces])
   const piece = useMemo(() => getPieceBySlug(orderedPieces, slug), [orderedPieces, slug])
   const displaySettings = useMemo(() => getPieceDisplaySettings(piece), [piece])
@@ -97,6 +91,12 @@ export function PiecePage({ pieces = [] }) {
     if (displaySettings.defaultMode === 'print' && displaySettings.enablePrintMode) return 'print'
     return resolveFirstReadableMode(displaySettings)
   }, [piece, searchParams, displaySettings])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(MODE_STORAGE_KEY, mode)
+    }
+  }, [mode])
 
   const index = useMemo(
     () => orderedPieces.findIndex((item) => item?.slug === slug),

@@ -23,13 +23,6 @@ function normalizeType(piece) {
   return 'article'
 }
 
-function formatDate(value, label) {
-  if (label) return label
-  const d = new Date(value || '')
-  if (!Number.isFinite(d.getTime())) return ''
-  return d.toISOString().slice(0, 10)
-}
-
 function normalizePiece(piece) {
   const display = typeof splitDisplayTitle === 'function'
     ? splitDisplayTitle(piece)
@@ -76,23 +69,10 @@ function ArchiveCard({ item, featured = false }) {
         ) : (
           <div className="archive-card__image archive-card__image--fallback" />
         )}
-      </Link>
-
-      <div className="archive-card__body">
-        <div className="archive-card__meta">
-          {item.publishedDateLabel || item.publishedAt ? (
-            <span>{formatDate(item.publishedAt, item.publishedDateLabel)}</span>
-          ) : null}
-          <span>{item.type}</span>
-          {item.project ? <span>{item.project}</span> : null}
+        <div className="archive-card__overlay">
+          <h2 className="archive-card__title">{item.title}</h2>
         </div>
-
-        <h2 className="archive-card__title">
-          <Link to={item.href}>{item.title}</Link>
-        </h2>
-
-        
-      </div>
+      </Link>
     </article>
   )
 }

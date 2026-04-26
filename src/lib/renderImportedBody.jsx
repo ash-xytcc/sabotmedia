@@ -15,6 +15,27 @@ function normalizeHref(href = '') {
   return value
 }
 
+function isBlockedPublicHref(href = '') {
+  const value = String(href || '').trim().toLowerCase()
+  if (!value) return true
+  if (value.includes('/wp-admin') || value.includes('customize.php')) return true
+  if (value.includes('noblogs.org/wp-admin')) return true
+  if (value === '/draft' || value.startsWith('/draft/')) return true
+  if (value.startsWith('/admin') || value.startsWith('/customize') || value.startsWith('/site-editor')) return true
+  return false
+}
+
+function sanitizePublicBodyLinks(doc) {
+  const links = Array.from(doc?.body?.querySelectorAll('a[href]') || [])
+  links.forEach((link) => {
+    const href = normalizeHref(link.getAttribute('href'))
+    if (isBlockedPublicHref(href)) {
+      link.setAttribute('href', '/archive')
+      link.setAttribute('rel', 'nofollow noopener noreferrer')
+    }
+  })
+}
+
 function renderChildren(nodes, mode, prefix = 'node') {
   return nodes.map((node, index) => renderNode(node, mode, makeKey(prefix, index))).filter(Boolean)
 }
@@ -164,6 +185,7 @@ export function renderImportedBody(html, mode = 'read') {
 
   const parser = new DOMParser()
   const doc = parser.parseFromString(value, 'text/html')
+  sanitizePublicBodyLinks(doc)
   const bodyNodes = Array.from(doc.body.childNodes || [])
   return renderChildren(bodyNodes, mode, 'body')
 }
