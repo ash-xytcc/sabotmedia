@@ -8436,7 +8436,8 @@ a.button {
 }
 
 .wp-admin-topbar__menu:hover .wp-admin-topbar__dropdown,
-.wp-admin-topbar__menu:focus-within .wp-admin-topbar__dropdown {
+.wp-admin-topbar__menu:focus-within .wp-admin-topbar__dropdown,
+.wp-admin-topbar__menu.is-open .wp-admin-topbar__dropdown {
   display: grid;
 }
 
