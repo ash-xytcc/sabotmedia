@@ -1,5 +1,7 @@
 export const PUBLIC_POST_ROUTE_PATTERN = '/post/:slug'
 
+const SLUG_TOKEN = ':slug'
+
 function normalizeSlug(rawSlug) {
   return String(rawSlug || '')
     .trim()
@@ -8,7 +10,12 @@ function normalizeSlug(rawSlug) {
 
 export function buildPublicPostPath(rawSlug) {
   const slug = normalizeSlug(rawSlug)
-  return slug ? `/post/${encodeURIComponent(slug)}` : '/post'
+
+  if (!slug) {
+    return PUBLIC_POST_ROUTE_PATTERN.replace(`/${SLUG_TOKEN}`, '')
+  }
+
+  return PUBLIC_POST_ROUTE_PATTERN.replace(SLUG_TOKEN, encodeURIComponent(slug))
 }
 
 export function buildPublicPostUrl({ origin, slug }) {
