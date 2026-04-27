@@ -13,7 +13,6 @@ import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { normalizeNativeDisplaySettings } from '../lib/publicDisplayModes'
 import { classicEditorBodyToHtml } from '../lib/classicEditorBody'
-import { renderImportedBody } from '../lib/renderImportedBody'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -125,6 +124,38 @@ function escapeHtmlText(value) {
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
+}
+
+function sanitizeVisualHtml(value = '') {
+  const raw = String(value || '')
+  if (!raw.trim()) return ''
+
+  if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+    return raw
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+      .replace(/\son[a-z]+\s*=\s*(".*?"|'.*?'|[^\s>]+)/gi, '')
+      .replace(/\s(href|src)\s*=\s*(['"])\s*javascript:[\s\S]*?\2/gi, ' $1="#"')
+  }
+
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(raw, 'text/html')
+  doc.querySelectorAll('script').forEach((node) => node.remove())
+
+  for (const el of doc.querySelectorAll('*')) {
+    for (const attr of Array.from(el.attributes || [])) {
+      const name = String(attr.name || '').toLowerCase()
+      const attrValue = String(attr.value || '')
+      if (name.startsWith('on')) {
+        el.removeAttribute(attr.name)
+        continue
+      }
+      if ((name === 'href' || name === 'src') && /^\s*javascript:/i.test(attrValue)) {
+        el.setAttribute(attr.name, '#')
+      }
+    }
+  }
+
+  return doc.body.innerHTML
 }
 
 const AUTOSAVE_DEBOUNCE_MS = 1200
@@ -247,17 +278,15 @@ export function NativeContentBridgePage() {
   const [isPermalinkEditing, setIsPermalinkEditing] = useState(false)
   const [permalinkDraft, setPermalinkDraft] = useState('')
   const textareaRef = useRef(null)
+  const visualEditorRef = useRef(null)
   const autosaveTimerRef = useRef(null)
   const suppressAutosaveRef = useRef(false)
   const lastAutosaveFingerprintRef = useRef('')
+  const visualSyncLockRef = useRef(false)
+  const [visualEditorEmpty, setVisualEditorEmpty] = useState(true)
   const [revisions, setRevisions] = useState([])
   const [autosaveState, setAutosaveState] = useState({ status: 'idle', at: '' })
   const { pushNotice } = useAdminNotices()
-  const visualPreviewHtml = useMemo(() => {
-    if (editorTab !== 'visual') return ''
-    return classicEditorBodyToHtml(draft.body || '')
-  }, [draft.body, editorTab])
-  const visualPreviewNodes = useMemo(() => renderImportedBody(visualPreviewHtml, 'read'), [visualPreviewHtml])
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
   const mostUsedCategories = useMemo(() => {
@@ -306,6 +335,17 @@ export function NativeContentBridgePage() {
     }
     boot()
   }, [searchParams])
+
+  useEffect(() => {
+    if (!visualSyncLockRef.current) return
+    visualSyncLockRef.current = false
+  }, [draft.body])
+
+  useEffect(() => {
+    if (editorTab !== 'visual') return
+    if (visualSyncLockRef.current) return
+    loadDraftBodyIntoVisualEditor()
+  }, [editorTab, draft.body, activeId])
 
   function restoreRevision(revision) {
     if (!revision?.draft) return
@@ -379,8 +419,65 @@ export function NativeContentBridgePage() {
     }
   }
 
+  function isVisualEditorEmpty(html = '') {
+    const value = String(html || '').replace(/&nbsp;/gi, ' ').trim()
+    if (!value) return true
+    const hasMedia = /<(img|video|audio|iframe|figure)\b/i.test(value)
+    const textOnly = value.replace(/<[^>]+>/g, '').trim()
+    return !hasMedia && !textOnly
+  }
+
+  function syncVisualBodyIntoDraft() {
+    const editor = visualEditorRef.current
+    if (!editor) return draft.body || ''
+    const sanitized = sanitizeVisualHtml(editor.innerHTML || '')
+    setVisualEditorEmpty(isVisualEditorEmpty(sanitized))
+    if (sanitized !== (draft.body || '')) {
+      visualSyncLockRef.current = true
+      setDraft((current) => ({ ...current, body: sanitized }))
+    }
+    return sanitized
+  }
+
+  function loadDraftBodyIntoVisualEditor(force = false) {
+    const editor = visualEditorRef.current
+    if (!editor) return
+    const visualHtml = classicEditorBodyToHtml(draft.body || '')
+    const sanitized = sanitizeVisualHtml(visualHtml)
+    if (!force && document.activeElement === editor) return
+    if ((editor.innerHTML || '') !== sanitized) {
+      editor.innerHTML = sanitized
+    }
+    setVisualEditorEmpty(isVisualEditorEmpty(sanitized))
+  }
+
+  function insertHtmlIntoVisualEditor(markup) {
+    const editor = visualEditorRef.current
+    if (!editor) return
+    editor.focus()
+    const selection = window.getSelection()
+    const range = selection?.rangeCount ? selection.getRangeAt(0) : null
+    if (range && editor.contains(range.commonAncestorContainer)) {
+      range.deleteContents()
+      const fragment = range.createContextualFragment(markup)
+      const lastNode = fragment.lastChild
+      range.insertNode(fragment)
+      if (lastNode) {
+        const nextRange = document.createRange()
+        nextRange.setStartAfter(lastNode)
+        nextRange.collapse(true)
+        selection.removeAllRanges()
+        selection.addRange(nextRange)
+      }
+    } else {
+      editor.insertAdjacentHTML('beforeend', markup)
+    }
+    syncVisualBodyIntoDraft()
+  }
+
   async function handleSave(note = 'save', patch = {}, options = {}) {
-    const normalized = buildNormalizedDraft(draft, patch)
+    const liveBody = editorTab === 'visual' ? syncVisualBodyIntoDraft() : draft.body
+    const normalized = buildNormalizedDraft(draft, { ...patch, body: liveBody })
     const result = await upsertNativeEntryWithMeta(items, normalized, note)
     setItems(result.items)
     const saved = result.items.find((item) => item.id === normalized.id)
@@ -423,6 +520,7 @@ export function NativeContentBridgePage() {
   }
 
   function applyEditorMutation(mutator) {
+    if (editorTab === 'visual') return
     const el = textareaRef.current
     const result = mutator(el)
     if (!result) return
@@ -445,6 +543,58 @@ export function NativeContentBridgePage() {
       const cursor = start + snippet.length
       return { next, cursorStart: cursor, cursorEnd: cursor }
     })
+  }
+
+  function runVisualCommand(command, value = null) {
+    const editor = visualEditorRef.current
+    if (!editor) return
+    editor.focus()
+    document.execCommand(command, false, value)
+    syncVisualBodyIntoDraft()
+  }
+
+  function handleToolbarAction(action) {
+    if (editorTab === 'visual') {
+      if (action === 'bold') return runVisualCommand('bold')
+      if (action === 'italic') return runVisualCommand('italic')
+      if (action === 'link') {
+        const href = window.prompt('Enter URL for link', 'https://')
+        if (!href) return
+        return runVisualCommand('createLink', href)
+      }
+      if (action === 'ul') return runVisualCommand('insertUnorderedList')
+      if (action === 'ol') return runVisualCommand('insertOrderedList')
+      if (action === 'quote') return runVisualCommand('formatBlock', 'blockquote')
+      if (action === 'left') return runVisualCommand('justifyLeft')
+      if (action === 'center') return runVisualCommand('justifyCenter')
+      if (action === 'right') return runVisualCommand('justifyRight')
+      return
+    }
+
+    if (action === 'bold') return applyEditorMutation((el) => wrapSelected(el, '**'))
+    if (action === 'italic') return applyEditorMutation((el) => wrapSelected(el, '*'))
+    if (action === 'link') {
+      const href = window.prompt('Enter URL for link', 'https://')
+      if (!href) return
+      return applyEditorMutation((el) => wrapSelected(el, '[', `](${href})`))
+    }
+    if (action === 'ul') return applyEditorMutation((el) => prefixSelectedLines(el, '- '))
+    if (action === 'ol') return applyEditorMutation((el) => prefixSelectedLines(el, '1. '))
+    if (action === 'quote') return applyEditorMutation((el) => prefixSelectedLines(el, '> '))
+    if (action === 'left') return applyEditorMutation((el) => wrapSelectionWithHtmlBlock(el, 'text-align:left;'))
+    if (action === 'center') return applyEditorMutation((el) => wrapSelectionWithHtmlBlock(el, 'text-align:center;'))
+    if (action === 'right') return applyEditorMutation((el) => wrapSelectionWithHtmlBlock(el, 'text-align:right;'))
+  }
+
+  function handleEditorTabChange(nextTab) {
+    if (nextTab === editorTab) return
+    if (editorTab === 'visual' && nextTab === 'text') {
+      syncVisualBodyIntoDraft()
+    }
+    setEditorTab(nextTab)
+    if (nextTab === 'visual') {
+      requestAnimationFrame(() => loadDraftBodyIntoVisualEditor(true))
+    }
   }
 
   function handleTitleChange(nextTitle) {
@@ -502,40 +652,42 @@ export function NativeContentBridgePage() {
             <div className="wp-editor-actions">
               <button type="button" className="button" onClick={() => setOpenMediaFor('body')}>Add Media</button>
               <div className="wp-editor-tabs">
-                <button type="button" className={`button${editorTab === 'visual' ? ' button--primary' : ''}`} onClick={() => setEditorTab('visual')}>Visual</button>
-                <button type="button" className={`button${editorTab === 'text' ? ' button--primary' : ''}`} onClick={() => setEditorTab('text')}>Text</button>
+                <button type="button" className={`button${editorTab === 'visual' ? ' button--primary' : ''}`} onClick={() => handleEditorTabChange('visual')}>Visual</button>
+                <button type="button" className={`button${editorTab === 'text' ? ' button--primary' : ''}`} onClick={() => handleEditorTabChange('text')}>Text</button>
               </div>
             </div>
 
             <div className="wp-classic-toolbar" role="toolbar" aria-label="Classic formatting toolbar">
-              <button type="button" className="wp-toolbar-btn" aria-label="Bold" title="Bold" onClick={() => applyEditorMutation((el) => wrapSelected(el, '**'))}><strong>B</strong></button>
-              <button type="button" className="wp-toolbar-btn" aria-label="Italic" title="Italic" onClick={() => applyEditorMutation((el) => wrapSelected(el, '*'))}><em>I</em></button>
-              <button type="button" className="wp-toolbar-btn" onClick={() => {
-                const href = window.prompt('Enter URL for link', 'https://')
-                if (!href) return
-                applyEditorMutation((el) => wrapSelected(el, '[', `](${href})`))
-              }} aria-label="Insert link" title="Insert/edit link">🔗</button>
-              <button type="button" className="wp-toolbar-btn" aria-label="Bulleted list" title="Bulleted list" onClick={() => applyEditorMutation((el) => prefixSelectedLines(el, '- '))}>•</button>
-              <button type="button" className="wp-toolbar-btn" aria-label="Numbered list" title="Numbered list" onClick={() => applyEditorMutation((el) => prefixSelectedLines(el, '1. '))}>1.</button>
-              <button type="button" className="wp-toolbar-btn" aria-label="Blockquote" title="Blockquote" onClick={() => applyEditorMutation((el) => prefixSelectedLines(el, '> '))}>❞</button>
-              <button type="button" className="wp-toolbar-btn" aria-label="Align left" title="Align left" onClick={() => applyEditorMutation((el) => wrapSelectionWithHtmlBlock(el, 'text-align:left;'))}>≡</button>
-              <button type="button" className="wp-toolbar-btn" aria-label="Align center" title="Align center" onClick={() => applyEditorMutation((el) => wrapSelectionWithHtmlBlock(el, 'text-align:center;'))}>≣</button>
-              <button type="button" className="wp-toolbar-btn" aria-label="Align right" title="Align right" onClick={() => applyEditorMutation((el) => wrapSelectionWithHtmlBlock(el, 'text-align:right;'))}>☰</button>
+              <button type="button" className="wp-toolbar-btn" aria-label="Bold" title="Bold" onClick={() => handleToolbarAction('bold')}><strong>B</strong></button>
+              <button type="button" className="wp-toolbar-btn" aria-label="Italic" title="Italic" onClick={() => handleToolbarAction('italic')}><em>I</em></button>
+              <button type="button" className="wp-toolbar-btn" onClick={() => handleToolbarAction('link')} aria-label="Insert link" title="Insert/edit link">🔗</button>
+              <button type="button" className="wp-toolbar-btn" aria-label="Bulleted list" title="Bulleted list" onClick={() => handleToolbarAction('ul')}>•</button>
+              <button type="button" className="wp-toolbar-btn" aria-label="Numbered list" title="Numbered list" onClick={() => handleToolbarAction('ol')}>1.</button>
+              <button type="button" className="wp-toolbar-btn" aria-label="Blockquote" title="Blockquote" onClick={() => handleToolbarAction('quote')}>❞</button>
+              <button type="button" className="wp-toolbar-btn" aria-label="Align left" title="Align left" onClick={() => handleToolbarAction('left')}>≡</button>
+              <button type="button" className="wp-toolbar-btn" aria-label="Align center" title="Align center" onClick={() => handleToolbarAction('center')}>≣</button>
+              <button type="button" className="wp-toolbar-btn" aria-label="Align right" title="Align right" onClick={() => handleToolbarAction('right')}>☰</button>
             </div>
             <div className={`wp-editor-body${editorTab === 'visual' ? ' wp-editor-body--visual' : ''}`}>
-              <textarea ref={textareaRef} className="wp-editor-textarea" value={draft.body || ''} onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} placeholder="Start writing…" />
               {editorTab === 'visual' ? (
-                <article className="wp-editor-rendered-preview" aria-label="Rendered preview">
-                  <h3>Rendered preview</h3>
-                  {visualPreviewNodes.length ? (
-                    <div className="wp-editor-rendered-preview__body post-body">
-                      {visualPreviewNodes}
-                    </div>
-                  ) : (
-                    <p className="wp-editor-rendered-preview__empty">Add content above to preview formatted output.</p>
-                  )}
-                </article>
-              ) : null}
+                <div
+                  ref={visualEditorRef}
+                  className={`wp-visual-editor${visualEditorEmpty ? ' is-empty' : ''}`}
+                  contentEditable
+                  suppressContentEditableWarning
+                  data-placeholder="Start writing…"
+                  onInput={() => syncVisualBodyIntoDraft()}
+                  onBlur={() => syncVisualBodyIntoDraft()}
+                />
+              ) : (
+                <textarea
+                  ref={textareaRef}
+                  className="wp-editor-textarea"
+                  value={draft.body || ''}
+                  onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))}
+                  placeholder="Start writing…"
+                />
+              )}
             </div>
 
             <article className="wp-meta-box"><h2>Excerpt</h2><textarea value={draft.excerpt || ''} onChange={(e) => setDraft((d) => ({ ...d, excerpt: e.target.value }))} /></article>
@@ -807,10 +959,17 @@ export function NativeContentBridgePage() {
               const escapedUrl = escapeHtmlAttribute(selectedMedia.url)
               const escapedAlt = escapeHtmlAttribute(selectedMedia.alt)
               const escapedCaption = escapeHtmlText(selectedMedia.caption)
-              const markup = escapedCaption
-                ? `\n<figure><img src="${escapedUrl}" alt="${escapedAlt}" /><figcaption>${escapedCaption}</figcaption></figure>\n`
-                : `\n<img src="${escapedUrl}" alt="${escapedAlt}" />\n`
-              insertAtCursor(markup)
+              const visualMarkup = escapedCaption
+                ? `<figure><img src="${escapedUrl}" alt="${escapedAlt}" /><figcaption>${escapedCaption}</figcaption></figure><p><br /></p>`
+                : `<img src="${escapedUrl}" alt="${escapedAlt}" /><p><br /></p>`
+              const textMarkup = escapedCaption
+                ? `<figure><img src="${escapedUrl}" alt="${escapedAlt}" /><figcaption>${escapedCaption}</figcaption></figure>`
+                : `<img src="${escapedUrl}" alt="${escapedAlt}" />`
+              if (editorTab === 'visual') {
+                insertHtmlIntoVisualEditor(visualMarkup)
+              } else {
+                insertAtCursor(`\n${textMarkup}\n`)
+              }
             }
             setOpenMediaFor('')
           }}
