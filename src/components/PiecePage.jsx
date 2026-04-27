@@ -52,14 +52,18 @@ function getOrderedPieces(pieces) {
 export function PiecePage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [searchParams] = useSearchParams()
-  const [nativePieces, setNativePieces] = useState([])
+  const [nativePieces, setNativePieces] = useState(null)
 
   useEffect(() => {
     let cancelled = false
 
     async function boot() {
-      const loaded = await loadPublishedNativePieces()
-      if (!cancelled) setNativePieces(loaded)
+      try {
+        const loaded = await loadPublishedNativePieces()
+        if (!cancelled) setNativePieces(Array.isArray(loaded) ? loaded : [])
+      } catch {
+        if (!cancelled) setNativePieces([])
+      }
     }
 
     boot()
@@ -72,7 +76,7 @@ export function PiecePage({ pieces = [] }) {
   const livePieces = wordpressFeed.pieces || pieces
 
   const mergedPieces = useMemo(
-    () => mergeNativeAndImportedPieces(Array.isArray(livePieces) ? livePieces : [], nativePieces),
+    () => mergeNativeAndImportedPieces(Array.isArray(livePieces) ? livePieces : [], Array.isArray(nativePieces) ? nativePieces : []),
     [livePieces, nativePieces]
   )
 
@@ -127,8 +131,29 @@ export function PiecePage({ pieces = [] }) {
     [piece?.bodyHtml, mode]
   )
 
+  if (!piece && nativePieces === null) {
+    return (
+      <main className="page piece-page piece-page--loading">
+        <PublicationTopbar />
+        <section className="piece-header">
+          <p>Loading post…</p>
+        </section>
+      </main>
+    )
+  }
+
   if (!piece) {
-    return <Navigate to="/archive" replace />
+    return (
+      <main className="page piece-page piece-page--not-found">
+        <PublicationTopbar />
+        <section className="piece-header">
+          <h1>Post not found</h1>
+          <p>This post is not published, does not exist, or is still saving.</p>
+          <Link className="button" to="/archive">Back to archive</Link>
+        </section>
+        <PublicationFooter />
+      </main>
+    )
   }
   if (mode === 'print') {
     return <Navigate to={`/piece/${piece.slug}/print`} replace />
