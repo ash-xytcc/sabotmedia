@@ -18,8 +18,7 @@ function normalizeHref(href = '') {
 function isBlockedPublicHref(href = '') {
   const value = String(href || '').trim().toLowerCase()
   if (!value) return true
-  if (value.includes('/wp-admin') || value.includes('customize.php')) return true
-  if (value.includes('noblogs.org/wp-admin')) return true
+  if (value.includes('/wp-admin')) return true
   if (value === '/draft' || value.startsWith('/draft/')) return true
   if (value.startsWith('/admin') || value.startsWith('/customize') || value.startsWith('/site-editor')) return true
   return false
