@@ -488,6 +488,16 @@ export function NativeContentBridgePage() {
       setActiveId(saved.id)
       setDraft({ ...saved, slugManuallyEdited: true })
       setPermalinkDraft(saved.slug || '')
+      if (saved.status === 'published' || saved.status === 'scheduled') {
+        setPublishSuccess({
+          id: saved.id,
+          slug: saved.slug || '',
+          title: saved.title || 'Untitled post',
+          status: saved.status,
+        })
+      } else {
+        setPublishSuccess(null)
+      }
       const snapshot = saveLocalRevision(saved.id, saved, note)
       setRevisions(snapshot.revisions)
       if (!result.synced) {
@@ -844,19 +854,19 @@ export function NativeContentBridgePage() {
                 {draft?.id && draft?.status === 'published' && draft?.slug ? (
                   <Link
                     className="button"
-                    to={`/post/${draft.slug}`}
+                    to={`/post/${publishSuccess?.slug || draft.slug}`}
                     target="_blank"
                     rel="noreferrer"
                   >
                     View Post
                   </Link>
                 ) : null}
-                <Link className="button" to="/archive">Back to Archive</Link>
+                <Link className="button" to="/content">Back to Archive</Link>
                 <button type="button" className="button" onClick={handleMoveToTrash}>Move to Trash</button>
               </div>
               {publishSuccess ? (
                 <div className="native-publish-success" role="status" aria-live="polite">
-                  <p className="native-publish-success__title">Published successfully.</p>
+                  <p className="native-publish-success__title">{publishSuccess.status === 'scheduled' ? 'Scheduled successfully.' : 'Published successfully.'}</p>
                   <p className="native-publish-success__subtitle">{publishSuccess.title}</p>
                   <div className="native-publish-success__actions">
                     {publishSuccess.slug ? (
@@ -868,7 +878,7 @@ export function NativeContentBridgePage() {
                         View Post
                       </Link>
                     )}
-                    <Link className="button" to="/archive">Back to Archive</Link>
+                    <Link className="button" to="/content">Back to Archive</Link>
                   </div>
                 </div>
               ) : null}
