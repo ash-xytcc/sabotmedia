@@ -520,11 +520,11 @@ export function ToolsAdminPage() {
   const tools = [
     {
       name: 'Print Lab',
-      status: 'Not wired',
-      notes: 'Publication print scaffolds including print PDF export path, zine imposition, button maker, and poster tiler.',
+      status: 'Ready',
+      notes: 'Open Print Lab to select print-enabled posts, toggle zine/poster helpers, and launch browser print.',
       actionLabel: 'Open Print Lab',
       action: () => {
-        window.location.assign('/tools/print')
+        window.location.assign('/printlab')
       },
     },
     {
