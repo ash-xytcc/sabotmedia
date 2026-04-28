@@ -59,13 +59,6 @@ function isPublicPiece(piece) {
 }
 
 
-  const publicBodyHtml = String(piece?.body || piece?.content || piece?.html || '')
-  const rawExcerpt = piece?.excerpt || piece?.subtitle || ''
-  const displayExcerpt = looksLikeRawHtml(rawExcerpt) ? '' : stripHtmlForPreview(rawExcerpt)
-  const heroImageUrl = heroImageUrl || ''
-  const shouldRenderHeroImage = !!heroImageUrl && !bodyContainsImageUrl(publicBodyHtml, heroImageUrl)
-
-
 function stripHtmlForPreview(value) {
   return String(value || '')
     .replace(/<[^>]*>/g, ' ')
@@ -208,6 +201,13 @@ export function PiecePage({ pieces = [] }) {
       </main>
     )
   }
+
+  const publicBodyHtml = String(piece?.body || piece?.content || piece?.html || '')
+  const rawExcerpt = piece?.excerpt || piece?.subtitle || ''
+  const displayExcerpt = looksLikeRawHtml(rawExcerpt) ? '' : stripHtmlForPreview(rawExcerpt)
+  const heroImageUrl = piece?.heroImage || piece?.featuredImage || ''
+  const shouldRenderHeroImage = !!heroImageUrl && !bodyContainsImageUrl(publicBodyHtml, heroImageUrl)
+
 
   if (!piece) {
     return (
