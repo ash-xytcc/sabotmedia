@@ -317,7 +317,7 @@ export function NativeContentBridgePage() {
       const found = (loaded || []).find((item) => item.id === editId)
       if (found) {
         setActiveId(found.id)
-        setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [] })
+        setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [], slugManuallyEdited: true })
         setPermalinkDraft(found.slug || '')
         setAllowComments(found.allowComments ?? true)
         setRevisions(loadLocalRevisions(found.id))
@@ -483,7 +483,7 @@ export function NativeContentBridgePage() {
     const saved = result.items.find((item) => item.id === normalized.id)
     if (saved) {
       setActiveId(saved.id)
-      setDraft(saved)
+      setDraft({ ...saved, slugManuallyEdited: true })
       setPermalinkDraft(saved.slug || '')
       const snapshot = saveLocalRevision(saved.id, saved, note)
       setRevisions(snapshot.revisions)
