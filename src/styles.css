@@ -8597,3 +8597,142 @@ a.button {
   flex-wrap: wrap;
   gap: 0.6rem;
 }
+
+.print-layout-switch {
+  display: inline-flex;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.print-layout-switch__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.75rem;
+  text-decoration: none;
+  color: #222;
+  background: #fff;
+  border-right: 1px solid rgba(0,0,0,0.15);
+  font-size: 0.9rem;
+}
+
+.print-layout-switch__link:last-child {
+  border-right: 0;
+}
+
+.print-layout-switch__link.is-active {
+  background: #111;
+  color: #fff;
+}
+
+.zine-sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.9rem;
+  padding: 0 1.5rem 2rem;
+}
+
+.zine-panel {
+  border: 2px solid #222;
+  padding: 0.9rem;
+  background: #fff;
+  min-height: 14rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  overflow: hidden;
+}
+
+.zine-panel__label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #444;
+  border-bottom: 1px dashed #aaa;
+  padding-bottom: 0.35rem;
+}
+
+.zine-panel h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+  line-height: 1.2;
+}
+
+.zine-panel p,
+.zine-panel li {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.zine-panel ul {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.zine-panel__figure {
+  margin: 0;
+  flex: 1;
+}
+
+.zine-panel__image {
+  width: 100%;
+  height: 100%;
+  max-height: 20rem;
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
+
+.zine-panel__body {
+  min-height: 0;
+}
+
+.zine-panel__body .post-body__paragraph,
+.zine-panel__body .post-body__heading,
+.zine-panel__body .post-body__blockquote,
+.zine-panel__body .post-body__caption,
+.zine-panel__body .post-body__list {
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.zine-panel__body .post-body__figure {
+  margin: 0.75rem 0;
+  break-inside: avoid;
+}
+
+@media print {
+  .print-page--zine .print-header {
+    border-bottom: 2px solid #000;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.8rem;
+  }
+
+  .print-page--zine .zine-sheet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.22in;
+    padding: 0;
+  }
+
+  .print-page--zine .zine-panel {
+    min-height: 3.65in;
+    max-height: 3.65in;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-page--zine .zine-panel__body {
+    overflow: hidden;
+  }
+
+  .print-page--zine .zine-panel:nth-child(4n) {
+    page-break-after: always;
+  }
+
+  .print-page--zine .zine-panel:nth-last-child(-n + 2) {
+    page-break-after: auto;
+  }
+}
