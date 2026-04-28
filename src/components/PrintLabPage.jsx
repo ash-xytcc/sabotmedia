@@ -1,132 +1,76 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import { resolveNativeBodyHtml } from '../lib/nativePublicFeed'
 import { renderImportedBody } from '../lib/renderImportedBody'
 import { AdminFrame } from './AdminRail'
 
-const PRINT_FORMATS = [
-  { value: 'single-page', label: 'Single page article' },
-  { value: 'half-sheet-zine', label: 'Half sheet zine' },
-  { value: 'booklet-draft', label: 'Booklet draft' },
-]
-
-function formatPostLabel(post) {
-  const title = post?.title || 'Untitled'
-  const status = post?.status || 'draft'
-  return `${title} (${status})`
+function getPublishedAtLabel(piece) {
+  if (!piece?.publishedAt) return '—'
+  const published = new Date(piece.publishedAt)
+  if (Number.isNaN(published.getTime())) return '—'
+  return published.toLocaleDateString()
 }
 
-export function PrintLabPage() {
-  const [posts, setPosts] = useState([])
-  const [selectedPostId, setSelectedPostId] = useState('')
-  const [selectedFormat, setSelectedFormat] = useState('single-page')
-  const [state, setState] = useState('loading')
+function isPublishedPiece(piece) {
+  if (piece?.status) return piece.status === 'published'
+  return Boolean(piece?.publishedAt)
+}
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function boot() {
-      try {
-        const loaded = await loadNativeCollection({ includeFuture: 1 })
-        if (cancelled) return
-        const normalized = Array.isArray(loaded)
-          ? loaded.filter((post) => post.status !== 'trash')
-          : []
-        setPosts(normalized)
-        if (normalized[0]?.id) setSelectedPostId(normalized[0].id)
-        setState('loaded')
-      } catch {
-        if (!cancelled) setState('error')
-      }
-    }
-
-    boot()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const selectedPost = useMemo(
-    () => posts.find((post) => post.id === selectedPostId) || null,
-    [posts, selectedPostId]
+export function PrintLabPage({ pieces = [] }) {
+  const [selectedSlugs, setSelectedSlugs] = useState([])
+  const publishedPieces = useMemo(
+    () => [...pieces].filter(isPublishedPiece).sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt)),
+    [pieces]
   )
-
-  const previewBody = useMemo(
-    () => renderImportedBody(resolveNativeBodyHtml(selectedPost || {}), 'read'),
-    [selectedPost]
-  )
-
-  const previewImage = selectedPost?.featuredImage || selectedPost?.heroImage || ''
 
   return (
     <AdminFrame>
       <main className="page wp-admin-screen print-lab-page">
         <div className="wp-screen-header print-lab-screen-header">
           <h1>Print Lab</h1>
-          <Link className="button" to="/tools">Back to Tools</Link>
+          <Link className="button" to="/content">Back to Posts</Link>
         </div>
 
-        <section className="wp-meta-box print-lab-controls" aria-label="Print controls">
-          <h2>Print layout generator</h2>
+        <section className="wp-meta-box">
+          <h2>Published posts</h2>
           <p className="description">
-            Select an existing post and format to generate a printable preview using post title, excerpt, featured image, and body.
+            Select published posts to stage source material for upcoming print workflows.
           </p>
 
-          <div className="print-lab-controls__row">
-            <label>
-              Post
-              <select value={selectedPostId} onChange={(event) => setSelectedPostId(event.target.value)}>
-                {posts.map((post) => (
-                  <option key={post.id} value={post.id}>{formatPostLabel(post)}</option>
-                ))}
-              </select>
-            </label>
+          <p className="print-lab-selection-count" aria-live="polite">
+            {selectedSlugs.length} selected
+          </p>
 
-            <label>
-              Format
-              <select value={selectedFormat} onChange={(event) => setSelectedFormat(event.target.value)}>
-                {PRINT_FORMATS.map((format) => (
-                  <option key={format.value} value={format.value}>{format.label}</option>
-                ))}
-              </select>
-            </label>
-
-            <button type="button" className="button button--primary" onClick={() => window.print()}>
-              Print
-            </button>
+          <div className="print-lab-post-list" role="list">
+            {publishedPieces.map((piece) => (
+              <label className="print-lab-post-card" key={piece.slug}>
+                <input
+                  type="checkbox"
+                  checked={selectedSlugs.includes(piece.slug)}
+                  onChange={(event) => {
+                    setSelectedSlugs((current) => (
+                      event.target.checked
+                        ? [...new Set([...current, piece.slug])]
+                        : current.filter((slug) => slug !== piece.slug)
+                    ))
+                  }}
+                />
+                {piece.featuredImage ? (
+                  <img className="print-lab-post-card__thumb" src={piece.featuredImage} alt="" loading="lazy" />
+                ) : (
+                  <div className="print-lab-post-card__thumb print-lab-post-card__thumb--empty" aria-hidden="true">No image</div>
+                )}
+                <div className="print-lab-post-card__content">
+                  <h3>{piece.title || 'Untitled'}</h3>
+                  <p><strong>Status:</strong> Published</p>
+                  <p><strong>Published:</strong> {getPublishedAtLabel(piece)}</p>
+                  <p><strong>Type:</strong> {piece.type || piece.sourcePostType || 'post'}</p>
+                </div>
+              </label>
+            ))}
+            {!publishedPieces.length ? <p className="description">No published posts available.</p> : null}
           </div>
-
-          {state === 'loading' ? <p className="description">Loading posts…</p> : null}
-          {state === 'error' ? <p className="description">Unable to load posts.</p> : null}
-          {state === 'loaded' && posts.length === 0 ? <p className="description">No posts available for preview.</p> : null}
-        </section>
-
-        <section className="wp-meta-box print-lab-preview-wrap" aria-label="Print preview">
-          <h2>Print preview</h2>
-
-          {selectedPost ? (
-            <article className={`print-lab-preview print-lab-preview--${selectedFormat}`}>
-              <header className="print-lab-preview__header">
-                <p className="print-lab-preview__eyebrow">{PRINT_FORMATS.find((item) => item.value === selectedFormat)?.label}</p>
-                <h3>{selectedPost.title || 'Untitled post'}</h3>
-                {selectedPost.excerpt ? <p className="print-lab-preview__excerpt">{selectedPost.excerpt}</p> : null}
-              </header>
-
-              {previewImage ? (
-                <figure className="print-lab-preview__hero">
-                  <img src={previewImage} alt="" />
-                </figure>
-              ) : null}
-
-              <div className="print-lab-preview__body">
-                {previewBody.length ? previewBody : <p>No body content yet.</p>}
-              </div>
-            </article>
-          ) : (
-            <p className="description">Select a post to preview.</p>
-          )}
         </section>
       </main>
     </AdminFrame>
