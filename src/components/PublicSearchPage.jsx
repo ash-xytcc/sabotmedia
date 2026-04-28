@@ -102,6 +102,7 @@ function normalizePiece(piece) {
     imageUrl,
     href: slug ? buildPublicPostPath(slug) : '/archive',
     hasPrintAssets: !!piece?.hasPrintAssets,
+    sourceKind: piece?.sourceKind || 'archive',
   }
 }
 
