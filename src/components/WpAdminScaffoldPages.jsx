@@ -126,7 +126,6 @@ export function SettingsAdminPage() {
           <h1>Settings</h1>
           <button className="button button--primary" type="button" onClick={saveSettings}>Save Changes</button>
         </div>
-        )}
       </main>
     </AdminFrame>
   )
