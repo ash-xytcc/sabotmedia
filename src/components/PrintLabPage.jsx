@@ -1,77 +1,132 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { loadNativeCollection } from '../lib/nativePublicContent'
+import { resolveNativeBodyHtml } from '../lib/nativePublicFeed'
+import { renderImportedBody } from '../lib/renderImportedBody'
 import { AdminFrame } from './AdminRail'
 
-const PRINT_LAB_TOOLS = [
-  {
-    name: 'Export piece as print PDF',
-    status: 'Scaffolded',
-    notes: 'Uses each piece’s Print mode and browser print dialog. Dedicated export pipeline is not wired yet.',
-    actionLabel: 'Open archive in print mode',
-    to: '/archive',
-  },
-  {
-    name: 'Zine / imposition scaffold',
-    status: 'Scaffolded',
-    notes: 'Planning surface for booklet signatures, folios, and pagination rules. No layout engine wired yet.',
-    actionLabel: 'View scaffold notes',
-    to: '/tools/print#zine-imposition',
-  },
-  {
-    name: 'Button maker scaffold',
-    status: 'Scaffolded',
-    notes: 'Reserved for circular artboard prep and print-safe bleed presets. Export templates are not wired yet.',
-    actionLabel: 'View scaffold notes',
-    to: '/tools/print#button-maker',
-  },
-  {
-    name: 'Poster tiler / rasterbator scaffold',
-    status: 'Scaffolded',
-    notes: 'Reserved for multi-page poster splitting and optional halftone raster modes. Rendering is not wired yet.',
-    actionLabel: 'View scaffold notes',
-    to: '/tools/print#poster-tiler',
-  },
+const PRINT_FORMATS = [
+  { value: 'single-page', label: 'Single page article' },
+  { value: 'half-sheet-zine', label: 'Half sheet zine' },
+  { value: 'booklet-draft', label: 'Booklet draft' },
 ]
 
+function formatPostLabel(post) {
+  const title = post?.title || 'Untitled'
+  const status = post?.status || 'draft'
+  return `${title} (${status})`
+}
+
 export function PrintLabPage() {
+  const [posts, setPosts] = useState([])
+  const [selectedPostId, setSelectedPostId] = useState('')
+  const [selectedFormat, setSelectedFormat] = useState('single-page')
+  const [state, setState] = useState('loading')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function boot() {
+      try {
+        const loaded = await loadNativeCollection({ includeFuture: 1 })
+        if (cancelled) return
+        const normalized = Array.isArray(loaded)
+          ? loaded.filter((post) => post.status !== 'trash')
+          : []
+        setPosts(normalized)
+        if (normalized[0]?.id) setSelectedPostId(normalized[0].id)
+        setState('loaded')
+      } catch {
+        if (!cancelled) setState('error')
+      }
+    }
+
+    boot()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const selectedPost = useMemo(
+    () => posts.find((post) => post.id === selectedPostId) || null,
+    [posts, selectedPostId]
+  )
+
+  const previewBody = useMemo(
+    () => renderImportedBody(resolveNativeBodyHtml(selectedPost || {}), 'read'),
+    [selectedPost]
+  )
+
+  const previewImage = selectedPost?.featuredImage || selectedPost?.heroImage || ''
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen print-lab-page">
-        <div className="wp-screen-header">
+        <div className="wp-screen-header print-lab-screen-header">
           <h1>Print Lab</h1>
-          <Link className="button button--primary" to="/tools">Back to Tools</Link>
+          <Link className="button" to="/tools">Back to Tools</Link>
         </div>
 
-        <section className="wp-meta-box">
-          <h2>Publication print scaffolds</h2>
+        <section className="wp-meta-box print-lab-controls" aria-label="Print controls">
+          <h2>Print layout generator</h2>
           <p className="description">
-            Print Lab tracks publication-focused tooling. Items marked scaffolded are intentionally not wired to completed exports.
+            Select an existing post and format to generate a printable preview using post title, excerpt, featured image, and body.
           </p>
 
-          <div className="print-lab-grid">
-            {PRINT_LAB_TOOLS.map((tool) => (
-              <article className="print-lab-card" key={tool.name}>
-                <h3>{tool.name}</h3>
-                <p><strong>Status:</strong> {tool.status}</p>
-                <p>{tool.notes}</p>
-                <Link className="button" to={tool.to}>{tool.actionLabel}</Link>
-              </article>
-            ))}
+          <div className="print-lab-controls__row">
+            <label>
+              Post
+              <select value={selectedPostId} onChange={(event) => setSelectedPostId(event.target.value)}>
+                {posts.map((post) => (
+                  <option key={post.id} value={post.id}>{formatPostLabel(post)}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Format
+              <select value={selectedFormat} onChange={(event) => setSelectedFormat(event.target.value)}>
+                {PRINT_FORMATS.map((format) => (
+                  <option key={format.value} value={format.value}>{format.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <button type="button" className="button button--primary" onClick={() => window.print()}>
+              Print
+            </button>
           </div>
+
+          {state === 'loading' ? <p className="description">Loading posts…</p> : null}
+          {state === 'error' ? <p className="description">Unable to load posts.</p> : null}
+          {state === 'loaded' && posts.length === 0 ? <p className="description">No posts available for preview.</p> : null}
         </section>
 
-        <section className="wp-meta-box" id="zine-imposition">
-          <h2>Zine / imposition scaffold</h2>
-          <p className="description">Target: signature planning (4/8/16 page), duplex folding map, and page-order proofing.</p>
-        </section>
+        <section className="wp-meta-box print-lab-preview-wrap" aria-label="Print preview">
+          <h2>Print preview</h2>
 
-        <section className="wp-meta-box" id="button-maker">
-          <h2>Button maker scaffold</h2>
-          <p className="description">Target: circular templates, text-safe ring guides, and pin-back bleed helpers.</p>
-        </section>
+          {selectedPost ? (
+            <article className={`print-lab-preview print-lab-preview--${selectedFormat}`}>
+              <header className="print-lab-preview__header">
+                <p className="print-lab-preview__eyebrow">{PRINT_FORMATS.find((item) => item.value === selectedFormat)?.label}</p>
+                <h3>{selectedPost.title || 'Untitled post'}</h3>
+                {selectedPost.excerpt ? <p className="print-lab-preview__excerpt">{selectedPost.excerpt}</p> : null}
+              </header>
 
-        <section className="wp-meta-box" id="poster-tiler">
-          <h2>Poster tiler / rasterbator scaffold</h2>
-          <p className="description">Target: poster splitting across paper sizes, registration marks, and optional raster effects.</p>
+              {previewImage ? (
+                <figure className="print-lab-preview__hero">
+                  <img src={previewImage} alt="" />
+                </figure>
+              ) : null}
+
+              <div className="print-lab-preview__body">
+                {previewBody.length ? previewBody : <p>No body content yet.</p>}
+              </div>
+            </article>
+          ) : (
+            <p className="description">Select a post to preview.</p>
+          )}
         </section>
       </main>
     </AdminFrame>
