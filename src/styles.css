@@ -5147,7 +5147,7 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
 /* featured card gets stronger editorial treatment */
 .publication-hero-card {
   position: relative;
-  min-height: clamp(420px, 58vw, 760px);
+  min-height: clamp(340px, 50vw, 620px);
   margin-bottom: var(--homepage-gutter);
 }
 
@@ -5201,7 +5201,7 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
 
 .publication-post-card {
   position: relative;
-  min-height: clamp(220px, 28vw, 360px);
+  min-height: clamp(220px, 24vw, 320px);
 }
 
 .publication-post-card__link {
@@ -5244,6 +5244,26 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.publication-hero-card p,
+.publication-post-card p {
+  margin: 0.6rem 0 0;
+  max-width: min(58ch, 100%);
+  font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.92);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.publication-hero-card--no-image .publication-hero-card__image-fill,
+.publication-post-card--no-image .publication-post-card__image-fill {
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.08), transparent 40%),
+    linear-gradient(140deg, #2a2a2f 0%, #101114 60%, #050506 100%);
 }
 
 /* calm the metadata so the titles lead */

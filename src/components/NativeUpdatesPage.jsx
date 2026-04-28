@@ -122,12 +122,14 @@ function getHomepageDisplaySettings() {
 }
 
 function HeroFeature({ item }) {
+  const hasImage = Boolean(item.imageUrl)
+
   return (
-    <article className="publication-hero-card">
+    <article className={`publication-hero-card${hasImage ? '' : ' publication-hero-card--no-image'}`}>
       <Link className="publication-hero-card__image-wrap" to={item.href}>
         <div
           className="publication-hero-card__image publication-hero-card__image-fill"
-          style={item.imageUrl ? {
+          style={hasImage ? {
             backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.62)), url("${item.imageUrl}")`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -140,6 +142,7 @@ function HeroFeature({ item }) {
             <span>{item.contentType}</span>
           </div>
           <h1>{item.title}</h1>
+          {item.excerpt ? <p>{item.excerpt}</p> : null}
         </div>
       </Link>
     </article>
@@ -147,12 +150,14 @@ function HeroFeature({ item }) {
 }
 
 function RecentCard({ item }) {
+  const hasImage = Boolean(item.imageUrl)
+
   return (
-    <article className="publication-post-card">
+    <article className={`publication-post-card${hasImage ? '' : ' publication-post-card--no-image'}`}>
       <Link className="publication-post-card__link" to={item.href}>
         <div
           className="publication-post-card__image-fill"
-          style={item.imageUrl ? {
+          style={hasImage ? {
             backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.68)), url("${item.imageUrl}")`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -164,7 +169,7 @@ function RecentCard({ item }) {
             <span>{item.target}</span>
           </div>
           <h2>{item.title}</h2>
-          
+          {item.excerpt ? <p>{item.excerpt}</p> : null}
         </div>
       </Link>
     </article>
@@ -248,17 +253,21 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
         <>
           <HeroFeature item={featuredItem} />
 
-          <section className={`publication-recent-grid publication-recent-grid--${homepageSettings.featuredLayout}`}>
-            {recentItems.map((item) => (
-              <RecentCard key={item.id} item={item} />
-            ))}
-          </section>
+          {recentItems.length ? (
+            <>
+              <section className={`publication-recent-grid publication-recent-grid--${homepageSettings.featuredLayout}`}>
+                {recentItems.map((item) => (
+                  <RecentCard key={item.id} item={item} />
+                ))}
+              </section>
 
-          <section className="publication-next-row">
-            <Link className="publication-next-link" to="/archive">
-              Next →
-            </Link>
-          </section>
+              <section className="publication-next-row">
+                <Link className="publication-next-link" to="/archive">
+                  Next →
+                </Link>
+              </section>
+            </>
+          ) : null}
         </>
       ) : state === 'loading' ? (
         <section className="missing-state">
