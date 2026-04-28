@@ -5,6 +5,7 @@ import { loadSites } from '../lib/siteDomains'
 const MENU = [
   { to: '/admin', label: 'Dashboard' },
   { to: '/content', label: 'Posts' },
+  { to: '/printlab', label: 'Printlab' },
   { to: '/native-bridge?new=article', label: 'Add New' },
   { to: '/media', label: 'Media' },
   { to: '/pages', label: 'Pages' },
