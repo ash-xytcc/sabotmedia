@@ -69,6 +69,553 @@ export function PagesAdminPage() {
         </div>
 
         <p className="description">Manage your primary public site surfaces and quick actions.</p>
+
+        <section className="wp-meta-box">
+          <table className="content-table wp-posts-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Slug</th>
+                <th>Status</th>
+                <th>Last modified</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pages.map((page) => (
+                <tr key={page.slug}>
+                  <td><strong>{page.title}</strong></td>
+                  <td>{page.slug}</td>
+                  <td>{page.status}</td>
+                  <td>{new Date(page.modified).toLocaleDateString()}</td>
+                  <td>
+                    <div className="wp-row-actions">
+                      <Link to={page.path}>View</Link>
+                      <Link to={`/customize?section=${page.customizeSection}`}>Edit Live</Link>
+                      <Link to={`/customize?section=${page.customizeSection}`}>Customize</Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </AdminFrame>
+  )
+}
+
+export function CustomizeAdminPage() {
+  const sections = useMemo(() => ([
+    { id: 'siteIdentity', title: 'Site Identity', body: 'Title, tagline, icon, and publication identity.' },
+    { id: 'colors', title: 'Colors', body: 'Theme colors and editorial color controls.' },
+    { id: 'masthead', title: 'Header / Masthead', body: 'Logo, masthead placement, and header layout.' },
+    { id: 'navigation', title: 'Navigation', body: 'Public nav placement and menu behavior.' },
+    { id: 'homepage', title: 'Homepage', body: 'Featured content, feed source, and layout.' },
+  ]), [])
+  const [searchParams, setSearchParams] = useSearchParams()
+  const defaultSection = searchParams.get('section') || 'siteIdentity'
+  const [activeSection, setActiveSection] = useState(defaultSection)
+  const [settings, setSettings] = useState(() => {
+    const customizer = loadCustomizerSettings()
+    const menuDraft = loadJson(MENU_KEY, [])
+
+    return {
+      ...DEFAULT_CUSTOMIZER_SETTINGS,
+      ...customizer,
+      navigation: {
+        ...DEFAULT_CUSTOMIZER_SETTINGS.navigation,
+        ...customizer.navigation,
+        menuItems: (Array.isArray(menuDraft) && menuDraft.length
+          ? menuDraft
+          : customizer.navigation.menuItems
+        ).map((item, index) => ({
+          id: item.id || `menu-${index + 1}`,
+          label: item.label,
+          path: item.path || item.to,
+        })),
+      },
+    }
+  })
+  const [saveMessage, setSaveMessage] = useState('')
+
+  useEffect(() => {
+    if (!sections.some((section) => section.id === activeSection)) {
+      setActiveSection('siteIdentity')
+    }
+  }, [activeSection, sections])
+
+  useEffect(() => {
+    const querySection = searchParams.get('section')
+    if (querySection && querySection !== activeSection && sections.some((section) => section.id === querySection)) {
+      setActiveSection(querySection)
+    }
+  }, [activeSection, searchParams, sections])
+
+  function updateSection(section, field, value) {
+    setSettings((current) => ({
+      ...current,
+      [section]: {
+        ...current[section],
+        [field]: value,
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function updateNavigationItem(index, patch) {
+    setSettings((current) => ({
+      ...current,
+      navigation: {
+        ...current.navigation,
+        menuItems: current.navigation.menuItems.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function addNavigationItem() {
+    setSettings((current) => ({
+      ...current,
+      navigation: {
+        ...current.navigation,
+        menuItems: [...current.navigation.menuItems, { label: 'New Item', path: '/' }],
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function removeNavigationItem(index) {
+    setSettings((current) => ({
+      ...current,
+      navigation: {
+        ...current.navigation,
+        menuItems: current.navigation.menuItems.filter((_, i) => i !== index),
+      },
+    }))
+    setSaveMessage('')
+  }
+
+  function saveSection(section) {
+    saveCustomizerSettings(settings)
+    saveJson(MENU_KEY, settings.navigation.menuItems.map((item, index) => ({ id: item.id || `menu-${index + 1}`, label: item.label, to: item.path })))
+    const sectionName = sections.find((entry) => entry.id === section)?.title || 'Section'
+    setSaveMessage(`${sectionName} saved locally.`)
+  }
+
+  function renderPanel() {
+    if (activeSection === 'siteIdentity') {
+      return (
+        <div className="wp-customize-panel" key="siteIdentity">
+          <h3>Site Identity</h3>
+          <label>
+            <span>Site title</span>
+            <input
+              value={settings.siteIdentity.siteTitle}
+              onChange={(e) => updateSection('siteIdentity', 'siteTitle', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Tagline</span>
+            <input
+              value={settings.siteIdentity.tagline}
+              onChange={(e) => updateSection('siteIdentity', 'tagline', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Logo / masthead URL</span>
+            <input
+              value={settings.siteIdentity.logoUrl}
+              onChange={(e) => updateSection('siteIdentity', 'logoUrl', e.target.value)}
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => saveSection('siteIdentity')}>Save</button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'colors') {
+      return (
+        <div className="wp-customize-panel" key="colors">
+          <h3>Colors</h3>
+          <label>
+            <span>Background color</span>
+            <input
+              value={settings.colors.backgroundColor}
+              onChange={(e) => updateSection('colors', 'backgroundColor', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Accent color</span>
+            <input
+              value={settings.colors.accentColor}
+              onChange={(e) => updateSection('colors', 'accentColor', e.target.value)}
+            />
+          </label>
+          <label>
+            <span>Text color</span>
+            <input
+              value={settings.colors.textColor}
+              onChange={(e) => updateSection('colors', 'textColor', e.target.value)}
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => saveSection('colors')}>Save</button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'masthead') {
+      return (
+        <div className="wp-customize-panel" key="masthead">
+          <h3>Header / Masthead</h3>
+          <label>
+            <span>Masthead size</span>
+            <select
+              value={settings.masthead.mastheadSize}
+              onChange={(e) => updateSection('masthead', 'mastheadSize', e.target.value)}
+            >
+              <option value="compact">Compact</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          <label>
+            <span>Nav position</span>
+            <select
+              value={settings.masthead.navPosition}
+              onChange={(e) => updateSection('masthead', 'navPosition', e.target.value)}
+            >
+              <option value="below">Below masthead</option>
+              <option value="inline">Inline with logo</option>
+              <option value="above">Above masthead</option>
+            </select>
+          </label>
+          <label>
+            <span>Logo URL</span>
+            <input
+              value={settings.masthead.logoUrl}
+              onChange={(e) => updateSection('masthead', 'logoUrl', e.target.value)}
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => saveSection('masthead')}>Save</button>
+        </div>
+      )
+    }
+
+    if (activeSection === 'navigation') {
+      return (
+        <div className="wp-customize-panel" key="navigation">
+          <h3>Navigation</h3>
+          <div className="wp-customize-nav-list">
+            {settings.navigation.menuItems.map((item, index) => (
+              <div className="wp-customize-nav-row" key={`${item.path}-${index}`}>
+                <input
+                  value={item.label}
+                  onChange={(e) => updateNavigationItem(index, { label: e.target.value })}
+                  aria-label={`Menu item ${index + 1} label`}
+                />
+                <input
+                  value={item.path}
+                  onChange={(e) => updateNavigationItem(index, { path: e.target.value })}
+                  aria-label={`Menu item ${index + 1} path`}
+                />
+                <button type="button" className="button" onClick={() => removeNavigationItem(index)}>Remove</button>
+              </div>
+            ))}
+          </div>
+          <p>
+            <button type="button" className="button" onClick={addNavigationItem}>Add item</button>
+          </p>
+          <button className="button button--primary" type="button" onClick={() => saveSection('navigation')}>Save</button>
+        </div>
+      )
+    }
+
+    return (
+      <div className="wp-customize-panel" key="homepage">
+        <h3>Homepage</h3>
+        <label>
+          <span>Homepage source</span>
+          <select
+            value={settings.homepage.homepageSource}
+            onChange={(e) => updateSection('homepage', 'homepageSource', e.target.value)}
+          >
+            <option value="latest">Latest posts</option>
+            <option value="featured">Featured feed</option>
+            <option value="mixed">Mixed curation</option>
+          </select>
+        </label>
+        <label>
+          <span>Featured layout</span>
+          <select
+            value={settings.homepage.featuredLayout}
+            onChange={(e) => updateSection('homepage', 'featuredLayout', e.target.value)}
+          >
+            <option value="grid">Grid</option>
+            <option value="list">List</option>
+            <option value="stack">Stack</option>
+          </select>
+        </label>
+        <label>
+          <span>Posts per page</span>
+          <input
+            type="number"
+            min="1"
+            value={settings.homepage.postsPerPage}
+            onChange={(e) => updateSection('homepage', 'postsPerPage', Number(e.target.value) || 1)}
+          />
+        </label>
+        <button className="button button--primary" type="button" onClick={() => saveSection('homepage')}>Save</button>
+      </div>
+    )
+  }
+
+  return (
+    <AdminFrame>
+      <main className="page wp-admin-screen">
+        <div className="wp-screen-header">
+          <h1>Customize</h1>
+          <Link className="button" to="/">View site</Link>
+        </div>
+
+        <section className="wp-meta-box wp-customize-shell">
+          <h2>Customizer</h2>
+          <p className="description">WordPress-style customizer scaffold for Sabot.</p>
+          <WpNotice>Customizer settings are local scaffold until public wiring lands.</WpNotice>
+
+          <div className="wp-customize-layout">
+            <div className="wp-customize-section-list">
+              {sections.map((section) => (
+                <button
+                  className={`wp-customize-section${section.id === activeSection ? ' is-active' : ''}`}
+                  type="button"
+                  key={section.id}
+                  onClick={() => {
+                    setActiveSection(section.id)
+                    setSearchParams({ section: section.id })
+                  }}
+                >
+                  <span>{section.title}</span>
+                  <small>{section.body}</small>
+                </button>
+              ))}
+            </div>
+            <div className="wp-customize-panel-wrap">
+              {renderPanel()}
+              {saveMessage && <p className="description">{saveMessage}</p>}
+            </div>
+          </div>
+
+          <p className="description">Navigation menus are managed here under the Navigation panel.</p>
+        </section>
+      </main>
+    </AdminFrame>
+  )
+}
+
+
+export function SiteEditorAdminPage() {
+  return (
+    <AdminFrame>
+      <main className="page wp-admin-screen">
+        <div className="wp-screen-header">
+          <h1>Advanced Draft Tools</h1>
+          <Link className="button button--primary" to="/draft">Open Draft Tools</Link>
+        </div>
+
+        <section className="wp-meta-box">
+          <h2>Legacy developer surface</h2>
+          <p className="description">
+            This legacy route stays available for developer workflows and is intentionally hidden from normal admin navigation.
+          </p>
+          <p><Link to="/customize?section=navigation">Customize Navigation</Link> · Draft editor (hidden legacy route)</p>
+        </section>
+      </main>
+    </AdminFrame>
+  )
+}
+
+export function ToolsAdminPage() {
+  const [notices, setNotices] = useState([])
+  const [running, setRunning] = useState('')
+
+  function addNotice(type, message) {
+    setNotices((current) => [{ id: `${Date.now()}-${Math.random()}`, type, message }, ...current].slice(0, 6))
+  }
+
+  function runNativeExport() {
+    return withToolRun('Export native content JSON', async () => {
+      const collection = await loadNativeCollection()
+      const payload = exportNativeCollection(collection)
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadJson(`native-content-export-${stamp}.json`, payload)
+      const copied = await copyToClipboard(payload)
+      addNotice('success', `Native content export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+    })
+  }
+
+  function runPublicSettingsExport() {
+    return withToolRun('Export public settings JSON', async () => {
+      const runtime = getStoredPublicConfig()
+      const payload = JSON.stringify(
+        {
+          exportedAt: new Date().toISOString(),
+          config: resolvePublicConfig(runtime),
+        },
+        null,
+        2
+      )
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadJson(`public-settings-export-${stamp}.json`, payload)
+      const copied = await copyToClipboard(payload)
+      addNotice('success', `Public settings export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+    })
+  }
+
+  function runSiteBackupExport() {
+    return withToolRun('Export Site Backup JSON', async () => {
+      const payload = exportLocalSiteBackupJson()
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadJson(`sabot-site-backup-${stamp}.json`, payload)
+      const copied = await copyToClipboard(payload)
+      addNotice('success', `Site backup export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+    })
+  }
+
+  function runMediaAudit() {
+    return withToolRun('Run media audit', async () => {
+      const nativeItems = await loadNativeCollection({ includeFuture: 1 })
+      const summary = buildMediaAuditSummary({ nativeItems })
+      addNotice(
+        'success',
+        `Media audit complete. Total media: ${summary.totalMedia}. Local uploaded media: ${summary.localUploadedMedia}. Imported media: ${summary.importedMedia}. Missing featured image count: ${summary.missingFeaturedImages}.`
+      )
+    })
+  }
+
+  function runBrokenImageAudit() {
+    addNotice('warning', 'Broken image audit scaffold is in place, but URL validation checks are not implemented yet.')
+  }
+
+  function runLocalStorageInventory() {
+    return withToolRun('Run localStorage inventory', async () => {
+      const inventory = buildLocalStorageInventory()
+      const summary = inventory.items.map((entry) => `${entry.key}: ${entry.bytes} bytes`).join('\n')
+      const payload = JSON.stringify(inventory, null, 2)
+      const stamp = new Date().toISOString().slice(0, 10)
+
+      downloadJson(`localstorage-inventory-${stamp}.json`, payload)
+      const copied = summary ? await copyToClipboard(summary) : false
+
+      addNotice(
+        'success',
+        `LocalStorage inventory complete. ${inventory.keyCount} keys scanned (${inventory.totalBytes} bytes total)${copied ? ' and copied to clipboard' : ''}.`
+      )
+    })
+  }
+
+  const tools = [
+    {
+      name: 'Print Lab',
+      status: 'Ready',
+      notes: 'Open Print Lab to select print-enabled posts, toggle zine/poster helpers, and launch browser print.',
+      actionLabel: 'Open Print Lab',
+      action: () => {
+        window.location.assign('/printlab')
+      },
+    },
+    {
+      name: 'Export Site Backup JSON',
+      status: 'Ready',
+      notes: 'Exports local native posts, media, settings, customizer, navigation, users/roles scaffold, localStorage inventory, and media audit summary.',
+      actionLabel: 'Run export',
+      action: runSiteBackupExport,
+    },
+    {
+      name: 'Export native content JSON',
+      status: 'Ready',
+      notes: 'Downloads current native content collection and copies JSON when clipboard access is allowed.',
+      actionLabel: 'Run export',
+      action: runNativeExport,
+    },
+    {
+      name: 'Export public settings JSON',
+      status: 'Ready',
+      notes: 'Exports resolved public settings from browser storage as JSON.',
+      actionLabel: 'Run export',
+      action: runPublicSettingsExport,
+    },
+    {
+      name: 'Run media audit',
+      status: 'Ready',
+      notes: 'Summarizes media totals, local uploads, imported references, and missing featured images.',
+      actionLabel: 'Run audit',
+      action: runMediaAudit,
+    },
+    {
+      name: 'Run broken image audit',
+      status: 'Not wired yet',
+      notes: 'Audit flow exists, but URL reachability checks are intentionally not implemented yet.',
+      actionLabel: 'Run scaffold',
+      action: runBrokenImageAudit,
+    },
+    {
+      name: 'Run localStorage inventory',
+      status: 'Ready',
+      notes: 'Scans localStorage keys, sizes values in bytes, downloads JSON, and copies a text summary.',
+      actionLabel: 'Run inventory',
+      action: runLocalStorageInventory,
+    },
+  ]
+
+  return (
+    <AdminFrame>
+      <main className="page wp-admin-screen">
+        <div className="wp-screen-header">
+          <h1>Tools</h1>
+        </div>
+
+        {notices.map((notice) => (
+          <div className={`notice ${notice.type === 'warning' ? 'notice-warning' : 'notice-success'}`} key={notice.id}>
+            <p>{notice.message}</p>
+          </div>
+        ))}
+
+        <section className="wp-meta-box">
+          <h2>Available tools</h2>
+          <p className="description">Internal Sabot clone tools. Noblogs direct backend is not part of main.</p>
+
+          <table className="content-table wp-posts-table">
+            <thead>
+              <tr>
+                <th>Tool</th>
+                <th>Status</th>
+                <th>Notes</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tools.map((tool) => (
+                <tr key={tool.name}>
+                  <td><strong>{tool.name}</strong></td>
+                  <td>{tool.status}</td>
+                  <td>{tool.notes}</td>
+                  <td>
+                    <button className="button" type="button" onClick={tool.action} disabled={running === tool.name}>
+                      {running === tool.name ? 'Running…' : tool.actionLabel}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        <section className="wp-meta-box" id="advanced-draft-tools">
+          <h2>Advanced Draft Tools</h2>
+          <p className="description">Legacy developer editing surface is hidden from normal UI and not wired from primary tools.</p>
+          <p>Draft editor route remains hidden for legacy-only use.</p>
+        </section>
       </main>
     </AdminFrame>
   )
