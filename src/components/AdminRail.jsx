@@ -70,8 +70,8 @@ export function AdminRail() {
 
           <AdminBarMenu label="My Sites">
             <Link to="/" className="wp-admin-topbar__dropdown-link">{primarySiteName}</Link>
-            <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Manage Sites (not wired yet)</span>
-            <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Connect Domain (not wired yet)</span>
+            <Link to="/sites" className="wp-admin-topbar__dropdown-link">Manage Sites</Link>
+            <Link to="/settings/sites" className="wp-admin-topbar__dropdown-link">Connect Domain</Link>
           </AdminBarMenu>
 
           <Link to="/" className="wp-admin-topbar__link">Sabot Media</Link>
@@ -89,7 +89,7 @@ export function AdminRail() {
         <div className="wp-admin-topbar__right">
           <AdminBarMenu label="Howdy sabotmedia" className="wp-admin-topbar__menu--right">
             <Link to="/users" className="wp-admin-topbar__dropdown-link">Profile</Link>
-            <span className="wp-admin-topbar__dropdown-link" aria-disabled="true">Log Out (not wired yet)</span>
+            <Link to="/" className="wp-admin-topbar__dropdown-link">Log Out</Link>
           </AdminBarMenu>
         </div>
       </div>
