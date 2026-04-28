@@ -7,6 +7,19 @@ import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/
 import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { splitDisplayTitle } from '../lib/content'
 import { buildPublicPostPath } from '../lib/publicSiteRouting'
+function resolveCanonicalSlug(piece) {
+  return String(
+    piece?.slug ||
+    piece?.nativeSlug ||
+    piece?.canonicalSlug ||
+    piece?.id ||
+    ''
+  ).trim()
+}
+
+function buildPublicPostPath(slug) {
+  return `/post/${encodeURIComponent(slug)}`
+}
 
 const FILTERS = [
   { key: 'all', label: 'All' },
