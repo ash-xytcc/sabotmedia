@@ -165,8 +165,8 @@ export default function App() {
           <Route path="/site-editor" element={<Navigate to="/tools#advanced-draft-tools" replace />} />
           <Route path="/advanced-draft-tools" element={<SiteEditorAdminPage />} />
           <Route path="/tools" element={<ToolsAdminPage />} />
+          <Route path="/printlab" element={<PrintLabPage pieces={pieces} />} />
           <Route path="/tools/print" element={<Navigate to="/printlab" replace />} />
-          <Route path="/printlab" element={<PrintLabPage />} />
           <Route path="/settings" element={<SettingsAdminPage />} />
           <Route path="/settings/social" element={<SettingsAdminPage />} />
           <Route path="/settings/sites" element={<SitesAdminPage />} />

@@ -1,107 +1,79 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getPieces } from '../lib/pieces'
-import { getPieceDisplaySettings } from '../lib/publicDisplayModes'
+import { loadNativeCollection } from '../lib/nativePublicContent'
+import { resolveNativeBodyHtml } from '../lib/nativePublicFeed'
+import { renderImportedBody } from '../lib/renderImportedBody'
 import { AdminFrame } from './AdminRail'
+import { getImportedImage } from '../lib/getImportedImage'
+import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
+import { useWordPressPieces } from '../lib/useWordPressPieces'
 
-function byNewestDate(a, b) {
-  const aTime = Date.parse(a?.publishedDate || a?.date || '')
-  const bTime = Date.parse(b?.publishedDate || b?.date || '')
-  return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0)
+function getPublishedAtLabel(piece) {
+  if (!piece?.publishedAt) return '—'
+  const published = new Date(piece.publishedAt)
+  if (Number.isNaN(published.getTime())) return '—'
+  return published.toLocaleDateString()
 }
 
-export function PrintLabPage() {
-  const pieces = useMemo(() => getPieces(), [])
-  const printablePieces = useMemo(
-    () => pieces
-      .filter((piece) => getPieceDisplaySettings(piece).enablePrintMode)
-      .sort(byNewestDate),
+function isPublishedPiece(piece) {
+  if (piece?.status) return piece.status === 'published'
+  return Boolean(piece?.publishedAt)
+}
+
+export function PrintLabPage({ pieces = [] }) {
+  const [selectedSlugs, setSelectedSlugs] = useState([])
+  const publishedPieces = useMemo(
+    () => [...pieces].filter(isPublishedPiece).sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt)),
     [pieces]
   )
-
-  const [selectedSlug, setSelectedSlug] = useState(() => printablePieces[0]?.slug || '')
-  const [zineSheet, setZineSheet] = useState(false)
-  const [posterMode, setPosterMode] = useState(false)
-
-  const selectedPiece = useMemo(
-    () => printablePieces.find((piece) => piece.slug === selectedSlug) || printablePieces[0] || null,
-    [printablePieces, selectedSlug]
-  )
-
-  const printPath = selectedPiece ? `/piece/${selectedPiece.slug}/print` : '/archive?filter=print'
-  const postPath = selectedPiece ? `/post/${selectedPiece.slug}` : '/archive'
 
   return (
     <AdminFrame>
       <main className="page wp-admin-screen print-lab-page">
-        <div className="wp-screen-header">
+        <div className="wp-screen-header print-lab-screen-header">
           <h1>Print Lab</h1>
-          <Link className="button" to="/tools">Back to Tools</Link>
+          <Link className="button" to="/content">Back to Posts</Link>
         </div>
 
         <section className="wp-meta-box">
-          <h2>Print workflow</h2>
-          <p className="description">Choose a post, toggle layout helpers, and open the browser print dialog.</p>
-
-          <div className="archive-controls" style={{ marginTop: 12 }}>
-            <label className="archive-control" htmlFor="printlab-piece-select">
-              <span>Post selection</span>
-              <select
-                id="printlab-piece-select"
-                value={selectedPiece?.slug || ''}
-                onChange={(event) => setSelectedSlug(event.target.value)}
-                disabled={!printablePieces.length}
-              >
-                {printablePieces.length ? printablePieces.map((piece) => (
-                  <option key={piece.slug} value={piece.slug}>{piece.title || piece.slug}</option>
-                )) : <option value="">No print-enabled posts available</option>}
-              </select>
-            </label>
-
-            <label className="archive-control" htmlFor="toggle-zine-sheet">
-              <span>Zine sheet</span>
-              <input
-                id="toggle-zine-sheet"
-                type="checkbox"
-                checked={zineSheet}
-                onChange={(event) => setZineSheet(event.target.checked)}
-              />
-            </label>
-
-            <label className="archive-control" htmlFor="toggle-poster-mode">
-              <span>Poster mode</span>
-              <input
-                id="toggle-poster-mode"
-                type="checkbox"
-                checked={posterMode}
-                onChange={(event) => setPosterMode(event.target.checked)}
-              />
-            </label>
-          </div>
-
-          <div className="wp-row-actions" style={{ marginTop: 16 }}>
-            <Link className="button" to={postPath}>Open article</Link>
-            <Link className="button" to={printPath}>Open print layout</Link>
-            <button type="button" className="button button--primary" onClick={() => window.print()}>
-              Browser print
-            </button>
-          </div>
-        </section>
-
-        <section className="wp-meta-box" aria-live="polite">
-          <h2>Layout preview controls</h2>
+          <h2>Published posts</h2>
           <p className="description">
-            Active toggles: {zineSheet ? 'Zine sheet on' : 'Zine sheet off'} · {posterMode ? 'Poster mode on' : 'Poster mode off'}
+            Select published posts to stage source material for upcoming print workflows.
           </p>
-          {selectedPiece ? (
-            <ul>
-              <li><strong>Selected post:</strong> {selectedPiece.title || selectedPiece.slug}</li>
-              <li><strong>Print route:</strong> {printPath}</li>
-              <li><strong>Article route:</strong> {postPath}</li>
-            </ul>
-          ) : (
-            <p className="description">No print-enabled posts were found. Use <Link to="/archive?filter=print">Archive print filter</Link>.</p>
-          )}
+
+          <p className="print-lab-selection-count" aria-live="polite">
+            {selectedSlugs.length} selected
+          </p>
+
+          <div className="print-lab-post-list" role="list">
+            {publishedPieces.map((piece) => (
+              <label className="print-lab-post-card" key={piece.slug}>
+                <input
+                  type="checkbox"
+                  checked={selectedSlugs.includes(piece.slug)}
+                  onChange={(event) => {
+                    setSelectedSlugs((current) => (
+                      event.target.checked
+                        ? [...new Set([...current, piece.slug])]
+                        : current.filter((slug) => slug !== piece.slug)
+                    ))
+                  }}
+                />
+                {piece.featuredImage ? (
+                  <img className="print-lab-post-card__thumb" src={piece.featuredImage} alt="" loading="lazy" />
+                ) : (
+                  <div className="print-lab-post-card__thumb print-lab-post-card__thumb--empty" aria-hidden="true">No image</div>
+                )}
+                <div className="print-lab-post-card__content">
+                  <h3>{piece.title || 'Untitled'}</h3>
+                  <p><strong>Status:</strong> Published</p>
+                  <p><strong>Published:</strong> {getPublishedAtLabel(piece)}</p>
+                  <p><strong>Type:</strong> {piece.type || piece.sourcePostType || 'post'}</p>
+                </div>
+              </label>
+            ))}
+            {!publishedPieces.length ? <p className="description">No published posts available.</p> : null}
+          </div>
         </section>
       </main>
     </AdminFrame>
