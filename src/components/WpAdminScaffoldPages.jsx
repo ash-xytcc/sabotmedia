@@ -53,46 +53,6 @@ async function copyToClipboard(value) {
 }
 
 
-function downloadJsonFile(filename, payload) {
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
-}
-
-function runSiteBackupExport() {
-  const keys = [
-    'sabot-native-content-v1',
-    'sabot-local-media-v1',
-    'sabot-wp-clone-settings-v1',
-    'sabot-wp-clone-menu-v1',
-    'sabot-wp-clone-user-role-settings-v1',
-    'sabot-public-config-draft-v1',
-  ]
-
-  const localStorageDump = {}
-  for (const key of keys) {
-    try {
-      localStorageDump[key] = JSON.parse(localStorage.getItem(key) || 'null')
-    } catch {
-      localStorageDump[key] = localStorage.getItem(key)
-    }
-  }
-
-  downloadJsonFile(`sabot-site-backup-${new Date().toISOString().slice(0, 10)}.json`, {
-    exportedAt: new Date().toISOString(),
-    app: 'sabot-media',
-    type: 'local-site-backup',
-    localStorage: localStorageDump,
-  })
-}
-
-
 export function PagesAdminPage() {
   const pages = [
     { title: 'Home', slug: 'home', path: '/', status: 'Published', modified: '2026-04-22', customizeSection: 'homepage' },
@@ -486,15 +446,6 @@ export function ToolsAdminPage() {
     setNotices((current) => [{ id: `${Date.now()}-${Math.random()}`, type, message }, ...current].slice(0, 6))
   }
 
-  async function runNativeExport() {
-    const collection = await loadNativeCollection()
-    const payload = exportNativeCollection(collection)
-    const stamp = new Date().toISOString().slice(0, 10)
-    downloadJson(`native-content-export-${stamp}.json`, payload)
-    const copied = await copyToClipboard(payload)
-    addNotice('success', `Native content export downloaded${copied ? ' and copied to clipboard' : ''}.`)
-  }
-
   function runNativeExport() {
     return withToolRun('Export native content JSON', async () => {
       const collection = await loadNativeCollection()
@@ -521,6 +472,16 @@ export function ToolsAdminPage() {
       downloadJson(`public-settings-export-${stamp}.json`, payload)
       const copied = await copyToClipboard(payload)
       addNotice('success', `Public settings export downloaded${copied ? ' and copied to clipboard' : ''}.`)
+    })
+  }
+
+  function runSiteBackupExport() {
+    return withToolRun('Export Site Backup JSON', async () => {
+      const payload = exportLocalSiteBackupJson()
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadJson(`sabot-site-backup-${stamp}.json`, payload)
+      const copied = await copyToClipboard(payload)
+      addNotice('success', `Site backup export downloaded${copied ? ' and copied to clipboard' : ''}.`)
     })
   }
 
