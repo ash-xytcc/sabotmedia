@@ -7,7 +7,7 @@ const EMPTY_FORM = {
   name: '',
   domain: '',
   basePath: '/',
-  status: 'scaffold',
+  status: '',
 }
 
 export function SitesAdminPage() {
@@ -57,7 +57,7 @@ export function SitesAdminPage() {
         </div>
 
         <div className="notice notice-warning">
-          <p><strong>Local scaffold only:</strong> this manager stores site/domain entries in localStorage. DNS and Cloudflare wiring are not connected yet.</p>
+          <p><strong>Local  only:</strong> this manager stores site/domain entries in localStorage. DNS and Cloudflare wiring are not connected yet.</p>
         </div>
 
         <section className="wp-meta-box">
@@ -83,7 +83,7 @@ export function SitesAdminPage() {
                 ))}
               </select>
             </label>
-            <p><button className="button button--primary" type="submit">Add site scaffold</button></p>
+            <p><button className="button button--primary" type="submit">Add site </button></p>
           </form>
         </section>
 

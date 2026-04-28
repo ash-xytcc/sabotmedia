@@ -112,7 +112,7 @@ export function MigrationToolsPage({ pieces }) {
           ) : (
             <section className="missing-state">
               <h2>No archive piece selected</h2>
-              <p>Pick one from the left and it will generate a native draft scaffold.</p>
+              <p>Pick one from the left and it will generate a native draft .</p>
             </section>
           )}
         </section>

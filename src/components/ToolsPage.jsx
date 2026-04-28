@@ -1,8 +1,8 @@
 import { AdminFrame } from './AdminRail'
 
 const TOOLS = [
-  ['Import', 'Bring content into the internal Sabot clone. Not wired yet.'],
-  ['Export', 'Export local/native content snapshots. Scaffolded.'],
+  ['Import', 'Bring content into the internal Sabot clone. Unavailable.'],
+  ['Export', 'Export local/native content snapshots. ed.'],
   ['Native content export', 'Future direct export of internal posts and media.'],
   ['Public config export', 'Future export of public site settings and customizer state.'],
   ['Media audit', 'Check missing featured images, broken URLs, and local media records.'],
@@ -34,7 +34,7 @@ export function ToolsPage() {
               {TOOLS.map(([tool, notes]) => (
                 <tr key={tool}>
                   <td><strong>{tool}</strong></td>
-                  <td>Scaffolded</td>
+                  <td>ed</td>
                   <td>{notes}</td>
                 </tr>
               ))}

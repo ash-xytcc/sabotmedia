@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 
 const SECTIONS = [
-  ['Site Identity', 'Edit title, tagline, and publication identity scaffolding.'],
+  ['Site Identity', 'Edit title, tagline, and publication identity ing.'],
   ['Colors', 'Theme color controls will live here.'],
   ['Header / Masthead', 'Masthead logo and header layout controls.'],
   ['Navigation', 'Public nav items and menu placement.'],
@@ -21,7 +21,7 @@ export function CustomizePage() {
         <section className="wp-meta-box wp-customize-shell">
           <h2>Customizer</h2>
           <p className="description">
-            WordPress-style customizer scaffold for Sabot. These sections are local UI placeholders until each control is wired.
+            WordPress-style customizer  for Sabot. These sections are local UI placeholders until each control is wired.
           </p>
 
           <div className="wp-customize-section-list">
