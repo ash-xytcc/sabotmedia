@@ -152,7 +152,7 @@ async function handleWrite(context) {
     }
 
     const body = await context.request.json()
-    const item = body?.item || body || {}
+    const item = { ...(body?.item || body || {}) }
     const revisionNote = String(body?.revisionNote || item?.revisionNote || 'save')
 
     if (!hasDb(context)) {
@@ -167,6 +167,9 @@ async function handleWrite(context) {
     await ensureNativeRevisionTable(context.env.BF_DB)
 
     const existing = item?.id ? await getExistingNativeEntry(context.env.BF_DB, item.id) : null
+    if (existing && !String(item.slug || '').trim()) {
+      item.slug = existing.slug
+    }
     if (existing) {
       await saveRevisionSnapshot(context.env.BF_DB, existing, `before:${revisionNote}`)
     }

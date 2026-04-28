@@ -110,16 +110,17 @@ export function normalizeNativeEntry(input) {
   const now = new Date().toISOString()
 
   const status = normalizeEnum(raw.status, ['draft', 'published', 'scheduled', 'archived', 'trash']) || 'draft'
-  const workflowState =
-    normalizeEnum(raw.workflowState || raw.workflow_state, [
-      'draft',
-      'in_review',
-      'needs_revision',
-      'ready',
-      'scheduled',
-      'published',
-      'archived',
-    ]) || inferWorkflowState(raw, status)
+  const requestedWorkflowState = normalizeEnum(raw.workflowState || raw.workflow_state, [
+    'draft',
+    'in_review',
+    'needs_revision',
+    'ready',
+    'scheduled',
+    'published',
+    'archived',
+    'trash',
+  ])
+  const workflowState = inferWorkflowState(raw, status, requestedWorkflowState)
 
   const scheduledFor = normalizeDateString(raw.scheduledFor || raw.scheduled_for || '')
   const display = normalizeDisplaySettings(raw)
@@ -489,15 +490,14 @@ export function isPubliclyVisible(item) {
 function computePublishedAt(entry) {
   const status = String(entry?.status || '')
   const existing = String(entry?.publishedAt || '')
-  const scheduled = normalizeDateString(entry?.scheduledFor || '')
-
-  if (!['published', 'scheduled'].includes(status)) return existing || ''
-  if (scheduled) return scheduled
+  if (status !== 'published') return ''
   return existing || new Date().toISOString()
 }
 
-function inferWorkflowState(raw, status) {
+function inferWorkflowState(raw, status, requestedWorkflowState = '') {
+  if (status === 'trash') return 'trash'
   if (status === 'archived') return 'archived'
+  if (requestedWorkflowState) return requestedWorkflowState
   if (status === 'published' || status === 'scheduled') {
     const scheduled = normalizeDateString(raw?.scheduledFor || raw?.scheduled_for || '')
     if (scheduled && new Date(scheduled).getTime() > Date.now()) return 'scheduled'
