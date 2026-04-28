@@ -132,6 +132,25 @@ export function PrintPage({ pieces = [] }) {
   const display = splitDisplayTitle(piece)
   const heroImage = getImportedImage(piece)
   const bodyNodes = renderImportedBody(piece.bodyHtml || '', 'print')
+  const excerpt = display.subtitle || piece.subtitle || piece.excerpt || ''
+  const sourceLabel = piece.sourceUrl || piece.sourcePostType || ''
+  const siteTitle = 'Sabot Media'
+
+  const metadataItems = [
+    { label: 'Site', value: siteTitle },
+    { label: 'Post', value: display.title || piece.title || '' },
+    { label: 'Date', value: piece.publishedDateLabel || '' },
+    {
+      label: 'Author / Source',
+      value: [piece.author, sourceLabel].map((item) => String(item || '').trim()).filter(Boolean).join(' · '),
+    },
+    { label: 'URL slug', value: piece.slug || '' },
+  ].filter((item) => String(item.value || '').trim())
+
+  const handleToggle = (key) => (event) => {
+    const checked = Boolean(event?.target?.checked)
+    setPrintOptions((current) => ({ ...current, [key]: checked }))
+  }
 
   return (
     <main className={`page print-page${printLayout === 'zine-sheet' ? ' print-page--zine' : ''}`}>
@@ -141,11 +160,17 @@ export function PrintPage({ pieces = [] }) {
           <PrintLayoutSwitch slug={piece.slug} layout={printLayout} />
           <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
         </div>
+        <fieldset className="print-header__controls" aria-label="print layout options">
+          <label><input type="checkbox" checked={printOptions.showMetadata} onChange={handleToggle('showMetadata')} /> Show metadata</label>
+          <label><input type="checkbox" checked={printOptions.showFeaturedImage} onChange={handleToggle('showFeaturedImage')} /> Show featured image</label>
+          <label><input type="checkbox" checked={printOptions.showExcerpt} onChange={handleToggle('showExcerpt')} /> Show excerpt</label>
+          <label><input type="checkbox" checked={printOptions.showColophon} onChange={handleToggle('showColophon')} /> Show colophon</label>
+        </fieldset>
 
         <div className="print-header__eyebrow">{piece.primaryProject || piece.type || 'publication'}</div>
         <h1>{display.title || piece.title || piece.slug}</h1>
-        {display.subtitle || piece.subtitle || piece.excerpt ? (
-          <p>{display.subtitle || piece.subtitle || piece.excerpt}</p>
+        {printOptions.showExcerpt && excerpt ? (
+          <p>{excerpt}</p>
         ) : null}
         <div className="print-header__meta">
           <span>{piece.author || 'Sabot Media'}</span>
