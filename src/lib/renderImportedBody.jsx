@@ -40,6 +40,47 @@ function renderChildren(nodes, mode, prefix = 'node') {
   return nodes.map((node, index) => renderNode(node, mode, makeKey(prefix, index))).filter(Boolean)
 }
 
+function looksLikeRawHtmlText(text = '') {
+  const value = String(text || '').trim()
+  if (!value) return false
+  return /<\/?[a-z][^>]*>/i.test(value)
+}
+
+function parseHtmlFragment(value = '') {
+  if (typeof DOMParser === 'undefined') return []
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(String(value || ''), 'text/html')
+  return Array.from(doc.body.childNodes || [])
+}
+
+function isMeaningfulElement(node) {
+  if (!node) return false
+  if (node.nodeType === 3) return Boolean((node.textContent || '').trim())
+  if (node.nodeType !== 1) return false
+  const tag = String(node.tagName || '').toLowerCase()
+  if (['script', 'style', 'noscript'].includes(tag)) return false
+  if (['img', 'iframe', 'video', 'audio', 'blockquote', 'hr'].includes(tag)) return true
+  return Boolean((node.textContent || '').trim() || node.children?.length)
+}
+
+function normalizeBodyNodes(nodes = []) {
+  const normalized = []
+  let previousSignature = ''
+
+  for (const node of nodes) {
+    if (!isMeaningfulElement(node)) continue
+    const tag = node.nodeType === 1 ? String(node.tagName || '').toLowerCase() : 'text'
+    const text = (node.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase()
+    const imgSrc = node.nodeType === 1 ? (node.getAttribute('src') || node.querySelector?.('img')?.getAttribute('src') || '') : ''
+    const signature = `${tag}|${imgSrc}|${text}`
+    if (signature && signature === previousSignature) continue
+    previousSignature = signature
+    normalized.push(node)
+  }
+
+  return normalized
+}
+
 function renderNode(node, mode, key) {
   if (!node) return null
 
@@ -56,6 +97,14 @@ function renderNode(node, mode, key) {
 
   switch (tag) {
     case 'p':
+      if (!node.children.length && looksLikeRawHtmlText(node.textContent || '')) {
+        const parsed = parseHtmlFragment(node.textContent || '')
+        return (
+          <div key={key} className="post-body__block">
+            {renderChildren(parsed, mode, `${key}-html`)}
+          </div>
+        )
+      }
       return renderInlineHTML('p', 'post-body__paragraph', html, key)
 
     case 'h1':
@@ -194,7 +243,7 @@ export function renderImportedBody(html, mode = 'read') {
   const parser = new DOMParser()
   const doc = parser.parseFromString(value, 'text/html')
   sanitizePublicBodyLinks(doc)
-  const bodyNodes = Array.from(doc.body.childNodes || [])
+  const bodyNodes = normalizeBodyNodes(Array.from(doc.body.childNodes || []))
   return renderChildren(bodyNodes, mode, 'body')
 }
 

@@ -40,6 +40,7 @@ function getPieceBySlug(pieces, slug) {
 
 function getOrderedPieces(pieces) {
   return (Array.isArray(pieces) ? pieces : [])
+    .filter((piece) => isPublicPiece(piece))
     .filter((piece) => piece?.slug)
     .slice()
     .sort((a, b) => {
@@ -47,6 +48,14 @@ function getOrderedPieces(pieces) {
       const bTime = new Date(b?.publishedAt || b?.updatedAt || 0).getTime()
       return bTime - aTime
     })
+}
+
+function isPublicPiece(piece) {
+  if (!piece) return false
+  const status = String(piece.status || '').toLowerCase()
+  if (['draft', 'pending', 'private', 'trash', 'auto-draft'].includes(status)) return false
+  if (piece.hidden === true) return false
+  return true
 }
 
 export function PiecePage({ pieces = [] }) {
@@ -130,6 +139,22 @@ export function PiecePage({ pieces = [] }) {
     () => renderImportedBody(piece?.bodyHtml || '', mode),
     [piece?.bodyHtml, mode]
   )
+  const headerMetaItems = useMemo(() => {
+    if (!piece) return []
+    return [piece.author || 'Sabot Media', piece.publishedDateLabel, piece.type]
+      .map((item) => String(item || '').trim())
+      .filter(Boolean)
+  }, [piece])
+  const detailItems = useMemo(() => {
+    if (!piece) return []
+    const items = []
+    if (piece.author) items.push({ label: 'Author', value: piece.author })
+    if (piece.publishedDateLabel) items.push({ label: 'Published', value: piece.publishedDateLabel })
+    if (piece.primaryProject) items.push({ label: 'Project', value: piece.primaryProject })
+    if (Array.isArray(piece.tags) && piece.tags.length) items.push({ label: 'Tags', value: piece.tags.join(', ') })
+    return items
+  }, [piece])
+  const hasMetaPanel = mode === 'read' && detailItems.length > 0
 
   if (!piece && nativePieces === null) {
     return (
@@ -174,11 +199,13 @@ export function PiecePage({ pieces = [] }) {
           </p>
         ) : null}
 
-        <ul className="piece-header__meta piece-header__meta--public-post" aria-label="Post metadata">
-          <li>{piece.author || 'Sabot Media'}</li>
-          {piece.publishedDateLabel ? <li>{piece.publishedDateLabel}</li> : null}
-          {piece.type ? <li>{piece.type}</li> : null}
-        </ul>
+        {headerMetaItems.length ? (
+          <div className="piece-header__meta">
+            {headerMetaItems.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        ) : null}
 
         <PublicationModeSwitch slug={piece.slug} mode={mode} displaySettings={displaySettings} />
       </header>
@@ -189,24 +216,21 @@ export function PiecePage({ pieces = [] }) {
         </section>
       ) : null}
 
-      <section className="piece-layout">
-        <article className="piece-body-wrap piece-body-wrap--public-post">
-          <div className="piece-body__content post-body__content">
+      <section className={`piece-layout${hasMetaPanel ? ' piece-layout--with-meta' : ''}`}>
+        <article className="piece-body-wrap">
+          <div className="piece-body__content">
             {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{piece.excerpt || ''}</p>}
           </div>
         </article>
 
-        {mode === 'read' ? (
+        {hasMetaPanel ? (
           <aside className="piece-meta-panel">
             <section className="piece-meta-panel__section">
               <h2>Details</h2>
               <ul className="piece-meta-panel__list">
-                {piece.author ? <li><strong>Author:</strong> {piece.author}</li> : null}
-                {piece.publishedDateLabel ? <li><strong>Published:</strong> {piece.publishedDateLabel}</li> : null}
-                {piece.primaryProject ? <li><strong>Project:</strong> {piece.primaryProject}</li> : null}
-                {Array.isArray(piece.tags) && piece.tags.length ? (
-                  <li><strong>Tags:</strong> {piece.tags.join(', ')}</li>
-                ) : null}
+                {detailItems.map((item) => (
+                  <li key={item.label}><strong>{item.label}:</strong> {item.value}</li>
+                ))}
               </ul>
             </section>
           </aside>

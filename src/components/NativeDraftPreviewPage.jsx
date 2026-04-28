@@ -32,9 +32,13 @@ export function NativeDraftPreviewPage() {
   }, [])
 
   const entry = useMemo(
-    () => items.find((item) => item.id === id || item.slug === id),
+    () => items.find((item) => item.id === id),
     [items, id]
   )
+
+  if (entry?.status === 'published' && entry?.slug) {
+    return <Navigate to={`/post/${entry.slug}`} replace />
+  }
 
   if (state === 'loaded' && !entry) return <Navigate to="/content" replace />
 
