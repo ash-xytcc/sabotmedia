@@ -6,6 +6,7 @@ import { getImportedImage } from '../lib/getImportedImage'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
 import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { splitDisplayTitle } from '../lib/content'
+import { buildPublicPostPath } from '../lib/publicSiteRouting'
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -23,6 +24,46 @@ function normalizeType(piece) {
   return 'article'
 }
 
+function normalizeArchiveSlug(piece) {
+  const candidates = [
+    piece?.slug,
+    piece?.id,
+    piece?.href,
+    piece?.permalink,
+    piece?.sourceUrl,
+  ]
+
+  for (const candidate of candidates) {
+    const value = String(candidate || '').trim()
+    if (!value) continue
+
+    const cleaned = value
+      .replace(/^https?:\/\/[^/]+/i, '')
+      .replace(/^\/?#?\/?/i, '/')
+      .replace(/^[^#]*#\/?/, '/')
+      .replace(/[?#].*$/, '')
+      .replace(/^\/+|\/+$/g, '')
+      .replace(/^(post|piece|native-preview)\//, '')
+      .replace(/^post-/, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '')
+
+    if (cleaned) return cleaned
+  }
+
+  return ''
+}
+
+function normalizeCardImageUrl(rawUrl) {
+  const url = String(rawUrl || '').trim()
+  if (!url) return ''
+  if (url.startsWith('#')) return ''
+  if (/^javascript:/i.test(url)) return ''
+  return url
+}
+
 function normalizePiece(piece) {
   const display = typeof splitDisplayTitle === 'function'
     ? splitDisplayTitle(piece)
@@ -35,11 +76,12 @@ function normalizePiece(piece) {
   const subtitle = display?.subtitle || piece?.subtitle || ''
   const excerpt = piece?.excerpt || subtitle || ''
   const project = piece?.primaryProject || ''
-  const imageUrl = piece?.featuredImage || getImportedImage(piece) || ''
+  const slug = normalizeArchiveSlug(piece)
+  const imageUrl = normalizeCardImageUrl(piece?.featuredImage || getImportedImage(piece) || '')
 
   return {
     id: piece?.id || piece?.slug || title,
-    slug: piece?.slug || '',
+    slug,
     title,
     excerpt,
     type: normalizeType(piece),
@@ -48,24 +90,28 @@ function normalizePiece(piece) {
     publishedAt: piece?.publishedAt || '',
     publishedDateLabel: piece?.publishedDateLabel || '',
     imageUrl,
-    href: piece?.slug ? `/post/${piece.slug}` : '/archive',
+    href: slug ? buildPublicPostPath(slug) : '/archive',
     hasPrintAssets: !!piece?.hasPrintAssets,
   }
 }
 
 function ArchiveCard({ item, featured = false }) {
+  const [hideImage, setHideImage] = useState(false)
+  const hasImage = item.imageUrl && !hideImage
+
   return (
     <article className={`archive-card${featured ? ' archive-card--featured' : ''}`}>
       <Link className="archive-card__media" to={item.href} aria-label={item.title}>
-        {item.imageUrl ? (
-          <div
-            className="archive-card__image"
-            style={{
-              backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.55)), url("${item.imageUrl}")`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          />
+        {hasImage ? (
+          <div className="archive-card__image">
+            <img
+              className="archive-card__image-el"
+              src={item.imageUrl}
+              alt={item.title}
+              loading="lazy"
+              onError={() => setHideImage(true)}
+            />
+          </div>
         ) : (
           <div className="archive-card__image archive-card__image--fallback" />
         )}
@@ -103,7 +149,11 @@ export function PublicSearchPage({ pieces = [] }) {
   const normalized = useMemo(() => {
     return mergeNativeAndImportedPieces(Array.isArray(livePieces) ? livePieces : [], nativePieces)
       .map(normalizePiece)
+      .filter((item) => item.slug)
       .sort((a, b) => {
+        const aNative = a.sourceKind === 'native' ? 1 : 0
+        const bNative = b.sourceKind === 'native' ? 1 : 0
+        if (aNative !== bNative) return bNative - aNative
         const aTime = new Date(a.publishedAt || 0).getTime()
         const bTime = new Date(b.publishedAt || 0).getTime()
         return bTime - aTime
