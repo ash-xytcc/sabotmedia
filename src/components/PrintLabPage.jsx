@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { loadNativeCollection } from '../lib/nativePublicContent'
+import { resolveNativeBodyHtml } from '../lib/nativePublicFeed'
+import { renderImportedBody } from '../lib/renderImportedBody'
 import { AdminFrame } from './AdminRail'
 
 function getPublishedAtLabel(piece) {
@@ -24,7 +27,7 @@ export function PrintLabPage({ pieces = [] }) {
   return (
     <AdminFrame>
       <main className="page wp-admin-screen print-lab-page">
-        <div className="wp-screen-header">
+        <div className="wp-screen-header print-lab-screen-header">
           <h1>Print Lab</h1>
           <Link className="button" to="/content">Back to Posts</Link>
         </div>
