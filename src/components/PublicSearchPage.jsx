@@ -17,9 +17,6 @@ function resolveCanonicalSlug(piece) {
   ).trim()
 }
 
-function buildPublicPostPath(slug) {
-  return `/post/${encodeURIComponent(slug)}`
-}
 
 const FILTERS = [
   { key: 'all', label: 'All' },
