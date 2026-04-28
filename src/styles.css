@@ -5003,6 +5003,13 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
   background-color: #111;
 }
 
+.archive-card__image-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .archive-card__image--fallback {
   background:
     linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.55)),
