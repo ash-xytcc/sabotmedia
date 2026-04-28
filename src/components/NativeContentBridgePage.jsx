@@ -818,8 +818,15 @@ export function NativeContentBridgePage() {
               <label>Publish <input type="datetime-local" value={toLocalDateTime(draft.scheduledFor)} onChange={(e) => setDraft((d) => ({ ...d, scheduledFor: fromLocalDateTime(e.target.value) }))} /></label>
               <div className="wp-meta-actions">
                 <button type="button" className="button" onClick={handlePreviewChanges}>Preview Changes</button>
-                <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
+                <button
+                  type="button"
+                  className="button"
+                  onClick={() => handleSave('save draft', {}, { successNotice: 'Draft saved.' })}
+                >
+                  Save Draft
+                </button>
                 <button type="button" className="button button--primary" onClick={async () => {
+                  const wasAlreadyPublished = ['published', 'scheduled'].includes(draft.status)
                   const isScheduled = Boolean(draft.scheduledFor) && new Date(draft.scheduledFor).getTime() > Date.now()
                   const { saved } = await handleSave('publish', {
                     status: isScheduled ? 'scheduled' : 'published',
@@ -827,19 +834,20 @@ export function NativeContentBridgePage() {
                   }, { successNotice: false, failureNotice: 'Publish failed.' })
                   if (saved) {
                     setDraft(saved)
-                    pushNotice('Post published.', 'success')
+                    pushNotice(wasAlreadyPublished ? 'Post updated.' : (isScheduled ? 'Post scheduled.' : 'Post published.'), 'success')
                   }
                 }}>Publish / Update</button>
-                {draft?.id && ['published', 'scheduled'].includes(draft?.status) ? (
+                {draft?.id && draft?.status === 'published' && draft?.slug ? (
                   <Link
                     className="button"
-                    to={draft.slug ? `/post/${draft.slug}` : `/native-preview/${draft.id}`}
+                    to={`/post/${draft.slug}`}
                     target="_blank"
                     rel="noreferrer"
                   >
                     View Post
                   </Link>
                 ) : null}
+                <Link className="button" to="/archive">Back to Archive</Link>
                 <button type="button" className="button" onClick={handleMoveToTrash}>Move to Trash</button>
               </div>
             </article>
