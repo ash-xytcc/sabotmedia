@@ -11,21 +11,21 @@ export const PUBLIC_SURFACE_TARGETS = {
     title: 'Press Updates',
     eyebrow: 'surface / press / updates',
     description: 'Published native entries targeted at press, statements, and outward-facing updates.',
-    route: '/press-updates',
+    route: '/press',
   },
   projects: {
     key: 'projects',
     title: 'Project Updates',
     eyebrow: 'surface / projects / updates',
     description: 'Published native entries targeted at project-specific public publishing lanes.',
-    route: '/project-updates',
+    route: '/projects',
   },
   home: {
     key: 'home',
     title: 'Home Surface',
     eyebrow: 'surface / home / featured',
     description: 'Published native entries targeted at the homepage surface.',
-    route: '/home-updates',
+    route: '/',
   },
 }
 

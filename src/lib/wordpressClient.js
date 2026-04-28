@@ -1,4 +1,4 @@
-const WP_BASE = 'https://sabotmedia.noblogs.org'
+const WP_BASE = typeof window !== 'undefined' ? window.location.origin : ''
 const API_BASE = `${WP_BASE}/wp-json/wp/v2`
 
 const ENTITY_CACHE = {
@@ -146,7 +146,7 @@ async function mapPostToPiece(post, categoriesIndex, tagsIndex) {
     excerpt,
     subtitle: '',
     bodyHtml,
-    sourceUrl: post.link || `${WP_BASE}/${post.slug}/`,
+    sourceUrl: post.link || `/${post.slug}/`,
     sourcePostType: 'wordpress',
     sourcePostId: String(post.id),
     featuredImage,
@@ -224,5 +224,5 @@ export function buildWordPressPostEditLink(postId, sourceUrl = '') {
     // fall through to default base
   }
 
-  return `${WP_BASE}/wp-admin/post.php?post=${encodeURIComponent(id)}&action=edit`
+  return `/wp-admin/post.php?post=${encodeURIComponent(id)}&action=edit`
 }
