@@ -79,6 +79,8 @@ function normalizePiece(piece) {
   const slug = normalizeArchiveSlug(piece)
   const imageUrl = normalizeCardImageUrl(piece?.featuredImage || getImportedImage(piece) || '')
 
+  const slug = resolveCanonicalSlug(piece)
+
   return {
     id: piece?.id || piece?.slug || title,
     slug,

@@ -188,7 +188,7 @@ export function PiecePage({ pieces = [] }) {
     <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
       <PublicationTopbar />
 
-      <header className="piece-header">
+      <header className="piece-header piece-header--public-post">
         <div className="piece-header__eyebrow">
           {piece.primaryProject || piece.type || 'publication'}
         </div>
