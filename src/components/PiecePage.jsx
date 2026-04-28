@@ -58,6 +58,48 @@ function isPublicPiece(piece) {
   return true
 }
 
+
+  const publicBodyHtml = String(piece?.body || piece?.content || piece?.html || '')
+  const rawExcerpt = piece?.excerpt || piece?.subtitle || ''
+  const displayExcerpt = looksLikeRawHtml(rawExcerpt) ? '' : stripHtmlForPreview(rawExcerpt)
+  const heroImageUrl = heroImageUrl || ''
+  const shouldRenderHeroImage = !!heroImageUrl && !bodyContainsImageUrl(publicBodyHtml, heroImageUrl)
+
+
+function stripHtmlForPreview(value) {
+  return String(value || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function looksLikeRawHtml(value) {
+  const raw = String(value || '')
+  return /<\s*\/?\s*(p|br|img|div|figure|h1|h2|h3|ul|ol|li|blockquote|a)\b/i.test(raw) || raw.includes('&nbsp;')
+}
+
+function extractImageUrlsFromHtml(value) {
+  const html = String(value || '')
+  const urls = []
+  html.replace(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi, (_, src) => {
+    if (src) urls.push(src)
+    return ''
+  })
+  return urls
+}
+
+function normalizeImageUrlForCompare(value) {
+  return String(value || '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '')
+}
+
+function bodyContainsImageUrl(bodyHtml, imageUrl) {
+  const target = normalizeImageUrlForCompare(imageUrl)
+  if (!target) return false
+  return extractImageUrlsFromHtml(bodyHtml).some((src) => normalizeImageUrlForCompare(src) === target)
+}
+
+
 export function PiecePage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [searchParams] = useSearchParams()
@@ -193,9 +235,9 @@ export function PiecePage({ pieces = [] }) {
           {piece.primaryProject || piece.type || 'publication'}
         </div>
         <h1>{display.title || piece.title || piece.slug}</h1>
-        {display.subtitle || piece.subtitle || piece.excerpt ? (
+        {display.subtitle || piece.subtitle || displayExcerpt ? (
           <p className="piece-header__subtitle">
-            {display.subtitle || piece.subtitle || piece.excerpt}
+            {display.subtitle || piece.subtitle || displayExcerpt}
           </p>
         ) : null}
 
@@ -219,7 +261,7 @@ export function PiecePage({ pieces = [] }) {
       <section className={`piece-layout${hasMetaPanel ? ' piece-layout--with-meta' : ''}`}>
         <article className="piece-body-wrap">
           <div className="piece-body__content">
-            {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{piece.excerpt || ''}</p>}
+            {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{displayExcerpt || ''}</p>}
           </div>
         </article>
 
