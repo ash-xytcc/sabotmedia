@@ -830,10 +830,10 @@ export function NativeContentBridgePage() {
                     pushNotice('Post published.', 'success')
                   }
                 }}>Publish / Update</button>
-                {draft?.id && ['published', 'scheduled'].includes(draft?.status) ? (
+                {draft?.id && draft?.status === 'published' && draft?.slug ? (
                   <Link
                     className="button"
-                    to={draft.slug ? `/post/${draft.slug}` : `/native-preview/${draft.id}`}
+                    to={`/post/${draft.slug}`}
                     target="_blank"
                     rel="noreferrer"
                   >
