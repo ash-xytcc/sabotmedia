@@ -126,46 +126,6 @@ export function SettingsAdminPage() {
           <h1>Settings</h1>
           <button className="button button--primary" type="button" onClick={saveSettings}>Save Changes</button>
         </div>
-
-        <section className="wp-meta-box">
-          <h2>Settings Sections</h2>
-          <p className="description">General settings are fully local; social provider fields are -only and unavailable.</p>
-          <p>
-            <NavLink className="button" to="/settings">General</NavLink>{' '}
-            <NavLink className="button" to="/settings/social">Social</NavLink>
-          </p>
-        </section>
-
-        {!isSocialPath ? (
-          <>
-            <section className="wp-meta-box">
-              <h2>General Settings</h2>
-
-              <div className="wp-settings-form">
-                <label><span>Site Title</span><input value={settings.siteTitle} onChange={(e) => update('siteTitle', e.target.value)} /></label>
-                <label><span>Tagline</span><input value={settings.tagline} onChange={(e) => update('tagline', e.target.value)} /></label>
-                <label><span>Homepage source</span><select value={settings.homepageSource} onChange={(e) => update('homepageSource', e.target.value)}><option value="latest">Latest posts</option><option value="featured">Featured post</option></select></label>
-                <label><span>Posts per page</span><input type="number" value={settings.postsPerPage} onChange={(e) => update('postsPerPage', Number(e.target.value || 12))} /></label>
-                <label><span>Default post type</span><select value={settings.defaultPostType} onChange={(e) => update('defaultPostType', e.target.value)}><option value="article">Article</option><option value="podcast">Podcast</option><option value="print">Print</option></select></label>
-                <label><span>Media mode</span><select value={settings.mediaMode} onChange={(e) => update('mediaMode', e.target.value)}><option value="local">Local only</option><option value="future-cloud">Future cloud</option></select></label>
-              </div>
-            </section>
-
-            
-
-          </>
-        ) : (
-          <section className="wp-meta-box">
-            <h2>Social Settings (unavailable)</h2>
-            <p className="description">These fields are s only and do not publish to social providers yet.</p>
-            <div className="wp-settings-form">
-              <label><span>Mastodon instance URL</span><input value={settings.social?.mastodonInstanceUrl || ''} onChange={(e) => updateSocial('mastodonInstanceUrl', e.target.value)} /></label>
-              <label><span>Mastodon access token</span><input value={settings.social?.mastodonAccessToken || ''} onChange={(e) => updateSocial('mastodonAccessToken', e.target.value)} /></label>
-              <label><span>Bluesky handle</span><input value={settings.social?.blueskyHandle || ''} onChange={(e) => updateSocial('blueskyHandle', e.target.value)} /></label>
-              <label><span>Bluesky app password</span><input value={settings.social?.blueskyAppPassword || ''} onChange={(e) => updateSocial('blueskyAppPassword', e.target.value)} /></label>
-              <label><span>Newsletter provider</span><input value={settings.social?.newsletterProvider || ''} onChange={(e) => updateSocial('newsletterProvider', e.target.value)} /></label>
-            </div>
-          </section>
         )}
       </main>
     </AdminFrame>
