@@ -286,6 +286,7 @@ export function NativeContentBridgePage() {
   const [visualEditorEmpty, setVisualEditorEmpty] = useState(true)
   const [revisions, setRevisions] = useState([])
   const [autosaveState, setAutosaveState] = useState({ status: 'idle', at: '' })
+  const [publishSuccess, setPublishSuccess] = useState(null)
   const { pushNotice } = useAdminNotices()
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
@@ -331,6 +332,7 @@ export function NativeContentBridgePage() {
         setRevisions(loadLocalRevisions(fresh.id))
         lastAutosaveFingerprintRef.current = toAutosaveFingerprint(fresh, true)
       }
+      setPublishSuccess(null)
       setAutosaveState({ status: 'idle', at: '' })
     }
     boot()
@@ -356,6 +358,7 @@ export function NativeContentBridgePage() {
       categories: Array.isArray(revision.draft.categories) ? revision.draft.categories : [],
     }
     setDraft(restored)
+    setPublishSuccess(null)
     setPermalinkDraft(restored.slug || '')
     pushNotice('Post saved.', 'info')
   }
@@ -506,6 +509,7 @@ export function NativeContentBridgePage() {
       workflowState: 'trash',
     }, { successNotice: false, failureNotice: 'Move to Trash failed.' })
     if (saved) pushNotice('Post moved to Trash.', 'warning')
+    setPublishSuccess(null)
   }
 
   async function handlePreviewChanges() {
@@ -818,7 +822,10 @@ export function NativeContentBridgePage() {
               <label>Publish <input type="datetime-local" value={toLocalDateTime(draft.scheduledFor)} onChange={(e) => setDraft((d) => ({ ...d, scheduledFor: fromLocalDateTime(e.target.value) }))} /></label>
               <div className="wp-meta-actions">
                 <button type="button" className="button" onClick={handlePreviewChanges}>Preview Changes</button>
-                <button type="button" className="button" onClick={() => handleSave('save draft')}>Save Draft</button>
+                <button type="button" className="button" onClick={() => {
+                  setPublishSuccess(null)
+                  handleSave('save draft')
+                }}>Save Draft</button>
                 <button type="button" className="button button--primary" onClick={async () => {
                   const isScheduled = Boolean(draft.scheduledFor) && new Date(draft.scheduledFor).getTime() > Date.now()
                   const { saved } = await handleSave('publish', {
@@ -828,6 +835,11 @@ export function NativeContentBridgePage() {
                   if (saved) {
                     setDraft(saved)
                     pushNotice('Post published.', 'success')
+                    setPublishSuccess({
+                      id: saved.id,
+                      slug: saved.slug || '',
+                      title: saved.title || 'Untitled',
+                    })
                   }
                 }}>Publish / Update</button>
                 {draft?.id && ['published', 'scheduled'].includes(draft?.status) ? (
@@ -842,6 +854,24 @@ export function NativeContentBridgePage() {
                 ) : null}
                 <button type="button" className="button" onClick={handleMoveToTrash}>Move to Trash</button>
               </div>
+              {publishSuccess ? (
+                <div className="native-publish-success" role="status" aria-live="polite">
+                  <p className="native-publish-success__title">Published successfully.</p>
+                  <p className="native-publish-success__subtitle">{publishSuccess.title}</p>
+                  <div className="native-publish-success__actions">
+                    {publishSuccess.slug ? (
+                      <Link className="button button--primary" to={`/post/${publishSuccess.slug}`}>
+                        View Post
+                      </Link>
+                    ) : (
+                      <Link className="button button--primary" to={`/native-preview/${publishSuccess.id}`}>
+                        View Post
+                      </Link>
+                    )}
+                    <Link className="button" to="/archive">Back to Archive</Link>
+                  </div>
+                </div>
+              ) : null}
             </article>
 
             <article className="wp-meta-box">

@@ -8471,3 +8471,97 @@ a.button {
 .wp-admin-topbar__search {
   font-size: 14px;
 }
+
+/* Public post polish + native publish success UX */
+.piece-header--public-post {
+  max-width: 50rem;
+  padding-top: clamp(2rem, 3vw, 3.25rem);
+  padding-bottom: clamp(1.1rem, 2vw, 1.75rem);
+}
+
+.piece-header--public-post h1 {
+  max-width: 14ch;
+  margin-top: 0.35rem;
+}
+
+.piece-header__meta--public-post {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  color: var(--sabot-muted-2);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-size: 0.92rem;
+}
+
+.piece-header__meta--public-post li {
+  position: relative;
+}
+
+.piece-header__meta--public-post li:not(:last-child)::after {
+  content: '•';
+  margin-left: 0.75rem;
+  color: var(--sabot-border-strong, rgba(236, 231, 220, 0.55));
+}
+
+.piece-page .piece-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: clamp(1.5rem, 2vw, 2.35rem);
+}
+
+.piece-body-wrap--public-post {
+  border-radius: 2px;
+}
+
+.piece-page .piece-body-wrap--public-post .piece-body__content {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 2.1vw, 2.2rem) clamp(1rem, 2vw, 1.6rem);
+}
+
+.piece-page .piece-body-wrap--public-post .post-body__paragraph,
+.piece-page .piece-body-wrap--public-post .post-body__content p {
+  margin-bottom: 1.3rem;
+  line-height: 1.78;
+}
+
+.piece-page .piece-body-wrap--public-post .post-body__image {
+  max-height: min(76vh, 44rem);
+  object-fit: contain;
+}
+
+.piece-page .piece-body-wrap--public-post .post-body__embed,
+.piece-page .piece-body-wrap--public-post .post-body__embed iframe,
+.piece-page .piece-body-wrap--public-post .post-body__embed video,
+.piece-page .piece-body-wrap--public-post .post-body__embed audio {
+  width: 100%;
+  max-width: 100%;
+}
+
+.native-publish-success {
+  margin-top: 0.9rem;
+  border: 1px solid var(--sabot-border);
+  background: color-mix(in srgb, var(--sabot-red) 8%, var(--sabot-panel));
+  box-shadow: var(--sabot-shadow-2);
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.native-publish-success__title {
+  margin: 0;
+  color: var(--sabot-ink);
+  font-weight: 700;
+}
+
+.native-publish-success__subtitle {
+  margin: 0;
+  color: var(--sabot-muted-2);
+  font-size: 0.95rem;
+}
+
+.native-publish-success__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}

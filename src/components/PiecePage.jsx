@@ -163,7 +163,7 @@ export function PiecePage({ pieces = [] }) {
     <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
       <PublicationTopbar />
 
-      <header className="piece-header">
+      <header className="piece-header piece-header--public-post">
         <div className="piece-header__eyebrow">
           {piece.primaryProject || piece.type || 'publication'}
         </div>
@@ -174,11 +174,11 @@ export function PiecePage({ pieces = [] }) {
           </p>
         ) : null}
 
-        <div className="piece-header__meta">
-          <span>{piece.author || 'Sabot Media'}</span>
-          {piece.publishedDateLabel ? <span>{piece.publishedDateLabel}</span> : null}
-          {piece.type ? <span>{piece.type}</span> : null}
-        </div>
+        <ul className="piece-header__meta piece-header__meta--public-post" aria-label="Post metadata">
+          <li>{piece.author || 'Sabot Media'}</li>
+          {piece.publishedDateLabel ? <li>{piece.publishedDateLabel}</li> : null}
+          {piece.type ? <li>{piece.type}</li> : null}
+        </ul>
 
         <PublicationModeSwitch slug={piece.slug} mode={mode} displaySettings={displaySettings} />
       </header>
@@ -190,8 +190,8 @@ export function PiecePage({ pieces = [] }) {
       ) : null}
 
       <section className="piece-layout">
-        <article className="piece-body-wrap">
-          <div className="piece-body__content">
+        <article className="piece-body-wrap piece-body-wrap--public-post">
+          <div className="piece-body__content post-body__content">
             {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{piece.excerpt || ''}</p>}
           </div>
         </article>

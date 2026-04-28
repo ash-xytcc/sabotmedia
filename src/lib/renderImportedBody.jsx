@@ -151,6 +151,14 @@ function renderNode(node, mode, key) {
         />
       )
 
+    case 'video':
+    case 'audio':
+      return (
+        <figure key={key} className={`post-body__figure${mode === 'experience' ? ' post-body__figure--experience' : ''}`}>
+          <div className="post-body__embed" dangerouslySetInnerHTML={{ __html: node.outerHTML }} />
+        </figure>
+      )
+
     case 'div':
     case 'section':
     case 'article':

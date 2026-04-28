@@ -23,6 +23,26 @@ function normalizeType(piece) {
   return 'article'
 }
 
+function resolveCanonicalSlug(piece) {
+  const candidates = [piece?.slug, piece?.href, piece?.url, piece?.link]
+  for (const candidate of candidates) {
+    const raw = String(candidate || '').trim()
+    if (!raw) continue
+    const hashPostMatch = raw.match(/#\/?post\/([^/?#]+)/i)
+    if (hashPostMatch?.[1]) return hashPostMatch[1]
+    const trimmed = raw.split('?')[0].split('#')[0].replace(/^https?:\/\/[^/]+/i, '')
+    const postMatch = trimmed.match(/\/post\/([^/]+)/i)
+    if (postMatch?.[1]) return postMatch[1]
+    const pieceMatch = trimmed.match(/\/piece\/([^/]+)/i)
+    if (pieceMatch?.[1]) return pieceMatch[1]
+    const short = trimmed.replace(/^\/+/, '')
+    if (short.startsWith('post/')) return short.slice(5)
+    if (short.startsWith('piece/')) return short.slice(6)
+    if (!short.includes('/')) return short
+  }
+  return ''
+}
+
 function normalizePiece(piece) {
   const display = typeof splitDisplayTitle === 'function'
     ? splitDisplayTitle(piece)
@@ -37,9 +57,11 @@ function normalizePiece(piece) {
   const project = piece?.primaryProject || ''
   const imageUrl = piece?.featuredImage || getImportedImage(piece) || ''
 
+  const slug = resolveCanonicalSlug(piece)
+
   return {
     id: piece?.id || piece?.slug || title,
-    slug: piece?.slug || '',
+    slug,
     title,
     excerpt,
     type: normalizeType(piece),
@@ -48,7 +70,7 @@ function normalizePiece(piece) {
     publishedAt: piece?.publishedAt || '',
     publishedDateLabel: piece?.publishedDateLabel || '',
     imageUrl,
-    href: piece?.slug ? `/post/${piece.slug}` : '/archive',
+    href: slug ? `/post/${slug}` : '/archive',
     hasPrintAssets: !!piece?.hasPrintAssets,
   }
 }
