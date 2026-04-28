@@ -98,12 +98,19 @@ export function buildLocalSiteBackupPayload({ nativeItems = [] } = {}) {
   const mediaAudit = buildMediaAuditSummary({ nativeItems: fallbackNativeItems })
   const localStorageInventory = buildLocalStorageInventory()
   const storedPublicConfig = getStoredPublicConfig()
+  const users = loadUserRolesScaffold()
+  const settings = {
+    wpAdmin: loadWpSettings(),
+    publicConfigStored: storedPublicConfig,
+    publicConfigResolved: resolvePublicConfig(storedPublicConfig),
+  }
+  const customizer = loadCustomizerSettings()
 
   return {
     exportedAt: new Date().toISOString(),
     schemaVersion: 1,
     backupType: 'local-site',
-    nativePosts: {
+    posts: {
       schemaVersion: NATIVE_CONTENT_SCHEMA_VERSION,
       items: fallbackNativeItems,
     },
@@ -111,16 +118,17 @@ export function buildLocalSiteBackupPayload({ nativeItems = [] } = {}) {
       localItems: loadLocalMediaItems(),
       auditSummary: mediaAudit,
     },
-    settings: {
-      wpAdmin: loadWpSettings(),
-      publicConfigStored: storedPublicConfig,
-      publicConfigResolved: resolvePublicConfig(storedPublicConfig),
+    settings,
+    customizer,
+    users,
+    nativePosts: {
+      schemaVersion: NATIVE_CONTENT_SCHEMA_VERSION,
+      items: fallbackNativeItems,
     },
-    customizer: loadCustomizerSettings(),
     navigation: {
       menuDraft: loadMenuDraft(),
     },
-    usersRolesScaffold: loadUserRolesScaffold(),
+    usersRolesScaffold: users,
     localStorageInventory,
   }
 }
