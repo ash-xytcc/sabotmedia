@@ -4827,6 +4827,118 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
   margin-top: 0;
 }
 
+.print-lab-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.print-lab-controls__row {
+  max-width: 280px;
+}
+
+.print-lab-controls__field {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.print-lab-controls__field select {
+  width: 100%;
+}
+
+.print-lab-controls__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.print-lab-poster__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.poster-preview {
+  --poster-image: none;
+  position: relative;
+  margin-top: 1rem;
+  min-height: min(70vh, 920px);
+  border: 1px solid var(--panel-border);
+  background: #0d0d0d;
+  color: #fff;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: clamp(1.2rem, 3vw, 2.75rem);
+}
+
+.poster-preview[data-has-image='true'] {
+  background-image: var(--poster-image);
+  background-size: cover;
+  background-position: center;
+}
+
+.poster-preview__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+.poster-preview__content {
+  position: relative;
+  z-index: 1;
+  max-width: 18ch;
+}
+
+.poster-preview__kicker {
+  margin: 0 0 0.65rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.poster-preview h3 {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 6rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.poster-preview__meta {
+  margin: 0.8rem 0 0;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media print {
+  .print-lab-page .wp-screen-header,
+  .print-lab-page .wp-meta-box:not(.print-lab-poster),
+  .print-lab-page .print-lab-controls,
+  .print-lab-page .print-lab-poster__header .button {
+    display: none !important;
+  }
+
+  .print-lab-page .print-lab-poster {
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .print-lab-page .poster-preview {
+    margin: 0;
+    min-height: 100vh;
+    border: 0;
+    break-inside: avoid;
+  }
+}
+
 .print-page {
   background: #fff;
   color: #111;
