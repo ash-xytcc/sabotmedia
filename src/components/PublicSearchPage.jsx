@@ -76,13 +76,11 @@ function normalizePiece(piece) {
   const subtitle = display?.subtitle || piece?.subtitle || ''
   const excerpt = piece?.excerpt || subtitle || ''
   const project = piece?.primaryProject || ''
-  const slug = normalizeArchiveSlug(piece)
+  const slug = resolveCanonicalSlug(piece)
   const imageUrl = normalizeCardImageUrl(piece?.featuredImage || getImportedImage(piece) || '')
 
-  const slug = resolveCanonicalSlug(piece)
-
   return {
-    id: piece?.id || piece?.slug || title,
+    id: piece?.id || slug || title,
     slug,
     title,
     excerpt,
