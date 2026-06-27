@@ -1,0 +1,122 @@
+.print-lab-preview-toolbar {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.print-lab-preview-toolbar .print-lab-controls__row {
+  grid-template-columns: minmax(180px, 260px) auto;
+  justify-content: start;
+}
+
+.print-lab-preview-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.print-lab-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2rem;
+  color: var(--sabot-muted-2);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.print-lab-toggle input {
+  margin: 0;
+}
+
+.print-lab-preview__metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+  margin: 1rem 0 0;
+  padding: 0.85rem 0 0;
+  border-top: 1px solid #d9dde2;
+}
+
+.print-lab-preview__metadata div {
+  min-width: 0;
+}
+
+.print-lab-preview__metadata dt {
+  margin: 0 0 0.15rem;
+  color: #5a6673;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.print-lab-preview__metadata dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #151515;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.print-lab-preview__colophon {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 2rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid #d9dde2;
+  color: #4d5864;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.print-lab-preview__body .post-body__embed iframe,
+.print-lab-preview__body iframe,
+.print-lab-preview__body video,
+.print-lab-preview__body audio {
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .print-lab-preview-toolbar .print-lab-controls__row,
+  .print-lab-preview__metadata {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .print-lab-preview-wrap,
+  .print-lab-preview-wrap * {
+    visibility: visible !important;
+  }
+
+  .print-lab-preview-toolbar,
+  .print-lab-preview-wrap > h2 {
+    display: none !important;
+  }
+
+  .print-lab-preview-wrap {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+
+  .print-lab-preview {
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  .print-lab-preview a {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+}
