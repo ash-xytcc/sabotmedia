@@ -13909,3 +13909,83 @@ a.button {
     margin: 0.5in;
   }
 }
+
+/* Printlab 26C: source panel row cleanup */
+.printlab-source-list,
+.printlab-source-scroll,
+.printlab-source-results {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.printlab-source-item,
+.printlab-source-row,
+.printlab-media-item,
+.printlab-post-source {
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+}
+
+.printlab-source-item img,
+.printlab-source-row img,
+.printlab-media-item img,
+.printlab-post-source img,
+.printlab-source-thumb,
+.printlab-source-thumbnail {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px;
+  max-width: 48px;
+  object-fit: cover;
+  display: block;
+  border-radius: 3px;
+}
+
+.printlab-source-title,
+.printlab-source-name,
+.printlab-media-title,
+.printlab-post-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.printlab-source-meta,
+.printlab-source-date,
+.printlab-media-meta,
+.printlab-post-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  opacity: 0.75;
+  line-height: 1.2;
+}
+
+.printlab-source-item.is-selected,
+.printlab-source-row.is-selected,
+.printlab-media-item.is-selected,
+.printlab-post-source.is-selected,
+.printlab-source-item[aria-selected="true"],
+.printlab-source-row[aria-selected="true"],
+.printlab-media-item[aria-selected="true"],
+.printlab-post-source[aria-selected="true"] {
+  outline: 2px solid #2271b1;
+  outline-offset: -2px;
+  background: #f0f6fc;
+}
+
+.printlab-source-item *,
+.printlab-source-row *,
+.printlab-media-item *,
+.printlab-post-source * {
+  min-width: 0;
+}
