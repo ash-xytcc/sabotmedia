@@ -8641,24 +8641,34 @@ a.button {
   align-items: center;
 }
 
+.print-lab-page {
+  --printlab-rail: #f4f1eb;
+  --printlab-rail-strong: #e8dfcf;
+  --printlab-ink: #171717;
+  --printlab-muted: #6f6a61;
+  --printlab-rule: #ded7cc;
+  --printlab-red: #c22b26;
+}
+
 .print-lab-status {
   margin-bottom: 0.75rem;
 }
 
 .print-lab-desk {
   display: grid;
-  grid-template-columns: minmax(230px, 280px) minmax(0, 1fr) minmax(210px, 250px);
-  gap: 1rem;
+  grid-template-columns: minmax(300px, 360px) minmax(520px, 1fr) minmax(240px, 290px);
+  gap: 1.1rem;
   align-items: start;
   min-height: calc(100vh - 190px);
 }
 
 .print-lab-source-pane,
 .print-lab-tool-panel {
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)), var(--panel);
+  border: 1px solid rgba(236, 231, 220, 0.18);
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
 }
 
 .print-lab-source-pane {
@@ -8668,34 +8678,34 @@ a.button {
 }
 
 .print-lab-tool-panel {
-  padding: 0.85rem;
+  padding: 1rem;
   position: sticky;
   top: 1rem;
 }
 
 .print-lab-pane-header {
-  min-height: 2.75rem;
-  padding: 0.65rem 0.75rem;
+  min-height: 3.1rem;
+  padding: 0.75rem 0.9rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border-bottom: 1px solid var(--panel-border);
-  background: var(--panel-alt);
+  border-bottom: 1px solid rgba(236, 231, 220, 0.14);
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .print-lab-tool-panel .print-lab-pane-header {
-  margin: -0.85rem -0.85rem 0.85rem;
+  margin: -1rem -1rem 1rem;
 }
 
 .print-lab-pane-header h2 {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .print-lab-pane-header span {
   color: var(--text-dim);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 700;
 }
 
@@ -8703,83 +8713,110 @@ a.button {
   display: grid;
   align-content: start;
   overflow: auto;
+  padding: 0.35rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(236, 231, 220, 0.35) transparent;
 }
 
 .print-lab-source-row {
   width: 100%;
   min-width: 0;
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
-  gap: 0.6rem;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 0.75rem;
   align-items: center;
-  border: 0;
-  border-bottom: 1px solid var(--panel-border);
+  border: 1px solid transparent;
   border-left: 4px solid transparent;
+  border-radius: 7px;
   background: transparent;
   color: inherit;
-  padding: 0.55rem 0.65rem 0.55rem 0.45rem;
+  padding: 0.65rem 0.7rem 0.65rem 0.55rem;
   text-align: left;
   cursor: pointer;
 }
 
 .print-lab-source-row:hover,
 .print-lab-source-row:focus-visible {
-  background: rgba(209, 165, 45, 0.08);
+  background: rgba(236, 231, 220, 0.06);
   outline: none;
 }
 
 .print-lab-source-row.is-selected {
-  background: rgba(196, 42, 35, 0.12);
-  border-left-color: var(--sabot-red);
+  background: rgba(196, 42, 35, 0.18);
+  border-color: rgba(196, 42, 35, 0.55);
+  border-left-color: var(--printlab-red);
+  box-shadow: inset 0 0 0 1px rgba(196, 42, 35, 0.22);
 }
 
 .print-lab-source-row__thumb {
-  width: 46px;
-  height: 46px;
+  width: 58px;
+  height: 58px;
   object-fit: cover;
-  border: 1px solid var(--panel-border);
+  border: 1px solid rgba(236, 231, 220, 0.18);
+  border-radius: 5px;
   background: var(--panel-alt);
 }
 
 .print-lab-source-row__thumb--empty {
-  display: block;
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+  font-size: 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .print-lab-source-row__content {
   min-width: 0;
   display: grid;
-  gap: 0.2rem;
+  gap: 0.38rem;
 }
 
-.print-lab-source-row__content strong,
-.print-lab-source-row__content span {
+.print-lab-source-row__content strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .print-lab-source-row__content strong {
-  font-size: 0.85rem;
-  line-height: 1.25;
+  font-size: 0.96rem;
+  line-height: 1.2;
 }
 
-.print-lab-source-row__content span {
+.print-lab-source-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.print-lab-source-row__meta span {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text-dim);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
   text-transform: uppercase;
+  border: 1px solid rgba(236, 231, 220, 0.16);
+  border-radius: 999px;
+  padding: 0.22rem 0.42rem;
 }
 
 .print-lab-control-group {
   border: 0;
   padding: 0;
-  margin: 0 0 1rem;
+  margin: 0 0 1.15rem;
   display: grid;
-  gap: 0.55rem;
+  gap: 0.65rem;
 }
 
 .print-lab-control-group legend {
   padding: 0;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.5rem;
   color: var(--text-dim);
   font-size: 0.74rem;
   font-weight: 800;
@@ -8789,34 +8826,65 @@ a.button {
 .print-lab-layout-selector {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.35rem;
+  gap: 0.5rem;
 }
 
 .print-lab-layout-selector button {
-  border: 1px solid var(--panel-border);
-  border-radius: 6px;
-  background: var(--panel-alt);
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid rgba(236, 231, 220, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.14);
   color: inherit;
-  min-height: 2.15rem;
-  padding: 0.35rem 0.55rem;
+  min-height: 2.8rem;
+  padding: 0.45rem 0.65rem;
   text-align: left;
-  font-weight: 700;
   cursor: pointer;
+}
+
+.print-lab-layout-selector button span {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  background: rgba(236, 231, 220, 0.1);
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.print-lab-layout-selector button strong {
+  min-width: 0;
+  font-size: 0.88rem;
 }
 
 .print-lab-layout-selector button:hover,
 .print-lab-layout-selector button:focus-visible,
 .print-lab-layout-selector button.is-active {
-  border-color: var(--sabot-red);
-  background: rgba(196, 42, 35, 0.14);
+  border-color: rgba(196, 42, 35, 0.72);
+  background: rgba(196, 42, 35, 0.17);
   outline: none;
 }
 
+.print-lab-layout-selector button.is-active span {
+  background: var(--printlab-red);
+  color: #fff;
+}
+
 .print-lab-toggle {
-  display: flex;
+  min-height: 2.35rem;
+  display: grid;
+  grid-template-columns: 1.1rem minmax(0, 1fr);
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+  gap: 0.65rem;
+  border: 1px solid rgba(236, 231, 220, 0.13);
+  border-radius: 7px;
+  padding: 0.45rem 0.55rem;
+  background: rgba(0, 0, 0, 0.1);
+  font-size: 0.86rem;
   font-weight: 700;
 }
 
@@ -8829,58 +8897,74 @@ a.button {
 .print-lab-print-button {
   width: 100%;
   justify-content: center;
+  min-height: 2.75rem;
+  font-size: 0.95rem;
 }
 
 .print-lab-preview-wrap {
   min-width: 0;
   overflow: auto;
-  padding: 0.5rem;
+  padding: 1.1rem;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    rgba(0, 0, 0, 0.16);
+  background-size: 24px 24px;
+  border: 1px solid rgba(236, 231, 220, 0.12);
+  border-radius: 8px;
 }
 
 .print-lab-preview {
   max-width: 8.5in;
   min-height: 11in;
   margin: 0 auto;
-  background: #fff;
-  color: #111;
-  border: 1px solid #d5d8dc;
-  padding: 0.6in;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  background: #fbfaf6;
+  color: var(--printlab-ink);
+  border: 1px solid var(--printlab-rule);
+  padding: 0.68in;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
 }
 
 .print-lab-preview__eyebrow {
   text-transform: uppercase;
   letter-spacing: 0;
-  font-size: 0.7rem;
-  margin: 0 0 0.4rem;
-  color: #51606f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin: 0 0 0.48rem;
+  color: var(--printlab-muted);
 }
 
 .print-lab-preview h2 {
   margin: 0;
-  font-size: 2.1rem;
-  line-height: 1.04;
+  color: var(--printlab-ink);
+  font-size: 2.55rem;
+  line-height: 1.02;
 }
 
 .print-lab-preview__excerpt {
-  margin: 0.75rem 0 0;
+  margin: 0.85rem 0 0;
   color: #333;
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   line-height: 1.5;
 }
 
 .print-lab-preview__hero {
-  margin: 1rem 0 1.25rem;
+  margin: 1.15rem 0 1.4rem;
 }
 
 .print-lab-preview__hero img {
   width: 100%;
   display: block;
-  border: 1px solid #dde0e3;
+  border: 1px solid var(--printlab-rule);
+  max-height: 4.7in;
+  object-fit: cover;
 }
 
 .print-lab-preview__body {
   margin-top: 1rem;
+  color: #222;
+  font-size: 1rem;
+  line-height: 1.62;
 }
 
 .print-lab-preview__body > :first-child {
@@ -8888,8 +8972,8 @@ a.button {
 }
 
 .print-lab-preview__colophon {
-  margin-top: 2rem;
-  padding-top: 0.4rem;
+  margin-top: 2.1rem;
+  padding-top: 0.55rem;
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -8899,44 +8983,83 @@ a.button {
   text-transform: uppercase;
 }
 
+.print-lab-preview--article .print-lab-preview__header {
+  padding-bottom: 0.95rem;
+  border-bottom: 2px solid var(--printlab-ink);
+}
+
+.print-lab-preview--article .print-lab-preview__body {
+  max-width: 6.6in;
+}
+
 .print-lab-preview--poster {
   max-width: 8.5in;
   min-height: 11in;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 0.45in;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  align-items: end;
+  padding: 0.48in;
+  background: #111;
+  color: #f8f3e8;
+  border-color: #111;
 }
 
 .print-lab-preview--poster .print-lab-preview__header {
-  order: 2;
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  padding: 0.25in 0;
+  text-align: center;
+  border-top: 12px solid #f8f3e8;
+  border-bottom: 12px solid #f8f3e8;
+}
+
+.print-lab-preview--poster .print-lab-preview__eyebrow {
+  color: #e2d7c3;
+  font-size: 0.85rem;
 }
 
 .print-lab-preview--poster h2 {
-  font-size: 4.2rem;
-  line-height: 0.94;
+  color: #f8f3e8;
+  font-size: 5.25rem;
+  line-height: 0.9;
   text-transform: uppercase;
 }
 
 .print-lab-preview--poster .print-lab-preview__excerpt {
-  max-width: 72%;
-  font-size: 1.3rem;
+  max-width: 6.6in;
+  margin: 0.22in auto 0;
+  color: #f8f3e8;
+  font-size: 1.55rem;
+  line-height: 1.18;
 }
 
 .print-lab-preview--poster .print-lab-preview__hero {
-  order: 1;
-  margin: 0 0 0.35in;
+  grid-row: 1 / -1;
+  grid-column: 1;
+  align-self: stretch;
+  margin: -0.48in -0.48in 0;
+  opacity: 0.52;
 }
 
 .print-lab-preview--poster .print-lab-preview__hero img {
-  max-height: 5.2in;
+  height: 100%;
+  min-height: 10.1in;
+  max-height: none;
   object-fit: cover;
+  border: 0;
+  filter: grayscale(0.12) contrast(1.05);
 }
 
 .print-lab-preview--poster .print-lab-preview__body {
-  order: 3;
-  max-width: 72%;
-  font-size: 1.05rem;
+  position: relative;
+  z-index: 1;
+  max-width: 5.9in;
+  margin: 0.24in auto 0;
+  color: #f8f3e8;
+  font-size: 1.08rem;
+  line-height: 1.45;
+  text-align: center;
 }
 
 .print-lab-preview--poster .print-lab-preview__body > *:nth-child(n + 3) {
@@ -8944,7 +9067,31 @@ a.button {
 }
 
 .print-lab-preview--poster .print-lab-preview__colophon {
-  order: 4;
+  position: relative;
+  z-index: 1;
+  color: #f8f3e8;
+  border-color: #f8f3e8;
+}
+
+.print-lab-preview--poster:not(:has(.print-lab-preview__hero)) {
+  background:
+    linear-gradient(135deg, #111 0%, #111 42%, #c22b26 42%, #c22b26 58%, #f8f3e8 58%, #f8f3e8 100%);
+}
+
+.print-lab-preview--poster:not(:has(.print-lab-preview__hero)) .print-lab-preview__header,
+.print-lab-preview--poster:not(:has(.print-lab-preview__hero)) .print-lab-preview__body,
+.print-lab-preview--poster:not(:has(.print-lab-preview__hero)) .print-lab-preview__colophon {
+  color: #111;
+}
+
+.print-lab-preview--poster:not(:has(.print-lab-preview__hero)) h2,
+.print-lab-preview--poster:not(:has(.print-lab-preview__hero)) .print-lab-preview__excerpt {
+  color: #111;
+}
+
+.print-lab-preview--poster:not(:has(.print-lab-preview__hero)) .print-lab-preview__header,
+.print-lab-preview--poster:not(:has(.print-lab-preview__hero)) .print-lab-preview__colophon {
+  border-color: #111;
 }
 
 .print-lab-preview--zine {
@@ -8952,44 +9099,84 @@ a.button {
   min-height: 8.5in;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: auto 1fr auto;
-  gap: 0.3in;
-  padding: 0.35in;
+  grid-template-rows: minmax(2in, auto) minmax(3.6in, 1fr) minmax(0.9in, auto);
+  gap: 0.16in;
+  padding: 0.28in;
+  background: #f4f1e9;
+}
+
+.print-lab-preview--zine .print-lab-preview__header,
+.print-lab-preview--zine .print-lab-preview__hero,
+.print-lab-preview--zine .print-lab-preview__body,
+.print-lab-preview--zine .print-lab-preview__colophon {
+  border: 2px solid #111;
+  background: #fffdf8;
+  padding: 0.14in;
+  overflow: hidden;
 }
 
 .print-lab-preview--zine .print-lab-preview__header {
   grid-column: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #111;
+  color: #fffdf8;
+}
+
+.print-lab-preview--zine .print-lab-preview__eyebrow {
+  color: #d8ccba;
 }
 
 .print-lab-preview--zine h2 {
-  font-size: 1.65rem;
+  color: #fffdf8;
+  font-size: 2rem;
+  line-height: 0.98;
+  text-transform: uppercase;
 }
 
 .print-lab-preview--zine .print-lab-preview__excerpt {
+  margin-top: 0.16in;
+  color: #fffdf8;
   font-size: 0.9rem;
+  line-height: 1.32;
 }
 
 .print-lab-preview--zine .print-lab-preview__hero {
   grid-column: 3 / 5;
   grid-row: 1 / 2;
   margin: 0;
+  padding: 0;
+  background: #e4ddd0;
 }
 
 .print-lab-preview--zine .print-lab-preview__hero img {
-  max-height: 2.2in;
+  height: 100%;
+  min-height: 2in;
+  max-height: none;
   object-fit: cover;
+  border: 0;
 }
 
 .print-lab-preview--zine .print-lab-preview__body {
   grid-column: 1 / -1;
-  column-count: 4;
-  column-gap: 0.25in;
+  column-count: 3;
+  column-gap: 0.22in;
   font-size: 0.82rem;
-  line-height: 1.42;
+  line-height: 1.4;
+}
+
+.print-lab-preview--zine .print-lab-preview__body > * {
+  break-inside: avoid;
 }
 
 .print-lab-preview--zine .print-lab-preview__colophon {
   grid-column: 1 / -1;
+  margin-top: 0;
+  align-items: end;
+  background: #f7ead1;
+  border-top: 2px solid #111;
+  font-size: 0.78rem;
 }
 
 @media (max-width: 900px) {
@@ -9011,7 +9198,10 @@ a.button {
   }
 
   .print-lab-layout-selector button {
+    grid-template-columns: 1fr;
+    justify-items: center;
     text-align: center;
+    gap: 0.35rem;
   }
 
   .print-lab-preview,
@@ -9024,6 +9214,14 @@ a.button {
 
   .print-lab-preview--poster h2 {
     font-size: 2.7rem;
+  }
+
+  .print-lab-preview--poster .print-lab-preview__hero {
+    margin: -1rem -1rem 0;
+  }
+
+  .print-lab-preview--poster .print-lab-preview__hero img {
+    min-height: 34rem;
   }
 
   .print-lab-preview--poster .print-lab-preview__excerpt,

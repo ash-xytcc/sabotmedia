@@ -57,9 +57,9 @@ function getExcerpt(piece) {
 }
 
 const layoutOptions = [
-  { id: 'article', label: 'Article' },
-  { id: 'poster', label: 'Poster' },
-  { id: 'zine', label: 'Zine Sheet' },
+  { id: 'article', label: 'Article', shortLabel: 'A' },
+  { id: 'poster', label: 'Poster', shortLabel: 'P' },
+  { id: 'zine', label: 'Zine Sheet', shortLabel: 'Z' },
 ]
 
 export function PrintLabPage({ pieces = [] }) {
@@ -167,13 +167,15 @@ export function PrintLabPage({ pieces = [] }) {
                       {image ? (
                         <img className="print-lab-source-row__thumb" src={image} alt="" loading="lazy" />
                       ) : (
-                        <span className="print-lab-source-row__thumb print-lab-source-row__thumb--empty" aria-hidden="true" />
+                        <span className="print-lab-source-row__thumb print-lab-source-row__thumb--empty" aria-hidden="true">
+                          {getContentType(piece).slice(0, 1).toUpperCase()}
+                        </span>
                       )}
                       <span className="print-lab-source-row__content">
                         <strong>{piece.title || 'Untitled'}</strong>
-                        <span>
-                          {getContentType(piece)}
-                          {getPublishedAt(piece) ? ` / ${getPublishedAtLabel(piece)}` : ''}
+                        <span className="print-lab-source-row__meta">
+                          <span>{getContentType(piece)}</span>
+                          {getPublishedAt(piece) ? <span>{getPublishedAtLabel(piece)}</span> : null}
                         </span>
                       </span>
                     </button>
@@ -237,7 +239,8 @@ export function PrintLabPage({ pieces = [] }) {
                       aria-pressed={layout === option.id}
                       onClick={() => setLayout(option.id)}
                     >
-                      {option.label}
+                      <span>{option.shortLabel}</span>
+                      <strong>{option.label}</strong>
                     </button>
                   ))}
                 </div>
