@@ -13727,3 +13727,185 @@ a.button {
 @media (max-width: 960px) { .print-lab-desk { grid-template-columns: 1fr; } .print-lab-source-pane, .print-lab-tool-panel, .print-lab-preview-wrap { height: auto; max-height: none; } .print-lab-tool-panel { position: static; } .print-lab-layout-selector { grid-template-columns: repeat(4, minmax(0, 1fr)); } .print-lab-layout-selector button { grid-template-columns: 1fr; justify-items: center; text-align: center !important; gap: 4px; } .print-lab-page-preview--image-side .print-lab-page-body { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .print-lab-preview--half-fold-zine { aspect-ratio: auto; } .print-lab-zine-spread { grid-template-columns: 1fr; } .print-lab-zine-spread::after { display: none; } }
 @media print { .print-lab-preview--half-fold-zine { width: 10in !important; height: 7.5in !important; aspect-ratio: auto !important; padding: 0 !important; } @page { size: letter landscape; margin: 0.5in; } }
+
+/* PRINTLAB_26B_POSTER_PRINT_HOTFIX */
+.print-lab-preview-wrap {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.print-lab-preview-status {
+  width: min(100%, 700px);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.print-lab-preview-status div {
+  min-width: 0;
+  border: 1px solid #c3c4c7;
+  border-radius: 7px;
+  background: #fff;
+  padding: 7px 9px;
+}
+
+.print-lab-preview-status span,
+.print-lab-preview-status strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.print-lab-preview-status span {
+  color: #646970;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.print-lab-preview-status strong {
+  color: #1d2327;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.print-lab-tool-scroll {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+}
+
+.print-lab-control-group {
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px;
+}
+
+.print-lab-control-group legend {
+  padding: 0 4px;
+}
+
+.print-lab-layout-selector button {
+  border-left-width: 4px !important;
+}
+
+.print-lab-layout-selector button.is-active {
+  border-color: var(--printlab-blue) !important;
+  border-left-color: var(--printlab-red) !important;
+  background: #eaf3fb !important;
+  box-shadow: inset 0 0 0 1px rgba(34, 113, 177, 0.2);
+}
+
+.print-lab-layout-selector button.is-active strong {
+  color: #0a4b78;
+}
+
+.print-lab-empty-note {
+  border-radius: 6px;
+}
+
+.print-lab-preview {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+}
+
+.print-lab-preview--poster-split {
+  width: min(100%, 620px);
+  padding: 16px;
+}
+
+.print-lab-split-grid {
+  align-items: start;
+}
+
+.print-lab-split-panel {
+  background-position: center;
+  background-size: cover;
+}
+
+.print-lab-split-panel__print-image {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.print-lab-page-image img,
+.print-lab-zine-panel--inside img {
+  max-width: 100%;
+}
+
+@media (max-width: 1180px) {
+  .print-lab-desk {
+    grid-template-columns: minmax(185px, 215px) minmax(0, 1fr) minmax(185px, 215px);
+  }
+
+  .print-lab-preview-status {
+    width: min(100%, 620px);
+  }
+}
+
+@media (max-width: 960px) {
+  .print-lab-preview-status {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .print-lab-preview-status {
+    display: none !important;
+  }
+
+  .print-lab-preview--poster-split {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .print-lab-preview--poster-split .print-lab-split-grid {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .print-lab-preview--poster-split .print-lab-split-panel {
+    width: 100% !important;
+    height: 9.5in !important;
+    min-height: 0 !important;
+    aspect-ratio: auto !important;
+    display: block !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    background-image: none !important;
+    background-color: #fff !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .print-lab-preview--poster-split .print-lab-split-panel:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .print-lab-split-panel__print-image {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+  }
+
+  .print-lab-split-panel span {
+    display: none !important;
+  }
+
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+}

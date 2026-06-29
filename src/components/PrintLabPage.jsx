@@ -187,8 +187,9 @@ function buildExportHtml(previewHtml, title) {
     .print-lab-tile-grid, .print-lab-split-grid, .print-lab-zine-spread { display: grid; gap: 10px; }
     .print-lab-page-preview { min-height: 720px; }
     .print-lab-split-panel { min-height: 280px; border: 1px solid #111; background-repeat: no-repeat; background-color: #fff; }
+    .print-lab-split-panel__print-image { display: none; width: 100%; height: 100%; }
     .print-lab-zine-spread { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    @media print { body { margin: 0; background: #fff; } .print-lab-preview { border: 0; box-shadow: none; } }
+    @media print { body { margin: 0; background: #fff; } .print-lab-preview { border: 0; box-shadow: none; } .print-lab-preview--poster-split { padding: 0; } .print-lab-split-grid { display: block; } .print-lab-split-panel { width: 100%; height: 9.5in; break-after: page; background-image: none !important; } .print-lab-split-panel__print-image { display: block; object-fit: cover; } }
   </style>
 </head>
 <body>
@@ -345,6 +346,24 @@ export function PrintLabPage({ pieces = [] }) {
 
   const currentImageUrl = currentImage?.url || ''
   const currentImageTitle = currentImage?.title || ''
+  const currentTool = toolOptions.find((option) => option.id === toolMode) || toolOptions[0]
+  const needsImageSource = toolMode === 'tile' || toolMode === 'split'
+  const sourceStatus = useMemo(() => {
+    if (!currentImageUrl) return 'No source selected'
+    if (sourceType === 'upload') return 'Uploaded image'
+    if (sourceType === 'media') return 'Media image'
+    if (sourceType === 'post') return 'Post source'
+    return 'Image source'
+  }, [currentImageUrl, sourceType])
+  const outputHint = useMemo(() => {
+    if (toolMode === 'tile') return `${tileRows}x${tileColumns} tile sheet`
+    if (toolMode === 'split') return `${splitWide}x${splitTall} poster split`
+    if (toolMode === 'page') return `${pageOrientation} page layout`
+    return '8.5x11 landscape half-fold'
+  }, [pageOrientation, splitTall, splitWide, tileColumns, tileRows, toolMode])
+  const missingSourceMessage = toolMode === 'split'
+    ? 'Select or upload an image to split a poster across printable pages.'
+    : 'Select or upload an image to build a tile sheet.'
   const pageHasContent = Boolean(currentImageUrl || pageTitle.trim() || pageBody.trim() || pageFooter.trim())
   const zineHasContent = Boolean((zineIncludeImage && currentImageUrl) || zineTitle.trim() || zineBody.trim() || zineFooter.trim())
   const hasUsableOutput = (
@@ -586,6 +605,7 @@ export function PrintLabPage({ pieces = [] }) {
                   key={option.id}
                   type="button"
                   aria-pressed={toolMode === option.id}
+                  aria-label={`Use ${option.label}`}
                   onClick={() => setToolMode(option.id)}
                 >
                   <span>{option.shortLabel}</span>
@@ -704,7 +724,9 @@ export function PrintLabPage({ pieces = [] }) {
           ) : null}
 
           {!hasUsableOutput ? (
-            <p className="print-lab-empty-note">Add text or select an image source to enable output actions.</p>
+            <p className="print-lab-empty-note">
+              {needsImageSource ? missingSourceMessage : 'Add text or select source material to enable output actions.'}
+            </p>
           ) : null}
 
           <div className="print-lab-actions">
@@ -748,7 +770,7 @@ export function PrintLabPage({ pieces = [] }) {
             ))}
           </div>
         ) : (
-          <p className="print-lab-preview-empty">Select or upload an image to build a tile sheet.</p>
+          <p className="print-lab-preview-empty">{missingSourceMessage}</p>
         )}
       </article>
     )
@@ -775,23 +797,33 @@ export function PrintLabPage({ pieces = [] }) {
               const row = Math.floor(index / splitWide)
               const x = splitWide === 1 ? 50 : (column / (splitWide - 1)) * 100
               const y = splitTall === 1 ? 50 : (row / (splitTall - 1)) * 100
+              const objectPosition = `${x}% ${y}%`
               return (
                 <section
                   className="print-lab-split-panel"
                   key={`split-${index}`}
                   style={{
                     backgroundImage: `url("${currentImageUrl}")`,
-                    backgroundPosition: `${x}% ${y}%`,
+                    backgroundPosition: objectPosition,
                     backgroundSize,
                   }}
                 >
+                  <img
+                    className="print-lab-split-panel__print-image"
+                    src={currentImageUrl}
+                    alt=""
+                    style={{
+                      objectFit: 'cover',
+                      objectPosition,
+                    }}
+                  />
                   {splitShowNumbers ? <span>{index + 1}</span> : null}
                 </section>
               )
             })}
           </div>
         ) : (
-          <p className="print-lab-preview-empty">Select or upload an image to split a poster across pages.</p>
+          <p className="print-lab-preview-empty">{missingSourceMessage}</p>
         )}
       </article>
     )
@@ -892,6 +924,20 @@ export function PrintLabPage({ pieces = [] }) {
           {renderSourcePanel()}
 
           <div className="print-lab-preview-wrap" aria-live="polite">
+            <div className="print-lab-preview-status">
+              <div>
+                <span>Preview</span>
+                <strong>{currentTool.label}</strong>
+              </div>
+              <div>
+                <span>Source</span>
+                <strong>{sourceStatus}</strong>
+              </div>
+              <div>
+                <span>Output</span>
+                <strong>{outputHint}</strong>
+              </div>
+            </div>
             {renderPreview()}
           </div>
 
