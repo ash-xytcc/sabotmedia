@@ -23,13 +23,21 @@ const toolOptions = [
 const fitOptions = ['cover', 'contain']
 const orientationOptions = ['portrait', 'landscape']
 const imagePositionOptions = ['top', 'side', 'background']
-const printCanvasWidth = 720
-const printCanvasHeight = 540
+const defaultCanvasSize = { width: 720, height: 540 }
+const canvasPresetOptions = {
+  landscape: { label: 'Landscape', width: 720, height: 540 },
+  portrait: { label: 'Portrait', width: 540, height: 720 },
+  square: { label: 'Square', width: 620, height: 620 },
+}
 const canvasResizeHandles = [
   { id: 'nw', cursor: 'nwse-resize' },
+  { id: 'n', cursor: 'ns-resize' },
   { id: 'ne', cursor: 'nesw-resize' },
+  { id: 'e', cursor: 'ew-resize' },
   { id: 'se', cursor: 'nwse-resize' },
+  { id: 's', cursor: 'ns-resize' },
   { id: 'sw', cursor: 'nesw-resize' },
+  { id: 'w', cursor: 'ew-resize' },
 ]
 
 function getPieceId(piece) {
@@ -118,6 +126,7 @@ function makeCanvasBlock(type, patch = {}) {
   const base = {
     id: `canvas-${type}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     type,
+    name: patch.title || (type === 'image' ? 'Image' : 'Text'),
     x: type === 'image' ? 390 : 42,
     y: type === 'image' ? 58 : 46,
     width: type === 'image' ? 280 : 330,
@@ -129,9 +138,25 @@ function makeCanvasBlock(type, patch = {}) {
     fontWeight: type === 'text' ? 800 : 600,
     lineHeight: 1.12,
     color: '#111111',
+    align: 'left',
+    opacity: 1,
     fit: 'cover',
   }
   return { ...base, ...patch }
+}
+
+function clampCanvasBlock(block, canvasSize = defaultCanvasSize) {
+  const minWidth = 70
+  const minHeight = 42
+  const width = clampValue(Number(block.width || minWidth), minWidth, canvasSize.width)
+  const height = clampValue(Number(block.height || minHeight), minHeight, canvasSize.height)
+  return {
+    ...block,
+    width,
+    height,
+    x: clampValue(Number(block.x || 0), 0, Math.max(0, canvasSize.width - width)),
+    y: clampValue(Number(block.y || 0), 0, Math.max(0, canvasSize.height - height)),
+  }
 }
 
 function buildCanvasStarterBlocks({ title, body, imageUrl, imageTitle }) {
@@ -270,7 +295,7 @@ function buildExportHtml(previewHtml, title) {
     .print-lab-split-panel__print-image { display: none; width: 100%; height: 100%; }
     .print-lab-zine-spread { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .print-lab-preview--canvas { width: min(100%, 760px); }
-    .print-lab-canvas-stage { position: relative; width: 100%; aspect-ratio: 4 / 3; background: #fff; overflow: hidden; }
+    .print-lab-canvas-stage { position: relative; width: 100%; aspect-ratio: var(--canvas-aspect, 4 / 3); background: #fff; overflow: hidden; }
     .print-lab-canvas-block { position: absolute; box-sizing: border-box; overflow: hidden; }
     .print-lab-canvas-block img { width: 100%; height: 100%; display: block; }
     .print-lab-canvas-text { width: 100%; height: 100%; overflow: hidden; white-space: pre-wrap; }
@@ -315,6 +340,8 @@ export function PrintLabPage({ pieces = [] }) {
   const [zineBody, setZineBody] = useState('')
   const [zineFooter, setZineFooter] = useState('')
   const [zineIncludeImage, setZineIncludeImage] = useState(true)
+  const [canvasPreset, setCanvasPreset] = useState('landscape')
+  const [canvasBackground, setCanvasBackground] = useState('#fffdf8')
   const [canvasBlocks, setCanvasBlocks] = useState([])
   const [selectedCanvasBlockId, setSelectedCanvasBlockId] = useState('')
   const [canvasInteraction, setCanvasInteraction] = useState(null)
@@ -437,6 +464,7 @@ export function PrintLabPage({ pieces = [] }) {
   const currentImageTitle = currentImage?.title || ''
   const currentTool = toolOptions.find((option) => option.id === toolMode) || toolOptions[0]
   const needsImageSource = toolMode === 'tile' || toolMode === 'split'
+  const canvasSize = canvasPresetOptions[canvasPreset] || canvasPresetOptions.landscape
   const selectedCanvasBlock = canvasBlocks.find((block) => block.id === selectedCanvasBlockId) || null
 
   useEffect(() => {
@@ -453,7 +481,7 @@ export function PrintLabPage({ pieces = [] }) {
       imageTitle: currentImageTitle,
     })
 
-    setCanvasBlocks(nextBlocks)
+    setCanvasBlocks(nextBlocks.map((block) => clampCanvasBlock(block, canvasSize)))
     setSelectedCanvasBlockId(nextBlocks[0]?.id || '')
     setCanvasInteraction(null)
   }, [
@@ -479,8 +507,8 @@ export function PrintLabPage({ pieces = [] }) {
     if (toolMode === 'split') return `${splitWide}x${splitTall} poster split`
     if (toolMode === 'page') return `${pageOrientation} page layout`
     if (toolMode === 'zine') return '8.5x11 landscape half-fold'
-    return `${canvasBlocks.length} canvas blocks`
-  }, [canvasBlocks.length, pageOrientation, splitTall, splitWide, tileColumns, tileRows, toolMode])
+    return `${canvasSize.label} canvas / ${canvasBlocks.length} blocks`
+  }, [canvasBlocks.length, canvasSize.label, pageOrientation, splitTall, splitWide, tileColumns, tileRows, toolMode])
   const missingSourceMessage = toolMode === 'split'
     ? 'Select or upload an image to split a poster across printable pages.'
     : 'Select or upload an image to build a tile sheet.'
@@ -544,16 +572,95 @@ export function PrintLabPage({ pieces = [] }) {
     setCanvasBlocks((blocks) => blocks.map((block) => {
       if (block.id !== id) return block
       const patch = typeof patchOrFn === 'function' ? patchOrFn(block) : patchOrFn
-      return { ...block, ...patch }
+      return clampCanvasBlock({ ...block, ...patch }, canvasSize)
     }))
+  }
+
+  function addCanvasTextBlock() {
+    const block = clampCanvasBlock(makeCanvasBlock('text', {
+      text: 'New text block',
+      x: 72,
+      y: 72,
+      width: 260,
+      height: 86,
+      fontSize: 24,
+    }), canvasSize)
+    setCanvasBlocks((blocks) => [...blocks, block])
+    setSelectedCanvasBlockId(block.id)
+  }
+
+  function addCanvasImageBlock() {
+    if (!currentImageUrl) return
+    const block = clampCanvasBlock(makeCanvasBlock('image', {
+      src: currentImageUrl,
+      title: currentImageTitle || 'Image',
+      name: currentImageTitle || 'Image',
+      x: Math.max(24, canvasSize.width - 330),
+      y: 92,
+      width: 260,
+      height: 220,
+    }), canvasSize)
+    setCanvasBlocks((blocks) => [...blocks, block])
+    setSelectedCanvasBlockId(block.id)
+  }
+
+  function deleteSelectedCanvasBlock() {
+    if (!selectedCanvasBlockId) return
+    setCanvasBlocks((blocks) => blocks.filter((block) => block.id !== selectedCanvasBlockId))
+    setSelectedCanvasBlockId('')
+  }
+
+  function duplicateSelectedCanvasBlock() {
+    if (!selectedCanvasBlock) return
+    const duplicate = clampCanvasBlock({
+      ...selectedCanvasBlock,
+      id: `canvas-${selectedCanvasBlock.type}-${Date.now()}`,
+      title: `${selectedCanvasBlock.title || selectedCanvasBlock.type} Copy`,
+      name: `${selectedCanvasBlock.name || selectedCanvasBlock.type} Copy`,
+      x: Number(selectedCanvasBlock.x || 0) + 24,
+      y: Number(selectedCanvasBlock.y || 0) + 24,
+    }, canvasSize)
+    setCanvasBlocks((blocks) => [...blocks, duplicate])
+    setSelectedCanvasBlockId(duplicate.id)
+  }
+
+  function moveSelectedCanvasBlock(direction) {
+    if (!selectedCanvasBlockId) return
+    setCanvasBlocks((blocks) => {
+      const index = blocks.findIndex((block) => block.id === selectedCanvasBlockId)
+      if (index < 0) return blocks
+      const next = blocks.slice()
+      if (direction === 'up' && index < next.length - 1) {
+        ;[next[index], next[index + 1]] = [next[index + 1], next[index]]
+      }
+      if (direction === 'down' && index > 0) {
+        ;[next[index], next[index - 1]] = [next[index - 1], next[index]]
+      }
+      return next
+    })
+  }
+
+  function changeCanvasPreset(nextPreset) {
+    const nextSize = canvasPresetOptions[nextPreset] || canvasPresetOptions.landscape
+    const currentSize = canvasSize
+    const scaleX = nextSize.width / currentSize.width
+    const scaleY = nextSize.height / currentSize.height
+    setCanvasPreset(nextPreset)
+    setCanvasBlocks((blocks) => blocks.map((block) => clampCanvasBlock({
+      ...block,
+      x: Number(block.x || 0) * scaleX,
+      y: Number(block.y || 0) * scaleY,
+      width: Number(block.width || 1) * scaleX,
+      height: Number(block.height || 1) * scaleY,
+    }, nextSize)))
   }
 
   function getCanvasPoint(event) {
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return { x: 0, y: 0 }
     return {
-      x: clampValue(((event.clientX - rect.left) / rect.width) * printCanvasWidth, 0, printCanvasWidth),
-      y: clampValue(((event.clientY - rect.top) / rect.height) * printCanvasHeight, 0, printCanvasHeight),
+      x: clampValue(((event.clientX - rect.left) / rect.width) * canvasSize.width, 0, canvasSize.width),
+      y: clampValue(((event.clientY - rect.top) / rect.height) * canvasSize.height, 0, canvasSize.height),
     }
   }
 
@@ -572,6 +679,8 @@ export function PrintLabPage({ pieces = [] }) {
       y: Number(block.y || 0),
       width: Number(block.width || 1),
       height: Number(block.height || 1),
+      canvasWidth: canvasSize.width,
+      canvasHeight: canvasSize.height,
     })
   }
 
@@ -591,6 +700,8 @@ export function PrintLabPage({ pieces = [] }) {
       y: Number(block.y || 0),
       width: Number(block.width || 1),
       height: Number(block.height || 1),
+      canvasWidth: canvasSize.width,
+      canvasHeight: canvasSize.height,
     })
   }
 
@@ -601,12 +712,16 @@ export function PrintLabPage({ pieces = [] }) {
       const point = getCanvasPoint(event)
       const dx = point.x - canvasInteraction.startX
       const dy = point.y - canvasInteraction.startY
+      const bounds = {
+        width: canvasInteraction.canvasWidth || canvasSize.width,
+        height: canvasInteraction.canvasHeight || canvasSize.height,
+      }
 
       updateCanvasBlock(canvasInteraction.id, () => {
         if (canvasInteraction.type === 'drag') {
           return {
-            x: clampValue(canvasInteraction.x + dx, 0, printCanvasWidth - canvasInteraction.width),
-            y: clampValue(canvasInteraction.y + dy, 0, printCanvasHeight - canvasInteraction.height),
+            x: clampValue(canvasInteraction.x + dx, 0, Math.max(0, bounds.width - canvasInteraction.width)),
+            y: clampValue(canvasInteraction.y + dy, 0, Math.max(0, bounds.height - canvasInteraction.height)),
           }
         }
 
@@ -637,10 +752,10 @@ export function PrintLabPage({ pieces = [] }) {
           nextHeight = minHeight
         }
 
-        nextX = clampValue(nextX, 0, printCanvasWidth - minWidth)
-        nextY = clampValue(nextY, 0, printCanvasHeight - minHeight)
-        nextWidth = clampValue(nextWidth, minWidth, printCanvasWidth - nextX)
-        nextHeight = clampValue(nextHeight, minHeight, printCanvasHeight - nextY)
+        nextX = clampValue(nextX, 0, Math.max(0, bounds.width - minWidth))
+        nextY = clampValue(nextY, 0, Math.max(0, bounds.height - minHeight))
+        nextWidth = clampValue(nextWidth, minWidth, bounds.width - nextX)
+        nextHeight = clampValue(nextHeight, minHeight, bounds.height - nextY)
         return { x: nextX, y: nextY, width: nextWidth, height: nextHeight }
       })
     }
@@ -657,7 +772,7 @@ export function PrintLabPage({ pieces = [] }) {
       window.removeEventListener('pointerup', handleUp)
       window.removeEventListener('pointercancel', handleUp)
     }
-  }, [canvasInteraction])
+  }, [canvasInteraction, canvasSize])
 
   async function handleUpload(event) {
     const file = event.target.files?.[0]
@@ -975,57 +1090,86 @@ export function PrintLabPage({ pieces = [] }) {
           {toolMode === 'canvas' ? (
             <fieldset className="print-lab-control-group">
               <legend>Canvas</legend>
+              <div className="print-lab-canvas-document">
+                <label className="print-lab-field">
+                  <span>Page preset</span>
+                  <select value={canvasPreset} onChange={(event) => changeCanvasPreset(event.target.value)}>
+                    {Object.entries(canvasPresetOptions).map(([id, option]) => (
+                      <option key={id} value={id}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="print-lab-field print-lab-color-field">
+                  <span>Background</span>
+                  <input type="color" value={canvasBackground} onChange={(event) => setCanvasBackground(event.target.value)} />
+                </label>
+              </div>
               <div className="print-lab-canvas-tools">
-                <button
-                  className="button"
-                  type="button"
-                  onClick={() => {
-                    const block = makeCanvasBlock('text', {
-                      text: 'New text block',
-                      x: 72,
-                      y: 72,
-                      width: 260,
-                      height: 86,
-                      fontSize: 24,
-                    })
-                    setCanvasBlocks((blocks) => [...blocks, block])
-                    setSelectedCanvasBlockId(block.id)
-                  }}
-                >
-                  Add Text
-                </button>
-                <button
-                  className="button"
-                  type="button"
-                  disabled={!currentImageUrl}
-                  onClick={() => {
-                    const block = makeCanvasBlock('image', {
-                      src: currentImageUrl,
-                      title: currentImageTitle || 'Image',
-                      x: 354,
-                      y: 92,
-                      width: 260,
-                      height: 220,
-                    })
-                    setCanvasBlocks((blocks) => [...blocks, block])
-                    setSelectedCanvasBlockId(block.id)
-                  }}
-                >
-                  Add Image
-                </button>
+                <button className="button" type="button" onClick={addCanvasTextBlock}>Add Text</button>
+                <button className="button" type="button" disabled={!currentImageUrl} onClick={addCanvasImageBlock}>Add Image</button>
+                <button className="button" type="button" disabled={!selectedCanvasBlock} onClick={duplicateSelectedCanvasBlock}>Duplicate</button>
+                <button className="button" type="button" disabled={!selectedCanvasBlock} onClick={deleteSelectedCanvasBlock}>Delete</button>
+                <button className="button" type="button" disabled={!selectedCanvasBlock} onClick={() => moveSelectedCanvasBlock('down')}>Send Back</button>
+                <button className="button" type="button" disabled={!selectedCanvasBlock} onClick={() => moveSelectedCanvasBlock('up')}>Bring Forward</button>
               </div>
               {selectedCanvasBlock ? (
                 <div className="print-lab-canvas-inspector">
-                  <strong>{selectedCanvasBlock.type === 'image' ? 'Image block' : 'Text block'}</strong>
-                  {selectedCanvasBlock.type === 'text' ? (
+                  <strong>{selectedCanvasBlock.title || selectedCanvasBlock.name || (selectedCanvasBlock.type === 'image' ? 'Image block' : 'Text block')}</strong>
+                  <div className="print-lab-control-grid">
                     <label className="print-lab-field">
-                      <span>Text</span>
-                      <textarea
-                        rows="4"
-                        value={selectedCanvasBlock.text}
-                        onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { text: event.target.value })}
-                      />
+                      <span>X</span>
+                      <input type="number" value={Math.round(selectedCanvasBlock.x)} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { x: Number(event.target.value || 0) })} />
                     </label>
+                    <label className="print-lab-field">
+                      <span>Y</span>
+                      <input type="number" value={Math.round(selectedCanvasBlock.y)} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { y: Number(event.target.value || 0) })} />
+                    </label>
+                    <label className="print-lab-field">
+                      <span>Width</span>
+                      <input type="number" min="70" value={Math.round(selectedCanvasBlock.width)} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { width: Number(event.target.value || 70) })} />
+                    </label>
+                    <label className="print-lab-field">
+                      <span>Height</span>
+                      <input type="number" min="42" value={Math.round(selectedCanvasBlock.height)} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { height: Number(event.target.value || 42) })} />
+                    </label>
+                  </div>
+                  {selectedCanvasBlock.type === 'text' ? (
+                    <>
+                      <label className="print-lab-field">
+                        <span>Text</span>
+                        <textarea
+                          rows="4"
+                          value={selectedCanvasBlock.text}
+                          onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { text: event.target.value })}
+                        />
+                      </label>
+                      <div className="print-lab-control-grid">
+                        <label className="print-lab-field">
+                          <span>Font size</span>
+                          <input type="number" min="8" max="96" value={selectedCanvasBlock.fontSize || 16} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { fontSize: clampNumber(event.target.value, 8, 96) })} />
+                        </label>
+                        <label className="print-lab-field print-lab-color-field">
+                          <span>Color</span>
+                          <input type="color" value={selectedCanvasBlock.color || '#111111'} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { color: event.target.value })} />
+                        </label>
+                      </div>
+                      <label className="print-lab-toggle">
+                        <input
+                          type="checkbox"
+                          checked={Number(selectedCanvasBlock.fontWeight || 500) >= 700}
+                          onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { fontWeight: event.target.checked ? 800 : 500 })}
+                        />
+                        <span>Bold</span>
+                      </label>
+                      <label className="print-lab-field">
+                        <span>Alignment</span>
+                        <select value={selectedCanvasBlock.align || 'left'} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { align: event.target.value })}>
+                          <option value="left">Left</option>
+                          <option value="center">Center</option>
+                          <option value="right">Right</option>
+                        </select>
+                      </label>
+                    </>
                   ) : (
                     <label className="print-lab-field">
                       <span>Image fit</span>
@@ -1041,6 +1185,20 @@ export function PrintLabPage({ pieces = [] }) {
               ) : (
                 <p className="print-lab-empty-note">Select a canvas block to edit its content.</p>
               )}
+              <div className="print-lab-canvas-layers">
+                <strong>Layers</strong>
+                {canvasBlocks.slice().reverse().map((block, index) => (
+                  <button
+                    className={block.id === selectedCanvasBlockId ? 'is-selected' : ''}
+                    key={block.id}
+                    type="button"
+                    onClick={() => setSelectedCanvasBlockId(block.id)}
+                  >
+                    <span>{block.title || block.name || block.type}</span>
+                    <small>{block.type} #{canvasBlocks.length - index}</small>
+                  </button>
+                ))}
+              </div>
             </fieldset>
           ) : null}
 
@@ -1232,15 +1390,20 @@ export function PrintLabPage({ pieces = [] }) {
         <div
           className="print-lab-canvas-stage"
           ref={canvasRef}
+          style={{
+            '--canvas-aspect': `${canvasSize.width} / ${canvasSize.height}`,
+            backgroundColor: canvasBackground,
+          }}
           onPointerDown={() => setSelectedCanvasBlockId('')}
         >
           {canvasBlocks.map((block) => {
             const selected = block.id === selectedCanvasBlockId
             const blockStyle = {
-              left: `${(Number(block.x || 0) / printCanvasWidth) * 100}%`,
-              top: `${(Number(block.y || 0) / printCanvasHeight) * 100}%`,
-              width: `${(Number(block.width || 1) / printCanvasWidth) * 100}%`,
-              height: `${(Number(block.height || 1) / printCanvasHeight) * 100}%`,
+              left: `${(Number(block.x || 0) / canvasSize.width) * 100}%`,
+              top: `${(Number(block.y || 0) / canvasSize.height) * 100}%`,
+              width: `${(Number(block.width || 1) / canvasSize.width) * 100}%`,
+              height: `${(Number(block.height || 1) / canvasSize.height) * 100}%`,
+              opacity: block.opacity ?? 1,
             }
 
             return (
@@ -1270,6 +1433,7 @@ export function PrintLabPage({ pieces = [] }) {
                       fontSize: `${block.fontSize}px`,
                       fontWeight: block.fontWeight,
                       lineHeight: block.lineHeight,
+                      textAlign: block.align || 'left',
                     }}
                   >
                     {block.text}

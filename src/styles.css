@@ -14178,7 +14178,7 @@ a.button {
 .print-lab-canvas-stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: var(--canvas-aspect, 4 / 3);
   overflow: hidden;
   background:
     linear-gradient(rgba(29, 35, 39, 0.06) 1px, transparent 1px),
@@ -14252,33 +14252,67 @@ a.button {
 
 .print-lab-canvas-resize {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border: 2px solid #fff;
   border-radius: 999px;
   background: #2271b1;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.26);
   touch-action: none;
+  z-index: 8;
 }
 
 .print-lab-canvas-resize--nw {
-  left: -7px;
-  top: -7px;
+  left: -9px;
+  top: -9px;
+}
+
+.print-lab-canvas-resize--n {
+  left: calc(50% - 9px);
+  top: -9px;
 }
 
 .print-lab-canvas-resize--ne {
-  right: -7px;
-  top: -7px;
+  right: -9px;
+  top: -9px;
+}
+
+.print-lab-canvas-resize--e {
+  right: -9px;
+  top: calc(50% - 9px);
 }
 
 .print-lab-canvas-resize--se {
-  right: -7px;
-  bottom: -7px;
+  right: -9px;
+  bottom: -9px;
+}
+
+.print-lab-canvas-resize--s {
+  left: calc(50% - 9px);
+  bottom: -9px;
 }
 
 .print-lab-canvas-resize--sw {
-  left: -7px;
-  bottom: -7px;
+  left: -9px;
+  bottom: -9px;
+}
+
+.print-lab-canvas-resize--w {
+  left: -9px;
+  top: calc(50% - 9px);
+}
+
+.print-lab-canvas-document {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  gap: 8px;
+  align-items: end;
+}
+
+.print-lab-color-field input[type='color'] {
+  width: 100%;
+  min-height: 34px;
+  padding: 2px;
 }
 
 .print-lab-canvas-tools {
@@ -14303,4 +14337,48 @@ a.button {
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.print-lab-canvas-layers {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 190px;
+  overflow: auto;
+}
+
+.print-lab-canvas-layers > strong {
+  color: #1d2327;
+  font-size: 12px;
+}
+
+.print-lab-canvas-layers button {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 7px 8px;
+  border: 1px solid #dcdcde;
+  border-radius: 7px;
+  background: #fff;
+  color: #1d2327;
+  text-align: left;
+}
+
+.print-lab-canvas-layers button.is-selected {
+  border-color: #72aee6;
+  background: #f0f6fc;
+  box-shadow: inset 3px 0 0 #2271b1;
+}
+
+.print-lab-canvas-layers span,
+.print-lab-canvas-layers small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.print-lab-canvas-layers small {
+  color: #646970;
+  font-size: 11px;
 }
