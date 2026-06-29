@@ -17,11 +17,20 @@ const toolOptions = [
   { id: 'split', label: 'Poster Split', shortLabel: 'S' },
   { id: 'page', label: 'Page Layout', shortLabel: 'P' },
   { id: 'zine', label: 'Half-Fold Zine', shortLabel: 'Z' },
+  { id: 'canvas', label: 'Canvas', shortLabel: 'C' },
 ]
 
 const fitOptions = ['cover', 'contain']
 const orientationOptions = ['portrait', 'landscape']
 const imagePositionOptions = ['top', 'side', 'background']
+const printCanvasWidth = 720
+const printCanvasHeight = 540
+const canvasResizeHandles = [
+  { id: 'nw', cursor: 'nwse-resize' },
+  { id: 'ne', cursor: 'nesw-resize' },
+  { id: 'se', cursor: 'nwse-resize' },
+  { id: 'sw', cursor: 'nesw-resize' },
+]
 
 function getPieceId(piece) {
   return String(piece?.id || piece?.slug || piece?.sourcePostId || piece?.title || '')
@@ -99,6 +108,77 @@ function clampNumber(value, min, max) {
   const parsed = Number.parseInt(value, 10)
   if (Number.isNaN(parsed)) return min
   return Math.min(max, Math.max(min, parsed))
+}
+
+function clampValue(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function makeCanvasBlock(type, patch = {}) {
+  const base = {
+    id: `canvas-${type}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    type,
+    x: type === 'image' ? 390 : 42,
+    y: type === 'image' ? 58 : 46,
+    width: type === 'image' ? 280 : 330,
+    height: type === 'image' ? 260 : 92,
+    text: 'New text',
+    src: '',
+    title: type === 'image' ? 'Image' : 'Text',
+    fontSize: type === 'text' ? 28 : 16,
+    fontWeight: type === 'text' ? 800 : 600,
+    lineHeight: 1.12,
+    color: '#111111',
+    fit: 'cover',
+  }
+  return { ...base, ...patch }
+}
+
+function buildCanvasStarterBlocks({ title, body, imageUrl, imageTitle }) {
+  const blocks = [
+    makeCanvasBlock('text', {
+      id: 'canvas-title',
+      title: 'Title',
+      text: title || imageTitle || 'Printlab Canvas',
+      x: 42,
+      y: 44,
+      width: imageUrl ? 324 : 636,
+      height: 96,
+      fontSize: 30,
+      fontWeight: 800,
+      lineHeight: 1.05,
+    }),
+  ]
+
+  if (body) {
+    blocks.push(makeCanvasBlock('text', {
+      id: 'canvas-body',
+      title: 'Body',
+      text: body,
+      x: 44,
+      y: 160,
+      width: imageUrl ? 314 : 632,
+      height: 240,
+      fontSize: 15,
+      fontWeight: 500,
+      lineHeight: 1.38,
+    }))
+  }
+
+  if (imageUrl) {
+    blocks.push(makeCanvasBlock('image', {
+      id: 'canvas-image',
+      title: imageTitle || 'Image',
+      src: imageUrl,
+      x: 388,
+      y: 58,
+      width: 286,
+      height: 350,
+      fit: 'cover',
+    }))
+  }
+
+  return blocks
 }
 
 function readImageFile(file) {
@@ -189,6 +269,11 @@ function buildExportHtml(previewHtml, title) {
     .print-lab-split-panel { min-height: 280px; border: 1px solid #111; background-repeat: no-repeat; background-color: #fff; }
     .print-lab-split-panel__print-image { display: none; width: 100%; height: 100%; }
     .print-lab-zine-spread { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .print-lab-preview--canvas { width: min(100%, 760px); }
+    .print-lab-canvas-stage { position: relative; width: 100%; aspect-ratio: 4 / 3; background: #fff; overflow: hidden; }
+    .print-lab-canvas-block { position: absolute; box-sizing: border-box; overflow: hidden; }
+    .print-lab-canvas-block img { width: 100%; height: 100%; display: block; }
+    .print-lab-canvas-text { width: 100%; height: 100%; overflow: hidden; white-space: pre-wrap; }
     @media print { body { margin: 0; background: #fff; } .print-lab-preview { border: 0; box-shadow: none; } .print-lab-preview--poster-split { padding: 0; } .print-lab-split-grid { display: block; } .print-lab-split-panel { width: 100%; height: 9.5in; break-after: page; background-image: none !important; } .print-lab-split-panel__print-image { display: block; object-fit: cover; } }
   </style>
 </head>
@@ -230,8 +315,12 @@ export function PrintLabPage({ pieces = [] }) {
   const [zineBody, setZineBody] = useState('')
   const [zineFooter, setZineFooter] = useState('')
   const [zineIncludeImage, setZineIncludeImage] = useState(true)
+  const [canvasBlocks, setCanvasBlocks] = useState([])
+  const [selectedCanvasBlockId, setSelectedCanvasBlockId] = useState('')
+  const [canvasInteraction, setCanvasInteraction] = useState(null)
 
   const previewRef = useRef(null)
+  const canvasRef = useRef(null)
   const wordpressFeed = useWordPressPieces(pieces)
 
   useEffect(() => {
@@ -348,6 +437,36 @@ export function PrintLabPage({ pieces = [] }) {
   const currentImageTitle = currentImage?.title || ''
   const currentTool = toolOptions.find((option) => option.id === toolMode) || toolOptions[0]
   const needsImageSource = toolMode === 'tile' || toolMode === 'split'
+  const selectedCanvasBlock = canvasBlocks.find((block) => block.id === selectedCanvasBlockId) || null
+
+  useEffect(() => {
+    const title = sourceType === 'post'
+      ? (selectedPostTitle || 'Untitled')
+      : (currentImageTitle || pageTitle || zineTitle || 'Printlab Canvas')
+    const body = sourceType === 'post'
+      ? truncateText(selectedPostBody || selectedPostExcerpt || '', 360)
+      : ''
+    const nextBlocks = buildCanvasStarterBlocks({
+      title,
+      body,
+      imageUrl: currentImageUrl,
+      imageTitle: currentImageTitle,
+    })
+
+    setCanvasBlocks(nextBlocks)
+    setSelectedCanvasBlockId(nextBlocks[0]?.id || '')
+    setCanvasInteraction(null)
+  }, [
+    currentImageTitle,
+    currentImageUrl,
+    pageTitle,
+    selectedPostBody,
+    selectedPostExcerpt,
+    selectedPostTitle,
+    sourceType,
+    zineTitle,
+  ])
+
   const sourceStatus = useMemo(() => {
     if (!currentImageUrl) return 'No source selected'
     if (sourceType === 'upload') return 'Uploaded image'
@@ -359,8 +478,9 @@ export function PrintLabPage({ pieces = [] }) {
     if (toolMode === 'tile') return `${tileRows}x${tileColumns} tile sheet`
     if (toolMode === 'split') return `${splitWide}x${splitTall} poster split`
     if (toolMode === 'page') return `${pageOrientation} page layout`
-    return '8.5x11 landscape half-fold'
-  }, [pageOrientation, splitTall, splitWide, tileColumns, tileRows, toolMode])
+    if (toolMode === 'zine') return '8.5x11 landscape half-fold'
+    return `${canvasBlocks.length} canvas blocks`
+  }, [canvasBlocks.length, pageOrientation, splitTall, splitWide, tileColumns, tileRows, toolMode])
   const missingSourceMessage = toolMode === 'split'
     ? 'Select or upload an image to split a poster across printable pages.'
     : 'Select or upload an image to build a tile sheet.'
@@ -370,7 +490,8 @@ export function PrintLabPage({ pieces = [] }) {
     (toolMode === 'tile' && Boolean(currentImageUrl)) ||
     (toolMode === 'split' && Boolean(currentImageUrl)) ||
     (toolMode === 'page' && pageHasContent) ||
-    (toolMode === 'zine' && zineHasContent)
+    (toolMode === 'zine' && zineHasContent) ||
+    (toolMode === 'canvas' && canvasBlocks.length > 0)
   )
 
   const currentTextContent = useMemo(() => {
@@ -394,8 +515,17 @@ export function PrintLabPage({ pieces = [] }) {
       return [pageTitle, pageBody, pageFooter].filter(Boolean).join('\n\n')
     }
 
-    return [zineTitle, zineBody, zineFooter].filter(Boolean).join('\n\n')
+    if (toolMode === 'zine') {
+      return [zineTitle, zineBody, zineFooter].filter(Boolean).join('\n\n')
+    }
+
+    return canvasBlocks.map((block) => (
+      block.type === 'image'
+        ? `Image: ${block.title || currentImageTitle || block.src}`
+        : block.text
+    )).filter(Boolean).join('\n\n')
   }, [
+    canvasBlocks,
     currentImageTitle,
     currentImageUrl,
     pageBody,
@@ -409,6 +539,125 @@ export function PrintLabPage({ pieces = [] }) {
     zineFooter,
     zineTitle,
   ])
+
+  function updateCanvasBlock(id, patchOrFn) {
+    setCanvasBlocks((blocks) => blocks.map((block) => {
+      if (block.id !== id) return block
+      const patch = typeof patchOrFn === 'function' ? patchOrFn(block) : patchOrFn
+      return { ...block, ...patch }
+    }))
+  }
+
+  function getCanvasPoint(event) {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return { x: 0, y: 0 }
+    return {
+      x: clampValue(((event.clientX - rect.left) / rect.width) * printCanvasWidth, 0, printCanvasWidth),
+      y: clampValue(((event.clientY - rect.top) / rect.height) * printCanvasHeight, 0, printCanvasHeight),
+    }
+  }
+
+  function startCanvasDrag(event, block) {
+    if (event.button !== undefined && event.button !== 0) return
+    event.preventDefault()
+    event.stopPropagation()
+    setSelectedCanvasBlockId(block.id)
+    const point = getCanvasPoint(event)
+    setCanvasInteraction({
+      type: 'drag',
+      id: block.id,
+      startX: point.x,
+      startY: point.y,
+      x: Number(block.x || 0),
+      y: Number(block.y || 0),
+      width: Number(block.width || 1),
+      height: Number(block.height || 1),
+    })
+  }
+
+  function startCanvasResize(event, block, handle) {
+    if (event.button !== undefined && event.button !== 0) return
+    event.preventDefault()
+    event.stopPropagation()
+    setSelectedCanvasBlockId(block.id)
+    const point = getCanvasPoint(event)
+    setCanvasInteraction({
+      type: 'resize',
+      id: block.id,
+      handle,
+      startX: point.x,
+      startY: point.y,
+      x: Number(block.x || 0),
+      y: Number(block.y || 0),
+      width: Number(block.width || 1),
+      height: Number(block.height || 1),
+    })
+  }
+
+  useEffect(() => {
+    if (!canvasInteraction) return undefined
+
+    function handleMove(event) {
+      const point = getCanvasPoint(event)
+      const dx = point.x - canvasInteraction.startX
+      const dy = point.y - canvasInteraction.startY
+
+      updateCanvasBlock(canvasInteraction.id, () => {
+        if (canvasInteraction.type === 'drag') {
+          return {
+            x: clampValue(canvasInteraction.x + dx, 0, printCanvasWidth - canvasInteraction.width),
+            y: clampValue(canvasInteraction.y + dy, 0, printCanvasHeight - canvasInteraction.height),
+          }
+        }
+
+        const minWidth = 70
+        const minHeight = 42
+        let nextX = canvasInteraction.x
+        let nextY = canvasInteraction.y
+        let nextWidth = canvasInteraction.width
+        let nextHeight = canvasInteraction.height
+
+        if (canvasInteraction.handle.includes('e')) nextWidth = canvasInteraction.width + dx
+        if (canvasInteraction.handle.includes('s')) nextHeight = canvasInteraction.height + dy
+        if (canvasInteraction.handle.includes('w')) {
+          nextX = canvasInteraction.x + dx
+          nextWidth = canvasInteraction.width - dx
+        }
+        if (canvasInteraction.handle.includes('n')) {
+          nextY = canvasInteraction.y + dy
+          nextHeight = canvasInteraction.height - dy
+        }
+
+        if (nextWidth < minWidth) {
+          if (canvasInteraction.handle.includes('w')) nextX -= minWidth - nextWidth
+          nextWidth = minWidth
+        }
+        if (nextHeight < minHeight) {
+          if (canvasInteraction.handle.includes('n')) nextY -= minHeight - nextHeight
+          nextHeight = minHeight
+        }
+
+        nextX = clampValue(nextX, 0, printCanvasWidth - minWidth)
+        nextY = clampValue(nextY, 0, printCanvasHeight - minHeight)
+        nextWidth = clampValue(nextWidth, minWidth, printCanvasWidth - nextX)
+        nextHeight = clampValue(nextHeight, minHeight, printCanvasHeight - nextY)
+        return { x: nextX, y: nextY, width: nextWidth, height: nextHeight }
+      })
+    }
+
+    function handleUp() {
+      setCanvasInteraction(null)
+    }
+
+    window.addEventListener('pointermove', handleMove)
+    window.addEventListener('pointerup', handleUp)
+    window.addEventListener('pointercancel', handleUp)
+    return () => {
+      window.removeEventListener('pointermove', handleMove)
+      window.removeEventListener('pointerup', handleUp)
+      window.removeEventListener('pointercancel', handleUp)
+    }
+  }, [canvasInteraction])
 
   async function handleUpload(event) {
     const file = event.target.files?.[0]
@@ -723,6 +972,78 @@ export function PrintLabPage({ pieces = [] }) {
             </fieldset>
           ) : null}
 
+          {toolMode === 'canvas' ? (
+            <fieldset className="print-lab-control-group">
+              <legend>Canvas</legend>
+              <div className="print-lab-canvas-tools">
+                <button
+                  className="button"
+                  type="button"
+                  onClick={() => {
+                    const block = makeCanvasBlock('text', {
+                      text: 'New text block',
+                      x: 72,
+                      y: 72,
+                      width: 260,
+                      height: 86,
+                      fontSize: 24,
+                    })
+                    setCanvasBlocks((blocks) => [...blocks, block])
+                    setSelectedCanvasBlockId(block.id)
+                  }}
+                >
+                  Add Text
+                </button>
+                <button
+                  className="button"
+                  type="button"
+                  disabled={!currentImageUrl}
+                  onClick={() => {
+                    const block = makeCanvasBlock('image', {
+                      src: currentImageUrl,
+                      title: currentImageTitle || 'Image',
+                      x: 354,
+                      y: 92,
+                      width: 260,
+                      height: 220,
+                    })
+                    setCanvasBlocks((blocks) => [...blocks, block])
+                    setSelectedCanvasBlockId(block.id)
+                  }}
+                >
+                  Add Image
+                </button>
+              </div>
+              {selectedCanvasBlock ? (
+                <div className="print-lab-canvas-inspector">
+                  <strong>{selectedCanvasBlock.type === 'image' ? 'Image block' : 'Text block'}</strong>
+                  {selectedCanvasBlock.type === 'text' ? (
+                    <label className="print-lab-field">
+                      <span>Text</span>
+                      <textarea
+                        rows="4"
+                        value={selectedCanvasBlock.text}
+                        onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { text: event.target.value })}
+                      />
+                    </label>
+                  ) : (
+                    <label className="print-lab-field">
+                      <span>Image fit</span>
+                      <select
+                        value={selectedCanvasBlock.fit || 'cover'}
+                        onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { fit: event.target.value })}
+                      >
+                        {fitOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                      </select>
+                    </label>
+                  )}
+                </div>
+              ) : (
+                <p className="print-lab-empty-note">Select a canvas block to edit its content.</p>
+              )}
+            </fieldset>
+          ) : null}
+
           {!hasUsableOutput ? (
             <p className="print-lab-empty-note">
               {needsImageSource ? missingSourceMessage : 'Add text or select source material to enable output actions.'}
@@ -905,11 +1226,83 @@ export function PrintLabPage({ pieces = [] }) {
     )
   }
 
+  function renderCanvasPreview() {
+    return (
+      <article className="print-lab-preview print-lab-output print-lab-preview--canvas" ref={previewRef}>
+        <div
+          className="print-lab-canvas-stage"
+          ref={canvasRef}
+          onPointerDown={() => setSelectedCanvasBlockId('')}
+        >
+          {canvasBlocks.map((block) => {
+            const selected = block.id === selectedCanvasBlockId
+            const blockStyle = {
+              left: `${(Number(block.x || 0) / printCanvasWidth) * 100}%`,
+              top: `${(Number(block.y || 0) / printCanvasHeight) * 100}%`,
+              width: `${(Number(block.width || 1) / printCanvasWidth) * 100}%`,
+              height: `${(Number(block.height || 1) / printCanvasHeight) * 100}%`,
+            }
+
+            return (
+              <div
+                className={`print-lab-canvas-block print-lab-canvas-block--${block.type}${selected ? ' is-selected' : ''}`}
+                key={block.id}
+                style={blockStyle}
+                onPointerDown={(event) => startCanvasDrag(event, block)}
+              >
+                {block.type === 'image' ? (
+                  <img src={block.src} alt="" draggable={false} style={{ objectFit: block.fit || 'cover' }} />
+                ) : (
+                  <div
+                    className="print-lab-canvas-text"
+                    contentEditable={selected}
+                    suppressContentEditableWarning
+                    onPointerDown={(event) => {
+                      if (selected && event.detail > 1) {
+                        event.stopPropagation()
+                        return
+                      }
+                      startCanvasDrag(event, block)
+                    }}
+                    onBlur={(event) => updateCanvasBlock(block.id, { text: event.currentTarget.innerText })}
+                    style={{
+                      color: block.color,
+                      fontSize: `${block.fontSize}px`,
+                      fontWeight: block.fontWeight,
+                      lineHeight: block.lineHeight,
+                    }}
+                  >
+                    {block.text}
+                  </div>
+                )}
+                {selected ? (
+                  <>
+                    <span className="print-lab-canvas-block__label">{block.title || block.type}</span>
+                    {canvasResizeHandles.map((handle) => (
+                      <span
+                        className={`print-lab-canvas-resize print-lab-canvas-resize--${handle.id}`}
+                        key={handle.id}
+                        role="presentation"
+                        style={{ cursor: handle.cursor }}
+                        onPointerDown={(event) => startCanvasResize(event, block, handle.id)}
+                      />
+                    ))}
+                  </>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
+      </article>
+    )
+  }
+
   function renderPreview() {
     if (toolMode === 'tile') return renderTilePreview()
     if (toolMode === 'split') return renderSplitPreview()
     if (toolMode === 'page') return renderPagePreview()
-    return renderZinePreview()
+    if (toolMode === 'zine') return renderZinePreview()
+    return renderCanvasPreview()
   }
 
   return (

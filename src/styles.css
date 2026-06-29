@@ -14167,3 +14167,140 @@ a.button {
     max-height: 280px;
   }
 }
+
+/* PRINTLAB_27A_CANVAS_FOUNDATION */
+.print-lab-preview--canvas {
+  width: min(100%, 760px);
+  padding: 18px;
+  background: #ece7dd;
+}
+
+.print-lab-canvas-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(29, 35, 39, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 35, 39, 0.06) 1px, transparent 1px),
+    #fffdf8;
+  background-size: 24px 24px;
+  border: 1px solid #1d2327;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+  touch-action: none;
+}
+
+.print-lab-canvas-block {
+  position: absolute;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.7);
+  cursor: move;
+  outline: 0;
+  touch-action: none;
+  user-select: none;
+}
+
+.print-lab-canvas-block.is-selected {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.22);
+  z-index: 5;
+}
+
+.print-lab-canvas-block img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.print-lab-canvas-text {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  overflow: hidden;
+  color: #111;
+  white-space: pre-wrap;
+  cursor: inherit;
+}
+
+.print-lab-canvas-block.is-selected .print-lab-canvas-text {
+  cursor: text;
+}
+
+.print-lab-canvas-block__label {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  max-width: calc(100% - 12px);
+  overflow: hidden;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(34, 113, 177, 0.92);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.print-lab-canvas-resize {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #2271b1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.26);
+  touch-action: none;
+}
+
+.print-lab-canvas-resize--nw {
+  left: -7px;
+  top: -7px;
+}
+
+.print-lab-canvas-resize--ne {
+  right: -7px;
+  top: -7px;
+}
+
+.print-lab-canvas-resize--se {
+  right: -7px;
+  bottom: -7px;
+}
+
+.print-lab-canvas-resize--sw {
+  left: -7px;
+  bottom: -7px;
+}
+
+.print-lab-canvas-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.print-lab-canvas-inspector {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid #dcdcde;
+  border-radius: 7px;
+  background: #f6f7f7;
+}
+
+.print-lab-canvas-inspector > strong {
+  overflow: hidden;
+  color: #1d2327;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
