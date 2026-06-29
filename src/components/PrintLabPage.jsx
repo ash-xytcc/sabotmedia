@@ -20,7 +20,7 @@ const toolOptions = [
   { id: 'canvas', label: 'Canvas', shortLabel: 'C' },
 ]
 
-const fitOptions = ['cover', 'contain']
+const fitOptions = ['cover', 'contain', 'stretch']
 const orientationOptions = ['portrait', 'landscape']
 const imagePositionOptions = ['top', 'side', 'background']
 const defaultCanvasSize = { width: 720, height: 540 }
@@ -141,6 +141,14 @@ function makeCanvasBlock(type, patch = {}) {
     align: 'left',
     opacity: 1,
     fit: 'cover',
+    mediaX: patch.x ?? (type === 'image' ? 390 : 42),
+    mediaY: patch.y ?? (type === 'image' ? 58 : 46),
+    mediaWidth: patch.width ?? (type === 'image' ? 280 : 330),
+    mediaHeight: patch.height ?? (type === 'image' ? 260 : 92),
+    cropLeft: 0,
+    cropRight: 0,
+    cropTop: 0,
+    cropBottom: 0,
   }
   return { ...base, ...patch }
 }
@@ -157,6 +165,79 @@ function clampCanvasBlock(block, canvasSize = defaultCanvasSize) {
     x: clampValue(Number(block.x || 0), 0, Math.max(0, canvasSize.width - width)),
     y: clampValue(Number(block.y || 0), 0, Math.max(0, canvasSize.height - height)),
   }
+}
+
+function isCanvasCropBlock(block) {
+  return block?.type === 'image'
+}
+
+function getCanvasMediaFrame(block) {
+  if (!isCanvasCropBlock(block)) return null
+  const frameX = Number(block?.x || 0)
+  const frameY = Number(block?.y || 0)
+  const frameWidth = Math.max(1, Number(block?.width || 1))
+  const frameHeight = Math.max(1, Number(block?.height || 1))
+  return {
+    frameX,
+    frameY,
+    frameWidth,
+    frameHeight,
+    mediaX: Number(block?.mediaX ?? frameX),
+    mediaY: Number(block?.mediaY ?? frameY),
+    mediaWidth: Math.max(1, Number(block?.mediaWidth || frameWidth)),
+    mediaHeight: Math.max(1, Number(block?.mediaHeight || frameHeight)),
+  }
+}
+
+function deriveCanvasCropPatch(frame) {
+  const cropLeft = Math.max(0, Math.round(frame.frameX - frame.mediaX))
+  const cropTop = Math.max(0, Math.round(frame.frameY - frame.mediaY))
+  const cropRight = Math.max(0, Math.round((frame.mediaX + frame.mediaWidth) - (frame.frameX + frame.frameWidth)))
+  const cropBottom = Math.max(0, Math.round((frame.mediaY + frame.mediaHeight) - (frame.frameY + frame.frameHeight)))
+  return {
+    x: frame.frameX,
+    y: frame.frameY,
+    width: frame.frameWidth,
+    height: frame.frameHeight,
+    mediaX: frame.mediaX,
+    mediaY: frame.mediaY,
+    mediaWidth: frame.mediaWidth,
+    mediaHeight: frame.mediaHeight,
+    cropLeft,
+    cropRight,
+    cropTop,
+    cropBottom,
+  }
+}
+
+function applyCanvasCropDrag(resizeState, handle, dx, dy) {
+  const minVisible = 24
+  const mediaLeft = Number(resizeState?.mediaX ?? resizeState?.x ?? 0)
+  const mediaTop = Number(resizeState?.mediaY ?? resizeState?.y ?? 0)
+  const mediaWidth = Math.max(1, Number(resizeState?.mediaWidth || resizeState?.width || 1))
+  const mediaHeight = Math.max(1, Number(resizeState?.mediaHeight || resizeState?.height || 1))
+  const mediaRight = mediaLeft + mediaWidth
+  const mediaBottom = mediaTop + mediaHeight
+  let frameLeft = Number(resizeState?.x || 0)
+  let frameTop = Number(resizeState?.y || 0)
+  let frameRight = frameLeft + Math.max(1, Number(resizeState?.width || 1))
+  let frameBottom = frameTop + Math.max(1, Number(resizeState?.height || 1))
+
+  if (handle.includes('w')) frameLeft = clampValue(frameLeft + dx, mediaLeft, frameRight - minVisible)
+  if (handle.includes('e')) frameRight = clampValue(frameRight + dx, frameLeft + minVisible, mediaRight)
+  if (handle.includes('n')) frameTop = clampValue(frameTop + dy, mediaTop, frameBottom - minVisible)
+  if (handle.includes('s')) frameBottom = clampValue(frameBottom + dy, frameTop + minVisible, mediaBottom)
+
+  return deriveCanvasCropPatch({
+    frameX: frameLeft,
+    frameY: frameTop,
+    frameWidth: frameRight - frameLeft,
+    frameHeight: frameBottom - frameTop,
+    mediaX: mediaLeft,
+    mediaY: mediaTop,
+    mediaWidth,
+    mediaHeight,
+  })
 }
 
 function buildCanvasStarterBlocks({ title, body, imageUrl, imageTitle }) {
@@ -294,10 +375,11 @@ function buildExportHtml(previewHtml, title) {
     .print-lab-split-panel { min-height: 280px; border: 1px solid #111; background-repeat: no-repeat; background-color: #fff; }
     .print-lab-split-panel__print-image { display: none; width: 100%; height: 100%; }
     .print-lab-zine-spread { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .print-lab-preview--canvas { width: min(100%, 760px); }
-    .print-lab-canvas-stage { position: relative; width: 100%; aspect-ratio: var(--canvas-aspect, 4 / 3); background: #fff; overflow: hidden; }
+    .print-lab-preview--canvas { width: 100%; max-width: none; padding: 0; background: #1f2937; overflow: auto; }
+    .print-lab-canvas-viewport { display: grid; place-items: start center; min-height: 540px; padding: 28px; overflow: auto; background: #1f2937; }
+    .print-lab-canvas-stage { position: relative; background: #fff; overflow: hidden; transform-origin: top center; }
     .print-lab-canvas-block { position: absolute; box-sizing: border-box; overflow: hidden; }
-    .print-lab-canvas-block img { width: 100%; height: 100%; display: block; }
+    .print-lab-canvas-block img { position: absolute; display: block; max-width: none; }
     .print-lab-canvas-text { width: 100%; height: 100%; overflow: hidden; white-space: pre-wrap; }
     @media print { body { margin: 0; background: #fff; } .print-lab-preview { border: 0; box-shadow: none; } .print-lab-preview--poster-split { padding: 0; } .print-lab-split-grid { display: block; } .print-lab-split-panel { width: 100%; height: 9.5in; break-after: page; background-image: none !important; } .print-lab-split-panel__print-image { display: block; object-fit: cover; } }
   </style>
@@ -345,9 +427,11 @@ export function PrintLabPage({ pieces = [] }) {
   const [canvasBlocks, setCanvasBlocks] = useState([])
   const [selectedCanvasBlockId, setSelectedCanvasBlockId] = useState('')
   const [canvasInteraction, setCanvasInteraction] = useState(null)
+  const [canvasZoom, setCanvasZoom] = useState(1)
 
   const previewRef = useRef(null)
   const canvasRef = useRef(null)
+  const canvasViewportRef = useRef(null)
   const wordpressFeed = useWordPressPieces(pieces)
 
   useEffect(() => {
@@ -576,6 +660,20 @@ export function PrintLabPage({ pieces = [] }) {
     }))
   }
 
+  function setCanvasZoomClamped(value) {
+    setCanvasZoom(clampValue(Number(value) || 1, 0.2, 2))
+  }
+
+  function fitCanvasToViewport() {
+    const rect = canvasViewportRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const availableWidth = Math.max(240, rect.width - 56)
+    const availableHeight = Math.max(240, rect.height - 56)
+    const nextZoom = clampValue(Math.min(availableWidth / canvasSize.width, availableHeight / canvasSize.height), 0.2, 1.25)
+    setCanvasZoom(nextZoom)
+    canvasViewportRef.current.scrollTo({ left: 0, top: 0 })
+  }
+
   function addCanvasTextBlock() {
     const block = clampCanvasBlock(makeCanvasBlock('text', {
       text: 'New text block',
@@ -652,7 +750,16 @@ export function PrintLabPage({ pieces = [] }) {
       y: Number(block.y || 0) * scaleY,
       width: Number(block.width || 1) * scaleX,
       height: Number(block.height || 1) * scaleY,
+      mediaX: Number(block.mediaX ?? block.x ?? 0) * scaleX,
+      mediaY: Number(block.mediaY ?? block.y ?? 0) * scaleY,
+      mediaWidth: Number(block.mediaWidth ?? block.width ?? 1) * scaleX,
+      mediaHeight: Number(block.mediaHeight ?? block.height ?? 1) * scaleY,
+      cropLeft: Number(block.cropLeft || 0) * scaleX,
+      cropRight: Number(block.cropRight || 0) * scaleX,
+      cropTop: Number(block.cropTop || 0) * scaleY,
+      cropBottom: Number(block.cropBottom || 0) * scaleY,
     }, nextSize)))
+    window.setTimeout(fitCanvasToViewport, 0)
   }
 
   function getCanvasPoint(event) {
@@ -670,6 +777,7 @@ export function PrintLabPage({ pieces = [] }) {
     event.stopPropagation()
     setSelectedCanvasBlockId(block.id)
     const point = getCanvasPoint(event)
+    const mediaFrame = getCanvasMediaFrame(block)
     setCanvasInteraction({
       type: 'drag',
       id: block.id,
@@ -679,6 +787,14 @@ export function PrintLabPage({ pieces = [] }) {
       y: Number(block.y || 0),
       width: Number(block.width || 1),
       height: Number(block.height || 1),
+      mediaX: Number(mediaFrame?.mediaX ?? block.mediaX ?? block.x ?? 0),
+      mediaY: Number(mediaFrame?.mediaY ?? block.mediaY ?? block.y ?? 0),
+      mediaWidth: Number(mediaFrame?.mediaWidth ?? block.mediaWidth ?? block.width ?? 1),
+      mediaHeight: Number(mediaFrame?.mediaHeight ?? block.mediaHeight ?? block.height ?? 1),
+      cropLeft: Number(block.cropLeft || 0),
+      cropRight: Number(block.cropRight || 0),
+      cropTop: Number(block.cropTop || 0),
+      cropBottom: Number(block.cropBottom || 0),
       canvasWidth: canvasSize.width,
       canvasHeight: canvasSize.height,
     })
@@ -690,8 +806,11 @@ export function PrintLabPage({ pieces = [] }) {
     event.stopPropagation()
     setSelectedCanvasBlockId(block.id)
     const point = getCanvasPoint(event)
+    const mediaFrame = getCanvasMediaFrame(block)
+    const isCropHandle = isCanvasCropBlock(block) && handle.length === 1
     setCanvasInteraction({
       type: 'resize',
+      mode: isCropHandle ? 'crop' : 'resize',
       id: block.id,
       handle,
       startX: point.x,
@@ -700,6 +819,14 @@ export function PrintLabPage({ pieces = [] }) {
       y: Number(block.y || 0),
       width: Number(block.width || 1),
       height: Number(block.height || 1),
+      mediaX: Number(mediaFrame?.mediaX ?? block.mediaX ?? block.x ?? 0),
+      mediaY: Number(mediaFrame?.mediaY ?? block.mediaY ?? block.y ?? 0),
+      mediaWidth: Number(mediaFrame?.mediaWidth ?? block.mediaWidth ?? block.width ?? 1),
+      mediaHeight: Number(mediaFrame?.mediaHeight ?? block.mediaHeight ?? block.height ?? 1),
+      cropLeft: Number(block.cropLeft || 0),
+      cropRight: Number(block.cropRight || 0),
+      cropTop: Number(block.cropTop || 0),
+      cropBottom: Number(block.cropBottom || 0),
       canvasWidth: canvasSize.width,
       canvasHeight: canvasSize.height,
     })
@@ -717,12 +844,30 @@ export function PrintLabPage({ pieces = [] }) {
         height: canvasInteraction.canvasHeight || canvasSize.height,
       }
 
-      updateCanvasBlock(canvasInteraction.id, () => {
+      updateCanvasBlock(canvasInteraction.id, (block) => {
         if (canvasInteraction.type === 'drag') {
-          return {
-            x: clampValue(canvasInteraction.x + dx, 0, Math.max(0, bounds.width - canvasInteraction.width)),
-            y: clampValue(canvasInteraction.y + dy, 0, Math.max(0, bounds.height - canvasInteraction.height)),
+          const nextX = clampValue(canvasInteraction.x + dx, 0, Math.max(0, bounds.width - canvasInteraction.width))
+          const nextY = clampValue(canvasInteraction.y + dy, 0, Math.max(0, bounds.height - canvasInteraction.height))
+          if (isCanvasCropBlock(block)) {
+            return deriveCanvasCropPatch({
+              frameX: nextX,
+              frameY: nextY,
+              frameWidth: Number(canvasInteraction.width || 1),
+              frameHeight: Number(canvasInteraction.height || 1),
+              mediaX: Number(canvasInteraction.mediaX ?? canvasInteraction.x ?? 0) + (nextX - Number(canvasInteraction.x || 0)),
+              mediaY: Number(canvasInteraction.mediaY ?? canvasInteraction.y ?? 0) + (nextY - Number(canvasInteraction.y || 0)),
+              mediaWidth: Number(canvasInteraction.mediaWidth || canvasInteraction.width || 1),
+              mediaHeight: Number(canvasInteraction.mediaHeight || canvasInteraction.height || 1),
+            })
           }
+          return {
+            x: nextX,
+            y: nextY,
+          }
+        }
+
+        if (canvasInteraction.mode === 'crop' && isCanvasCropBlock(block)) {
+          return applyCanvasCropDrag(canvasInteraction, canvasInteraction.handle, dx, dy)
         }
 
         const minWidth = 70
@@ -756,6 +901,28 @@ export function PrintLabPage({ pieces = [] }) {
         nextY = clampValue(nextY, 0, Math.max(0, bounds.height - minHeight))
         nextWidth = clampValue(nextWidth, minWidth, bounds.width - nextX)
         nextHeight = clampValue(nextHeight, minHeight, bounds.height - nextY)
+        if (isCanvasCropBlock(block)) {
+          const baseWidth = Math.max(1, Number(canvasInteraction.width || 1))
+          const baseHeight = Math.max(1, Number(canvasInteraction.height || 1))
+          const scaleX = nextWidth / baseWidth
+          const scaleY = nextHeight / baseHeight
+          const cropOffsetX = Number(canvasInteraction.x || 0) - Number(canvasInteraction.mediaX || 0)
+          const cropOffsetY = Number(canvasInteraction.y || 0) - Number(canvasInteraction.mediaY || 0)
+          return {
+            x: nextX,
+            y: nextY,
+            width: nextWidth,
+            height: nextHeight,
+            mediaX: nextX - cropOffsetX * scaleX,
+            mediaY: nextY - cropOffsetY * scaleY,
+            mediaWidth: Math.max(minWidth, Number(canvasInteraction.mediaWidth || canvasInteraction.width || 1) * scaleX),
+            mediaHeight: Math.max(minHeight, Number(canvasInteraction.mediaHeight || canvasInteraction.height || 1) * scaleY),
+            cropLeft: Math.max(0, Number(canvasInteraction.cropLeft || 0) * scaleX),
+            cropRight: Math.max(0, Number(canvasInteraction.cropRight || 0) * scaleX),
+            cropTop: Math.max(0, Number(canvasInteraction.cropTop || 0) * scaleY),
+            cropBottom: Math.max(0, Number(canvasInteraction.cropBottom || 0) * scaleY),
+          }
+        }
         return { x: nextX, y: nextY, width: nextWidth, height: nextHeight }
       })
     }
@@ -773,6 +940,17 @@ export function PrintLabPage({ pieces = [] }) {
       window.removeEventListener('pointercancel', handleUp)
     }
   }, [canvasInteraction, canvasSize])
+
+  useEffect(() => {
+    if (toolMode !== 'canvas') return undefined
+    const timer = window.setTimeout(fitCanvasToViewport, 0)
+    const handleResize = () => fitCanvasToViewport()
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [toolMode, canvasPreset, canvasSize.width, canvasSize.height])
 
   async function handleUpload(event) {
     const file = event.target.files?.[0]
@@ -1388,74 +1566,108 @@ export function PrintLabPage({ pieces = [] }) {
     return (
       <article className="print-lab-preview print-lab-output print-lab-preview--canvas" ref={previewRef}>
         <div
-          className="print-lab-canvas-stage"
-          ref={canvasRef}
-          style={{
-            '--canvas-aspect': `${canvasSize.width} / ${canvasSize.height}`,
-            backgroundColor: canvasBackground,
-          }}
-          onPointerDown={() => setSelectedCanvasBlockId('')}
+          className="print-lab-canvas-viewport"
+          ref={canvasViewportRef}
         >
-          {canvasBlocks.map((block) => {
-            const selected = block.id === selectedCanvasBlockId
-            const blockStyle = {
-              left: `${(Number(block.x || 0) / canvasSize.width) * 100}%`,
-              top: `${(Number(block.y || 0) / canvasSize.height) * 100}%`,
-              width: `${(Number(block.width || 1) / canvasSize.width) * 100}%`,
-              height: `${(Number(block.height || 1) / canvasSize.height) * 100}%`,
-              opacity: block.opacity ?? 1,
-            }
+          <div
+            className="print-lab-canvas-stage"
+            ref={canvasRef}
+            style={{
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+              transform: `scale(${canvasZoom})`,
+              backgroundColor: canvasBackground,
+            }}
+            onPointerDown={() => setSelectedCanvasBlockId('')}
+          >
+            {canvasBlocks.map((block) => {
+              const selected = block.id === selectedCanvasBlockId
+              const blockWidth = Math.max(1, Number(block.width || 1))
+              const blockHeight = Math.max(1, Number(block.height || 1))
+              const mediaFrame = getCanvasMediaFrame(block)
+              const fit = block.fit || 'cover'
+              const blockStyle = {
+                left: `${Number(block.x || 0)}px`,
+                top: `${Number(block.y || 0)}px`,
+                width: `${blockWidth}px`,
+                height: `${blockHeight}px`,
+                opacity: block.opacity ?? 1,
+              }
+              const mediaStyle = block.type === 'image' && mediaFrame ? (
+                fit === 'stretch'
+                  ? {
+                    left: 0,
+                    top: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'fill',
+                  }
+                  : {
+                    left: `${mediaFrame.mediaX - Number(block.x || 0)}px`,
+                    top: `${mediaFrame.mediaY - Number(block.y || 0)}px`,
+                    width: `${mediaFrame.mediaWidth}px`,
+                    height: `${mediaFrame.mediaHeight}px`,
+                    objectFit: fit,
+                  }
+              ) : null
 
-            return (
-              <div
-                className={`print-lab-canvas-block print-lab-canvas-block--${block.type}${selected ? ' is-selected' : ''}`}
-                key={block.id}
-                style={blockStyle}
-                onPointerDown={(event) => startCanvasDrag(event, block)}
-              >
-                {block.type === 'image' ? (
-                  <img src={block.src} alt="" draggable={false} style={{ objectFit: block.fit || 'cover' }} />
-                ) : (
-                  <div
-                    className="print-lab-canvas-text"
-                    contentEditable={selected}
-                    suppressContentEditableWarning
-                    onPointerDown={(event) => {
-                      if (selected && event.detail > 1) {
-                        event.stopPropagation()
-                        return
-                      }
-                      startCanvasDrag(event, block)
-                    }}
-                    onBlur={(event) => updateCanvasBlock(block.id, { text: event.currentTarget.innerText })}
-                    style={{
-                      color: block.color,
-                      fontSize: `${block.fontSize}px`,
-                      fontWeight: block.fontWeight,
-                      lineHeight: block.lineHeight,
-                      textAlign: block.align || 'left',
-                    }}
-                  >
-                    {block.text}
-                  </div>
-                )}
-                {selected ? (
-                  <>
-                    <span className="print-lab-canvas-block__label">{block.title || block.type}</span>
-                    {canvasResizeHandles.map((handle) => (
-                      <span
-                        className={`print-lab-canvas-resize print-lab-canvas-resize--${handle.id}`}
-                        key={handle.id}
-                        role="presentation"
-                        style={{ cursor: handle.cursor }}
-                        onPointerDown={(event) => startCanvasResize(event, block, handle.id)}
-                      />
-                    ))}
-                  </>
-                ) : null}
-              </div>
-            )
-          })}
+              return (
+                <div
+                  className={`print-lab-canvas-block print-lab-canvas-block--${block.type}${selected ? ' is-selected' : ''}`}
+                  key={block.id}
+                  style={blockStyle}
+                  onPointerDown={(event) => startCanvasDrag(event, block)}
+                >
+                  {block.type === 'image' ? (
+                    <img src={block.src} alt="" draggable={false} style={mediaStyle} />
+                  ) : (
+                    <div
+                      className="print-lab-canvas-text"
+                      contentEditable={selected}
+                      suppressContentEditableWarning
+                      onPointerDown={(event) => {
+                        if (selected && event.detail > 1) {
+                          event.stopPropagation()
+                          return
+                        }
+                        startCanvasDrag(event, block)
+                      }}
+                      onBlur={(event) => updateCanvasBlock(block.id, { text: event.currentTarget.innerText })}
+                      style={{
+                        color: block.color,
+                        fontSize: `${block.fontSize}px`,
+                        fontWeight: block.fontWeight,
+                        lineHeight: block.lineHeight,
+                        textAlign: block.align || 'left',
+                      }}
+                    >
+                      {block.text}
+                    </div>
+                  )}
+                  {selected ? (
+                    <>
+                      <span className="print-lab-canvas-block__label">{block.title || block.type}</span>
+                      {canvasResizeHandles.map((handle) => {
+                        const actionLabel = block.type === 'image' && handle.id.length === 1 ? 'Crop image' : 'Resize block'
+                        return (
+                          <span
+                            aria-label={`${actionLabel}: ${handle.id}`}
+                            className={`print-lab-canvas-resize print-lab-canvas-resize--${handle.id}`}
+                            key={handle.id}
+                            role="button"
+                            tabIndex="-1"
+                            title={actionLabel}
+                            style={{ cursor: handle.cursor }}
+                            onPointerDown={(event) => startCanvasResize(event, block, handle.id)}
+                          />
+                        )
+                      })}
+                    </>
+                  ) : null}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </article>
     )
@@ -1471,17 +1683,17 @@ export function PrintLabPage({ pieces = [] }) {
 
   return (
     <AdminFrame>
-      <main className="page wp-admin-screen print-lab-page">
+      <main className={`page wp-admin-screen print-lab-page${toolMode === 'canvas' ? ' print-lab-page--canvas-mode' : ''}`}>
         <div className="wp-screen-header print-lab-screen-header">
           <h1>Printlab</h1>
           <Link className="button" to="/content">Back to Posts</Link>
         </div>
 
-        <section className="print-lab-desk" aria-label="Printlab production lab">
+        <section className={`print-lab-desk${toolMode === 'canvas' ? ' print-lab-desk--canvas-mode' : ''}`} aria-label="Printlab production lab">
           {renderSourcePanel()}
 
           <div className="print-lab-preview-wrap" aria-live="polite">
-            <div className="print-lab-preview-status">
+            <div className={toolMode === 'canvas' ? 'print-lab-canvas-topbar' : 'print-lab-preview-status'}>
               <div>
                 <span>Preview</span>
                 <strong>{currentTool.label}</strong>
@@ -1494,6 +1706,15 @@ export function PrintLabPage({ pieces = [] }) {
                 <span>Output</span>
                 <strong>{outputHint}</strong>
               </div>
+              {toolMode === 'canvas' ? (
+                <div className="print-lab-canvas-zoombar" aria-label="Canvas zoom controls">
+                  <button className="button" type="button" onClick={fitCanvasToViewport}>Fit</button>
+                  <button className="button" type="button" onClick={() => setCanvasZoomClamped(canvasZoom - 0.1)} aria-label="Zoom out">-</button>
+                  <button className="button" type="button" onClick={() => setCanvasZoomClamped(1)}>100%</button>
+                  <button className="button" type="button" onClick={() => setCanvasZoomClamped(canvasZoom + 0.1)} aria-label="Zoom in">+</button>
+                  <span>{Math.round(canvasZoom * 100)}%</span>
+                </div>
+              ) : null}
             </div>
             {renderPreview()}
           </div>

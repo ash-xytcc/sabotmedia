@@ -14382,3 +14382,441 @@ a.button {
   color: #646970;
   font-size: 11px;
 }
+
+/* PRINTLAB_27C_TRUE_STUDIO_MODE */
+.print-lab-page--canvas-mode {
+  padding: 8px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-screen-header {
+  margin-bottom: 8px;
+}
+
+.print-lab-desk--canvas-mode {
+  grid-template-columns: minmax(168px, 210px) minmax(0, 1fr) minmax(264px, 318px);
+  gap: 8px;
+  width: 100%;
+  max-width: none;
+  min-height: calc(100vh - 88px);
+  overflow: hidden;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-pane,
+.print-lab-desk--canvas-mode .print-lab-tool-panel,
+.print-lab-desk--canvas-mode .print-lab-preview-wrap {
+  min-width: 0;
+  height: calc(100vh - 96px);
+  max-height: none;
+  overflow: hidden;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-pane .print-lab-pane-body,
+.print-lab-desk--canvas-mode .print-lab-tool-scroll {
+  max-height: none;
+  overflow: auto;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-row {
+  grid-template-columns: 42px minmax(0, 1fr);
+  padding: 7px;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-row__thumb {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-row__content strong {
+  font-size: 12px;
+}
+
+.print-lab-desk--canvas-mode .print-lab-preview-wrap {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: 0;
+  border-color: #0f172a;
+  background: #111827;
+}
+
+.print-lab-canvas-topbar {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(80px, 1fr)) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.print-lab-canvas-topbar > div {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.print-lab-canvas-topbar span {
+  min-width: 0;
+  overflow: hidden;
+  color: #9ca3af;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.print-lab-canvas-topbar strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #f9fafb;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.print-lab-canvas-zoombar {
+  display: flex !important;
+  flex-wrap: nowrap;
+  gap: 5px !important;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.print-lab-canvas-zoombar .button {
+  min-height: 28px;
+  padding: 3px 8px;
+  border-color: #374151;
+  background: #1f2937;
+  color: #f9fafb;
+  line-height: 1.2;
+}
+
+.print-lab-canvas-zoombar .button:hover {
+  border-color: #60a5fa;
+  background: #253244;
+  color: #fff;
+}
+
+.print-lab-canvas-zoombar > span {
+  min-width: 42px;
+  color: #d1d5db;
+  text-align: right;
+}
+
+.print-lab-desk--canvas-mode .print-lab-preview--canvas {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #1f2937;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.print-lab-canvas-viewport {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  place-items: start center;
+  overflow: auto;
+  padding: 28px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    #1f2937;
+  background-size: 28px 28px;
+}
+
+.print-lab-canvas-stage {
+  position: relative;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.75);
+  background:
+    linear-gradient(rgba(29, 35, 39, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 35, 39, 0.055) 1px, transparent 1px),
+    #fffdf8;
+  background-size: 24px 24px;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transform-origin: top center;
+  touch-action: none;
+}
+
+.print-lab-canvas-block {
+  position: absolute;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: move;
+  outline: 0;
+  touch-action: none;
+  user-select: none;
+}
+
+.print-lab-canvas-block.is-selected {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.7), 0 0 0 5px rgba(37, 99, 235, 0.16);
+  z-index: 20;
+}
+
+.print-lab-canvas-block img {
+  position: absolute;
+  display: block;
+  max-width: none;
+  pointer-events: none;
+}
+
+.print-lab-canvas-text {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  overflow: hidden;
+  color: #111;
+  cursor: inherit;
+  white-space: pre-wrap;
+}
+
+.print-lab-canvas-block.is-selected .print-lab-canvas-text {
+  cursor: text;
+}
+
+.print-lab-canvas-block__label {
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  max-width: calc(100% - 14px);
+  overflow: hidden;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.88);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.print-lab-canvas-resize {
+  position: absolute;
+  z-index: 30;
+  border: 2px solid #fff;
+  background: #2563eb;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.28);
+  touch-action: none;
+}
+
+.print-lab-canvas-resize--nw,
+.print-lab-canvas-resize--ne,
+.print-lab-canvas-resize--se,
+.print-lab-canvas-resize--sw {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.print-lab-canvas-resize--n,
+.print-lab-canvas-resize--s {
+  width: 34px;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.print-lab-canvas-resize--e,
+.print-lab-canvas-resize--w {
+  width: 8px;
+  height: 34px;
+  border-radius: 999px;
+}
+
+.print-lab-canvas-block--image.is-selected .print-lab-canvas-resize--n,
+.print-lab-canvas-block--image.is-selected .print-lab-canvas-resize--e,
+.print-lab-canvas-block--image.is-selected .print-lab-canvas-resize--s,
+.print-lab-canvas-block--image.is-selected .print-lab-canvas-resize--w {
+  background: #f59e0b;
+}
+
+.print-lab-canvas-resize--nw {
+  left: -7px;
+  top: -7px;
+}
+
+.print-lab-canvas-resize--n {
+  left: calc(50% - 17px);
+  top: -5px;
+}
+
+.print-lab-canvas-resize--ne {
+  right: -7px;
+  top: -7px;
+}
+
+.print-lab-canvas-resize--e {
+  right: -5px;
+  top: calc(50% - 17px);
+}
+
+.print-lab-canvas-resize--se {
+  right: -7px;
+  bottom: -7px;
+}
+
+.print-lab-canvas-resize--s {
+  left: calc(50% - 17px);
+  bottom: -5px;
+}
+
+.print-lab-canvas-resize--sw {
+  left: -7px;
+  bottom: -7px;
+}
+
+.print-lab-canvas-resize--w {
+  left: -5px;
+  top: calc(50% - 17px);
+}
+
+.print-lab-desk--canvas-mode .print-lab-control-group {
+  padding: 10px;
+}
+
+.print-lab-desk--canvas-mode .print-lab-layout-selector {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.print-lab-desk--canvas-mode .print-lab-layout-selector button {
+  min-width: 0;
+  padding: 7px 4px;
+}
+
+.print-lab-desk--canvas-mode .print-lab-layout-selector strong {
+  display: none;
+}
+
+.print-lab-canvas-document {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 68px;
+  gap: 8px;
+  align-items: end;
+}
+
+.print-lab-canvas-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.print-lab-canvas-tools .button {
+  min-width: 0;
+  padding-right: 6px;
+  padding-left: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.print-lab-canvas-inspector {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid #dcdcde;
+  border-radius: 7px;
+  background: #f6f7f7;
+}
+
+.print-lab-canvas-layers {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+@media (max-width: 1120px) {
+  .print-lab-desk--canvas-mode {
+    grid-template-columns: minmax(150px, 180px) minmax(0, 1fr) minmax(244px, 286px);
+  }
+
+  .print-lab-canvas-topbar {
+    grid-template-columns: repeat(2, minmax(80px, 1fr));
+  }
+
+  .print-lab-canvas-zoombar {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 900px) {
+  .print-lab-desk--canvas-mode {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .print-lab-desk--canvas-mode .print-lab-source-pane,
+  .print-lab-desk--canvas-mode .print-lab-tool-panel,
+  .print-lab-desk--canvas-mode .print-lab-preview-wrap {
+    height: auto;
+    max-height: none;
+  }
+
+  .print-lab-desk--canvas-mode .print-lab-preview-wrap {
+    height: 72vh;
+    min-height: 520px;
+  }
+}
+
+@media print {
+  .print-lab-canvas-topbar {
+    display: none !important;
+  }
+
+  .print-lab-preview--canvas {
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    padding: 0 !important;
+    background: #fff !important;
+    overflow: visible !important;
+  }
+
+  .print-lab-canvas-viewport {
+    display: block !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .print-lab-canvas-stage {
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .print-lab-canvas-block {
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .print-lab-canvas-block__label,
+  .print-lab-canvas-resize {
+    display: none !important;
+  }
+}
