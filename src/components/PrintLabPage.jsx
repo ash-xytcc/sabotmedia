@@ -8,21 +8,20 @@ import { AdminFrame } from './AdminRail'
 
 const sourceOptions = [
   { id: 'upload', label: 'Upload Image' },
-  { id: 'media', label: 'Media Library / Existing Image' },
-  { id: 'post', label: 'Existing Post' },
+  { id: 'media', label: 'Media Library' },
+  { id: 'post', label: 'CMS Post' },
 ]
 
 const toolOptions = [
   { id: 'tile', label: 'Tile Sheet', shortLabel: 'T' },
   { id: 'split', label: 'Poster Split', shortLabel: 'S' },
   { id: 'page', label: 'Page Layout', shortLabel: 'P' },
-  { id: 'zine', label: 'Zine Sheet', shortLabel: 'Z' },
+  { id: 'zine', label: 'Half-Fold Zine', shortLabel: 'Z' },
 ]
 
 const fitOptions = ['cover', 'contain']
 const orientationOptions = ['portrait', 'landscape']
 const imagePositionOptions = ['top', 'side', 'background']
-const zinePanelOptions = [4, 6, 8]
 
 function getPieceId(piece) {
   return String(piece?.id || piece?.slug || piece?.sourcePostId || piece?.title || '')
@@ -152,26 +151,6 @@ function dedupeImageItems(items) {
   return next
 }
 
-function chunkText(text = '', count = 4, limit = 240) {
-  const words = String(text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
-  const chunks = []
-  let current = ''
-
-  for (const word of words) {
-    const next = current ? `${current} ${word}` : word
-    if (next.length > limit && current) {
-      chunks.push(current)
-      current = word
-      if (chunks.length >= count) break
-    } else {
-      current = next
-    }
-  }
-
-  if (current && chunks.length < count) chunks.push(current)
-  return chunks.map((chunk) => truncateText(chunk, limit))
-}
-
 function renderParagraphs(text) {
   const paragraphs = String(text || '').split(/\n{2,}/).map((line) => line.trim()).filter(Boolean)
   if (!paragraphs.length) return null
@@ -205,9 +184,10 @@ function buildExportHtml(previewHtml, title) {
     body { margin: 24px; font-family: Arial, sans-serif; background: #e5e5e5; color: #111; }
     img { max-width: 100%; }
     .print-lab-preview { margin: 0 auto; background: #fffdf8; color: #111; border: 1px solid #ccc; padding: 24px; }
-    .print-lab-tile-grid, .print-lab-split-grid, .print-lab-zine-grid { display: grid; gap: 10px; }
+    .print-lab-tile-grid, .print-lab-split-grid, .print-lab-zine-spread { display: grid; gap: 10px; }
     .print-lab-page-preview { min-height: 720px; }
     .print-lab-split-panel { min-height: 280px; border: 1px solid #111; background-repeat: no-repeat; background-color: #fff; }
+    .print-lab-zine-spread { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     @media print { body { margin: 0; background: #fff; } .print-lab-preview { border: 0; box-shadow: none; } }
   </style>
 </head>
@@ -245,7 +225,6 @@ export function PrintLabPage({ pieces = [] }) {
   const [pageImagePosition, setPageImagePosition] = useState('top')
   const [pageFooter, setPageFooter] = useState('')
 
-  const [zinePanelCount, setZinePanelCount] = useState(6)
   const [zineTitle, setZineTitle] = useState('')
   const [zineBody, setZineBody] = useState('')
   const [zineFooter, setZineFooter] = useState('')
@@ -264,7 +243,7 @@ export function PrintLabPage({ pieces = [] }) {
         if (cancelled) return
         setNativePieces(Array.isArray(loaded) ? loaded : [])
         setNativeState('loaded')
-      } catch (err) {
+      } catch {
         if (cancelled) return
         setNativePieces([])
         setNativeState('error')
@@ -505,9 +484,7 @@ export function PrintLabPage({ pieces = [] }) {
                   <strong>{uploadImage.title}</strong>
                   <span>{uploadImage.meta}</span>
                 </div>
-              ) : (
-                <p className="print-lab-empty-note">Choose an image file to use Tile Sheet or Poster Split.</p>
-              )}
+              ) : null}
             </div>
           ) : null}
 
@@ -539,7 +516,7 @@ export function PrintLabPage({ pieces = [] }) {
                   })}
                 </div>
               ) : (
-                <p className="print-lab-empty-note">No existing images are available yet. Upload an image or choose an existing post.</p>
+                <p className="print-lab-empty-note">No existing images are available.</p>
               )}
             </div>
           ) : null}
@@ -548,10 +525,10 @@ export function PrintLabPage({ pieces = [] }) {
             <div className="print-lab-source-section">
               {isLoading ? <p className="print-lab-empty-note">Loading published posts...</p> : null}
               {!isLoading && !publishedPieces.length ? (
-                <p className="print-lab-empty-note">No published posts are available in the merged feed.</p>
+                <p className="print-lab-empty-note">No published posts are available.</p>
               ) : null}
               {publishedPieces.length ? (
-                <div className="print-lab-source-list" role="listbox" aria-label="Existing posts">
+                <div className="print-lab-source-list" role="listbox" aria-label="CMS posts">
                   {publishedPieces.map((piece) => {
                     const id = getPieceId(piece)
                     const image = getFeaturedImage(piece)
@@ -654,11 +631,11 @@ export function PrintLabPage({ pieces = [] }) {
               <div className="print-lab-control-grid">
                 <label className="print-lab-field">
                   <span>Pages wide</span>
-                  <input type="number" min="1" max="5" value={splitWide} onChange={(event) => setSplitWide(clampNumber(event.target.value, 1, 5))} />
+                  <input type="number" min="1" max="4" value={splitWide} onChange={(event) => setSplitWide(clampNumber(event.target.value, 1, 4))} />
                 </label>
                 <label className="print-lab-field">
                   <span>Pages tall</span>
-                  <input type="number" min="1" max="5" value={splitTall} onChange={(event) => setSplitTall(clampNumber(event.target.value, 1, 5))} />
+                  <input type="number" min="1" max="4" value={splitTall} onChange={(event) => setSplitTall(clampNumber(event.target.value, 1, 4))} />
                 </label>
               </div>
               <label className="print-lab-field">
@@ -706,19 +683,13 @@ export function PrintLabPage({ pieces = [] }) {
 
           {toolMode === 'zine' ? (
             <fieldset className="print-lab-control-group">
-              <legend>Zine Sheet</legend>
+              <legend>Half-Fold Zine</legend>
               <label className="print-lab-field">
-                <span>Panel count</span>
-                <select value={zinePanelCount} onChange={(event) => setZinePanelCount(Number(event.target.value))}>
-                  {zinePanelOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                </select>
-              </label>
-              <label className="print-lab-field">
-                <span>Title</span>
+                <span>Cover title</span>
                 <input value={zineTitle} onChange={(event) => setZineTitle(event.target.value)} />
               </label>
               <label className="print-lab-field">
-                <span>Body text</span>
+                <span>Inside text</span>
                 <textarea rows="7" value={zineBody} onChange={(event) => setZineBody(event.target.value)} />
               </label>
               <label className="print-lab-field">
@@ -872,70 +843,31 @@ export function PrintLabPage({ pieces = [] }) {
   }
 
   function renderZinePreview() {
-    const bodyChunks = chunkText(zineBody, zinePanelCount, 230)
-    const panels = []
     const coverTitle = zineTitle.trim() || truncateText(zineBody, 90)
-
-    if (coverTitle) {
-      panels.push({
-        type: 'cover',
-        content: (
-          <>
-            <span>Zine Sheet</span>
-            <h2>{coverTitle}</h2>
-          </>
-        ),
-      })
-    }
-
-    if (zineIncludeImage && currentImageUrl) {
-      panels.push({
-        type: 'image',
-        content: <img src={currentImageUrl} alt="" />,
-      })
-    }
-
-    if (zineBody.trim()) {
-      panels.push({
-        type: 'pull',
-        content: <p>{truncateText(zineBody, 150)}</p>,
-      })
-    }
-
-    bodyChunks.forEach((chunk, index) => {
-      panels.push({
-        type: 'body',
-        content: <p>{chunk}</p>,
-        key: `body-${index}`,
-      })
-    })
-
-    if (zineFooter.trim()) {
-      panels.push({
-        type: 'meta',
-        content: <p>{zineFooter}</p>,
-      })
-    }
-
-    while (panels.length < zinePanelCount) {
-      panels.push({ type: 'accent', content: null })
-    }
+    const hasImage = zineIncludeImage && currentImageUrl
 
     return (
-      <article
-        className={`print-lab-preview print-lab-output print-lab-preview--zine-sheet print-lab-preview--zine-${zinePanelCount}`}
-        ref={previewRef}
-      >
+      <article className="print-lab-preview print-lab-output print-lab-preview--half-fold-zine" ref={previewRef}>
         {zineHasContent ? (
-          <div className="print-lab-zine-grid">
-            {panels.slice(0, zinePanelCount).map((panel, index) => (
-              <section className={`print-lab-zine-panel print-lab-zine-panel--${panel.type}`} key={`${panel.type}-${panel.key || index}`}>
-                {panel.content}
-              </section>
-            ))}
+          <div className="print-lab-zine-spread">
+            <section className="print-lab-zine-panel print-lab-zine-panel--cover">
+              <span>Half-Fold Zine</span>
+              {coverTitle ? <h2>{coverTitle}</h2> : null}
+              {zineFooter.trim() ? <p>{zineFooter}</p> : null}
+            </section>
+            <section className="print-lab-zine-panel print-lab-zine-panel--inside">
+              {hasImage ? (
+                <figure>
+                  <img src={currentImageUrl} alt="" />
+                </figure>
+              ) : null}
+              <div className="print-lab-zine-copy">
+                {renderParagraphs(zineBody)}
+              </div>
+            </section>
           </div>
         ) : (
-          <p className="print-lab-preview-empty">Add text or image source to build a zine sheet.</p>
+          <p className="print-lab-preview-empty">Add text or image source to build a half-fold zine.</p>
         )}
       </article>
     )
