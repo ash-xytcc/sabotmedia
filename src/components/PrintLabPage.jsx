@@ -52,10 +52,25 @@ function getPreviewHtml(piece) {
   return piece?.bodyHtml || piece?.contentHtml || piece?.content || piece?.body || ''
 }
 
+function getExcerpt(piece) {
+  return piece?.excerpt || piece?.summary || piece?.description || ''
+}
+
+const layoutOptions = [
+  { id: 'article', label: 'Article' },
+  { id: 'poster', label: 'Poster' },
+  { id: 'zine', label: 'Zine Sheet' },
+]
+
 export function PrintLabPage({ pieces = [] }) {
   const [nativePieces, setNativePieces] = useState([])
   const [nativeState, setNativeState] = useState('loading')
   const [selectedId, setSelectedId] = useState('')
+  const [layout, setLayout] = useState('article')
+  const [showImage, setShowImage] = useState(true)
+  const [showMetadata, setShowMetadata] = useState(true)
+  const [showExcerpt, setShowExcerpt] = useState(true)
+  const [showColophon, setShowColophon] = useState(true)
   const wordpressFeed = useWordPressPieces(pieces)
 
   useEffect(() => {
@@ -104,7 +119,11 @@ export function PrintLabPage({ pieces = [] }) {
   const selectedPiece = publishedPieces.find((piece) => getPieceId(piece) === selectedId) || null
   const selectedImage = getFeaturedImage(selectedPiece)
   const previewHtml = getPreviewHtml(selectedPiece)
+  const selectedExcerpt = getExcerpt(selectedPiece)
+  const selectedContentType = getContentType(selectedPiece)
+  const selectedPublishedAt = getPublishedAtLabel(selectedPiece)
   const isLoading = nativeState === 'loading' && wordpressFeed.state === 'loading' && !publishedPieces.length
+  const selectedTitle = selectedPiece?.title || 'Untitled'
 
   return (
     <AdminFrame>
@@ -114,21 +133,23 @@ export function PrintLabPage({ pieces = [] }) {
           <Link className="button" to="/content">Back to Posts</Link>
         </div>
 
-        <section className="wp-meta-box print-lab-controls">
-          <h2>Published source posts</h2>
-          <p className="description">
-            Choose a published post from the merged native and imported feed to preview its print source material.
-          </p>
-
+        <section className="print-lab-status" aria-live="polite">
           {isLoading ? <p className="description">Loading published posts...</p> : null}
 
           {!isLoading && !publishedPieces.length ? (
             <p className="description">No published posts are available in the merged feed yet.</p>
           ) : null}
+        </section>
 
-          {publishedPieces.length ? (
-            <div className="print-lab-source-layout">
-              <div className="print-lab-post-list" role="list" aria-label="Published posts">
+        {publishedPieces.length ? (
+          <section className="print-lab-desk" aria-label="Printlab production desk">
+            <aside className="print-lab-source-pane" aria-label="Published source posts">
+              <div className="print-lab-pane-header">
+                <h2>Sources</h2>
+                <span>{publishedPieces.length}</span>
+              </div>
+
+              <div className="print-lab-post-list" role="listbox" aria-label="Published posts">
                 {publishedPieces.map((piece) => {
                   const id = getPieceId(piece)
                   const image = getFeaturedImage(piece)
@@ -136,41 +157,48 @@ export function PrintLabPage({ pieces = [] }) {
 
                   return (
                     <button
-                      className={`print-lab-post-card${selected ? ' is-selected' : ''}`}
+                      className={`print-lab-source-row${selected ? ' is-selected' : ''}`}
                       key={id}
                       type="button"
-                      role="listitem"
-                      aria-pressed={selected}
+                      role="option"
+                      aria-selected={selected}
                       onClick={() => setSelectedId(id)}
                     >
                       {image ? (
-                        <img className="print-lab-post-card__thumb" src={image} alt="" loading="lazy" />
+                        <img className="print-lab-source-row__thumb" src={image} alt="" loading="lazy" />
                       ) : (
-                        <span className="print-lab-post-card__thumb print-lab-post-card__thumb--empty" aria-hidden="true">No image</span>
+                        <span className="print-lab-source-row__thumb print-lab-source-row__thumb--empty" aria-hidden="true" />
                       )}
-                      <span className="print-lab-post-card__content">
+                      <span className="print-lab-source-row__content">
                         <strong>{piece.title || 'Untitled'}</strong>
-                        <span>{getContentType(piece)}</span>
-                        <span>{getPublishedAtLabel(piece)}</span>
+                        <span>
+                          {getContentType(piece)}
+                          {getPublishedAt(piece) ? ` / ${getPublishedAtLabel(piece)}` : ''}
+                        </span>
                       </span>
                     </button>
                   )
                 })}
               </div>
+            </aside>
 
-              <div className="print-lab-preview-wrap" aria-live="polite">
-                <h2>Preview</h2>
+            <div className="print-lab-preview-wrap" aria-live="polite">
+              <article className={`print-lab-preview print-lab-preview--${layout}`}>
                 {selectedPiece ? (
-                  <article className="print-lab-preview print-lab-preview--single-page">
+                  <>
                     <header className="print-lab-preview__header">
-                      <p className="print-lab-preview__eyebrow">
-                        {getContentType(selectedPiece)} / {getPublishedAtLabel(selectedPiece)}
-                      </p>
-                      <h3>{selectedPiece.title || 'Untitled'}</h3>
-                      {selectedPiece.excerpt ? <p className="print-lab-preview__excerpt">{selectedPiece.excerpt}</p> : null}
+                      {showMetadata ? (
+                        <p className="print-lab-preview__eyebrow">
+                          {selectedContentType} / {selectedPublishedAt}
+                        </p>
+                      ) : null}
+                      <h2>{selectedTitle}</h2>
+                      {showExcerpt && selectedExcerpt ? (
+                        <p className="print-lab-preview__excerpt">{selectedExcerpt}</p>
+                      ) : null}
                     </header>
 
-                    {selectedImage ? (
+                    {showImage && selectedImage ? (
                       <figure className="print-lab-preview__hero">
                         <img src={selectedImage} alt="" />
                       </figure>
@@ -179,14 +207,68 @@ export function PrintLabPage({ pieces = [] }) {
                     <div className="print-lab-preview__body post-body__content">
                       {previewHtml ? renderImportedBody(previewHtml, 'print') : <p>No body content is available for this post.</p>}
                     </div>
-                  </article>
+
+                    {showColophon ? (
+                      <footer className="print-lab-preview__colophon">
+                        <strong>SABOT MEDIA</strong>
+                        <span>Printlab proof / {selectedContentType} / {selectedPublishedAt}</span>
+                      </footer>
+                    ) : null}
+                  </>
                 ) : (
                   <p className="description">Select a published post to preview its source material.</p>
                 )}
-              </div>
+              </article>
             </div>
-          ) : null}
-        </section>
+
+            <aside className="print-lab-tool-panel" aria-label="Print controls">
+              <div className="print-lab-pane-header">
+                <h2>Controls</h2>
+              </div>
+
+              <fieldset className="print-lab-control-group">
+                <legend>Layout</legend>
+                <div className="print-lab-layout-selector">
+                  {layoutOptions.map((option) => (
+                    <button
+                      className={layout === option.id ? 'is-active' : ''}
+                      key={option.id}
+                      type="button"
+                      aria-pressed={layout === option.id}
+                      onClick={() => setLayout(option.id)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+
+              <fieldset className="print-lab-control-group">
+                <legend>Include</legend>
+                <label className="print-lab-toggle">
+                  <input type="checkbox" checked={showImage} onChange={(event) => setShowImage(event.target.checked)} />
+                  <span>Show image</span>
+                </label>
+                <label className="print-lab-toggle">
+                  <input type="checkbox" checked={showMetadata} onChange={(event) => setShowMetadata(event.target.checked)} />
+                  <span>Show metadata</span>
+                </label>
+                <label className="print-lab-toggle">
+                  <input type="checkbox" checked={showExcerpt} onChange={(event) => setShowExcerpt(event.target.checked)} />
+                  <span>Show excerpt</span>
+                </label>
+                <label className="print-lab-toggle">
+                  <input type="checkbox" checked={showColophon} onChange={(event) => setShowColophon(event.target.checked)} />
+                  <span>Show colophon</span>
+                </label>
+              </fieldset>
+
+              <button className="button button--primary print-lab-print-button" type="button" onClick={() => window.print()}>
+                Print
+              </button>
+            </aside>
+          </section>
+        ) : null}
       </main>
     </AdminFrame>
   )
