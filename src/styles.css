@@ -16140,3 +16140,323 @@ a.button {
 .print-lab-reader-order-list strong {
   font-size: 12px;
 }
+
+/* PRINTLAB_30B_OUTPUT_IMPOSITION */
+.print-lab-publication-surface {
+  position: relative;
+  container-type: inline-size;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(29, 35, 39, 0.18);
+  background: #fffdf8;
+  color: #111;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.print-lab-publication-surface--blank {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  aspect-ratio: 1 / 1.294;
+  border-style: dashed;
+  background: #fff;
+  color: #646970;
+}
+
+.print-lab-publication-surface__stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.print-lab-publication-surface__label {
+  position: absolute;
+  z-index: 3;
+  top: 6px;
+  left: 6px;
+  max-width: calc(100% - 12px);
+  padding: 3px 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #1d2327;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.print-lab-publication-block {
+  position: absolute;
+  overflow: hidden;
+}
+
+.print-lab-publication-block--image img {
+  position: absolute;
+  display: block;
+  max-width: none;
+}
+
+.print-lab-publication-text {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
+.print-lab-page-preview--publication {
+  width: min(100%, 720px) !important;
+  min-height: 0 !important;
+  padding: 18px !important;
+  background: #f6f7f7 !important;
+}
+
+.print-lab-publication-surface--page-layout {
+  margin: 0 auto;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.12);
+}
+
+.print-lab-preview--tile-sheet {
+  padding: clamp(14px, 2vw, 24px) !important;
+}
+
+.print-lab-tile {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.print-lab-preview--poster-split {
+  padding: clamp(12px, 2vw, 20px) !important;
+}
+
+.print-lab-split-panel {
+  background-clip: padding-box;
+}
+
+.print-lab-preview--half-fold-zine {
+  width: min(100%, 880px) !important;
+  min-height: 0 !important;
+  padding: 14px !important;
+  background: #f1f3f4 !important;
+}
+
+.print-lab-half-fold-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.print-lab-half-fold-sheet {
+  display: grid;
+  gap: 7px;
+}
+
+.print-lab-half-fold-sheet__label {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+  color: #1d2327;
+  font-size: 11px;
+}
+
+.print-lab-half-fold-sheet__label span {
+  color: #646970;
+}
+
+.print-lab-half-fold-spread {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  aspect-ratio: 11 / 8.5;
+  overflow: hidden;
+  border: 1px solid #1d2327;
+  background: #fff;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+}
+
+.print-lab-half-fold-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  padding: 18px;
+  overflow: hidden;
+}
+
+.print-lab-half-fold-panel--left {
+  border-right: 1px dashed rgba(29, 35, 39, 0.46);
+}
+
+.print-lab-half-fold-panel__label {
+  position: absolute;
+  z-index: 4;
+  top: 6px;
+  left: 7px;
+  max-width: calc(100% - 14px);
+  padding: 3px 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1d2327;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.print-lab-publication-surface--half-fold {
+  align-self: center;
+  justify-self: center;
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow: none;
+}
+
+.print-lab-half-fold-spread__fold {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  z-index: 5;
+  border-left: 2px dashed rgba(29, 35, 39, 0.52);
+  pointer-events: none;
+}
+
+.print-lab-imposition-list {
+  display: grid;
+  gap: 8px;
+}
+
+.print-lab-imposition-sheet {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.print-lab-imposition-sheet > strong {
+  grid-column: 1 / -1;
+  color: #1d2327;
+  font-size: 12px;
+}
+
+.print-lab-imposition-sheet button,
+.print-lab-imposition-blank {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 7px;
+  border: 1px solid #dcdcde;
+  border-radius: 5px;
+  background: #f6f7f7;
+  color: #1d2327;
+  text-align: left;
+}
+
+.print-lab-imposition-sheet button.is-active {
+  border-color: #72aee6;
+  background: #f0f6fc;
+  box-shadow: inset 3px 0 0 #2271b1;
+}
+
+.print-lab-imposition-sheet span,
+.print-lab-imposition-sheet strong,
+.print-lab-imposition-sheet small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.print-lab-imposition-sheet span {
+  color: #646970;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.print-lab-imposition-sheet strong {
+  font-size: 12px;
+}
+
+.print-lab-imposition-sheet small {
+  color: #646970;
+  font-size: 11px;
+}
+
+@media print {
+  .print-lab-preview--poster-split {
+    width: auto !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .print-lab-preview--poster-split .print-lab-split-panel {
+    width: 7.5in !important;
+    height: 10in !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    overflow: hidden !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .print-lab-preview--half-fold-zine {
+    width: 11in !important;
+    max-width: none !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: #fff !important;
+  }
+
+  .print-lab-half-fold-stack {
+    gap: 0 !important;
+  }
+
+  .print-lab-half-fold-sheet {
+    width: 11in !important;
+    height: 8.5in !important;
+    gap: 0 !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .print-lab-half-fold-sheet:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  .print-lab-half-fold-sheet__label {
+    display: none !important;
+  }
+
+  .print-lab-half-fold-spread {
+    width: 11in !important;
+    height: 8.5in !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .print-lab-half-fold-panel {
+    padding: 0.25in !important;
+  }
+
+  .print-lab-half-fold-panel__label,
+  .print-lab-publication-surface__label {
+    background: rgba(255, 255, 255, 0.82) !important;
+  }
+
+  @page {
+    size: letter landscape;
+    margin: 0;
+  }
+}

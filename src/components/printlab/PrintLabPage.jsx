@@ -517,7 +517,12 @@ export function PrintLabPage({ pieces = [] }) {
     }
 
     if (toolMode === 'zine') {
-      return [halfFoldOutput.coverTitle, halfFoldOutput.body, halfFoldOutput.footer].filter(Boolean).join('\n\n')
+      return halfFoldOutput.sheets.map((sheet) => (
+        [
+          sheet.label,
+          ...sheet.panels.map((panel) => `${panel.label}: ${panel.page?.label || panel.positionLabel}`),
+        ].join('\n')
+      )).join('\n\n')
     }
 
     return canvasBlocks.map((block) => (
@@ -1185,23 +1190,37 @@ export function PrintLabPage({ pieces = [] }) {
 
           {toolMode === 'zine' ? (
             <fieldset className="print-lab-control-group">
-              <legend>Half-Fold Zine</legend>
-              <label className="print-lab-field">
-                <span>Cover title</span>
-                <input value={zineTitle} onChange={(event) => setZineTitle(event.target.value)} />
-              </label>
-              <label className="print-lab-field">
-                <span>Inside text</span>
-                <textarea rows="7" value={zineBody} onChange={(event) => setZineBody(event.target.value)} />
-              </label>
-              <label className="print-lab-field">
-                <span>Colophon/footer</span>
-                <input value={zineFooter} onChange={(event) => setZineFooter(event.target.value)} />
-              </label>
-              <label className="print-lab-toggle">
-                <input type="checkbox" checked={zineIncludeImage} onChange={(event) => setZineIncludeImage(event.target.checked)} />
-                <span>Include image</span>
-              </label>
+              <legend>Half-Fold Print Layout</legend>
+              <div className="print-lab-output-summary">
+                <strong>{halfFoldOutput.label}</strong>
+                <span>{halfFoldOutput.sheetSize.label} / fold at center</span>
+              </div>
+              <div className="print-lab-imposition-list">
+                {halfFoldOutput.sheets.map((sheet) => (
+                  <div className="print-lab-imposition-sheet" key={sheet.id}>
+                    <strong>{sheet.label}</strong>
+                    {sheet.panels.map((panel) => (
+                      panel.page ? (
+                        <button
+                          className={panel.page.id === publication.activePageId ? 'is-active' : ''}
+                          key={panel.id}
+                          type="button"
+                          onClick={() => selectPublicationPage(panel.page.id)}
+                        >
+                          <span>{panel.side}</span>
+                          <strong>{panel.positionLabel}</strong>
+                          <small>{panel.page.label}</small>
+                        </button>
+                      ) : (
+                        <div className="print-lab-imposition-blank" key={panel.id}>
+                          <span>{panel.side}</span>
+                          <strong>{panel.positionLabel}</strong>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                ))}
+              </div>
             </fieldset>
           ) : null}
 
@@ -1469,6 +1488,7 @@ export function PrintLabPage({ pieces = [] }) {
         previewRef={previewRef}
         output={pageLayoutOutput}
         renderParagraphs={renderParagraphs}
+        uploadedCanvasFonts={uploadedCanvasFonts}
       />
     )
   }
@@ -1478,7 +1498,7 @@ export function PrintLabPage({ pieces = [] }) {
       <HalfFoldRenderer
         previewRef={previewRef}
         output={halfFoldOutput}
-        renderParagraphs={renderParagraphs}
+        uploadedCanvasFonts={uploadedCanvasFonts}
       />
     )
   }

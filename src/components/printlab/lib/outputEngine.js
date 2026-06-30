@@ -37,6 +37,11 @@ export const printlabOutputTypes = {
   zine: 'zine',
 }
 
+export const printlabOutputViews = {
+  readerOrder: 'reader-order',
+  printLayout: 'print-layout',
+}
+
 export function getReaderOrderPages(publication) {
   const pages = Array.isArray(publication?.pages) ? publication.pages : []
   return pages.map((page, index) => normalizePage(page, index)).filter(Boolean)
@@ -160,12 +165,15 @@ export function getPageLayoutOutput({
   const resolvedBody = cleanText(body) || cleanText(bodyBlock?.text) || cleanText(truncateText(sourceBody || '', 520)) || starterBody
   const resolvedFooter = cleanText(footer) || cleanText(sourceFooter) || 'Footer / source line'
   const resolvedImageUrl = imageUrl || imageBlock?.src || ''
+  const hasPublicationPage = usePublicationContent && activePage && (activePage.blocks || []).length > 0
   const hasContent = Boolean(resolvedImageUrl || cleanText(title) || cleanText(body) || cleanText(footer) || titleBlock || bodyBlock || imageBlock)
   return {
     type: printlabOutputTypes.page,
     label: `${orientation} page layout`,
+    view: hasPublicationPage ? printlabOutputViews.readerOrder : printlabOutputViews.printLayout,
     pages,
     activePage,
+    publicationPage: hasPublicationPage ? activePage : null,
     orientation,
     imagePosition,
     hasContent,
@@ -178,49 +186,58 @@ export function getPageLayoutOutput({
 
 export function getHalfFoldOutput({
   publication,
-  usePublicationContent = true,
-  title = '',
-  body = '',
-  footer = '',
-  imageUrl = '',
-  includeImage = true,
-  hasContent = false,
-  truncateText = (value) => value,
 } = {}) {
   const pages = getReaderOrderPages(publication)
-  const spreads = []
-  for (let index = 0; index < pages.length; index += 2) {
-    spreads.push({
-      id: `half-fold-${index / 2 + 1}`,
-      label: `Spread ${index / 2 + 1}`,
-      left: pages[index] || null,
-      right: pages[index + 1] || null,
-      leftLabel: pages[index] ? `Page ${pages[index].pageNumber}` : 'Blank',
-      rightLabel: pages[index + 1] ? `Page ${pages[index + 1].pageNumber}` : 'Blank',
+  const imposedPages = pages.length ? pages : []
+  const sheets = []
+  const sheetCount = Math.max(1, Math.ceil(Math.max(1, imposedPages.length) / 2))
+  for (let index = 0; index < sheetCount; index += 1) {
+    const left = imposedPages[index * 2] || null
+    const right = imposedPages[index * 2 + 1] || null
+    sheets.push({
+      id: `half-fold-sheet-${index + 1}`,
+      label: `Sheet ${index + 1}`,
+      sheetNumber: index + 1,
+      panels: [
+        {
+          id: `half-fold-sheet-${index + 1}-left`,
+          side: 'left',
+          label: left ? `Left panel / Page ${left.pageNumber}` : 'Left panel / Blank',
+          positionLabel: left ? `Page ${left.pageNumber}` : 'Blank',
+          page: left,
+        },
+        {
+          id: `half-fold-sheet-${index + 1}-right`,
+          side: 'right',
+          label: right ? `Right panel / Page ${right.pageNumber}` : 'Right panel / Blank',
+          positionLabel: right ? `Page ${right.pageNumber}` : 'Blank',
+          page: right,
+        },
+      ],
     })
   }
-  const firstPage = pages[0] || null
-  const secondPage = pages[1] || null
-  const publicationCoverTitle = usePublicationContent ? cleanText(getFirstTextBlock(firstPage, 0)?.text) : ''
-  const publicationInsideText = usePublicationContent
-    ? (cleanText(getFirstTextBlock(secondPage, 0)?.text) || cleanText(getFirstTextBlock(firstPage, 1)?.text))
-    : ''
-  const explicitCoverTitle = cleanText(title) || publicationCoverTitle || cleanText(truncateText(body, 90))
-  const coverTitle = explicitCoverTitle || cleanText(firstPage?.title)
-  const insideText = cleanText(body) || publicationInsideText
-  const imageBlock = usePublicationContent ? (getFirstImageBlock(secondPage) || getFirstImageBlock(firstPage)) : null
-  const resolvedImageUrl = includeImage ? (imageUrl || imageBlock?.src || '') : ''
   return {
     type: printlabOutputTypes.zine,
-    label: `${Math.max(1, spreads.length)} half-fold spread${spreads.length === 1 ? '' : 's'}`,
+    view: printlabOutputViews.printLayout,
+    label: `${sheets.length} half-fold sheet${sheets.length === 1 ? '' : 's'}`,
     pages,
-    spreads,
-    zineHasContent: hasContent || Boolean(explicitCoverTitle || insideText || resolvedImageUrl || cleanText(footer)),
-    coverTitle,
-    footer,
-    hasImage: Boolean(resolvedImageUrl),
-    imageUrl: resolvedImageUrl,
-    body: insideText,
+    sheets,
+    spreads: sheets.map((sheet) => ({
+      id: sheet.id,
+      label: sheet.label,
+      left: sheet.panels[0].page,
+      right: sheet.panels[1].page,
+      leftLabel: sheet.panels[0].positionLabel,
+      rightLabel: sheet.panels[1].positionLabel,
+    })),
+    sheetSize: {
+      label: 'Letter landscape',
+      width: 11,
+      height: 8.5,
+      unit: 'in',
+    },
+    fold: 'vertical-center',
+    zineHasContent: true,
   }
 }
 

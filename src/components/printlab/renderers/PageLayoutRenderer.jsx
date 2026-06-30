@@ -1,8 +1,27 @@
+import { PublicationPageSurface } from './PublicationPageSurface'
+
 export function PageLayoutRenderer({
   previewRef,
   output,
   renderParagraphs,
+  uploadedCanvasFonts,
 }) {
+  if (output.publicationPage) {
+    return (
+      <article
+        className="print-lab-preview print-lab-output print-lab-page-preview print-lab-page-preview--publication"
+        ref={previewRef}
+      >
+        <PublicationPageSurface
+          className="print-lab-publication-surface--page-layout"
+          label={`Page ${output.publicationPage.pageNumber} / ${output.publicationPage.label}`}
+          page={output.publicationPage}
+          uploadedCanvasFonts={uploadedCanvasFonts}
+        />
+      </article>
+    )
+  }
+
   const hasImage = Boolean(output.imageUrl)
   return (
     <article
