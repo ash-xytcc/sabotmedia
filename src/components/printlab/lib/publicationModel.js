@@ -1,12 +1,20 @@
 export function createPublicationPage(patch = {}) {
   const id = patch.id || `page-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+  const preset = patch.preset || patch.orientation || 'landscape'
+  const width = Number(patch.width || patch.canvasSize?.width || 720)
+  const height = Number(patch.height || patch.canvasSize?.height || 540)
+  const background = patch.background || patch.backgroundColor || '#fffdf8'
   return {
     id,
     label: patch.label || patch.title || 'Page',
     title: patch.title || patch.label || 'Page',
-    canvasSize: patch.canvasSize || { width: 720, height: 540 },
-    orientation: patch.orientation || 'landscape',
-    backgroundColor: patch.backgroundColor || '#fffdf8',
+    preset,
+    width,
+    height,
+    canvasSize: patch.canvasSize || { width, height },
+    orientation: patch.orientation || preset,
+    background,
+    backgroundColor: background,
     blocks: Array.isArray(patch.blocks) ? patch.blocks : [],
   }
 }

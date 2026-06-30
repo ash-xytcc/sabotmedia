@@ -8,7 +8,6 @@ import {
   buildCanvasStarterBlocks,
   canvasPresetOptions,
   clampCanvasBlock,
-  defaultCanvasSize,
   deriveCanvasCropPatch,
   getCanvasMediaFrame,
   getUploadedFontFaceCss,
@@ -18,6 +17,13 @@ import {
   systemCanvasFontOptions,
 } from './lib/canvasMath'
 import { buildExportHtml } from './lib/exportHtml'
+import {
+  createEmptyPublication,
+  createPublicationPage,
+  deletePublicationPage as removePublicationPage,
+  duplicatePublicationPage as copyPublicationPage,
+  getActivePage,
+} from './lib/publicationModel'
 import { CanvasRenderer } from './renderers/CanvasRenderer'
 import { HalfFoldRenderer } from './renderers/HalfFoldRenderer'
 import { PageLayoutRenderer } from './renderers/PageLayoutRenderer'
@@ -185,9 +191,8 @@ export function PrintLabPage({ pieces = [] }) {
   const [zineBody, setZineBody] = useState('')
   const [zineFooter, setZineFooter] = useState('')
   const [zineIncludeImage, setZineIncludeImage] = useState(true)
-  const [canvasPreset, setCanvasPreset] = useState('landscape')
-  const [canvasBackground, setCanvasBackground] = useState('#fffdf8')
-  const [canvasBlocks, setCanvasBlocks] = useState([])
+  const [publication, setPublication] = useState(() => createEmptyPublication({ title: 'Printlab Publication' }))
+  const [publicationDirty, setPublicationDirty] = useState(false)
   const [selectedCanvasBlockId, setSelectedCanvasBlockId] = useState('')
   const [canvasInteraction, setCanvasInteraction] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
@@ -240,11 +245,118 @@ export function PrintLabPage({ pieces = [] }) {
   const currentImageTitle = currentImage?.title || ''
   const currentTool = toolOptions.find((option) => option.id === toolMode) || toolOptions[0]
   const needsImageSource = toolMode === 'tile' || toolMode === 'split'
-  const canvasSize = canvasPresetOptions[canvasPreset] || canvasPresetOptions.landscape
+  const publicationPages = Array.isArray(publication.pages) ? publication.pages : []
+  const activePage = getActivePage(publication) || createPublicationPage({ id: 'page-1', label: 'Page 1' })
+  const canvasPreset = activePage.preset || 'landscape'
+  const presetSize = canvasPresetOptions[canvasPreset] || canvasPresetOptions.landscape
+  const canvasSize = {
+    ...presetSize,
+    width: Number(activePage.width || activePage.canvasSize?.width || presetSize.width),
+    height: Number(activePage.height || activePage.canvasSize?.height || presetSize.height),
+  }
+  const canvasBackground = activePage.background || activePage.backgroundColor || '#fffdf8'
+  const canvasBlocks = Array.isArray(activePage.blocks) ? activePage.blocks : []
   const selectedCanvasBlock = canvasBlocks.find((block) => block.id === selectedCanvasBlockId) || null
   const uploadedFontFaceCss = useMemo(() => getUploadedFontFaceCss(uploadedCanvasFonts), [uploadedCanvasFonts])
 
+  function updateActiveCanvasPage(patchOrFn, options = {}) {
+    const { markDirty = true } = options
+    if (markDirty) setPublicationDirty(true)
+    setPublication((current) => {
+      const pages = Array.isArray(current.pages) && current.pages.length
+        ? current.pages
+        : [createPublicationPage({ id: 'page-1', label: 'Page 1' })]
+      const activeId = current.activePageId || pages[0]?.id
+      return {
+        ...current,
+        activePageId: activeId,
+        pages: pages.map((page) => {
+          if (page.id !== activeId) return page
+          const patch = typeof patchOrFn === 'function' ? patchOrFn(page) : patchOrFn
+          const nextPage = { ...page, ...patch }
+          const width = Number(nextPage.width || nextPage.canvasSize?.width || canvasSize.width)
+          const height = Number(nextPage.height || nextPage.canvasSize?.height || canvasSize.height)
+          const background = nextPage.background || nextPage.backgroundColor || '#fffdf8'
+          return {
+            ...nextPage,
+            width,
+            height,
+            canvasSize: { width, height },
+            background,
+            backgroundColor: background,
+          }
+        }),
+      }
+    })
+  }
+
+  function setCanvasBlocks(patchOrFn, options) {
+    updateActiveCanvasPage((page) => {
+      const blocks = Array.isArray(page.blocks) ? page.blocks : []
+      const nextBlocks = typeof patchOrFn === 'function' ? patchOrFn(blocks) : patchOrFn
+      return { blocks: Array.isArray(nextBlocks) ? nextBlocks : blocks }
+    }, options)
+  }
+
+  function setCanvasBackground(nextBackground) {
+    updateActiveCanvasPage({ background: nextBackground, backgroundColor: nextBackground })
+  }
+
+  function selectPublicationPage(pageId) {
+    const page = publicationPages.find((item) => item.id === pageId)
+    if (!page) return
+    setPublication((current) => ({ ...current, activePageId: pageId }))
+    setSelectedCanvasBlockId(page.blocks?.[0]?.id || '')
+    setCanvasInteraction(null)
+    window.setTimeout(fitCanvasToViewport, 0)
+  }
+
+  function addPublicationPage() {
+    const nextIndex = publicationPages.length + 1
+    const page = createPublicationPage({
+      label: `Page ${nextIndex}`,
+      title: `Page ${nextIndex}`,
+      preset: canvasPreset,
+      width: canvasSize.width,
+      height: canvasSize.height,
+      background: canvasBackground,
+      backgroundColor: canvasBackground,
+      blocks: [],
+    })
+    setPublicationDirty(true)
+    setPublication((current) => ({
+      ...current,
+      pages: [...(Array.isArray(current.pages) ? current.pages : []), page],
+      activePageId: page.id,
+    }))
+    setSelectedCanvasBlockId('')
+    setCanvasInteraction(null)
+    window.setTimeout(fitCanvasToViewport, 0)
+  }
+
+  function duplicateActivePublicationPage() {
+    setPublicationDirty(true)
+    setPublication((current) => copyPublicationPage(current, current.activePageId))
+    setSelectedCanvasBlockId('')
+    setCanvasInteraction(null)
+    window.setTimeout(fitCanvasToViewport, 0)
+  }
+
+  function deleteActivePublicationPage() {
+    if (publicationPages.length <= 1) return
+    setPublicationDirty(true)
+    setPublication((current) => removePublicationPage(current, current.activePageId))
+    setSelectedCanvasBlockId('')
+    setCanvasInteraction(null)
+    window.setTimeout(fitCanvasToViewport, 0)
+  }
+
+  function renameActivePublicationPage(nextLabel) {
+    updateActiveCanvasPage({ label: nextLabel, title: nextLabel })
+  }
+
   useEffect(() => {
+    if (publicationDirty) return
     const title = sourceType === 'post'
       ? (selectedPostTitle || 'Untitled')
       : (currentImageTitle || pageTitle || zineTitle || 'Printlab Canvas')
@@ -258,7 +370,7 @@ export function PrintLabPage({ pieces = [] }) {
       imageTitle: currentImageTitle,
     })
 
-    setCanvasBlocks(nextBlocks.map((block) => clampCanvasBlock(block, canvasSize)))
+    setCanvasBlocks(nextBlocks.map((block) => clampCanvasBlock(block, canvasSize)), { markDirty: false })
     setSelectedCanvasBlockId(nextBlocks[0]?.id || '')
     setCanvasInteraction(null)
   }, [
@@ -270,6 +382,7 @@ export function PrintLabPage({ pieces = [] }) {
     selectedPostTitle,
     sourceType,
     zineTitle,
+    publicationDirty,
   ])
 
   const sourceStatus = useMemo(() => {
@@ -436,22 +549,27 @@ export function PrintLabPage({ pieces = [] }) {
     const currentSize = canvasSize
     const scaleX = nextSize.width / currentSize.width
     const scaleY = nextSize.height / currentSize.height
-    setCanvasPreset(nextPreset)
-    setCanvasBlocks((blocks) => blocks.map((block) => clampCanvasBlock({
-      ...block,
-      x: Number(block.x || 0) * scaleX,
-      y: Number(block.y || 0) * scaleY,
-      width: Number(block.width || 1) * scaleX,
-      height: Number(block.height || 1) * scaleY,
-      mediaX: Number(block.mediaX ?? block.x ?? 0) * scaleX,
-      mediaY: Number(block.mediaY ?? block.y ?? 0) * scaleY,
-      mediaWidth: Number(block.mediaWidth ?? block.width ?? 1) * scaleX,
-      mediaHeight: Number(block.mediaHeight ?? block.height ?? 1) * scaleY,
-      cropLeft: Number(block.cropLeft || 0) * scaleX,
-      cropRight: Number(block.cropRight || 0) * scaleX,
-      cropTop: Number(block.cropTop || 0) * scaleY,
-      cropBottom: Number(block.cropBottom || 0) * scaleY,
-    }, nextSize)))
+    updateActiveCanvasPage((page) => ({
+      preset: nextPreset,
+      width: nextSize.width,
+      height: nextSize.height,
+      canvasSize: { width: nextSize.width, height: nextSize.height },
+      blocks: (page.blocks || []).map((block) => clampCanvasBlock({
+        ...block,
+        x: Number(block.x || 0) * scaleX,
+        y: Number(block.y || 0) * scaleY,
+        width: Number(block.width || 1) * scaleX,
+        height: Number(block.height || 1) * scaleY,
+        mediaX: Number(block.mediaX ?? block.x ?? 0) * scaleX,
+        mediaY: Number(block.mediaY ?? block.y ?? 0) * scaleY,
+        mediaWidth: Number(block.mediaWidth ?? block.width ?? 1) * scaleX,
+        mediaHeight: Number(block.mediaHeight ?? block.height ?? 1) * scaleY,
+        cropLeft: Number(block.cropLeft || 0) * scaleX,
+        cropRight: Number(block.cropRight || 0) * scaleX,
+        cropTop: Number(block.cropTop || 0) * scaleY,
+        cropBottom: Number(block.cropBottom || 0) * scaleY,
+      }, nextSize)),
+    }))
     window.setTimeout(fitCanvasToViewport, 0)
   }
 
@@ -1001,6 +1119,36 @@ export function PrintLabPage({ pieces = [] }) {
           {toolMode === 'canvas' ? (
             <fieldset className="print-lab-control-group">
               <legend>Canvas</legend>
+              <div className="print-lab-publication-panel">
+                <div className="print-lab-publication-panel__header">
+                  <strong>{publication.title}</strong>
+                  <span>{publicationPages.length} page{publicationPages.length === 1 ? '' : 's'}</span>
+                </div>
+                <label className="print-lab-field">
+                  <span>Active page label</span>
+                  <input value={activePage.label || ''} onChange={(event) => renameActivePublicationPage(event.target.value)} />
+                </label>
+                <div className="print-lab-page-list" role="listbox" aria-label="Publication pages">
+                  {publicationPages.map((page, index) => (
+                    <button
+                      className={page.id === publication.activePageId ? 'is-selected' : ''}
+                      key={page.id}
+                      type="button"
+                      role="option"
+                      aria-selected={page.id === publication.activePageId}
+                      onClick={() => selectPublicationPage(page.id)}
+                    >
+                      <span>{page.label || `Page ${index + 1}`}</span>
+                      <small>{canvasPresetOptions[page.preset]?.label || page.orientation || 'Page'} / {(page.blocks || []).length} blocks</small>
+                    </button>
+                  ))}
+                </div>
+                <div className="print-lab-page-actions">
+                  <button className="button" type="button" onClick={addPublicationPage}>Add Page</button>
+                  <button className="button" type="button" onClick={duplicateActivePublicationPage}>Duplicate Page</button>
+                  <button className="button" type="button" disabled={publicationPages.length <= 1} onClick={deleteActivePublicationPage}>Delete Page</button>
+                </div>
+              </div>
               <div className="print-lab-canvas-document">
                 <label className="print-lab-field">
                   <span>Page preset</span>

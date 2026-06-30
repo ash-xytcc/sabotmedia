@@ -15881,3 +15881,96 @@ a.button {
     min-height: 70vh;
   }
 }
+
+/* PRINTLAB_29B_PUBLICATION_PAGES */
+.print-lab-publication-panel {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid #dcdcde;
+  border-radius: 7px;
+  background: #f6f7f7;
+}
+
+.print-lab-publication-panel__header {
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.print-lab-publication-panel__header strong,
+.print-lab-publication-panel__header span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.print-lab-publication-panel__header strong {
+  color: #1d2327;
+  font-size: 12px;
+}
+
+.print-lab-publication-panel__header span {
+  color: #646970;
+  font-size: 11px;
+}
+
+.print-lab-page-list {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 160px;
+  overflow: auto;
+}
+
+.print-lab-page-list button {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 7px 8px;
+  border: 1px solid #dcdcde;
+  border-radius: 5px;
+  background: #fff;
+  text-align: left;
+}
+
+.print-lab-page-list button.is-selected {
+  border-color: #72aee6;
+  background: #f0f6fc;
+  box-shadow: inset 3px 0 0 #2271b1;
+}
+
+.print-lab-page-list span,
+.print-lab-page-list small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.print-lab-page-list span {
+  color: #1d2327;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.print-lab-page-list small {
+  color: #646970;
+  font-size: 11px;
+}
+
+.print-lab-page-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.print-lab-page-actions .button {
+  min-width: 0;
+  padding-inline: 6px;
+  white-space: normal;
+}
