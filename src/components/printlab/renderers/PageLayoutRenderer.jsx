@@ -1,52 +1,46 @@
 export function PageLayoutRenderer({
   previewRef,
-  pageOrientation,
-  pageImagePosition,
-  pageHasContent,
-  currentImageUrl,
-  titleText,
-  bodyContent,
-  footerText,
+  output,
   renderParagraphs,
 }) {
-  const hasImage = Boolean(currentImageUrl)
+  const hasImage = Boolean(output.imageUrl)
   return (
     <article
-      className={`print-lab-preview print-lab-output print-lab-page-preview print-lab-page-preview--${pageOrientation} print-lab-page-preview--image-${pageImagePosition}${pageHasContent ? '' : ' print-lab-page-preview--starter'}`}
+      className={`print-lab-preview print-lab-output print-lab-page-preview print-lab-page-preview--${output.orientation} print-lab-page-preview--image-${output.imagePosition}${output.hasContent ? '' : ' print-lab-page-preview--starter'}`}
       ref={previewRef}
     >
-      {hasImage && pageImagePosition === 'background' ? (
-        <div className="print-lab-page-background" style={{ backgroundImage: `url("${currentImageUrl}")` }} />
+      {hasImage && output.imagePosition === 'background' ? (
+        <div className="print-lab-page-background" style={{ backgroundImage: `url("${output.imageUrl}")` }} />
       ) : null}
 
       <div className="print-lab-page-content">
-        {hasImage && pageImagePosition === 'top' ? (
+        {hasImage && output.imagePosition === 'top' ? (
           <figure className="print-lab-page-image">
-            <img src={currentImageUrl} alt="" />
+            <img src={output.imageUrl} alt="" />
           </figure>
         ) : null}
 
-        {!hasImage && pageImagePosition === 'top' ? <div className="print-lab-page-image-placeholder">Image area</div> : null}
+        {!hasImage && output.imagePosition === 'top' ? <div className="print-lab-page-image-placeholder">Image area</div> : null}
 
         <div className="print-lab-page-main">
           <header className="print-lab-page-header">
-            <span>{pageHasContent ? 'Page Layout' : 'Starter Layout'}</span>
-            <h2>{titleText}</h2>
+            <span>{output.hasContent ? 'Page Layout' : 'Starter Layout'}</span>
+            <h2>{output.titleText}</h2>
           </header>
 
           <div className="print-lab-page-body">
-            {hasImage && pageImagePosition === 'side' ? (
+            {hasImage && output.imagePosition === 'side' ? (
               <figure className="print-lab-page-image print-lab-page-image--side">
-                <img src={currentImageUrl} alt="" />
+                <img src={output.imageUrl} alt="" />
               </figure>
             ) : null}
-            {!hasImage && pageImagePosition === 'side' ? <div className="print-lab-page-image-placeholder print-lab-page-image-placeholder--side">Image area</div> : null}
-            {renderParagraphs(bodyContent)}
+            {!hasImage && output.imagePosition === 'side' ? <div className="print-lab-page-image-placeholder print-lab-page-image-placeholder--side">Image area</div> : null}
+            {renderParagraphs(output.bodyContent)}
           </div>
         </div>
       </div>
 
-      <footer className="print-lab-page-footer">{footerText}</footer>
+      <footer className="print-lab-page-footer">{output.footerText}</footer>
     </article>
   )
 }

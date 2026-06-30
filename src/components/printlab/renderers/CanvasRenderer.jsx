@@ -2,13 +2,11 @@ import { canvasResizeHandles, getCanvasFontFamily, getCanvasMediaFrame } from '.
 
 export function CanvasRenderer({
   previewRef,
+  output,
   uploadedFontFaceCss,
   canvasViewportRef,
   canvasRef,
-  canvasSize,
   canvasZoom,
-  canvasBackground,
-  canvasBlocks,
   selectedCanvasBlockId,
   setSelectedCanvasBlockId,
   uploadedCanvasFonts,
@@ -16,6 +14,9 @@ export function CanvasRenderer({
   startCanvasResize,
   updateCanvasBlock,
 }) {
+  const canvasSize = output.canvasSize
+  const canvasBackground = output.canvasBackground
+  const canvasBlocks = output.canvasBlocks
   return (
     <article className="print-lab-preview print-lab-output print-lab-preview--canvas" ref={previewRef}>
       {uploadedFontFaceCss ? <style>{uploadedFontFaceCss}</style> : null}

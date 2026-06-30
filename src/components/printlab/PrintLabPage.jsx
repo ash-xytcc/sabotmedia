@@ -18,6 +18,13 @@ import {
 } from './lib/canvasMath'
 import { buildExportHtml } from './lib/exportHtml'
 import {
+  getCanvasOutput,
+  getHalfFoldOutput,
+  getPageLayoutOutput,
+  getPosterOutput,
+  getTileOutput,
+} from './lib/outputEngine'
+import {
   createEmptyPublication,
   createPublicationPage,
   deletePublicationPage as removePublicationPage,
@@ -392,24 +399,90 @@ export function PrintLabPage({ pieces = [] }) {
     if (sourceType === 'post') return 'Post source'
     return 'Image source'
   }, [currentImageUrl, sourceType])
-  const outputHint = useMemo(() => {
-    if (toolMode === 'tile') return `${tileRows}x${tileColumns} tile sheet`
-    if (toolMode === 'split') return `${splitWide}x${splitTall} poster split`
-    if (toolMode === 'page') return `${pageOrientation} page layout`
-    if (toolMode === 'zine') return '8.5x11 landscape half-fold'
-    return `${canvasSize.label} canvas / ${canvasBlocks.length} blocks`
-  }, [canvasBlocks.length, canvasSize.label, pageOrientation, splitTall, splitWide, tileColumns, tileRows, toolMode])
   const missingSourceMessage = toolMode === 'split'
     ? 'Select or upload an image to split a poster across printable pages.'
     : 'Select or upload an image to build a tile sheet.'
-  const pageHasContent = Boolean(currentImageUrl || pageTitle.trim() || pageBody.trim() || pageFooter.trim())
   const zineHasContent = Boolean((zineIncludeImage && currentImageUrl) || zineTitle.trim() || zineBody.trim() || zineFooter.trim())
+  const tileOutput = useMemo(() => getTileOutput({
+    publication,
+    rows: tileRows,
+    columns: tileColumns,
+    gap: tileGap,
+    fit: tileFit,
+    caption: tileCaption,
+    imageUrl: currentImageUrl,
+    missingSourceMessage,
+  }), [currentImageUrl, missingSourceMessage, publication, tileCaption, tileColumns, tileFit, tileGap, tileRows])
+  const posterOutput = useMemo(() => getPosterOutput({
+    publication,
+    wide: splitWide,
+    tall: splitTall,
+    fit: splitFit,
+    showNumbers: splitShowNumbers,
+    imageUrl: currentImageUrl,
+    missingSourceMessage,
+  }), [currentImageUrl, missingSourceMessage, publication, splitFit, splitShowNumbers, splitTall, splitWide])
+  const pageLayoutOutput = useMemo(() => getPageLayoutOutput({
+    publication,
+    activePageId: publication.activePageId,
+    usePublicationContent: publicationDirty || Boolean(currentImageUrl) || sourceType === 'post',
+    orientation: pageOrientation,
+    imagePosition: pageImagePosition,
+    title: pageTitle,
+    body: pageBody,
+    footer: pageFooter,
+    imageUrl: currentImageUrl,
+    sourceTitle: selectedPostTitle && sourceType === 'post' ? selectedPostTitle : '',
+    sourceBody: sourceType === 'post' ? (selectedPostBody || selectedPostExcerpt) : '',
+    sourceFooter: sourceType === 'post' ? 'Source: CMS post' : '',
+    starterBody: 'Use this page layout for a flyer, article handout, one-sheet, or announcement. Add body copy in Tools and choose an image source to compose a print-ready page.',
+    truncateText,
+  }), [
+    currentImageUrl,
+    pageBody,
+    pageFooter,
+    pageImagePosition,
+    pageOrientation,
+    pageTitle,
+    publication,
+    publicationDirty,
+    selectedPostBody,
+    selectedPostExcerpt,
+    selectedPostTitle,
+    sourceType,
+  ])
+  const halfFoldOutput = useMemo(() => getHalfFoldOutput({
+    publication,
+    usePublicationContent: publicationDirty || Boolean(currentImageUrl) || sourceType === 'post',
+    title: zineTitle,
+    body: zineBody,
+    footer: zineFooter,
+    imageUrl: currentImageUrl,
+    includeImage: zineIncludeImage,
+    hasContent: zineHasContent,
+    truncateText,
+  }), [currentImageUrl, publication, publicationDirty, sourceType, zineBody, zineFooter, zineHasContent, zineIncludeImage, zineTitle])
+  const canvasOutput = useMemo(() => getCanvasOutput({
+    publication,
+    activePageId: publication.activePageId,
+    canvasSize,
+    canvasBackground,
+    canvasBlocks,
+  }), [canvasBackground, canvasBlocks, canvasSize, publication])
+  const currentOutput = (
+    toolMode === 'tile' ? tileOutput
+      : toolMode === 'split' ? posterOutput
+        : toolMode === 'page' ? pageLayoutOutput
+          : toolMode === 'zine' ? halfFoldOutput
+            : canvasOutput
+  )
+  const outputHint = currentOutput.label
   const hasUsableOutput = (
-    (toolMode === 'tile' && Boolean(currentImageUrl)) ||
-    (toolMode === 'split' && Boolean(currentImageUrl)) ||
-    (toolMode === 'page' && pageHasContent) ||
-    (toolMode === 'zine' && zineHasContent) ||
-    (toolMode === 'canvas' && canvasBlocks.length > 0)
+    (toolMode === 'tile' && Boolean(tileOutput.imageUrl)) ||
+    (toolMode === 'split' && Boolean(posterOutput.imageUrl)) ||
+    (toolMode === 'page' && Boolean(pageLayoutOutput.hasContent)) ||
+    (toolMode === 'zine' && Boolean(halfFoldOutput.zineHasContent)) ||
+    (toolMode === 'canvas' && canvasOutput.canvasBlocks.length > 0)
   )
 
   const currentTextContent = useMemo(() => {
@@ -430,11 +503,11 @@ export function PrintLabPage({ pieces = [] }) {
     }
 
     if (toolMode === 'page') {
-      return [pageTitle, pageBody, pageFooter].filter(Boolean).join('\n\n')
+      return [pageLayoutOutput.titleText, pageLayoutOutput.bodyContent, pageLayoutOutput.footerText].filter(Boolean).join('\n\n')
     }
 
     if (toolMode === 'zine') {
-      return [zineTitle, zineBody, zineFooter].filter(Boolean).join('\n\n')
+      return [halfFoldOutput.coverTitle, halfFoldOutput.body, halfFoldOutput.footer].filter(Boolean).join('\n\n')
     }
 
     return canvasBlocks.map((block) => (
@@ -448,7 +521,9 @@ export function PrintLabPage({ pieces = [] }) {
     currentImageUrl,
     pageBody,
     pageFooter,
+    pageLayoutOutput,
     pageTitle,
+    halfFoldOutput,
     splitTall,
     splitWide,
     tileCaption,
@@ -1322,13 +1397,7 @@ export function PrintLabPage({ pieces = [] }) {
     return (
       <TileSheetRenderer
         previewRef={previewRef}
-        tileRows={tileRows}
-        tileColumns={tileColumns}
-        tileGap={tileGap}
-        tileFit={tileFit}
-        tileCaption={tileCaption}
-        currentImageUrl={currentImageUrl}
-        missingSourceMessage={missingSourceMessage}
+        output={tileOutput}
       />
     )
   }
@@ -1337,49 +1406,26 @@ export function PrintLabPage({ pieces = [] }) {
     return (
       <PosterSplitRenderer
         previewRef={previewRef}
-        splitWide={splitWide}
-        splitTall={splitTall}
-        splitFit={splitFit}
-        splitShowNumbers={splitShowNumbers}
-        currentImageUrl={currentImageUrl}
-        missingSourceMessage={missingSourceMessage}
+        output={posterOutput}
       />
     )
   }
 
   function renderPagePreview() {
-    const titleText = pageTitle.trim() || (selectedPostTitle && sourceType === 'post' ? selectedPostTitle : 'Flyer / Article Title')
-    const bodyText = pageBody.trim() || (sourceType === 'post' ? truncateText(selectedPostBody || selectedPostExcerpt, 520) : '')
-    const bodyContent = bodyText || 'Use this page layout for a flyer, article handout, one-sheet, or announcement. Add body copy in Tools and choose an image source to compose a print-ready page.'
-    const footerText = pageFooter.trim() || (sourceType === 'post' ? 'Source: CMS post' : 'Footer / source line')
     return (
       <PageLayoutRenderer
         previewRef={previewRef}
-        pageOrientation={pageOrientation}
-        pageImagePosition={pageImagePosition}
-        pageHasContent={pageHasContent}
-        currentImageUrl={currentImageUrl}
-        titleText={titleText}
-        bodyContent={bodyContent}
-        footerText={footerText}
+        output={pageLayoutOutput}
         renderParagraphs={renderParagraphs}
       />
     )
   }
 
   function renderZinePreview() {
-    const coverTitle = zineTitle.trim() || truncateText(zineBody, 90)
-    const hasImage = zineIncludeImage && currentImageUrl
-
     return (
       <HalfFoldRenderer
         previewRef={previewRef}
-        zineHasContent={zineHasContent}
-        coverTitle={coverTitle}
-        zineFooter={zineFooter}
-        hasImage={hasImage}
-        currentImageUrl={currentImageUrl}
-        zineBody={zineBody}
+        output={halfFoldOutput}
         renderParagraphs={renderParagraphs}
       />
     )
@@ -1389,13 +1435,11 @@ export function PrintLabPage({ pieces = [] }) {
     return (
       <CanvasRenderer
         previewRef={previewRef}
+        output={canvasOutput}
         uploadedFontFaceCss={uploadedFontFaceCss}
         canvasViewportRef={canvasViewportRef}
         canvasRef={canvasRef}
-        canvasSize={canvasSize}
         canvasZoom={canvasZoom}
-        canvasBackground={canvasBackground}
-        canvasBlocks={canvasBlocks}
         selectedCanvasBlockId={selectedCanvasBlockId}
         setSelectedCanvasBlockId={setSelectedCanvasBlockId}
         uploadedCanvasFonts={uploadedCanvasFonts}

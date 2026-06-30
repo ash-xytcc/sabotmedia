@@ -1,36 +1,38 @@
 export function TileSheetRenderer({
   previewRef,
-  tileRows,
-  tileColumns,
-  tileGap,
-  tileFit,
-  tileCaption,
-  currentImageUrl,
-  missingSourceMessage,
+  output,
 }) {
-  const count = tileRows * tileColumns
+  const {
+    columns,
+    gap,
+    fit,
+    caption,
+    imageUrl,
+    missingSourceMessage,
+    tiles,
+  } = output
   return (
     <article
       className="print-lab-preview print-lab-output print-lab-preview--tile-sheet"
       ref={previewRef}
       style={{
-        '--tile-columns': tileColumns,
-        '--tile-gap': `${tileGap}px`,
+        '--tile-columns': columns,
+        '--tile-gap': `${gap}px`,
       }}
     >
-      {currentImageUrl ? (
+      {imageUrl ? (
         <div className="print-lab-tile-grid">
-          {Array.from({ length: count }).map((_, index) => (
-            <figure className="print-lab-tile" key={`tile-${index}`}>
-              <img src={currentImageUrl} alt="" style={{ objectFit: tileFit }} />
-              {tileCaption.trim() ? <figcaption>{tileCaption}</figcaption> : null}
+          {tiles.map((tile) => (
+            <figure className="print-lab-tile" key={tile.id}>
+              <img src={tile.imageUrl} alt="" style={{ objectFit: fit }} />
+              {caption.trim() ? <figcaption>{caption}</figcaption> : null}
             </figure>
           ))}
         </div>
       ) : (
         <div className="print-lab-preview-empty print-lab-preview-empty--source">
           <strong>Upload or select an image</strong>
-          <span>{`${tileRows}x${tileColumns} tile sheet ready`}</span>
+          <span>{output.label} ready</span>
           <p>{missingSourceMessage}</p>
         </div>
       )}
