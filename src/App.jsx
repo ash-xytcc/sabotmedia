@@ -41,6 +41,7 @@ const ADMIN_SHELL_PATHS = [
   '/admin',
   '/review',
   '/content',
+  '/posts',
   '/native-bridge',
   '/native-preview',
   '/podcasts',
@@ -156,6 +157,7 @@ export default function App() {
           <Route path="/review" element={<ReviewQueuePage pieces={pieces} />} />
           <Route path="/admin" element={<AdminPage pieces={pieces} />} />
           <Route path="/content" element={<ContentListPage />} />
+          <Route path="/posts" element={<ContentListPage />} />
           <Route path="/overrides" element={<OverridesPage />} />
           <Route path="/media" element={<MediaLibraryPage />} />
           <Route path="/pages" element={<PagesAdminPage />} />

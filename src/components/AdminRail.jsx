@@ -80,7 +80,6 @@ export function AdminRail() {
           <AdminBarMenu label="+ New">
             <Link to="/native-bridge?new=article" className="wp-admin-topbar__dropdown-link">Post</Link>
             <Link to="/media" className="wp-admin-topbar__dropdown-link">Media</Link>
-            <Link to="/pages" className="wp-admin-topbar__dropdown-link">Page</Link>
             <Link to="/users" className="wp-admin-topbar__dropdown-link">User</Link>
           </AdminBarMenu>
 
