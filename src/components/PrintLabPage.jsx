@@ -23,6 +23,13 @@ const toolOptions = [
 const fitOptions = ['cover', 'contain', 'stretch']
 const orientationOptions = ['portrait', 'landscape']
 const imagePositionOptions = ['top', 'side', 'background']
+const canvasFontOptions = [
+  { label: 'System Sans', value: 'system', family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+  { label: 'Serif', value: 'serif', family: 'serif' },
+  { label: 'Monospace', value: 'monospace', family: '"Courier New", Courier, monospace' },
+  { label: 'Impact / Poster', value: 'impact', family: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif' },
+  { label: 'Georgia', value: 'georgia', family: 'Georgia, "Times New Roman", serif' },
+]
 const defaultCanvasSize = { width: 720, height: 540 }
 const canvasPresetOptions = {
   landscape: { label: 'Landscape', width: 720, height: 540 },
@@ -122,6 +129,10 @@ function clampValue(value, min, max) {
   return Math.min(max, Math.max(min, value))
 }
 
+function getCanvasFontFamily(value) {
+  return canvasFontOptions.find((option) => option.value === value)?.family || canvasFontOptions[0].family
+}
+
 function makeCanvasBlock(type, patch = {}) {
   const base = {
     id: `canvas-${type}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -135,6 +146,7 @@ function makeCanvasBlock(type, patch = {}) {
     src: '',
     title: type === 'image' ? 'Image' : 'Text',
     fontSize: type === 'text' ? 28 : 16,
+    fontFamily: 'system',
     fontWeight: type === 'text' ? 800 : 600,
     lineHeight: 1.12,
     color: '#111111',
@@ -378,12 +390,12 @@ function buildExportHtml(previewHtml, title) {
     .print-lab-preview--canvas { width: 100%; max-width: none; padding: 0; background: #1f2937; overflow: auto; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
     .print-lab-canvas-viewport { display: grid; place-items: center; min-height: 540px; padding: 20px; overflow: auto; background: #1f2937; }
     .print-lab-canvas-shell { position: relative; flex: 0 0 auto; margin: auto; }
-    .print-lab-canvas-stage { position: relative; background-color: #fff; overflow: hidden; transform-origin: top left; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .print-lab-canvas-stage { position: relative; background-image: none !important; background-color: #fff; overflow: hidden; transform-origin: top left; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
     .print-lab-canvas-block { position: absolute; box-sizing: border-box; overflow: hidden; }
     .print-lab-canvas-block img { position: absolute; display: block; max-width: none; }
     .print-lab-canvas-text { width: 100%; height: 100%; overflow: hidden; white-space: pre-wrap; }
     .print-lab-canvas-block__label, .print-lab-canvas-resize { display: none; }
-    @media print { body { margin: 0; background: #fff; } .print-lab-preview { border: 0; box-shadow: none; } .print-lab-preview--poster-split { padding: 0; } .print-lab-split-grid { display: block; } .print-lab-split-panel { width: 100%; height: 9.5in; break-after: page; background-image: none !important; } .print-lab-split-panel__print-image { display: block; object-fit: cover; } .print-lab-preview--canvas { background: #fff !important; overflow: visible !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .print-lab-canvas-viewport { display: block; min-height: 0; height: auto; padding: 0; overflow: visible; background: #fff !important; } .print-lab-canvas-shell { width: auto !important; height: auto !important; margin: 0 auto !important; } .print-lab-canvas-stage { margin: 0 auto; transform: none !important; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; } }
+    @media print { body { margin: 0; background: #fff; } .print-lab-preview { border: 0; box-shadow: none; } .print-lab-preview--poster-split { padding: 0; } .print-lab-split-grid { display: block; } .print-lab-split-panel { width: 100%; height: 9.5in; break-after: page; background-image: none !important; } .print-lab-split-panel__print-image { display: block; object-fit: cover; } .print-lab-preview--canvas { background: #fff !important; overflow: visible !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .print-lab-canvas-viewport { display: block; min-height: 0; height: auto; padding: 0; overflow: visible; background: #fff !important; background-image: none !important; } .print-lab-canvas-shell { width: auto !important; height: auto !important; margin: 0 auto !important; } .print-lab-canvas-stage { margin: 0 auto; background-image: none !important; transform: none !important; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; } }
   </style>
 </head>
 <body>
@@ -1339,9 +1351,22 @@ export function PrintLabPage({ pieces = [] }) {
                       </label>
                       <div className="print-lab-control-grid">
                         <label className="print-lab-field">
+                          <span>Font family</span>
+                          <select
+                            value={selectedCanvasBlock.fontFamily || 'system'}
+                            onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { fontFamily: event.target.value })}
+                          >
+                            {canvasFontOptions.map((option) => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="print-lab-field">
                           <span>Font size</span>
                           <input type="number" min="8" max="96" value={selectedCanvasBlock.fontSize || 16} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { fontSize: clampNumber(event.target.value, 8, 96) })} />
                         </label>
+                      </div>
+                      <div className="print-lab-control-grid">
                         <label className="print-lab-field print-lab-color-field">
                           <span>Color</span>
                           <input type="color" value={selectedCanvasBlock.color || '#111111'} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { color: event.target.value })} />
@@ -1660,6 +1685,7 @@ export function PrintLabPage({ pieces = [] }) {
                       onBlur={(event) => updateCanvasBlock(block.id, { text: event.currentTarget.innerText })}
                       style={{
                         color: block.color,
+                        fontFamily: getCanvasFontFamily(block.fontFamily),
                         fontSize: `${block.fontSize}px`,
                         fontWeight: block.fontWeight,
                         lineHeight: block.lineHeight,

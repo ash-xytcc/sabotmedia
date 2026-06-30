@@ -14890,6 +14890,7 @@ a.button {
     padding: 0 !important;
     overflow: visible !important;
     background: #fff !important;
+    background-image: none !important;
   }
 
   .print-lab-canvas-shell {
@@ -14900,6 +14901,7 @@ a.button {
 
   .print-lab-canvas-stage {
     margin: 0 auto !important;
+    background-image: none !important;
     box-shadow: none !important;
     transform: none !important;
     print-color-adjust: exact !important;
