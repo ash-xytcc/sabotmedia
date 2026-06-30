@@ -375,13 +375,15 @@ function buildExportHtml(previewHtml, title) {
     .print-lab-split-panel { min-height: 280px; border: 1px solid #111; background-repeat: no-repeat; background-color: #fff; }
     .print-lab-split-panel__print-image { display: none; width: 100%; height: 100%; }
     .print-lab-zine-spread { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .print-lab-preview--canvas { width: 100%; max-width: none; padding: 0; background: #1f2937; overflow: auto; }
-    .print-lab-canvas-viewport { display: grid; place-items: start center; min-height: 540px; padding: 28px; overflow: auto; background: #1f2937; }
-    .print-lab-canvas-stage { position: relative; background: #fff; overflow: hidden; transform-origin: top center; }
+    .print-lab-preview--canvas { width: 100%; max-width: none; padding: 0; background: #1f2937; overflow: auto; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .print-lab-canvas-viewport { display: grid; place-items: center; min-height: 540px; padding: 20px; overflow: auto; background: #1f2937; }
+    .print-lab-canvas-shell { position: relative; flex: 0 0 auto; margin: auto; }
+    .print-lab-canvas-stage { position: relative; background-color: #fff; overflow: hidden; transform-origin: top left; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
     .print-lab-canvas-block { position: absolute; box-sizing: border-box; overflow: hidden; }
     .print-lab-canvas-block img { position: absolute; display: block; max-width: none; }
     .print-lab-canvas-text { width: 100%; height: 100%; overflow: hidden; white-space: pre-wrap; }
-    @media print { body { margin: 0; background: #fff; } .print-lab-preview { border: 0; box-shadow: none; } .print-lab-preview--poster-split { padding: 0; } .print-lab-split-grid { display: block; } .print-lab-split-panel { width: 100%; height: 9.5in; break-after: page; background-image: none !important; } .print-lab-split-panel__print-image { display: block; object-fit: cover; } }
+    .print-lab-canvas-block__label, .print-lab-canvas-resize { display: none; }
+    @media print { body { margin: 0; background: #fff; } .print-lab-preview { border: 0; box-shadow: none; } .print-lab-preview--poster-split { padding: 0; } .print-lab-split-grid { display: block; } .print-lab-split-panel { width: 100%; height: 9.5in; break-after: page; background-image: none !important; } .print-lab-split-panel__print-image { display: block; object-fit: cover; } .print-lab-preview--canvas { background: #fff !important; overflow: visible !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .print-lab-canvas-viewport { display: block; min-height: 0; height: auto; padding: 0; overflow: visible; background: #fff !important; } .print-lab-canvas-shell { width: auto !important; height: auto !important; margin: 0 auto !important; } .print-lab-canvas-stage { margin: 0 auto; transform: none !important; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; } }
   </style>
 </head>
 <body>
@@ -428,6 +430,8 @@ export function PrintLabPage({ pieces = [] }) {
   const [selectedCanvasBlockId, setSelectedCanvasBlockId] = useState('')
   const [canvasInteraction, setCanvasInteraction] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
+  const [canvasSourceOpen, setCanvasSourceOpen] = useState(false)
+  const [canvasToolsOpen, setCanvasToolsOpen] = useState(true)
 
   const previewRef = useRef(null)
   const canvasRef = useRef(null)
@@ -667,9 +671,9 @@ export function PrintLabPage({ pieces = [] }) {
   function fitCanvasToViewport() {
     const rect = canvasViewportRef.current?.getBoundingClientRect()
     if (!rect) return
-    const availableWidth = Math.max(240, rect.width - 56)
-    const availableHeight = Math.max(240, rect.height - 56)
-    const nextZoom = clampValue(Math.min(availableWidth / canvasSize.width, availableHeight / canvasSize.height), 0.2, 1.25)
+    const availableWidth = Math.max(240, rect.width - 40)
+    const availableHeight = Math.max(240, rect.height - 40)
+    const nextZoom = clampValue(Math.min(availableWidth / canvasSize.width, availableHeight / canvasSize.height), 0.18, 1.25)
     setCanvasZoom(nextZoom)
     canvasViewportRef.current.scrollTo({ left: 0, top: 0 })
   }
@@ -1016,11 +1020,17 @@ export function PrintLabPage({ pieces = [] }) {
   }
 
   function renderSourcePanel() {
+    const collapsed = toolMode === 'canvas' && !canvasSourceOpen
     return (
-      <aside className="print-lab-source-pane" aria-label="Printlab source">
+      <aside className={`print-lab-source-pane${collapsed ? ' is-collapsed' : ''}`} aria-label="Printlab source">
         <div className="print-lab-pane-header">
           <h2>Source</h2>
           <span>{sourceOptions.find((option) => option.id === sourceType)?.label}</span>
+          {toolMode === 'canvas' ? (
+            <button className="button print-lab-pane-toggle" type="button" onClick={() => setCanvasSourceOpen((open) => !open)}>
+              {canvasSourceOpen ? 'Hide' : 'Show'}
+            </button>
+          ) : null}
         </div>
 
         <div className="print-lab-pane-body">
@@ -1130,11 +1140,17 @@ export function PrintLabPage({ pieces = [] }) {
   }
 
   function renderToolControls() {
+    const collapsed = toolMode === 'canvas' && !canvasToolsOpen
     return (
-      <aside className="print-lab-tool-panel" aria-label="Printlab controls">
+      <aside className={`print-lab-tool-panel${collapsed ? ' is-collapsed' : ''}`} aria-label="Printlab controls">
         <div className="print-lab-pane-header">
           <h2>Tools</h2>
           <span>{toolOptions.find((option) => option.id === toolMode)?.label}</span>
+          {toolMode === 'canvas' ? (
+            <button className="button print-lab-pane-toggle" type="button" onClick={() => setCanvasToolsOpen((open) => !open)}>
+              {canvasToolsOpen ? 'Hide' : 'Show'}
+            </button>
+          ) : null}
         </div>
 
         <div className="print-lab-tool-scroll">
@@ -1570,6 +1586,13 @@ export function PrintLabPage({ pieces = [] }) {
           ref={canvasViewportRef}
         >
           <div
+            className="print-lab-canvas-shell"
+            style={{
+              width: `${canvasSize.width * canvasZoom}px`,
+              height: `${canvasSize.height * canvasZoom}px`,
+            }}
+          >
+          <div
             className="print-lab-canvas-stage"
             ref={canvasRef}
             style={{
@@ -1577,6 +1600,8 @@ export function PrintLabPage({ pieces = [] }) {
               height: `${canvasSize.height}px`,
               transform: `scale(${canvasZoom})`,
               backgroundColor: canvasBackground,
+              printColorAdjust: 'exact',
+              WebkitPrintColorAdjust: 'exact',
             }}
             onPointerDown={() => setSelectedCanvasBlockId('')}
           >
@@ -1668,6 +1693,7 @@ export function PrintLabPage({ pieces = [] }) {
               )
             })}
           </div>
+          </div>
         </div>
       </article>
     )
@@ -1689,7 +1715,10 @@ export function PrintLabPage({ pieces = [] }) {
           <Link className="button" to="/content">Back to Posts</Link>
         </div>
 
-        <section className={`print-lab-desk${toolMode === 'canvas' ? ' print-lab-desk--canvas-mode' : ''}`} aria-label="Printlab production lab">
+        <section
+          className={`print-lab-desk${toolMode === 'canvas' ? ' print-lab-desk--canvas-mode' : ''}${toolMode === 'canvas' && !canvasSourceOpen ? ' is-source-collapsed' : ''}${toolMode === 'canvas' && !canvasToolsOpen ? ' is-tools-collapsed' : ''}`}
+          aria-label="Printlab production lab"
+        >
           {renderSourcePanel()}
 
           <div className="print-lab-preview-wrap" aria-live="polite">
@@ -1708,10 +1737,12 @@ export function PrintLabPage({ pieces = [] }) {
               </div>
               {toolMode === 'canvas' ? (
                 <div className="print-lab-canvas-zoombar" aria-label="Canvas zoom controls">
+                  <button className="button" type="button" onClick={() => setCanvasSourceOpen((open) => !open)} aria-pressed={canvasSourceOpen}>Source</button>
                   <button className="button" type="button" onClick={fitCanvasToViewport}>Fit</button>
                   <button className="button" type="button" onClick={() => setCanvasZoomClamped(canvasZoom - 0.1)} aria-label="Zoom out">-</button>
                   <button className="button" type="button" onClick={() => setCanvasZoomClamped(1)}>100%</button>
                   <button className="button" type="button" onClick={() => setCanvasZoomClamped(canvasZoom + 0.1)} aria-label="Zoom in">+</button>
+                  <button className="button" type="button" onClick={() => setCanvasToolsOpen((open) => !open)} aria-pressed={canvasToolsOpen}>Tools</button>
                   <span>{Math.round(canvasZoom * 100)}%</span>
                 </div>
               ) : null}

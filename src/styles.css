@@ -14401,6 +14401,18 @@ a.button {
   overflow: hidden;
 }
 
+.print-lab-desk--canvas-mode.is-source-collapsed {
+  grid-template-columns: 46px minmax(0, 1fr) minmax(264px, 318px);
+}
+
+.print-lab-desk--canvas-mode.is-tools-collapsed {
+  grid-template-columns: minmax(168px, 210px) minmax(0, 1fr) 46px;
+}
+
+.print-lab-desk--canvas-mode.is-source-collapsed.is-tools-collapsed {
+  grid-template-columns: 46px minmax(0, 1fr) 46px;
+}
+
 .print-lab-desk--canvas-mode .print-lab-source-pane,
 .print-lab-desk--canvas-mode .print-lab-tool-panel,
 .print-lab-desk--canvas-mode .print-lab-preview-wrap {
@@ -14414,6 +14426,51 @@ a.button {
 .print-lab-desk--canvas-mode .print-lab-tool-scroll {
   max-height: none;
   overflow: auto;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-pane.is-collapsed,
+.print-lab-desk--canvas-mode .print-lab-tool-panel.is-collapsed {
+  background: #f6f7f7;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-pane.is-collapsed .print-lab-pane-body,
+.print-lab-desk--canvas-mode .print-lab-tool-panel.is-collapsed .print-lab-tool-scroll {
+  display: none;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-pane.is-collapsed .print-lab-pane-header,
+.print-lab-desk--canvas-mode .print-lab-tool-panel.is-collapsed .print-lab-pane-header {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 4px;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-pane.is-collapsed .print-lab-pane-header h2,
+.print-lab-desk--canvas-mode .print-lab-tool-panel.is-collapsed .print-lab-pane-header h2 {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.print-lab-desk--canvas-mode .print-lab-source-pane.is-collapsed .print-lab-pane-header > span,
+.print-lab-desk--canvas-mode .print-lab-tool-panel.is-collapsed .print-lab-pane-header > span {
+  display: none;
+}
+
+.print-lab-pane-toggle {
+  min-height: 26px;
+  padding: 2px 7px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.print-lab-desk--canvas-mode .is-collapsed .print-lab-pane-toggle {
+  width: 32px;
+  padding: 6px 2px;
+  writing-mode: vertical-rl;
 }
 
 .print-lab-desk--canvas-mode .print-lab-source-row {
@@ -14501,6 +14558,11 @@ a.button {
   color: #fff;
 }
 
+.print-lab-canvas-zoombar .button[aria-pressed='true'] {
+  border-color: #93c5fd;
+  background: #1d4ed8;
+}
+
 .print-lab-canvas-zoombar > span {
   min-width: 42px;
   color: #d1d5db;
@@ -14525,14 +14587,20 @@ a.button {
   height: 100%;
   min-height: 0;
   display: grid;
-  place-items: start center;
+  place-items: center;
   overflow: auto;
-  padding: 28px;
+  padding: 20px;
   background:
     linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
     #1f2937;
   background-size: 28px 28px;
+}
+
+.print-lab-canvas-shell {
+  position: relative;
+  flex: 0 0 auto;
+  margin: auto;
 }
 
 .print-lab-canvas-stage {
@@ -14546,7 +14614,9 @@ a.button {
     #fffdf8;
   background-size: 24px 24px;
   box-shadow: 0 22px 55px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(255, 255, 255, 0.14);
-  transform-origin: top center;
+  transform-origin: top left;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
   touch-action: none;
 }
 
@@ -14751,6 +14821,18 @@ a.button {
     grid-template-columns: minmax(150px, 180px) minmax(0, 1fr) minmax(244px, 286px);
   }
 
+  .print-lab-desk--canvas-mode.is-source-collapsed {
+    grid-template-columns: 42px minmax(0, 1fr) minmax(244px, 286px);
+  }
+
+  .print-lab-desk--canvas-mode.is-tools-collapsed {
+    grid-template-columns: minmax(150px, 180px) minmax(0, 1fr) 42px;
+  }
+
+  .print-lab-desk--canvas-mode.is-source-collapsed.is-tools-collapsed {
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+  }
+
   .print-lab-canvas-topbar {
     grid-template-columns: repeat(2, minmax(80px, 1fr));
   }
@@ -14766,6 +14848,12 @@ a.button {
     grid-template-columns: 1fr;
     min-height: auto;
     overflow: visible;
+  }
+
+  .print-lab-desk--canvas-mode.is-source-collapsed,
+  .print-lab-desk--canvas-mode.is-tools-collapsed,
+  .print-lab-desk--canvas-mode.is-source-collapsed.is-tools-collapsed {
+    grid-template-columns: 1fr;
   }
 
   .print-lab-desk--canvas-mode .print-lab-source-pane,
@@ -14804,10 +14892,18 @@ a.button {
     background: #fff !important;
   }
 
+  .print-lab-canvas-shell {
+    width: auto !important;
+    height: auto !important;
+    margin: 0 auto !important;
+  }
+
   .print-lab-canvas-stage {
     margin: 0 auto !important;
     box-shadow: none !important;
     transform: none !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
   }
 
   .print-lab-canvas-block {
