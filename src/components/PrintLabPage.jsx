@@ -23,13 +23,27 @@ const toolOptions = [
 const fitOptions = ['cover', 'contain', 'stretch']
 const orientationOptions = ['portrait', 'landscape']
 const imagePositionOptions = ['top', 'side', 'background']
-const canvasFontOptions = [
+const printlabGoogleFontsHref = 'https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Libre+Baskerville:wght@400;700&family=Merriweather:wght@400;700;900&family=Oswald:wght@400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Roboto+Condensed:wght@400;700&family=Source+Serif+4:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap'
+const systemCanvasFontOptions = [
   { label: 'System Sans', value: 'system', family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
   { label: 'Serif', value: 'serif', family: 'serif' },
   { label: 'Monospace', value: 'monospace', family: '"Courier New", Courier, monospace' },
   { label: 'Impact / Poster', value: 'impact', family: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif' },
   { label: 'Georgia', value: 'georgia', family: 'Georgia, "Times New Roman", serif' },
 ]
+const googleCanvasFontOptions = [
+  { label: 'Oswald', value: 'google-oswald', family: '"Oswald", "Arial Narrow", sans-serif' },
+  { label: 'Roboto Condensed', value: 'google-roboto-condensed', family: '"Roboto Condensed", "Arial Narrow", sans-serif' },
+  { label: 'Libre Baskerville', value: 'google-libre-baskerville', family: '"Libre Baskerville", Georgia, serif' },
+  { label: 'Playfair Display', value: 'google-playfair-display', family: '"Playfair Display", Georgia, serif' },
+  { label: 'Bebas Neue', value: 'google-bebas-neue', family: '"Bebas Neue", Impact, sans-serif' },
+  { label: 'Archivo Black', value: 'google-archivo-black', family: '"Archivo Black", Impact, sans-serif' },
+  { label: 'Merriweather', value: 'google-merriweather', family: '"Merriweather", Georgia, serif' },
+  { label: 'Source Serif 4', value: 'google-source-serif-4', family: '"Source Serif 4", Georgia, serif' },
+  { label: 'Space Mono', value: 'google-space-mono', family: '"Space Mono", "Courier New", monospace' },
+  { label: 'Inter', value: 'google-inter', family: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+]
+const canvasFontOptions = [...systemCanvasFontOptions, ...googleCanvasFontOptions]
 const defaultCanvasSize = { width: 720, height: 540 }
 const canvasPresetOptions = {
   landscape: { label: 'Landscape', width: 720, height: 540 },
@@ -377,6 +391,9 @@ function buildExportHtml(previewHtml, title) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(title || 'Printlab Output')}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="${printlabGoogleFontsHref}">
   <style>
     * { box-sizing: border-box; }
     body { margin: 24px; font-family: Arial, sans-serif; background: #e5e5e5; color: #111; }
@@ -449,6 +466,25 @@ export function PrintLabPage({ pieces = [] }) {
   const canvasRef = useRef(null)
   const canvasViewportRef = useRef(null)
   const wordpressFeed = useWordPressPieces(pieces)
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (document.getElementById('printlab-google-fonts')) return
+    const preconnectGoogle = document.createElement('link')
+    preconnectGoogle.id = 'printlab-google-fonts-preconnect-google'
+    preconnectGoogle.rel = 'preconnect'
+    preconnectGoogle.href = 'https://fonts.googleapis.com'
+    const preconnectStatic = document.createElement('link')
+    preconnectStatic.id = 'printlab-google-fonts-preconnect-static'
+    preconnectStatic.rel = 'preconnect'
+    preconnectStatic.href = 'https://fonts.gstatic.com'
+    preconnectStatic.crossOrigin = ''
+    const stylesheet = document.createElement('link')
+    stylesheet.id = 'printlab-google-fonts'
+    stylesheet.rel = 'stylesheet'
+    stylesheet.href = printlabGoogleFontsHref
+    document.head.append(preconnectGoogle, preconnectStatic, stylesheet)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -1356,9 +1392,16 @@ export function PrintLabPage({ pieces = [] }) {
                             value={selectedCanvasBlock.fontFamily || 'system'}
                             onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { fontFamily: event.target.value })}
                           >
-                            {canvasFontOptions.map((option) => (
-                              <option key={option.value} value={option.value}>{option.label}</option>
-                            ))}
+                            <optgroup label="System fonts">
+                              {systemCanvasFontOptions.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </optgroup>
+                            <optgroup label="Google Fonts">
+                              {googleCanvasFontOptions.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </optgroup>
                           </select>
                         </label>
                         <label className="print-lab-field">
