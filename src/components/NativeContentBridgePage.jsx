@@ -669,18 +669,22 @@ export function NativeContentBridgePage() {
               )}
             </div>
 
-            <div className="native-content-editor__toolbar" aria-label="Editor toolbar">
-              {['bold', 'italic', 'link', 'ul', 'ol', 'quote', 'left', 'center', 'right'].map((action) => (
-                <button className="button" key={action} type="button" onClick={() => handleToolbarAction(action)}>
-                  {action}
-                </button>
-              ))}
-              <button className="button" type="button" onClick={() => setOpenMediaFor('body')}>Add Media</button>
-            </div>
+            <div className="native-content-editor__chrome">
+              <div className="native-content-editor__media-row">
+                <button className="button native-content-editor__add-media" type="button" onClick={() => setOpenMediaFor('body')}>Add Media</button>
+                <div className="native-content-editor__tabs">
+                  <button className={`button${editorTab === 'visual' ? ' button--primary' : ''}`} type="button" onClick={() => handleEditorTabChange('visual')}>Visual</button>
+                  <button className={`button${editorTab === 'text' ? ' button--primary' : ''}`} type="button" onClick={() => handleEditorTabChange('text')}>Text</button>
+                </div>
+              </div>
 
-            <div className="native-content-editor__tabs">
-              <button className={`button${editorTab === 'visual' ? ' button--primary' : ''}`} type="button" onClick={() => handleEditorTabChange('visual')}>Visual</button>
-              <button className={`button${editorTab === 'text' ? ' button--primary' : ''}`} type="button" onClick={() => handleEditorTabChange('text')}>Text</button>
+              <div className="native-content-editor__toolbar" aria-label="Editor toolbar">
+                {['bold', 'italic', 'link', 'ul', 'ol', 'quote', 'left', 'center', 'right'].map((action) => (
+                  <button className="button" key={action} type="button" onClick={() => handleToolbarAction(action)}>
+                    {action}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {editorTab === 'visual' ? (
@@ -707,15 +711,6 @@ export function NativeContentBridgePage() {
                 onChange={(event) => setDraft((current) => ({ ...current, body: event.target.value }))}
               />
             )}
-
-            <label className="native-content-editor__field">
-              <span>Excerpt</span>
-              <textarea
-                rows="4"
-                value={draft.excerpt || ''}
-                onChange={(event) => setDraft((current) => ({ ...current, excerpt: event.target.value }))}
-              />
-            </label>
           </article>
 
           <aside className="native-bridge-sidebar native-bridge-sidebar--open">
@@ -768,10 +763,6 @@ export function NativeContentBridgePage() {
                   <option value="experience">Experience</option>
                   <option value="print">Print</option>
                 </select>
-              </label>
-              <label className="native-content-editor__check">
-                <input type="checkbox" checked={allowComments} onChange={(event) => setAllowComments(event.target.checked)} />
-                <span>Allow comments</span>
               </label>
             </section>
 
@@ -840,6 +831,26 @@ export function NativeContentBridgePage() {
                 <input value={draft.featuredImage || ''} onChange={(event) => setDraft((current) => ({ ...current, featuredImage: event.target.value, heroImage: event.target.value }))} />
               </label>
               <button className="button" type="button" onClick={() => setOpenMediaFor('featured')}>Choose from Media</button>
+            </section>
+
+            <section className="wp-meta-box">
+              <h2>Excerpt</h2>
+              <label className="native-content-editor__field native-content-editor__field--plain">
+                <span>Excerpt</span>
+                <textarea
+                  rows="4"
+                  value={draft.excerpt || ''}
+                  onChange={(event) => setDraft((current) => ({ ...current, excerpt: event.target.value }))}
+                />
+              </label>
+            </section>
+
+            <section className="wp-meta-box">
+              <h2>Discussion</h2>
+              <label className="native-content-editor__check">
+                <input type="checkbox" checked={allowComments} onChange={(event) => setAllowComments(event.target.checked)} />
+                <span>Allow comments</span>
+              </label>
             </section>
 
             {revisions.length ? (
