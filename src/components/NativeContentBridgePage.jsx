@@ -642,6 +642,219 @@ export function NativeContentBridgePage() {
         </div>
         <WpAdminNotices />
 
+        <section className="native-bridge-layout">
+          <article className="native-bridge-main">
+            <label className="native-content-editor__title-field">
+              <span>Title</span>
+              <input
+                value={draft.title || ''}
+                onChange={(event) => handleTitleChange(event.target.value)}
+                placeholder="Add title"
+              />
+            </label>
+
+            <div className="native-content-editor__permalink">
+              <span>Permalink</span>
+              {isPermalinkEditing ? (
+                <>
+                  <input value={permalinkDraft} onChange={(event) => setPermalinkDraft(event.target.value)} />
+                  <button className="button" type="button" onClick={handlePermalinkConfirm}>OK</button>
+                  <button className="button" type="button" onClick={handlePermalinkCancel}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <code>{draft.slug || slugify(draft.title) || draft.id}</code>
+                  <button className="button" type="button" onClick={() => setIsPermalinkEditing(true)}>Edit</button>
+                </>
+              )}
+            </div>
+
+            <div className="native-content-editor__toolbar" aria-label="Editor toolbar">
+              {['bold', 'italic', 'link', 'ul', 'ol', 'quote', 'left', 'center', 'right'].map((action) => (
+                <button className="button" key={action} type="button" onClick={() => handleToolbarAction(action)}>
+                  {action}
+                </button>
+              ))}
+              <button className="button" type="button" onClick={() => setOpenMediaFor('body')}>Add Media</button>
+            </div>
+
+            <div className="native-content-editor__tabs">
+              <button className={`button${editorTab === 'visual' ? ' button--primary' : ''}`} type="button" onClick={() => handleEditorTabChange('visual')}>Visual</button>
+              <button className={`button${editorTab === 'text' ? ' button--primary' : ''}`} type="button" onClick={() => handleEditorTabChange('text')}>Text</button>
+            </div>
+
+            {editorTab === 'visual' ? (
+              <div className="native-content-editor__visual-wrap">
+                {visualEditorEmpty ? <span className="native-content-editor__placeholder">Start writing...</span> : null}
+                <div
+                  className="native-content-editor__visual"
+                  contentEditable
+                  ref={visualEditorRef}
+                  suppressContentEditableWarning
+                  onBlur={syncVisualBodyIntoDraft}
+                  onInput={() => {
+                    const html = visualEditorRef.current?.innerHTML || ''
+                    setVisualEditorEmpty(isVisualEditorEmpty(html))
+                  }}
+                />
+              </div>
+            ) : (
+              <textarea
+                className="native-content-editor__textarea"
+                ref={textareaRef}
+                rows="18"
+                value={draft.body || ''}
+                onChange={(event) => setDraft((current) => ({ ...current, body: event.target.value }))}
+              />
+            )}
+
+            <label className="native-content-editor__field">
+              <span>Excerpt</span>
+              <textarea
+                rows="4"
+                value={draft.excerpt || ''}
+                onChange={(event) => setDraft((current) => ({ ...current, excerpt: event.target.value }))}
+              />
+            </label>
+          </article>
+
+          <aside className="native-bridge-sidebar native-bridge-sidebar--open">
+            <section className="wp-meta-box">
+              <h2>Publish</h2>
+              <label className="native-content-editor__field">
+                <span>Status</span>
+                <select value={draft.status || 'draft'} onChange={(event) => setDraft((current) => ({ ...current, status: event.target.value, workflowState: event.target.value }))}>
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="trash">Trash</option>
+                </select>
+              </label>
+              {draft.status === 'scheduled' ? (
+                <label className="native-content-editor__field">
+                  <span>Scheduled for</span>
+                  <input
+                    type="datetime-local"
+                    value={toLocalDateTime(draft.scheduledFor)}
+                    onChange={(event) => setDraft((current) => ({ ...current, scheduledFor: fromLocalDateTime(event.target.value) }))}
+                  />
+                </label>
+              ) : null}
+              <div className="native-content-editor__actions">
+                <button className="button" type="button" onClick={() => handleSave('save draft', { status: 'draft', workflowState: 'draft' })}>Save Draft</button>
+                <button className="button" type="button" onClick={handlePreviewChanges}>Preview</button>
+                <button className="button button--primary" type="button" onClick={() => handleSave('publish', { status: 'published', workflowState: 'published' })}>Publish</button>
+                {searchParams.get('edit') ? <button className="button button-link-delete" type="button" onClick={handleMoveToTrash}>Trash</button> : null}
+              </div>
+              {autosaveState.status === 'saved' ? <p className="description">Autosaved {formatAutosaveTime(autosaveState.at)}</p> : null}
+              {publishSuccess ? <p className="description" role="status">Saved: <Link to={publishSuccess.slug ? `/post/${publishSuccess.slug}` : `/native-preview/${publishSuccess.id}`}>{publishSuccess.title}</Link></p> : null}
+            </section>
+
+            <section className="wp-meta-box">
+              <h2>Post Settings</h2>
+              <label className="native-content-editor__field">
+                <span>Content type</span>
+                <select value={draft.contentType || 'dispatch'} onChange={(event) => setDraft((current) => ({ ...current, contentType: event.target.value }))}>
+                  <option value="dispatch">Dispatch</option>
+                  <option value="podcast">Podcast</option>
+                  <option value="print">Print</option>
+                  <option value="note">Note</option>
+                </select>
+              </label>
+              <label className="native-content-editor__field">
+                <span>Default display</span>
+                <select value={displaySettings.defaultMode} onChange={(event) => setDraft((current) => applyDisplayPatch(current, { defaultMode: event.target.value }))}>
+                  <option value="read">Read</option>
+                  <option value="experience">Experience</option>
+                  <option value="print">Print</option>
+                </select>
+              </label>
+              <label className="native-content-editor__check">
+                <input type="checkbox" checked={allowComments} onChange={(event) => setAllowComments(event.target.checked)} />
+                <span>Allow comments</span>
+              </label>
+            </section>
+
+            <section className="wp-meta-box">
+              <h2>Categories</h2>
+              <div className="native-content-editor__tabs">
+                <button className={`button${categoryTab === 'all' ? ' button--primary' : ''}`} type="button" onClick={() => setCategoryTab('all')}>All</button>
+                <button className={`button${categoryTab === 'used' ? ' button--primary' : ''}`} type="button" onClick={() => setCategoryTab('used')}>Most Used</button>
+              </div>
+              {(categoryTab === 'used' ? mostUsedCategories : categoryOptions).map((category) => (
+                <label className="native-content-editor__check" key={category}>
+                  <input
+                    type="checkbox"
+                    checked={(draft.categories || []).includes(category)}
+                    onChange={(event) => setDraft((current) => {
+                      const currentCategories = normalizeTermList(current.categories || current.projects)
+                      const next = event.target.checked
+                        ? [...new Set([...currentCategories, category])]
+                        : currentCategories.filter((item) => item !== category)
+                      return { ...current, categories: next, projects: next }
+                    })}
+                  />
+                  <span>{category}</span>
+                </label>
+              ))}
+              <div className="native-content-editor__inline-add">
+                <input value={newCategory} onChange={(event) => setNewCategory(event.target.value)} />
+                <button className="button" type="button" onClick={() => {
+                  const category = newCategory.trim()
+                  if (!category) return
+                  setDraft((current) => {
+                    const next = [...new Set([...normalizeTermList(current.categories || current.projects), category])]
+                    return { ...current, categories: next, projects: next }
+                  })
+                  setNewCategory('')
+                }}>Add</button>
+              </div>
+            </section>
+
+            <section className="wp-meta-box">
+              <h2>Tags</h2>
+              <div className="native-content-editor__inline-add">
+                <input value={tagInput} onChange={(event) => setTagInput(event.target.value)} onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    addTagsFromInput()
+                  }
+                }} />
+                <button className="button" type="button" onClick={() => addTagsFromInput()}>Add</button>
+              </div>
+              <p className="description">{(draft.tags || []).join(', ') || 'No tags'}</p>
+              {mostUsedTags.length ? (
+                <p className="description">
+                  {mostUsedTags.slice(0, 8).map((tag) => (
+                    <button className="button" type="button" key={tag} onClick={() => addTagsFromInput(tag)}>{tag}</button>
+                  ))}
+                </p>
+              ) : null}
+            </section>
+
+            <section className="wp-meta-box">
+              <h2>Featured Image</h2>
+              {draft.featuredImage ? <img className="native-content-editor__featured-preview" src={draft.featuredImage} alt="" /> : null}
+              <label className="native-content-editor__field">
+                <span>Image URL</span>
+                <input value={draft.featuredImage || ''} onChange={(event) => setDraft((current) => ({ ...current, featuredImage: event.target.value, heroImage: event.target.value }))} />
+              </label>
+              <button className="button" type="button" onClick={() => setOpenMediaFor('featured')}>Choose from Media</button>
+            </section>
+
+            {revisions.length ? (
+              <section className="wp-meta-box">
+                <h2>Revisions</h2>
+                {revisions.slice(0, 5).map((revision) => (
+                  <button className="button" type="button" key={revision.id} onClick={() => restoreRevision(revision)}>
+                    {new Date(revision.createdAt).toLocaleString()}
+                  </button>
+                ))}
+              </section>
+            ) : null}
+          </aside>
+        </section>
+
         <MediaPickerModal
           open={Boolean(openMediaFor)}
           onClose={() => setOpenMediaFor('')}

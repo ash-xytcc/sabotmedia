@@ -42,6 +42,8 @@ const ADMIN_SHELL_PATHS = [
   '/review',
   '/content',
   '/posts',
+  '/add-new',
+  '/post-new',
   '/native-bridge',
   '/native-preview',
   '/podcasts',
@@ -158,6 +160,9 @@ export default function App() {
           <Route path="/admin" element={<AdminPage pieces={pieces} />} />
           <Route path="/content" element={<ContentListPage />} />
           <Route path="/posts" element={<ContentListPage />} />
+          <Route path="/add-new" element={<Navigate to="/native-bridge?new=article" replace />} />
+          <Route path="/post-new" element={<Navigate to="/native-bridge?new=article" replace />} />
+          <Route path="/wp-admin/post-new.php" element={<Navigate to="/native-bridge?new=article" replace />} />
           <Route path="/overrides" element={<OverridesPage />} />
           <Route path="/media" element={<MediaLibraryPage />} />
           <Route path="/pages" element={<PagesAdminPage />} />
