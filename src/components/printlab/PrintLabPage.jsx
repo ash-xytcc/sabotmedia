@@ -22,6 +22,7 @@ import {
   getHalfFoldOutput,
   getPageLayoutOutput,
   getPosterOutput,
+  getReaderOrderPages,
   getTileOutput,
 } from './lib/outputEngine'
 import {
@@ -265,6 +266,7 @@ export function PrintLabPage({ pieces = [] }) {
   const canvasBlocks = Array.isArray(activePage.blocks) ? activePage.blocks : []
   const selectedCanvasBlock = canvasBlocks.find((block) => block.id === selectedCanvasBlockId) || null
   const uploadedFontFaceCss = useMemo(() => getUploadedFontFaceCss(uploadedCanvasFonts), [uploadedCanvasFonts])
+  const readerOrderPages = useMemo(() => getReaderOrderPages(publication), [publication])
 
   function updateActiveCanvasPage(patchOrFn, options = {}) {
     const { markDirty = true } = options
@@ -307,6 +309,14 @@ export function PrintLabPage({ pieces = [] }) {
 
   function setCanvasBackground(nextBackground) {
     updateActiveCanvasPage({ background: nextBackground, backgroundColor: nextBackground })
+  }
+
+  function updatePublicationTitle(nextTitle) {
+    setPublicationDirty(true)
+    setPublication((current) => ({
+      ...current,
+      title: nextTitle,
+    }))
   }
 
   function selectPublicationPage(pageId) {
@@ -1054,7 +1064,7 @@ export function PrintLabPage({ pieces = [] }) {
     return (
       <aside className={`print-lab-tool-panel${collapsed ? ' is-collapsed' : ''}`} aria-label="Printlab controls">
         <div className="print-lab-pane-header">
-          <h2>Tools</h2>
+          <h2>Output</h2>
           <span>{toolOptions.find((option) => option.id === toolMode)?.label}</span>
           {toolMode === 'canvas' ? (
             <button className="button print-lab-pane-toggle" type="button" onClick={() => setCanvasToolsOpen((open) => !open)}>
@@ -1065,7 +1075,11 @@ export function PrintLabPage({ pieces = [] }) {
 
         <div className="print-lab-tool-scroll">
           <fieldset className="print-lab-control-group">
-            <legend>Mode</legend>
+            <legend>Output view</legend>
+            <div className="print-lab-output-summary">
+              <strong>{currentTool.label}</strong>
+              <span>{outputHint}</span>
+            </div>
             <div className="print-lab-layout-selector">
               {toolOptions.map((option) => (
                 <button
@@ -1193,17 +1207,21 @@ export function PrintLabPage({ pieces = [] }) {
 
           {toolMode === 'canvas' ? (
             <fieldset className="print-lab-control-group">
-              <legend>Canvas</legend>
+              <legend>Publication</legend>
               <div className="print-lab-publication-panel">
                 <div className="print-lab-publication-panel__header">
-                  <strong>{publication.title}</strong>
+                  <strong>{publication.title || 'Untitled Publication'}</strong>
                   <span>{publicationPages.length} page{publicationPages.length === 1 ? '' : 's'}</span>
                 </div>
+                <label className="print-lab-field">
+                  <span>Publication title</span>
+                  <input value={publication.title || ''} onChange={(event) => updatePublicationTitle(event.target.value)} />
+                </label>
                 <label className="print-lab-field">
                   <span>Active page label</span>
                   <input value={activePage.label || ''} onChange={(event) => renameActivePublicationPage(event.target.value)} />
                 </label>
-                <div className="print-lab-page-list" role="listbox" aria-label="Publication pages">
+                <div className="print-lab-page-list print-lab-page-list--cards" role="listbox" aria-label="Publication pages">
                   {publicationPages.map((page, index) => (
                     <button
                       className={page.id === publication.activePageId ? 'is-selected' : ''}
@@ -1213,8 +1231,26 @@ export function PrintLabPage({ pieces = [] }) {
                       aria-selected={page.id === publication.activePageId}
                       onClick={() => selectPublicationPage(page.id)}
                     >
-                      <span>{page.label || `Page ${index + 1}`}</span>
-                      <small>{canvasPresetOptions[page.preset]?.label || page.orientation || 'Page'} / {(page.blocks || []).length} blocks</small>
+                      <span
+                        className="print-lab-page-card-thumb"
+                        style={{ backgroundColor: page.background || page.backgroundColor || '#fffdf8' }}
+                        aria-hidden="true"
+                      >
+                        {(page.blocks || []).slice(0, 4).map((block) => (
+                          <span
+                            className={`print-lab-page-card-block print-lab-page-card-block--${block.type}`}
+                            key={block.id}
+                            style={{
+                              left: `${Math.max(4, Math.min(82, ((Number(block.x || 0) / Math.max(1, Number(page.width || page.canvasSize?.width || canvasSize.width))) * 100)))}%`,
+                              top: `${Math.max(4, Math.min(82, ((Number(block.y || 0) / Math.max(1, Number(page.height || page.canvasSize?.height || canvasSize.height))) * 100)))}%`,
+                            }}
+                          />
+                        ))}
+                      </span>
+                      <span className="print-lab-page-card-copy">
+                        <span>{page.label || `Page ${index + 1}`}</span>
+                        <small>{canvasPresetOptions[page.preset]?.label || page.orientation || 'Page'} / {(page.blocks || []).length} blocks</small>
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -1223,6 +1259,22 @@ export function PrintLabPage({ pieces = [] }) {
                   <button className="button" type="button" onClick={duplicateActivePublicationPage}>Duplicate Page</button>
                   <button className="button" type="button" disabled={publicationPages.length <= 1} onClick={deleteActivePublicationPage}>Delete Page</button>
                 </div>
+              </div>
+              <div className="print-lab-reader-order-panel">
+                <div className="print-lab-reader-order-panel__header">
+                  <strong>Reader Order</strong>
+                  <span>{readerOrderPages.length} page{readerOrderPages.length === 1 ? '' : 's'}</span>
+                </div>
+                <ol className="print-lab-reader-order-list">
+                  {readerOrderPages.map((page) => (
+                    <li className={page.id === publication.activePageId ? 'is-active' : ''} key={page.id}>
+                      <button type="button" onClick={() => selectPublicationPage(page.id)}>
+                        <span>Page {page.pageNumber}</span>
+                        <strong>{page.label || page.title || `Page ${page.pageNumber}`}</strong>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
               </div>
               <div className="print-lab-canvas-document">
                 <label className="print-lab-field">
