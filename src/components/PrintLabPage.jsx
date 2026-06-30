@@ -44,6 +44,7 @@ const googleCanvasFontOptions = [
   { label: 'Inter', value: 'google-inter', family: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
 ]
 const canvasFontOptions = [...systemCanvasFontOptions, ...googleCanvasFontOptions]
+const fontUploadAccept = '.ttf,.otf,.woff,.woff2'
 const defaultCanvasSize = { width: 720, height: 540 }
 const canvasPresetOptions = {
   landscape: { label: 'Landscape', width: 720, height: 540 },
@@ -143,8 +144,28 @@ function clampValue(value, min, max) {
   return Math.min(max, Math.max(min, value))
 }
 
-function getCanvasFontFamily(value) {
+function getCanvasFontFamily(value, uploadedFonts = []) {
+  const uploaded = uploadedFonts.find((font) => font.family === value)
+  if (uploaded) return `"${uploaded.family}", ${canvasFontOptions[0].family}`
   return canvasFontOptions.find((option) => option.value === value)?.family || canvasFontOptions[0].family
+}
+
+function getFontFormat(filename = '') {
+  const extension = String(filename).split('.').pop()?.toLowerCase()
+  if (extension === 'ttf') return 'truetype'
+  if (extension === 'otf') return 'opentype'
+  if (extension === 'woff') return 'woff'
+  if (extension === 'woff2') return 'woff2'
+  return ''
+}
+
+function getUploadedFontFaceCss(fonts = []) {
+  return fonts.map((font) => {
+    if (!font?.family || !font?.dataUrl) return ''
+    const format = getFontFormat(font.name)
+    const formatHint = format ? ` format("${format}")` : ''
+    return `@font-face { font-family: "${font.family}"; src: url("${font.dataUrl}")${formatHint}; font-weight: 100 900; font-style: normal; font-display: swap; }`
+  }).filter(Boolean).join('\n')
 }
 
 function makeCanvasBlock(type, patch = {}) {
@@ -322,6 +343,15 @@ function readImageFile(file) {
   })
 }
 
+function readFontFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Unable to read font file'))
+    reader.readAsDataURL(file)
+  })
+}
+
 function makeDownloadName(label, extension) {
   const safe = String(label || 'printlab-output')
     .toLowerCase()
@@ -461,6 +491,7 @@ export function PrintLabPage({ pieces = [] }) {
   const [canvasZoom, setCanvasZoom] = useState(1)
   const [canvasSourceOpen, setCanvasSourceOpen] = useState(false)
   const [canvasToolsOpen, setCanvasToolsOpen] = useState(true)
+  const [uploadedCanvasFonts, setUploadedCanvasFonts] = useState([])
 
   const previewRef = useRef(null)
   const canvasRef = useRef(null)
@@ -602,6 +633,7 @@ export function PrintLabPage({ pieces = [] }) {
   const needsImageSource = toolMode === 'tile' || toolMode === 'split'
   const canvasSize = canvasPresetOptions[canvasPreset] || canvasPresetOptions.landscape
   const selectedCanvasBlock = canvasBlocks.find((block) => block.id === selectedCanvasBlockId) || null
+  const uploadedFontFaceCss = useMemo(() => getUploadedFontFaceCss(uploadedCanvasFonts), [uploadedCanvasFonts])
 
   useEffect(() => {
     const title = sourceType === 'post'
@@ -1028,6 +1060,32 @@ export function PrintLabPage({ pieces = [] }) {
     event.target.value = ''
   }
 
+  async function handleFontUpload(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    if (!/\.(ttf|otf|woff2?)$/i.test(file.name)) {
+      setActionStatus('Choose a TTF, OTF, WOFF, or WOFF2 font file.')
+      event.target.value = ''
+      return
+    }
+
+    try {
+      const dataUrl = await readFontFile(file)
+      const name = file.name.replace(/\.[^.]+$/, '') || 'Uploaded font'
+      const family = `PrintlabUploadedFont${Date.now()}`
+      const font = { name, family, dataUrl }
+      setUploadedCanvasFonts((fonts) => [...fonts, font])
+      if (selectedCanvasBlock?.type === 'text') {
+        updateCanvasBlock(selectedCanvasBlock.id, { fontFamily: family })
+      }
+      setActionStatus(`${name} added to font menu.`)
+    } catch {
+      setActionStatus('Font upload failed.')
+    } finally {
+      event.target.value = ''
+    }
+  }
+
   async function handleCopyHtml() {
     if (!hasUsableOutput || !previewRef.current) return
     const html = previewRef.current.outerHTML
@@ -1402,6 +1460,13 @@ export function PrintLabPage({ pieces = [] }) {
                                 <option key={option.value} value={option.value}>{option.label}</option>
                               ))}
                             </optgroup>
+                            {uploadedCanvasFonts.length ? (
+                              <optgroup label="Uploaded fonts">
+                                {uploadedCanvasFonts.map((font) => (
+                                  <option key={font.family} value={font.family}>{font.name}</option>
+                                ))}
+                              </optgroup>
+                            ) : null}
                           </select>
                         </label>
                         <label className="print-lab-field">
@@ -1409,6 +1474,10 @@ export function PrintLabPage({ pieces = [] }) {
                           <input type="number" min="8" max="96" value={selectedCanvasBlock.fontSize || 16} onChange={(event) => updateCanvasBlock(selectedCanvasBlock.id, { fontSize: clampNumber(event.target.value, 8, 96) })} />
                         </label>
                       </div>
+                      <label className="print-lab-field">
+                        <span>Upload font</span>
+                        <input type="file" accept={fontUploadAccept} onChange={handleFontUpload} />
+                      </label>
                       <div className="print-lab-control-grid">
                         <label className="print-lab-field print-lab-color-field">
                           <span>Color</span>
@@ -1649,6 +1718,7 @@ export function PrintLabPage({ pieces = [] }) {
   function renderCanvasPreview() {
     return (
       <article className="print-lab-preview print-lab-output print-lab-preview--canvas" ref={previewRef}>
+        {uploadedFontFaceCss ? <style>{uploadedFontFaceCss}</style> : null}
         <div
           className="print-lab-canvas-viewport"
           ref={canvasViewportRef}
@@ -1728,7 +1798,7 @@ export function PrintLabPage({ pieces = [] }) {
                       onBlur={(event) => updateCanvasBlock(block.id, { text: event.currentTarget.innerText })}
                       style={{
                         color: block.color,
-                        fontFamily: getCanvasFontFamily(block.fontFamily),
+                        fontFamily: getCanvasFontFamily(block.fontFamily, uploadedCanvasFonts),
                         fontSize: `${block.fontSize}px`,
                         fontWeight: block.fontWeight,
                         lineHeight: block.lineHeight,
