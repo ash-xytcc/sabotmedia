@@ -1161,7 +1161,9 @@ export function PrintLabPage({ pieces = [] }) {
                   <strong>{uploadImage.title}</strong>
                   <span>{uploadImage.meta}</span>
                 </div>
-              ) : null}
+              ) : (
+                <p className="print-lab-empty-note print-lab-empty-note--compact">Choose an image to use in Tile Sheet, Poster Split, Page Layout, Zine, or Canvas.</p>
+              )}
             </div>
           ) : null}
 
@@ -1580,7 +1582,11 @@ export function PrintLabPage({ pieces = [] }) {
             ))}
           </div>
         ) : (
-          <p className="print-lab-preview-empty">{missingSourceMessage}</p>
+          <div className="print-lab-preview-empty print-lab-preview-empty--source">
+            <strong>Upload or select an image</strong>
+            <span>{`${tileRows}x${tileColumns} tile sheet ready`}</span>
+            <p>{missingSourceMessage}</p>
+          </div>
         )}
       </article>
     )
@@ -1633,7 +1639,11 @@ export function PrintLabPage({ pieces = [] }) {
             })}
           </div>
         ) : (
-          <p className="print-lab-preview-empty">{missingSourceMessage}</p>
+          <div className="print-lab-preview-empty print-lab-preview-empty--source">
+            <strong>Image required for poster split</strong>
+            <span>{`${splitWide}x${splitTall} printable panel preview`}</span>
+            <p>{missingSourceMessage}</p>
+          </div>
         )}
       </article>
     )
@@ -1641,45 +1651,47 @@ export function PrintLabPage({ pieces = [] }) {
 
   function renderPagePreview() {
     const hasImage = Boolean(currentImageUrl)
+    const titleText = pageTitle.trim() || (selectedPostTitle && sourceType === 'post' ? selectedPostTitle : 'Flyer / Article Title')
+    const bodyText = pageBody.trim() || (sourceType === 'post' ? truncateText(selectedPostBody || selectedPostExcerpt, 520) : '')
+    const bodyContent = bodyText || 'Use this page layout for a flyer, article handout, one-sheet, or announcement. Add body copy in Tools and choose an image source to compose a print-ready page.'
+    const footerText = pageFooter.trim() || (sourceType === 'post' ? 'Source: CMS post' : 'Footer / source line')
     return (
       <article
-        className={`print-lab-preview print-lab-output print-lab-page-preview print-lab-page-preview--${pageOrientation} print-lab-page-preview--image-${pageImagePosition}`}
+        className={`print-lab-preview print-lab-output print-lab-page-preview print-lab-page-preview--${pageOrientation} print-lab-page-preview--image-${pageImagePosition}${pageHasContent ? '' : ' print-lab-page-preview--starter'}`}
         ref={previewRef}
       >
-        {pageHasContent ? (
-          <>
-            {hasImage && pageImagePosition === 'background' ? (
-              <div className="print-lab-page-background" style={{ backgroundImage: `url("${currentImageUrl}")` }} />
-            ) : null}
+        {hasImage && pageImagePosition === 'background' ? (
+          <div className="print-lab-page-background" style={{ backgroundImage: `url("${currentImageUrl}")` }} />
+        ) : null}
 
-            <div className="print-lab-page-content">
-              {hasImage && pageImagePosition === 'top' ? (
-                <figure className="print-lab-page-image">
+        <div className="print-lab-page-content">
+          {hasImage && pageImagePosition === 'top' ? (
+            <figure className="print-lab-page-image">
+              <img src={currentImageUrl} alt="" />
+            </figure>
+          ) : null}
+
+          {!hasImage && pageImagePosition === 'top' ? <div className="print-lab-page-image-placeholder">Image area</div> : null}
+
+          <div className="print-lab-page-main">
+            <header className="print-lab-page-header">
+              <span>{pageHasContent ? 'Page Layout' : 'Starter Layout'}</span>
+              <h2>{titleText}</h2>
+            </header>
+
+            <div className="print-lab-page-body">
+              {hasImage && pageImagePosition === 'side' ? (
+                <figure className="print-lab-page-image print-lab-page-image--side">
                   <img src={currentImageUrl} alt="" />
                 </figure>
               ) : null}
-
-              <div className="print-lab-page-main">
-                <header className="print-lab-page-header">
-                  {pageTitle.trim() ? <h2>{pageTitle}</h2> : null}
-                </header>
-
-                <div className="print-lab-page-body">
-                  {hasImage && pageImagePosition === 'side' ? (
-                    <figure className="print-lab-page-image print-lab-page-image--side">
-                      <img src={currentImageUrl} alt="" />
-                    </figure>
-                  ) : null}
-                  {renderParagraphs(pageBody)}
-                </div>
-              </div>
+              {!hasImage && pageImagePosition === 'side' ? <div className="print-lab-page-image-placeholder print-lab-page-image-placeholder--side">Image area</div> : null}
+              {renderParagraphs(bodyContent)}
             </div>
+          </div>
+        </div>
 
-            {pageFooter.trim() ? <footer className="print-lab-page-footer">{pageFooter}</footer> : null}
-          </>
-        ) : (
-          <p className="print-lab-preview-empty">Add text or choose an image to compose a page layout.</p>
-        )}
+        <footer className="print-lab-page-footer">{footerText}</footer>
       </article>
     )
   }
@@ -1690,27 +1702,26 @@ export function PrintLabPage({ pieces = [] }) {
 
     return (
       <article className="print-lab-preview print-lab-output print-lab-preview--half-fold-zine" ref={previewRef}>
-        {zineHasContent ? (
-          <div className="print-lab-zine-spread">
-            <section className="print-lab-zine-panel print-lab-zine-panel--cover">
-              <span>Half-Fold Zine</span>
-              {coverTitle ? <h2>{coverTitle}</h2> : null}
-              {zineFooter.trim() ? <p>{zineFooter}</p> : null}
-            </section>
-            <section className="print-lab-zine-panel print-lab-zine-panel--inside">
-              {hasImage ? (
-                <figure>
-                  <img src={currentImageUrl} alt="" />
-                </figure>
-              ) : null}
-              <div className="print-lab-zine-copy">
-                {renderParagraphs(zineBody)}
-              </div>
-            </section>
-          </div>
-        ) : (
-          <p className="print-lab-preview-empty">Add text or image source to build a half-fold zine.</p>
-        )}
+        <div className={`print-lab-zine-spread${zineHasContent ? '' : ' print-lab-zine-spread--starter'}`}>
+          <section className="print-lab-zine-panel print-lab-zine-panel--cover">
+            <span>Left panel / cover</span>
+            <h2>{coverTitle || 'Half-Fold Zine Title'}</h2>
+            <p>{zineFooter.trim() || 'Colophon / footer'}</p>
+          </section>
+          <section className="print-lab-zine-panel print-lab-zine-panel--inside">
+            <span>Right panel / inside</span>
+            {hasImage ? (
+              <figure>
+                <img src={currentImageUrl} alt="" />
+              </figure>
+            ) : (
+              <div className="print-lab-zine-image-placeholder">Image area</div>
+            )}
+            <div className="print-lab-zine-copy">
+              {renderParagraphs(zineBody || 'Add short text for the inside panel. This half-fold preview stays visible so the left/right fold relationship is clear before content is finished.')}
+            </div>
+          </section>
+        </div>
       </article>
     )
   }
