@@ -68,7 +68,9 @@ const printlabGoogleFontsHref = 'https://fonts.googleapis.com/css2?family=Archiv
 const fontUploadAccept = '.ttf,.otf,.woff,.woff2'
 
 function getPieceId(piece) {
-  return String(piece?.id || piece?.slug || piece?.sourcePostId || piece?.title || '')
+  const source = piece?.sourceKind || piece?.sourcePostType || piece?.origin || 'imported'
+  const id = piece?.id || piece?.slug || piece?.sourcePostId || piece?.title || ''
+  return `${source}:${String(id)}`
 }
 
 function getContentType(piece) {
@@ -268,6 +270,7 @@ export function PrintLabPage({ pieces = [] }) {
   const currentTool = toolOptions.find((option) => option.id === toolMode) || toolOptions[0]
   const needsImageSource = toolMode === 'tile' || toolMode === 'split'
   const publicationPages = Array.isArray(publication.pages) ? publication.pages : []
+  const postFlowMode = toolMode === 'zine' || publication.outputSettings?.sourceFlow === 'zine' ? 'zine' : 'publication'
   const activePage = getActivePage(publication) || createPublicationPage({ id: 'page-1', label: 'Page 1' })
   const canvasPreset = activePage.preset || 'landscape'
   const presetSize = canvasPresetOptions[canvasPreset] || canvasPresetOptions.landscape
@@ -618,6 +621,8 @@ export function PrintLabPage({ pieces = [] }) {
 
   function flowSelectedPostIntoPublication({ replace = false } = {}) {
     if (sourceType !== 'post' || !selectedPiece) return
+    const sourceId = getPieceId(selectedPiece)
+    const sourceTitle = selectedPostTitle || selectedPiece.title || 'Untitled'
     const footer = ['SABOT MEDIA', getContentType(selectedPiece), getPublishedAtLabel(selectedPiece)]
       .filter(Boolean)
       .join(' / ')
@@ -631,9 +636,10 @@ export function PrintLabPage({ pieces = [] }) {
       setActionStatus('No usable title, image, excerpt, or body text was found for the selected CMS post.')
       return
     }
-    const buildPages = toolMode === 'zine' ? buildZinePublicationFromPost : buildPublicationPagesFromPost
+    const isZineFlow = postFlowMode === 'zine'
+    const buildPages = isZineFlow ? buildZinePublicationFromPost : buildPublicationPagesFromPost
     const pages = buildPages({
-      title: selectedPostTitle || selectedPiece.title || 'Untitled',
+      title: sourceTitle,
       body: selectedPostBody || '',
       excerpt: selectedPostExcerpt || '',
       imageUrl: currentImageUrl,
@@ -648,9 +654,21 @@ export function PrintLabPage({ pieces = [] }) {
       const nextPages = replace ? pages : [...existingPages, ...pages]
       return {
         ...current,
-        title: selectedPostTitle || current.title || 'Printlab Publication',
+        title: sourceTitle || current.title || 'Printlab Publication',
         pages: nextPages,
         activePageId: pages[0]?.id || nextPages[0]?.id || current.activePageId,
+        source: {
+          type: 'post',
+          id: sourceId,
+          title: sourceTitle,
+        },
+        outputSettings: {
+          ...(current.outputSettings || {}),
+          sourceType: 'post',
+          sourceId,
+          sourceTitle,
+          sourceFlow: postFlowMode,
+        },
       }
     })
     setSelectedCanvasBlockId(pages[0]?.blocks?.[0]?.id || '')
@@ -658,7 +676,7 @@ export function PrintLabPage({ pieces = [] }) {
     setCanvasContextMenu(null)
     setToolMode('canvas')
     setCanvasToolsOpen(true)
-    setActionStatus(`Post flowed into ${pages.length} ${toolMode === 'zine' ? 'zine' : 'publication'} page${pages.length === 1 ? '' : 's'}. Preview in Half-Fold to print.`)
+    setActionStatus(`Flowed "${sourceTitle}" into ${pages.length} ${isZineFlow ? 'zine' : 'publication'} page${pages.length === 1 ? '' : 's'}. Preview in Half-Fold to print.`)
     window.setTimeout(fitCanvasToViewport, 0)
   }
 
@@ -1218,7 +1236,7 @@ export function PrintLabPage({ pieces = [] }) {
                         aria-selected={selected}
                         onClick={() => {
                           setSelectedId(id)
-                          setActionStatus(`Selected CMS post: ${piece.title || 'Untitled'}. Use Flow post into ${toolMode === 'zine' ? 'zine pages' : 'publication'} to create editable pages.`)
+                          setActionStatus(`Selected CMS post: ${piece.title || 'Untitled'}. Use Flow post into ${postFlowMode === 'zine' ? 'zine pages' : 'publication'} to create editable pages.`)
                         }}
                       >
                         {image ? (
@@ -1242,13 +1260,13 @@ export function PrintLabPage({ pieces = [] }) {
               ) : null}
               {selectedPiece ? (
                 <div className="print-lab-source-action">
-                  <button className="button button-primary" type="button" onClick={() => flowSelectedPostIntoPublication({ replace: !publicationDirty })}>
-                    {toolMode === 'zine' ? 'Flow post into zine pages' : 'Flow post into publication'}
+                  <button className="button button-primary" type="button" onClick={() => flowSelectedPostIntoPublication({ replace: true })}>
+                    {publicationDirty ? `Replace publication with ${postFlowMode === 'zine' ? 'zine pages' : 'selected post'}` : (postFlowMode === 'zine' ? 'Flow post into zine pages' : 'Flow post into publication')}
                   </button>
                   <p className="print-lab-empty-note print-lab-empty-note--compact">
-                    {toolMode === 'zine'
+                    {postFlowMode === 'zine'
                       ? 'Creates editable portrait zine pages from the selected CMS post.'
-                      : 'Creates editable publication pages from the selected CMS post.'}
+                      : 'Replaces the current publication with editable pages from the selected CMS post.'}
                   </p>
                 </div>
               ) : null}
@@ -1332,13 +1350,13 @@ export function PrintLabPage({ pieces = [] }) {
           {sourceType === 'post' && selectedPiece ? (
             <fieldset className="print-lab-control-group">
               <legend>Article flow</legend>
-              <button className="button" type="button" onClick={() => flowSelectedPostIntoPublication({ replace: !publicationDirty })}>
-                {toolMode === 'zine' ? 'Flow post into zine pages' : 'Flow post into publication'}
+              <button className="button" type="button" onClick={() => flowSelectedPostIntoPublication({ replace: true })}>
+                {publicationDirty ? `Replace publication with ${postFlowMode === 'zine' ? 'zine pages' : 'selected post'}` : (postFlowMode === 'zine' ? 'Flow post into zine pages' : 'Flow post into publication')}
               </button>
               <p className="print-lab-empty-note print-lab-empty-note--compact">
-                {toolMode === 'zine'
+                {postFlowMode === 'zine'
                   ? 'Builds editable portrait zine pages, then Half-Fold imposes them for print.'
-                  : (publicationDirty ? 'Adds new article pages after your current publication.' : 'Builds editable portrait pages from the selected post.')}
+                  : 'Replaces the current publication with editable portrait pages from the selected post.'}
               </p>
             </fieldset>
           ) : null}

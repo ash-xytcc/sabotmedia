@@ -5,7 +5,9 @@ import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../../.
 import { useWordPressPieces } from '../../../lib/useWordPressPieces'
 
 function getPieceId(piece) {
-  return String(piece?.id || piece?.slug || piece?.sourcePostId || piece?.title || '')
+  const source = piece?.sourceKind || piece?.sourcePostType || piece?.origin || 'imported'
+  const id = piece?.id || piece?.slug || piece?.sourcePostId || piece?.title || ''
+  return `${source}:${String(id)}`
 }
 
 function getContentType(piece) {
