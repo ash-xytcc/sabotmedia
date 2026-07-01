@@ -17,6 +17,7 @@ import {
   systemCanvasFontOptions,
 } from './lib/canvasMath'
 import { buildExportHtml } from './lib/exportHtml'
+import { CanvasFloatingToolbar } from './CanvasFloatingToolbar'
 import {
   getCanvasOutput,
   getHalfFoldOutput,
@@ -1537,20 +1538,43 @@ export function PrintLabPage({ pieces = [] }) {
 
   function renderCanvasPreview() {
     return (
-      <CanvasRenderer
-        previewRef={previewRef}
-        output={canvasOutput}
-        uploadedFontFaceCss={uploadedFontFaceCss}
-        canvasViewportRef={canvasViewportRef}
-        canvasRef={canvasRef}
-        canvasZoom={canvasZoom}
-        selectedCanvasBlockId={selectedCanvasBlockId}
-        setSelectedCanvasBlockId={setSelectedCanvasBlockId}
-        uploadedCanvasFonts={uploadedCanvasFonts}
-        startCanvasDrag={startCanvasDrag}
-        startCanvasResize={startCanvasResize}
-        updateCanvasBlock={updateCanvasBlock}
-      />
+      <>
+        <CanvasFloatingToolbar
+          selectedBlock={selectedCanvasBlock}
+          currentImageUrl={currentImageUrl}
+          currentImageTitle={currentImageTitle}
+          canvasBackground={canvasBackground}
+          canvasPreset={canvasPreset}
+          canvasPresetOptions={canvasPresetOptions}
+          systemFontOptions={systemCanvasFontOptions}
+          googleFontOptions={googleCanvasFontOptions}
+          uploadedFonts={uploadedCanvasFonts}
+          fitOptions={fitOptions}
+          onUpdateBlock={updateCanvasBlock}
+          onAddText={addCanvasTextBlock}
+          onAddImage={addCanvasImageBlock}
+          onDuplicate={duplicateSelectedCanvasBlock}
+          onDelete={deleteSelectedCanvasBlock}
+          onMoveDown={() => moveSelectedCanvasBlock('down')}
+          onMoveUp={() => moveSelectedCanvasBlock('up')}
+          onSetBackground={setCanvasBackground}
+          onChangePreset={changeCanvasPreset}
+        />
+        <CanvasRenderer
+          previewRef={previewRef}
+          output={canvasOutput}
+          uploadedFontFaceCss={uploadedFontFaceCss}
+          canvasViewportRef={canvasViewportRef}
+          canvasRef={canvasRef}
+          canvasZoom={canvasZoom}
+          selectedCanvasBlockId={selectedCanvasBlockId}
+          setSelectedCanvasBlockId={setSelectedCanvasBlockId}
+          uploadedCanvasFonts={uploadedCanvasFonts}
+          startCanvasDrag={startCanvasDrag}
+          startCanvasResize={startCanvasResize}
+          updateCanvasBlock={updateCanvasBlock}
+        />
+      </>
     )
   }
 
