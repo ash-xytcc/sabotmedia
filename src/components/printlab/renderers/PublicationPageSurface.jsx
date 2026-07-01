@@ -31,10 +31,11 @@ export function PublicationPageSurface({
   label = '',
   blankLabel = 'Blank',
   className = '',
+  fit = 'contain-page',
 }) {
   if (!page) {
     return (
-      <div className={`print-lab-publication-surface print-lab-publication-surface--blank ${className}`}>
+      <div className={`print-lab-publication-surface print-lab-publication-surface--blank print-lab-publication-surface--fit-${fit} ${className}`}>
         <span className="print-lab-publication-surface__label">{blankLabel}</span>
       </div>
     )
@@ -43,50 +44,61 @@ export function PublicationPageSurface({
   const width = Number(page.width || page.canvasSize?.width || 720)
   const height = Number(page.height || page.canvasSize?.height || 540)
   const blocks = Array.isArray(page.blocks) ? page.blocks : []
+  const orientation = width > height ? 'landscape' : 'portrait'
 
   return (
     <div
-      className={`print-lab-publication-surface ${className}`}
+      className={`print-lab-publication-surface print-lab-publication-surface--fit-${fit} print-lab-publication-surface--${orientation} ${className}`}
       style={{
-        aspectRatio: `${width} / ${height}`,
+        '--publication-page-width': width,
+        '--publication-page-height': height,
+        '--publication-page-ratio': `${width} / ${height}`,
         backgroundColor: page.background || page.backgroundColor || '#fffdf8',
       }}
     >
       {label ? <span className="print-lab-publication-surface__label">{label}</span> : null}
-      <div className="print-lab-publication-surface__stage">
-        {blocks.map((block) => {
-          const blockStyle = {
-            left: percent(block.x, width),
-            top: percent(block.y, height),
-            width: percent(block.width, width),
-            height: percent(block.height, height),
-            opacity: block.opacity ?? 1,
-          }
-          if (block.type === 'image') {
+      <div
+        className="print-lab-publication-surface__page"
+        style={{
+          aspectRatio: `${width} / ${height}`,
+          backgroundColor: page.background || page.backgroundColor || '#fffdf8',
+        }}
+      >
+        <div className="print-lab-publication-surface__stage">
+          {blocks.map((block) => {
+            const blockStyle = {
+              left: percent(block.x, width),
+              top: percent(block.y, height),
+              width: percent(block.width, width),
+              height: percent(block.height, height),
+              opacity: block.opacity ?? 1,
+            }
+            if (block.type === 'image') {
+              return (
+                <div className="print-lab-publication-block print-lab-publication-block--image" key={block.id} style={blockStyle}>
+                  <img src={block.src} alt="" draggable={false} style={getMediaStyle(block, page)} />
+                </div>
+              )
+            }
             return (
-              <div className="print-lab-publication-block print-lab-publication-block--image" key={block.id} style={blockStyle}>
-                <img src={block.src} alt="" draggable={false} style={getMediaStyle(block, page)} />
+              <div className="print-lab-publication-block print-lab-publication-block--text" key={block.id} style={blockStyle}>
+                <div
+                  className="print-lab-publication-text"
+                  style={{
+                    color: block.color,
+                    fontFamily: getCanvasFontFamily(block.fontFamily, uploadedCanvasFonts),
+                    fontSize: `${(Number(block.fontSize || 16) / width) * 100}cqw`,
+                    fontWeight: block.fontWeight,
+                    lineHeight: block.lineHeight,
+                    textAlign: block.align || 'left',
+                  }}
+                >
+                  {block.text}
+                </div>
               </div>
             )
-          }
-          return (
-            <div className="print-lab-publication-block print-lab-publication-block--text" key={block.id} style={blockStyle}>
-              <div
-                className="print-lab-publication-text"
-                style={{
-                  color: block.color,
-                  fontFamily: getCanvasFontFamily(block.fontFamily, uploadedCanvasFonts),
-                  fontSize: `${(Number(block.fontSize || 16) / width) * 100}cqw`,
-                  fontWeight: block.fontWeight,
-                  lineHeight: block.lineHeight,
-                  textAlign: block.align || 'left',
-                }}
-              >
-                {block.text}
-              </div>
-            </div>
-          )
-        })}
+          })}
+        </div>
       </div>
     </div>
   )

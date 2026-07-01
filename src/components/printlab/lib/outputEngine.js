@@ -47,6 +47,58 @@ export function getReaderOrderPages(publication) {
   return pages.map((page, index) => normalizePage(page, index)).filter(Boolean)
 }
 
+function makeBookletPanel(page, side, sheetNumber, face) {
+  return {
+    id: `booklet-sheet-${sheetNumber}-${face}-${side}`,
+    side,
+    label: page ? `${side === 'left' ? 'Left' : 'Right'} panel / Page ${page.pageNumber}` : `${side === 'left' ? 'Left' : 'Right'} panel / Blank`,
+    positionLabel: page ? `Page ${page.pageNumber}` : 'Blank',
+    page,
+  }
+}
+
+export function getBookletImposedSpreads(pages) {
+  const readerPages = Array.isArray(pages) ? pages.filter(Boolean) : []
+  const paddedPageCount = Math.max(4, Math.ceil(Math.max(1, readerPages.length) / 4) * 4)
+  const paddedPages = Array.from({ length: paddedPageCount }).map((_, index) => readerPages[index] || null)
+  const sheetCount = paddedPageCount / 4
+  const spreads = []
+
+  for (let sheetIndex = 0; sheetIndex < sheetCount; sheetIndex += 1) {
+    const sheetNumber = sheetIndex + 1
+    const outsideLeft = paddedPageCount - (sheetIndex * 2)
+    const outsideRight = 1 + (sheetIndex * 2)
+    const insideLeft = 2 + (sheetIndex * 2)
+    const insideRight = paddedPageCount - 1 - (sheetIndex * 2)
+
+    spreads.push({
+      id: `booklet-sheet-${sheetNumber}-front`,
+      label: `Sheet ${sheetNumber} Front`,
+      sheetNumber,
+      face: 'Front',
+      pageNumbers: [outsideLeft, outsideRight],
+      panels: [
+        makeBookletPanel(paddedPages[outsideLeft - 1], 'left', sheetNumber, 'front'),
+        makeBookletPanel(paddedPages[outsideRight - 1], 'right', sheetNumber, 'front'),
+      ],
+    })
+
+    spreads.push({
+      id: `booklet-sheet-${sheetNumber}-back`,
+      label: `Sheet ${sheetNumber} Back`,
+      sheetNumber,
+      face: 'Back',
+      pageNumbers: [insideLeft, insideRight],
+      panels: [
+        makeBookletPanel(paddedPages[insideLeft - 1], 'left', sheetNumber, 'back'),
+        makeBookletPanel(paddedPages[insideRight - 1], 'right', sheetNumber, 'back'),
+      ],
+    })
+  }
+
+  return spreads
+}
+
 export function getCanvasOutput({
   publication,
   activePageId,
@@ -188,38 +240,11 @@ export function getHalfFoldOutput({
   publication,
 } = {}) {
   const pages = getReaderOrderPages(publication)
-  const imposedPages = pages.length ? pages : []
-  const sheets = []
-  const sheetCount = Math.max(1, Math.ceil(Math.max(1, imposedPages.length) / 2))
-  for (let index = 0; index < sheetCount; index += 1) {
-    const left = imposedPages[index * 2] || null
-    const right = imposedPages[index * 2 + 1] || null
-    sheets.push({
-      id: `half-fold-sheet-${index + 1}`,
-      label: `Sheet ${index + 1}`,
-      sheetNumber: index + 1,
-      panels: [
-        {
-          id: `half-fold-sheet-${index + 1}-left`,
-          side: 'left',
-          label: left ? `Left panel / Page ${left.pageNumber}` : 'Left panel / Blank',
-          positionLabel: left ? `Page ${left.pageNumber}` : 'Blank',
-          page: left,
-        },
-        {
-          id: `half-fold-sheet-${index + 1}-right`,
-          side: 'right',
-          label: right ? `Right panel / Page ${right.pageNumber}` : 'Right panel / Blank',
-          positionLabel: right ? `Page ${right.pageNumber}` : 'Blank',
-          page: right,
-        },
-      ],
-    })
-  }
+  const sheets = getBookletImposedSpreads(pages)
   return {
     type: printlabOutputTypes.zine,
     view: printlabOutputViews.printLayout,
-    label: `${sheets.length} half-fold sheet${sheets.length === 1 ? '' : 's'}`,
+    label: `${sheets.length} imposed spread${sheets.length === 1 ? '' : 's'}`,
     pages,
     sheets,
     spreads: sheets.map((sheet) => ({
@@ -229,6 +254,8 @@ export function getHalfFoldOutput({
       right: sheet.panels[1].page,
       leftLabel: sheet.panels[0].positionLabel,
       rightLabel: sheet.panels[1].positionLabel,
+      face: sheet.face,
+      sheetNumber: sheet.sheetNumber,
     })),
     sheetSize: {
       label: 'Letter landscape',

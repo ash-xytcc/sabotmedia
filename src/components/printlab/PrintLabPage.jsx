@@ -330,12 +330,14 @@ export function PrintLabPage({ pieces = [] }) {
 
   function addPublicationPage() {
     const nextIndex = publicationPages.length + 1
+    const nextPreset = toolMode === 'zine' ? 'portrait' : canvasPreset
+    const nextSize = canvasPresetOptions[nextPreset] || canvasSize
     const page = createPublicationPage({
       label: `Page ${nextIndex}`,
       title: `Page ${nextIndex}`,
-      preset: canvasPreset,
-      width: canvasSize.width,
-      height: canvasSize.height,
+      preset: nextPreset,
+      width: nextSize.width,
+      height: nextSize.height,
       background: canvasBackground,
       backgroundColor: canvasBackground,
       blocks: [],
@@ -1499,6 +1501,7 @@ export function PrintLabPage({ pieces = [] }) {
         previewRef={previewRef}
         output={halfFoldOutput}
         uploadedCanvasFonts={uploadedCanvasFonts}
+        onSelectPage={selectPublicationPage}
       />
     )
   }

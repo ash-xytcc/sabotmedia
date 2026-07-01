@@ -4,6 +4,7 @@ export function HalfFoldRenderer({
   previewRef,
   output,
   uploadedCanvasFonts,
+  onSelectPage,
 }) {
   return (
     <article className="print-lab-preview print-lab-output print-lab-preview--half-fold-zine" ref={previewRef}>
@@ -17,10 +18,21 @@ export function HalfFoldRenderer({
             <div className="print-lab-half-fold-spread">
               {sheet.panels.map((panel) => (
                 <section className={`print-lab-half-fold-panel print-lab-half-fold-panel--${panel.side}`} key={panel.id}>
-                  <span className="print-lab-half-fold-panel__label">{panel.label}</span>
+                  {panel.page ? (
+                    <button
+                      className="print-lab-half-fold-panel__label"
+                      type="button"
+                      onClick={() => onSelectPage?.(panel.page.id)}
+                    >
+                      {panel.label}
+                    </button>
+                  ) : (
+                    <span className="print-lab-half-fold-panel__label">{panel.label}</span>
+                  )}
                   <PublicationPageSurface
                     blankLabel={panel.positionLabel}
                     className="print-lab-publication-surface--half-fold"
+                    fit="cover-panel"
                     page={panel.page}
                     uploadedCanvasFonts={uploadedCanvasFonts}
                   />
