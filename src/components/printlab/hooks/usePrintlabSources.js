@@ -47,25 +47,47 @@ function isPublishedPiece(piece) {
 }
 
 function getPreviewHtml(piece) {
-  return piece?.bodyHtml || piece?.contentHtml || piece?.content || piece?.body || ''
+  return (
+    piece?.bodyHtml ||
+    piece?.contentHtml ||
+    piece?.content ||
+    piece?.body ||
+    piece?.bodyText ||
+    piece?.body_plain ||
+    piece?.plainText ||
+    piece?.text ||
+    ''
+  )
 }
 
 function getExcerpt(piece) {
-  return piece?.excerpt || piece?.summary || piece?.description || ''
+  return piece?.excerpt || piece?.summary || piece?.description || piece?.subtitle || ''
 }
 
 function getPlainTextFromHtml(html = '') {
   const value = String(html || '').trim()
   if (!value) return ''
+  const withBlockBreaks = value
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|blockquote|figure)>/gi, '\n\n')
 
   if (typeof DOMParser === 'undefined') {
-    return value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    return withBlockBreaks
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/[ \t]{2,}/g, ' ')
+      .trim()
   }
 
   const parser = new DOMParser()
-  const doc = parser.parseFromString(value, 'text/html')
+  const doc = parser.parseFromString(withBlockBreaks, 'text/html')
   doc.querySelectorAll('script, style, noscript').forEach((node) => node.remove())
-  return (doc.body.textContent || '').replace(/\s+/g, ' ').trim()
+  return (doc.body.textContent || '')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim()
 }
 
 function dedupeImageItems(items) {

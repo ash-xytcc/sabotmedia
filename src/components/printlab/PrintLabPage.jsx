@@ -434,12 +434,15 @@ export function PrintLabPage({ pieces = [] }) {
   ])
 
   const sourceStatus = useMemo(() => {
+    if (sourceType === 'post') {
+      if (!selectedPiece) return 'No CMS post selected'
+      return selectedPostTitle ? `Post: ${truncateText(selectedPostTitle, 34)}` : 'Post source selected'
+    }
     if (!currentImageUrl) return 'No source selected'
     if (sourceType === 'upload') return 'Uploaded image'
     if (sourceType === 'media') return 'Media image'
-    if (sourceType === 'post') return 'Post source'
     return 'Image source'
-  }, [currentImageUrl, sourceType])
+  }, [currentImageUrl, selectedPiece, selectedPostTitle, sourceType])
   const missingSourceMessage = toolMode === 'split'
     ? 'Select or upload an image to split a poster across printable pages.'
     : 'Select or upload an image to build a tile sheet.'
@@ -618,6 +621,16 @@ export function PrintLabPage({ pieces = [] }) {
     const footer = ['SABOT MEDIA', getContentType(selectedPiece), getPublishedAtLabel(selectedPiece)]
       .filter(Boolean)
       .join(' / ')
+    const hasUsablePostContent = Boolean(
+      (selectedPostTitle || selectedPiece.title || '').trim() ||
+      selectedPostBody.trim() ||
+      selectedPostExcerpt.trim() ||
+      currentImageUrl
+    )
+    if (!hasUsablePostContent) {
+      setActionStatus('No usable title, image, excerpt, or body text was found for the selected CMS post.')
+      return
+    }
     const buildPages = toolMode === 'zine' ? buildZinePublicationFromPost : buildPublicationPagesFromPost
     const pages = buildPages({
       title: selectedPostTitle || selectedPiece.title || 'Untitled',
@@ -645,7 +658,7 @@ export function PrintLabPage({ pieces = [] }) {
     setCanvasContextMenu(null)
     setToolMode('canvas')
     setCanvasToolsOpen(true)
-    setActionStatus(`${pages.length} ${toolMode === 'zine' ? 'zine' : 'publication'} page${pages.length === 1 ? '' : 's'} created from post.`)
+    setActionStatus(`Post flowed into ${pages.length} ${toolMode === 'zine' ? 'zine' : 'publication'} page${pages.length === 1 ? '' : 's'}. Preview in Half-Fold to print.`)
     window.setTimeout(fitCanvasToViewport, 0)
   }
 
@@ -1203,7 +1216,10 @@ export function PrintLabPage({ pieces = [] }) {
                         type="button"
                         role="option"
                         aria-selected={selected}
-                        onClick={() => setSelectedId(id)}
+                        onClick={() => {
+                          setSelectedId(id)
+                          setActionStatus(`Selected CMS post: ${piece.title || 'Untitled'}. Use Flow post into ${toolMode === 'zine' ? 'zine pages' : 'publication'} to create editable pages.`)
+                        }}
                       >
                         {image ? (
                           <img className="print-lab-source-row__thumb" src={image} alt="" loading="lazy" />
@@ -1222,6 +1238,18 @@ export function PrintLabPage({ pieces = [] }) {
                       </button>
                     )
                   })}
+                </div>
+              ) : null}
+              {selectedPiece ? (
+                <div className="print-lab-source-action">
+                  <button className="button button-primary" type="button" onClick={() => flowSelectedPostIntoPublication({ replace: !publicationDirty })}>
+                    {toolMode === 'zine' ? 'Flow post into zine pages' : 'Flow post into publication'}
+                  </button>
+                  <p className="print-lab-empty-note print-lab-empty-note--compact">
+                    {toolMode === 'zine'
+                      ? 'Creates editable portrait zine pages from the selected CMS post.'
+                      : 'Creates editable publication pages from the selected CMS post.'}
+                  </p>
                 </div>
               ) : null}
             </div>
