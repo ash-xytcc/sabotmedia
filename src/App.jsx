@@ -25,6 +25,7 @@ import { EditableText } from './components/EditableText'
 import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/content'
 import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
+import { PublicInfoPage } from './components/PublicInfoPage'
 import { AdminNoticeProvider } from './components/WpAdminNotices'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
 import { AnalyticsPage } from './components/AnalyticsPage'
@@ -153,9 +154,10 @@ export default function App() {
           <Route path="/" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
           <Route path="/projects" element={<ProjectsIndexPage projectMap={projectMap} />} />
           <Route path="/projects/:slug" element={<ProjectPage pieces={pieces} />} />
-          <Route path="/piece/:slug" element={<PiecePage pieces={pieces} />} />
+          <Route path="/piece/:slug" element={<LegacyPieceRedirect />} />
           <Route path="/post/:slug" element={<PiecePage pieces={pieces} />} />
-          <Route path="/piece/:slug/print" element={<PrintPage pieces={pieces} />} />
+          <Route path="/post/:slug/print" element={<PrintPage pieces={pieces} />} />
+          <Route path="/piece/:slug/print" element={<LegacyPrintRedirect />} />
           <Route path="/review" element={<ReviewQueuePage pieces={pieces} />} />
           <Route path="/admin" element={<AdminPage pieces={pieces} />} />
           <Route path="/content" element={<ContentListPage />} />
@@ -185,6 +187,10 @@ export default function App() {
         <Route path="/updates/:slug" element={<NativeUpdateDetailPage />} />
         <Route path="/native-preview/:id" element={<NativeDraftPreviewPage />} />
         <Route path="/press" element={<PublicSurfacePage target="press" />} />
+        <Route path="/about" element={<PublicInfoPage page="about" />} />
+        <Route path="/contact" element={<PublicInfoPage page="contact" />} />
+        <Route path="/submit" element={<PublicInfoPage page="submit" />} />
+        <Route path="/support" element={<PublicInfoPage page="support" />} />
         <Route path="/archive" element={<PublicSearchPage pieces={pieces} />} />
         <Route path="/search" element={<PublicSearchPage pieces={pieces} />} />
           <Route path="/draft" element={<PublicDraftPage />} />
@@ -193,4 +199,16 @@ export default function App() {
       </AdminNoticeProvider>
     </PublicEditProvider>
   )
+}
+
+function LegacyPieceRedirect() {
+  const location = useLocation()
+  const slug = location.pathname.replace(/^\/piece\//, '').replace(/\/+$/, '')
+  return <Navigate to={`/post/${slug}${location.search || ''}`} replace />
+}
+
+function LegacyPrintRedirect() {
+  const location = useLocation()
+  const slug = location.pathname.replace(/^\/piece\//, '').replace(/\/print\/?$/, '')
+  return <Navigate to={`/post/${slug}/print${location.search || ''}`} replace />
 }

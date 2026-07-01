@@ -49,7 +49,6 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
   const noMatchesBody = getConfiguredText(resolvedConfig, filtersBlock?.noMatchesBodyField || 'home.filters.noMatchesBody', 'Try changing the search or filters.')
   const resultsPrefix = getConfiguredText(resolvedConfig, filtersBlock?.resultsPrefixField || 'home.filters.resultsPrefix', 'showing')
   const readLabel = getConfiguredText(resolvedConfig, featuredBlock?.readLabelField || 'home.featured.readLabel', 'read')
-  const experienceLabel = getConfiguredText(resolvedConfig, featuredBlock?.experienceLabelField || 'home.featured.experienceLabel', 'experience')
   const printLabel = getConfiguredText(resolvedConfig, featuredBlock?.printLabelField || 'home.featured.printLabel', 'print')
 
   const initialQuery = searchParams.get('q') || ''
@@ -158,9 +157,8 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
 
           {featured?.piece ? (
             <div className="hero__actions">
-              <Link className="button button--primary" to={`/piece/${featured.piece.slug}`}>{readLabel}</Link>
-              <Link className="button" to={`/piece/${featured.piece.slug}?mode=experience`}>{experienceLabel}</Link>
-              <Link className="button" to={`/piece/${featured.piece.slug}/print`}>{printLabel}</Link>
+              <Link className="button button--primary" to={`/post/${featured.piece.slug}`}>{readLabel}</Link>
+              <Link className="button" to={`/post/${featured.piece.slug}/print`}>{printLabel}</Link>
             </div>
           ) : null}
         </div>

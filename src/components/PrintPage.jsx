@@ -5,7 +5,7 @@ import { renderImportedBody } from '../lib/renderImportedBody'
 import { splitDisplayTitle } from '../lib/content'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
 import { useWordPressPieces } from '../lib/useWordPressPieces'
-import { getPieceDisplaySettings, resolveFirstReadableMode } from '../lib/publicDisplayModes'
+import { getPieceDisplaySettings } from '../lib/publicDisplayModes'
 
 function getPieceBySlug(pieces, slug) {
   return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
@@ -24,8 +24,7 @@ function PublicationModeSwitch({ slug }) {
   return (
     <nav className="publication-mode-switch" aria-label="reading modes">
       <Link className="publication-mode-switch__link" to={`/post/${slug}`}>Read</Link>
-      <Link className="publication-mode-switch__link" to={`/post/${slug}?mode=experience`}>Experience</Link>
-      <Link className="publication-mode-switch__link is-active" to={`/piece/${slug}/print`}>Print</Link>
+      <Link className="publication-mode-switch__link is-active" to={`/post/${slug}/print`}>Print</Link>
     </nav>
   )
 }
@@ -33,10 +32,10 @@ function PublicationModeSwitch({ slug }) {
 function PrintLayoutSwitch({ slug, layout = 'article' }) {
   return (
     <div className="print-layout-switch" role="group" aria-label="print layout">
-      <Link className={`print-layout-switch__link${layout === 'article' ? ' is-active' : ''}`} to={`/piece/${slug}/print`}>
+      <Link className={`print-layout-switch__link${layout === 'article' ? ' is-active' : ''}`} to={`/post/${slug}/print`}>
         Article layout
       </Link>
-      <Link className={`print-layout-switch__link${layout === 'zine-sheet' ? ' is-active' : ''}`} to={`/piece/${slug}/print?layout=zine-sheet`}>
+      <Link className={`print-layout-switch__link${layout === 'zine-sheet' ? ' is-active' : ''}`} to={`/post/${slug}/print?layout=zine-sheet`}>
         Zine sheet
       </Link>
     </div>
@@ -94,6 +93,12 @@ export function PrintPage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [searchParams] = useSearchParams()
   const [nativePieces, setNativePieces] = useState([])
+  const [printOptions, setPrintOptions] = useState({
+    showMetadata: true,
+    showFeaturedImage: true,
+    showExcerpt: true,
+    showColophon: true,
+  })
   const requestedLayout = searchParams.get('layout')
   const printLayout = requestedLayout === 'zine-sheet' ? 'zine-sheet' : 'article'
 
@@ -123,10 +128,7 @@ export function PrintPage({ pieces = [] }) {
   }
   const displaySettings = getPieceDisplaySettings(piece)
   if (!displaySettings.enablePrintMode) {
-    const nextMode = displaySettings.defaultMode === 'experience' && displaySettings.enableExperienceMode
-      ? 'experience'
-      : resolveFirstReadableMode(displaySettings)
-    return <Navigate to={nextMode === 'experience' ? `/post/${piece.slug}?mode=experience` : `/post/${piece.slug}`} replace />
+    return <Navigate to={`/post/${piece.slug}`} replace />
   }
 
   const display = splitDisplayTitle(piece)
@@ -182,7 +184,18 @@ export function PrintPage({ pieces = [] }) {
         <PrintZineSheet piece={piece} display={display} heroImage={heroImage} bodyNodes={bodyNodes} />
       ) : (
         <>
-          {heroImage ? (
+          {printOptions.showMetadata && metadataItems.length ? (
+            <section className="print-metadata" aria-label="print metadata">
+              {metadataItems.map((item) => (
+                <div key={item.label}>
+                  <strong>{item.label}</strong>
+                  <span>{item.value}</span>
+                </div>
+              ))}
+            </section>
+          ) : null}
+
+          {printOptions.showFeaturedImage && heroImage ? (
             <section className="print-hero">
               <img className="print-hero__image" src={heroImage} alt={display.title || piece.title || piece.slug} />
             </section>
@@ -193,6 +206,13 @@ export function PrintPage({ pieces = [] }) {
               {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{piece.excerpt || ''}</p>}
             </div>
           </section>
+
+          {printOptions.showColophon ? (
+            <footer className="print-colophon">
+              <strong>{siteTitle}</strong>
+              <span>{piece.slug ? `/post/${piece.slug}` : ''}</span>
+            </footer>
+          ) : null}
         </>
       )}
     </main>

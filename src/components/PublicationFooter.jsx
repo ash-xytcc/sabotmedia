@@ -4,27 +4,30 @@ const footerSections = [
   {
     title: 'Archive',
     links: [
+      ['/', 'Home'],
       ['/archive', 'Browse archive'],
       ['/updates', 'Recent posts'],
-      ['/press', 'Press'],
       ['/projects', 'Projects'],
+      ['/about', 'About'],
     ],
   },
   {
     title: 'Formats',
     links: [
-      ['/archive', 'Articles'],
-      ['/archive', 'Dispatches'],
-      ['/archive', 'Podcasts'],
-      ['/archive', 'Print materials'],
+      ['/archive?format=article', 'Articles'],
+      ['/archive?format=podcast', 'Podcasts'],
+      ['/archive?format=comic', 'Comics'],
+      ['/archive?format=zine', 'Zines'],
+      ['/archive?format=newsletter', 'Newsletters'],
     ],
   },
   {
     title: 'About',
     links: [
-      ['/archive', 'About the publication'],
-      ['/archive', 'Contact'],
-      ['/archive', 'Topics and tags'],
+      ['/about', 'About the publication'],
+      ['/contact', 'Contact'],
+      ['/submit', 'Submit work'],
+      ['/support', 'Support'],
     ],
   },
 ]
@@ -55,7 +58,7 @@ export function PublicationFooter() {
       </div>
 
       <div className="publication-footer__bottom">
-        <p>Each piece supports read mode, experience mode, and print mode.</p>
+        <p>Read online, search the archive, or open a print-friendly article view.</p>
       </div>
     </footer>
   )

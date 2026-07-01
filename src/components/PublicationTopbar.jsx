@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
 import { loadMenuDraft } from '../lib/wpAdminLocal'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
@@ -31,6 +31,7 @@ function resolvePublicNavItems(customItems = [], fallbackItems = []) {
 }
 
 export function PublicationTopbar() {
+  const location = useLocation()
   const customizer = loadCustomizerSettings()
   const menuDraft = loadMenuDraft()
 
@@ -42,8 +43,8 @@ export function PublicationTopbar() {
 
   const fallbackMenu = [
     { id: 'archive', label: 'Archive', path: '/archive' },
-    { id: 'press', label: 'Press', path: '/press' },
     { id: 'projects', label: 'Projects', path: '/projects' },
+    { id: 'about', label: 'About', path: '/about' },
   ]
 
   const fallbackItems = fallbackMenu.map((item) => ({
@@ -54,9 +55,12 @@ export function PublicationTopbar() {
 
   const sourceMenu = customizer.navigation?.menuItems?.length ? customizer.navigation.menuItems : menuDraft
   const publicItems = resolvePublicNavItems(sourceMenu, fallbackItems)
+    .filter((item) => item.to !== '/press')
+  const isHome = location.pathname === '/'
+  const resolvedMastheadSize = isHome ? mastheadSize : 'compact'
 
   return (
-    <header className={`publication-topbar publication-topbar--masthead publication-topbar--${mastheadSize}`}>
+    <header className={`publication-topbar publication-topbar--masthead publication-topbar--${resolvedMastheadSize}${isHome ? ' publication-topbar--home' : ' publication-topbar--inner'}`}>
       <div className="publication-topbar__inner">
         <div className="publication-topbar__brand">
           <Link to="/" className="publication-topbar__brand-link" aria-label={`${siteTitle} home`} title={siteTitle}>

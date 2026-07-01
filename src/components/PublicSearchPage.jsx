@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { getImportedImage } from '../lib/getImportedImage'
@@ -21,15 +21,19 @@ function resolveCanonicalSlug(piece) {
 const FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'article', label: 'Articles' },
-  { key: 'dispatch', label: 'Dispatches' },
   { key: 'podcast', label: 'Podcasts' },
+  { key: 'comic', label: 'Comics' },
+  { key: 'zine', label: 'Zines' },
+  { key: 'newsletter', label: 'Newsletters' },
   { key: 'print', label: 'Print' },
 ]
 
 function normalizeType(piece) {
-  const raw = String(piece?.type || '').toLowerCase()
+  const raw = String(piece?.type || piece?.contentType || '').toLowerCase()
   if (raw.includes('podcast')) return 'podcast'
-  if (raw.includes('dispatch')) return 'dispatch'
+  if (raw.includes('comic')) return 'comic'
+  if (raw.includes('zine')) return 'zine'
+  if (raw.includes('newsletter')) return 'newsletter'
   if (raw.includes('print') || piece?.hasPrintAssets) return 'print'
   return 'article'
 }
@@ -130,13 +134,20 @@ function ArchiveCard({ item, featured = false }) {
           <h2 className="archive-card__title">{item.title}</h2>
         </div>
       </Link>
+      <div className="archive-card__actions">
+        <Link className="button button--primary" to={item.href}>Read</Link>
+        <Link className="button" to={`${item.href}/print`}>Print</Link>
+      </div>
     </article>
   )
 }
 
 export function PublicSearchPage({ pieces = [] }) {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [query, setQuery] = useState('')
-  const [activeFilter, setActiveFilter] = useState('all')
+  const initialFormat = searchParams.get('format') || searchParams.get('type') || 'all'
+  const [activeFilter, setActiveFilter] = useState(FILTERS.some((filter) => filter.key === initialFormat) ? initialFormat : 'all')
+  const [projectFilter, setProjectFilter] = useState(searchParams.get('project') || 'all')
   const [visibleCount, setVisibleCount] = useState(24)
   const [nativePieces, setNativePieces] = useState([])
 
@@ -183,6 +194,7 @@ export function PublicSearchPage({ pieces = [] }) {
             : item.type === activeFilter
 
       if (!filterPass) return false
+      if (projectFilter !== 'all' && item.project !== projectFilter) return false
       if (!q) return true
 
       const haystack = [
@@ -197,19 +209,61 @@ export function PublicSearchPage({ pieces = [] }) {
 
       return haystack.includes(q)
     })
-  }, [normalized, activeFilter, query])
+  }, [normalized, activeFilter, projectFilter, query])
 
   const featured = filtered[0] || null
   const results = featured ? filtered.slice(1, visibleCount + 1) : filtered.slice(0, visibleCount)
 
   const counts = useMemo(() => {
-    const out = { all: normalized.length, article: 0, dispatch: 0, podcast: 0, print: 0 }
+    const out = Object.fromEntries(FILTERS.map((filter) => [filter.key, 0]))
+    out.all = normalized.length
     for (const item of normalized) {
       if (item.type in out) out[item.type] += 1
-      if (item.hasPrintAssets && item.type !== 'print') out.print += 0
+      if (item.hasPrintAssets && item.type !== 'print') out.print += 1
     }
     return out
   }, [normalized])
+
+  const projectOptions = useMemo(() => {
+    return [...new Set(normalized.map((item) => item.project).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b))
+  }, [normalized])
+
+  useEffect(() => {
+    const nextFormat = searchParams.get('format') || searchParams.get('type') || 'all'
+    if (FILTERS.some((filter) => filter.key === nextFormat) && nextFormat !== activeFilter) {
+      setActiveFilter(nextFormat)
+      setVisibleCount(24)
+    }
+    const nextProject = searchParams.get('project') || 'all'
+    if (nextProject !== projectFilter) {
+      setProjectFilter(nextProject)
+      setVisibleCount(24)
+    }
+  }, [activeFilter, projectFilter, searchParams])
+
+  function updateFilter(filterKey) {
+    setActiveFilter(filterKey)
+    setVisibleCount(24)
+    const next = new URLSearchParams(searchParams)
+    if (filterKey === 'all') {
+      next.delete('format')
+      next.delete('type')
+    } else {
+      next.set('format', filterKey)
+      next.delete('type')
+    }
+    setSearchParams(next, { replace: true })
+  }
+
+  function updateProjectFilter(project) {
+    setProjectFilter(project)
+    setVisibleCount(24)
+    const next = new URLSearchParams(searchParams)
+    if (project === 'all') next.delete('project')
+    else next.set('project', project)
+    setSearchParams(next, { replace: true })
+  }
 
   return (
     <main className="page public-search-page archive-page">
@@ -234,10 +288,7 @@ export function PublicSearchPage({ pieces = [] }) {
               key={filter.key}
               type="button"
               className={`archive-filter-chip${activeFilter === filter.key ? ' is-active' : ''}`}
-              onClick={() => {
-                setActiveFilter(filter.key)
-                setVisibleCount(24)
-              }}
+              onClick={() => updateFilter(filter.key)}
             >
               {filter.label}
               <span className="archive-filter-chip__count">
@@ -259,6 +310,18 @@ export function PublicSearchPage({ pieces = [] }) {
             placeholder="Title, project, excerpt..."
           />
         </label>
+
+        {projectOptions.length ? (
+          <label className="archive-search-control">
+            <span>Project</span>
+            <select value={projectFilter} onChange={(event) => updateProjectFilter(event.target.value)}>
+              <option value="all">All projects</option>
+              {projectOptions.map((project) => (
+                <option key={project} value={project}>{project}</option>
+              ))}
+            </select>
+          </label>
+        ) : null}
       </section>
 
       {featured ? (
