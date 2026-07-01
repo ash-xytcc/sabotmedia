@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { canvasResizeHandles, getCanvasFontFamily, getCanvasMediaFrame } from '../lib/canvasMath'
 
 export function CanvasRenderer({
@@ -9,14 +10,24 @@ export function CanvasRenderer({
   canvasZoom,
   selectedCanvasBlockId,
   setSelectedCanvasBlockId,
+  editingTextBlockId,
+  setEditingTextBlockId,
   uploadedCanvasFonts,
   startCanvasDrag,
   startCanvasResize,
   updateCanvasBlock,
+  openCanvasContextMenu,
 }) {
   const canvasSize = output.canvasSize
   const canvasBackground = output.canvasBackground
   const canvasBlocks = output.canvasBlocks
+  useEffect(() => {
+    if (!editingTextBlockId) return
+    const node = canvasRef.current?.querySelector(`[data-text-block-id="${editingTextBlockId}"]`)
+    if (!node) return
+    node.focus()
+  }, [canvasRef, editingTextBlockId])
+
   return (
     <article className="print-lab-preview print-lab-output print-lab-preview--canvas" ref={previewRef}>
       {uploadedFontFaceCss ? <style>{uploadedFontFaceCss}</style> : null}
@@ -50,6 +61,7 @@ export function CanvasRenderer({
               const blockHeight = Math.max(1, Number(block.height || 1))
               const mediaFrame = getCanvasMediaFrame(block)
               const fit = block.fit || 'cover'
+              const editing = block.id === editingTextBlockId
               const blockStyle = {
                 left: `${Number(block.x || 0)}px`,
                 top: `${Number(block.y || 0)}px`,
@@ -77,26 +89,47 @@ export function CanvasRenderer({
 
               return (
                 <div
-                  className={`print-lab-canvas-block print-lab-canvas-block--${block.type}${selected ? ' is-selected' : ''}`}
+                  className={`print-lab-canvas-block print-lab-canvas-block--${block.type}${selected ? ' is-selected' : ''}${editing ? ' is-editing' : ''}`}
                   key={block.id}
                   style={blockStyle}
                   onPointerDown={(event) => startCanvasDrag(event, block)}
+                  onContextMenu={(event) => openCanvasContextMenu(event, block)}
+                  onDoubleClick={(event) => {
+                    if (block.type !== 'text') return
+                    event.stopPropagation()
+                    setEditingTextBlockId(block.id)
+                  }}
+                  title={block.type === 'text' ? 'Double-click to edit text' : undefined}
                 >
                   {block.type === 'image' ? (
                     <img src={block.src} alt="" draggable={false} style={mediaStyle} />
                   ) : (
                     <div
                       className="print-lab-canvas-text"
-                      contentEditable={selected}
+                      contentEditable={editing}
+                      data-text-block-id={block.id}
                       suppressContentEditableWarning
                       onPointerDown={(event) => {
+                        if (editing) {
+                          event.stopPropagation()
+                          return
+                        }
                         if (selected && event.detail > 1) {
                           event.stopPropagation()
                           return
                         }
                         startCanvasDrag(event, block)
                       }}
-                      onBlur={(event) => updateCanvasBlock(block.id, { text: event.currentTarget.innerText })}
+                      onBlur={(event) => {
+                        updateCanvasBlock(block.id, { text: event.currentTarget.innerText })
+                        setEditingTextBlockId('')
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Escape') return
+                        event.preventDefault()
+                        event.currentTarget.blur()
+                        setEditingTextBlockId('')
+                      }}
                       style={{
                         color: block.color,
                         fontFamily: getCanvasFontFamily(block.fontFamily, uploadedCanvasFonts),

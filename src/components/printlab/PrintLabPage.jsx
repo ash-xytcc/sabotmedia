@@ -29,6 +29,7 @@ import {
 import {
   createEmptyPublication,
   createPublicationPage,
+  buildPublicationPagesFromPost,
   deletePublicationPage as removePublicationPage,
   duplicatePublicationPage as copyPublicationPage,
   getActivePage,
@@ -209,6 +210,8 @@ export function PrintLabPage({ pieces = [] }) {
   const [canvasToolsOpen, setCanvasToolsOpen] = useState(true)
   const [uploadedCanvasFonts, setUploadedCanvasFonts] = useState([])
   const [activeHalfFoldSheetIndex, setActiveHalfFoldSheetIndex] = useState(0)
+  const [editingTextBlockId, setEditingTextBlockId] = useState('')
+  const [canvasContextMenu, setCanvasContextMenu] = useState(null)
 
   const previewRef = useRef(null)
   const canvasRef = useRef(null)
@@ -327,6 +330,8 @@ export function PrintLabPage({ pieces = [] }) {
     setPublication((current) => ({ ...current, activePageId: pageId }))
     setSelectedCanvasBlockId(page.blocks?.[0]?.id || '')
     setCanvasInteraction(null)
+    setEditingTextBlockId('')
+    setCanvasContextMenu(null)
     window.setTimeout(fitCanvasToViewport, 0)
   }
 
@@ -385,6 +390,30 @@ export function PrintLabPage({ pieces = [] }) {
 
   useEffect(() => {
     if (publicationDirty) return
+    if (sourceType === 'post' && selectedPiece) {
+      const footer = ['SABOT MEDIA', getContentType(selectedPiece), getPublishedAtLabel(selectedPiece)]
+        .filter(Boolean)
+        .join(' / ')
+      const pages = buildPublicationPagesFromPost({
+        title: selectedPostTitle || selectedPiece.title || 'Untitled',
+        body: selectedPostBody || '',
+        excerpt: selectedPostExcerpt || '',
+        imageUrl: currentImageUrl,
+        footer,
+      })
+      if (pages.length) {
+        setPublication((current) => ({
+          ...current,
+          title: selectedPostTitle || current.title,
+          pages,
+          activePageId: pages[0]?.id || current.activePageId,
+        }))
+        setSelectedCanvasBlockId(pages[0]?.blocks?.[0]?.id || '')
+        setCanvasInteraction(null)
+        setEditingTextBlockId('')
+        return
+      }
+    }
     const title = sourceType === 'post'
       ? (selectedPostTitle || 'Untitled')
       : (currentImageTitle || pageTitle || zineTitle || 'Printlab Canvas')
@@ -470,6 +499,7 @@ export function PrintLabPage({ pieces = [] }) {
     selectedPostBody,
     selectedPostExcerpt,
     selectedPostTitle,
+    selectedPiece,
     sourceType,
   ])
   const halfFoldOutput = useMemo(() => getHalfFoldOutput({
@@ -573,6 +603,40 @@ export function PrintLabPage({ pieces = [] }) {
     }))
   }
 
+  function flowSelectedPostIntoPublication({ replace = false } = {}) {
+    if (sourceType !== 'post' || !selectedPiece) return
+    const footer = ['SABOT MEDIA', getContentType(selectedPiece), getPublishedAtLabel(selectedPiece)]
+      .filter(Boolean)
+      .join(' / ')
+    const pages = buildPublicationPagesFromPost({
+      title: selectedPostTitle || selectedPiece.title || 'Untitled',
+      body: selectedPostBody || '',
+      excerpt: selectedPostExcerpt || '',
+      imageUrl: currentImageUrl,
+      footer,
+      background: canvasBackground,
+    })
+    if (!pages.length) return
+    setPublicationDirty(true)
+    setPublication((current) => {
+      const existingPages = Array.isArray(current.pages) ? current.pages : []
+      const nextPages = replace ? pages : [...existingPages, ...pages]
+      return {
+        ...current,
+        title: selectedPostTitle || current.title || 'Printlab Publication',
+        pages: nextPages,
+        activePageId: pages[0]?.id || nextPages[0]?.id || current.activePageId,
+      }
+    })
+    setSelectedCanvasBlockId(pages[0]?.blocks?.[0]?.id || '')
+    setEditingTextBlockId('')
+    setCanvasContextMenu(null)
+    setToolMode('canvas')
+    setCanvasToolsOpen(true)
+    setActionStatus(`${pages.length} publication page${pages.length === 1 ? '' : 's'} created from post.`)
+    window.setTimeout(fitCanvasToViewport, 0)
+  }
+
   function setCanvasZoomClamped(value) {
     setCanvasZoom(clampValue(Number(value) || 1, 0.2, 2))
   }
@@ -598,6 +662,7 @@ export function PrintLabPage({ pieces = [] }) {
     }), canvasSize)
     setCanvasBlocks((blocks) => [...blocks, block])
     setSelectedCanvasBlockId(block.id)
+    setEditingTextBlockId(block.id)
   }
 
   function addCanvasImageBlock() {
@@ -619,6 +684,8 @@ export function PrintLabPage({ pieces = [] }) {
     if (!selectedCanvasBlockId) return
     setCanvasBlocks((blocks) => blocks.filter((block) => block.id !== selectedCanvasBlockId))
     setSelectedCanvasBlockId('')
+    setEditingTextBlockId('')
+    setCanvasContextMenu(null)
   }
 
   function duplicateSelectedCanvasBlock() {
@@ -633,6 +700,7 @@ export function PrintLabPage({ pieces = [] }) {
     }, canvasSize)
     setCanvasBlocks((blocks) => [...blocks, duplicate])
     setSelectedCanvasBlockId(duplicate.id)
+    setCanvasContextMenu(null)
   }
 
   function moveSelectedCanvasBlock(direction) {
@@ -691,9 +759,12 @@ export function PrintLabPage({ pieces = [] }) {
 
   function startCanvasDrag(event, block) {
     if (event.button !== undefined && event.button !== 0) return
+    if (editingTextBlockId === block.id) return
     event.preventDefault()
     event.stopPropagation()
     setSelectedCanvasBlockId(block.id)
+    setEditingTextBlockId('')
+    setCanvasContextMenu(null)
     const point = getCanvasPoint(event)
     const mediaFrame = getCanvasMediaFrame(block)
     setCanvasInteraction({
@@ -713,6 +784,7 @@ export function PrintLabPage({ pieces = [] }) {
       cropRight: Number(block.cropRight || 0),
       cropTop: Number(block.cropTop || 0),
       cropBottom: Number(block.cropBottom || 0),
+      fontSize: Number(block.fontSize || 16),
       canvasWidth: canvasSize.width,
       canvasHeight: canvasSize.height,
     })
@@ -723,6 +795,8 @@ export function PrintLabPage({ pieces = [] }) {
     event.preventDefault()
     event.stopPropagation()
     setSelectedCanvasBlockId(block.id)
+    setEditingTextBlockId('')
+    setCanvasContextMenu(null)
     const point = getCanvasPoint(event)
     const mediaFrame = getCanvasMediaFrame(block)
     const isCropHandle = isCanvasCropBlock(block) && handle.length === 1
@@ -745,9 +819,28 @@ export function PrintLabPage({ pieces = [] }) {
       cropRight: Number(block.cropRight || 0),
       cropTop: Number(block.cropTop || 0),
       cropBottom: Number(block.cropBottom || 0),
+      fontSize: Number(block.fontSize || 16),
       canvasWidth: canvasSize.width,
       canvasHeight: canvasSize.height,
     })
+  }
+
+  function openCanvasContextMenu(event, block) {
+    event.preventDefault()
+    event.stopPropagation()
+    setSelectedCanvasBlockId(block.id)
+    setEditingTextBlockId('')
+    setCanvasContextMenu({
+      blockId: block.id,
+      x: event.clientX,
+      y: event.clientY,
+    })
+  }
+
+  function startTextEditing(blockId) {
+    setSelectedCanvasBlockId(blockId)
+    setEditingTextBlockId(blockId)
+    setCanvasContextMenu(null)
   }
 
   useEffect(() => {
@@ -841,6 +934,17 @@ export function PrintLabPage({ pieces = [] }) {
             cropBottom: Math.max(0, Number(canvasInteraction.cropBottom || 0) * scaleY),
           }
         }
+        if (block.type === 'text' && canvasInteraction.handle.length === 2) {
+          const scaleX = nextWidth / Math.max(1, Number(canvasInteraction.width || 1))
+          const scaleY = nextHeight / Math.max(1, Number(canvasInteraction.height || 1))
+          return {
+            x: nextX,
+            y: nextY,
+            width: nextWidth,
+            height: nextHeight,
+            fontSize: clampValue(Number(canvasInteraction.fontSize || block.fontSize || 16) * ((scaleX + scaleY) / 2), 8, 160),
+          }
+        }
         return { x: nextX, y: nextY, width: nextWidth, height: nextHeight }
       })
     }
@@ -858,6 +962,35 @@ export function PrintLabPage({ pieces = [] }) {
       window.removeEventListener('pointercancel', handleUp)
     }
   }, [canvasInteraction, canvasSize])
+
+  useEffect(() => {
+    function isEditableTarget(target) {
+      return Boolean(target?.closest?.('input, textarea, select, [contenteditable="true"]'))
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape' && editingTextBlockId) {
+        setEditingTextBlockId('')
+        return
+      }
+      if ((event.key !== 'Delete' && event.key !== 'Backspace') || !selectedCanvasBlockId || isEditableTarget(event.target)) return
+      event.preventDefault()
+      deleteSelectedCanvasBlock()
+    }
+
+    function handlePointerDown(event) {
+      if (!canvasContextMenu) return
+      if (event.target?.closest?.('.print-lab-canvas-context-menu')) return
+      setCanvasContextMenu(null)
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('pointerdown', handlePointerDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('pointerdown', handlePointerDown)
+    }
+  }, [canvasContextMenu, editingTextBlockId, selectedCanvasBlockId])
 
   useEffect(() => {
     if (toolMode !== 'canvas') return undefined
@@ -1118,6 +1251,18 @@ export function PrintLabPage({ pieces = [] }) {
               ))}
             </div>
           </fieldset>
+
+          {sourceType === 'post' && selectedPiece ? (
+            <fieldset className="print-lab-control-group">
+              <legend>Article flow</legend>
+              <button className="button" type="button" onClick={() => flowSelectedPostIntoPublication({ replace: !publicationDirty })}>
+                Create pages from post
+              </button>
+              <p className="print-lab-empty-note print-lab-empty-note--compact">
+                {publicationDirty ? 'Adds new article pages after your current publication.' : 'Builds editable portrait pages from the selected post.'}
+              </p>
+            </fieldset>
+          ) : null}
 
           {toolMode === 'tile' ? (
             <fieldset className="print-lab-control-group">
@@ -1537,6 +1682,9 @@ export function PrintLabPage({ pieces = [] }) {
   }
 
   function renderCanvasPreview() {
+    const contextBlock = canvasContextMenu
+      ? canvasBlocks.find((block) => block.id === canvasContextMenu.blockId)
+      : null
     return (
       <>
         <CanvasFloatingToolbar
@@ -1560,6 +1708,44 @@ export function PrintLabPage({ pieces = [] }) {
           onSetBackground={setCanvasBackground}
           onChangePreset={changeCanvasPreset}
         />
+        {canvasContextMenu && contextBlock ? (
+          <div
+            className="print-lab-canvas-context-menu"
+            style={{
+              left: `${canvasContextMenu.x}px`,
+              top: `${canvasContextMenu.y}px`,
+            }}
+          >
+            {contextBlock.type === 'text' ? (
+              <button type="button" onClick={() => startTextEditing(contextBlock.id)}>Edit text</button>
+            ) : null}
+            {contextBlock.type === 'image' && currentImageUrl ? (
+              <button
+                type="button"
+                onClick={() => {
+                  updateCanvasBlock(contextBlock.id, {
+                    src: currentImageUrl,
+                    title: currentImageTitle || contextBlock.title || 'Image',
+                    name: currentImageTitle || contextBlock.name || 'Image',
+                  })
+                  setCanvasContextMenu(null)
+                }}
+              >
+                Replace with selected image
+              </button>
+            ) : null}
+            <button type="button" onClick={duplicateSelectedCanvasBlock}>Duplicate</button>
+            <button type="button" onClick={() => {
+              moveSelectedCanvasBlock('up')
+              setCanvasContextMenu(null)
+            }}>Bring forward</button>
+            <button type="button" onClick={() => {
+              moveSelectedCanvasBlock('down')
+              setCanvasContextMenu(null)
+            }}>Send back</button>
+            <button className="is-danger" type="button" onClick={deleteSelectedCanvasBlock}>Delete</button>
+          </div>
+        ) : null}
         <CanvasRenderer
           previewRef={previewRef}
           output={canvasOutput}
@@ -1569,10 +1755,13 @@ export function PrintLabPage({ pieces = [] }) {
           canvasZoom={canvasZoom}
           selectedCanvasBlockId={selectedCanvasBlockId}
           setSelectedCanvasBlockId={setSelectedCanvasBlockId}
+          editingTextBlockId={editingTextBlockId}
+          setEditingTextBlockId={setEditingTextBlockId}
           uploadedCanvasFonts={uploadedCanvasFonts}
           startCanvasDrag={startCanvasDrag}
           startCanvasResize={startCanvasResize}
           updateCanvasBlock={updateCanvasBlock}
+          openCanvasContextMenu={openCanvasContextMenu}
         />
       </>
     )
