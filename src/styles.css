@@ -16004,6 +16004,15 @@ a.button {
   font-size: 11px;
 }
 
+.print-lab-output-summary small {
+  min-width: 0;
+  overflow: hidden;
+  color: #646970;
+  font-size: 11px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+}
+
 .print-lab-page-list--cards {
   gap: 7px;
   max-height: 220px;
@@ -16520,6 +16529,62 @@ button.print-lab-half-fold-panel__label:focus-visible {
   box-shadow: inset 0 -3px 0 #2271b1;
 }
 
+/* PRINTLAB_30H_MARGINS_SOURCE_CLARITY */
+.print-lab-source-help {
+  margin: -2px 0 8px;
+  color: #646970;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.print-lab-margin-presets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.print-lab-margin-presets button {
+  min-width: 0;
+  padding: 7px 6px;
+  border: 1px solid #c3c4c7;
+  border-radius: 5px;
+  background: #fff;
+  color: #1d2327;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.print-lab-margin-presets button.is-active {
+  border-color: #2271b1;
+  background: #f0f6fc;
+  box-shadow: inset 0 -3px 0 #2271b1;
+}
+
+.print-lab-margin-grid {
+  margin-top: 7px;
+}
+
+.print-lab-preview--tile-sheet {
+  padding: var(--print-margin-top, 10px) var(--print-margin-right, 10px) var(--print-margin-bottom, 10px) var(--print-margin-left, 10px) !important;
+}
+
+.print-lab-page-preview {
+  padding: var(--print-margin-top, 10px) var(--print-margin-right, 10px) var(--print-margin-bottom, 10px) var(--print-margin-left, 10px) !important;
+}
+
+.print-lab-page-preview--publication {
+  padding: var(--print-margin-top, 10px) var(--print-margin-right, 10px) var(--print-margin-bottom, 10px) var(--print-margin-left, 10px) !important;
+}
+
+.print-lab-half-fold-panel {
+  padding: var(--print-margin-top, 10px) var(--print-margin-right, 10px) var(--print-margin-bottom, 10px) var(--print-margin-left, 10px) !important;
+}
+
+.print-lab-split-panel {
+  background-origin: content-box;
+  background-clip: content-box;
+}
+
 /* PRINTLAB_30F_LIVE_CANVAS_TOOLBAR */
 .print-lab-desk--canvas-mode .print-lab-preview-wrap {
   position: relative;
@@ -16750,7 +16815,7 @@ button.print-lab-half-fold-panel__label:focus-visible {
   }
 
   .print-lab-half-fold-panel {
-    padding: 0.25in !important;
+    padding: var(--print-margin-top, 10px) var(--print-margin-right, 10px) var(--print-margin-bottom, 10px) var(--print-margin-left, 10px) !important;
   }
 
   .print-lab-half-fold-panel__label,

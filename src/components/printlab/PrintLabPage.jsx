@@ -41,9 +41,9 @@ import { PosterSplitRenderer } from './renderers/PosterSplitRenderer'
 import { TileSheetRenderer } from './renderers/TileSheetRenderer'
 
 const sourceOptions = [
-  { id: 'upload', label: 'Upload Image' },
-  { id: 'media', label: 'Media Library' },
-  { id: 'post', label: 'CMS Post' },
+  { id: 'upload', label: 'Upload Image', help: 'Use a new image from your computer.' },
+  { id: 'media', label: 'Media Library', help: 'Reuse an image already saved in Sabot Media.' },
+  { id: 'post', label: 'CMS Post', help: 'Use an existing article/post as source material.' },
 ]
 
 const toolOptions = [
@@ -57,6 +57,12 @@ const toolOptions = [
 const fitOptions = ['cover', 'contain', 'stretch']
 const orientationOptions = ['portrait', 'landscape']
 const imagePositionOptions = ['top', 'side', 'background']
+const marginPresets = {
+  tight: { label: 'Tight', values: { top: 4, right: 4, bottom: 4, left: 4 } },
+  normal: { label: 'Normal', values: { top: 10, right: 10, bottom: 10, left: 10 } },
+  wide: { label: 'Wide', values: { top: 24, right: 24, bottom: 24, left: 24 } },
+  custom: { label: 'Custom', values: null },
+}
 const printlabGoogleFontsHref = 'https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Libre+Baskerville:wght@400;700&family=Merriweather:wght@400;700;900&family=Oswald:wght@400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Roboto+Condensed:wght@400;700&family=Source+Serif+4:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap'
 const fontUploadAccept = '.ttf,.otf,.woff,.woff2'
 
@@ -201,6 +207,8 @@ export function PrintLabPage({ pieces = [] }) {
   const [zineBody, setZineBody] = useState('')
   const [zineFooter, setZineFooter] = useState('')
   const [zineIncludeImage, setZineIncludeImage] = useState(true)
+  const [marginPreset, setMarginPreset] = useState('normal')
+  const [outputMargins, setOutputMargins] = useState(() => ({ ...marginPresets.normal.values }))
   const [publication, setPublication] = useState(() => createEmptyPublication({ title: 'Printlab Publication' }))
   const [publicationDirty, setPublicationDirty] = useState(false)
   const [selectedCanvasBlockId, setSelectedCanvasBlockId] = useState('')
@@ -390,35 +398,17 @@ export function PrintLabPage({ pieces = [] }) {
 
   useEffect(() => {
     if (publicationDirty) return
-    if (sourceType === 'post' && selectedPiece) {
-      const footer = ['SABOT MEDIA', getContentType(selectedPiece), getPublishedAtLabel(selectedPiece)]
-        .filter(Boolean)
-        .join(' / ')
-      const pages = buildPublicationPagesFromPost({
-        title: selectedPostTitle || selectedPiece.title || 'Untitled',
-        body: selectedPostBody || '',
-        excerpt: selectedPostExcerpt || '',
-        imageUrl: currentImageUrl,
-        footer,
-      })
-      if (pages.length) {
-        setPublication((current) => ({
-          ...current,
-          title: selectedPostTitle || current.title,
-          pages,
-          activePageId: pages[0]?.id || current.activePageId,
-        }))
-        setSelectedCanvasBlockId(pages[0]?.blocks?.[0]?.id || '')
-        setCanvasInteraction(null)
-        setEditingTextBlockId('')
-        return
-      }
+    if (sourceType === 'post') {
+      setSelectedCanvasBlockId('')
+      setCanvasInteraction(null)
+      setEditingTextBlockId('')
+      return
     }
     const title = sourceType === 'post'
       ? (selectedPostTitle || 'Untitled')
       : (currentImageTitle || pageTitle || zineTitle || 'Printlab Canvas')
     const body = sourceType === 'post'
-      ? truncateText(selectedPostBody || selectedPostExcerpt || '', 360)
+      ? truncateText(selectedPostExcerpt || selectedPostBody || '', 180)
       : ''
     const nextBlocks = buildCanvasStarterBlocks({
       title,
@@ -462,7 +452,8 @@ export function PrintLabPage({ pieces = [] }) {
     caption: tileCaption,
     imageUrl: currentImageUrl,
     missingSourceMessage,
-  }), [currentImageUrl, missingSourceMessage, publication, tileCaption, tileColumns, tileFit, tileGap, tileRows])
+    margins: outputMargins,
+  }), [currentImageUrl, missingSourceMessage, outputMargins, publication, tileCaption, tileColumns, tileFit, tileGap, tileRows])
   const posterOutput = useMemo(() => getPosterOutput({
     publication,
     wide: splitWide,
@@ -471,11 +462,12 @@ export function PrintLabPage({ pieces = [] }) {
     showNumbers: splitShowNumbers,
     imageUrl: currentImageUrl,
     missingSourceMessage,
-  }), [currentImageUrl, missingSourceMessage, publication, splitFit, splitShowNumbers, splitTall, splitWide])
+    margins: outputMargins,
+  }), [currentImageUrl, missingSourceMessage, outputMargins, publication, splitFit, splitShowNumbers, splitTall, splitWide])
   const pageLayoutOutput = useMemo(() => getPageLayoutOutput({
     publication,
     activePageId: publication.activePageId,
-    usePublicationContent: publicationDirty || Boolean(currentImageUrl) || sourceType === 'post',
+    usePublicationContent: publicationDirty || sourceType !== 'post',
     orientation: pageOrientation,
     imagePosition: pageImagePosition,
     title: pageTitle,
@@ -483,12 +475,14 @@ export function PrintLabPage({ pieces = [] }) {
     footer: pageFooter,
     imageUrl: currentImageUrl,
     sourceTitle: selectedPostTitle && sourceType === 'post' ? selectedPostTitle : '',
-    sourceBody: sourceType === 'post' ? (selectedPostBody || selectedPostExcerpt) : '',
+    sourceBody: sourceType === 'post' ? truncateText(selectedPostExcerpt || selectedPostBody, 520) : '',
     sourceFooter: sourceType === 'post' ? 'Source: CMS post' : '',
     starterBody: 'Use this page layout for a flyer, article handout, one-sheet, or announcement. Add body copy in Tools and choose an image source to compose a print-ready page.',
     truncateText,
+    margins: outputMargins,
   }), [
     currentImageUrl,
+    outputMargins,
     pageBody,
     pageFooter,
     pageImagePosition,
@@ -512,7 +506,8 @@ export function PrintLabPage({ pieces = [] }) {
     includeImage: zineIncludeImage,
     hasContent: zineHasContent,
     truncateText,
-  }), [currentImageUrl, publication, publicationDirty, sourceType, zineBody, zineFooter, zineHasContent, zineIncludeImage, zineTitle])
+    margins: outputMargins,
+  }), [currentImageUrl, outputMargins, publication, publicationDirty, sourceType, zineBody, zineFooter, zineHasContent, zineIncludeImage, zineTitle])
   const canvasOutput = useMemo(() => getCanvasOutput({
     publication,
     activePageId: publication.activePageId,
@@ -600,6 +595,20 @@ export function PrintLabPage({ pieces = [] }) {
       if (block.id !== id) return block
       const patch = typeof patchOrFn === 'function' ? patchOrFn(block) : patchOrFn
       return clampCanvasBlock({ ...block, ...patch }, canvasSize)
+    }))
+  }
+
+  function applyMarginPreset(presetId) {
+    setMarginPreset(presetId)
+    const preset = marginPresets[presetId]
+    if (preset?.values) setOutputMargins({ ...preset.values })
+  }
+
+  function updateOutputMargin(side, value) {
+    setMarginPreset('custom')
+    setOutputMargins((margins) => ({
+      ...margins,
+      [side]: clampNumber(value, 0, 96),
     }))
   }
 
@@ -1115,6 +1124,9 @@ export function PrintLabPage({ pieces = [] }) {
               ))}
             </select>
           </label>
+          <p className="print-lab-source-help">
+            {sourceOptions.find((option) => option.id === sourceType)?.help}
+          </p>
 
           {sourceType === 'upload' ? (
             <div className="print-lab-source-section">
@@ -1136,6 +1148,7 @@ export function PrintLabPage({ pieces = [] }) {
 
           {sourceType === 'media' ? (
             <div className="print-lab-source-section">
+              <p className="print-lab-source-help">Selecting a media item makes it the current image source, just like uploading an image.</p>
               {mediaItems.length ? (
                 <div className="print-lab-source-list" role="listbox" aria-label="Existing images">
                   {mediaItems.map((item) => {
@@ -1169,6 +1182,7 @@ export function PrintLabPage({ pieces = [] }) {
 
           {sourceType === 'post' ? (
             <div className="print-lab-source-section">
+              <p className="print-lab-source-help">Select a post, then use Flow post into publication to create editable print pages.</p>
               {isLoading ? <p className="print-lab-empty-note">Loading published posts...</p> : null}
               {!isLoading && !publishedPieces.length ? (
                 <p className="print-lab-empty-note">No published posts are available.</p>
@@ -1234,6 +1248,7 @@ export function PrintLabPage({ pieces = [] }) {
             <div className="print-lab-output-summary">
               <strong>{currentTool.label}</strong>
               <span>{outputHint}</span>
+              <small>Edit pages in Canvas. Output views preview print/export layouts.</small>
             </div>
             <div className="print-lab-layout-selector">
               {toolOptions.map((option) => (
@@ -1252,11 +1267,42 @@ export function PrintLabPage({ pieces = [] }) {
             </div>
           </fieldset>
 
+          <fieldset className="print-lab-control-group">
+            <legend>Print margins</legend>
+            <div className="print-lab-margin-presets" role="group" aria-label="Margin presets">
+              {Object.entries(marginPresets).map(([id, preset]) => (
+                <button
+                  className={marginPreset === id ? 'is-active' : ''}
+                  key={id}
+                  type="button"
+                  aria-pressed={marginPreset === id}
+                  onClick={() => applyMarginPreset(id)}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <div className="print-lab-control-grid print-lab-margin-grid">
+              {['top', 'right', 'bottom', 'left'].map((side) => (
+                <label className="print-lab-field" key={side}>
+                  <span>{side} px</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="96"
+                    value={outputMargins[side]}
+                    onChange={(event) => updateOutputMargin(side, event.target.value)}
+                  />
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           {sourceType === 'post' && selectedPiece ? (
             <fieldset className="print-lab-control-group">
               <legend>Article flow</legend>
               <button className="button" type="button" onClick={() => flowSelectedPostIntoPublication({ replace: !publicationDirty })}>
-                Create pages from post
+                Flow post into publication
               </button>
               <p className="print-lab-empty-note print-lab-empty-note--compact">
                 {publicationDirty ? 'Adds new article pages after your current publication.' : 'Builds editable portrait pages from the selected post.'}

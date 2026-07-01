@@ -11,6 +11,12 @@ export function PageLayoutRenderer({
       <article
         className="print-lab-preview print-lab-output print-lab-page-preview print-lab-page-preview--publication"
         ref={previewRef}
+        style={{
+          '--print-margin-top': `${output.margins.top}px`,
+          '--print-margin-right': `${output.margins.right}px`,
+          '--print-margin-bottom': `${output.margins.bottom}px`,
+          '--print-margin-left': `${output.margins.left}px`,
+        }}
       >
         <PublicationPageSurface
           className="print-lab-publication-surface--page-layout"
@@ -27,6 +33,12 @@ export function PageLayoutRenderer({
     <article
       className={`print-lab-preview print-lab-output print-lab-page-preview print-lab-page-preview--${output.orientation} print-lab-page-preview--image-${output.imagePosition}${output.hasContent ? '' : ' print-lab-page-preview--starter'}`}
       ref={previewRef}
+      style={{
+        '--print-margin-top': `${output.margins.top}px`,
+        '--print-margin-right': `${output.margins.right}px`,
+        '--print-margin-bottom': `${output.margins.bottom}px`,
+        '--print-margin-left': `${output.margins.left}px`,
+      }}
     >
       {hasImage && output.imagePosition === 'background' ? (
         <div className="print-lab-page-background" style={{ backgroundImage: `url("${output.imageUrl}")` }} />

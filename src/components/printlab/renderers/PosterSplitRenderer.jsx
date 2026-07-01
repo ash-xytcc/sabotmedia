@@ -8,6 +8,10 @@ export function PosterSplitRenderer({
       ref={previewRef}
       style={{
         '--split-columns': output.wide,
+        '--print-margin-top': `${output.margins.top}px`,
+        '--print-margin-right': `${output.margins.right}px`,
+        '--print-margin-bottom': `${output.margins.bottom}px`,
+        '--print-margin-left': `${output.margins.left}px`,
       }}
     >
       {output.imageUrl ? (
@@ -20,6 +24,7 @@ export function PosterSplitRenderer({
                 backgroundImage: `url("${output.imageUrl}")`,
                 backgroundPosition: panel.objectPosition,
                 backgroundSize: output.backgroundSize,
+                padding: `var(--print-margin-top) var(--print-margin-right) var(--print-margin-bottom) var(--print-margin-left)`,
               }}
             >
               <img

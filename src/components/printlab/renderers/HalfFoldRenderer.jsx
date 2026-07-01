@@ -18,7 +18,16 @@ export function HalfFoldRenderer({
   }
 
   return (
-    <article className="print-lab-preview print-lab-output print-lab-preview--half-fold-zine" ref={previewRef}>
+    <article
+      className="print-lab-preview print-lab-output print-lab-preview--half-fold-zine"
+      ref={previewRef}
+      style={{
+        '--print-margin-top': `${output.margins.top}px`,
+        '--print-margin-right': `${output.margins.right}px`,
+        '--print-margin-bottom': `${output.margins.bottom}px`,
+        '--print-margin-left': `${output.margins.left}px`,
+      }}
+    >
       <div className="print-lab-half-fold-nav" aria-label="Half-fold sheet navigation">
         <button className="button" type="button" disabled={!canNavigate || activeIndex === 0} onClick={() => navigate(activeIndex - 1)}>
           Previous

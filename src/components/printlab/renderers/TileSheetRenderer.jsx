@@ -10,6 +10,7 @@ export function TileSheetRenderer({
     imageUrl,
     missingSourceMessage,
     tiles,
+    margins,
   } = output
   return (
     <article
@@ -18,6 +19,10 @@ export function TileSheetRenderer({
       style={{
         '--tile-columns': columns,
         '--tile-gap': `${gap}px`,
+        '--print-margin-top': `${margins.top}px`,
+        '--print-margin-right': `${margins.right}px`,
+        '--print-margin-bottom': `${margins.bottom}px`,
+        '--print-margin-left': `${margins.left}px`,
       }}
     >
       {imageUrl ? (

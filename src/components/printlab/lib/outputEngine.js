@@ -29,6 +29,17 @@ function cleanText(value = '') {
   return String(value || '').trim()
 }
 
+const defaultOutputMargins = { top: 10, right: 10, bottom: 10, left: 10 }
+
+function normalizeMargins(margins) {
+  return {
+    top: Number(margins?.top ?? defaultOutputMargins.top),
+    right: Number(margins?.right ?? defaultOutputMargins.right),
+    bottom: Number(margins?.bottom ?? defaultOutputMargins.bottom),
+    left: Number(margins?.left ?? defaultOutputMargins.left),
+  }
+}
+
 export const printlabOutputTypes = {
   canvas: 'canvas',
   page: 'page',
@@ -128,6 +139,7 @@ export function getTileOutput({
   caption = '',
   imageUrl = '',
   missingSourceMessage = '',
+  margins,
 } = {}) {
   const count = Math.max(1, Number(rows || 1) * Number(columns || 1))
   return {
@@ -141,6 +153,7 @@ export function getTileOutput({
     caption,
     imageUrl,
     missingSourceMessage,
+    margins: normalizeMargins(margins),
     tiles: Array.from({ length: count }).map((_, index) => ({
       id: `tile-${index}`,
       index,
@@ -159,6 +172,7 @@ export function getPosterOutput({
   showNumbers = true,
   imageUrl = '',
   missingSourceMessage = '',
+  margins,
 } = {}) {
   const panelCount = Math.max(1, Number(wide || 1) * Number(tall || 1))
   const backgroundSize = fit === 'contain'
@@ -174,6 +188,7 @@ export function getPosterOutput({
     showNumbers,
     imageUrl,
     missingSourceMessage,
+    margins: normalizeMargins(margins),
     backgroundSize,
     panels: Array.from({ length: panelCount }).map((_, index) => {
       const column = index % wide
@@ -207,6 +222,7 @@ export function getPageLayoutOutput({
   sourceFooter = '',
   starterBody = '',
   truncateText = (value) => value,
+  margins,
 } = {}) {
   const pages = getReaderOrderPages(publication)
   const activePage = pages.find((page) => page.id === activePageId) || pages[0] || null
@@ -233,11 +249,13 @@ export function getPageLayoutOutput({
     titleText: resolvedTitle,
     bodyContent: resolvedBody,
     footerText: resolvedFooter,
+    margins: normalizeMargins(margins),
   }
 }
 
 export function getHalfFoldOutput({
   publication,
+  margins,
 } = {}) {
   const pages = getReaderOrderPages(publication)
   const sheets = getBookletImposedSpreads(pages)
@@ -263,6 +281,7 @@ export function getHalfFoldOutput({
       height: 8.5,
       unit: 'in',
     },
+    margins: normalizeMargins(margins),
     fold: 'vertical-center',
     zineHasContent: true,
   }
