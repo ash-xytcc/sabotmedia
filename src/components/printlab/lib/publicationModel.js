@@ -1,8 +1,8 @@
 export function createPublicationPage(patch = {}) {
   const id = patch.id || `page-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-  const preset = patch.preset || patch.orientation || 'landscape'
-  const width = Number(patch.width || patch.canvasSize?.width || 720)
-  const height = Number(patch.height || patch.canvasSize?.height || 540)
+  const preset = patch.preset || patch.orientation || 'portrait'
+  const width = Number(patch.width || patch.canvasSize?.width || 540)
+  const height = Number(patch.height || patch.canvasSize?.height || 720)
   const background = patch.background || patch.backgroundColor || '#fffdf8'
   return {
     id,

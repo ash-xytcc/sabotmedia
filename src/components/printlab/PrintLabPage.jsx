@@ -207,6 +207,7 @@ export function PrintLabPage({ pieces = [] }) {
   const [canvasSourceOpen, setCanvasSourceOpen] = useState(false)
   const [canvasToolsOpen, setCanvasToolsOpen] = useState(true)
   const [uploadedCanvasFonts, setUploadedCanvasFonts] = useState([])
+  const [activeHalfFoldSheetIndex, setActiveHalfFoldSheetIndex] = useState(0)
 
   const previewRef = useRef(null)
   const canvasRef = useRef(null)
@@ -328,10 +329,17 @@ export function PrintLabPage({ pieces = [] }) {
     window.setTimeout(fitCanvasToViewport, 0)
   }
 
+  function editPublicationPage(pageId) {
+    selectPublicationPage(pageId)
+    setToolMode('canvas')
+    setCanvasToolsOpen(true)
+    window.setTimeout(fitCanvasToViewport, 0)
+  }
+
   function addPublicationPage() {
     const nextIndex = publicationPages.length + 1
-    const nextPreset = toolMode === 'zine' ? 'portrait' : canvasPreset
-    const nextSize = canvasPresetOptions[nextPreset] || canvasSize
+    const nextPreset = 'portrait'
+    const nextSize = canvasPresetOptions[nextPreset] || canvasPresetOptions.portrait
     const page = createPublicationPage({
       label: `Page ${nextIndex}`,
       title: `Page ${nextIndex}`,
@@ -496,6 +504,12 @@ export function PrintLabPage({ pieces = [] }) {
     (toolMode === 'zine' && Boolean(halfFoldOutput.zineHasContent)) ||
     (toolMode === 'canvas' && canvasOutput.canvasBlocks.length > 0)
   )
+
+  useEffect(() => {
+    if (toolMode !== 'zine') return
+    const maxIndex = Math.max(0, halfFoldOutput.sheets.length - 1)
+    setActiveHalfFoldSheetIndex((index) => Math.min(index, maxIndex))
+  }, [halfFoldOutput.sheets.length, toolMode])
 
   const currentTextContent = useMemo(() => {
     if (toolMode === 'tile') {
@@ -1198,28 +1212,33 @@ export function PrintLabPage({ pieces = [] }) {
                 <span>{halfFoldOutput.sheetSize.label} / fold at center</span>
               </div>
               <div className="print-lab-imposition-list">
-                {halfFoldOutput.sheets.map((sheet) => (
-                  <div className="print-lab-imposition-sheet" key={sheet.id}>
-                    <strong>{sheet.label}</strong>
-                    {sheet.panels.map((panel) => (
-                      panel.page ? (
-                        <button
-                          className={panel.page.id === publication.activePageId ? 'is-active' : ''}
-                          key={panel.id}
-                          type="button"
-                          onClick={() => selectPublicationPage(panel.page.id)}
-                        >
-                          <span>{panel.side}</span>
-                          <strong>{panel.positionLabel}</strong>
-                          <small>{panel.page.label}</small>
-                        </button>
-                      ) : (
-                        <div className="print-lab-imposition-blank" key={panel.id}>
-                          <span>{panel.side}</span>
-                          <strong>{panel.positionLabel}</strong>
-                        </div>
-                      )
-                    ))}
+                {halfFoldOutput.sheets.map((sheet, index) => (
+                  <div className={`print-lab-imposition-sheet${index === activeHalfFoldSheetIndex ? ' is-selected' : ''}`} key={sheet.id}>
+                    <button className="print-lab-imposition-sheet__nav" type="button" onClick={() => setActiveHalfFoldSheetIndex(index)}>
+                      <strong>{sheet.label}</strong>
+                      <span>{sheet.panels.map((panel) => panel.positionLabel).join(' | ')}</span>
+                    </button>
+                    <div className="print-lab-imposition-sheet__pages">
+                      {sheet.panels.map((panel) => (
+                        panel.page ? (
+                          <button
+                            className={panel.page.id === publication.activePageId ? 'is-active' : ''}
+                            key={panel.id}
+                            type="button"
+                            onClick={() => editPublicationPage(panel.page.id)}
+                          >
+                            <span>{panel.side}</span>
+                            <strong>{panel.positionLabel}</strong>
+                            <small>{panel.page.label}</small>
+                          </button>
+                        ) : (
+                          <div className="print-lab-imposition-blank" key={panel.id}>
+                            <span>{panel.side}</span>
+                            <strong>{panel.positionLabel}</strong>
+                          </div>
+                        )
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1298,14 +1317,22 @@ export function PrintLabPage({ pieces = [] }) {
                 </ol>
               </div>
               <div className="print-lab-canvas-document">
-                <label className="print-lab-field">
-                  <span>Page preset</span>
-                  <select value={canvasPreset} onChange={(event) => changeCanvasPreset(event.target.value)}>
+                <div className="print-lab-field print-lab-preset-field">
+                  <span>Page orientation</span>
+                  <div className="print-lab-preset-toggle" role="group" aria-label="Page orientation">
                     {Object.entries(canvasPresetOptions).map(([id, option]) => (
-                      <option key={id} value={id}>{option.label}</option>
+                      <button
+                        className={canvasPreset === id ? 'is-active' : ''}
+                        key={id}
+                        type="button"
+                        aria-pressed={canvasPreset === id}
+                        onClick={() => changeCanvasPreset(id)}
+                      >
+                        {option.label}
+                      </button>
                     ))}
-                  </select>
-                </label>
+                  </div>
+                </div>
                 <label className="print-lab-field print-lab-color-field">
                   <span>Background</span>
                   <input type="color" value={canvasBackground} onChange={(event) => setCanvasBackground(event.target.value)} />
@@ -1500,8 +1527,10 @@ export function PrintLabPage({ pieces = [] }) {
       <HalfFoldRenderer
         previewRef={previewRef}
         output={halfFoldOutput}
+        activeSheetIndex={activeHalfFoldSheetIndex}
+        onNavigate={setActiveHalfFoldSheetIndex}
         uploadedCanvasFonts={uploadedCanvasFonts}
-        onSelectPage={selectPublicationPage}
+        onSelectPage={editPublicationPage}
       />
     )
   }

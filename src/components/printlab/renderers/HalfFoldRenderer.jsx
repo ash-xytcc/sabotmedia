@@ -3,17 +3,38 @@ import { PublicationPageSurface } from './PublicationPageSurface'
 export function HalfFoldRenderer({
   previewRef,
   output,
+  activeSheetIndex = 0,
+  onNavigate,
   uploadedCanvasFonts,
   onSelectPage,
 }) {
+  const sheetCount = output.sheets.length
+  const activeIndex = Math.max(0, Math.min(activeSheetIndex, sheetCount - 1))
+  const sheet = output.sheets[activeIndex] || output.sheets[0]
+  const canNavigate = sheetCount > 1
+
+  function navigate(nextIndex) {
+    onNavigate?.(Math.max(0, Math.min(nextIndex, sheetCount - 1)))
+  }
+
   return (
     <article className="print-lab-preview print-lab-output print-lab-preview--half-fold-zine" ref={previewRef}>
-      <div className="print-lab-half-fold-stack" aria-label="Half-fold print layout">
-        {output.sheets.map((sheet) => (
+      <div className="print-lab-half-fold-nav" aria-label="Half-fold sheet navigation">
+        <button className="button" type="button" disabled={!canNavigate || activeIndex === 0} onClick={() => navigate(activeIndex - 1)}>
+          Previous
+        </button>
+        <strong>{sheet?.label || 'Sheet 1'} of {sheetCount}</strong>
+        <button className="button" type="button" disabled={!canNavigate || activeIndex >= sheetCount - 1} onClick={() => navigate(activeIndex + 1)}>
+          Next
+        </button>
+      </div>
+
+      {sheet ? (
+        <div className="print-lab-half-fold-stack" aria-label="Half-fold print layout">
           <div className="print-lab-half-fold-sheet" key={sheet.id}>
             <div className="print-lab-half-fold-sheet__label">
               <strong>{sheet.label}</strong>
-              <span>{output.sheetSize.label}</span>
+              <span>{sheet.panels.map((panel) => panel.positionLabel).join(' / ')} / {output.sheetSize.label}</span>
             </div>
             <div className="print-lab-half-fold-spread">
               {sheet.panels.map((panel) => (
@@ -41,8 +62,8 @@ export function HalfFoldRenderer({
               <span className="print-lab-half-fold-spread__fold" aria-hidden="true" />
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ) : null}
     </article>
   )
 }

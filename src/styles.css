@@ -16290,6 +16290,25 @@ a.button {
   gap: 18px;
 }
 
+.print-lab-half-fold-nav {
+  display: grid;
+  grid-template-columns: minmax(84px, auto) minmax(0, 1fr) minmax(84px, auto);
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 12px;
+}
+
+.print-lab-half-fold-nav strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #1d2327;
+  font-size: 12px;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .print-lab-half-fold-sheet {
   display: grid;
   gap: 7px;
@@ -16390,7 +16409,6 @@ button.print-lab-half-fold-panel__label:focus-visible {
 
 .print-lab-imposition-sheet {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
   padding: 8px;
   border: 1px solid #dcdcde;
@@ -16398,13 +16416,39 @@ button.print-lab-half-fold-panel__label:focus-visible {
   background: #fff;
 }
 
-.print-lab-imposition-sheet > strong {
-  grid-column: 1 / -1;
+.print-lab-imposition-sheet.is-selected {
+  border-color: #72aee6;
+  background: #f0f6fc;
+  box-shadow: inset 3px 0 0 #2271b1;
+}
+
+.print-lab-imposition-sheet__nav {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: #1d2327;
+  text-align: left;
+}
+
+.print-lab-imposition-sheet__nav strong {
   font-size: 12px;
 }
 
-.print-lab-imposition-sheet button,
+.print-lab-imposition-sheet__nav span {
+  color: #646970;
+  font-size: 11px;
+}
+
+.print-lab-imposition-sheet__pages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.print-lab-imposition-sheet__pages button,
 .print-lab-imposition-blank {
   min-width: 0;
   display: grid;
@@ -16417,35 +16461,63 @@ button.print-lab-half-fold-panel__label:focus-visible {
   text-align: left;
 }
 
-.print-lab-imposition-sheet button.is-active {
+.print-lab-imposition-sheet__pages button.is-active {
   border-color: #72aee6;
   background: #f0f6fc;
   box-shadow: inset 3px 0 0 #2271b1;
 }
 
-.print-lab-imposition-sheet span,
-.print-lab-imposition-sheet strong,
-.print-lab-imposition-sheet small {
+.print-lab-imposition-sheet__pages span,
+.print-lab-imposition-sheet__pages strong,
+.print-lab-imposition-sheet__pages small {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.print-lab-imposition-sheet span {
+.print-lab-imposition-sheet__pages span {
   color: #646970;
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
-.print-lab-imposition-sheet strong {
+.print-lab-imposition-sheet__pages strong {
   font-size: 12px;
 }
 
-.print-lab-imposition-sheet small {
+.print-lab-imposition-sheet__pages small {
   color: #646970;
   font-size: 11px;
+}
+
+.print-lab-preset-field {
+  gap: 6px;
+}
+
+.print-lab-preset-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.print-lab-preset-toggle button {
+  min-width: 0;
+  padding: 8px 7px;
+  border: 1px solid #c3c4c7;
+  border-radius: 5px;
+  background: #fff;
+  color: #1d2327;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.print-lab-preset-toggle button.is-active {
+  border-color: #2271b1;
+  background: #f0f6fc;
+  box-shadow: inset 0 -3px 0 #2271b1;
 }
 
 @media print {
@@ -16475,6 +16547,10 @@ button.print-lab-half-fold-panel__label:focus-visible {
 
   .print-lab-half-fold-stack {
     gap: 0 !important;
+  }
+
+  .print-lab-half-fold-nav {
+    display: none !important;
   }
 
   .print-lab-half-fold-sheet {
