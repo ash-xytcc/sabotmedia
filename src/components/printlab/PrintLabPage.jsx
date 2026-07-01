@@ -30,6 +30,7 @@ import {
   createEmptyPublication,
   createPublicationPage,
   buildPublicationPagesFromPost,
+  buildZinePublicationFromPost,
   deletePublicationPage as removePublicationPage,
   duplicatePublicationPage as copyPublicationPage,
   getActivePage,
@@ -617,13 +618,15 @@ export function PrintLabPage({ pieces = [] }) {
     const footer = ['SABOT MEDIA', getContentType(selectedPiece), getPublishedAtLabel(selectedPiece)]
       .filter(Boolean)
       .join(' / ')
-    const pages = buildPublicationPagesFromPost({
+    const buildPages = toolMode === 'zine' ? buildZinePublicationFromPost : buildPublicationPagesFromPost
+    const pages = buildPages({
       title: selectedPostTitle || selectedPiece.title || 'Untitled',
       body: selectedPostBody || '',
       excerpt: selectedPostExcerpt || '',
       imageUrl: currentImageUrl,
       footer,
       background: canvasBackground,
+      marginSettings: outputMargins,
     })
     if (!pages.length) return
     setPublicationDirty(true)
@@ -642,7 +645,7 @@ export function PrintLabPage({ pieces = [] }) {
     setCanvasContextMenu(null)
     setToolMode('canvas')
     setCanvasToolsOpen(true)
-    setActionStatus(`${pages.length} publication page${pages.length === 1 ? '' : 's'} created from post.`)
+    setActionStatus(`${pages.length} ${toolMode === 'zine' ? 'zine' : 'publication'} page${pages.length === 1 ? '' : 's'} created from post.`)
     window.setTimeout(fitCanvasToViewport, 0)
   }
 
@@ -1182,7 +1185,7 @@ export function PrintLabPage({ pieces = [] }) {
 
           {sourceType === 'post' ? (
             <div className="print-lab-source-section">
-              <p className="print-lab-source-help">Select a post, then use Flow post into publication to create editable print pages.</p>
+              <p className="print-lab-source-help">Select a post, then flow it into editable publication pages. In Half-Fold Zine, the flow creates portrait zine pages for imposition.</p>
               {isLoading ? <p className="print-lab-empty-note">Loading published posts...</p> : null}
               {!isLoading && !publishedPieces.length ? (
                 <p className="print-lab-empty-note">No published posts are available.</p>
@@ -1302,10 +1305,12 @@ export function PrintLabPage({ pieces = [] }) {
             <fieldset className="print-lab-control-group">
               <legend>Article flow</legend>
               <button className="button" type="button" onClick={() => flowSelectedPostIntoPublication({ replace: !publicationDirty })}>
-                Flow post into publication
+                {toolMode === 'zine' ? 'Flow post into zine pages' : 'Flow post into publication'}
               </button>
               <p className="print-lab-empty-note print-lab-empty-note--compact">
-                {publicationDirty ? 'Adds new article pages after your current publication.' : 'Builds editable portrait pages from the selected post.'}
+                {toolMode === 'zine'
+                  ? 'Builds editable portrait zine pages, then Half-Fold imposes them for print.'
+                  : (publicationDirty ? 'Adds new article pages after your current publication.' : 'Builds editable portrait pages from the selected post.')}
               </p>
             </fieldset>
           ) : null}
