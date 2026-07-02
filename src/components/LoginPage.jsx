@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from './AdminAuthContext'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
@@ -8,7 +8,7 @@ import { useResolvedConfig } from '../lib/useResolvedConfig'
 
 function getReturnTo(search = '') {
   const params = new URLSearchParams(search)
-  const value = params.get('returnTo') || '/wp-admin'
+  const value = params.get('returnTo') || params.get('next') || '/wp-admin'
   if (!value.startsWith('/') || value.startsWith('//')) return '/wp-admin'
   return value
 }
@@ -30,8 +30,6 @@ export function LoginPage() {
   const rejectedError = getConfiguredText(resolvedConfig, loginCopy.rejectedError.field, loginCopy.rejectedError.defaultText)
   const submitLabel = getConfiguredText(resolvedConfig, loginCopy.submitLabel.field, loginCopy.submitLabel.defaultText)
   const checkingLabel = getConfiguredText(resolvedConfig, loginCopy.checkingLabel.field, loginCopy.checkingLabel.defaultText)
-
-  if (isAuthenticated) return <Navigate to={returnTo} replace />
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -58,24 +56,38 @@ export function LoginPage() {
     <main className="page admin-login-page">
       <section className="admin-login-panel" aria-labelledby="admin-login-title">
         <img className="admin-login-panel__logo" src={mastheadLogo} alt="Sabot Media" />
-        <h1 id="admin-login-title">{title}</h1>
-        <p>{body}</p>
-        <form onSubmit={handleSubmit}>
-          <label>
-            <span>{tokenLabel}</span>
-            <input
-              autoComplete="current-password"
-              autoFocus
-              type="password"
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-            />
-          </label>
-          {submitError || authError ? <p className="admin-login-panel__error">{submitError || authError}</p> : null}
-          <button className="button button--primary" type="submit" disabled={isSubmitting || isChecking}>
-            {isSubmitting || isChecking ? checkingLabel : submitLabel}
-          </button>
-        </form>
+        {isAuthenticated ? (
+          <>
+            <h1 id="admin-login-title">You are logged in</h1>
+            <p>Your editor session is active.</p>
+            <div className="admin-login-panel__actions">
+              <Link className="button button--primary" to={returnTo}>Continue</Link>
+              <Link className="button" to="/wp-admin">Dashboard</Link>
+              <Link className="button" to="/logout">Logout</Link>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 id="admin-login-title">{title}</h1>
+            <p>{body}</p>
+            <form onSubmit={handleSubmit}>
+              <label>
+                <span>{tokenLabel}</span>
+                <input
+                  autoComplete="current-password"
+                  autoFocus
+                  type="password"
+                  value={token}
+                  onChange={(event) => setToken(event.target.value)}
+                />
+              </label>
+              {submitError || authError ? <p className="admin-login-panel__error">{submitError || authError}</p> : null}
+              <button className="button button--primary" type="submit" disabled={isSubmitting || isChecking}>
+                {isSubmitting || isChecking ? checkingLabel : submitLabel}
+              </button>
+            </form>
+          </>
+        )}
       </section>
     </main>
   )

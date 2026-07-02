@@ -5971,7 +5971,8 @@ a { color: inherit; }
 }
 
 .admin-login-panel form,
-.admin-login-panel label {
+.admin-login-panel label,
+.admin-login-panel__actions {
   display: grid;
   gap: 0.65rem;
 }
@@ -5989,6 +5990,10 @@ a { color: inherit; }
 
 .admin-login-panel__error {
   color: #ffcf5f !important;
+}
+
+.admin-login-panel__actions {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 @media (max-width: 720px) {
@@ -7678,6 +7683,21 @@ a {
   color: var(--sabot-dim);
   border-top: 1px solid var(--sabot-line);
   padding-top: 1rem;
+}
+
+.publication-footer__login-link {
+  display: inline-flex;
+  margin-top: 0.75rem;
+  color: inherit;
+  font-size: 0.82rem;
+  opacity: 0.68;
+  text-decoration: none;
+}
+
+.publication-footer__login-link:hover,
+.publication-footer__login-link:focus-visible {
+  color: var(--sabot-text);
+  opacity: 1;
 }
 
 /* archive */

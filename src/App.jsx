@@ -152,6 +152,7 @@ function RouteMeta({ pieces = [] }) {
       '/updates': ['Updates', 'Latest Sabot Media updates.'],
       '/login': ['Editor Login', 'Editor login for Sabot Media administrators.'],
       '/wp-login': ['Editor Login', 'Editor login for Sabot Media administrators.'],
+      '/logout': ['Editor Logout', 'Log out of Sabot Media editor tools.'],
     }[pathname]
 
     if (routeMeta) {
@@ -297,6 +298,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/wp-login" element={<LoginPage />} />
+          <Route path="/logout" element={<LogoutPage />} />
           <Route path="/" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
           <Route path="/projects" element={<ProjectsIndexPage projectMap={projectMap} />} />
           <Route path="/projects/:slug" element={<ProjectPage pieces={pieces} />} />
@@ -382,4 +384,34 @@ function LegacyPrintRedirect() {
   const location = useLocation()
   const slug = location.pathname.replace(/^\/piece\//, '').replace(/\/print\/?$/, '')
   return <Navigate to={`/post/${slug}/print${location.search || ''}`} replace />
+}
+
+function LogoutPage() {
+  const navigate = useNavigate()
+  const { logout } = useAdminAuth()
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function runLogout() {
+      await logout()
+      if (!cancelled) navigate('/login?loggedOut=1', { replace: true })
+    }
+
+    runLogout()
+
+    return () => {
+      cancelled = true
+    }
+  }, [logout, navigate])
+
+  return (
+    <main className="page admin-login-page">
+      <section className="admin-login-panel">
+        <p className="admin-login-panel__eyebrow">Sabot Media</p>
+        <h1>Logging out</h1>
+        <p>Ending your editor session.</p>
+      </section>
+    </main>
+  )
 }

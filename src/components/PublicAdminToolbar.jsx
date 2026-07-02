@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { usePublicEdit } from './PublicEditContext'
 import { useAdminAuth } from './AdminAuthContext'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
@@ -9,6 +9,7 @@ import mastheadLogo from '../assets/sabot-masthead-logo.png'
 export function PublicAdminToolbar() {
   const siteTitle = 'Sabot Media'
   const location = useLocation()
+  const navigate = useNavigate()
 
   const [nativeItems, setNativeItems] = useState([])
   const { isAuthenticated, logout } = useAdminAuth()
@@ -74,6 +75,11 @@ export function PublicAdminToolbar() {
 
   if (!isAuthenticated || !canUseToolbar || isEditing) return null
 
+  async function handleLogout() {
+    await logout()
+    navigate('/login?loggedOut=1')
+  }
+
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
       <div className="wp-public-admin-bar__left">
@@ -89,7 +95,7 @@ export function PublicAdminToolbar() {
         <a className="wp-public-admin-bar__item" href={editSiteLink}>Edit Site</a>
       </div>
       <div className="wp-public-admin-bar__right">
-        <button className="wp-public-admin-bar__item" type="button" onClick={logout}>Logout</button>
+        <button className="wp-public-admin-bar__item" type="button" onClick={handleLogout}>Logout</button>
         {canSave && changedFields.length ? (
           <>
             <span className="wp-public-admin-bar__status">{changedFields.length} unsaved</span>

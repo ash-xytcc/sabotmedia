@@ -1,10 +1,13 @@
+import { Link } from 'react-router-dom'
 import { EditableLink } from './EditableLink'
 import { EditableText } from './EditableText'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
+import { useAdminAuth } from './AdminAuthContext'
 
 export function PublicationFooter() {
   const footer = editableContentRegistry.footer
+  const { isAuthenticated, isChecking } = useAdminAuth()
 
   return (
     <footer className="publication-footer">
@@ -50,6 +53,9 @@ export function PublicationFooter() {
         <EditableText as="div" field={footer.bottom.field} multiline>
           {footer.bottom.defaultText}
         </EditableText>
+        {!isChecking && !isAuthenticated ? (
+          <Link className="publication-footer__login-link" to="/login">Editor login</Link>
+        ) : null}
       </div>
     </footer>
   )
