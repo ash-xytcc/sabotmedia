@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { loadSites } from '../lib/siteDomains'
+import { adminRoutes } from '../routing/routes'
 
 const MENU = [
-  { to: '/admin', label: 'Dashboard' },
-  { to: '/content', label: 'Posts' },
-  { to: '/printlab', label: 'Printlab' },
+  { to: adminRoutes.dashboard, label: 'Dashboard' },
+  { to: adminRoutes.posts, label: 'Posts' },
+  { to: adminRoutes.printlab, label: 'Printlab' },
+  { to: '/zine-studio', label: 'Zine Studio' },
   { to: '/native-bridge?new=article', label: 'Add New' },
-  { to: '/media', label: 'Media' },
+  { to: adminRoutes.media, label: 'Media' },
   { to: '/pages', label: 'Pages' },
   { to: '/customize', label: 'Customize' },
   { to: '/tools', label: 'Tools' },
-  { to: '/settings', label: 'Settings' },
+  { to: adminRoutes.settings, label: 'Settings' },
   { to: '/users', label: 'Users' },
 ]
 
@@ -65,7 +67,7 @@ export function AdminRail() {
     <>
       <div className="wp-admin-topbar" role="navigation" aria-label="WordPress admin bar">
         <div className="wp-admin-topbar__left">
-          <Link to="/admin" className="wp-admin-topbar__link wp-admin-topbar__link--icon" aria-label="Sabot admin dashboard">
+          <Link to={adminRoutes.dashboard} className="wp-admin-topbar__link wp-admin-topbar__link--icon" aria-label="Sabot admin dashboard">
             <span className="wp-admin-topbar__wpicon" aria-hidden="true">W</span>
           </Link>
 
@@ -81,6 +83,7 @@ export function AdminRail() {
             <Link to="/native-bridge?new=article" className="wp-admin-topbar__dropdown-link">Post</Link>
             <Link to="/media" className="wp-admin-topbar__dropdown-link">Media</Link>
             <Link to="/pages" className="wp-admin-topbar__dropdown-link">Page</Link>
+            <Link to="/zine-studio" className="wp-admin-topbar__dropdown-link">Publication</Link>
             <Link to="/users" className="wp-admin-topbar__dropdown-link">User</Link>
           </AdminBarMenu>
 

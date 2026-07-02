@@ -8,6 +8,9 @@ import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { renderImportedBody } from '../lib/renderImportedBody'
 import { splitDisplayTitle } from '../lib/content'
 import { getPieceDisplaySettings, resolveFirstReadableMode } from '../lib/publicDisplayModes'
+import { attachPostAssets } from '../assets/assetSystem'
+import { normalizePost } from '../models/publication'
+import { renderPost } from '../renderers'
 
 const MODE_STORAGE_KEY = 'sabot.postMode'
 
@@ -164,15 +167,19 @@ export function PiecePage({ pieces = [] }) {
           },
     [piece]
   )
+  const renderData = useMemo(
+    () => (piece ? renderPost(attachPostAssets(normalizePost(piece)), { mode }) : null),
+    [piece, mode]
+  )
 
   const heroImage = useMemo(() => {
     if (!piece) return ''
-    return piece.featuredImage || getImportedImage(piece) || ''
-  }, [piece])
+    return renderData?.hero?.url || piece.featuredImage || getImportedImage(piece) || ''
+  }, [piece, renderData])
 
   const bodyNodes = useMemo(
-    () => renderImportedBody(piece?.bodyHtml || '', mode),
-    [piece?.bodyHtml, mode]
+    () => renderImportedBody(renderData?.bodyHtml || piece?.bodyHtml || '', mode),
+    [piece?.bodyHtml, renderData, mode]
   )
   const headerMetaItems = useMemo(() => {
     if (!piece) return []
@@ -232,7 +239,7 @@ export function PiecePage({ pieces = [] }) {
 
       <header className="piece-header piece-header--public-post">
         <div className="piece-header__eyebrow">
-          {piece.primaryProject || piece.type || 'publication'}
+          {renderData?.eyebrow || piece.primaryProject || piece.type || 'publication'}
         </div>
         <h1>{display.title || piece.title || piece.slug}</h1>
         {display.subtitle || piece.subtitle || displayExcerpt ? (

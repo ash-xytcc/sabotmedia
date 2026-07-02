@@ -18,6 +18,8 @@ import { NativeDraftPreviewPage } from './components/NativeDraftPreviewPage'
 import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PrintLabPage } from './components/PrintLabPage'
+import { ZineStudioPage } from './components/ZineStudioPage'
+import { PublicationLandingPage, PublicationReaderPage, PublicationsIndexPage } from './components/PublicationReaderPage'
 import { PublicEditProvider, usePublicEdit } from './components/PublicEditContext'
 import { PublicEditPanel } from './components/PublicEditPanel'
 import { PublicAdminToolbar } from './components/PublicAdminToolbar'
@@ -30,6 +32,7 @@ import { MediaLibraryPage } from './components/MediaLibraryPage'
 import { AnalyticsPage } from './components/AnalyticsPage'
 import { CustomizeAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminPages'
 import { SitesAdminPage } from './components/SitesAdminPage'
+import { adminRoutes, publicRoutes } from './routing/routes'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -62,8 +65,15 @@ const ADMIN_SHELL_PATHS = [
   '/advanced-draft-tools',
   '/tools',
   '/printlab',
+  '/zine-studio',
   '/settings',
   '/sites',
+  '/wp-admin',
+  '/wp-admin/posts',
+  '/wp-admin/media',
+  '/wp-admin/projects',
+  '/wp-admin/printlab',
+  '/wp-admin/settings',
 ]
 
 function shouldUseBareShell(pathname) {
@@ -150,14 +160,20 @@ export default function App() {
           <Route path="/" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
           <Route path="/projects" element={<ProjectsIndexPage projectMap={projectMap} />} />
           <Route path="/projects/:slug" element={<ProjectPage pieces={pieces} />} />
+          <Route path={publicRoutes.project} element={<ProjectPage pieces={pieces} />} />
           <Route path="/piece/:slug" element={<PiecePage pieces={pieces} />} />
-          <Route path="/post/:slug" element={<PiecePage pieces={pieces} />} />
+          <Route path={publicRoutes.post} element={<PiecePage pieces={pieces} />} />
           <Route path="/piece/:slug/print" element={<PrintPage pieces={pieces} />} />
+          <Route path={publicRoutes.print} element={<PrintPage pieces={pieces} />} />
           <Route path="/review" element={<ReviewQueuePage pieces={pieces} />} />
-          <Route path="/admin" element={<AdminPage pieces={pieces} />} />
-          <Route path="/content" element={<ContentListPage />} />
+          <Route path="/admin" element={<Navigate to={adminRoutes.dashboard} replace />} />
+          <Route path={adminRoutes.dashboard} element={<AdminPage pieces={pieces} />} />
+          <Route path="/content" element={<Navigate to={adminRoutes.posts} replace />} />
+          <Route path={adminRoutes.posts} element={<ContentListPage />} />
           <Route path="/overrides" element={<OverridesPage />} />
-          <Route path="/media" element={<MediaLibraryPage />} />
+          <Route path="/media" element={<Navigate to={adminRoutes.media} replace />} />
+          <Route path={adminRoutes.media} element={<MediaLibraryPage />} />
+          <Route path={adminRoutes.projects} element={<ProjectsIndexPage projectMap={projectMap} />} />
           <Route path="/pages" element={<PagesAdminPage />} />
           <Route path="/users" element={<UsersAdminPage />} />
           <Route path="/menus" element={<Navigate to="/customize?section=navigation" replace />} />
@@ -165,10 +181,14 @@ export default function App() {
           <Route path="/site-editor" element={<Navigate to="/tools#advanced-draft-tools" replace />} />
           <Route path="/advanced-draft-tools" element={<SiteEditorAdminPage />} />
           <Route path="/tools" element={<ToolsAdminPage />} />
-          <Route path="/printlab" element={<PrintLabPage pieces={pieces} />} />
-          <Route path="/tools/print" element={<Navigate to="/printlab" replace />} />
-          <Route path="/settings" element={<SettingsAdminPage />} />
-          <Route path="/settings/social" element={<SettingsAdminPage />} />
+          <Route path="/printlab" element={<Navigate to={adminRoutes.printlab} replace />} />
+          <Route path={adminRoutes.printlab} element={<PrintLabPage pieces={pieces} />} />
+          <Route path="/zine-studio" element={<ZineStudioPage />} />
+          <Route path="/zine-studio/:id" element={<ZineStudioPage />} />
+          <Route path="/tools/print" element={<Navigate to={adminRoutes.printlab} replace />} />
+          <Route path="/settings" element={<Navigate to={adminRoutes.settings} replace />} />
+          <Route path={adminRoutes.settings} element={<SettingsAdminPage />} />
+          <Route path="/settings/social" element={<Navigate to={adminRoutes.settings} replace />} />
           <Route path="/settings/sites" element={<SitesAdminPage />} />
           <Route path="/sites" element={<SitesAdminPage />} />
         <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
@@ -178,6 +198,9 @@ export default function App() {
         <Route path="/updates/:slug" element={<NativeUpdateDetailPage />} />
         <Route path="/native-preview/:id" element={<NativeDraftPreviewPage />} />
         <Route path="/press" element={<PublicSurfacePage target="press" />} />
+        <Route path="/publications" element={<PublicationsIndexPage />} />
+        <Route path="/publications/:slug" element={<PublicationLandingPage />} />
+        <Route path="/reader/:slug" element={<PublicationReaderPage />} />
         <Route path="/archive" element={<PublicSearchPage pieces={pieces} />} />
         <Route path="/search" element={<PublicSearchPage pieces={pieces} />} />
           <Route path="/draft" element={<PublicDraftPage />} />
