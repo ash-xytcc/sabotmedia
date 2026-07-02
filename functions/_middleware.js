@@ -27,6 +27,7 @@ const ADMIN_PREFIXES = [
 ]
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/session'])
 
 export async function onRequest(context) {
   const url = new URL(context.request.url)
@@ -34,6 +35,10 @@ export async function onRequest(context) {
   const method = String(context.request.method || 'GET').toUpperCase()
   const isAdminRoute = ADMIN_PREFIXES.some((path) => pathname === path || pathname.startsWith(`${path}/`))
   const isApiWrite = pathname.startsWith('/api/') && WRITE_METHODS.has(method)
+
+  if (PUBLIC_AUTH_API_PATHS.has(pathname)) {
+    return context.next()
+  }
 
   if (!isAdminRoute && !isApiWrite) {
     return context.next()

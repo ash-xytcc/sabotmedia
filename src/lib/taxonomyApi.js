@@ -1,14 +1,3 @@
-import { getSavedAdminToken } from './publicConfigApi'
-
-function authHeaders() {
-  const token = getSavedAdminToken()
-  if (!token) return {}
-  return {
-    authorization: `Bearer ${token}`,
-    'x-sabot-admin-token': token,
-  }
-}
-
 async function safeJson(res) {
   try {
     return await res.json()
@@ -28,9 +17,9 @@ export async function fetchTaxonomyTerms(params = {}) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'GET',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...authHeaders(),
     },
   })
 
@@ -45,9 +34,9 @@ export async function fetchTaxonomyTerms(params = {}) {
 export async function saveTaxonomyTerm(term) {
   const res = await fetch('/api/taxonomy', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: {
       'content-type': 'application/json',
-      ...authHeaders(),
     },
     body: JSON.stringify({ term }),
   })
@@ -66,9 +55,9 @@ export async function removeTaxonomyTerm(id) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'DELETE',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...authHeaders(),
     },
   })
 
@@ -86,9 +75,9 @@ export async function fetchNativeTaxonomyLinks(nativeContentId) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'GET',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...authHeaders(),
     },
   })
 
@@ -103,9 +92,9 @@ export async function fetchNativeTaxonomyLinks(nativeContentId) {
 export async function saveNativeTaxonomyLinks(nativeContentId, termIds) {
   const res = await fetch('/api/native-content-taxonomy', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: {
       'content-type': 'application/json',
-      ...authHeaders(),
     },
     body: JSON.stringify({ nativeContentId, termIds }),
   })

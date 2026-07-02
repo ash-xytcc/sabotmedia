@@ -1,14 +1,3 @@
-import { getSavedAdminToken } from './publicConfigApi'
-
-function authHeaders() {
-  const token = getSavedAdminToken()
-  if (!token) return {}
-  return {
-    authorization: `Bearer ${token}`,
-    'x-sabot-admin-token': token,
-  }
-}
-
 async function safeJson(res) {
   try {
     return await res.json()
@@ -23,9 +12,9 @@ export async function fetchNativeSources(nativeContentId) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'GET',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...authHeaders(),
     },
   })
 
@@ -39,9 +28,9 @@ export async function fetchNativeSources(nativeContentId) {
 export async function saveNativeSource(record) {
   const res = await fetch('/api/native-content-sources', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: {
       'content-type': 'application/json',
-      ...authHeaders(),
     },
     body: JSON.stringify({ record }),
   })
@@ -59,9 +48,9 @@ export async function removeNativeSource(id) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'DELETE',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...authHeaders(),
     },
   })
 

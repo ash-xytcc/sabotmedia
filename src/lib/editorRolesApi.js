@@ -1,15 +1,3 @@
-import { getSavedAdminToken } from './publicConfigApi'
-
-function authHeaders() {
-  const token = getSavedAdminToken()
-  if (!token) return {}
-  return {
-    authorization: `Bearer ${token}`,
-    'x-sabot-admin-token': token,
-    'x-sabot-admin-principal': token,
-  }
-}
-
 async function safeJson(res) {
   try {
     return await res.json()
@@ -21,9 +9,9 @@ async function safeJson(res) {
 export async function fetchEditorRoles() {
   const res = await fetch('/api/editor-roles', {
     method: 'GET',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...authHeaders(),
     },
   })
 
@@ -37,9 +25,9 @@ export async function fetchEditorRoles() {
 export async function saveEditorRole(record) {
   const res = await fetch('/api/editor-roles', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: {
       'content-type': 'application/json',
-      ...authHeaders(),
     },
     body: JSON.stringify({ record }),
   })
@@ -57,9 +45,9 @@ export async function removeEditorRole(id) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'DELETE',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...authHeaders(),
     },
   })
 
@@ -81,9 +69,9 @@ export async function fetchAuditLog(params = {}) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'GET',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...authHeaders(),
     },
   })
 

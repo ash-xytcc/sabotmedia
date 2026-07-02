@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { usePublicEdit } from './PublicEditContext'
-import { getSavedAdminToken, setSavedAdminToken } from '../lib/publicConfigApi'
 
 function removeEditParam(pathname, search) {
   const params = new URLSearchParams(search)
@@ -27,8 +26,7 @@ export function PublicEditPanel() {
   } = usePublicEdit()
   const location = useLocation()
   const navigate = useNavigate()
-  const [showTokenPrompt, setShowTokenPrompt] = useState(false)
-  const [tokenInput, setTokenInput] = useState(() => getSavedAdminToken())
+  const [loginNotice, setLoginNotice] = useState(false)
 
   const statusText = useMemo(() => {
     if (saveState === 'saving') return 'Saving'
@@ -75,16 +73,13 @@ export function PublicEditPanel() {
     }
 
     if (!canSave) {
-      setShowTokenPrompt(true)
+      const returnTo = `${location.pathname}${location.search || ''}${location.hash || ''}`
+      setLoginNotice(true)
+      navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`)
       return
     }
 
     await saveDraftToBackend()
-  }
-
-  function saveTokenAndReload() {
-    setSavedAdminToken(tokenInput.trim())
-    window.location.reload()
   }
 
   return (
@@ -95,8 +90,10 @@ export function PublicEditPanel() {
           <span>{statusText}</span>
         </div>
 
-        {saveError || permissionError ? (
-          <p className="public-inline-edit-bar__message">{saveError || permissionError}</p>
+        {saveError || permissionError || loginNotice ? (
+          <p className="public-inline-edit-bar__message">
+            {saveError || permissionError || 'Log in to save changes.'}
+          </p>
         ) : null}
 
         <div className="public-inline-edit-bar__actions">
@@ -109,29 +106,6 @@ export function PublicEditPanel() {
           </button>
         </div>
       </div>
-
-      {showTokenPrompt ? (
-        <div className="public-inline-token-modal" role="dialog" aria-modal="true" aria-label="Save permission needed">
-          <div className="public-inline-token-modal__box">
-            <h2>Save permission needed</h2>
-            <p>Enter the site edit token once to save these changes. The page stays editable after reload.</p>
-            <input
-              type="password"
-              value={tokenInput}
-              onChange={(event) => setTokenInput(event.target.value)}
-              placeholder="Site edit token"
-            />
-            <div className="public-inline-token-modal__actions">
-              <button className="button button--primary" type="button" onClick={saveTokenAndReload}>
-                Save token
-              </button>
-              <button className="button" type="button" onClick={() => setShowTokenPrompt(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </>
   )
 }

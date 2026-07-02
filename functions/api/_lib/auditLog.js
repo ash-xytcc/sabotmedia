@@ -107,9 +107,8 @@ export async function listAuditLog(db, options = {}) {
 
 export function inferActorFromRequest(request) {
   const auth =
-    request.headers.get('x-sabot-admin-principal') ||
     request.headers.get('x-sabot-actor') ||
-    request.headers.get('authorization') ||
+    request.headers.get('cf-access-authenticated-user-email') ||
     ''
 
   return String(auth || 'unknown').slice(0, 160)

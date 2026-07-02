@@ -1,14 +1,3 @@
-import { getSavedAdminToken } from './publicConfigApi'
-
-function buildAuthHeaders() {
-  const token = getSavedAdminToken()
-  if (!token) return {}
-  return {
-    authorization: `Bearer ${token}`,
-    'x-sabot-admin-token': token,
-  }
-}
-
 async function safeJson(res) {
   try {
     return await res.json()
@@ -28,9 +17,9 @@ export async function fetchNativeEntries(params = {}) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'GET',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...buildAuthHeaders(),
     },
   })
 
@@ -46,9 +35,9 @@ export async function fetchNativeEntries(params = {}) {
 export async function saveNativeEntry(item, revisionNote = 'save') {
   const res = await fetch('/api/native-content', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: {
       'content-type': 'application/json',
-      ...buildAuthHeaders(),
     },
     body: JSON.stringify({ item, revisionNote }),
   })
@@ -68,9 +57,9 @@ export async function removeNativeEntry(idOrSlug) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'DELETE',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...buildAuthHeaders(),
     },
   })
 
@@ -94,9 +83,9 @@ export async function fetchNativeRevisions(params = {}) {
 
   const res = await fetch(url.pathname + url.search, {
     method: 'GET',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...buildAuthHeaders(),
     },
   })
 
@@ -112,9 +101,9 @@ export async function fetchNativeRevisions(params = {}) {
 export async function restoreNativeRevision(revisionId) {
   const res = await fetch('/api/native-content-revisions', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: {
       'content-type': 'application/json',
-      ...buildAuthHeaders(),
     },
     body: JSON.stringify({ revisionId }),
   })

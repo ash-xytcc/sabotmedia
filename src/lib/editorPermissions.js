@@ -1,13 +1,4 @@
-import { getPublicConfigPermissions, getSavedAdminToken } from './publicConfigApi'
-
-function authHeaders() {
-  const token = getSavedAdminToken()
-  if (!token) return {}
-  return {
-    authorization: `Bearer ${token}`,
-    'x-sabot-admin-token': token,
-  }
-}
+import { getPublicConfigPermissions } from './publicConfigApi'
 
 async function safeJson(res) {
   try {
@@ -20,9 +11,9 @@ async function safeJson(res) {
 export async function getNativeContentPermissions() {
   const res = await fetch('/api/native-content', {
     method: 'OPTIONS',
+    credentials: 'same-origin',
     headers: {
       accept: 'application/json',
-      ...authHeaders(),
     },
   })
 
