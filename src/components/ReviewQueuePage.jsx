@@ -345,7 +345,7 @@ export function ReviewQueuePage({ pieces }) {
         <EditableText as="h1" field={heroBlock?.titleField || 'review.hero.title'}>
           Review Queue
         </EditableText>
-        <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'review.hero.description'}>
+        <EditableText as="div" className="project-hero__description" field={heroBlock?.descriptionField || 'review.hero.description'} multiline>
           Imported pieces that probably need metadata cleanup, project reassignment, or richer handling.
         </EditableText>
         <div className="project-hero__meta">

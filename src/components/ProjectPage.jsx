@@ -136,7 +136,7 @@ export function ProjectPage({ pieces }) {
           {meta.name}
         </EditableText>
 
-        <EditableText as="p" className="project-hero__description" field={projectDescriptionField}>
+        <EditableText as="div" className="project-hero__description" field={projectDescriptionField} multiline>
           {meta.description}
         </EditableText>
 

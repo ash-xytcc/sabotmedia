@@ -130,9 +130,10 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
 
           {featuredDisplay.subtitle ? (
             <EditableText
-              as="p"
+              as="div"
               className="hero__subtitle"
               field={featuredBlock?.subtitleField || 'home.featured.subtitle'}
+              multiline
             >
               {featuredDisplay.subtitle}
             </EditableText>
@@ -147,9 +148,10 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
 
           {featured?.piece?.excerpt ? (
             <EditableText
-              as="p"
+              as="div"
               className="hero__excerpt"
               field={featuredBlock?.excerptField || 'home.featured.excerpt'}
+              multiline
             >
               {featured.piece.excerpt}
             </EditableText>

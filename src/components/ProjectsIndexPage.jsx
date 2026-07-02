@@ -46,7 +46,7 @@ export function ProjectsIndexPage({ projectMap }) {
         <EditableText as="h1" field={heroBlock?.titleField || 'projects.hero.title'}>
           Projects
         </EditableText>
-        <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'projects.hero.description'}>
+        <EditableText as="div" className="project-hero__description" field={heroBlock?.descriptionField || 'projects.hero.description'} multiline>
           Sabot Media is not one stream. It is a federation of smaller publishing routes, each with its own emphasis, rhythm, and medium.
         </EditableText>
         <div className="project-hero__meta">

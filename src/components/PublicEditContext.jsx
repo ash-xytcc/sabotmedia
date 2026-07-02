@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { clearStoredPublicConfig, getStoredPublicConfig, mergePublicConfig, setStoredPublicConfig } from '../lib/publicConfig'
 import { getPublicConfigPermissions, loadPublicConfigPayload, savePublicConfigPayload } from '../lib/publicConfigApi'
 import { buildPublicConfigPayload } from '../lib/publicDraftExport'
@@ -38,6 +38,7 @@ export function PublicEditProvider({ children }) {
       return emptyDraft()
     }
   })
+  const draftRef = useRef(draft)
 
   const [loadState, setLoadState] = useState('idle')
   const [saveState, setSaveState] = useState('idle')
@@ -52,12 +53,25 @@ export function PublicEditProvider({ children }) {
   const [schemaVersion, setSchemaVersion] = useState(2)
 
   useEffect(() => {
+    draftRef.current = draft
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
     } catch {
       // ignore
     }
   }, [draft])
+
+  function setDraftSnapshot(updater) {
+    const previous = draftRef.current || emptyDraft()
+    const next = typeof updater === 'function' ? updater(previous) : updater
+    draftRef.current = next
+    setDraft(next)
+  }
+
+  function hasPendingDraftChanges() {
+    const current = draftRef.current || emptyDraft()
+    return Boolean(Object.keys(current.text || {}).length || Object.keys(current.styles || {}).length)
+  }
 
   async function reloadFromBackend() {
     try {
@@ -210,7 +224,7 @@ export function PublicEditProvider({ children }) {
     },
     discardDraftAndReload() {
       const fresh = emptyDraft()
-      setDraft(fresh)
+      setDraftSnapshot(fresh)
       try {
         window.localStorage.removeItem(STORAGE_KEY)
       } catch {
@@ -220,7 +234,7 @@ export function PublicEditProvider({ children }) {
       return reloadFromBackend()
     },
     updateText(field, value) {
-      setDraft((prev) => ({
+      setDraftSnapshot((prev) => ({
         ...prev,
         text: {
           ...prev.text,
@@ -229,7 +243,7 @@ export function PublicEditProvider({ children }) {
       }))
     },
     updateStyle(field, patch) {
-      setDraft((prev) => ({
+      setDraftSnapshot((prev) => ({
         ...prev,
         styles: {
           ...prev.styles,
@@ -241,7 +255,7 @@ export function PublicEditProvider({ children }) {
       }))
     },
     resetField(field) {
-      setDraft((prev) => {
+      setDraftSnapshot((prev) => {
         const nextText = { ...(prev.text || {}) }
         const nextStyles = { ...(prev.styles || {}) }
         delete nextText[field]
@@ -250,10 +264,10 @@ export function PublicEditProvider({ children }) {
       })
     },
     applyDraftLocally() {
-      const next = mergePublicConfig(savedConfig || emptyConfig(), draft || emptyDraft())
+      const next = mergePublicConfig(savedConfig || emptyConfig(), draftRef.current || emptyDraft())
       setSavedConfig(next)
       setStoredPublicConfig(next)
-      setDraft(emptyDraft())
+      setDraftSnapshot(emptyDraft())
       try {
         window.localStorage.removeItem(STORAGE_KEY)
       } catch {
@@ -272,14 +286,14 @@ export function PublicEditProvider({ children }) {
         setSaveState('saving')
         setSaveError('')
 
-        const next = mergePublicConfig(savedConfig || emptyConfig(), draft || emptyDraft())
+        const next = mergePublicConfig(savedConfig || emptyConfig(), draftRef.current || emptyDraft())
         const payload = buildPublicConfigPayload(next)
         const data = await savePublicConfigPayload(payload)
         const saved = data?.received?.publicSite || next
 
         setSavedConfig(saved)
         setStoredPublicConfig(saved)
-        setDraft(emptyDraft())
+        setDraftSnapshot(emptyDraft())
         try {
           window.localStorage.removeItem(STORAGE_KEY)
         } catch {
@@ -299,7 +313,7 @@ export function PublicEditProvider({ children }) {
     },
     clearDraft() {
       const fresh = emptyDraft()
-      setDraft(fresh)
+      setDraftSnapshot(fresh)
       try {
         window.localStorage.removeItem(STORAGE_KEY)
       } catch {
@@ -312,11 +326,11 @@ export function PublicEditProvider({ children }) {
     },
     importDraftPatch(configLike) {
       const normalized = normalizePublicConfig(configLike)
-      setDraft((prev) => mergePublicConfig(prev || emptyDraft(), toDraftShape(normalized)))
+      setDraftSnapshot((prev) => mergePublicConfig(prev || emptyDraft(), toDraftShape(normalized)))
     },
     replaceDraftWithImported(configLike) {
       const normalized = normalizePublicConfig(configLike)
-      setDraft(toDraftShape(normalized))
+      setDraftSnapshot(toDraftShape(normalized))
     },
     replaceSavedConfigLocally(configLike) {
       const normalized = normalizePublicConfig(configLike)
@@ -325,8 +339,9 @@ export function PublicEditProvider({ children }) {
       setLastSavedAt(new Date().toISOString())
     },
     exportDraft() {
-      return JSON.stringify(draft, null, 2)
+      return JSON.stringify(draftRef.current || draft, null, 2)
     },
+    hasPendingDraftChanges,
   }), [
     isEditing,
     isAdmin,

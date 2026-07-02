@@ -1,38 +1,10 @@
-import { Link } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
+import { EditableLink } from './EditableLink'
 import { EditableText } from './EditableText'
 import { getEditablePage } from '../lib/editableContentRegistry'
 
-const pageContent = {
-  about: {
-    actions: [
-      ['/archive', 'Browse archive'],
-      ['/projects', 'View projects'],
-    ],
-  },
-  contact: {
-    actions: [
-      ['/submit', 'Submit work'],
-      ['/support', 'Support'],
-    ],
-  },
-  submit: {
-    actions: [
-      ['/archive?format=article', 'Read articles'],
-      ['/contact', 'Contact'],
-    ],
-  },
-  support: {
-    actions: [
-      ['/archive?format=zine', 'Print material'],
-      ['/projects', 'Projects'],
-    ],
-  },
-}
-
 export function PublicInfoPage({ page = 'about' }) {
-  const content = pageContent[page] || pageContent.about
   const editablePage = getEditablePage(page)
 
   return (
@@ -50,17 +22,24 @@ export function PublicInfoPage({ page = 'about' }) {
           {editablePage.title.defaultText}
         </EditableText>
         <EditableText
-          as="p"
+          as="div"
           className="project-hero__description"
           field={editablePage.body.field}
+          multiline
         >
           {editablePage.body.defaultText}
         </EditableText>
         <div className="archive-results-bar">
-          {content.actions.map(([to, label], index) => (
-            <Link className={`button${index === 0 ? ' button--primary' : ''}`} key={to} to={to}>
-              {label}
-            </Link>
+          {editablePage.actions.map((action, index) => (
+            <EditableLink
+              className={`button${index === 0 ? ' button--primary' : ''}`}
+              defaultHref={action.defaultHref}
+              defaultLabel={action.defaultLabel}
+              hrefField={action.hrefField}
+              key={action.id}
+              labelField={action.labelField}
+              variant="button"
+            />
           ))}
         </div>
       </section>

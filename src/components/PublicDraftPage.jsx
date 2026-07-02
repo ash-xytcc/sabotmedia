@@ -160,7 +160,7 @@ export function PublicDraftPage() {
           <EditableText as="h1" field={heroBlock?.titleField || 'draft.hero.title'}>
             Site Editor
           </EditableText>
-          <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'draft.hero.description'}>
+          <EditableText as="div" className="project-hero__description" field={heroBlock?.descriptionField || 'draft.hero.description'} multiline>
             Choose a public page to edit live, view on the site, or customize. Advanced config import/export tools are available below for developers.
           </EditableText>
           <div className="project-hero__meta">

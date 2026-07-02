@@ -23,6 +23,7 @@ export function PublicEditPanel() {
     saveDraftToBackend,
     discardDraftAndReload,
     stopEditing,
+    hasPendingDraftChanges,
   } = usePublicEdit()
   const location = useLocation()
   const navigate = useNavigate()
@@ -63,7 +64,12 @@ export function PublicEditPanel() {
   }
 
   async function handleSave() {
-    if (!hasDraftChanges) {
+    if (document.activeElement?.isContentEditable) {
+      document.activeElement.blur()
+      await new Promise((resolve) => window.requestAnimationFrame(resolve))
+    }
+
+    if (!hasPendingDraftChanges()) {
       await exitEditor()
       return
     }

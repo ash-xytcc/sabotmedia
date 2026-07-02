@@ -29,7 +29,7 @@ export function OverridesPage() {
         <EditableText as="h1" field={heroBlock?.titleField || 'overrides.hero.title'}>
           Overrides
         </EditableText>
-        <EditableText as="p" className="project-hero__description" field={heroBlock?.descriptionField || 'overrides.hero.description'}>
+        <EditableText as="div" className="project-hero__description" field={heroBlock?.descriptionField || 'overrides.hero.description'} multiline>
           Local metadata overrides layered on top of imported archive content. This is the current manual control surface before deeper admin editing lands.
         </EditableText>
         <div className="project-hero__meta">

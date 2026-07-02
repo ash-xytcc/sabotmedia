@@ -49,7 +49,7 @@ export function AdminWorkflowCard() {
       <EditableText as="h2" field={block?.titleField || 'admin.workflow.title'}>
         Editorial Workflow
       </EditableText>
-      <EditableText as="p" className="admin-workflow-card__description" field={block?.descriptionField || 'admin.workflow.description'}>
+      <EditableText as="div" className="admin-workflow-card__description" field={block?.descriptionField || 'admin.workflow.description'} multiline>
         Move through archive cleanup, overrides, podcast enrichment, native publishing, and public rendering without relying on memory.
       </EditableText>
 

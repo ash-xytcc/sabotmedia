@@ -76,7 +76,7 @@ export function AdminPublicConfigCard() {
         <EditableText as="h2" field={block?.titleField || 'admin.publicEditor.title'}>
           {title}
         </EditableText>
-        <EditableText as="p" className="admin-public-config-card__description" field={block?.descriptionField || 'admin.publicEditor.description'}>
+        <EditableText as="div" className="admin-public-config-card__description" field={block?.descriptionField || 'admin.publicEditor.description'} multiline>
           {description}
         </EditableText>
       </div>
