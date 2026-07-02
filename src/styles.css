@@ -18024,3 +18024,56 @@ button.print-lab-half-fold-panel__label:focus-visible {
     color: inherit !important;
   }
 }
+
+/* Official masthead logo fit: crop the committed padded asset at render time. */
+.publication-topbar--masthead .publication-topbar__brand-link {
+  position: relative;
+  width: clamp(260px, 25vw, 420px) !important;
+  height: clamp(82px, 8.2vw, 124px) !important;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.publication-topbar--masthead .publication-topbar__brand-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100% !important;
+  height: auto !important;
+  max-width: none !important;
+  object-fit: contain;
+  object-position: center center;
+  transform: translate(-50%, -50%) scale(2.05) !important;
+  transform-origin: center center;
+}
+
+.publication-topbar--large .publication-topbar__brand-link {
+  width: clamp(300px, 30vw, 500px) !important;
+  height: clamp(94px, 9.6vw, 148px) !important;
+}
+
+.publication-topbar--compact .publication-topbar__brand-link,
+.publication-topbar--inner .publication-topbar__brand-link {
+  width: clamp(180px, 18vw, 300px) !important;
+  height: clamp(56px, 5.6vw, 86px) !important;
+}
+
+@media (max-width: 900px) {
+  .publication-topbar--masthead .publication-topbar__brand-link {
+    width: clamp(220px, 62vw, 340px) !important;
+    height: clamp(70px, 18vw, 104px) !important;
+  }
+
+  .publication-topbar--compact .publication-topbar__brand-link,
+  .publication-topbar--inner .publication-topbar__brand-link {
+    width: clamp(170px, 54vw, 260px) !important;
+    height: clamp(52px, 15vw, 76px) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .publication-topbar--masthead .publication-topbar__brand-link {
+    width: min(82vw, 300px) !important;
+    height: clamp(64px, 21vw, 92px) !important;
+  }
+}
