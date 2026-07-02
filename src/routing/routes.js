@@ -4,6 +4,7 @@ export const publicRoutes = Object.freeze({
   project: '/project/:slug',
   projectsLegacy: '/projects/:slug',
   about: '/about',
+  security: '/security',
   contact: '/contact',
   support: '/support',
   submit: '/submit',

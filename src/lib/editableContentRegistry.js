@@ -32,6 +32,7 @@ export const editableContentRegistry = {
           { id: 'archive', labelField: 'footer.site.archive.label', hrefField: 'footer.site.archive.href', defaultLabel: 'Archive', defaultHref: '/archive' },
           { id: 'projects', labelField: 'footer.site.projects.label', hrefField: 'footer.site.projects.href', defaultLabel: 'Projects', defaultHref: '/projects' },
           { id: 'about', labelField: 'footer.site.about.label', hrefField: 'footer.site.about.href', defaultLabel: 'About', defaultHref: '/about' },
+          { id: 'security', labelField: 'footer.site.security.label', hrefField: 'footer.site.security.href', defaultLabel: 'Security', defaultHref: '/security' },
           { id: 'contact', labelField: 'footer.site.contact.label', hrefField: 'footer.site.contact.href', defaultLabel: 'Contact', defaultHref: '/contact' },
           { id: 'submit', labelField: 'footer.site.submit.label', hrefField: 'footer.site.submit.href', defaultLabel: 'Submit work', defaultHref: '/submit' },
           { id: 'support', labelField: 'footer.site.support.label', hrefField: 'footer.site.support.href', defaultLabel: 'Support', defaultHref: '/support' },
@@ -125,6 +126,63 @@ export const editableContentRegistry = {
     actions: [
       { id: 'zines', labelField: 'info.support.actions.zines.label', hrefField: 'info.support.actions.zines.href', defaultLabel: 'Print material', defaultHref: '/archive?format=zine' },
       { id: 'projects', labelField: 'info.support.actions.projects.label', hrefField: 'info.support.actions.projects.href', defaultLabel: 'Projects', defaultHref: '/projects' },
+    ],
+  },
+  security: {
+    eyebrow: {
+      field: 'info.security.eyebrow',
+      defaultText: 'security / encryption / contact',
+    },
+    title: {
+      field: 'info.security.title',
+      defaultText: 'Security',
+    },
+    body: {
+      field: 'info.security.body',
+      defaultText:
+        `Some people contact Sabot Media with information that may carry personal, legal, professional, or political risk. We take that seriously.
+
+Our public email addresses are routed through privacy-conscious infrastructure, and our primary mailbox is hosted with Riseup. Ordinary email is not end-to-end encrypted by default, though. If your message is sensitive, use encryption.
+
+For general contact, normal email is fine.
+
+For sensitive tips, documents, organizing information, legal concerns, or anything that could put someone at risk, use OpenPGP encryption.
+
+Contact:
+security@sabot.media
+
+OpenPGP key:
+Sabot Media <security@sabot.media>
+
+Fingerprint:
+55D4 995F 3C93 E0B4 94B4 6D10 8D0E 0AF9 4E20 A4B1
+
+Key ID:
+8D0E0AF94E20A4B1
+
+Download:
+https://sabot.media/pgp.asc
+
+How to use it:
+1. Install an OpenPGP tool such as Mailvelope, Thunderbird, Kleopatra, GPG, Proton Mail with PGP, or OpenKeychain.
+2. Import our public key from https://sabot.media/pgp.asc.
+3. Verify that the fingerprint matches the one listed above.
+4. Write to security@sabot.media or tips@sabot.media.
+5. Enable encryption before sending.
+
+Proton Mail:
+If you already use Proton Mail, you can contact us from Proton. Proton is a reasonable option for many people, especially if you are not ready to set up separate encryption tools. For stronger protection, still verify and use our OpenPGP key.
+
+Important limits:
+Encryption protects message contents. It does not automatically hide metadata such as who contacted us, when, from where, or that contact occurred.
+
+If anonymity matters, consider using Tor Browser, a separate email identity, and OpenPGP together.
+
+We will never ask you to send private keys, passwords, or identifying information you do not want to share.`,
+    },
+    actions: [
+      { id: 'pgp', labelField: 'info.security.actions.pgp.label', hrefField: 'info.security.actions.pgp.href', defaultLabel: 'Download PGP key', defaultHref: '/pgp.asc' },
+      { id: 'contact', labelField: 'info.security.actions.contact.label', hrefField: 'info.security.actions.contact.href', defaultLabel: 'Contact', defaultHref: '/contact' },
     ],
   },
 }

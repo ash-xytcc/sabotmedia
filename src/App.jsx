@@ -225,6 +225,7 @@ export default function App() {
         <Route path="/publications/:slug" element={<PublicationLandingPage />} />
         <Route path="/reader/:slug" element={<PublicationReaderPage />} />
         <Route path="/about" element={<PublicInfoPage page="about" />} />
+        <Route path="/security" element={<PublicInfoPage page="security" />} />
         <Route path="/contact" element={<PublicInfoPage page="contact" />} />
         <Route path="/submit" element={<PublicInfoPage page="submit" />} />
         <Route path="/support" element={<PublicInfoPage page="support" />} />
