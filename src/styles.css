@@ -17219,7 +17219,7 @@ button.print-lab-half-fold-panel__label:focus-visible {
 
 .projects-index-page .project-index-grid,
 .project-page .piece-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   width: 100%;
   min-width: 0;
 }
@@ -17239,19 +17239,13 @@ button.print-lab-half-fold-panel__label:focus-visible {
 }
 
 .projects-index-page .project-index-card__eyebrow,
-.projects-index-page .project-index-card h2,
-.projects-index-page .project-index-card h2 a,
 .projects-index-page .project-index-card__description,
 .projects-index-page .project-index-card__meta,
 .project-page .piece-card__meta,
 .project-page .piece-card__footer,
-.project-page .piece-card h3,
-.project-page .piece-card h3 a,
 .project-page .piece-card p,
 .project-page .piece-card__subtitle,
 .project-page .project-featured-callout__eyebrow,
-.project-page .project-featured-callout h2,
-.project-page .project-featured-callout h2 a,
 .project-page .project-featured-callout p,
 .project-page .project-hero__meta,
 .project-page .project-hero__meta span {
@@ -17262,7 +17256,17 @@ button.print-lab-half-fold-panel__label:focus-visible {
 .projects-index-page .project-index-card h2,
 .project-page .piece-card h3,
 .project-page .project-featured-callout h2 {
+  max-width: 100%;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
   text-wrap: balance;
+  white-space: normal;
+}
+
+.projects-index-page .project-index-card h2 {
+  font-size: clamp(2.05rem, 2.65rem, 3rem);
+  line-height: 0.95;
 }
 
 .projects-index-page .project-index-card h2 a,
@@ -17270,6 +17274,10 @@ button.print-lab-half-fold-panel__label:focus-visible {
 .project-page .project-featured-callout h2 a {
   display: block;
   max-width: 100%;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  white-space: normal;
 }
 
 .projects-index-page .project-index-card__actions,
@@ -17293,5 +17301,18 @@ button.print-lab-half-fold-panel__label:focus-visible {
   .projects-index-page .project-index-grid,
   .project-page .piece-grid {
     grid-template-columns: 1fr;
+  }
+
+  .projects-index-page .project-index-card h2 {
+    font-size: clamp(1.75rem, 1.9rem, 2.05rem);
+  }
+
+  .projects-index-page .project-index-card h2,
+  .projects-index-page .project-index-card h2 a,
+  .project-page .piece-card h3,
+  .project-page .piece-card h3 a,
+  .project-page .project-featured-callout h2,
+  .project-page .project-featured-callout h2 a {
+    overflow-wrap: break-word;
   }
 }
