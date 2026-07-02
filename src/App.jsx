@@ -82,6 +82,16 @@ function shouldUseBareShell(pathname) {
   return ADMIN_SHELL_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
 }
 
+function ScrollToTop() {
+  const { pathname, search, hash } = useLocation()
+
+  useEffect(() => {
+    if (hash) return
+    window.scrollTo(0, 0)
+  }, [pathname, search, hash])
+
+  return null
+}
 
 function Layout({ children }) {
   const { isEditing, setSelectedField, startEditing } = usePublicEdit()
@@ -164,6 +174,7 @@ export default function App() {
   return (
     <PublicEditProvider>
       <AdminNoticeProvider>
+      <ScrollToTop />
       <Layout>
         <Routes>
           <Route path="/" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
