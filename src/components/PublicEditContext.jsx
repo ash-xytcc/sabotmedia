@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { clearStoredPublicConfig, getStoredPublicConfig, mergePublicConfig, setStoredPublicConfig } from '../lib/publicConfig'
 import { getPublicConfigPermissions, loadPublicConfigPayload, savePublicConfigPayload } from '../lib/publicConfigApi'
 import { buildPublicConfigPayload } from '../lib/publicDraftExport'
@@ -13,6 +13,14 @@ function emptyConfig() {
 
 function emptyDraft() {
   return { text: {}, styles: {} }
+}
+
+function hasConfigOverrides(config) {
+  return Boolean(
+    Object.keys(config?.text || {}).length ||
+    Object.keys(config?.styles || {}).length ||
+    Object.keys(config?.blocks || {}).length
+  )
 }
 
 function toDraftShape(config) {
@@ -79,9 +87,17 @@ export function PublicEditProvider({ children }) {
       setLoadError('')
       const data = await loadPublicConfigPayload()
       const config = data?.config || emptyConfig()
+      const preserveLocalSavedConfig = data?.mode === 'scaffold' && !hasConfigOverrides(config)
 
-      setSavedConfig(config)
-      setStoredPublicConfig(config)
+      setSavedConfig((current) => {
+        if (preserveLocalSavedConfig && hasConfigOverrides(current)) {
+          setStoredPublicConfig(current)
+          return current
+        }
+
+        setStoredPublicConfig(config)
+        return config
+      })
       setBackendMode(data?.mode || 'unknown')
       setLastLoadedAt(data?.updatedAt || new Date().toISOString())
       setConfigVersion(Number(data?.version || 1))
@@ -177,6 +193,10 @@ export function PublicEditProvider({ children }) {
 
   const hasDraftChanges = changedFields.length > 0
 
+  const startEditing = useCallback(() => {
+    setIsEditing(true)
+  }, [])
+
   const value = useMemo(() => ({
     isEditing,
     isAdmin,
@@ -205,9 +225,7 @@ export function PublicEditProvider({ children }) {
     configVersion,
     schemaVersion,
     setSavedConfig,
-    startEditing() {
-      setIsEditing(true)
-    },
+    startEditing,
     toggleEditing: () => {
       setIsEditing((v) => {
         const next = !v
@@ -368,6 +386,7 @@ export function PublicEditProvider({ children }) {
     lastSavedAt,
     configVersion,
     schemaVersion,
+    startEditing,
   ])
 
   return (
