@@ -23,7 +23,10 @@ export function EditableText({ as: Tag = 'div', className = '', children, field,
   const resolvedConfig = useResolvedConfig()
 
   const fallbackHtml = useMemo(() => defaultToHtml(children, multiline), [children, multiline])
-  const configuredHtml = sanitizeEditableHtml(getConfiguredText(resolvedConfig, field, fallbackHtml), { multiline })
+  const configuredText = getConfiguredText(resolvedConfig, field, fallbackHtml)
+  const editableHtml = sanitizeEditableHtml(configuredText, { multiline })
+  const renderedHtml = sanitizeEditableHtml(configuredText, { multiline, linkifyText: true })
+  const configuredHtml = isEditing && isAdmin ? editableHtml : renderedHtml
   const draftStyle = getConfiguredStyle(resolvedConfig, field)
   const isSelected = isEditing && isAdmin && selectedField === field
 

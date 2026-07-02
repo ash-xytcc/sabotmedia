@@ -105,8 +105,21 @@ export function sanitizeEditableHtml(html = '', options = {}) {
   const template = document.createElement('template')
   template.innerHTML = String(html || '')
 
-  function sanitizeNode(node) {
+  function htmlToFragment(htmlValue = '') {
+    const fragmentTemplate = document.createElement('template')
+    fragmentTemplate.innerHTML = htmlValue
+    const fragment = document.createDocumentFragment()
+    for (const child of Array.from(fragmentTemplate.content.childNodes)) {
+      fragment.appendChild(child)
+    }
+    return fragment
+  }
+
+  function sanitizeNode(node, parentTag = '') {
     if (node.nodeType === Node.TEXT_NODE) {
+      if (options.linkifyText && parentTag !== 'A') {
+        return htmlToFragment(linkifyInline(node.textContent || ''))
+      }
       return document.createTextNode(node.textContent || '')
     }
 
@@ -115,7 +128,7 @@ export function sanitizeEditableHtml(html = '', options = {}) {
     }
 
     const tag = node.tagName
-    const children = Array.from(node.childNodes).map(sanitizeNode)
+    const children = Array.from(node.childNodes).map((child) => sanitizeNode(child, tag))
 
     if (!ALLOWED_TAGS.has(tag)) {
       const fragment = document.createDocumentFragment()
