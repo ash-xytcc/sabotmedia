@@ -14,21 +14,6 @@ import { renderPost } from '../renderers'
 
 const MODE_STORAGE_KEY = 'sabot.postMode'
 
-function PublicationModeSwitch({ slug, mode, displaySettings }) {
-  const links = []
-  if (displaySettings.enableReadMode) links.push({ key: 'read', label: 'Read', to: `/post/${slug}` })
-  if (displaySettings.enablePrintMode) links.push({ key: 'print', label: 'Print', to: `/post/${slug}/print` })
-  return (
-    <nav className="publication-mode-switch" aria-label="reading modes">
-      {links.map((link) => (
-        <Link key={link.key} className={`publication-mode-switch__link${mode === link.key ? ' is-active' : ''}`} to={link.to}>
-          {link.label}
-        </Link>
-      ))}
-    </nav>
-  )
-}
-
 function getPreferredMode(searchParams) {
   const explicit = searchParams.get('mode')
   if (explicit === 'read') return 'read'
@@ -93,6 +78,11 @@ function bodyContainsImageUrl(bodyHtml, imageUrl) {
   return extractImageUrlsFromHtml(bodyHtml).some((src) => normalizeImageUrlForCompare(src) === target)
 }
 
+function formatMetaType(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  return raw.charAt(0).toUpperCase() + raw.slice(1)
+}
 
 export function PiecePage({ pieces = [] }) {
   const { slug = '' } = useParams()
@@ -178,20 +168,10 @@ export function PiecePage({ pieces = [] }) {
   )
   const headerMetaItems = useMemo(() => {
     if (!piece) return []
-    return [piece.author || 'Sabot Media', piece.publishedDateLabel, piece.type]
+    return ['Sabot Media', formatMetaType(piece.type), piece.publishedDateLabel]
       .map((item) => String(item || '').trim())
       .filter(Boolean)
   }, [piece])
-  const detailItems = useMemo(() => {
-    if (!piece) return []
-    const items = []
-    if (piece.author) items.push({ label: 'Author', value: piece.author })
-    if (piece.publishedDateLabel) items.push({ label: 'Published', value: piece.publishedDateLabel })
-    if (piece.primaryProject) items.push({ label: 'Project', value: piece.primaryProject })
-    if (Array.isArray(piece.tags) && piece.tags.length) items.push({ label: 'Tags', value: piece.tags.join(', ') })
-    return items
-  }, [piece])
-  const hasMetaPanel = mode === 'read' && detailItems.length > 0
 
   if (!piece && nativePieces === null) {
     return (
@@ -204,11 +184,10 @@ export function PiecePage({ pieces = [] }) {
     )
   }
 
-  const publicBodyHtml = String(piece?.body || piece?.content || piece?.html || '')
+  const publicBodyHtml = String(renderData?.bodyHtml || piece?.bodyHtml || piece?.body || piece?.content || piece?.html || '')
   const rawExcerpt = piece?.excerpt || piece?.subtitle || ''
   const displayExcerpt = looksLikeRawHtml(rawExcerpt) ? '' : stripHtmlForPreview(rawExcerpt)
-  const heroImageUrl = piece?.heroImage || piece?.featuredImage || ''
-  const shouldRenderHeroImage = !!heroImageUrl && !bodyContainsImageUrl(publicBodyHtml, heroImageUrl)
+  const shouldRenderHeroImage = !!heroImage && !bodyContainsImageUrl(publicBodyHtml, heroImage)
 
 
   if (!piece) {
@@ -237,11 +216,6 @@ export function PiecePage({ pieces = [] }) {
           {renderData?.eyebrow || piece.primaryProject || piece.type || 'publication'}
         </div>
         <h1>{display.title || piece.title || piece.slug}</h1>
-        {display.subtitle || piece.subtitle || displayExcerpt ? (
-          <p className="piece-header__subtitle">
-            {display.subtitle || piece.subtitle || displayExcerpt}
-          </p>
-        ) : null}
 
         {headerMetaItems.length ? (
           <div className="piece-header__meta">
@@ -251,34 +225,26 @@ export function PiecePage({ pieces = [] }) {
           </div>
         ) : null}
 
-        <PublicationModeSwitch slug={piece.slug} mode={mode} displaySettings={displaySettings} />
+        {displaySettings.enablePrintMode ? (
+          <div className="piece-header__actions">
+            <Link className="piece-header__print-link" to={`/post/${piece.slug}/print`}>
+              Print
+            </Link>
+          </div>
+        ) : null}
       </header>
 
-      {heroImage ? (
-        <section className={`piece-hero${mode === 'experience' ? ' piece-hero--experience' : ''}${displaySettings.heroStyle !== 'default' ? ` piece-hero--${displaySettings.heroStyle}` : ''}`}>
-          <img className="piece-hero__image" src={heroImage} alt={display.title || piece.title || piece.slug} />
-        </section>
-      ) : null}
-
-      <section className={`piece-layout${hasMetaPanel ? ' piece-layout--with-meta' : ''}`}>
-        <article className="piece-body-wrap">
+      <section className="piece-layout">
+        <article className="piece-body-wrap piece-body-wrap--public-post">
+          {shouldRenderHeroImage ? (
+            <figure className="piece-inline-featured-image">
+              <img src={heroImage} alt={display.title || piece.title || piece.slug} />
+            </figure>
+          ) : null}
           <div className="piece-body__content">
             {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{displayExcerpt || ''}</p>}
           </div>
         </article>
-
-        {hasMetaPanel ? (
-          <aside className="piece-meta-panel">
-            <section className="piece-meta-panel__section">
-              <h2>Details</h2>
-              <ul className="piece-meta-panel__list">
-                {detailItems.map((item) => (
-                  <li key={item.label}><strong>{item.label}:</strong> {item.value}</li>
-                ))}
-              </ul>
-            </section>
-          </aside>
-        ) : null}
       </section>
 
       <section className="piece-nav">
