@@ -18,6 +18,7 @@ const ADMIN_PREFIXES = [
   '/tools',
   '/users',
   '/pages',
+  '/collections-admin',
   '/menus',
   '/sites',
   '/podcasts',

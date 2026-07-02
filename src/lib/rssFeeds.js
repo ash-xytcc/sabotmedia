@@ -69,6 +69,10 @@ export function buildRssBundle(items = []) {
     bundle[`projects/${project}.xml`] = buildRssXml(`Sabot Media / ${project}`, `Published content for ${project}.`, projectItems)
   }
 
+  for (const [collection, collectionItems] of Object.entries(groupBy(visible, (item) => item.collections || item.collection || []))) {
+    bundle[`collections/${collection}.xml`] = buildRssXml(`Sabot Media / ${collection}`, `Published content in ${collection}.`, collectionItems)
+  }
+
   for (const [format, formatItems] of Object.entries(groupBy(visible, (item) => item.contentType || item.type || 'article'))) {
     bundle[`formats/${format}.xml`] = buildRssXml(`Sabot Media / ${format}`, `Published ${format} content.`, formatItems)
   }

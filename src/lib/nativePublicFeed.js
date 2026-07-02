@@ -54,6 +54,7 @@ export function normalizeNativePublicPiece(item) {
     target: item.target || 'general',
     primaryProject,
     primaryProjectSlug,
+    collections: Array.isArray(item.collections) ? item.collections : [],
     tags: Array.isArray(item.tags) ? item.tags : [],
     bodyHtml: resolveNativeBodyHtml(item),
     richBody: Array.isArray(item.richBody) ? item.richBody : [],

@@ -9,7 +9,7 @@ import { getDefaultFeaturedTitleDisplayForContentType, normalizeFeaturedTitleDis
 
 const FALLBACK_STORAGE_KEY = 'sabot-native-public-content-v1'
 
-export const NATIVE_CONTENT_SCHEMA_VERSION = 2
+export const NATIVE_CONTENT_SCHEMA_VERSION = 3
 
 export function createEmptyNativeEntry() {
   const now = new Date().toISOString()
@@ -35,6 +35,7 @@ export function createEmptyNativeEntry() {
     sourceNotes: '',
     categories: [],
     projects: [],
+    collections: [],
     tags: [],
     bodyHtml: '',
     featuredImage: '',
@@ -124,6 +125,7 @@ export function normalizeNativeEntry(input) {
     seoDescription: String(raw.seoDescription || raw.metaDescription || ''),
     categories: normalizeTags(raw.categories || raw.projects),
     projects: normalizeTags(raw.projects || raw.categories),
+    collections: normalizeTags(raw.collections || raw.collection),
     tags: normalizeTags(raw.tags),
     createdAt: String(raw.createdAt || new Date().toISOString()),
     updatedAt: String(raw.updatedAt || new Date().toISOString()),
@@ -138,6 +140,7 @@ export function createNativeEntryFromImportedPiece(piece = {}) {
   const slug = slugify(piece.slug || piece.title || piece.id || '')
   const sourcePostId = String(piece.sourcePostId || piece.id || slug)
   const projects = normalizeTags(piece.projects || piece.primaryProject || piece.primaryProjectSlug)
+  const collections = normalizeTags(piece.collections || piece.collection)
   const featuredImage = String(piece.featuredImage || piece.heroImage || piece.imageUrl || getImportedImage(piece) || '')
   const publishedAt = normalizeDateString(piece.publishedAt || piece.date || '') || now
   const contentType = mapImportedContentType(piece.type || piece.contentType)
@@ -165,6 +168,7 @@ export function createNativeEntryFromImportedPiece(piece = {}) {
     sourceNotes: piece.sourceNotes || '',
     categories: projects,
     projects,
+    collections,
     tags: piece.tags || [],
     featuredImage,
     heroImage: featuredImage,

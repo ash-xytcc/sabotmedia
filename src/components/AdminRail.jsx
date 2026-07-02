@@ -11,6 +11,7 @@ const MENU = [
   { to: adminRoutes.addNew, label: 'Add New' },
   { to: adminRoutes.media, label: 'Media' },
   { to: adminRoutes.pages, label: 'Pages' },
+  { to: adminRoutes.collections, label: 'Collections' },
   { to: adminRoutes.customize, label: 'Customize' },
   { to: adminRoutes.tools, label: 'Tools' },
   { to: adminRoutes.siteHealth, label: 'Site Health' },
@@ -89,6 +90,7 @@ export function AdminRail() {
             <Link to={adminRoutes.addNew} className="wp-admin-topbar__dropdown-link">Post</Link>
             <Link to={adminRoutes.media} className="wp-admin-topbar__dropdown-link">Media</Link>
             <Link to={adminRoutes.pages} className="wp-admin-topbar__dropdown-link">Page</Link>
+            <Link to={adminRoutes.collections} className="wp-admin-topbar__dropdown-link">Collection</Link>
             <Link to={adminRoutes.users} className="wp-admin-topbar__dropdown-link">User</Link>
           </AdminBarMenu>
 

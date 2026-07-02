@@ -18,6 +18,9 @@ import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PrintLabPage } from './components/PrintLabPage'
 import { PublicationLandingPage, PublicationReaderPage, PublicationsIndexPage } from './components/PublicationReaderPage'
+import { CollectionsIndexPage } from './components/CollectionsIndexPage'
+import { CollectionPage } from './components/CollectionPage'
+import { CollectionsAdminPage } from './components/CollectionsAdminPage'
 import { AdminQaPage } from './components/AdminQaPage'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { NotFoundPage } from './components/NotFoundPage'
@@ -70,6 +73,7 @@ const ADMIN_SHELL_PATHS = [
   '/platform-map',
   '/media',
   '/pages',
+  '/collections-admin',
   '/users',
   '/menus',
   '/customize',
@@ -84,6 +88,7 @@ const ADMIN_SHELL_PATHS = [
   '/wp-admin/posts',
   '/wp-admin/media',
   '/wp-admin/projects',
+  '/wp-admin/collections',
   '/wp-admin/printlab',
   '/wp-admin/site-health',
   '/wp-admin/settings',
@@ -144,6 +149,7 @@ function RouteMeta({ pieces = [] }) {
     const routeMeta = {
       '/': ['Sabot Media', 'Independent reporting, essays, comics, podcasts, zines, and project-based archive work.'],
       '/archive': ['Archive', 'Browse the Sabot Media archive by search, project, format, and date.'],
+      '/collections': ['Collections', 'Browse Sabot Media bodies of work by timeline, downloads, gallery, and related pieces.'],
       '/search': ['Search', 'Search the Sabot Media archive.'],
       '/projects': ['Archive', 'Search and filter the full Sabot Media archive by project, format, and keyword.'],
       '/about': ['About', 'About Sabot Media and its public-interest media work.'],
@@ -312,6 +318,8 @@ export default function App() {
           <Route path="/post/:slug/print" element={<PrintPage pieces={pieces} />} />
           <Route path={publicRoutes.print} element={<PrintPage pieces={pieces} />} />
           <Route path="/piece/:slug/print" element={<LegacyPrintRedirect />} />
+          <Route path={publicRoutes.collections} element={<CollectionsIndexPage pieces={pieces} />} />
+          <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
           <Route path="/review" element={protect(<Navigate to={adminRoutes.qa} replace />)} />
           <Route path="/admin" element={protect(<Navigate to={adminRoutes.dashboard} replace />)} />
           <Route path={adminRoutes.dashboard} element={protect(<AdminPage pieces={pieces} />)} />
@@ -327,6 +335,8 @@ export default function App() {
           <Route path="/media" element={protect(<Navigate to={adminRoutes.media} replace />)} />
           <Route path={adminRoutes.media} element={protect(<MediaLibraryPage />)} />
           <Route path={adminRoutes.projects} element={protect(<ProjectsIndexPage projectMap={projectMap} />)} />
+          <Route path="/collections-admin" element={protect(<Navigate to={adminRoutes.collections} replace />)} />
+          <Route path={adminRoutes.collections} element={protect(<CollectionsAdminPage />)} />
           <Route path="/pages" element={protect(<Navigate to={adminRoutes.pages} replace />)} />
           <Route path={adminRoutes.pages} element={protect(<PagesAdminPage />)} />
           <Route path="/users" element={protect(<Navigate to={adminRoutes.users} replace />)} />

@@ -32,7 +32,7 @@ export function ContentListPage() {
   const [selectedIds, setSelectedIds] = useState([])
   const [quickEditId, setQuickEditId] = useState('')
   const [bulkAction, setBulkAction] = useState('')
-  const [quickEdit, setQuickEdit] = useState({ title: '', slug: '', status: 'draft', tags: '', categories: '' })
+  const [quickEdit, setQuickEdit] = useState({ title: '', slug: '', status: 'draft', tags: '', categories: '', collections: '' })
   const { pushNotice } = useAdminNotices()
 
   useEffect(() => {
@@ -77,6 +77,7 @@ export function ContentListPage() {
         item.type,
         item.format,
         item.collection,
+        ...(item.collections || []),
         ...(item.projects || []),
         ...(item.categories || []),
         ...(item.tags || []),
@@ -96,6 +97,7 @@ export function ContentListPage() {
       slug: slugify(quickEdit.slug || quickEdit.title),
       status: quickEdit.status,
       tags: normalizeTermList(quickEdit.tags),
+      collections: normalizeTermList(quickEdit.collections),
       categories: parsedCategories,
       projects: parsedCategories,
     }
@@ -188,7 +190,7 @@ export function ContentListPage() {
                       <strong className="content-table__title">{item.title || 'Untitled'}</strong>
                       <div className="wp-row-actions">
                         <Link to={item.isImportedArchive ? `${adminRoutes.nativeBridge}?import=${item.importSlug || item.slug}` : `${adminRoutes.nativeBridge}?edit=${item.id}`}>Edit</Link>
-                        {item.isImportedArchive ? null : <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || item.projects || []).join(', ') }) }}>Quick Edit</button>}
+                        {item.isImportedArchive ? null : <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || item.projects || []).join(', '), collections: (item.collections || []).join(', ') }) }}>Quick Edit</button>}
                         {item.status === 'published' ? <Link to={`/post/${item.slug}`}>View</Link> : null}
                         {item.isImportedArchive ? <span>Imported archive</span> : item.status !== 'trash' ? <button type="button" onClick={async () => { setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash')); pushNotice('Post moved to Trash.', 'warning') }}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
                       </div>
@@ -208,6 +210,7 @@ export function ContentListPage() {
                           <select value={quickEdit.status} onChange={(e) => setQuickEdit((c) => ({ ...c, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option><option value="scheduled">Scheduled</option><option value="archived">Archived</option><option value="trash">Trash</option></select>
                           <input value={quickEdit.tags} onChange={(e) => setQuickEdit((c) => ({ ...c, tags: e.target.value }))} placeholder="Tags: tag1, tag2" />
                           <input value={quickEdit.categories} onChange={(e) => setQuickEdit((c) => ({ ...c, categories: e.target.value }))} placeholder="Categories: cat1, cat2" />
+                          <input value={quickEdit.collections} onChange={(e) => setQuickEdit((c) => ({ ...c, collections: e.target.value }))} placeholder="Collections: collection-one, collection-two" />
                           <button type="button" className="button button--primary" onClick={() => saveQuickEdit(item.id)}>Update</button>
                           <button type="button" className="button" onClick={() => setQuickEditId('')}>Cancel</button>
                         </div>

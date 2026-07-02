@@ -1,4 +1,4 @@
-const NATIVE_CONTENT_SCHEMA_VERSION = 2
+const NATIVE_CONTENT_SCHEMA_VERSION = 3
 
 function normalizeBoolean(value, fallback = true) {
   if (typeof value === 'boolean') return value
@@ -176,6 +176,7 @@ export function normalizeNativeEntry(input) {
     heroStyle: display.heroStyle,
     categories: normalizeTags(raw.categories || raw.projects),
     projects: normalizeTags(raw.projects || raw.categories),
+    collections: normalizeTags(raw.collections || raw.collection),
     tags: normalizeTags(raw.tags),
     createdAt: String(raw.createdAt || raw.created_at || now),
     updatedAt: String(raw.updatedAt || raw.updated_at || now),

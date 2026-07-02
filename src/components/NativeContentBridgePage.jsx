@@ -37,6 +37,7 @@ function createTypedEntry(kind = 'article') {
     workflowState: 'draft',
     tags: [],
     categories: [],
+    collections: [],
     featuredImage: '',
     heroImage: '',
     featuredImageTitle: '',
@@ -196,6 +197,7 @@ function saveLocalRevision(postId, draft, note) {
       excerpt: String(draft?.excerpt || ''),
       tags: Array.isArray(draft?.tags) ? draft.tags : [],
       categories: Array.isArray(draft?.categories) ? draft.categories : [],
+      collections: Array.isArray(draft?.collections) ? draft.collections : [],
       featuredImage: String(draft?.featuredImage || ''),
       heroImage: String(draft?.heroImage || ''),
       featuredTitleDisplay: String(draft?.featuredTitleDisplay || ''),
@@ -259,6 +261,7 @@ function toAutosaveFingerprint(draft, allowComments) {
     scheduledFor: draft?.scheduledFor || '',
     tags: Array.isArray(draft?.tags) ? draft.tags : [],
     categories: Array.isArray(draft?.categories) ? draft.categories : [],
+    collections: Array.isArray(draft?.collections) ? draft.collections : [],
     featuredImage: draft?.featuredImage || '',
     heroImage: draft?.heroImage || '',
     featuredTitleDisplay: draft?.featuredTitleDisplay || '',
@@ -355,7 +358,7 @@ export function NativeContentBridgePage() {
         : (loaded || []).find((item) => item.id === editId)
       if (found) {
         setActiveId(found.id)
-        setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [], slugManuallyEdited: true })
+        setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [], collections: found.collections || [], slugManuallyEdited: true })
         setPermalinkDraft(found.slug || '')
         setAllowComments(found.allowComments ?? true)
         setRevisions(loadLocalRevisions(found.id))
@@ -363,7 +366,7 @@ export function NativeContentBridgePage() {
       } else if (importedPiece) {
         const importedDraft = createNativeEntryFromImportedPiece(importedPiece)
         setActiveId(importedDraft.id)
-        setDraft({ ...importedDraft, tags: importedDraft.tags || [], categories: importedDraft.categories || importedDraft.projects || [], slugManuallyEdited: true })
+        setDraft({ ...importedDraft, tags: importedDraft.tags || [], categories: importedDraft.categories || importedDraft.projects || [], collections: importedDraft.collections || [], slugManuallyEdited: true })
         setPermalinkDraft(importedDraft.slug || '')
         setAllowComments(importedDraft.allowComments ?? true)
         setRevisions(loadLocalRevisions(importedDraft.id))
@@ -401,6 +404,7 @@ export function NativeContentBridgePage() {
       ...revision.draft,
       tags: Array.isArray(revision.draft.tags) ? revision.draft.tags : [],
       categories: Array.isArray(revision.draft.categories) ? revision.draft.categories : [],
+      collections: Array.isArray(revision.draft.collections) ? revision.draft.collections : [],
     }
     setDraft(restored)
     setPublishSuccess(null)
@@ -423,6 +427,7 @@ export function NativeContentBridgePage() {
           slug: slugify(draft.slug || draft.title),
           categories: normalizeTermList(draft.categories || draft.projects),
           projects: normalizeTermList(draft.categories || draft.projects),
+          collections: normalizeTermList(draft.collections),
           allowComments,
         }, 'autosave')
         lastAutosaveFingerprintRef.current = fingerprint
@@ -457,6 +462,7 @@ export function NativeContentBridgePage() {
       ...merged,
       slug: slugify(merged.slug || merged.title),
       tags: Array.isArray(merged.tags) ? merged.tags : [],
+      collections: normalizeTermList(merged.collections),
       categories: normalizedCategories,
       projects: normalizedCategories,
       featuredImage: merged.featuredImage || merged.heroImage || '',
@@ -898,6 +904,19 @@ export function NativeContentBridgePage() {
                   setNewCategory('')
                 }}>Add</button>
               </div>
+            </section>
+
+            <section className="wp-meta-box">
+              <h2>Collections</h2>
+              <label className="native-content-editor__field">
+                <span>Collection slugs or names</span>
+                <input
+                  value={(draft.collections || []).join(', ')}
+                  onChange={(event) => setDraft((current) => ({ ...current, collections: normalizeTermList(event.target.value) }))}
+                  placeholder="collection-one, another-collection"
+                />
+              </label>
+              <p className="description">{(draft.collections || []).join(', ') || 'No collections'}</p>
             </section>
 
             <section className="wp-meta-box">
