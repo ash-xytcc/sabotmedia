@@ -7,21 +7,13 @@ const AdminAuthContext = createContext(null)
 export function AdminAuthProvider({ children }) {
   const [token, setToken] = useState(() => getSavedAdminToken())
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isChecking, setIsChecking] = useState(Boolean(token))
+  const [isChecking, setIsChecking] = useState(true)
   const [authError, setAuthError] = useState('')
   const [permissions, setPermissions] = useState(null)
 
   const validateSavedToken = useCallback(async () => {
     const currentToken = getSavedAdminToken()
     setToken(currentToken)
-
-    if (!currentToken) {
-      setIsAuthenticated(false)
-      setPermissions(null)
-      setAuthError('')
-      setIsChecking(false)
-      return false
-    }
 
     try {
       setIsChecking(true)
@@ -30,7 +22,9 @@ export function AdminAuthProvider({ children }) {
       const allowed = Boolean(snapshot?.canEditAnything)
       setPermissions(snapshot)
       setIsAuthenticated(allowed)
-      if (!allowed) setAuthError(snapshot?.publicConfig?.error || snapshot?.nativeContent?.error || 'Valid admin token required.')
+      if (!allowed) {
+        setAuthError(currentToken ? (snapshot?.publicConfig?.error || snapshot?.nativeContent?.error || 'Valid admin token required.') : '')
+      }
       return allowed
     } catch (error) {
       setPermissions(null)

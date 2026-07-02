@@ -34,6 +34,8 @@ npm run dev
 
 Live editing, CMS routes, media tools, and Printlab admin routes require the `SABOT_ADMIN_TOKEN` environment variable in production. Editors sign in at `/login` or `/wp-login` with that token. Public visitors can read, search, and print without logging in.
 
+For production route protection, configure Cloudflare Access as described in [`SECURITY_AUTH.md`](./SECURITY_AUTH.md).
+
 If your XML file lives somewhere else:
 
 ```bash
