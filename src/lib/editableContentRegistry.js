@@ -140,18 +140,60 @@ export const editableContentRegistry = {
     body: {
       field: 'info.security.body',
       defaultText:
-        `Some people contact Sabot Media with information that may carry personal, legal, professional, or political risk. We take that seriously.
+        `Some people contact Sabot Media with information that may carry personal, legal, professional, or political risk.
 
-Our public email addresses are routed through privacy-conscious infrastructure, and our primary mailbox is hosted with Riseup. Ordinary email is not end-to-end encrypted by default, though. If your message is sensitive, use encryption.
+We take that seriously.
+
+This page explains how to contact us, what different tools can and cannot protect, and how to send encrypted email using our public OpenPGP key.
+
+No security tool is magic. The safest method depends on what you are sending, who might be watching, and what consequences you are trying to avoid.
+
+## Quick guide
 
 For general contact, normal email is fine.
 
 For sensitive tips, documents, organizing information, legal concerns, or anything that could put someone at risk, use OpenPGP encryption.
 
-Contact:
+For anonymity, encryption alone is not enough. Use Tor Browser, a separate email identity, and avoid including identifying details.
+
+## Contact addresses
+
+General:
+info@sabot.media
+
+Submissions:
+submit@sabot.media
+
+Tips:
+tips@sabot.media
+
+Security:
 security@sabot.media
 
-OpenPGP key:
+Support:
+support@sabot.media
+
+Press:
+press@sabot.media
+
+## What we use
+
+Our public email addresses are routed through privacy-conscious infrastructure, and our primary mailbox is hosted with Riseup.
+
+Riseup is a communications collective that provides email and other tools for people and groups working toward social change.
+
+Learn more:
+https://riseup.net
+
+Ordinary email is not end-to-end encrypted by default. Riseup is a better home than most corporate email providers, but if you send an unencrypted email, the contents are still not protected the same way an encrypted message would be.
+
+If your message is sensitive, use OpenPGP.
+
+## Our OpenPGP key
+
+Use this key to encrypt email to Sabot Media.
+
+Identity:
 Sabot Media <security@sabot.media>
 
 Fingerprint:
@@ -160,25 +202,186 @@ Fingerprint:
 Key ID:
 8D0E0AF94E20A4B1
 
-Download:
+Download our public key:
 https://sabot.media/pgp.asc
 
-How to use it:
-1. Install an OpenPGP tool such as Mailvelope, Thunderbird, Kleopatra, GPG, Proton Mail with PGP, or OpenKeychain.
-2. Import our public key from https://sabot.media/pgp.asc.
-3. Verify that the fingerprint matches the one listed above.
-4. Write to security@sabot.media or tips@sabot.media.
-5. Enable encryption before sending.
+Before sending sensitive information, verify that the fingerprint above matches the key you imported.
+
+## What OpenPGP does
+
+OpenPGP encrypts the contents of your message so only someone with the matching private key can read it.
+
+It can protect:
+- the body of your email
+- attached files, if encrypted
+- signed messages proving a message came from a specific key
+
+It does not automatically hide:
+- who contacted us
+- when contact happened
+- your IP address
+- subject lines, depending on your email tool
+- the fact that communication occurred
+
+Learn more about OpenPGP:
+https://www.openpgp.org
+
+EFF guide to PGP:
+https://ssd.eff.org/module/how-use-pgp
+
+## How to send us encrypted email
+
+1. Install an OpenPGP tool.
+
+Good options include:
+
+Mailvelope:
+https://mailvelope.com
+
+Thunderbird:
+https://www.thunderbird.net
+
+Kleopatra:
+https://www.openpgp.org/software/kleopatra/
+
+GnuPG:
+https://gnupg.org
+
+OpenKeychain for Android:
+https://www.openkeychain.org
 
 Proton Mail:
-If you already use Proton Mail, you can contact us from Proton. Proton is a reasonable option for many people, especially if you are not ready to set up separate encryption tools. For stronger protection, still verify and use our OpenPGP key.
+https://proton.me/mail
 
-Important limits:
-Encryption protects message contents. It does not automatically hide metadata such as who contacted us, when, from where, or that contact occurred.
+2. Download our public key.
 
-If anonymity matters, consider using Tor Browser, a separate email identity, and OpenPGP together.
+https://sabot.media/pgp.asc
 
-We will never ask you to send private keys, passwords, or identifying information you do not want to share.`,
+3. Import the key into your OpenPGP tool.
+
+4. Verify the fingerprint.
+
+Make sure the fingerprint shown by your tool matches:
+
+55D4 995F 3C93 E0B4 94B4 6D10 8D0E 0AF9 4E20 A4B1
+
+5. Write your message to:
+
+security@sabot.media
+
+or
+
+tips@sabot.media
+
+6. Enable encryption before sending.
+
+If your tool gives you a warning that the message is not encrypted, stop and check your setup before sending sensitive information.
+
+## Proton Mail
+
+If you already use Proton Mail, you can contact us from Proton.
+
+Proton is a reasonable option for many people, especially if you are not ready to set up separate encryption tools.
+
+Important limit:
+A Proton-to-Proton message is end-to-end encrypted inside Proton. A Proton message to a non-Proton mailbox is not automatically end-to-end encrypted unless you use OpenPGP or Proton's encrypted message features.
+
+For stronger protection, import and verify our OpenPGP key before sending sensitive material.
+
+Proton Mail:
+https://proton.me/mail
+
+Proton guide to PGP:
+https://proton.me/support/how-to-use-pgp
+
+## Tor Browser
+
+Tor Browser helps hide your IP address and makes it harder for websites and network observers to know where you are connecting from.
+
+Tor is useful if you do not want your normal internet connection associated with contacting us.
+
+Tor does not make unsafe behavior safe. If you log into your personal email, include your name, or send identifying documents, Tor cannot remove that information.
+
+Tor Browser:
+https://www.torproject.org
+
+EFF guide to Tor:
+https://ssd.eff.org/module/how-use-tor
+
+## Safer tip workflow
+
+If you are sending something sensitive:
+
+1. Think about what you are trying to protect.
+2. Avoid using a work, school, or personal device if that creates risk.
+3. Use Tor Browser if anonymity matters.
+4. Use a separate email identity that is not tied to your real name.
+5. Encrypt your message with our OpenPGP key.
+6. Remove metadata from files when possible.
+7. Do not include unnecessary identifying details.
+8. Tell us what safety concerns you have.
+
+## File metadata
+
+Documents, images, audio, and video may contain metadata.
+
+Metadata can include:
+- author names
+- device information
+- GPS location
+- timestamps
+- editing history
+- software used
+
+Before sending sensitive files, consider removing metadata.
+
+EFF surveillance self-defense:
+https://ssd.eff.org
+
+ExifTool:
+https://exiftool.org
+
+MAT2 metadata cleaner:
+https://0xacab.org/jvoisin/mat2
+
+## What to send
+
+For tips, include what you safely can:
+
+- what happened
+- when it happened
+- where it happened
+- who was involved
+- how you know
+- what documents, images, audio, or witnesses support it
+- what parts are confirmed
+- what parts are uncertain
+- what risks we should understand before publishing
+
+Do not send identifying information you do not want us to have.
+
+## What we will never ask for
+
+We will never ask you to:
+- send us your private key
+- send passwords by email
+- turn off encryption for convenience
+- identify yourself if anonymity is necessary
+- reveal sources unnecessarily
+- expose other people without consent
+
+## If you are unsure
+
+If you are unsure what level of security you need, contact us first with a low-risk message.
+
+Do not include sensitive details in the first message.
+
+You can write something like:
+
+"I have a sensitive tip and need help choosing a safer way to send it."
+
+Use:
+security@sabot.media`,
     },
     actions: [
       { id: 'pgp', labelField: 'info.security.actions.pgp.label', hrefField: 'info.security.actions.pgp.href', defaultLabel: 'Download PGP key', defaultHref: '/pgp.asc' },
