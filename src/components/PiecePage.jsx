@@ -58,26 +58,6 @@ function looksLikeRawHtml(value) {
   return /<\s*\/?\s*(p|br|img|div|figure|h1|h2|h3|ul|ol|li|blockquote|a)\b/i.test(raw) || raw.includes('&nbsp;')
 }
 
-function extractImageUrlsFromHtml(value) {
-  const html = String(value || '')
-  const urls = []
-  html.replace(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi, (_, src) => {
-    if (src) urls.push(src)
-    return ''
-  })
-  return urls
-}
-
-function normalizeImageUrlForCompare(value) {
-  return String(value || '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '')
-}
-
-function bodyContainsImageUrl(bodyHtml, imageUrl) {
-  const target = normalizeImageUrlForCompare(imageUrl)
-  if (!target) return false
-  return extractImageUrlsFromHtml(bodyHtml).some((src) => normalizeImageUrlForCompare(src) === target)
-}
-
 function formatMetaType(value) {
   const raw = String(value || '').trim()
   if (!raw) return ''
@@ -166,12 +146,13 @@ export function PiecePage({ pieces = [] }) {
     () => renderImportedBody(renderData?.bodyHtml || piece?.bodyHtml || '', mode),
     [piece?.bodyHtml, renderData, mode]
   )
+  const categoryLabel = renderData?.eyebrow || piece?.primaryProject || piece?.type || 'general'
   const headerMetaItems = useMemo(() => {
     if (!piece) return []
-    return ['Sabot Media', formatMetaType(piece.type), piece.publishedDateLabel]
+    return [categoryLabel, 'Sabot Media', formatMetaType(piece.type), piece.publishedDateLabel]
       .map((item) => String(item || '').trim())
       .filter(Boolean)
-  }, [piece])
+  }, [piece, categoryLabel])
 
   if (!piece && nativePieces === null) {
     return (
@@ -184,11 +165,8 @@ export function PiecePage({ pieces = [] }) {
     )
   }
 
-  const publicBodyHtml = String(renderData?.bodyHtml || piece?.bodyHtml || piece?.body || piece?.content || piece?.html || '')
   const rawExcerpt = piece?.excerpt || piece?.subtitle || ''
   const displayExcerpt = looksLikeRawHtml(rawExcerpt) ? '' : stripHtmlForPreview(rawExcerpt)
-  const shouldRenderHeroImage = !!heroImage && !bodyContainsImageUrl(publicBodyHtml, heroImage)
-
 
   if (!piece) {
     return (
@@ -211,36 +189,40 @@ export function PiecePage({ pieces = [] }) {
     <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
       <PublicationTopbar />
 
-      <header className="piece-header piece-header--public-post">
-        <div className="piece-header__eyebrow">
-          {renderData?.eyebrow || piece.primaryProject || piece.type || 'publication'}
-        </div>
-        <h1>{display.title || piece.title || piece.slug}</h1>
-
-        {headerMetaItems.length ? (
-          <div className="piece-header__meta">
-            {headerMetaItems.map((item) => (
-              <span key={item}>{item}</span>
-            ))}
+      <section className={`piece-article-lead${heroImage ? ' piece-article-lead--image' : ' piece-article-lead--fallback'}`}>
+        {heroImage ? (
+          <figure className="piece-article-lead__figure">
+            <img className="piece-article-lead__image" src={heroImage} alt="" />
+            <figcaption className="piece-article-lead__overlay">
+              <h1>{display.title || piece.title || piece.slug}</h1>
+            </figcaption>
+          </figure>
+        ) : (
+          <div className="piece-article-lead__fallback">
+            <div className="piece-article-lead__eyebrow">{categoryLabel}</div>
+            <h1>{display.title || piece.title || piece.slug}</h1>
           </div>
-        ) : null}
+        )}
 
-        {displaySettings.enablePrintMode ? (
-          <div className="piece-header__actions">
-            <Link className="piece-header__print-link" to={`/post/${piece.slug}/print`}>
+        <div className="piece-article-lead__below">
+          {headerMetaItems.length ? (
+            <div className="piece-article-lead__meta">
+              {headerMetaItems.map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+          ) : null}
+
+          {displaySettings.enablePrintMode ? (
+            <Link className="piece-article-lead__print-link" to={`/post/${piece.slug}/print`}>
               Print
             </Link>
-          </div>
-        ) : null}
-      </header>
+          ) : null}
+        </div>
+      </section>
 
       <section className="piece-layout">
         <article className="piece-body-wrap piece-body-wrap--public-post">
-          {shouldRenderHeroImage ? (
-            <figure className="piece-inline-featured-image">
-              <img src={heroImage} alt={display.title || piece.title || piece.slug} />
-            </figure>
-          ) : null}
           <div className="piece-body__content">
             {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{displayExcerpt || ''}</p>}
           </div>
