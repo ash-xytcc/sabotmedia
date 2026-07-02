@@ -19,13 +19,16 @@ import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PrintLabPage } from './components/PrintLabPage'
 import { PublicationLandingPage, PublicationReaderPage, PublicationsIndexPage } from './components/PublicationReaderPage'
+import { AdminQaPage } from './components/AdminQaPage'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { NotFoundPage } from './components/NotFoundPage'
 import { PublicEditProvider, usePublicEdit } from './components/PublicEditContext'
 import { PublicEditPanel } from './components/PublicEditPanel'
 import { PublicAdminToolbar } from './components/PublicAdminToolbar'
 import { AdminAuthProvider, useAdminAuth } from './components/AdminAuthContext'
 import { LoginPage } from './components/LoginPage'
 import { EditableText } from './components/EditableText'
-import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/content'
+import { buildProjectMap, getFeaturedPiece, getLatestPieces, getProjectMeta } from './lib/content'
 import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
 import { PublicInfoPage } from './components/PublicInfoPage'
@@ -35,6 +38,7 @@ import { AnalyticsPage } from './components/AnalyticsPage'
 import { CustomizeAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminPages'
 import { SitesAdminPage } from './components/SitesAdminPage'
 import { adminRoutes, publicRoutes } from './routing/routes'
+import { buildPostMeta, setDocumentMeta } from './lib/documentMeta'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -45,6 +49,7 @@ const reviewCount = pieces.filter((piece) => piece.reviewFlags?.length).length
 const ADMIN_SHELL_PATHS = [
   '/admin',
   '/review',
+  '/qa',
   '/content',
   '/posts',
   '/add-new',
@@ -91,6 +96,72 @@ function ScrollToTop() {
     if (hash) return
     window.scrollTo(0, 0)
   }, [pathname, search, hash])
+
+  return null
+}
+
+function RouteMeta({ pieces = [] }) {
+  const location = useLocation()
+
+  useEffect(() => {
+    const pathname = location.pathname
+    const postMatch = pathname.match(/^\/post\/([^/]+)$/)
+    const postPrintMatch = pathname.match(/^\/post\/([^/]+)\/print$/)
+    const printMatch = pathname.match(/^\/print\/([^/]+)$/)
+    const projectMatch = pathname.match(/^\/(?:project|projects)\/([^/]+)$/)
+
+    if (postMatch) {
+      const piece = pieces.find((item) => item.slug === postMatch[1])
+      if (piece) setDocumentMeta(buildPostMeta(piece, { path: pathname }))
+      return
+    }
+
+    if (postPrintMatch || printMatch) {
+      const slug = (postPrintMatch || printMatch)[1]
+      const piece = pieces.find((item) => item.slug === slug)
+      setDocumentMeta({
+        ...(piece ? buildPostMeta(piece, { path: pathname }) : {}),
+        title: piece ? `${piece.title} Print` : 'Print',
+        canonicalPath: pathname,
+      })
+      return
+    }
+
+    if (projectMatch) {
+      const meta = getProjectMeta(projectMatch[1])
+      setDocumentMeta({
+        title: meta.name,
+        description: meta.description,
+        canonicalPath: pathname,
+      })
+      return
+    }
+
+    const routeMeta = {
+      '/': ['Sabot Media', 'Independent reporting, essays, comics, podcasts, zines, and project-based archive work.'],
+      '/archive': ['Archive', 'Browse the Sabot Media archive by search, project, format, and date.'],
+      '/search': ['Search', 'Search the Sabot Media archive.'],
+      '/projects': ['Projects', 'Browse Sabot Media project archives and publishing lanes.'],
+      '/about': ['About', 'About Sabot Media and its public-interest media work.'],
+      '/contact': ['Contact', 'Contact Sabot Media.'],
+      '/submit': ['Submit', 'Submit tips, documents, writing, art, or project ideas to Sabot Media.'],
+      '/support': ['Support', 'Support Sabot Media by reading, sharing, printing, citing, and circulating the archive.'],
+      '/security': ['Security', 'Security guidance and public OpenPGP key for contacting Sabot Media.'],
+      '/press': ['Press', 'Press information and public-facing Sabot Media materials.'],
+      '/publications': ['Publications', 'Read Sabot Media publications.'],
+      '/updates': ['Updates', 'Latest Sabot Media updates.'],
+      '/login': ['Editor Login', 'Editor login for Sabot Media administrators.'],
+      '/wp-login': ['Editor Login', 'Editor login for Sabot Media administrators.'],
+    }[pathname]
+
+    if (routeMeta) {
+      setDocumentMeta({
+        title: routeMeta[0],
+        description: routeMeta[1],
+        canonicalPath: pathname,
+      })
+    }
+  }, [location.pathname, pieces])
 
   return null
 }
@@ -158,8 +229,13 @@ function Layout({ children }) {
   if (bareShell) {
     return (
       <div className="bare-route-shell">
+        <a className="skip-link" href="#main-content">Skip to content</a>
         <PublicEditPanel />
-        {children}
+        <div id="main-content" tabIndex="-1">
+          <ErrorBoundary key={location.pathname} area="admin">
+            {children}
+          </ErrorBoundary>
+        </div>
       </div>
     )
   }
@@ -171,9 +247,14 @@ function Layout({ children }) {
         if (isEditing) setSelectedField(null)
       }}
     >
+      <a className="skip-link" href="#main-content">Skip to content</a>
       <PublicAdminToolbar />
       <PublicEditPanel />
-      {children}
+      <div id="main-content" tabIndex="-1">
+        <ErrorBoundary key={location.pathname} area="public">
+          {children}
+        </ErrorBoundary>
+      </div>
     </div>
   )
 }
@@ -211,6 +292,7 @@ export default function App() {
       <PublicEditProvider>
         <AdminNoticeProvider>
       <ScrollToTop />
+      <RouteMeta pieces={pieces} />
       <Layout>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -244,6 +326,8 @@ export default function App() {
           <Route path="/site-editor" element={protect(<Navigate to="/tools#advanced-draft-tools" replace />)} />
           <Route path="/advanced-draft-tools" element={protect(<SiteEditorAdminPage />)} />
           <Route path="/tools" element={protect(<ToolsAdminPage />)} />
+          <Route path="/qa" element={protect(<AdminQaPage />)} />
+          <Route path={adminRoutes.qa} element={protect(<AdminQaPage />)} />
           <Route path="/printlab" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
           <Route path={adminRoutes.printlab} element={protect(<PrintLabPage pieces={pieces} />)} />
           <Route path="/tools/print" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
@@ -279,6 +363,7 @@ export default function App() {
         <Route path="/archive" element={<PublicSearchPage pieces={pieces} />} />
         <Route path="/search" element={<PublicSearchPage pieces={pieces} />} />
           <Route path="/draft" element={protect(<PublicDraftPage />)} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Layout>
         </AdminNoticeProvider>

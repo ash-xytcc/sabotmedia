@@ -19,6 +19,7 @@ export const adminRoutes = Object.freeze({
   media: '/wp-admin/media',
   projects: '/wp-admin/projects',
   printlab: '/wp-admin/printlab',
+  qa: '/wp-admin/qa',
   settings: '/wp-admin/settings',
 })
 

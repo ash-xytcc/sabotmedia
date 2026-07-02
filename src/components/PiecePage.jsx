@@ -12,6 +12,7 @@ import { attachPostAssets } from '../assets/assetSystem'
 import { normalizePost } from '../models/publication'
 import { renderPost } from '../renderers'
 import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
+import { buildPostMeta, setDocumentMeta } from '../lib/documentMeta'
 
 const MODE_STORAGE_KEY = 'sabot.postMode'
 
@@ -168,9 +169,9 @@ export function PiecePage({ pieces = [] }) {
   const featuredTitleDisplay = useMemo(() => resolveFeaturedTitleDisplay(piece || {}), [piece])
 
   useEffect(() => {
-    if (!titleText) return
-    document.title = `${titleText} | Sabot Media`
-  }, [titleText])
+    if (!piece || !titleText) return
+    setDocumentMeta(buildPostMeta({ ...piece, title: titleText, featuredImage: heroImage || piece.featuredImage }, { path: `/post/${piece.slug}` }))
+  }, [piece, titleText, heroImage])
 
   if (!piece && nativePieces === null) {
     return (

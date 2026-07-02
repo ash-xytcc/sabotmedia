@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
-import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { getProjectMeta, splitDisplayTitle, isPublicProjectSlug, buildTypeOptions } from '../lib/content'
 import { getProjectTheme } from '../lib/projectTheme'
 import { getFeaturedPieceForProject } from '../lib/projectFeatured'
@@ -9,6 +9,7 @@ import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 import { getProjectTitleField, getProjectDescriptionField } from '../lib/projectConfigFields'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
+import { NotFoundPage } from './NotFoundPage'
 
 const PAGE_SIZE = 24
 
@@ -67,9 +68,16 @@ export function ProjectPage({ pieces }) {
   const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || 'all')
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const projectExists = Array.isArray(pieces) && pieces.some((piece) => (piece.primaryProjectSlug || '') === slug)
 
-  if (!isPublicProjectSlug(slug)) {
-    return <Navigate to="/projects" replace />
+  if (!isPublicProjectSlug(slug) || !projectExists) {
+    return (
+      <NotFoundPage
+        kind="project"
+        backTo="/projects"
+        backLabel="Back to projects"
+      />
+    )
   }
 
   const meta = getProjectMeta(slug)

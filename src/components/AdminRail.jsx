@@ -12,6 +12,7 @@ const MENU = [
   { to: '/pages', label: 'Pages' },
   { to: '/customize', label: 'Customize' },
   { to: '/tools', label: 'Tools' },
+  { to: adminRoutes.qa, label: 'QA' },
   { to: adminRoutes.settings, label: 'Settings' },
   { to: '/users', label: 'Users' },
 ]

@@ -23,6 +23,7 @@ const ADMIN_PREFIXES = [
   '/podcasts',
   '/draft',
   '/review',
+  '/qa',
   '/overrides',
 ]
 
