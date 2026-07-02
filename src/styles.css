@@ -17193,6 +17193,19 @@ button.print-lab-half-fold-panel__label:focus-visible {
     margin: 0;
   }
 }
+
+@media print {
+  body:has(.print-page),
+  .print-page {
+    page: public-article-print;
+  }
+
+  @page public-article-print {
+    size: letter portrait;
+    margin: 0.65in;
+  }
+}
+
 /* PROJECT_CARD_CONTAINMENT_FIX */
 .projects-index-page,
 .project-page {

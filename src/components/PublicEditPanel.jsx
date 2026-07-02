@@ -105,7 +105,7 @@ export function PublicEditPanel() {
             {saveState === 'saving' ? 'Saving...' : 'Save'}
           </button>
           <button className="button" type="button" onClick={() => exitEditor({ discard: hasDraftChanges })}>
-            Cancel / Exit
+            {hasDraftChanges ? 'Exit without saving' : 'Exit'}
           </button>
         </div>
       </div>
