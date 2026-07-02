@@ -7,6 +7,10 @@ import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/
 import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { splitDisplayTitle } from '../lib/content'
 import { buildPublicPostPath } from '../lib/publicSiteRouting'
+import { EditableText } from './EditableText'
+import { editableContentRegistry } from '../lib/editableContentRegistry'
+import { getConfiguredText } from '../lib/publicConfig'
+import { useResolvedConfig } from '../lib/useResolvedConfig'
 function resolveCanonicalSlug(piece) {
   return String(
     piece?.slug ||
@@ -110,7 +114,29 @@ function normalizePiece(piece) {
   }
 }
 
-function ArchiveCard({ item, featured = false }) {
+function HighlightText({ text, query }) {
+  const value = String(text || '')
+  const needle = String(query || '').trim()
+  if (!needle) return value
+
+  const lower = value.toLowerCase()
+  const lowerNeedle = needle.toLowerCase()
+  const parts = []
+  let index = 0
+  let matchIndex = lower.indexOf(lowerNeedle, index)
+
+  while (matchIndex >= 0) {
+    if (matchIndex > index) parts.push(value.slice(index, matchIndex))
+    parts.push(<mark key={`${matchIndex}-${lowerNeedle}`}>{value.slice(matchIndex, matchIndex + needle.length)}</mark>)
+    index = matchIndex + needle.length
+    matchIndex = lower.indexOf(lowerNeedle, index)
+  }
+
+  if (index < value.length) parts.push(value.slice(index))
+  return parts
+}
+
+function ArchiveCard({ item, featured = false, query = '', readLabel = 'Read', printLabel = 'Print' }) {
   const [hideImage, setHideImage] = useState(false)
   const hasImage = item.imageUrl && !hideImage
 
@@ -131,18 +157,20 @@ function ArchiveCard({ item, featured = false }) {
           <div className="archive-card__image archive-card__image--fallback" />
         )}
         <div className="archive-card__overlay">
-          <h2 className="archive-card__title">{item.title}</h2>
+          <h2 className="archive-card__title"><HighlightText text={item.title} query={query} /></h2>
         </div>
       </Link>
       <div className="archive-card__actions">
-        <Link className="button button--primary" to={item.href}>Read</Link>
-        <Link className="button" to={`${item.href}/print`}>Print</Link>
+        <Link className="button button--primary" to={item.href}>{readLabel}</Link>
+        <Link className="button" to={`${item.href}/print`}>{printLabel}</Link>
       </div>
     </article>
   )
 }
 
 export function PublicSearchPage({ pieces = [] }) {
+  const archiveCopy = editableContentRegistry.archive
+  const resolvedConfig = useResolvedConfig()
   const [searchParams, setSearchParams] = useSearchParams()
   const [query, setQuery] = useState('')
   const initialFormat = searchParams.get('format') || searchParams.get('type') || 'all'
@@ -202,6 +230,7 @@ export function PublicSearchPage({ pieces = [] }) {
         item.excerpt,
         item.project,
         item.type,
+        item.rawType,
         item.publishedDateLabel,
       ]
         .join(' ')
@@ -228,6 +257,14 @@ export function PublicSearchPage({ pieces = [] }) {
     return [...new Set(normalized.map((item) => item.project).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b))
   }, [normalized])
+
+  const readLabel = getConfiguredText(resolvedConfig, archiveCopy.readLabel.field, archiveCopy.readLabel.defaultText)
+  const printLabel = getConfiguredText(resolvedConfig, archiveCopy.printLabel.field, archiveCopy.printLabel.defaultText)
+  const loadMoreLabel = getConfiguredText(resolvedConfig, archiveCopy.loadMoreLabel.field, archiveCopy.loadMoreLabel.defaultText)
+  const clearFiltersLabel = getConfiguredText(resolvedConfig, archiveCopy.clearFiltersLabel.field, archiveCopy.clearFiltersLabel.defaultText)
+  const recentLabel = getConfiguredText(resolvedConfig, archiveCopy.recentLabel.field, archiveCopy.recentLabel.defaultText)
+  const allProjectsLabel = getConfiguredText(resolvedConfig, archiveCopy.allProjectsLabel.field, archiveCopy.allProjectsLabel.defaultText)
+  const countLabel = getConfiguredText(resolvedConfig, archiveCopy.countLabel.field, archiveCopy.countLabel.defaultText)
 
   useEffect(() => {
     const nextFormat = searchParams.get('format') || searchParams.get('type') || 'all'
@@ -265,18 +302,30 @@ export function PublicSearchPage({ pieces = [] }) {
     setSearchParams(next, { replace: true })
   }
 
+  function clearArchiveFilters() {
+    setQuery('')
+    setActiveFilter('all')
+    setProjectFilter('all')
+    setVisibleCount(24)
+    setSearchParams(new URLSearchParams(), { replace: true })
+  }
+
   return (
     <main className="page public-search-page archive-page">
       <PublicationTopbar />
 
       <section className="project-hero archive-page__hero">
-        <div className="project-hero__eyebrow">archive / browse / publication</div>
-        <h1>Archive</h1>
-        <p className="project-hero__description">
-          Browse articles, dispatches, podcasts, and print material from across the publication. Search still works, but browsing comes first.
-        </p>
+        <EditableText as="div" className="project-hero__eyebrow" field={archiveCopy.eyebrow.field}>
+          {archiveCopy.eyebrow.defaultText}
+        </EditableText>
+        <EditableText as="h1" field={archiveCopy.title.field}>
+          {archiveCopy.title.defaultText}
+        </EditableText>
+        <EditableText as="p" className="project-hero__description" field={archiveCopy.body.field} multiline>
+          {archiveCopy.body.defaultText}
+        </EditableText>
         <div className="project-hero__meta">
-          <span>{normalized.length} pieces</span>
+          <span>{normalized.length} {countLabel}</span>
         </div>
       </section>
 
@@ -298,7 +347,9 @@ export function PublicSearchPage({ pieces = [] }) {
         </div>
 
         <label className="archive-search-control">
-          <span>Search the archive</span>
+          <EditableText as="span" field={archiveCopy.searchLabel.field}>
+            {archiveCopy.searchLabel.defaultText}
+          </EditableText>
           <input
             type="text"
             value={query}
@@ -306,15 +357,17 @@ export function PublicSearchPage({ pieces = [] }) {
               setQuery(e.target.value)
               setVisibleCount(24)
             }}
-            placeholder="Title, project, excerpt..."
+            placeholder={getConfiguredText(resolvedConfig, archiveCopy.searchPlaceholder.field, archiveCopy.searchPlaceholder.defaultText)}
           />
         </label>
 
         {projectOptions.length ? (
           <label className="archive-search-control">
-            <span>Project</span>
+            <EditableText as="span" field={archiveCopy.projectLabel.field}>
+              {archiveCopy.projectLabel.defaultText}
+            </EditableText>
             <select value={projectFilter} onChange={(event) => updateProjectFilter(event.target.value)}>
-              <option value="all">All projects</option>
+              <option value="all">{allProjectsLabel}</option>
               {projectOptions.map((project) => (
                 <option key={project} value={project}>{project}</option>
               ))}
@@ -325,14 +378,14 @@ export function PublicSearchPage({ pieces = [] }) {
 
       {featured ? (
         <section className="archive-featured">
-          <ArchiveCard item={featured} featured />
+          <ArchiveCard item={featured} featured query={query} readLabel={readLabel} printLabel={printLabel} />
         </section>
       ) : null}
 
       <section className="archive-results">
         <div className="archive-results__header">
           <div className="archive-results__eyebrow">
-            {activeFilter === 'all' ? 'recent archive' : `${activeFilter} archive`}
+            {activeFilter === 'all' ? recentLabel : `${activeFilter} archive`}
           </div>
           <p className="archive-results__summary">
             {filtered.length} result{filtered.length === 1 ? '' : 's'}
@@ -343,13 +396,22 @@ export function PublicSearchPage({ pieces = [] }) {
         {results.length ? (
           <div className="archive-card-grid">
             {results.map((item) => (
-              <ArchiveCard key={item.id} item={item} />
+              <ArchiveCard key={item.id} item={item} query={query} readLabel={readLabel} printLabel={printLabel} />
             ))}
           </div>
         ) : (
           <section className="missing-state">
-            <h2>No archive results</h2>
-            <p>Try a different filter or a broader search term.</p>
+            <EditableText as="h2" field={archiveCopy.emptyTitle.field}>
+              {archiveCopy.emptyTitle.defaultText}
+            </EditableText>
+            <EditableText as="p" field={archiveCopy.emptyBody.field}>
+              {archiveCopy.emptyBody.defaultText}
+            </EditableText>
+            <div className="archive-empty-actions">
+              <button className="button" type="button" onClick={clearArchiveFilters}>
+                {clearFiltersLabel}
+              </button>
+            </div>
           </section>
         )}
 
@@ -360,7 +422,7 @@ export function PublicSearchPage({ pieces = [] }) {
               className="button button--primary"
               onClick={() => setVisibleCount((count) => count + 24)}
             >
-              Load more
+              {loadMoreLabel}
             </button>
           </div>
         ) : null}

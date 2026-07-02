@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from './AdminAuthContext'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
+import { editableContentRegistry } from '../lib/editableContentRegistry'
+import { getConfiguredText } from '../lib/publicConfig'
+import { useResolvedConfig } from '../lib/useResolvedConfig'
 
 function getReturnTo(search = '') {
   const params = new URLSearchParams(search)
@@ -11,6 +14,8 @@ function getReturnTo(search = '') {
 }
 
 export function LoginPage() {
+  const loginCopy = editableContentRegistry.login
+  const resolvedConfig = useResolvedConfig()
   const location = useLocation()
   const navigate = useNavigate()
   const { isAuthenticated, isChecking, login, authError } = useAdminAuth()
@@ -18,6 +23,13 @@ export function LoginPage() {
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const returnTo = useMemo(() => getReturnTo(location.search), [location.search])
+  const title = getConfiguredText(resolvedConfig, loginCopy.title.field, loginCopy.title.defaultText)
+  const body = getConfiguredText(resolvedConfig, loginCopy.body.field, loginCopy.body.defaultText)
+  const tokenLabel = getConfiguredText(resolvedConfig, loginCopy.tokenLabel.field, loginCopy.tokenLabel.defaultText)
+  const emptyError = getConfiguredText(resolvedConfig, loginCopy.emptyError.field, loginCopy.emptyError.defaultText)
+  const rejectedError = getConfiguredText(resolvedConfig, loginCopy.rejectedError.field, loginCopy.rejectedError.defaultText)
+  const submitLabel = getConfiguredText(resolvedConfig, loginCopy.submitLabel.field, loginCopy.submitLabel.defaultText)
+  const checkingLabel = getConfiguredText(resolvedConfig, loginCopy.checkingLabel.field, loginCopy.checkingLabel.defaultText)
 
   if (isAuthenticated) return <Navigate to={returnTo} replace />
 
@@ -26,7 +38,7 @@ export function LoginPage() {
     setSubmitError('')
 
     if (!token.trim()) {
-      setSubmitError('Enter the admin token.')
+      setSubmitError(emptyError)
       return
     }
 
@@ -39,18 +51,18 @@ export function LoginPage() {
       return
     }
 
-    setSubmitError('That token was not accepted.')
+    setSubmitError(rejectedError)
   }
 
   return (
     <main className="page admin-login-page">
       <section className="admin-login-panel" aria-labelledby="admin-login-title">
         <img className="admin-login-panel__logo" src={mastheadLogo} alt="Sabot Media" />
-        <h1 id="admin-login-title">Editor Login</h1>
-        <p>Enter the admin token to access backstage tools and live editing.</p>
+        <h1 id="admin-login-title">{title}</h1>
+        <p>{body}</p>
         <form onSubmit={handleSubmit}>
           <label>
-            <span>Admin token</span>
+            <span>{tokenLabel}</span>
             <input
               autoComplete="current-password"
               autoFocus
@@ -61,7 +73,7 @@ export function LoginPage() {
           </label>
           {submitError || authError ? <p className="admin-login-panel__error">{submitError || authError}</p> : null}
           <button className="button button--primary" type="submit" disabled={isSubmitting || isChecking}>
-            {isSubmitting || isChecking ? 'Checking...' : 'Log in'}
+            {isSubmitting || isChecking ? checkingLabel : submitLabel}
           </button>
         </form>
       </section>

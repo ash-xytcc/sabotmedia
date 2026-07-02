@@ -3,26 +3,46 @@ import { useEffect } from 'react'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { setDocumentMeta } from '../lib/documentMeta'
+import { EditableText } from './EditableText'
+import { editableContentRegistry } from '../lib/editableContentRegistry'
+import { getConfiguredText } from '../lib/publicConfig'
+import { useResolvedConfig } from '../lib/useResolvedConfig'
 
 const COPY = {
   page: {
+    titleField: editableContentRegistry.notFound.pageTitle.field,
+    bodyField: editableContentRegistry.notFound.pageBody.field,
     title: 'Page not found',
     body: 'That page does not exist, moved, or was never published.',
   },
   post: {
+    titleField: editableContentRegistry.notFound.postTitle.field,
+    bodyField: editableContentRegistry.notFound.postBody.field,
     title: 'Post not found',
     body: 'This post is not published, does not exist, or is still saving.',
   },
   project: {
+    titleField: editableContentRegistry.notFound.projectTitle.field,
+    bodyField: editableContentRegistry.notFound.projectBody.field,
     title: 'Project not found',
     body: 'That project archive does not exist or is not public.',
   },
 }
 
 export function NotFoundPage({ kind = 'page', title = '', body = '', backTo = '/archive', backLabel = 'Back to archive' }) {
+  const resolvedConfig = useResolvedConfig()
+  const notFoundCopy = editableContentRegistry.notFound
   const copy = COPY[kind] || COPY.page
-  const heading = title || copy.title
-  const message = body || copy.body
+  const configuredTitle = getConfiguredText(resolvedConfig, copy.titleField, copy.title)
+  const configuredBody = getConfiguredText(resolvedConfig, copy.bodyField, copy.body)
+  const heading = title || configuredTitle
+  const message = body || configuredBody
+  const resolvedBackLabel = getConfiguredText(
+    resolvedConfig,
+    backTo === '/projects' ? notFoundCopy.projectsLabel.field : notFoundCopy.archiveLabel.field,
+    backLabel
+  )
+  const homeLabel = getConfiguredText(resolvedConfig, notFoundCopy.homeLabel.field, notFoundCopy.homeLabel.defaultText)
 
   useEffect(() => {
     setDocumentMeta({
@@ -33,15 +53,21 @@ export function NotFoundPage({ kind = 'page', title = '', body = '', backTo = '/
   }, [heading, message])
 
   return (
-    <main className="page not-found-page" aria-labelledby="not-found-title">
+    <main className="page not-found-page">
       <PublicationTopbar />
       <section className="missing-state not-found-page__body">
-        <p className="project-hero__eyebrow">404</p>
-        <h1 id="not-found-title">{heading}</h1>
-        <p>{message}</p>
+        <EditableText as="p" className="project-hero__eyebrow" field={notFoundCopy.eyebrow.field}>
+          {notFoundCopy.eyebrow.defaultText}
+        </EditableText>
+        <EditableText as="h1" field={copy.titleField}>
+          {heading}
+        </EditableText>
+        <EditableText as="p" field={copy.bodyField}>
+          {message}
+        </EditableText>
         <div className="not-found-page__actions">
-          <Link className="button button--primary" to={backTo}>{backLabel}</Link>
-          <Link className="button" to="/">Home</Link>
+          <Link className="button button--primary" to={backTo}>{resolvedBackLabel}</Link>
+          <Link className="button" to="/">{homeLabel}</Link>
         </div>
       </section>
       <PublicationFooter />

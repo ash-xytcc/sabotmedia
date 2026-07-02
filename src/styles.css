@@ -7629,6 +7629,22 @@ a {
   object-fit: contain;
 }
 
+
+/* OVERNIGHT_MATURITY_PASS */
+
+.archive-card__title mark {
+  background: rgba(211, 166, 44, 0.92);
+  color: #090909;
+  padding: 0 0.08em;
+}
+
+.archive-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 .publication-footer__brand h2 {
   font-size: 2rem;
   margin-bottom: 0.5rem;

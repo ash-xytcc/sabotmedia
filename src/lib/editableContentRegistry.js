@@ -52,6 +52,167 @@ export const editableContentRegistry = {
       },
     ],
   },
+  home: {
+    loadingTitle: {
+      field: 'home.loading.title',
+      defaultText: 'Loading recent posts',
+    },
+    loadingBody: {
+      field: 'home.loading.body',
+      defaultText: 'Pulling together the latest published material.',
+    },
+    emptyTitle: {
+      field: 'home.empty.title',
+      defaultText: 'No recent pieces available',
+    },
+    emptyBody: {
+      field: 'home.empty.body',
+      defaultText: 'Publish native entries or confirm the imported archive is loaded.',
+    },
+    errorTitle: {
+      field: 'home.error.title',
+      defaultText: 'Recent posts unavailable',
+    },
+    nextLabel: {
+      field: 'home.next.label',
+      defaultText: 'Next',
+    },
+  },
+  archive: {
+    eyebrow: {
+      field: 'archive.hero.eyebrow',
+      defaultText: 'archive / browse / publication',
+    },
+    title: {
+      field: 'archive.hero.title',
+      defaultText: 'Archive',
+    },
+    body: {
+      field: 'archive.hero.body',
+      defaultText:
+        'Browse articles, dispatches, podcasts, and print material from across the publication. Search still works, but browsing comes first.',
+    },
+    countLabel: {
+      field: 'archive.hero.countLabel',
+      defaultText: 'pieces',
+    },
+    searchLabel: {
+      field: 'archive.search.label',
+      defaultText: 'Search the archive',
+    },
+    searchPlaceholder: {
+      field: 'archive.search.placeholder',
+      defaultText: 'Title, project, excerpt, format...',
+    },
+    projectLabel: {
+      field: 'archive.project.label',
+      defaultText: 'Project',
+    },
+    allProjectsLabel: {
+      field: 'archive.project.allLabel',
+      defaultText: 'All projects',
+    },
+    recentLabel: {
+      field: 'archive.results.recentLabel',
+      defaultText: 'recent archive',
+    },
+    emptyTitle: {
+      field: 'archive.empty.title',
+      defaultText: 'No archive results',
+    },
+    emptyBody: {
+      field: 'archive.empty.body',
+      defaultText: 'Try a different filter, a broader search term, or clear the project filter.',
+    },
+    loadMoreLabel: {
+      field: 'archive.loadMore.label',
+      defaultText: 'Load more',
+    },
+    clearFiltersLabel: {
+      field: 'archive.clearFilters.label',
+      defaultText: 'Clear filters',
+    },
+    readLabel: {
+      field: 'archive.card.readLabel',
+      defaultText: 'Read',
+    },
+    printLabel: {
+      field: 'archive.card.printLabel',
+      defaultText: 'Print',
+    },
+  },
+  notFound: {
+    eyebrow: {
+      field: 'notFound.eyebrow',
+      defaultText: '404',
+    },
+    pageTitle: {
+      field: 'notFound.page.title',
+      defaultText: 'Page not found',
+    },
+    pageBody: {
+      field: 'notFound.page.body',
+      defaultText: 'That page does not exist, moved, or was never published.',
+    },
+    postTitle: {
+      field: 'notFound.post.title',
+      defaultText: 'Post not found',
+    },
+    postBody: {
+      field: 'notFound.post.body',
+      defaultText: 'This post is not published, does not exist, or is still saving.',
+    },
+    projectTitle: {
+      field: 'notFound.project.title',
+      defaultText: 'Project not found',
+    },
+    projectBody: {
+      field: 'notFound.project.body',
+      defaultText: 'That project archive does not exist or is not public.',
+    },
+    homeLabel: {
+      field: 'notFound.actions.homeLabel',
+      defaultText: 'Home',
+    },
+    archiveLabel: {
+      field: 'notFound.actions.archiveLabel',
+      defaultText: 'Back to archive',
+    },
+    projectsLabel: {
+      field: 'notFound.actions.projectsLabel',
+      defaultText: 'Back to projects',
+    },
+  },
+  login: {
+    title: {
+      field: 'login.title',
+      defaultText: 'Editor Login',
+    },
+    body: {
+      field: 'login.body',
+      defaultText: 'Enter the admin token to access backstage tools and live editing.',
+    },
+    tokenLabel: {
+      field: 'login.tokenLabel',
+      defaultText: 'Admin token',
+    },
+    emptyError: {
+      field: 'login.emptyError',
+      defaultText: 'Enter the admin token.',
+    },
+    rejectedError: {
+      field: 'login.rejectedError',
+      defaultText: 'That token was not accepted.',
+    },
+    submitLabel: {
+      field: 'login.submitLabel',
+      defaultText: 'Log in',
+    },
+    checkingLabel: {
+      field: 'login.checkingLabel',
+      defaultText: 'Checking...',
+    },
+  },
   about: {
     eyebrow: {
       field: 'info.about.eyebrow',

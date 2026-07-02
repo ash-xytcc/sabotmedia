@@ -7,6 +7,10 @@ import { PublicationFooter } from './PublicationFooter'
 import { splitDisplayTitle } from '../lib/content'
 import { PublicationTopbar } from './PublicationTopbar'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
+import { EditableText } from './EditableText'
+import { editableContentRegistry } from '../lib/editableContentRegistry'
+import { getConfiguredText } from '../lib/publicConfig'
+import { useResolvedConfig } from '../lib/useResolvedConfig'
 
 function formatDate(value) {
   const d = new Date(value || '')
@@ -177,6 +181,8 @@ function RecentCard({ item }) {
 }
 
 export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] }) {
+  const homeCopy = editableContentRegistry.home
+  const resolvedConfig = useResolvedConfig()
   const [nativeItems, setNativeItems] = useState([])
   const [state, setState] = useState('loading')
   const [error, setError] = useState('')
@@ -235,6 +241,7 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
   const recentItems = mergedFeed.filter((item) => item.id !== featuredItem?.id).slice(0, homepageSettings.postsPerPage)
 
   const usingArchiveFallback = !nativeItems.length && !!archiveFeed.featured
+  const nextLabel = getConfiguredText(resolvedConfig, homeCopy.nextLabel.field, homeCopy.nextLabel.defaultText)
 
   return (
     <main className="page publication-homepage">
@@ -244,7 +251,9 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
 
       {error && !usingArchiveFallback ? (
         <section className="missing-state">
-          <h1>Recent posts unavailable</h1>
+          <EditableText as="h1" field={homeCopy.errorTitle.field}>
+            {homeCopy.errorTitle.defaultText}
+          </EditableText>
           <p>{error}</p>
         </section>
       ) : null}
@@ -263,7 +272,7 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
 
               <section className="publication-next-row">
                 <Link className="publication-next-link" to="/archive">
-                  Next →
+                  {nextLabel} →
                 </Link>
               </section>
             </>
@@ -271,13 +280,21 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
         </>
       ) : state === 'loading' ? (
         <section className="missing-state">
-          <h1>Loading recent posts</h1>
-          <p>Pulling together the latest published material.</p>
+          <EditableText as="h1" field={homeCopy.loadingTitle.field}>
+            {homeCopy.loadingTitle.defaultText}
+          </EditableText>
+          <EditableText as="p" field={homeCopy.loadingBody.field}>
+            {homeCopy.loadingBody.defaultText}
+          </EditableText>
         </section>
       ) : (
         <section className="missing-state">
-          <h1>No recent pieces available</h1>
-          <p>Either publish some native entries or make sure the imported archive is loaded.</p>
+          <EditableText as="h1" field={homeCopy.emptyTitle.field}>
+            {homeCopy.emptyTitle.defaultText}
+          </EditableText>
+          <EditableText as="p" field={homeCopy.emptyBody.field}>
+            {homeCopy.emptyBody.defaultText}
+          </EditableText>
         </section>
       )}
 
