@@ -32,7 +32,7 @@ export async function onRequestGet(context) {
     const status = url.searchParams.get('status') || ''
     const target = url.searchParams.get('target') || ''
     const workflowState = url.searchParams.get('workflowState') || ''
-    const includeFuture = permission.canEdit || url.searchParams.get('includeFuture') === '1'
+    const includeFuture = permission.canEdit && url.searchParams.get('includeFuture') === '1'
 
     if (!hasDb(context)) {
       return json({

@@ -30,6 +30,10 @@ npm run import:wordpress -- sabotmedia.WordPress.2026-04-21.xml
 npm run dev
 ```
 
+## Admin access
+
+Live editing, CMS routes, media tools, and Printlab admin routes require the `SABOT_ADMIN_TOKEN` environment variable in production. Editors sign in at `/login` or `/wp-login` with that token. Public visitors can read, search, and print without logging in.
+
 If your XML file lives somewhere else:
 
 ```bash

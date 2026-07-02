@@ -3,6 +3,7 @@ import { clearStoredPublicConfig, getStoredPublicConfig, mergePublicConfig, setS
 import { getPublicConfigPermissions, loadPublicConfigPayload, savePublicConfigPayload } from '../lib/publicConfigApi'
 import { buildPublicConfigPayload } from '../lib/publicDraftExport'
 import { normalizePublicConfig } from '../lib/publicConfigSchema'
+import { useAdminAuth } from './AdminAuthContext'
 
 const STORAGE_KEY = 'sabot-public-edit-draft-v2'
 const PublicEditContext = createContext(null)
@@ -32,7 +33,8 @@ function toDraftShape(config) {
 
 export function PublicEditProvider({ children }) {
   const [isEditing, setIsEditing] = useState(false)
-  const [isAdmin] = useState(true)
+  const { isAuthenticated } = useAdminAuth()
+  const isAdmin = isAuthenticated
   const [canSave, setCanSave] = useState(false)
   const [backendMode, setBackendMode] = useState('unknown')
   const [selectedField, setSelectedField] = useState(null)
@@ -110,6 +112,14 @@ export function PublicEditProvider({ children }) {
   }
 
   useEffect(() => {
+    if (!isAdmin) {
+      setCanSave(false)
+      setPermissionState('idle')
+      setPermissionError('')
+      reloadFromBackend()
+      return
+    }
+
     let cancelled = false
 
     async function boot() {
@@ -141,7 +151,13 @@ export function PublicEditProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isAdmin])
+
+  useEffect(() => {
+    if (isAdmin) return
+    setIsEditing(false)
+    setSelectedField(null)
+  }, [isAdmin])
 
   useEffect(() => {
     function handleKeyDown(e) {
@@ -194,8 +210,10 @@ export function PublicEditProvider({ children }) {
   const hasDraftChanges = changedFields.length > 0
 
   const startEditing = useCallback(() => {
+    if (!isAdmin) return false
     setIsEditing(true)
-  }, [])
+    return true
+  }, [isAdmin])
 
   const value = useMemo(() => ({
     isEditing,

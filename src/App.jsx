@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { HomePage } from './components/HomePage'
 import { PiecePage } from './components/PiecePage'
@@ -22,6 +22,8 @@ import { PublicationLandingPage, PublicationReaderPage, PublicationsIndexPage } 
 import { PublicEditProvider, usePublicEdit } from './components/PublicEditContext'
 import { PublicEditPanel } from './components/PublicEditPanel'
 import { PublicAdminToolbar } from './components/PublicAdminToolbar'
+import { AdminAuthProvider, useAdminAuth } from './components/AdminAuthContext'
+import { LoginPage } from './components/LoginPage'
 import { EditableText } from './components/EditableText'
 import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/content'
 import { getPieces } from './lib/pieces'
@@ -95,7 +97,9 @@ function ScrollToTop() {
 
 function Layout({ children }) {
   const { isEditing, setSelectedField, startEditing } = usePublicEdit()
+  const { isAuthenticated } = useAdminAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const bareShell = shouldUseBareShell(location.pathname)
   const isHomepage = location.pathname === '/'
 
@@ -110,9 +114,14 @@ function Layout({ children }) {
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     if (params.get('edit') === 'site') {
-      startEditing()
+      if (isAuthenticated) {
+        startEditing()
+      } else {
+        const returnTo = `${location.pathname}${location.search || ''}${location.hash || ''}`
+        navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`, { replace: true })
+      }
     }
-  }, [location.search, startEditing])
+  }, [isAuthenticated, location.hash, location.pathname, location.search, navigate, startEditing])
 
   useEffect(() => {
     const root = document.documentElement
@@ -169,14 +178,43 @@ function Layout({ children }) {
   )
 }
 
+function ProtectedRoute({ children }) {
+  const location = useLocation()
+  const { isAuthenticated, isChecking } = useAdminAuth()
+
+  if (isChecking) {
+    return (
+      <main className="page admin-login-page">
+        <section className="admin-login-panel">
+          <p className="admin-login-panel__eyebrow">Sabot Media</p>
+          <h1>Checking Access</h1>
+        </section>
+      </main>
+    )
+  }
+
+  if (!isAuthenticated) {
+    const returnTo = `${location.pathname}${location.search || ''}${location.hash || ''}`
+    return <Navigate to={`/login?returnTo=${encodeURIComponent(returnTo)}`} replace />
+  }
+
+  return children
+}
+
+function protect(element) {
+  return <ProtectedRoute>{element}</ProtectedRoute>
+}
 
 export default function App() {
   return (
-    <PublicEditProvider>
-      <AdminNoticeProvider>
+    <AdminAuthProvider>
+      <PublicEditProvider>
+        <AdminNoticeProvider>
       <ScrollToTop />
       <Layout>
         <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/wp-login" element={<LoginPage />} />
           <Route path="/" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
           <Route path="/projects" element={<ProjectsIndexPage projectMap={projectMap} />} />
           <Route path="/projects/:slug" element={<ProjectPage pieces={pieces} />} />
@@ -186,40 +224,49 @@ export default function App() {
           <Route path="/post/:slug/print" element={<PrintPage pieces={pieces} />} />
           <Route path={publicRoutes.print} element={<PrintPage pieces={pieces} />} />
           <Route path="/piece/:slug/print" element={<LegacyPrintRedirect />} />
-          <Route path="/review" element={<ReviewQueuePage pieces={pieces} />} />
-          <Route path="/admin" element={<AdminPage pieces={pieces} />} />
-          <Route path={adminRoutes.dashboard} element={<AdminPage pieces={pieces} />} />
-          <Route path="/content" element={<ContentListPage />} />
-          <Route path="/posts" element={<ContentListPage />} />
-          <Route path={adminRoutes.posts} element={<ContentListPage />} />
-          <Route path="/add-new" element={<Navigate to="/native-bridge?new=article" replace />} />
-          <Route path="/post-new" element={<Navigate to="/native-bridge?new=article" replace />} />
-          <Route path="/wp-admin/post-new.php" element={<Navigate to="/native-bridge?new=article" replace />} />
-          <Route path="/overrides" element={<OverridesPage />} />
-          <Route path="/media" element={<Navigate to={adminRoutes.media} replace />} />
-          <Route path={adminRoutes.media} element={<MediaLibraryPage />} />
-          <Route path={adminRoutes.projects} element={<ProjectsIndexPage projectMap={projectMap} />} />
-          <Route path="/pages" element={<PagesAdminPage />} />
-          <Route path="/users" element={<UsersAdminPage />} />
-          <Route path="/menus" element={<Navigate to="/customize?section=navigation" replace />} />
-          <Route path="/customize" element={<CustomizeAdminPage />} />
-          <Route path="/site-editor" element={<Navigate to="/tools#advanced-draft-tools" replace />} />
-          <Route path="/advanced-draft-tools" element={<SiteEditorAdminPage />} />
-          <Route path="/tools" element={<ToolsAdminPage />} />
-          <Route path="/printlab" element={<Navigate to={adminRoutes.printlab} replace />} />
-          <Route path={adminRoutes.printlab} element={<PrintLabPage pieces={pieces} />} />
-          <Route path="/tools/print" element={<Navigate to={adminRoutes.printlab} replace />} />
-          <Route path="/settings" element={<Navigate to={adminRoutes.settings} replace />} />
-          <Route path={adminRoutes.settings} element={<SettingsAdminPage />} />
-          <Route path="/settings/social" element={<Navigate to={adminRoutes.settings} replace />} />
-          <Route path="/settings/sites" element={<SitesAdminPage />} />
-          <Route path="/sites" element={<SitesAdminPage />} />
-        <Route path="/podcasts" element={<PodcastAdminPage pieces={pieces} />} />
-        <Route path="/podcasts/settings" element={<PodcastSettingsPage />} />
-        <Route path="/native-bridge" element={<NativeContentBridgePage />} />
+          <Route path="/review" element={protect(<ReviewQueuePage pieces={pieces} />)} />
+          <Route path="/admin" element={protect(<AdminPage pieces={pieces} />)} />
+          <Route path={adminRoutes.dashboard} element={protect(<AdminPage pieces={pieces} />)} />
+          <Route path="/content" element={protect(<ContentListPage />)} />
+          <Route path="/posts" element={protect(<ContentListPage />)} />
+          <Route path={adminRoutes.posts} element={protect(<ContentListPage />)} />
+          <Route path="/add-new" element={protect(<Navigate to="/native-bridge?new=article" replace />)} />
+          <Route path="/post-new" element={protect(<Navigate to="/native-bridge?new=article" replace />)} />
+          <Route path="/wp-admin/post-new.php" element={protect(<Navigate to="/native-bridge?new=article" replace />)} />
+          <Route path="/overrides" element={protect(<OverridesPage />)} />
+          <Route path="/media" element={protect(<Navigate to={adminRoutes.media} replace />)} />
+          <Route path={adminRoutes.media} element={protect(<MediaLibraryPage />)} />
+          <Route path={adminRoutes.projects} element={protect(<ProjectsIndexPage projectMap={projectMap} />)} />
+          <Route path="/pages" element={protect(<PagesAdminPage />)} />
+          <Route path="/users" element={protect(<UsersAdminPage />)} />
+          <Route path="/menus" element={protect(<Navigate to="/customize?section=navigation" replace />)} />
+          <Route path="/customize" element={protect(<CustomizeAdminPage />)} />
+          <Route path="/site-editor" element={protect(<Navigate to="/tools#advanced-draft-tools" replace />)} />
+          <Route path="/advanced-draft-tools" element={protect(<SiteEditorAdminPage />)} />
+          <Route path="/tools" element={protect(<ToolsAdminPage />)} />
+          <Route path="/printlab" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
+          <Route path={adminRoutes.printlab} element={protect(<PrintLabPage pieces={pieces} />)} />
+          <Route path="/tools/print" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
+          <Route path="/settings" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
+          <Route path={adminRoutes.settings} element={protect(<SettingsAdminPage />)} />
+          <Route path="/settings/social" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
+          <Route path="/settings/sites" element={protect(<SitesAdminPage />)} />
+          <Route path="/sites" element={protect(<SitesAdminPage />)} />
+          <Route path="/admin/*" element={protect(<Navigate to={adminRoutes.dashboard} replace />)} />
+          <Route path="/wp-admin/*" element={protect(<Navigate to={adminRoutes.dashboard} replace />)} />
+          <Route path="/content/*" element={protect(<Navigate to={adminRoutes.posts} replace />)} />
+          <Route path="/media/*" element={protect(<Navigate to={adminRoutes.media} replace />)} />
+          <Route path="/customize/*" element={protect(<CustomizeAdminPage />)} />
+          <Route path="/settings/*" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
+          <Route path="/tools/*" element={protect(<ToolsAdminPage />)} />
+          <Route path="/printlab/*" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
+          <Route path="/native-bridge/*" element={protect(<NativeContentBridgePage />)} />
+        <Route path="/podcasts" element={protect(<PodcastAdminPage pieces={pieces} />)} />
+        <Route path="/podcasts/settings" element={protect(<PodcastSettingsPage />)} />
+        <Route path="/native-bridge" element={protect(<NativeContentBridgePage />)} />
         <Route path="/updates" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
         <Route path="/updates/:slug" element={<NativeUpdateDetailPage />} />
-        <Route path="/native-preview/:id" element={<NativeDraftPreviewPage />} />
+        <Route path="/native-preview/:id" element={protect(<NativeDraftPreviewPage />)} />
         <Route path="/press" element={<PublicSurfacePage target="press" />} />
         <Route path="/publications" element={<PublicationsIndexPage />} />
         <Route path="/publications/:slug" element={<PublicationLandingPage />} />
@@ -231,11 +278,12 @@ export default function App() {
         <Route path="/support" element={<PublicInfoPage page="support" />} />
         <Route path="/archive" element={<PublicSearchPage pieces={pieces} />} />
         <Route path="/search" element={<PublicSearchPage pieces={pieces} />} />
-          <Route path="/draft" element={<PublicDraftPage />} />
+          <Route path="/draft" element={protect(<PublicDraftPage />)} />
         </Routes>
       </Layout>
-      </AdminNoticeProvider>
-    </PublicEditProvider>
+        </AdminNoticeProvider>
+      </PublicEditProvider>
+    </AdminAuthProvider>
   )
 }
 

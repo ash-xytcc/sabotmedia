@@ -1,6 +1,7 @@
 import { useMemo, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { usePublicEdit } from './PublicEditContext'
+import { useAdminAuth } from './AdminAuthContext'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 
@@ -9,9 +10,14 @@ export function PublicAdminToolbar() {
   const location = useLocation()
 
   const [nativeItems, setNativeItems] = useState([])
+  const { isAuthenticated, logout } = useAdminAuth()
 
   useEffect(() => {
     let cancelled = false
+    if (!isAuthenticated) {
+      setNativeItems([])
+      return () => { cancelled = true }
+    }
     loadNativeCollection({ includeFuture: 1 })
       .then((items) => {
         if (!cancelled) setNativeItems(Array.isArray(items) ? items : [])
@@ -20,12 +26,16 @@ export function PublicAdminToolbar() {
         if (!cancelled) setNativeItems([])
       })
     return () => { cancelled = true }
-  }, [])
+  }, [isAuthenticated])
   const { isEditing, canSave, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
   const [canUseToolbar, setCanUseToolbar] = useState(false)
 
   useEffect(() => {
     let cancelled = false
+    if (!isAuthenticated) {
+      setCanUseToolbar(false)
+      return () => { cancelled = true }
+    }
 
     async function loadPermissions() {
       try {
@@ -40,7 +50,7 @@ export function PublicAdminToolbar() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [isAuthenticated])
 
   useEffect(() => {
     if (!canUseToolbar) return
@@ -61,7 +71,7 @@ export function PublicAdminToolbar() {
     return `${location.pathname}?${params.toString()}`
   }, [location.pathname, location.search])
 
-  if (!canUseToolbar || isEditing) return null
+  if (!isAuthenticated || !canUseToolbar || isEditing) return null
 
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
@@ -76,6 +86,7 @@ export function PublicAdminToolbar() {
         <a className="wp-public-admin-bar__item" href={editSiteLink}>Edit Site</a>
       </div>
       <div className="wp-public-admin-bar__right">
+        <button className="wp-public-admin-bar__item" type="button" onClick={logout}>Logout</button>
         {canSave && changedFields.length ? (
           <>
             <span className="wp-public-admin-bar__status">{changedFields.length} unsaved</span>
