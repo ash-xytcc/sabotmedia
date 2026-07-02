@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
@@ -138,6 +138,23 @@ function HighlightText({ text, query }) {
   return parts
 }
 
+function scoreSearchResult(item, query) {
+  const q = String(query || '').trim().toLowerCase()
+  if (!q) return 0
+  const title = String(item.title || '').toLowerCase()
+  const project = String(item.project || '').toLowerCase()
+  const type = String(item.type || '').toLowerCase()
+  const excerpt = String(item.excerpt || '').toLowerCase()
+  let score = 0
+  if (title === q) score += 100
+  if (title.startsWith(q)) score += 60
+  if (title.includes(q)) score += 40
+  if (project.includes(q)) score += 25
+  if (type.includes(q)) score += 12
+  if (excerpt.includes(q)) score += 8
+  return score
+}
+
 function ArchiveCard({ item, featured = false, query = '', readLabel = 'Read', printLabel = 'Print' }) {
   const [hideImage, setHideImage] = useState(false)
   const hasImage = item.imageUrl && !hideImage
@@ -166,6 +183,9 @@ function ArchiveCard({ item, featured = false, query = '', readLabel = 'Read', p
         <Link className="button button--primary" to={item.href}>{readLabel}</Link>
         <Link className="button" to={`${item.href}/print`}>{printLabel}</Link>
       </div>
+      {item.excerpt ? (
+        <p className="archive-card__excerpt"><HighlightText text={item.excerpt} query={query} /></p>
+      ) : null}
     </article>
   )
 }
@@ -174,12 +194,13 @@ export function PublicSearchPage({ pieces = [] }) {
   const archiveCopy = editableContentRegistry.archive
   const resolvedConfig = useResolvedConfig()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(searchParams.get('q') || '')
   const initialFormat = searchParams.get('format') || searchParams.get('type') || 'all'
   const [activeFilter, setActiveFilter] = useState(FILTERS.some((filter) => filter.key === initialFormat) ? initialFormat : 'all')
   const [projectFilter, setProjectFilter] = useState(searchParams.get('project') || 'all')
   const [visibleCount, setVisibleCount] = useState(24)
   const [nativePieces, setNativePieces] = useState([])
+  const searchInputRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -215,7 +236,7 @@ export function PublicSearchPage({ pieces = [] }) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
 
-    return normalized.filter((item) => {
+    const matches = normalized.filter((item) => {
       const filterPass =
         activeFilter === 'all'
           ? true
@@ -240,6 +261,9 @@ export function PublicSearchPage({ pieces = [] }) {
 
       return haystack.includes(q)
     })
+
+    if (!q) return matches
+    return matches.sort((a, b) => scoreSearchResult(b, q) - scoreSearchResult(a, q) || new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0))
   }, [normalized, activeFilter, projectFilter, query])
 
   const featured = filtered[0] || null
@@ -270,7 +294,24 @@ export function PublicSearchPage({ pieces = [] }) {
       setProjectFilter(nextProject)
       setVisibleCount(24)
     }
-  }, [activeFilter, projectFilter, searchParams])
+    const nextQuery = searchParams.get('q') || ''
+    if (nextQuery !== query) {
+      setQuery(nextQuery)
+      setVisibleCount(24)
+    }
+  }, [activeFilter, projectFilter, query, searchParams])
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key !== '/') return
+      const active = document.activeElement
+      if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName)) return
+      event.preventDefault()
+      searchInputRef.current?.focus()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   function updateFilter(filterKey) {
     setActiveFilter(filterKey)
@@ -341,11 +382,16 @@ export function PublicSearchPage({ pieces = [] }) {
             {archiveCopy.searchLabel.defaultText}
           </EditableText>
           <input
+            ref={searchInputRef}
             type="text"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
               setVisibleCount(24)
+              const next = new URLSearchParams(searchParams)
+              if (e.target.value.trim()) next.set('q', e.target.value)
+              else next.delete('q')
+              setSearchParams(next, { replace: true })
             }}
             placeholder={getConfiguredText(resolvedConfig, archiveCopy.searchPlaceholder.field, archiveCopy.searchPlaceholder.defaultText)}
           />

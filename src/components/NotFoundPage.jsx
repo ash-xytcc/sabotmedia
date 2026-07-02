@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'
-import { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { setDocumentMeta } from '../lib/documentMeta'
@@ -30,6 +30,8 @@ const COPY = {
 }
 
 export function NotFoundPage({ kind = 'page', title = '', body = '', backTo = '/archive', backLabel = 'Back to archive' }) {
+  const navigate = useNavigate()
+  const [query, setQuery] = useState('')
   const resolvedConfig = useResolvedConfig()
   const notFoundCopy = editableContentRegistry.notFound
   const copy = COPY[kind] || COPY.page
@@ -69,6 +71,22 @@ export function NotFoundPage({ kind = 'page', title = '', body = '', backTo = '/
           <Link className="button button--primary" to={backTo}>{resolvedBackLabel}</Link>
           <Link className="button" to="/">{homeLabel}</Link>
         </div>
+        <form className="not-found-search" role="search" onSubmit={(event) => {
+          event.preventDefault()
+          navigate(query.trim() ? `/archive?q=${encodeURIComponent(query.trim())}` : '/archive')
+        }}>
+          <label>
+            <span>Search the archive</span>
+            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search Sabot Media" />
+          </label>
+          <button className="button" type="submit">Search</button>
+        </form>
+        <nav className="not-found-useful-links" aria-label="Useful links">
+          <Link to="/archive">Archive</Link>
+          <Link to="/collections">Collections</Link>
+          <Link to="/publications">Publications</Link>
+          <Link to="/about">About</Link>
+        </nav>
       </section>
       <PublicationFooter />
     </main>

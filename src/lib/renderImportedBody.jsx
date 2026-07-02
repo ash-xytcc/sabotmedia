@@ -9,6 +9,22 @@ function renderInlineHTML(tag, className, html, key) {
   return <Tag key={key} className={className} dangerouslySetInnerHTML={{ __html: html }} />
 }
 
+function renderHeading(tag, className, node, key) {
+  const Tag = tag
+  const id = node.getAttribute('id') || slugifyHeading(node.textContent || key)
+  return <Tag key={key} id={id} className={className} dangerouslySetInnerHTML={{ __html: node.innerHTML || '' }} />
+}
+
+function slugifyHeading(value = '') {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'section'
+}
+
 function normalizeHref(href = '') {
   const value = String(href || '').trim()
   if (!value) return '#'
@@ -107,18 +123,18 @@ function renderNode(node, mode, key) {
       return renderInlineHTML('p', 'post-body__paragraph', html, key)
 
     case 'h1':
-      return renderInlineHTML('h1', 'post-body__heading post-body__heading--1', html, key)
+      return renderHeading('h1', 'post-body__heading post-body__heading--1', node, key)
 
     case 'h2':
-      return renderInlineHTML('h2', 'post-body__heading post-body__heading--2', html, key)
+      return renderHeading('h2', 'post-body__heading post-body__heading--2', node, key)
 
     case 'h3':
-      return renderInlineHTML('h3', 'post-body__heading post-body__heading--3', html, key)
+      return renderHeading('h3', 'post-body__heading post-body__heading--3', node, key)
 
     case 'h4':
     case 'h5':
     case 'h6':
-      return renderInlineHTML('h4', 'post-body__heading post-body__heading--4', html, key)
+      return renderHeading('h4', 'post-body__heading post-body__heading--4', node, key)
 
     case 'blockquote':
       return (

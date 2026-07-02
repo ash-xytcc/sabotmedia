@@ -13,6 +13,17 @@ import { normalizePost } from '../models/publication'
 import { renderPost } from '../renderers'
 import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
 import { buildPostMeta, setDocumentMeta } from '../lib/documentMeta'
+import { loadCollectionsAsync } from '../lib/collections'
+import { loadPublicationsAsync } from '../lib/publications'
+import {
+  estimateReadingTimeFromHtml,
+  extractArticleEnhancements,
+  getPodcastAudioUrl,
+  getRelatedArticles,
+  getRelatedCollections,
+  getRelatedPublications,
+  setStructuredArticleData,
+} from '../lib/publicExperience'
 
 const MODE_STORAGE_KEY = 'sabot.postMode'
 
@@ -79,6 +90,9 @@ export function PiecePage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [searchParams] = useSearchParams()
   const [nativePieces, setNativePieces] = useState(null)
+  const [collections, setCollections] = useState([])
+  const [publications, setPublications] = useState([])
+  const [readingProgress, setReadingProgress] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -96,6 +110,17 @@ export function PiecePage({ pieces = [] }) {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    loadCollectionsAsync().then((loaded) => {
+      if (!cancelled) setCollections(loaded)
+    })
+    loadPublicationsAsync().then((loaded) => {
+      if (!cancelled) setPublications(loaded)
+    })
+    return () => { cancelled = true }
   }, [])
 
   const wordpressFeed = useWordPressPieces(pieces)
@@ -157,6 +182,13 @@ export function PiecePage({ pieces = [] }) {
     () => renderImportedBody(renderData?.bodyHtml || piece?.bodyHtml || '', mode),
     [piece?.bodyHtml, renderData, mode]
   )
+  const articleHtml = renderData?.bodyHtml || piece?.bodyHtml || piece?.body || ''
+  const readingTime = useMemo(() => estimateReadingTimeFromHtml(articleHtml, piece?.excerpt || ''), [articleHtml, piece?.excerpt])
+  const enhancements = useMemo(() => extractArticleEnhancements(articleHtml), [articleHtml])
+  const podcastAudioUrl = useMemo(() => getPodcastAudioUrl(piece || {}), [piece])
+  const relatedArticles = useMemo(() => getRelatedArticles(piece || {}, orderedPieces, 4), [piece, orderedPieces])
+  const relatedCollections = useMemo(() => getRelatedCollections(piece || {}, collections, orderedPieces, 3), [piece, collections, orderedPieces])
+  const relatedPublications = useMemo(() => getRelatedPublications(piece || {}, publications, 3), [piece, publications])
   const categoryLabel = renderData?.eyebrow || piece?.primaryProject || piece?.type || 'general'
   const headerMetaItems = useMemo(() => {
     if (!piece) return []
@@ -171,7 +203,29 @@ export function PiecePage({ pieces = [] }) {
   useEffect(() => {
     if (!piece || !titleText) return
     setDocumentMeta(buildPostMeta({ ...piece, title: titleText, featuredImage: heroImage || piece.featuredImage }, { path: `/post/${piece.slug}` }))
+    setStructuredArticleData({ ...piece, title: titleText }, { url: `/post/${piece.slug}`, image: heroImage || piece.featuredImage })
   }, [piece, titleText, heroImage])
+
+  useEffect(() => {
+    function updateProgress() {
+      const article = document.querySelector('.piece-body-wrap--public-post')
+      if (!article) {
+        setReadingProgress(0)
+        return
+      }
+      const rect = article.getBoundingClientRect()
+      const total = Math.max(1, rect.height - window.innerHeight)
+      const read = Math.min(total, Math.max(0, -rect.top))
+      setReadingProgress(Math.round((read / total) * 100))
+    }
+    updateProgress()
+    window.addEventListener('scroll', updateProgress, { passive: true })
+    window.addEventListener('resize', updateProgress)
+    return () => {
+      window.removeEventListener('scroll', updateProgress)
+      window.removeEventListener('resize', updateProgress)
+    }
+  }, [piece?.slug])
 
   if (!piece && nativePieces === null) {
     return (
@@ -206,13 +260,16 @@ export function PiecePage({ pieces = [] }) {
 
   return (
     <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
+      <div className="reading-progress" aria-hidden="true">
+        <span style={{ width: `${readingProgress}%` }} />
+      </div>
       <PublicationTopbar />
 
       <section className={`piece-article-lead piece-article-lead--${featuredTitleDisplay} piece-article-lead--${titleLengthClass}${heroImage ? ' piece-article-lead--image' : ' piece-article-lead--fallback'}`} aria-label={titleText}>
         {featuredTitleDisplay === 'hidden' && heroImage ? <h1 className="screen-reader-only">{titleText}</h1> : null}
         {heroImage ? (
           <figure className="piece-article-lead__figure">
-            <img className="piece-article-lead__image" src={heroImage} alt="" />
+            <img className="piece-article-lead__image" src={heroImage} alt={piece.featuredImageAlt || titleText} />
             {featuredTitleDisplay === 'overlay' ? (
               <figcaption className="piece-article-lead__overlay">
                 <h1>{titleText}</h1>
@@ -239,6 +296,7 @@ export function PiecePage({ pieces = [] }) {
               {headerMetaItems.map((item) => (
                 <span key={item}>{item}</span>
               ))}
+              <span>{readingTime} min read</span>
             </div>
           ) : null}
 
@@ -251,12 +309,39 @@ export function PiecePage({ pieces = [] }) {
       </section>
 
       <section className="piece-layout">
+        <aside className="public-reading-tools" aria-label="Article tools">
+          {enhancements.headings.length ? (
+            <nav className="public-reading-card public-reading-toc" aria-label="Table of contents">
+              <h2>Contents</h2>
+              {enhancements.headings.slice(0, 8).map((heading) => (
+                <a className={`public-reading-toc__item public-reading-toc__item--${heading.level}`} href={`#${heading.id}`} key={`${heading.id}-${heading.text}`}>
+                  {heading.text}
+                </a>
+              ))}
+            </nav>
+          ) : null}
+          {podcastAudioUrl ? (
+            <section className="public-reading-card public-podcast-player" aria-label="Podcast player">
+              <h2>Listen</h2>
+              <audio controls preload="metadata" src={podcastAudioUrl} />
+              <a href={podcastAudioUrl}>Download audio</a>
+            </section>
+          ) : null}
+        </aside>
         <article className="piece-body-wrap piece-body-wrap--public-post">
           <div className="piece-body__content">
             {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{displayExcerpt || ''}</p>}
           </div>
         </article>
       </section>
+
+      <ArticleEnhancementSections
+        piece={piece}
+        enhancements={enhancements}
+        relatedArticles={relatedArticles}
+        relatedCollections={relatedCollections}
+        relatedPublications={relatedPublications}
+      />
 
       <section className="piece-nav">
         <div className="piece-nav-grid">
@@ -278,5 +363,137 @@ export function PiecePage({ pieces = [] }) {
 
       <PublicationFooter />
     </main>
+  )
+}
+
+function ArticleEnhancementSections({ piece, enhancements, relatedArticles, relatedCollections, relatedPublications }) {
+  const relatedPrintLinks = Array.isArray(piece?.relatedPrintLinks) ? piece.relatedPrintLinks : []
+  const assetDownloads = (piece?.relatedAssets || []).filter((asset) => asset?.url && /download|pdf|audio|image|asset/i.test(`${asset.kind || ''} ${asset.type || ''}`))
+  const downloads = [
+    ...enhancements.downloads,
+    ...relatedPrintLinks.map((item, index) => ({ id: `print-${index}`, title: item.title || item.label || 'Print asset', url: item.url || item.href || '', type: item.type || 'Print' })),
+    ...assetDownloads.map((item, index) => ({ id: `asset-${index}`, title: item.title || 'Download', url: item.url, type: item.kind || item.type || 'Asset' })),
+  ].filter((item) => item.url)
+  const transcript = piece?.podcastTranscript || piece?.fullTranscript || ''
+  const showAny =
+    downloads.length ||
+    enhancements.footnotes.length ||
+    enhancements.sources.length ||
+    enhancements.timeline.length ||
+    enhancements.locations.length ||
+    transcript ||
+    relatedArticles.length ||
+    relatedCollections.length ||
+    relatedPublications.length
+
+  if (!showAny) return null
+
+  return (
+    <section className="public-experience-sections" aria-label="Article extras">
+      {transcript ? (
+        <details className="public-experience-panel public-transcript">
+          <summary>Transcript</summary>
+          <div className="public-transcript__body">{transcript}</div>
+        </details>
+      ) : null}
+
+      {downloads.length ? (
+        <section className="public-experience-panel">
+          <h2>Downloads</h2>
+          <div className="public-download-grid">
+            {downloads.map((download) => (
+              <a className="public-download-card" href={download.url} key={`${download.id}-${download.url}`} target="_blank" rel="noopener noreferrer">
+                <strong>{download.title || 'Download'}</strong>
+                <span>{download.type || 'File'}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {enhancements.timeline.length ? (
+        <section className="public-experience-panel">
+          <h2>Timeline</h2>
+          <div className="public-timeline-block">
+            {enhancements.timeline.map((item) => (
+              <article key={item.id}>
+                <time>{item.date}</time>
+                <h3>{item.title || item.text}</h3>
+                {item.title ? <p>{item.text}</p> : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {enhancements.locations.length ? (
+        <section className="public-experience-panel">
+          <h2>Locations</h2>
+          <div className="public-map-grid">
+            {enhancements.locations.map((location) => (
+              <article className="public-location-card" key={location.id}>
+                <h3>{location.title}</h3>
+                <p>{location.location}</p>
+                {location.lat && location.lng ? (
+                  <a href={`https://www.openstreetmap.org/?mlat=${location.lat}&mlon=${location.lng}#map=12/${location.lat}/${location.lng}`} target="_blank" rel="noopener noreferrer">
+                    Open map
+                  </a>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {enhancements.sources.length ? (
+        <section className="public-experience-panel">
+          <h2>Sources</h2>
+          <div className="public-source-list">
+            {enhancements.sources.map((source) => (
+              <article className="public-source-block" key={source.id}>
+                <h3>{source.title}</h3>
+                <p>{source.text}</p>
+                {source.url ? <a href={source.url} target="_blank" rel="noopener noreferrer">Source link</a> : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {enhancements.footnotes.length ? (
+        <section className="public-experience-panel">
+          <h2>Footnotes</h2>
+          <ol className="public-footnotes">
+            {enhancements.footnotes.map((note) => <li key={note.id}>{note.text}</li>)}
+          </ol>
+        </section>
+      ) : null}
+
+      {(relatedArticles.length || relatedCollections.length || relatedPublications.length) ? (
+        <section className="public-experience-panel">
+          <h2>Related</h2>
+          <div className="public-related-grid">
+            {relatedArticles.map((item) => (
+              <Link className="public-related-card" to={`/post/${item.slug}`} key={`article-${item.slug}`}>
+                <span>Article</span>
+                <strong>{splitDisplayTitle(item).title || item.title}</strong>
+              </Link>
+            ))}
+            {relatedCollections.map((collection) => (
+              <Link className="public-related-card" to={`/collections/${collection.slug}`} key={`collection-${collection.id}`}>
+                <span>Collection</span>
+                <strong>{collection.title}</strong>
+              </Link>
+            ))}
+            {relatedPublications.map((publication) => (
+              <Link className="public-related-card" to={`/publications/${publication.slug}`} key={`publication-${publication.id}`}>
+                <span>Publication</span>
+                <strong>{publication.title}</strong>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </section>
   )
 }
