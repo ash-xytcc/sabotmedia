@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
+import mastheadLogo from '../assets/sabot-masthead-logo.png'
 
 export function AppHeader() {
   return (
     <header className="app-header">
       <Link className="brand" to="/">
-        <span className="brand-kicker">Sabot</span>
-        <span className="brand-title">Media</span>
+        <img src={mastheadLogo} alt="Sabot Media" className="brand-image" />
       </Link>
       <nav className="header-nav" aria-label="Primary">
         <a href="#drops">Drops</a>

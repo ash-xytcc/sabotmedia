@@ -1,6 +1,7 @@
 import { EditableLink } from './EditableLink'
 import { EditableText } from './EditableText'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
+import mastheadLogo from '../assets/sabot-masthead-logo.png'
 
 export function PublicationFooter() {
   const footer = editableContentRegistry.footer
@@ -9,6 +10,11 @@ export function PublicationFooter() {
     <footer className="publication-footer">
       <div className="publication-footer__top">
         <div className="publication-footer__brand">
+          <img
+            src={mastheadLogo}
+            alt="Sabot Media"
+            className="publication-footer__brand-logo"
+          />
           <EditableText as="div" className="publication-footer__eyebrow" field={footer.eyebrow.field}>
             {footer.eyebrow.defaultText}
           </EditableText>
