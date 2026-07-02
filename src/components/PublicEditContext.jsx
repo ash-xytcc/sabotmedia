@@ -115,6 +115,10 @@ export function PublicEditProvider({ children }) {
 
   useEffect(() => {
     function handleKeyDown(e) {
+      const active = document.activeElement
+      const isTextInput = active?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(active?.tagName)
+      if (isTextInput) return
+
       if (e.key === 'Escape') {
         setSelectedField(null)
         setIsEditing(false)

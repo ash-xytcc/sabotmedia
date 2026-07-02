@@ -40,14 +40,21 @@ export function EditableText({ as: Tag = 'div', className = '', children, field 
       style={style}
       contentEditable={isEditing && isAdmin}
       suppressContentEditableWarning
+      spellCheck={isEditing && isAdmin}
+      tabIndex={isEditing && isAdmin ? 0 : undefined}
+      title={isEditing && isAdmin ? 'Click and type to edit' : undefined}
       onClick={(e) => {
         if (!isEditing || !isAdmin) return
         e.stopPropagation()
         setSelectedField(field)
       }}
+      onFocus={() => {
+        if (!isEditing || !isAdmin) return
+        setSelectedField(field)
+      }}
       onInput={(e) => {
         if (!isEditing || !isAdmin) return
-        updateText(field, e.currentTarget.textContent || '')
+        updateText(field, e.currentTarget.innerText || e.currentTarget.textContent || '')
       }}
     >
       {configuredText || children}

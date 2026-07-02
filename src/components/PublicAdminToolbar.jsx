@@ -21,7 +21,7 @@ export function PublicAdminToolbar() {
       })
     return () => { cancelled = true }
   }, [])
-  const { canSave, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
+  const { isEditing, canSave, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
   const [canUseToolbar, setCanUseToolbar] = useState(false)
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export function PublicAdminToolbar() {
     return `${location.pathname}?${params.toString()}`
   }, [location.pathname, location.search])
 
-  if (!canUseToolbar) return null
+  if (!canUseToolbar || isEditing) return null
 
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
