@@ -12,6 +12,21 @@ function getPieceBySlug(pieces, slug) {
   return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
 }
 
+function formatMetaType(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  return raw.charAt(0).toUpperCase() + raw.slice(1)
+}
+
+function getTitleLengthClass(value) {
+  const title = String(value || '').trim()
+  const wordCount = title.split(/\s+/).filter(Boolean).length
+  if (title.length > 72 || wordCount > 10) return 'title-length-xl'
+  if (title.length > 48 || wordCount > 7) return 'title-length-long'
+  if (title.length > 28 || wordCount > 4) return 'title-length-medium'
+  return 'title-length-short'
+}
+
 export function PrintPage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [nativePieces, setNativePieces] = useState([])
@@ -54,6 +69,14 @@ export function PrintPage({ pieces = [] }) {
   const post = attachPostAssets(normalizePost(piece))
   const printDocument = printEngine.render(post, { layout: printLayout, options: printOptions })
   const bodyNodes = renderImportedBody(printDocument.bodyHtml || '', 'print')
+  const titleText = printDocument.title || piece.title || piece.slug
+  const titleLengthClass = getTitleLengthClass(titleText)
+  const printMetaItems = [
+    printDocument.eyebrow,
+    'Sabot Media',
+    formatMetaType(piece.type || post.kind),
+    printDocument.publishedDateLabel,
+  ].map((item) => String(item || '').trim()).filter(Boolean)
 
   const handleToggle = (key) => (event) => {
     const checked = Boolean(event?.target?.checked)
@@ -70,26 +93,33 @@ export function PrintPage({ pieces = [] }) {
         <fieldset className="print-header__controls" aria-label="print layout options">
           <label><input type="checkbox" checked={printOptions.showMetadata} onChange={handleToggle('showMetadata')} /> Show metadata</label>
           <label><input type="checkbox" checked={printOptions.showFeaturedImage} onChange={handleToggle('showFeaturedImage')} /> Show featured image</label>
-          <label><input type="checkbox" checked={printOptions.showExcerpt} onChange={handleToggle('showExcerpt')} /> Show excerpt</label>
           <label><input type="checkbox" checked={printOptions.showColophon} onChange={handleToggle('showColophon')} /> Show colophon</label>
         </fieldset>
-
-        <div className="print-header__eyebrow">{printDocument.eyebrow}</div>
-        <h1>{printDocument.title || piece.slug}</h1>
-        {printOptions.showExcerpt && printDocument.excerpt ? (
-          <p>{printDocument.excerpt}</p>
-        ) : null}
-        <div className="print-header__meta">
-          <span>{printDocument.author}</span>
-          {printDocument.publishedDateLabel ? <span>{printDocument.publishedDateLabel}</span> : null}
-        </div>
       </header>
 
-      {printOptions.showFeaturedImage && printDocument.hero?.url ? (
-        <section className="print-hero">
-          <img className="print-hero__image" src={printDocument.hero.url} alt={printDocument.title || piece.slug} />
-        </section>
-      ) : null}
+      <section className={`print-article-lead print-article-lead--${titleLengthClass}${printDocument.hero?.url ? ' print-article-lead--image' : ' print-article-lead--fallback'}`}>
+        {printDocument.hero?.url ? (
+          <figure className="print-article-lead__figure">
+            <img className="print-article-lead__image" src={printDocument.hero.url} alt="" />
+            <figcaption className="print-article-lead__overlay">
+              <h1>{titleText}</h1>
+            </figcaption>
+          </figure>
+        ) : (
+          <div className="print-article-lead__fallback">
+            <div className="print-article-lead__eyebrow">{printDocument.eyebrow}</div>
+            <h1>{titleText}</h1>
+          </div>
+        )}
+
+        {printOptions.showMetadata && printMetaItems.length ? (
+          <div className="print-article-lead__meta">
+            {printMetaItems.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        ) : null}
+      </section>
 
       <section className="print-wrap">
         <div className="piece-body__content">
