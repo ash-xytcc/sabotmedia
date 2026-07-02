@@ -1,7 +1,6 @@
 export const editableContentRegistry = {
   nav: [
     { id: 'archive', labelField: 'nav.archive.label', hrefField: 'nav.archive.href', defaultLabel: 'Archive', defaultHref: '/archive' },
-    { id: 'projects', labelField: 'nav.projects.label', hrefField: 'nav.projects.href', defaultLabel: 'Projects', defaultHref: '/projects' },
     { id: 'about', labelField: 'nav.about.label', hrefField: 'nav.about.href', defaultLabel: 'About', defaultHref: '/about' },
   ],
   footer: {
@@ -30,7 +29,6 @@ export const editableContentRegistry = {
         links: [
           { id: 'home', labelField: 'footer.site.home.label', hrefField: 'footer.site.home.href', defaultLabel: 'Home', defaultHref: '/' },
           { id: 'archive', labelField: 'footer.site.archive.label', hrefField: 'footer.site.archive.href', defaultLabel: 'Archive', defaultHref: '/archive' },
-          { id: 'projects', labelField: 'footer.site.projects.label', hrefField: 'footer.site.projects.href', defaultLabel: 'Projects', defaultHref: '/projects' },
           { id: 'about', labelField: 'footer.site.about.label', hrefField: 'footer.site.about.href', defaultLabel: 'About', defaultHref: '/about' },
           { id: 'security', labelField: 'footer.site.security.label', hrefField: 'footer.site.security.href', defaultLabel: 'Security', defaultHref: '/security' },
           { id: 'contact', labelField: 'footer.site.contact.label', hrefField: 'footer.site.contact.href', defaultLabel: 'Contact', defaultHref: '/contact' },
@@ -90,7 +88,7 @@ export const editableContentRegistry = {
     body: {
       field: 'archive.hero.body',
       defaultText:
-        'Browse articles, dispatches, podcasts, and print material from across the publication. Search still works, but browsing comes first.',
+        'Search and filter the full Sabot Media archive by project, format, and keyword.',
     },
     countLabel: {
       field: 'archive.hero.countLabel',
@@ -111,6 +109,14 @@ export const editableContentRegistry = {
     allProjectsLabel: {
       field: 'archive.project.allLabel',
       defaultText: 'All projects',
+    },
+    formatLabel: {
+      field: 'archive.format.label',
+      defaultText: 'Format',
+    },
+    allFormatsLabel: {
+      field: 'archive.format.allLabel',
+      defaultText: 'All formats',
     },
     recentLabel: {
       field: 'archive.results.recentLabel',
@@ -229,7 +235,6 @@ export const editableContentRegistry = {
     },
     actions: [
       { id: 'archive', labelField: 'info.about.actions.archive.label', hrefField: 'info.about.actions.archive.href', defaultLabel: 'Browse archive', defaultHref: '/archive' },
-      { id: 'projects', labelField: 'info.about.actions.projects.label', hrefField: 'info.about.actions.projects.href', defaultLabel: 'View projects', defaultHref: '/projects' },
     ],
   },
   contact: {
@@ -286,7 +291,7 @@ export const editableContentRegistry = {
     },
     actions: [
       { id: 'zines', labelField: 'info.support.actions.zines.label', hrefField: 'info.support.actions.zines.href', defaultLabel: 'Print material', defaultHref: '/archive?format=zine' },
-      { id: 'projects', labelField: 'info.support.actions.projects.label', hrefField: 'info.support.actions.projects.href', defaultLabel: 'Projects', defaultHref: '/projects' },
+      { id: 'archive', labelField: 'info.support.actions.archive.label', hrefField: 'info.support.actions.archive.href', defaultLabel: 'Browse archive', defaultHref: '/archive' },
     ],
   },
   security: {

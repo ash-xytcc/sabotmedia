@@ -6,7 +6,7 @@ import { fetchNativeEntries } from '../lib/nativePublicContentApi'
 const CORE_ROUTES = [
   ['Home', '/'],
   ['Archive', '/archive'],
-  ['Projects', '/projects'],
+  ['Archive project filter', '/archive?project=The%20Communique'],
   ['About', '/about'],
   ['Contact', '/contact'],
   ['Submit', '/submit'],
@@ -26,7 +26,7 @@ const MANUAL_STEPS = [
   'Open /archive, click a post, and confirm the page starts at the top.',
   'Open /piece/{known-slug} and confirm it redirects to /post/{known-slug}.',
   'Open a missing /post/{bad-slug} and confirm the friendly not-found page appears.',
-  'Open a missing /project/{bad-slug} and confirm the friendly not-found page appears.',
+  'Open /project/{known-slug} and confirm it redirects to the Archive project filter.',
   'Run a keyboard pass: Tab reaches skip link, nav, cards, buttons, and forms with visible focus.',
   'Print a public article and confirm controls are hidden in browser print preview.',
   'Save an editable public page change, reload, and confirm it persists.',

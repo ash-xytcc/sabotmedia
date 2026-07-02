@@ -8,7 +8,6 @@ function buildPages() {
     { id: 'home', title: 'Home', path: '/' },
     { id: 'archive', title: 'Archive', path: '/archive' },
     { id: 'press', title: 'Press', path: '/press' },
-    { id: 'projects', title: 'Projects', path: '/projects' },
   ]
 
   const fromTargets = listSurfaceConfigs().map((target) => ({

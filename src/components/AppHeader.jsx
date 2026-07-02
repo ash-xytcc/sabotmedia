@@ -8,9 +8,8 @@ export function AppHeader() {
         <img src={mastheadLogo} alt="Sabot Media" className="brand-image" />
       </Link>
       <nav className="header-nav" aria-label="Primary">
-        <a href="#drops">Drops</a>
-        <a href="#projects">Projects</a>
-        <a href="#about">About</a>
+        <Link to="/archive">Archive</Link>
+        <Link to="/about">About</Link>
       </nav>
     </header>
   )

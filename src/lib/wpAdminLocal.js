@@ -6,7 +6,6 @@ const USER_ROLES_KEY = 'sabot-wp-clone-user-roles-v1'
 export const DEFAULT_MENU_ITEMS = [
   { id: 'archive', label: 'Archive', to: '/archive' },
   { id: 'press', label: 'Press', to: '/press' },
-  { id: 'projects', label: 'Projects', to: '/projects' },
 ]
 
 export const DEFAULT_SETTINGS = {

@@ -9359,37 +9359,6 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
   border-bottom: 1px solid var(--sabot-border);
 }
 
-.archive-filter-bar__filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.archive-filter-chip {
-  appearance: none;
-  border: 1px solid rgba(211,166,44,0.22);
-  background: rgba(255,255,255,0.02);
-  color: var(--sabot-ink);
-  padding: 0.65rem 0.85rem;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.8rem;
-}
-
-.archive-filter-chip.is-active,
-.archive-filter-chip:hover,
-.archive-filter-chip:focus-visible {
-  background: #dbc8aa;
-  color: #111;
-  border-color: rgba(219,200,170,0.82);
-}
-
-.archive-filter-chip__count {
-  margin-left: 0.55rem;
-  opacity: 0.78;
-}
-
 .archive-search-control {
   display: grid;
   gap: 0.45rem;
@@ -9408,6 +9377,16 @@ body:has(.system-backup-page) footer:not(.publication-footer) {
   color: var(--sabot-ink);
   min-height: 2.9rem;
   padding: 0.7rem 0.85rem;
+}
+
+.archive-search-control select {
+  width: 100%;
+  min-height: 2.9rem;
+  border: 1px solid var(--sabot-border);
+  background: var(--sabot-panel);
+  color: var(--sabot-ink);
+  padding: 0.7rem 0.85rem;
+  font: inherit;
 }
 
 .archive-featured {
@@ -17053,13 +17032,6 @@ button.print-lab-half-fold-panel__label:focus-visible {
   padding: 0.45rem 0.7rem;
   font-size: 0.82rem;
   text-transform: uppercase;
-}
-
-.archive-search-control select {
-  min-height: 2.35rem;
-  border: 1px solid var(--sabot-border, rgba(219, 200, 170, 0.22));
-  background: rgba(255, 255, 255, 0.92);
-  color: #1d2327;
 }
 
 .public-press-kit {

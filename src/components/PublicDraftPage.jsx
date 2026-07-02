@@ -21,7 +21,6 @@ const SITE_PAGES = [
   { label: 'Home', path: '/' },
   { label: 'Archive', path: '/archive' },
   { label: 'Press', path: '/press' },
-  { label: 'Projects', path: '/projects' },
 ]
 
 const SITE_SECTIONS = ['Masthead', 'Navigation', 'Homepage layout', 'Public surfaces']

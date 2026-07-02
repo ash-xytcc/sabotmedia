@@ -10,12 +10,13 @@ import { PublicationFooter } from './PublicationFooter'
 function ProjectIndexCard({ project }) {
   const meta = getProjectMeta(project.slug)
   const theme = getProjectTheme(project.slug)
+  const archiveHref = `/archive?project=${encodeURIComponent(project.name || meta.name)}`
 
   return (
     <article className={`project-index-card ${theme.className}`}>
       <div className="project-index-card__eyebrow">{theme.accent}</div>
       <h2>
-        <Link to={`/projects/${project.slug}`}>{meta.name}</Link>
+        <Link to={archiveHref}>{meta.name}</Link>
       </h2>
       <p className="project-index-card__description">{meta.description}</p>
       <div className="project-index-card__meta">
@@ -23,8 +24,8 @@ function ProjectIndexCard({ project }) {
         <span>archive view</span>
       </div>
       <div className="project-index-card__actions">
-        <Link className="button button--primary" to={`/projects/${project.slug}`}>
-          enter project
+        <Link className="button button--primary" to={archiveHref}>
+          filter archive
         </Link>
       </div>
     </article>

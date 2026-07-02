@@ -1,9 +1,8 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useEffect } from 'react'
 import { HomePage } from './components/HomePage'
 import { PiecePage } from './components/PiecePage'
 import { PrintPage } from './components/PrintPage'
-import { ProjectPage } from './components/ProjectPage'
 import { ProjectsIndexPage } from './components/ProjectsIndexPage'
 import { ReviewQueuePage } from './components/ReviewQueuePage'
 import { AdminPage } from './components/AdminPage'
@@ -141,7 +140,7 @@ function RouteMeta({ pieces = [] }) {
       '/': ['Sabot Media', 'Independent reporting, essays, comics, podcasts, zines, and project-based archive work.'],
       '/archive': ['Archive', 'Browse the Sabot Media archive by search, project, format, and date.'],
       '/search': ['Search', 'Search the Sabot Media archive.'],
-      '/projects': ['Projects', 'Browse Sabot Media project archives and publishing lanes.'],
+      '/projects': ['Archive', 'Search and filter the full Sabot Media archive by project, format, and keyword.'],
       '/about': ['About', 'About Sabot Media and its public-interest media work.'],
       '/contact': ['Contact', 'Contact Sabot Media.'],
       '/submit': ['Submit', 'Submit tips, documents, writing, art, or project ideas to Sabot Media.'],
@@ -300,9 +299,9 @@ export default function App() {
           <Route path="/wp-login" element={<LoginPage />} />
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="/" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
-          <Route path="/projects" element={<ProjectsIndexPage projectMap={projectMap} />} />
-          <Route path="/projects/:slug" element={<ProjectPage pieces={pieces} />} />
-          <Route path={publicRoutes.project} element={<ProjectPage pieces={pieces} />} />
+          <Route path="/projects" element={<Navigate to="/archive" replace />} />
+          <Route path="/projects/:slug" element={<ProjectArchiveRedirect projectMap={projectMap} />} />
+          <Route path={publicRoutes.project} element={<ProjectArchiveRedirect projectMap={projectMap} />} />
           <Route path="/piece/:slug" element={<LegacyPieceRedirect />} />
           <Route path={publicRoutes.post} element={<PiecePage pieces={pieces} />} />
           <Route path="/post/:slug/print" element={<PrintPage pieces={pieces} />} />
@@ -396,6 +395,13 @@ function LegacyPrintRedirect() {
   const location = useLocation()
   const slug = location.pathname.replace(/^\/piece\//, '').replace(/\/print\/?$/, '')
   return <Navigate to={`/post/${slug}/print${location.search || ''}`} replace />
+}
+
+function ProjectArchiveRedirect({ projectMap = [] }) {
+  const { slug = '' } = useParams()
+  const match = projectMap.find((project) => project.slug === slug)
+  const projectValue = match?.name || getProjectMeta(slug).name || slug
+  return <Navigate to={`/archive?project=${encodeURIComponent(projectValue)}`} replace />
 }
 
 function LegacyNativeBridgeRedirect() {

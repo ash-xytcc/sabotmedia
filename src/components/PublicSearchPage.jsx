@@ -5,7 +5,7 @@ import { PublicationFooter } from './PublicationFooter'
 import { getImportedImage } from '../lib/getImportedImage'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
 import { useWordPressPieces } from '../lib/useWordPressPieces'
-import { splitDisplayTitle } from '../lib/content'
+import { slugifyProject, splitDisplayTitle } from '../lib/content'
 import { buildPublicPostPath } from '../lib/publicSiteRouting'
 import { EditableText } from './EditableText'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
@@ -94,6 +94,7 @@ function normalizePiece(piece) {
   const subtitle = display?.subtitle || piece?.subtitle || ''
   const excerpt = piece?.excerpt || subtitle || ''
   const project = piece?.primaryProject || ''
+  const projectSlug = piece?.primaryProjectSlug || slugifyProject(project)
   const slug = resolveCanonicalSlug(piece)
   const imageUrl = normalizeCardImageUrl(piece?.featuredImage || getImportedImage(piece) || '')
 
@@ -105,6 +106,7 @@ function normalizePiece(piece) {
     type: normalizeType(piece),
     rawType: piece?.type || '',
     project,
+    projectSlug,
     publishedAt: piece?.publishedAt || '',
     publishedDateLabel: piece?.publishedDateLabel || '',
     imageUrl,
@@ -222,7 +224,7 @@ export function PublicSearchPage({ pieces = [] }) {
             : item.type === activeFilter
 
       if (!filterPass) return false
-      if (projectFilter !== 'all' && item.project !== projectFilter) return false
+      if (projectFilter !== 'all' && item.project !== projectFilter && item.projectSlug !== projectFilter) return false
       if (!q) return true
 
       const haystack = [
@@ -243,16 +245,6 @@ export function PublicSearchPage({ pieces = [] }) {
   const featured = filtered[0] || null
   const results = featured ? filtered.slice(1, visibleCount + 1) : filtered.slice(0, visibleCount)
 
-  const counts = useMemo(() => {
-    const out = Object.fromEntries(FILTERS.map((filter) => [filter.key, 0]))
-    out.all = normalized.length
-    for (const item of normalized) {
-      if (item.type in out) out[item.type] += 1
-      if (item.hasPrintAssets && item.type !== 'print') out.print += 1
-    }
-    return out
-  }, [normalized])
-
   const projectOptions = useMemo(() => {
     return [...new Set(normalized.map((item) => item.project).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b))
@@ -264,6 +256,7 @@ export function PublicSearchPage({ pieces = [] }) {
   const clearFiltersLabel = getConfiguredText(resolvedConfig, archiveCopy.clearFiltersLabel.field, archiveCopy.clearFiltersLabel.defaultText)
   const recentLabel = getConfiguredText(resolvedConfig, archiveCopy.recentLabel.field, archiveCopy.recentLabel.defaultText)
   const allProjectsLabel = getConfiguredText(resolvedConfig, archiveCopy.allProjectsLabel.field, archiveCopy.allProjectsLabel.defaultText)
+  const allFormatsLabel = getConfiguredText(resolvedConfig, archiveCopy.allFormatsLabel.field, archiveCopy.allFormatsLabel.defaultText)
   const countLabel = getConfiguredText(resolvedConfig, archiveCopy.countLabel.field, archiveCopy.countLabel.defaultText)
 
   useEffect(() => {
@@ -330,21 +323,18 @@ export function PublicSearchPage({ pieces = [] }) {
       </section>
 
       <section className="archive-filter-bar">
-        <div className="archive-filter-bar__filters" role="tablist" aria-label="Archive filters">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter.key}
-              type="button"
-              className={`archive-filter-chip${activeFilter === filter.key ? ' is-active' : ''}`}
-              onClick={() => updateFilter(filter.key)}
-            >
-              {filter.label}
-              <span className="archive-filter-chip__count">
-                {filter.key === 'all' ? counts.all : counts[filter.key]}
-              </span>
-            </button>
-          ))}
-        </div>
+        <label className="archive-search-control">
+          <EditableText as="span" field={archiveCopy.formatLabel.field}>
+            {archiveCopy.formatLabel.defaultText}
+          </EditableText>
+          <select value={activeFilter} onChange={(event) => updateFilter(event.target.value)}>
+            {FILTERS.map((filter) => (
+              <option key={filter.key} value={filter.key}>
+                {filter.key === 'all' ? allFormatsLabel : filter.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <label className="archive-search-control">
           <EditableText as="span" field={archiveCopy.searchLabel.field}>

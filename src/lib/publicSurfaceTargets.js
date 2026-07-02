@@ -18,7 +18,7 @@ export const PUBLIC_SURFACE_TARGETS = {
     title: 'Project Updates',
     eyebrow: 'surface / projects / updates',
     description: 'Published native entries targeted at project-specific public publishing lanes.',
-    route: '/projects',
+    route: '/archive',
   },
   home: {
     key: 'home',

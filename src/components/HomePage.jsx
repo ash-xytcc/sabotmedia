@@ -172,13 +172,13 @@ export function HomePage({ featured, latest, projectMap, allPieces }) {
               className="manifesto-card__eyebrow"
               field={projectsBlock?.eyebrowField || 'home.projects.eyebrow'}
             >
-              Projects
+              Browse by project
             </EditableText>
             <ul className="project-list">
               {projectMap.map((project) => (
                 <li key={project.slug}>
                   <div>
-                    <strong><Link to={`/projects/${project.slug}`}>{project.name}</Link></strong>
+                    <strong><Link to={`/archive?project=${encodeURIComponent(project.name)}`}>{project.name}</Link></strong>
                     <span>{project.count} pieces</span>
                   </div>
                 </li>

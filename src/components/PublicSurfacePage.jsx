@@ -97,10 +97,9 @@ export function PublicSurfacePage({ target = 'general' }) {
           </article>
           <article className="wp-meta-box">
             <h2>Routes</h2>
-            <p>Browse the archive, project lanes, and public updates for current context.</p>
+            <p>Browse the archive and public updates for current context.</p>
             <div className="project-featured-callout__actions">
               <Link className="button" to="/archive">Archive</Link>
-              <Link className="button" to="/projects">Projects</Link>
               <Link className="button" to="/about">About</Link>
             </div>
           </article>
