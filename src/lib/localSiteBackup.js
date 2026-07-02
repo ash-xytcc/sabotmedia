@@ -4,6 +4,7 @@ import { loadCustomizerSettings } from './customizerLocal'
 import { getStoredPublicConfig, resolvePublicConfig } from './publicConfig'
 import { loadMenuDraft, loadWpSettings, WP_ROLE_OPTIONS } from './wpAdminLocal'
 import { COLLECTIONS_SCHEMA_VERSION, loadCollections } from './collections'
+import { loadPublications } from './publications'
 
 const NATIVE_CONTENT_KEY = 'sabot-native-public-content-v1'
 const USER_ROLE_SETTINGS_KEY = 'sabot-wp-clone-user-role-settings-v1'
@@ -107,6 +108,7 @@ export function buildLocalSiteBackupPayload({ nativeItems = [] } = {}) {
   }
   const customizer = loadCustomizerSettings()
   const collections = loadCollections()
+  const publications = loadPublications()
 
   return {
     exportedAt: new Date().toISOString(),
@@ -123,6 +125,9 @@ export function buildLocalSiteBackupPayload({ nativeItems = [] } = {}) {
     collections: {
       schemaVersion: COLLECTIONS_SCHEMA_VERSION,
       items: collections,
+    },
+    publications: {
+      items: publications,
     },
     settings,
     customizer,

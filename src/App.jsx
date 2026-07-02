@@ -18,6 +18,7 @@ import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PrintLabPage } from './components/PrintLabPage'
 import { PublicationLandingPage, PublicationReaderPage, PublicationsIndexPage } from './components/PublicationReaderPage'
+import { PublicationSystemPage } from './components/PublicationSystemPage'
 import { CollectionsIndexPage } from './components/CollectionsIndexPage'
 import { CollectionPage } from './components/CollectionPage'
 import { CollectionsAdminPage } from './components/CollectionsAdminPage'
@@ -74,6 +75,7 @@ const ADMIN_SHELL_PATHS = [
   '/media',
   '/pages',
   '/collections-admin',
+  '/publications-admin',
   '/users',
   '/menus',
   '/customize',
@@ -89,6 +91,7 @@ const ADMIN_SHELL_PATHS = [
   '/wp-admin/media',
   '/wp-admin/projects',
   '/wp-admin/collections',
+  '/wp-admin/publications',
   '/wp-admin/printlab',
   '/wp-admin/site-health',
   '/wp-admin/settings',
@@ -337,6 +340,8 @@ export default function App() {
           <Route path={adminRoutes.projects} element={protect(<ProjectsIndexPage projectMap={projectMap} />)} />
           <Route path="/collections-admin" element={protect(<Navigate to={adminRoutes.collections} replace />)} />
           <Route path={adminRoutes.collections} element={protect(<CollectionsAdminPage />)} />
+          <Route path="/publications-admin" element={protect(<Navigate to={adminRoutes.publications} replace />)} />
+          <Route path={adminRoutes.publications} element={protect(<PublicationSystemPage />)} />
           <Route path="/pages" element={protect(<Navigate to={adminRoutes.pages} replace />)} />
           <Route path={adminRoutes.pages} element={protect(<PagesAdminPage />)} />
           <Route path="/users" element={protect(<Navigate to={adminRoutes.users} replace />)} />

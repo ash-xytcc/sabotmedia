@@ -15,6 +15,8 @@ export async function onRequestGet(context) {
     const id = url.searchParams.get('id') || ''
     const slug = url.searchParams.get('slug') || ''
     const status = url.searchParams.get('status') || ''
+    const permission = await resolvePublicSitePermission(context)
+    const includeDrafts = permission.canEdit && url.searchParams.get('includeDrafts') === '1'
 
     if (!hasDb(context)) {
       return json({ ok: true, mode: 'scaffold', items: [] })
@@ -24,6 +26,9 @@ export async function onRequestGet(context) {
 
     if (id || slug) {
       const item = await getPublication(context.env.BF_DB, id || slug)
+      if (item && !includeDrafts && !isPublicPublication(item)) {
+        return json({ ok: true, mode: 'd1', item: null })
+      }
       return json({ ok: true, mode: 'd1', item })
     }
 
@@ -32,6 +37,8 @@ export async function onRequestGet(context) {
     if (status) {
       query += ' WHERE status = ?'
       params.push(status)
+    } else if (!includeDrafts) {
+      query += " WHERE status = 'published'"
     }
     query += ' ORDER BY updated_at DESC'
 
@@ -39,8 +46,31 @@ export async function onRequestGet(context) {
     return json({
       ok: true,
       mode: 'd1',
-      items: (result.results || []).map((row) => safeParse(row.payload_json)).filter(Boolean),
+      items: (result.results || []).map((row) => safeParse(row.payload_json)).filter(Boolean).filter((item) => includeDrafts || isPublicPublication(item)),
     })
+  } catch (error) {
+    return json({ ok: false, error: String(error?.message || error) }, 500)
+  }
+}
+
+export async function onRequestDelete(context) {
+  try {
+    const permission = await resolvePublicSitePermission(context)
+    if (!permission.canEdit) {
+      return json({ ok: false, error: permission.reason, canEdit: false }, 403)
+    }
+
+    const url = new URL(context.request.url)
+    const id = url.searchParams.get('id') || url.searchParams.get('slug') || ''
+    if (!id) return json({ ok: false, error: 'missing id or slug' }, 400)
+
+    if (!hasDb(context)) {
+      return json({ ok: true, mode: 'scaffold', deleted: id })
+    }
+
+    await ensureTables(context.env.BF_DB)
+    await context.env.BF_DB.prepare('DELETE FROM publications WHERE id = ? OR slug = ?').bind(id, id).run()
+    return json({ ok: true, mode: 'd1', deleted: id })
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
   }
@@ -127,6 +157,10 @@ function safeParse(value) {
   } catch {
     return null
   }
+}
+
+function isPublicPublication(item = {}) {
+  return item.status === 'published' || item.visibility === 'public' || item.visibility === 'unlisted'
 }
 
 function hasDb(context) {

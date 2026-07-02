@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { PAGE_SIZES, findPublication, loadPublications } from '../lib/publications'
+import { PAGE_SIZES, findPublication, loadPublications, loadPublicationsAsync } from '../lib/publications'
+import { PublicationTopbar } from './PublicationTopbar'
+import { PublicationFooter } from './PublicationFooter'
 import '../publicationReader.css'
 
 function RenderPage({ page, zoom = 1 }) {
@@ -54,10 +56,12 @@ function useSwipe(onPrevious, onNext) {
 
 export function PublicationReaderPage() {
   const { slug = '' } = useParams()
-  const publication = useMemo(() => findPublication(slug), [slug])
+  const [publications, setPublications] = useState(() => loadPublications())
+  const publication = useMemo(() => publications.find((item) => item.id === slug || item.slug === slug) || findPublication(slug), [publications, slug])
   const [pageIndex, setPageIndex] = useState(0)
   const [zoom, setZoom] = useState(1)
   const [showThumbnails, setShowThumbnails] = useState(true)
+  const [bookmarks, setBookmarks] = useState(() => loadBookmarks(slug))
 
   const pages = publication?.pages || []
   const currentPage = pages[pageIndex] || pages[0]
@@ -67,12 +71,21 @@ export function PublicationReaderPage() {
   const swipeHandlers = useSwipe(goPrevious, goNext)
 
   useEffect(() => {
+    let cancelled = false
+    loadPublicationsAsync().then((loaded) => {
+      if (!cancelled) setPublications(loaded)
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
     function onKeyDown(event) {
       if (event.key === 'ArrowLeft') goPrevious()
       if (event.key === 'ArrowRight') goNext()
       if (event.key === '+' || event.key === '=') setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))
       if (event.key === '-') setZoom((value) => Math.max(0.6, Number((value - 0.1).toFixed(2))))
       if (event.key.toLowerCase() === 'f') document.documentElement.requestFullscreen?.()
+      if (event.key.toLowerCase() === 'b') toggleBookmark()
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -83,12 +96,21 @@ export function PublicationReaderPage() {
     return <Navigate to="/publications" replace />
   }
 
+  function toggleBookmark() {
+    setBookmarks((current) => {
+      const next = current.includes(pageIndex) ? current.filter((item) => item !== pageIndex) : [...current, pageIndex].sort((a, b) => a - b)
+      saveBookmarks(slug, next)
+      return next
+    })
+  }
+
   return (
     <main className="publication-reader" {...swipeHandlers}>
       <header className="publication-reader__bar">
         <Link to={`/publications/${publication.slug}`}>{publication.title}</Link>
         <div className="publication-reader__controls">
           <button type="button" onClick={() => setShowThumbnails((value) => !value)}>Thumbnails</button>
+          <button type="button" onClick={toggleBookmark}>{bookmarks.includes(pageIndex) ? 'Bookmarked' : 'Bookmark'}</button>
           <button type="button" onClick={() => setZoom((value) => Math.max(0.6, Number((value - 0.1).toFixed(2))))}>-</button>
           <span>{Math.round(zoom * 100)}%</span>
           <button type="button" onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))}>+</button>
@@ -108,6 +130,7 @@ export function PublicationReaderPage() {
               >
                 <span>{index + 1}</span>
                 <strong>{page.title}</strong>
+                {bookmarks.includes(index) ? <em>Bookmark</em> : null}
               </button>
             ))}
           </aside>
@@ -128,26 +151,36 @@ export function PublicationReaderPage() {
 }
 
 export function PublicationsIndexPage() {
-  const publications = loadPublications()
+  const [publications, setPublications] = useState(() => loadPublications())
+
+  useEffect(() => {
+    let cancelled = false
+    loadPublicationsAsync().then((loaded) => {
+      if (!cancelled) setPublications(loaded)
+    })
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <main className="page publications-index-page">
+      <PublicationTopbar />
       <section className="project-hero">
         <div className="project-hero__eyebrow">Publications</div>
-        <h1>Zines</h1>
-        <p className="project-hero__description">Published zine documents with reader and print editions.</p>
+        <h1>Publications</h1>
+        <p className="project-hero__description">Books, magazines, zines, readers, pamphlets, poster packs, campaign kits, and booklets.</p>
       </section>
 
       {publications.length ? (
         <section className="piece-grid">
-          {publications.map((publication) => (
+          {publications.filter((publication) => ['public', 'unlisted'].includes(publication.visibility) || publication.status === 'published').map((publication) => (
             <article className="piece-card" key={publication.id}>
               <div className="piece-card__meta">
+                <span>{publication.publicationType}</span>
                 <span>{publication.pages.length} pages</span>
-                <span>{publication.status}</span>
+                <span>{publication.issueNumber ? `Issue ${publication.issueNumber}` : publication.visibility}</span>
               </div>
               <h3><Link to={`/publications/${publication.slug}`}>{publication.title}</Link></h3>
-              <p>{publication.pages.map((page) => page.title).slice(0, 4).join(', ')}</p>
+              <p>{publication.description || publication.pages.map((page) => page.title).slice(0, 4).join(', ')}</p>
             </article>
           ))}
         </section>
@@ -157,13 +190,23 @@ export function PublicationsIndexPage() {
           <p>No zine publications have been prepared yet.</p>
         </section>
       )}
+      <PublicationFooter />
     </main>
   )
 }
 
 export function PublicationLandingPage() {
   const { slug = '' } = useParams()
-  const publication = findPublication(slug)
+  const [publications, setPublications] = useState(() => loadPublications())
+  const publication = publications.find((item) => item.id === slug || item.slug === slug) || findPublication(slug)
+
+  useEffect(() => {
+    let cancelled = false
+    loadPublicationsAsync().then((loaded) => {
+      if (!cancelled) setPublications(loaded)
+    })
+    return () => { cancelled = true }
+  }, [])
 
   if (!publication) {
     return <Navigate to="/publications" replace />
@@ -175,18 +218,27 @@ export function PublicationLandingPage() {
 
   return (
     <main className="page publication-landing-page">
+      <PublicationTopbar />
       <section className="project-hero">
-        <div className="project-hero__eyebrow">Publication</div>
+        <div className="project-hero__eyebrow">{publication.publicationType || 'Publication'}{publication.issueNumber ? ` / Issue ${publication.issueNumber}` : ''}</div>
         <h1>{publication.title}</h1>
-        <p className="project-hero__description">{publication.pages.length} managed pages, stored as one publication document.</p>
+        <p className="project-hero__description">{publication.description || publication.subtitle || `${publication.pages.length} managed pages with reader and print editions.`}</p>
         <div className="publication-actions">
           {publication.pages.length ? <Link className="button button--primary" to={`/reader/${publication.slug}`}>Read Online</Link> : null}
+          {publication.printlabProjectUrl ? <Link className="button" to={publication.printlabProjectUrl}>Open Printlab Project</Link> : null}
           {printPdf ? <a className="button" href={printPdf}>Download Print Edition</a> : null}
           {imposedPdf ? <a className="button" href={imposedPdf}>Download Imposed Booklet</a> : null}
           {readerPdf ? <a className="button" href={readerPdf}>Download Reader PDF</a> : null}
         </div>
       </section>
       <section className="publication-page-strip" aria-label="Publication pages">
+        {(publication.tableOfContents || []).length ? (
+          <article className="publication-page-card publication-page-card--toc">
+            <span>TOC</span>
+            <h2>Table of contents</h2>
+            <p>{publication.tableOfContents.map((item) => item.title).join(', ')}</p>
+          </article>
+        ) : null}
         {publication.pages.map((page, index) => (
           <article className="publication-page-card" key={page.id}>
             <span>{index + 1}</span>
@@ -195,6 +247,39 @@ export function PublicationLandingPage() {
           </article>
         ))}
       </section>
+      {(publication.downloadAssets || []).length ? (
+        <section className="publication-page-strip" aria-label="Publication downloads">
+          {publication.downloadAssets.map((asset) => (
+            <article className="publication-page-card" key={asset.id}>
+              <span>{asset.type || 'download'}</span>
+              <h2>{asset.title || 'Download'}</h2>
+              {asset.url ? <a className="button" href={asset.url}>Download</a> : null}
+            </article>
+          ))}
+        </section>
+      ) : null}
+      <PublicationFooter />
     </main>
   )
+}
+
+function bookmarkKey(slug) {
+  return `sabot-publication-bookmarks:${slug}`
+}
+
+function loadBookmarks(slug) {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(bookmarkKey(slug)) || '[]')
+    return Array.isArray(parsed) ? parsed.filter((item) => Number.isFinite(item)) : []
+  } catch {
+    return []
+  }
+}
+
+function saveBookmarks(slug, bookmarks) {
+  try {
+    window.localStorage.setItem(bookmarkKey(slug), JSON.stringify(bookmarks))
+  } catch {
+    // Non-essential reader affordance.
+  }
 }

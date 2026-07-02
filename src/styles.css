@@ -12648,6 +12648,128 @@ a.button {
     align-items: stretch;
   }
 }
+
+.publication-builder-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.publication-builder-list,
+.publication-builder {
+  display: grid;
+  gap: 12px;
+}
+
+.publication-builder-list__item {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #c3c4c7;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.publication-builder-list__item.is-active {
+  border-color: #2271b1;
+  box-shadow: inset 4px 0 0 #2271b1;
+}
+
+.publication-builder__workflow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.publication-builder__workflow span {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #c3c4c7;
+  background: #f6f7f7;
+  font-weight: 700;
+  text-align: center;
+}
+
+.publication-builder__grid,
+.publication-piece-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.publication-builder__cover {
+  display: block;
+  width: min(360px, 100%);
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 1px solid #c3c4c7;
+}
+
+.publication-builder__search {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.publication-builder__section-header,
+.publication-builder__actions,
+.publication-download-editor,
+.publication-selected-piece {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.publication-builder__section-header,
+.publication-selected-piece {
+  justify-content: space-between;
+}
+
+.publication-download-editor {
+  flex-wrap: wrap;
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+.publication-download-editor input {
+  flex: 1 1 180px;
+}
+
+.publication-selected-piece,
+.publication-version {
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+.publication-version {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+@media (max-width: 900px) {
+  .publication-builder-layout,
+  .publication-builder__grid,
+  .publication-piece-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .publication-builder__workflow {
+    grid-template-columns: 1fr;
+  }
+
+  .publication-builder__actions,
+  .publication-selected-piece {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
 .wp-screen-header { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .wp-screen-header h1 { font-size: 23px; margin: 0; }
 
