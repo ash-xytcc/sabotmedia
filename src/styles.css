@@ -17193,3 +17193,92 @@ button.print-lab-half-fold-panel__label:focus-visible {
     margin: 0;
   }
 }
+/* PROJECT_CARD_CONTAINMENT_FIX */
+.projects-index-page,
+.project-page {
+  overflow-x: clip;
+}
+
+.projects-index-page *,
+.project-page * {
+  box-sizing: border-box;
+}
+
+.projects-index-page .project-index-grid,
+.project-page .piece-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  width: 100%;
+  min-width: 0;
+}
+
+.projects-index-page .project-index-card,
+.projects-index-page .project-index-card > *,
+.project-page .piece-card,
+.project-page .piece-card > *,
+.project-page .project-featured-callout,
+.project-page .project-featured-callout > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.projects-index-page .project-index-card {
+  overflow: hidden;
+}
+
+.projects-index-page .project-index-card__eyebrow,
+.projects-index-page .project-index-card h2,
+.projects-index-page .project-index-card h2 a,
+.projects-index-page .project-index-card__description,
+.projects-index-page .project-index-card__meta,
+.project-page .piece-card__meta,
+.project-page .piece-card__footer,
+.project-page .piece-card h3,
+.project-page .piece-card h3 a,
+.project-page .piece-card p,
+.project-page .piece-card__subtitle,
+.project-page .project-featured-callout__eyebrow,
+.project-page .project-featured-callout h2,
+.project-page .project-featured-callout h2 a,
+.project-page .project-featured-callout p,
+.project-page .project-hero__meta,
+.project-page .project-hero__meta span {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.projects-index-page .project-index-card h2,
+.project-page .piece-card h3,
+.project-page .project-featured-callout h2 {
+  text-wrap: balance;
+}
+
+.projects-index-page .project-index-card h2 a,
+.project-page .piece-card h3 a,
+.project-page .project-featured-callout h2 a {
+  display: block;
+  max-width: 100%;
+}
+
+.projects-index-page .project-index-card__actions,
+.project-page .project-featured-callout__actions,
+.project-page .archive-results-bar {
+  display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.projects-index-page .project-index-card__actions .button,
+.project-page .project-featured-callout__actions .button,
+.project-page .archive-results-bar .button {
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .projects-index-page .project-index-grid,
+  .project-page .piece-grid {
+    grid-template-columns: 1fr;
+  }
+}
