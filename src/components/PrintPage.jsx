@@ -7,6 +7,7 @@ import { getPieceDisplaySettings, resolveFirstReadableMode } from '../lib/public
 import { attachPostAssets } from '../assets/assetSystem'
 import { normalizePost } from '../models/publication'
 import { DEFAULT_PRINT_OPTIONS, PrintLayouts, printEngine } from '../print/printEngine'
+import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
 
 function getPieceBySlug(pieces, slug) {
   return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
@@ -53,6 +54,12 @@ export function PrintPage({ pieces = [] }) {
   )
 
   const piece = getPieceBySlug(mergedPieces, slug)
+  const pageTitle = piece?.title || piece?.slug || ''
+
+  useEffect(() => {
+    if (!pageTitle) return
+    document.title = `${pageTitle} | Sabot Media Print`
+  }, [pageTitle])
 
   if (!piece) {
     return <Navigate to="/archive" replace />
@@ -71,6 +78,7 @@ export function PrintPage({ pieces = [] }) {
   const bodyNodes = renderImportedBody(printDocument.bodyHtml || '', 'print')
   const titleText = printDocument.title || piece.title || piece.slug
   const titleLengthClass = getTitleLengthClass(titleText)
+  const featuredTitleDisplay = resolveFeaturedTitleDisplay(piece)
   const printMetaItems = [
     printDocument.eyebrow,
     'Sabot Media',
@@ -97,13 +105,16 @@ export function PrintPage({ pieces = [] }) {
         </fieldset>
       </header>
 
-      <section className={`print-article-lead print-article-lead--${titleLengthClass}${printDocument.hero?.url ? ' print-article-lead--image' : ' print-article-lead--fallback'}`}>
+      <section className={`print-article-lead print-article-lead--${featuredTitleDisplay} print-article-lead--${titleLengthClass}${printDocument.hero?.url ? ' print-article-lead--image' : ' print-article-lead--fallback'}`} aria-label={titleText}>
+        {featuredTitleDisplay === 'hidden' && printDocument.hero?.url ? <h1 className="screen-reader-only">{titleText}</h1> : null}
         {printDocument.hero?.url ? (
           <figure className="print-article-lead__figure">
             <img className="print-article-lead__image" src={printDocument.hero.url} alt="" />
-            <figcaption className="print-article-lead__overlay">
-              <h1>{titleText}</h1>
-            </figcaption>
+            {featuredTitleDisplay === 'overlay' ? (
+              <figcaption className="print-article-lead__overlay">
+                <h1>{titleText}</h1>
+              </figcaption>
+            ) : null}
           </figure>
         ) : (
           <div className="print-article-lead__fallback">
@@ -111,6 +122,13 @@ export function PrintPage({ pieces = [] }) {
             <h1>{titleText}</h1>
           </div>
         )}
+
+        {printDocument.hero?.url && featuredTitleDisplay === 'below' ? (
+          <div className="print-article-lead__title-below">
+            <div className="print-article-lead__eyebrow">{printDocument.eyebrow}</div>
+            <h1>{titleText}</h1>
+          </div>
+        ) : null}
 
         {printOptions.showMetadata && printMetaItems.length ? (
           <div className="print-article-lead__meta">

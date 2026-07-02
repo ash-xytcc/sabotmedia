@@ -149,6 +149,7 @@ export function normalizeNativeEntry(input) {
     heroImage: String(raw.heroImage || raw.featuredImage || ''),
     featuredImage: String(raw.featuredImage || raw.heroImage || ''),
     featuredImageTitle: String(raw.featuredImageTitle || ''),
+    featuredTitleDisplay: normalizeFeaturedTitleDisplay(raw.featuredTitleDisplay),
     featuredImageAlt: String(raw.featuredImageAlt || ''),
     featuredImageCaption: String(raw.featuredImageCaption || ''),
     transcriptionStatus: String(raw.transcriptionStatus || 'none'),
@@ -520,6 +521,10 @@ function normalizeDateString(value) {
 function normalizeEnum(value, allowed) {
   const str = String(value || '').trim()
   return allowed.includes(str) ? str : ''
+}
+
+function normalizeFeaturedTitleDisplay(value) {
+  return normalizeEnum(value, ['overlay', 'below', 'hidden'])
 }
 
 function normalizeTags(value) {

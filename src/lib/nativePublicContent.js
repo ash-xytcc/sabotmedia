@@ -5,6 +5,7 @@ import {
 } from './nativePublicContentApi'
 import { getImportedImage } from './getImportedImage'
 import { normalizeNativeDisplaySettings } from './publicDisplayModes'
+import { getDefaultFeaturedTitleDisplayForContentType, normalizeFeaturedTitleDisplay, resolveFeaturedTitleDisplay } from './featuredTitleDisplay'
 
 const FALLBACK_STORAGE_KEY = 'sabot-native-public-content-v1'
 
@@ -39,6 +40,7 @@ export function createEmptyNativeEntry() {
     featuredImage: '',
     heroImage: '',
     featuredImageTitle: '',
+    featuredTitleDisplay: '',
     featuredImageAlt: '',
     featuredImageCaption: '',
     podcastAudioUrl: '',
@@ -93,6 +95,7 @@ export function normalizeNativeEntry(input) {
     heroImage: String(raw.heroImage || raw.featuredImage || ''),
     featuredImage: String(raw.featuredImage || raw.heroImage || ''),
     featuredImageTitle: String(raw.featuredImageTitle || ''),
+    featuredTitleDisplay: normalizeFeaturedTitleDisplay(raw.featuredTitleDisplay),
     featuredImageAlt: String(raw.featuredImageAlt || ''),
     featuredImageCaption: String(raw.featuredImageCaption || ''),
     enableReadMode: display.enableReadMode,
@@ -166,6 +169,7 @@ export function createNativeEntryFromImportedPiece(piece = {}) {
     featuredImage,
     heroImage: featuredImage,
     featuredImageTitle: piece.featuredImageTitle || piece.title || '',
+    featuredTitleDisplay: resolveFeaturedTitleDisplay(piece) || getDefaultFeaturedTitleDisplayForContentType(contentType),
     featuredImageAlt: piece.featuredImageAlt || '',
     featuredImageCaption: piece.featuredImageCaption || '',
     hasPrintAssets: Boolean(piece.hasPrintAssets || contentType === 'print'),

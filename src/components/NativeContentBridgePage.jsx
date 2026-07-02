@@ -14,6 +14,7 @@ import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { normalizeNativeDisplaySettings } from '../lib/publicDisplayModes'
 import { classicEditorBodyToHtml } from '../lib/classicEditorBody'
+import { getDefaultFeaturedTitleDisplayForContentType } from '../lib/featuredTitleDisplay'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -38,6 +39,7 @@ function createTypedEntry(kind = 'article') {
     featuredImage: '',
     heroImage: '',
     featuredImageTitle: '',
+    featuredTitleDisplay: getDefaultFeaturedTitleDisplayForContentType(kind),
     featuredImageAlt: '',
     featuredImageCaption: '',
     podcastAudioUrl: '',
@@ -194,6 +196,7 @@ function saveLocalRevision(postId, draft, note) {
       categories: Array.isArray(draft?.categories) ? draft.categories : [],
       featuredImage: String(draft?.featuredImage || ''),
       heroImage: String(draft?.heroImage || ''),
+      featuredTitleDisplay: String(draft?.featuredTitleDisplay || ''),
       enableReadMode: Boolean(draft?.enableReadMode ?? true),
       enableExperienceMode: Boolean(draft?.enableExperienceMode ?? true),
       enablePrintMode: Boolean(draft?.enablePrintMode ?? true),
@@ -240,6 +243,7 @@ function toAutosaveFingerprint(draft, allowComments) {
     categories: Array.isArray(draft?.categories) ? draft.categories : [],
     featuredImage: draft?.featuredImage || '',
     heroImage: draft?.heroImage || '',
+    featuredTitleDisplay: draft?.featuredTitleDisplay || '',
     podcastAudioUrl: draft?.podcastAudioUrl || '',
     podcastRssEnclosureUrl: draft?.podcastRssEnclosureUrl || '',
     podcastDuration: draft?.podcastDuration || '',
@@ -438,6 +442,7 @@ export function NativeContentBridgePage() {
       heroImage: merged.heroImage || merged.featuredImage || '',
       bodyHtml: liveBodyToBodyHtml(merged.body || ''),
       featuredImageTitle: merged.featuredImageTitle || '',
+      featuredTitleDisplay: merged.featuredTitleDisplay || '',
       featuredImageAlt: merged.featuredImageAlt || '',
       featuredImageCaption: merged.featuredImageCaption || '',
       podcastCoverImage: merged.podcastCoverImage || merged.featuredImage || merged.heroImage || '',
@@ -656,6 +661,19 @@ export function NativeContentBridgePage() {
     setIsPermalinkEditing(false)
   }
 
+  function handleContentTypeChange(nextContentType) {
+    setDraft((current) => {
+      const previousDefault = getDefaultFeaturedTitleDisplayForContentType(current.contentType || 'dispatch')
+      const nextDefault = getDefaultFeaturedTitleDisplayForContentType(nextContentType)
+      const shouldUpdateTitleDisplay = !current.featuredTitleDisplay || current.featuredTitleDisplay === previousDefault
+      return {
+        ...current,
+        contentType: nextContentType,
+        featuredTitleDisplay: shouldUpdateTitleDisplay ? nextDefault : current.featuredTitleDisplay,
+      }
+    })
+  }
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen wp-edit-screen">
@@ -788,7 +806,7 @@ export function NativeContentBridgePage() {
               <h2>Post Settings</h2>
               <label className="native-content-editor__field">
                 <span>Content type</span>
-                <select value={draft.contentType || 'dispatch'} onChange={(event) => setDraft((current) => ({ ...current, contentType: event.target.value }))}>
+                <select value={draft.contentType || 'dispatch'} onChange={(event) => handleContentTypeChange(event.target.value)}>
                   <option value="dispatch">Dispatch</option>
                   <option value="podcast">Podcast</option>
                   <option value="print">Print</option>
@@ -870,6 +888,17 @@ export function NativeContentBridgePage() {
                 <input value={draft.featuredImage || ''} onChange={(event) => setDraft((current) => ({ ...current, featuredImage: event.target.value, heroImage: event.target.value }))} />
               </label>
               <button className="button" type="button" onClick={() => setOpenMediaFor('featured')}>Choose from Media</button>
+              <label className="native-content-editor__field">
+                <span>Featured image title</span>
+                <select
+                  value={draft.featuredTitleDisplay || getDefaultFeaturedTitleDisplayForContentType(draft.contentType || 'dispatch')}
+                  onChange={(event) => setDraft((current) => ({ ...current, featuredTitleDisplay: event.target.value }))}
+                >
+                  <option value="overlay">Overlay title on image</option>
+                  <option value="below">Show title below image</option>
+                  <option value="hidden">Hide title because image already includes it</option>
+                </select>
+              </label>
             </section>
 
             <section className="wp-meta-box">

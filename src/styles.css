@@ -17382,6 +17382,18 @@ button.print-lab-half-fold-panel__label:focus-visible {
 }
 
 /* PUBLIC_ARTICLE_FEATURED_IMAGE_LEAD */
+.screen-reader-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .piece-page .piece-article-lead,
 .piece-page .piece-layout {
   max-width: 760px;
@@ -17413,6 +17425,11 @@ button.print-lab-half-fold-panel__label:focus-visible {
   background:
     linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.58) 38%, rgba(0,0,0,0.18) 72%, rgba(0,0,0,0) 100%);
   pointer-events: none;
+}
+
+.piece-article-lead--below .piece-article-lead__figure::after,
+.piece-article-lead--hidden .piece-article-lead__figure::after {
+  display: none;
 }
 
 .piece-article-lead__image {
@@ -17483,7 +17500,12 @@ button.print-lab-half-fold-panel__label:focus-visible {
   padding: clamp(0.8rem, 2vw, 1.25rem) 0 0;
 }
 
-.piece-article-lead__fallback h1 {
+.piece-article-lead__title-below {
+  padding: clamp(0.8rem, 2vw, 1.25rem) 0 0;
+}
+
+.piece-article-lead__fallback h1,
+.piece-article-lead__title-below h1 {
   max-width: 100%;
   color: var(--sabot-ink, var(--sabot-text, #f3eadb));
   display: block;
@@ -17697,6 +17719,11 @@ button.print-lab-half-fold-panel__label:focus-visible {
   pointer-events: none;
 }
 
+.print-article-lead--below .print-article-lead__figure::after,
+.print-article-lead--hidden .print-article-lead__figure::after {
+  display: none;
+}
+
 .print-article-lead__image {
   display: block;
   width: 100%;
@@ -17758,7 +17785,12 @@ button.print-lab-half-fold-panel__label:focus-visible {
   padding-top: 0.4rem;
 }
 
-.print-article-lead__fallback h1 {
+.print-article-lead__title-below {
+  padding-top: 0.55rem;
+}
+
+.print-article-lead__fallback h1,
+.print-article-lead__title-below h1 {
   display: block;
   max-width: 100%;
   overflow: visible;

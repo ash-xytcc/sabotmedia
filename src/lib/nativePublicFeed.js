@@ -61,6 +61,7 @@ export function normalizeNativePublicPiece(item) {
     sourcePostType: 'native',
     sourcePostId: item.id,
     featuredImage: image,
+    featuredTitleDisplay: item.featuredTitleDisplay || '',
     heroImage: image,
     imageUrl: image,
     href: `/post/${item.slug || item.id}`,

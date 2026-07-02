@@ -184,6 +184,7 @@ export function normalizePost(piece = {}) {
     rendering: {
       bodyHtml: piece.bodyHtml || piece.contentHtml || piece.content || piece.body || piece.html || '',
       heroImage,
+      featuredTitleDisplay: piece.featuredTitleDisplay || '',
       displayMode: piece.displayMode || '',
       displaySettings: piece.displaySettings || null,
     },

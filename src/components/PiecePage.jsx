@@ -11,6 +11,7 @@ import { getPieceDisplaySettings, resolveFirstReadableMode } from '../lib/public
 import { attachPostAssets } from '../assets/assetSystem'
 import { normalizePost } from '../models/publication'
 import { renderPost } from '../renderers'
+import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
 
 const MODE_STORAGE_KEY = 'sabot.postMode'
 
@@ -164,6 +165,12 @@ export function PiecePage({ pieces = [] }) {
   }, [piece, categoryLabel])
   const titleText = display.title || piece?.title || piece?.slug || ''
   const titleLengthClass = getTitleLengthClass(titleText)
+  const featuredTitleDisplay = useMemo(() => resolveFeaturedTitleDisplay(piece || {}), [piece])
+
+  useEffect(() => {
+    if (!titleText) return
+    document.title = `${titleText} | Sabot Media`
+  }, [titleText])
 
   if (!piece && nativePieces === null) {
     return (
@@ -200,13 +207,16 @@ export function PiecePage({ pieces = [] }) {
     <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
       <PublicationTopbar />
 
-      <section className={`piece-article-lead piece-article-lead--${titleLengthClass}${heroImage ? ' piece-article-lead--image' : ' piece-article-lead--fallback'}`}>
+      <section className={`piece-article-lead piece-article-lead--${featuredTitleDisplay} piece-article-lead--${titleLengthClass}${heroImage ? ' piece-article-lead--image' : ' piece-article-lead--fallback'}`} aria-label={titleText}>
+        {featuredTitleDisplay === 'hidden' && heroImage ? <h1 className="screen-reader-only">{titleText}</h1> : null}
         {heroImage ? (
           <figure className="piece-article-lead__figure">
             <img className="piece-article-lead__image" src={heroImage} alt="" />
-            <figcaption className="piece-article-lead__overlay">
-              <h1>{titleText}</h1>
-            </figcaption>
+            {featuredTitleDisplay === 'overlay' ? (
+              <figcaption className="piece-article-lead__overlay">
+                <h1>{titleText}</h1>
+              </figcaption>
+            ) : null}
           </figure>
         ) : (
           <div className="piece-article-lead__fallback">
@@ -214,6 +224,13 @@ export function PiecePage({ pieces = [] }) {
             <h1>{titleText}</h1>
           </div>
         )}
+
+        {heroImage && featuredTitleDisplay === 'below' ? (
+          <div className="piece-article-lead__title-below">
+            <div className="piece-article-lead__eyebrow">{categoryLabel}</div>
+            <h1>{titleText}</h1>
+          </div>
+        ) : null}
 
         <div className="piece-article-lead__below">
           {headerMetaItems.length ? (
