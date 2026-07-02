@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { renderImportedBody } from '../lib/renderImportedBody'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
 import { useWordPressPieces } from '../lib/useWordPressPieces'
@@ -22,78 +22,11 @@ function PublicationModeSwitch({ slug }) {
   )
 }
 
-function PrintLayoutSwitch({ slug, layout = 'article' }) {
-  return (
-    <div className="print-layout-switch" role="group" aria-label="print layout">
-      <Link className={`print-layout-switch__link${layout === 'article' ? ' is-active' : ''}`} to={`/post/${slug}/print`}>
-        Article layout
-      </Link>
-      <Link className={`print-layout-switch__link${layout === 'zine-sheet' ? ' is-active' : ''}`} to={`/post/${slug}/print?layout=zine-sheet`}>
-        Zine sheet
-      </Link>
-    </div>
-  )
-}
-
-function PrintZineSheet({ printDocument }) {
-  return (
-    <section className="zine-sheet" aria-label="zine sheet preview">
-      {printDocument.panels.map((panel) => {
-        if (panel.kind === 'cover') {
-          return (
-            <article key={panel.id} className="zine-panel zine-panel--title">
-              <div className="zine-panel__label">{panel.label}</div>
-              <h2>{panel.title || printDocument.title || printDocument.slug}</h2>
-              {panel.subtitle ? <p>{panel.subtitle}</p> : null}
-            </article>
-          )
-        }
-
-        if (panel.kind === 'image' && panel.image?.url) {
-          return (
-            <article key={panel.id} className="zine-panel zine-panel--image">
-              <div className="zine-panel__label">{panel.label}</div>
-              <figure className="zine-panel__figure">
-                <img className="zine-panel__image" src={panel.image.url} alt={panel.title || printDocument.title || ''} />
-              </figure>
-            </article>
-          )
-        }
-
-        if (panel.kind === 'metadata') {
-          return (
-            <article key={panel.id} className="zine-panel zine-panel--meta">
-              <div className="zine-panel__label">{panel.label}</div>
-              <ul>
-                {panel.metadata.map((item) => (
-                  <li key={item.label}><strong>{item.label}:</strong> {item.value}</li>
-                ))}
-              </ul>
-            </article>
-          )
-        }
-
-        const bodyNodes = renderImportedBody(panel.bodyHtml || '', 'print')
-        return (
-          <article key={panel.id} className="zine-panel zine-panel--body">
-            <div className="zine-panel__label">{panel.label}</div>
-            <div className="zine-panel__body piece-body__content">
-              {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{printDocument.excerpt || ''}</p>}
-            </div>
-          </article>
-        )
-      })}
-    </section>
-  )
-}
-
 export function PrintPage({ pieces = [] }) {
   const { slug = '' } = useParams()
-  const [searchParams] = useSearchParams()
   const [nativePieces, setNativePieces] = useState([])
   const [printOptions, setPrintOptions] = useState(DEFAULT_PRINT_OPTIONS)
-  const requestedLayout = searchParams.get('layout')
-  const printLayout = requestedLayout === PrintLayouts.ZINE_SHEET ? PrintLayouts.ZINE_SHEET : PrintLayouts.ARTICLE
+  const printLayout = PrintLayouts.ARTICLE
 
   useEffect(() => {
     let cancelled = false
@@ -138,11 +71,10 @@ export function PrintPage({ pieces = [] }) {
   }
 
   return (
-    <main className={`page print-page${printLayout === PrintLayouts.ZINE_SHEET ? ' print-page--zine' : ''}`}>
+    <main className="page print-page">
       <header className="print-header">
         <div className="print-header__actions">
           <PublicationModeSwitch slug={piece.slug} />
-          <PrintLayoutSwitch slug={piece.slug} layout={printLayout} />
           <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
         </div>
         <fieldset className="print-header__controls" aria-label="print layout options">
@@ -163,30 +95,24 @@ export function PrintPage({ pieces = [] }) {
         </div>
       </header>
 
-      {printLayout === PrintLayouts.ZINE_SHEET ? (
-        <PrintZineSheet printDocument={printDocument} />
-      ) : (
-        <>
-          {printOptions.showFeaturedImage && printDocument.hero?.url ? (
-            <section className="print-hero">
-              <img className="print-hero__image" src={printDocument.hero.url} alt={printDocument.title || piece.slug} />
-            </section>
-          ) : null}
+      {printOptions.showFeaturedImage && printDocument.hero?.url ? (
+        <section className="print-hero">
+          <img className="print-hero__image" src={printDocument.hero.url} alt={printDocument.title || piece.slug} />
+        </section>
+      ) : null}
 
-          <section className="print-wrap">
-            <div className="piece-body__content">
-              {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{printDocument.excerpt || ''}</p>}
-            </div>
-          </section>
+      <section className="print-wrap">
+        <div className="piece-body__content">
+          {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{printDocument.excerpt || ''}</p>}
+        </div>
+      </section>
 
-          {printOptions.showColophon ? (
-            <footer className="print-colophon">
-              <strong>Sabot Media</strong>
-              <span>{piece.slug ? `/post/${piece.slug}` : ''}</span>
-            </footer>
-          ) : null}
-        </>
-      )}
+      {printOptions.showColophon ? (
+        <footer className="print-colophon">
+          <strong>Sabot Media</strong>
+          <span>{piece.slug ? `/post/${piece.slug}` : ''}</span>
+        </footer>
+      ) : null}
     </main>
   )
 }

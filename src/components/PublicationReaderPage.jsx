@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { PAGE_SIZES, findPublication, loadPublications } from '../lib/publications'
-import '../zineStudio.css'
+import '../publicationReader.css'
 
 function RenderPage({ page, zoom = 1 }) {
   const size = PAGE_SIZES[page.orientation] || PAGE_SIZES.portrait

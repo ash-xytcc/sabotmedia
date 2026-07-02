@@ -55,6 +55,12 @@ export function PublicAdminToolbar() {
     return found ? `/native-bridge?edit=${found.id}` : ''
   }, [location.pathname, nativeItems])
 
+  const editSiteLink = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    params.set('edit', 'site')
+    return `${location.pathname}?${params.toString()}`
+  }, [location.pathname, location.search])
+
   if (!canUseToolbar) return null
 
   return (
@@ -65,10 +71,9 @@ export function PublicAdminToolbar() {
         <a className="wp-public-admin-bar__item" href={'/native-bridge?new=article'}>New</a>
         <a className="wp-public-admin-bar__item" href={'/content'}>Posts</a>
         <a className="wp-public-admin-bar__item" href={'/media'}>Media</a>
-        {/* Live inline editing remains deferred; use Customize as the active internal site-editing entry point. */}
         <a className="wp-public-admin-bar__item" href={'/customize'}>Customize</a>
         {editPostLink ? <a className="wp-public-admin-bar__item" href={editPostLink}>Edit Post</a> : null}
-        <a className="wp-public-admin-bar__item" href="/customize">Edit Site</a>
+        <a className="wp-public-admin-bar__item" href={editSiteLink}>Edit Site</a>
       </div>
       <div className="wp-public-admin-bar__right">
         {canSave && changedFields.length ? (

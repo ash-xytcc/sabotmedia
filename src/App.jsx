@@ -18,7 +18,6 @@ import { NativeDraftPreviewPage } from './components/NativeDraftPreviewPage'
 import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PrintLabPage } from './components/PrintLabPage'
-import { ZineStudioPage } from './components/ZineStudioPage'
 import { PublicationLandingPage, PublicationReaderPage, PublicationsIndexPage } from './components/PublicationReaderPage'
 import { PublicEditProvider, usePublicEdit } from './components/PublicEditContext'
 import { PublicEditPanel } from './components/PublicEditPanel'
@@ -69,7 +68,6 @@ const ADMIN_SHELL_PATHS = [
   '/advanced-draft-tools',
   '/tools',
   '/printlab',
-  '/zine-studio',
   '/settings',
   '/sites',
   '/wp-admin',
@@ -86,7 +84,7 @@ function shouldUseBareShell(pathname) {
 
 
 function Layout({ children }) {
-  const { isEditing, setSelectedField } = usePublicEdit()
+  const { isEditing, setSelectedField, startEditing } = usePublicEdit()
   const location = useLocation()
   const bareShell = shouldUseBareShell(location.pathname)
   const isHomepage = location.pathname === '/'
@@ -98,6 +96,13 @@ function Layout({ children }) {
       document.body.classList.remove('is-homepage')
     }
   }, [isHomepage])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('edit') === 'site') {
+      startEditing()
+    }
+  }, [location.search, startEditing])
 
   useEffect(() => {
     const root = document.documentElement
@@ -192,8 +197,6 @@ export default function App() {
           <Route path="/tools" element={<ToolsAdminPage />} />
           <Route path="/printlab" element={<Navigate to={adminRoutes.printlab} replace />} />
           <Route path={adminRoutes.printlab} element={<PrintLabPage pieces={pieces} />} />
-          <Route path="/zine-studio" element={<ZineStudioPage />} />
-          <Route path="/zine-studio/:id" element={<ZineStudioPage />} />
           <Route path="/tools/print" element={<Navigate to={adminRoutes.printlab} replace />} />
           <Route path="/settings" element={<Navigate to={adminRoutes.settings} replace />} />
           <Route path={adminRoutes.settings} element={<SettingsAdminPage />} />

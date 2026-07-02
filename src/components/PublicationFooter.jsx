@@ -2,13 +2,15 @@ import { Link } from 'react-router-dom'
 
 const footerSections = [
   {
-    title: 'Archive',
+    title: 'Site',
     links: [
       ['/', 'Home'],
-      ['/archive', 'Browse archive'],
-      ['/updates', 'Recent posts'],
+      ['/archive', 'Archive'],
       ['/projects', 'Projects'],
       ['/about', 'About'],
+      ['/contact', 'Contact'],
+      ['/submit', 'Submit work'],
+      ['/support', 'Support'],
     ],
   },
   {
@@ -19,15 +21,6 @@ const footerSections = [
       ['/archive?format=comic', 'Comics'],
       ['/archive?format=zine', 'Zines'],
       ['/archive?format=newsletter', 'Newsletters'],
-    ],
-  },
-  {
-    title: 'About',
-    links: [
-      ['/about', 'About the publication'],
-      ['/contact', 'Contact'],
-      ['/submit', 'Submit work'],
-      ['/support', 'Support'],
     ],
   },
 ]

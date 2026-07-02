@@ -187,6 +187,9 @@ export function PublicEditProvider({ children }) {
     configVersion,
     schemaVersion,
     setSavedConfig,
+    startEditing() {
+      setIsEditing(true)
+    },
     toggleEditing: () => {
       setIsEditing((v) => {
         const next = !v
