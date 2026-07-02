@@ -9,7 +9,7 @@ export function PublicationTopbar() {
   const customizer = loadCustomizerSettings()
 
   const siteTitle = String(customizer.siteIdentity?.siteTitle || 'Sabot Media').trim() || 'Sabot Media'
-  const logoUrl = String(customizer.masthead?.logoUrl || customizer.siteIdentity?.logoUrl || '').trim() || mastheadLogo
+  const logoUrl = mastheadLogo
   const mastheadSize = ['compact', 'medium', 'large'].includes(customizer.masthead?.mastheadSize)
     ? customizer.masthead.mastheadSize
     : 'medium'

@@ -8,6 +8,7 @@ import { attachPostAssets } from '../assets/assetSystem'
 import { normalizePost } from '../models/publication'
 import { DEFAULT_PRINT_OPTIONS, PrintLayouts, printEngine } from '../print/printEngine'
 import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
+import mastheadLogo from '../assets/sabot-masthead-logo.png'
 
 function getPieceBySlug(pieces, slug) {
   return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
@@ -147,7 +148,7 @@ export function PrintPage({ pieces = [] }) {
 
       {printOptions.showColophon ? (
         <footer className="print-colophon">
-          <strong>Sabot Media</strong>
+          <img src={mastheadLogo} alt="Sabot Media" className="print-colophon__logo" />
           <span>{piece.slug ? `/post/${piece.slug}` : ''}</span>
         </footer>
       ) : null}

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from './AdminAuthContext'
+import mastheadLogo from '../assets/sabot-masthead-logo.png'
 
 function getReturnTo(search = '') {
   const params = new URLSearchParams(search)
@@ -44,7 +45,7 @@ export function LoginPage() {
   return (
     <main className="page admin-login-page">
       <section className="admin-login-panel" aria-labelledby="admin-login-title">
-        <p className="admin-login-panel__eyebrow">Sabot Media</p>
+        <img className="admin-login-panel__logo" src={mastheadLogo} alt="Sabot Media" />
         <h1 id="admin-login-title">Editor Login</h1>
         <p>Enter the admin token to access backstage tools and live editing.</p>
         <form onSubmit={handleSubmit}>

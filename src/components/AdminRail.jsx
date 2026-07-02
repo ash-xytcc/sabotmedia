@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { loadSites } from '../lib/siteDomains'
 import { adminRoutes } from '../routing/routes'
+import mastheadLogo from '../assets/sabot-masthead-logo.png'
 
 const MENU = [
   { to: adminRoutes.dashboard, label: 'Dashboard' },
@@ -77,7 +78,9 @@ export function AdminRail() {
             <Link to="/settings/sites" className="wp-admin-topbar__dropdown-link">Connect Domain</Link>
           </AdminBarMenu>
 
-          <Link to="/" className="wp-admin-topbar__link">Sabot Media</Link>
+          <Link to="/" className="wp-admin-topbar__link wp-admin-topbar__brand-logo-link" aria-label="Sabot Media home">
+            <img src={mastheadLogo} alt="Sabot Media" className="wp-admin-topbar__brand-logo" />
+          </Link>
 
           <AdminBarMenu label="+ New">
             <Link to="/native-bridge?new=article" className="wp-admin-topbar__dropdown-link">Post</Link>

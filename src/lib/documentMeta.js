@@ -1,6 +1,6 @@
 const DEFAULT_TITLE = 'Sabot Media'
 const DEFAULT_DESCRIPTION = 'Independent reporting, essays, comics, podcasts, zines, and project-based archive work from Sabot Media.'
-const DEFAULT_IMAGE = '/icon-512.png'
+const DEFAULT_IMAGE = '/sabot-logo.png'
 
 export function setDocumentMeta({
   title = DEFAULT_TITLE,

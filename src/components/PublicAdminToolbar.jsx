@@ -4,6 +4,7 @@ import { usePublicEdit } from './PublicEditContext'
 import { useAdminAuth } from './AdminAuthContext'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
 import { loadNativeCollection } from '../lib/nativePublicContent'
+import mastheadLogo from '../assets/sabot-masthead-logo.png'
 
 export function PublicAdminToolbar() {
   const siteTitle = 'Sabot Media'
@@ -76,7 +77,9 @@ export function PublicAdminToolbar() {
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
       <div className="wp-public-admin-bar__left">
-        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/'}>{siteTitle}</a>
+        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/'} aria-label={`${siteTitle} home`}>
+          <img src={mastheadLogo} alt={siteTitle} className="wp-public-admin-bar__brand-logo" />
+        </a>
         <a className="wp-public-admin-bar__item" href={'/admin'}>Dashboard</a>
         <a className="wp-public-admin-bar__item" href={'/native-bridge?new=article'}>New</a>
         <a className="wp-public-admin-bar__item" href={'/content'}>Posts</a>
