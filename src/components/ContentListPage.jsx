@@ -16,12 +16,14 @@ function normalizeTermList(value) {
 
 function getBucket(item) {
   if (item.status === 'trash') return 'trash'
+  if (item.status === 'archived' || item.workflowState === 'archived') return 'archived'
+  if (item.workflowState === 'review' || item.workflowState === 'in_review') return 'review'
   if (item.status === 'scheduled' || item.workflowState === 'scheduled' || item.scheduledFor) return 'scheduled'
   if (item.status === 'published' || item.workflowState === 'published') return 'published'
   return 'drafts'
 }
 
-const TABS = ['all', 'published', 'drafts', 'scheduled', 'trash']
+const TABS = ['all', 'drafts', 'review', 'scheduled', 'published', 'archived', 'trash']
 
 export function ContentListPage() {
   const [items, setItems] = useState([])
@@ -64,7 +66,21 @@ export function ContentListPage() {
       const bucket = getBucket(item)
       if (tab !== 'all' && bucket !== tab) return false
       if (categoryFilter !== 'all' && !(item.projects || item.categories || []).includes(categoryFilter)) return false
-      return !q || [item.title, item.slug, item.author, ...(item.tags || [])].join(' ').toLowerCase().includes(q)
+      return !q || [
+        item.title,
+        item.slug,
+        item.author,
+        item.excerpt,
+        item.body,
+        item.bodyHtml,
+        item.contentType,
+        item.type,
+        item.format,
+        item.collection,
+        ...(item.projects || []),
+        ...(item.categories || []),
+        ...(item.tags || []),
+      ].join(' ').toLowerCase().includes(q)
     })
   }, [allRows, tab, query, categoryFilter])
   const selectableVisible = useMemo(() => visible.filter((item) => !item.isImportedArchive), [visible])
@@ -189,7 +205,7 @@ export function ContentListPage() {
                         <div className="wp-quick-edit">
                           <input value={quickEdit.title} onChange={(e) => setQuickEdit((c) => ({ ...c, title: e.target.value }))} placeholder="Title" />
                           <input value={quickEdit.slug} onChange={(e) => setQuickEdit((c) => ({ ...c, slug: e.target.value }))} placeholder="Slug" />
-                          <select value={quickEdit.status} onChange={(e) => setQuickEdit((c) => ({ ...c, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option><option value="scheduled">Scheduled</option><option value="trash">Trash</option></select>
+                          <select value={quickEdit.status} onChange={(e) => setQuickEdit((c) => ({ ...c, status: e.target.value }))}><option value="draft">Draft</option><option value="published">Published</option><option value="scheduled">Scheduled</option><option value="archived">Archived</option><option value="trash">Trash</option></select>
                           <input value={quickEdit.tags} onChange={(e) => setQuickEdit((c) => ({ ...c, tags: e.target.value }))} placeholder="Tags: tag1, tag2" />
                           <input value={quickEdit.categories} onChange={(e) => setQuickEdit((c) => ({ ...c, categories: e.target.value }))} placeholder="Categories: cat1, cat2" />
                           <button type="button" className="button button--primary" onClick={() => saveQuickEdit(item.id)}>Update</button>

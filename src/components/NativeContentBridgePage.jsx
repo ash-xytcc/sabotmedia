@@ -186,6 +186,7 @@ function saveLocalRevision(postId, draft, note) {
   const snapshot = {
     id: `revision-${Math.random().toString(36).slice(2, 10)}`,
     createdAt: new Date().toISOString(),
+    editor: 'local editor',
     note: String(note || 'manual save'),
     draft: {
       title: String(draft?.title || ''),
@@ -225,6 +226,22 @@ function saveLocalRevision(postId, draft, note) {
   } catch {
     return { ok: false, revisions: loadLocalRevisions(postId) }
   }
+}
+
+function summarizeRevisionChanges(current = {}, previous = {}) {
+  const checks = [
+    ['title', 'title'],
+    ['excerpt', 'excerpt'],
+    ['body', 'body'],
+    ['status', 'status'],
+    ['workflowState', 'workflow'],
+    ['featuredImage', 'featured image'],
+    ['publishedAt', 'publication date'],
+  ]
+  const changed = checks
+    .filter(([key]) => String(current?.[key] || '') !== String(previous?.[key] || ''))
+    .map(([, label]) => label)
+  return changed.length ? changed.join(', ') : 'metadata snapshot'
 }
 
 function toAutosaveFingerprint(draft, allowComments) {
@@ -298,6 +315,7 @@ export function NativeContentBridgePage() {
   const visualSyncLockRef = useRef(false)
   const [visualEditorEmpty, setVisualEditorEmpty] = useState(true)
   const [revisions, setRevisions] = useState([])
+  const [compareRevisionId, setCompareRevisionId] = useState('')
   const [autosaveState, setAutosaveState] = useState({ status: 'idle', at: '' })
   const [publishSuccess, setPublishSuccess] = useState(null)
   const { pushNotice } = useAdminNotices()
@@ -387,8 +405,10 @@ export function NativeContentBridgePage() {
     setDraft(restored)
     setPublishSuccess(null)
     setPermalinkDraft(restored.slug || '')
-    pushNotice('Post saved.', 'info')
+    pushNotice('Revision restored into the editor. Save to publish the restored snapshot.', 'info')
   }
+
+  const compareRevision = revisions.find((revision) => revision.id === compareRevisionId)
 
   useEffect(() => {
     if (!activeId) return
@@ -775,12 +795,30 @@ export function NativeContentBridgePage() {
                 />
               </label>
               <label className="native-content-editor__field">
-                <span>Status</span>
-                <select value={draft.status || 'draft'} onChange={(event) => setDraft((current) => ({ ...current, status: event.target.value, workflowState: event.target.value }))}>
+                <span>Publication status</span>
+                <select value={draft.status || 'draft'} onChange={(event) => setDraft((current) => {
+                  const status = event.target.value
+                  return {
+                    ...current,
+                    status,
+                    workflowState: status === 'published' ? 'published' : status === 'scheduled' ? 'scheduled' : status === 'archived' ? 'archived' : current.workflowState || 'draft',
+                  }
+                })}>
                   <option value="draft">Draft</option>
-                  <option value="published">Published</option>
                   <option value="scheduled">Scheduled</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
                   <option value="trash">Trash</option>
+                </select>
+              </label>
+              <label className="native-content-editor__field">
+                <span>Editorial workflow</span>
+                <select value={draft.workflowState || 'draft'} onChange={(event) => setDraft((current) => ({ ...current, workflowState: event.target.value }))}>
+                  <option value="draft">Draft</option>
+                  <option value="in_review">Review</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
                 </select>
               </label>
               {draft.status === 'scheduled' ? (
@@ -795,7 +833,9 @@ export function NativeContentBridgePage() {
               ) : null}
               <div className="native-content-editor__actions">
                 <button className="button" type="button" onClick={() => handleSave('save draft', { status: 'draft', workflowState: 'draft' })}>Save Draft</button>
+                <button className="button" type="button" onClick={() => handleSave('submit for review', { status: 'draft', workflowState: 'in_review' })}>Submit for Review</button>
                 <button className="button" type="button" onClick={handlePreviewChanges}>Preview</button>
+                <button className="button" type="button" onClick={() => handleSave('schedule', { status: 'scheduled', workflowState: 'scheduled' })}>Schedule</button>
                 <button className="button button--primary" type="button" onClick={() => handleSave('publish', { status: 'published', workflowState: 'published' })}>Publish</button>
                 {searchParams.get('edit') || searchParams.get('import') ? <button className="button button-link-delete" type="button" onClick={handleMoveToTrash}>Trash</button> : null}
               </div>
@@ -924,12 +964,38 @@ export function NativeContentBridgePage() {
 
             {revisions.length ? (
               <section className="wp-meta-box">
-                <h2>Revisions</h2>
-                {revisions.slice(0, 5).map((revision) => (
-                  <button className="button" type="button" key={revision.id} onClick={() => restoreRevision(revision)}>
-                    {new Date(revision.createdAt).toLocaleString()}
-                  </button>
-                ))}
+                <h2>Revision History</h2>
+                <div className="native-content-editor__revision-list">
+                  {revisions.slice(0, 8).map((revision, index) => {
+                    const previous = revisions[index + 1]?.draft || {}
+                    return (
+                      <article className="native-content-editor__revision" key={revision.id}>
+                        <strong>{new Date(revision.createdAt).toLocaleString()}</strong>
+                        <span>{revision.editor || 'local editor'} / {revision.note || 'save'}</span>
+                        <span>Changed: {summarizeRevisionChanges(revision.draft, previous)}</span>
+                        <div className="review-card__actions">
+                          <button className="button" type="button" onClick={() => setCompareRevisionId(revision.id)}>Compare</button>
+                          <button className="button" type="button" onClick={() => restoreRevision(revision)}>Restore</button>
+                        </div>
+                      </article>
+                    )
+                  })}
+                </div>
+                {compareRevision ? (
+                  <div className="native-content-editor__revision-compare">
+                    <h3>Compare Revision</h3>
+                    <dl>
+                      <dt>Title</dt>
+                      <dd><del>{compareRevision.draft?.title || 'Untitled'}</del><ins>{draft.title || 'Untitled'}</ins></dd>
+                      <dt>Status</dt>
+                      <dd><del>{compareRevision.draft?.status || 'draft'}</del><ins>{draft.status || 'draft'}</ins></dd>
+                      <dt>Excerpt length</dt>
+                      <dd><del>{String(compareRevision.draft?.excerpt || '').length}</del><ins>{String(draft.excerpt || '').length}</ins></dd>
+                      <dt>Body length</dt>
+                      <dd><del>{String(compareRevision.draft?.body || '').length}</del><ins>{String(draft.body || '').length}</ins></dd>
+                    </dl>
+                  </div>
+                ) : null}
               </section>
             ) : null}
           </aside>

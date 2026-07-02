@@ -81,11 +81,35 @@ function persistSelectedMediaEdits(selected, fields, setItems, setSelected) {
     alt: String(fields?.alt ?? selected.alt ?? ''),
     caption: String(fields?.caption ?? selected.caption ?? ''),
     description: String(fields?.description ?? selected.description ?? ''),
+    folder: String(fields?.folder ?? selected.folder ?? 'Unfiled'),
+    tags: Array.isArray(fields?.tags)
+      ? fields.tags
+      : String(fields?.tags ?? (selected.tags || []).join(', '))
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean),
   }
   const updated = { ...selected, ...updates }
   setItems((current) => current.map((item) => (item.id === selected.id ? updated : item)))
   setSelected(updated)
   updateLocalMediaMetadata(selected, updates)
+  if (selected.source === 'local-upload') updateLocalMediaItem(selected.id, updates)
+}
+
+async function replaceSelectedMediaFile(selected, file, setItems, setSelected) {
+  if (!selected?.id || !file?.type?.startsWith('image/')) return
+  const dataUrl = await fileToDataUrl(file)
+  const updates = {
+    url: dataUrl,
+    dataUrl,
+    filename: file.name || selected.filename || '',
+    mimeType: file.type || selected.mimeType || '',
+    uploadedAt: new Date().toISOString(),
+    source: selected.source || 'local-upload',
+  }
+  const updated = { ...selected, ...updates }
+  setItems((current) => current.map((item) => (item.id === selected.id ? updated : item)))
+  setSelected(updated)
   if (selected.source === 'local-upload') updateLocalMediaItem(selected.id, updates)
 }
 
@@ -97,13 +121,24 @@ export function loadMediaLibraryItems(nativeItems = null) {
 }
 
 function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSelected, items, setItems, onUploadClick, onConfirm }) {
-  const visible = items.filter((item) => [item.title, item.url, item.caption, item.alt].join(' ').toLowerCase().includes(query.toLowerCase()))
+  const [folderFilter, setFolderFilter] = useState('all')
+  const replaceInputRef = useRef(null)
+  const folders = [...new Set(items.map((item) => item.folder || 'Unfiled'))].sort((a, b) => a.localeCompare(b))
+  const usageCount = selected ? items.filter((item) => item.url === selected.url).length : 0
+  const visible = items.filter((item) => {
+    if (folderFilter !== 'all' && (item.folder || 'Unfiled') !== folderFilter) return false
+    return [item.title, item.url, item.caption, item.alt, item.folder, ...(item.tags || [])].join(' ').toLowerCase().includes(query.toLowerCase())
+  })
 
   return (
     <>
       <div className="wp-media-toolbar">
         <button type="button" className={`button${mode === 'grid' ? ' button--primary' : ''}`} onClick={() => setMode('grid')}>Grid</button>
         <button type="button" className={`button${mode === 'list' ? ' button--primary' : ''}`} onClick={() => setMode('list')}>List</button>
+        <select value={folderFilter} onChange={(event) => setFolderFilter(event.target.value)} aria-label="Filter by folder">
+          <option value="all">All folders</option>
+          {folders.map((folder) => <option key={folder} value={folder}>{folder}</option>)}
+        </select>
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search media" />
         <button type="button" className="button" onClick={onUploadClick}>Upload</button>
       </div>
@@ -124,6 +159,7 @@ function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSele
             <>
               <img src={selected.url} alt={selected.alt || ''} />
               <p><strong>Source:</strong> {selected.source === 'local-upload' ? 'Local browser storage only' : (selected.source || 'unknown')}</p>
+              <p><strong>Usage:</strong> {usageCount} reference{usageCount === 1 ? '' : 's'} in the media index</p>
               {selected.filename ? <p><strong>File name:</strong> {selected.filename}</p> : null}
               {selected.uploadedAt ? <p><strong>Uploaded:</strong> {new Date(selected.uploadedAt).toLocaleString()}</p> : null}
               <p><strong>URL:</strong> {selected.url}</p>
@@ -136,6 +172,14 @@ function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSele
                 <input value={selected.alt || ''} onChange={(e) => persistSelectedMediaEdits(selected, { alt: e.target.value }, setItems, setSelected)} />
               </label>
               <label>
+                Folder
+                <input value={selected.folder || 'Unfiled'} onChange={(e) => persistSelectedMediaEdits(selected, { folder: e.target.value }, setItems, setSelected)} />
+              </label>
+              <label>
+                Tags
+                <input value={(selected.tags || []).join(', ')} onChange={(e) => persistSelectedMediaEdits(selected, { tags: e.target.value }, setItems, setSelected)} />
+              </label>
+              <label>
                 Caption
                 <textarea value={selected.caption || ''} onChange={(e) => persistSelectedMediaEdits(selected, { caption: e.target.value }, setItems, setSelected)} />
               </label>
@@ -143,6 +187,20 @@ function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSele
                 Description
                 <textarea value={selected.description || ''} onChange={(e) => persistSelectedMediaEdits(selected, { description: e.target.value }, setItems, setSelected)} />
               </label>
+              <div className="review-card__actions">
+                <button className="button" type="button" onClick={() => replaceInputRef.current?.click()}>Replace media</button>
+              </div>
+              <input
+                ref={replaceInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={async (event) => {
+                  const file = event.target.files?.[0]
+                  if (file) await replaceSelectedMediaFile(selected, file, setItems, setSelected)
+                  event.target.value = ''
+                }}
+              />
               {onConfirm ? <button type="button" className="button button--primary" onClick={() => onConfirm(selected)}>Select</button> : null}
             </>
           ) : <p>Select an item to see details.</p>}
@@ -265,6 +323,13 @@ export function MediaLibraryPage() {
     event.target.value = ''
   }
 
+  async function handleDrop(event) {
+    event.preventDefault()
+    const files = Array.from(event.dataTransfer?.files || [])
+    if (!files.length) return
+    await handleUpload({ target: { files, value: '' } })
+  }
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
@@ -273,8 +338,8 @@ export function MediaLibraryPage() {
           <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Add New</button>
         </div>
         <WpAdminNotices />
-        <section className="wp-meta-box">
-          <p className="wp-media-local-note">Add New / Upload stores images in this browser only using localStorage.</p>
+        <section className="wp-meta-box" onDragOver={(event) => event.preventDefault()} onDrop={handleDrop}>
+          <p className="wp-media-local-note">Add New / Upload stores images in this browser only using localStorage. Drag files here for bulk upload.</p>
           <div className="wp-media-toolbar">
             <button type="button" className={`button${mode === 'grid' ? ' button--primary' : ''}`} onClick={() => setMode('grid')}>Grid View</button>
             <button type="button" className={`button${mode === 'list' ? ' button--primary' : ''}`} onClick={() => setMode('list')}>List View</button>

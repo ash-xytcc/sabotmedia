@@ -11,6 +11,8 @@ import { exportLocalSiteBackupJson } from '../lib/localSiteBackup'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import { loadWpSettings, saveWpSettings } from '../lib/wpAdminLocal'
 import { adminRoutes } from '../routing/routes'
+import { getPieces } from '../lib/pieces'
+import { downloadRssBundle } from '../lib/rssFeeds'
 
 export { PagesAdminPage, SettingsAdminPage, UsersAdminPage }
 
@@ -160,6 +162,16 @@ export function ToolsAdminPage() {
     }
   }
 
+  async function exportRss() {
+    try {
+      const nativeItems = await loadNativeCollection({ includeFuture: 1 })
+      downloadRssBundle([...(Array.isArray(nativeItems) ? nativeItems : []), ...getPieces()])
+      setStatus('RSS bundle exported.')
+    } catch {
+      setStatus('RSS export failed.')
+    }
+  }
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
@@ -169,10 +181,15 @@ export function ToolsAdminPage() {
 
         <section className="wp-meta-box">
           <h2>Backup Export</h2>
-          <p className="description">Downloads posts, media, settings, customizer data, users, local storage inventory, and any saved Printlab project records.</p>
-          <button type="button" className="button button--primary" onClick={exportBackup}>
-            Export Backup JSON
-          </button>
+          <p className="description">Downloads native content, media index, settings, editable pages, collections, publications, users, local storage inventory, and any saved Printlab project records.</p>
+          <div className="review-card__actions">
+            <button type="button" className="button button--primary" onClick={exportBackup}>
+              Export Backup JSON
+            </button>
+            <button type="button" className="button" onClick={exportRss}>
+              Generate RSS Bundle
+            </button>
+          </div>
           {status ? <p className="description" role="status">{status}</p> : null}
         </section>
       </main>

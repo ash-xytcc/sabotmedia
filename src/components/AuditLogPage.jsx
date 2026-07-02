@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchAuditLog } from '../lib/editorRolesApi'
+import { AdminFrame } from './AdminRail'
 
 export function AuditLogPage() {
   const [items, setItems] = useState([])
@@ -40,7 +41,8 @@ export function AuditLogPage() {
   }, [items, query])
 
   return (
-    <main className="page audit-log-page">
+    <AdminFrame>
+    <main className="page wp-admin-screen audit-log-page">
       <section className="project-hero">
         <div className="project-hero__eyebrow">audit / history / operations</div>
         <h1>Audit Log</h1>
@@ -76,5 +78,6 @@ export function AuditLogPage() {
         ))}
       </section>
     </main>
+    </AdminFrame>
   )
 }

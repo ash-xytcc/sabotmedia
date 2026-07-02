@@ -1,5 +1,3 @@
-import { PublicationTopbar } from './PublicationTopbar'
-import { PublicationFooter } from './PublicationFooter'
 import { downloadSnapshot, exportSystemSnapshot, summarizeSnapshot } from '../lib/systemBackup'
 import { useState } from 'react'
 import { AdminFrame } from './AdminRail'
@@ -25,20 +23,17 @@ export function SystemBackupPage() {
 
   return (
     <AdminFrame>
-    <main className="page system-backup-page">
-      <PublicationTopbar />
-
-      <section className="project-hero">
-        <div className="project-hero__eyebrow">system / backup / recovery</div>
+    <main className="page wp-admin-screen system-backup-page">
+      <div className="wp-screen-header">
+        <div>
         <h1>System Backup</h1>
-        <p className="project-hero__description">
+        <p className="description">
           Export a full JSON snapshot of the publication system for safekeeping, recovery, or inspection.
         </p>
-        <div className="project-hero__meta">
-          <span>status: {state}</span>
         </div>
+        <span className="description">status: {state}</span>
+      </div>
         {error ? <p className="review-card__excerpt">{error}</p> : null}
-      </section>
 
       <section className="review-summary-card">
         <div className="review-summary-card__eyebrow">export snapshot</div>
@@ -63,8 +58,6 @@ export function SystemBackupPage() {
           </article>
         </section>
       ) : null}
-
-      <PublicationFooter />
     </main>
     </AdminFrame>
   )

@@ -28,6 +28,8 @@ function normalizeMediaItem(item) {
     alt: String(item.alt || ''),
     caption: String(item.caption || ''),
     description: String(item.description || ''),
+    folder: String(item.folder || 'Unfiled'),
+    tags: Array.isArray(item.tags) ? item.tags.map((tag) => String(tag || '').trim()).filter(Boolean) : String(item.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean),
     uploadedAt: String(item.uploadedAt || item.createdAt || new Date().toISOString()),
     source: String(item.source || 'local-upload'),
     mimeType: String(item.mimeType || ''),
@@ -54,6 +56,8 @@ function normalizeMediaMetadata(raw) {
       alt: String(value.alt || ''),
       caption: String(value.caption || ''),
       description: String(value.description || ''),
+      folder: String(value.folder || 'Unfiled'),
+      tags: Array.isArray(value.tags) ? value.tags.map((tag) => String(tag || '').trim()).filter(Boolean) : String(value.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean),
     }
   }
   return next
@@ -113,6 +117,8 @@ export function updateLocalMediaMetadata(itemOrKey, fields) {
     alt: String(fields?.alt || ''),
     caption: String(fields?.caption || ''),
     description: String(fields?.description || ''),
+    folder: String(fields?.folder || 'Unfiled'),
+    tags: Array.isArray(fields?.tags) ? fields.tags.map((tag) => String(tag || '').trim()).filter(Boolean) : String(fields?.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean),
   }
   const existing = loadLocalMediaMetadata()
   const next = { ...existing, [key]: updates }
@@ -132,6 +138,8 @@ export function applyLocalMediaMetadata(item) {
     alt: String(saved.alt || item.alt || ''),
     caption: String(saved.caption || item.caption || ''),
     description: String(saved.description || item.description || ''),
+    folder: String(saved.folder || item.folder || 'Unfiled'),
+    tags: Array.isArray(saved.tags) ? saved.tags : (Array.isArray(item.tags) ? item.tags : []),
   }
 }
 

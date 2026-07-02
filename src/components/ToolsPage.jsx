@@ -1,14 +1,38 @@
 import { AdminFrame } from './AdminRail'
+import { useEffect, useState } from 'react'
+import { loadNativeCollection } from '../lib/nativePublicContent'
+import { getPieces } from '../lib/pieces'
+import { exportLocalSiteBackupJson } from '../lib/localSiteBackup'
+import { downloadRssBundle } from '../lib/rssFeeds'
 
 const TOOLS = [
-  ['Import', 'Bring content into the internal Sabot clone. Unavailable.'],
-  ['Export', 'Export local/native content snapshots. ed.'],
-  ['Native content export', 'Future direct export of internal posts and media.'],
-  ['Public config export', 'Future export of public site settings and customizer state.'],
-  ['Media audit', 'Check missing featured images, broken URLs, and local media records.'],
+  ['Native content export', 'Exports native content, imported archive references, and revision-aware local data.'],
+  ['Media index export', 'Included in the newsroom backup with local uploads, folders, tags, alt text, captions, and media audit data.'],
+  ['Settings export', 'Included in the newsroom backup with WordPress-style settings, customizer values, and editable public pages.'],
+  ['RSS generation', 'Generates all-content, project, collection/category, format, podcast, and author feed XML as an export bundle.'],
+  ['Site health', 'Dashboard checks missing images, alt text, orphaned media, RSS/search status, and build/deploy notes.'],
 ]
 
 export function ToolsPage() {
+  const [nativeItems, setNativeItems] = useState([])
+
+  useEffect(() => {
+    loadNativeCollection({ includeFuture: 1 }).then((items) => setNativeItems(Array.isArray(items) ? items : [])).catch(() => setNativeItems([]))
+  }, [])
+
+  function downloadBackup() {
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const blob = new Blob([exportLocalSiteBackupJson({ nativeItems })], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `sabot-newsroom-backup-${stamp}.json`
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
@@ -40,6 +64,10 @@ export function ToolsPage() {
               ))}
             </tbody>
           </table>
+          <div className="review-card__actions">
+            <button className="button button--primary" type="button" onClick={downloadBackup}>Export newsroom backup</button>
+            <button className="button" type="button" onClick={() => downloadRssBundle([...nativeItems, ...getPieces()])}>Generate RSS bundle</button>
+          </div>
         </section>
       </main>
     </AdminFrame>

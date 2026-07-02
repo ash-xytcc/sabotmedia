@@ -12316,6 +12316,58 @@ a.button {
 .wp-meta-box h2 { font-size: 14px; margin: 0 0 10px; }
 .wp-checklist { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
 
+.newsroom-stat-grid,
+.newsroom-grid {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.newsroom-stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.newsroom-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.newsroom-panel {
+  align-content: start;
+  display: grid;
+  gap: 10px;
+}
+
+.newsroom-panel h2 {
+  margin: 0;
+}
+
+.newsroom-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.newsroom-list li {
+  align-items: start;
+  border-top: 1px solid #dcdcde;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-top: 8px;
+}
+
+.newsroom-list strong,
+.newsroom-list span {
+  display: block;
+}
+
+.newsroom-list span {
+  color: #646970;
+  font-size: 12px;
+}
+
 .wp-list-filters { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .wp-view-tabs { display: flex; gap: 8px; }
 .wp-view-tab { border: 0; background: transparent; color: #2271b1; cursor: pointer; }
@@ -12433,10 +12485,17 @@ a.button {
 .wp-media-local-note { margin: 0; padding: 8px 10px; background: #f6f7f7; border-bottom: 1px solid #dcdcde; color: #50575e; font-size: 12px; }
 .wp-media-toolbar { display: flex; gap: 8px; align-items: center; padding: 10px; background: #fff; border-bottom: 1px solid #c3c4c7; }
 .wp-media-toolbar input { flex: 1; }
+.wp-media-toolbar select { min-height: 32px; }
 .wp-media-modal__body { display: grid; grid-template-columns: 1fr 320px; min-height: 0; }
 .wp-media-modal__library { overflow: auto; padding: 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; align-content: start; }
 .wp-media-modal__details { overflow: auto; padding: 10px; background: #fff; border-left: 1px solid #c3c4c7; }
 .wp-media-modal__details img { width: 100%; margin-bottom: 8px; max-height: 220px; object-fit: contain; background: #f0f0f1; }
+.wp-media-details label,
+.wp-media-modal__details label {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
 /* MEDIA_PICKER_ACTUAL_THUMBNAIL_FIX */
 .wp-media-layout--grid .wp-media-item,
 .wp-media-modal__body--grid .wp-media-item {
@@ -12481,7 +12540,9 @@ a.button {
   .wp-edit-main,
   .wp-media-layout,
   .wp-media-modal__body,
-  .wp-dashboard-grid { grid-template-columns: 1fr; }
+  .wp-dashboard-grid,
+  .newsroom-grid,
+  .newsroom-stat-grid { grid-template-columns: 1fr; }
   .wp-quick-edit { grid-template-columns: 1fr; }
 }
 

@@ -36,6 +36,9 @@ import { MediaLibraryPage } from './components/MediaLibraryPage'
 import { AnalyticsPage } from './components/AnalyticsPage'
 import { CustomizeAdminPage, PagesAdminPage, SettingsAdminPage, SiteEditorAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminPages'
 import { SitesAdminPage } from './components/SitesAdminPage'
+import { SiteHealthPage } from './components/SiteHealthPage'
+import { SystemBackupPage } from './components/SystemBackupPage'
+import { AuditLogPage } from './components/AuditLogPage'
 import { adminRoutes, publicRoutes } from './routing/routes'
 import { buildPostMeta, setDocumentMeta } from './lib/documentMeta'
 
@@ -73,6 +76,7 @@ const ADMIN_SHELL_PATHS = [
   '/site-editor',
   '/advanced-draft-tools',
   '/tools',
+  '/site-health',
   '/printlab',
   '/settings',
   '/sites',
@@ -81,6 +85,7 @@ const ADMIN_SHELL_PATHS = [
   '/wp-admin/media',
   '/wp-admin/projects',
   '/wp-admin/printlab',
+  '/wp-admin/site-health',
   '/wp-admin/settings',
 ]
 
@@ -333,6 +338,12 @@ export default function App() {
           <Route path="/advanced-draft-tools" element={protect(<Navigate to={`${adminRoutes.tools}#advanced-draft-tools`} replace />)} />
           <Route path="/tools" element={protect(<Navigate to={adminRoutes.tools} replace />)} />
           <Route path={adminRoutes.tools} element={protect(<ToolsAdminPage />)} />
+          <Route path="/site-health" element={protect(<Navigate to={adminRoutes.siteHealth} replace />)} />
+          <Route path={adminRoutes.siteHealth} element={protect(<SiteHealthPage pieces={pieces} />)} />
+          <Route path="/system-backup" element={protect(<Navigate to={adminRoutes.backup} replace />)} />
+          <Route path={adminRoutes.backup} element={protect(<SystemBackupPage />)} />
+          <Route path="/audit-log" element={protect(<Navigate to={adminRoutes.auditLog} replace />)} />
+          <Route path={adminRoutes.auditLog} element={protect(<AuditLogPage />)} />
           <Route path="/qa" element={protect(<Navigate to={adminRoutes.qa} replace />)} />
           <Route path={adminRoutes.qa} element={protect(<AdminQaPage />)} />
           <Route path="/printlab" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
