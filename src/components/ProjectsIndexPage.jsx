@@ -50,8 +50,7 @@ export function ProjectsIndexPage({ projectMap }) {
           Sabot Media is not one stream. It is a federation of smaller publishing routes, each with its own emphasis, rhythm, and medium.
         </EditableText>
         <div className="project-hero__meta">
-          <span>{projectMap.length} project lenses</span>
-          <span>archive + native-ready structure</span>
+          <span>{projectMap.length} projects</span>
         </div>
       </section>
 

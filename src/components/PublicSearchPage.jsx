@@ -277,7 +277,6 @@ export function PublicSearchPage({ pieces = [] }) {
         </p>
         <div className="project-hero__meta">
           <span>{normalized.length} pieces</span>
-          <span>newest first</span>
         </div>
       </section>
 

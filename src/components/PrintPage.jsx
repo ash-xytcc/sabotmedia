@@ -12,16 +12,6 @@ function getPieceBySlug(pieces, slug) {
   return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
 }
 
-function PublicationModeSwitch({ slug }) {
-  return (
-    <nav className="publication-mode-switch" aria-label="reading modes">
-      <Link className="publication-mode-switch__link" to={`/post/${slug}`}>Read</Link>
-      <Link className="publication-mode-switch__link" to={`/post/${slug}?mode=experience`}>Experience</Link>
-      <Link className="publication-mode-switch__link is-active" to={`/post/${slug}/print`}>Print</Link>
-    </nav>
-  )
-}
-
 export function PrintPage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [nativePieces, setNativePieces] = useState([])
@@ -74,7 +64,7 @@ export function PrintPage({ pieces = [] }) {
     <main className="page print-page">
       <header className="print-header">
         <div className="print-header__actions">
-          <PublicationModeSwitch slug={piece.slug} />
+          <Link className="print-header__back-link" to={`/post/${piece.slug}`}>Back to article</Link>
           <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
         </div>
         <fieldset className="print-header__controls" aria-label="print layout options">

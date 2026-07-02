@@ -64,6 +64,15 @@ function formatMetaType(value) {
   return raw.charAt(0).toUpperCase() + raw.slice(1)
 }
 
+function getTitleLengthClass(value) {
+  const title = String(value || '').trim()
+  const wordCount = title.split(/\s+/).filter(Boolean).length
+  if (title.length > 72 || wordCount > 10) return 'title-length-xl'
+  if (title.length > 48 || wordCount > 7) return 'title-length-long'
+  if (title.length > 28 || wordCount > 4) return 'title-length-medium'
+  return 'title-length-short'
+}
+
 export function PiecePage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [searchParams] = useSearchParams()
@@ -153,6 +162,8 @@ export function PiecePage({ pieces = [] }) {
       .map((item) => String(item || '').trim())
       .filter(Boolean)
   }, [piece, categoryLabel])
+  const titleText = display.title || piece?.title || piece?.slug || ''
+  const titleLengthClass = getTitleLengthClass(titleText)
 
   if (!piece && nativePieces === null) {
     return (
@@ -189,18 +200,18 @@ export function PiecePage({ pieces = [] }) {
     <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
       <PublicationTopbar />
 
-      <section className={`piece-article-lead${heroImage ? ' piece-article-lead--image' : ' piece-article-lead--fallback'}`}>
+      <section className={`piece-article-lead piece-article-lead--${titleLengthClass}${heroImage ? ' piece-article-lead--image' : ' piece-article-lead--fallback'}`}>
         {heroImage ? (
           <figure className="piece-article-lead__figure">
             <img className="piece-article-lead__image" src={heroImage} alt="" />
             <figcaption className="piece-article-lead__overlay">
-              <h1>{display.title || piece.title || piece.slug}</h1>
+              <h1>{titleText}</h1>
             </figcaption>
           </figure>
         ) : (
           <div className="piece-article-lead__fallback">
             <div className="piece-article-lead__eyebrow">{categoryLabel}</div>
-            <h1>{display.title || piece.title || piece.slug}</h1>
+            <h1>{titleText}</h1>
           </div>
         )}
 

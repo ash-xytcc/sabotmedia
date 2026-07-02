@@ -142,8 +142,6 @@ export function ProjectPage({ pieces }) {
 
         <div className="project-hero__meta">
           <span>{filtered.length} pieces</span>
-          <span>imported archive + native-ready structure</span>
-          <span>{featuredResult?.source === 'explicit' ? 'explicit feature' : featuredResult?.source === 'fallback' ? 'fallback feature' : 'no feature'}</span>
         </div>
       </section>
 
