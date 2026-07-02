@@ -58,6 +58,7 @@ export function PublicSurfacePage({ target = 'general' }) {
     () => listSurfaceConfigs().filter((entry) => entry.key !== surface.key),
     [surface.key]
   )
+  const isPress = surface.key === 'press'
 
   return (
     <main className="page public-surface-page">
@@ -80,18 +81,44 @@ export function PublicSurfacePage({ target = 'general' }) {
         ))}
       </section>
 
+      {isPress ? (
+        <section className="public-press-kit">
+          <article className="wp-meta-box">
+            <h2>Sabot Media</h2>
+            <p>
+              Sabot Media is an independent public-interest media project publishing reporting, essays,
+              archive work, print material, and project-based dispatches.
+            </p>
+          </article>
+          <article className="wp-meta-box">
+            <h2>Press contact</h2>
+            <p>For press questions, statements, interviews, corrections, or background, use the public contact route.</p>
+            <Link className="button button--primary" to="/contact">Contact</Link>
+          </article>
+          <article className="wp-meta-box">
+            <h2>Routes</h2>
+            <p>Browse the archive, project lanes, and public updates for current context.</p>
+            <div className="project-featured-callout__actions">
+              <Link className="button" to="/archive">Archive</Link>
+              <Link className="button" to="/projects">Projects</Link>
+              <Link className="button" to="/about">About</Link>
+            </div>
+          </article>
+        </section>
+      ) : null}
+
       {items.length ? (
         <section className="piece-grid">
           {items.map((item) => (
             <SurfaceCard key={item.id} item={item} />
           ))}
         </section>
-      ) : (
+      ) : !isPress ? (
         <section className="missing-state">
           <h2>No published entries</h2>
           <p>This surface is live, but nothing has been published into it yet.</p>
         </section>
-      )}
+      ) : null}
       <PublicationFooter />
     </main>
   )

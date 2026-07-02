@@ -17,7 +17,7 @@ function PublicationModeSwitch({ slug }) {
     <nav className="publication-mode-switch" aria-label="reading modes">
       <Link className="publication-mode-switch__link" to={`/post/${slug}`}>Read</Link>
       <Link className="publication-mode-switch__link" to={`/post/${slug}?mode=experience`}>Experience</Link>
-      <Link className="publication-mode-switch__link is-active" to={`/print/${slug}`}>Print</Link>
+      <Link className="publication-mode-switch__link is-active" to={`/post/${slug}/print`}>Print</Link>
     </nav>
   )
 }
@@ -25,10 +25,10 @@ function PublicationModeSwitch({ slug }) {
 function PrintLayoutSwitch({ slug, layout = 'article' }) {
   return (
     <div className="print-layout-switch" role="group" aria-label="print layout">
-      <Link className={`print-layout-switch__link${layout === PrintLayouts.ARTICLE ? ' is-active' : ''}`} to={`/print/${slug}`}>
+      <Link className={`print-layout-switch__link${layout === 'article' ? ' is-active' : ''}`} to={`/post/${slug}/print`}>
         Article layout
       </Link>
-      <Link className={`print-layout-switch__link${layout === PrintLayouts.ZINE_SHEET ? ' is-active' : ''}`} to={`/print/${slug}?layout=zine-sheet`}>
+      <Link className={`print-layout-switch__link${layout === 'zine-sheet' ? ' is-active' : ''}`} to={`/post/${slug}/print?layout=zine-sheet`}>
         Zine sheet
       </Link>
     </div>
@@ -178,6 +178,13 @@ export function PrintPage({ pieces = [] }) {
               {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{printDocument.excerpt || ''}</p>}
             </div>
           </section>
+
+          {printOptions.showColophon ? (
+            <footer className="print-colophon">
+              <strong>Sabot Media</strong>
+              <span>{piece.slug ? `/post/${piece.slug}` : ''}</span>
+            </footer>
+          ) : null}
         </>
       )}
     </main>

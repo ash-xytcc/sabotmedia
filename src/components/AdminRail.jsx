@@ -65,10 +65,10 @@ export function AdminRail() {
 
   return (
     <>
-      <div className="wp-admin-topbar" role="navigation" aria-label="WordPress admin bar">
+      <div className="wp-admin-topbar" role="navigation" aria-label="SabotPress admin bar">
         <div className="wp-admin-topbar__left">
-          <Link to={adminRoutes.dashboard} className="wp-admin-topbar__link wp-admin-topbar__link--icon" aria-label="Sabot admin dashboard">
-            <span className="wp-admin-topbar__wpicon" aria-hidden="true">W</span>
+          <Link to={adminRoutes.dashboard} className="wp-admin-topbar__link wp-admin-topbar__link--icon" aria-label="SabotPress" title="SabotPress">
+            <span className="wp-admin-topbar__wpicon" aria-hidden="true">S</span>
           </Link>
 
           <AdminBarMenu label="My Sites">

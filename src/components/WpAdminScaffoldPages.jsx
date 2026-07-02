@@ -1,14 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, NavLink, useLocation, useSearchParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
-import { exportNativeCollection, loadNativeCollection } from '../lib/nativePublicContent'
-import { getStoredPublicConfig, resolvePublicConfig } from '../lib/publicConfig'
-import { loadSites } from '../lib/siteDomains'
-import { DEFAULT_CUSTOMIZER_SETTINGS, loadCustomizerSettings, saveCustomizerSettings } from '../lib/customizerLocal'
-import { buildLocalStorageInventory, buildMediaAuditSummary, exportLocalSiteBackupJson } from '../lib/localSiteBackup'
+import { DEFAULT_SETTINGS, loadWpSettings, saveWpSettings } from '../lib/wpAdminLocal'
+import { getPieces } from '../lib/pieces'
 
-const SETTINGS_KEY = 'sabot-wp-clone-settings-v1'
-const MENU_KEY = 'sabot-wp-clone-menu-v1'
 const USER_ROLE_SETTINGS_KEY = 'sabot-wp-clone-user-role-settings-v1'
 
 function loadJson(key, fallback) {
@@ -28,37 +23,14 @@ function saveJson(key, value) {
   }
 }
 
-function WpNotice({ children }) {
-  return <div className="notice notice-info"><p>{children}</p></div>
-}
-
-function downloadJson(filename, payload) {
-  const blob = new Blob([payload], { type: 'application/json' })
-  const url = window.URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = filename
-  anchor.click()
-  window.URL.revokeObjectURL(url)
-}
-
-async function copyToClipboard(value) {
-  if (!navigator?.clipboard?.writeText) return false
-  try {
-    await navigator.clipboard.writeText(value)
-    return true
-  } catch {
-    return false
-  }
-}
-
-
 export function PagesAdminPage() {
+  const samplePost = getPieces().find((piece) => piece?.slug)
+  const samplePostPath = samplePost?.slug ? `/post/${samplePost.slug}` : '/archive'
   const pages = [
-    { title: 'Home', slug: 'home', path: '/', status: 'Published', modified: '2026-04-22', customizeSection: 'homepage' },
-    { title: 'Archive', slug: 'archive', path: '/archive', status: 'Published', modified: '2026-04-21', customizeSection: 'navigation' },
-    { title: 'Press', slug: 'press', path: '/press', status: 'Published', modified: '2026-04-23', customizeSection: 'colors' },
-    { title: 'Projects', slug: 'projects', path: '/projects', status: 'Published', modified: '2026-04-20', customizeSection: 'homepage' },
+    { title: 'Home', slug: 'home', path: '/', type: 'Public page', customizeSection: 'homepage' },
+    { title: 'Archive', slug: 'archive', path: '/archive', type: 'Public index', customizeSection: 'navigation' },
+    { title: 'Post template', slug: 'post-template', path: samplePostPath, type: 'Template', customizeSection: 'colors' },
+    { title: 'Printlab', slug: 'printlab', path: '/printlab', type: 'Admin tool', customizeSection: 'masthead' },
   ]
 
   return (
@@ -68,55 +40,55 @@ export function PagesAdminPage() {
           <h1>Pages</h1>
         </div>
 
-        <p className="description">Manage your primary public site surfaces and quick actions.</p>
+        <section className="wp-meta-box">
+          <table className="content-table wp-posts-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Slug</th>
+                <th>Type</th>
+                <th>Path</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pages.map((page) => (
+                <tr key={page.slug}>
+                  <td>
+                    <strong className="content-table__title">{page.title}</strong>
+                    <div className="wp-row-actions">
+                      <Link to={page.path}>View</Link>
+                      <Link to={`/draft?page=${page.slug}`}>Edit Live</Link>
+                      <Link to={`/customize?section=${page.customizeSection}`}>Customize</Link>
+                    </div>
+                  </td>
+                  <td>{page.slug}</td>
+                  <td>{page.type}</td>
+                  <td>{page.path}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
       </main>
     </AdminFrame>
   )
 }
 
 export function SettingsAdminPage() {
-  const location = useLocation()
-  const isSocialPath = location.pathname.startsWith('/settings/social')
-  const [settings, setSettings] = useState(() => loadJson(SETTINGS_KEY, {
-    siteTitle: 'Sabot Media',
-    tagline: 'Radical media and publishing',
-    homepageSource: 'latest',
-    postsPerPage: 12,
-    defaultPostType: 'article',
-    mediaMode: 'local',
-    social: {
-      mastodonInstanceUrl: '',
-      mastodonAccessToken: '',
-      blueskyHandle: '',
-      blueskyAppPassword: '',
-      rssAutopostEnabled: true,
-      newsletterProvider: '',
-    },
-  }))
-  const sites = useMemo(() => loadSites(), [])
+  const [settings, setSettings] = useState(() => loadWpSettings())
+  const [saved, setSaved] = useState('')
 
   function update(field, value) {
     setSettings((current) => ({ ...current, [field]: value }))
   }
 
-  function updateSocial(field, value) {
-    setSettings((current) => ({
-      ...current,
-      social: {
-        mastodonInstanceUrl: '',
-        mastodonAccessToken: '',
-        blueskyHandle: '',
-        blueskyAppPassword: '',
-        rssAutopostEnabled: true,
-        newsletterProvider: '',
-        ...(current.social || {}),
-        [field]: value,
-      },
-    }))
-  }
-
   function saveSettings() {
-    saveJson(SETTINGS_KEY, settings)
+    const savedSettings = saveWpSettings({
+      ...settings,
+      postsPerPage: Math.max(1, Number(settings.postsPerPage) || DEFAULT_SETTINGS.postsPerPage),
+    })
+    setSettings(savedSettings)
+    setSaved('Settings saved.')
   }
 
   return (
@@ -126,6 +98,34 @@ export function SettingsAdminPage() {
           <h1>Settings</h1>
           <button className="button button--primary" type="button" onClick={saveSettings}>Save Changes</button>
         </div>
+
+        <section className="wp-meta-box">
+          <h2>General</h2>
+          <div className="wp-settings-form">
+            <label>
+              <span>Site title</span>
+              <input value={settings.siteTitle || ''} onChange={(event) => update('siteTitle', event.target.value)} />
+            </label>
+            <label>
+              <span>Tagline</span>
+              <input value={settings.tagline || ''} onChange={(event) => update('tagline', event.target.value)} />
+            </label>
+            <label>
+              <span>Posts per page</span>
+              <input type="number" min="1" max="100" value={settings.postsPerPage || 10} onChange={(event) => update('postsPerPage', Number(event.target.value) || 10)} />
+            </label>
+            <label>
+              <span>Default post type</span>
+              <select value={settings.defaultPostType || 'dispatch'} onChange={(event) => update('defaultPostType', event.target.value)}>
+                <option value="dispatch">Dispatch</option>
+                <option value="article">Article</option>
+                <option value="podcast">Podcast</option>
+                <option value="print">Print</option>
+              </select>
+            </label>
+          </div>
+          {saved ? <p className="description" role="status">{saved}</p> : null}
+        </section>
       </main>
     </AdminFrame>
   )
@@ -274,7 +274,7 @@ export function UsersAdminPage() {
             <li><strong>Editor:</strong> publish and manage posts</li>
             <li><strong>Author:</strong> write and publish own posts</li>
             <li><strong>Contributor:</strong> write drafts</li>
-            <li><strong>Subscriber:</strong> read-only placeholder</li>
+            <li><strong>Subscriber:</strong> read-only account</li>
           </ul>
         </section>
       </main>

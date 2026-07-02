@@ -17,8 +17,7 @@ const MODE_STORAGE_KEY = 'sabot.postMode'
 function PublicationModeSwitch({ slug, mode, displaySettings }) {
   const links = []
   if (displaySettings.enableReadMode) links.push({ key: 'read', label: 'Read', to: `/post/${slug}` })
-  if (displaySettings.enableExperienceMode) links.push({ key: 'experience', label: 'Experience', to: `/post/${slug}?mode=experience` })
-  if (displaySettings.enablePrintMode) links.push({ key: 'print', label: 'Print', to: `/piece/${slug}/print` })
+  if (displaySettings.enablePrintMode) links.push({ key: 'print', label: 'Print', to: `/post/${slug}/print` })
   return (
     <nav className="publication-mode-switch" aria-label="reading modes">
       {links.map((link) => (
@@ -32,7 +31,6 @@ function PublicationModeSwitch({ slug, mode, displaySettings }) {
 
 function getPreferredMode(searchParams) {
   const explicit = searchParams.get('mode')
-  if (explicit === 'experience') return 'experience'
   if (explicit === 'read') return 'read'
   return ''
 }
@@ -133,12 +131,9 @@ export function PiecePage({ pieces = [] }) {
   const mode = useMemo(() => {
     if (!piece) return 'read'
     const explicit = getPreferredMode(searchParams)
-    if (explicit === 'experience' && displaySettings.enableExperienceMode) return 'experience'
     if (explicit === 'read' && displaySettings.enableReadMode) return 'read'
     const stored = typeof window !== 'undefined' ? window.localStorage.getItem(MODE_STORAGE_KEY) : ''
-    if (stored === 'experience' && displaySettings.enableExperienceMode) return 'experience'
     if (stored === 'read' && displaySettings.enableReadMode) return 'read'
-    if (displaySettings.defaultMode === 'experience' && displaySettings.enableExperienceMode) return 'experience'
     if (displaySettings.defaultMode === 'print' && displaySettings.enablePrintMode) return 'print'
     return resolveFirstReadableMode(displaySettings)
   }, [piece, searchParams, displaySettings])
@@ -230,7 +225,7 @@ export function PiecePage({ pieces = [] }) {
     )
   }
   if (mode === 'print') {
-    return <Navigate to={`/piece/${piece.slug}/print`} replace />
+    return <Navigate to={`/post/${piece.slug}/print`} replace />
   }
 
   return (

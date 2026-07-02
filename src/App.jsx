@@ -27,6 +27,7 @@ import { EditableText } from './components/EditableText'
 import { buildProjectMap, getFeaturedPiece, getLatestPieces } from './lib/content'
 import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
+import { PublicInfoPage } from './components/PublicInfoPage'
 import { AdminNoticeProvider } from './components/WpAdminNotices'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
 import { AnalyticsPage } from './components/AnalyticsPage'
@@ -44,6 +45,9 @@ const ADMIN_SHELL_PATHS = [
   '/admin',
   '/review',
   '/content',
+  '/posts',
+  '/add-new',
+  '/post-new',
   '/native-bridge',
   '/native-preview',
   '/podcasts',
@@ -161,15 +165,20 @@ export default function App() {
           <Route path="/projects" element={<ProjectsIndexPage projectMap={projectMap} />} />
           <Route path="/projects/:slug" element={<ProjectPage pieces={pieces} />} />
           <Route path={publicRoutes.project} element={<ProjectPage pieces={pieces} />} />
-          <Route path="/piece/:slug" element={<PiecePage pieces={pieces} />} />
+          <Route path="/piece/:slug" element={<LegacyPieceRedirect />} />
           <Route path={publicRoutes.post} element={<PiecePage pieces={pieces} />} />
-          <Route path="/piece/:slug/print" element={<PrintPage pieces={pieces} />} />
+          <Route path="/post/:slug/print" element={<PrintPage pieces={pieces} />} />
           <Route path={publicRoutes.print} element={<PrintPage pieces={pieces} />} />
+          <Route path="/piece/:slug/print" element={<LegacyPrintRedirect />} />
           <Route path="/review" element={<ReviewQueuePage pieces={pieces} />} />
-          <Route path="/admin" element={<Navigate to={adminRoutes.dashboard} replace />} />
+          <Route path="/admin" element={<AdminPage pieces={pieces} />} />
           <Route path={adminRoutes.dashboard} element={<AdminPage pieces={pieces} />} />
-          <Route path="/content" element={<Navigate to={adminRoutes.posts} replace />} />
+          <Route path="/content" element={<ContentListPage />} />
+          <Route path="/posts" element={<ContentListPage />} />
           <Route path={adminRoutes.posts} element={<ContentListPage />} />
+          <Route path="/add-new" element={<Navigate to="/native-bridge?new=article" replace />} />
+          <Route path="/post-new" element={<Navigate to="/native-bridge?new=article" replace />} />
+          <Route path="/wp-admin/post-new.php" element={<Navigate to="/native-bridge?new=article" replace />} />
           <Route path="/overrides" element={<OverridesPage />} />
           <Route path="/media" element={<Navigate to={adminRoutes.media} replace />} />
           <Route path={adminRoutes.media} element={<MediaLibraryPage />} />
@@ -201,6 +210,10 @@ export default function App() {
         <Route path="/publications" element={<PublicationsIndexPage />} />
         <Route path="/publications/:slug" element={<PublicationLandingPage />} />
         <Route path="/reader/:slug" element={<PublicationReaderPage />} />
+        <Route path="/about" element={<PublicInfoPage page="about" />} />
+        <Route path="/contact" element={<PublicInfoPage page="contact" />} />
+        <Route path="/submit" element={<PublicInfoPage page="submit" />} />
+        <Route path="/support" element={<PublicInfoPage page="support" />} />
         <Route path="/archive" element={<PublicSearchPage pieces={pieces} />} />
         <Route path="/search" element={<PublicSearchPage pieces={pieces} />} />
           <Route path="/draft" element={<PublicDraftPage />} />
@@ -209,4 +222,16 @@ export default function App() {
       </AdminNoticeProvider>
     </PublicEditProvider>
   )
+}
+
+function LegacyPieceRedirect() {
+  const location = useLocation()
+  const slug = location.pathname.replace(/^\/piece\//, '').replace(/\/+$/, '')
+  return <Navigate to={`/post/${slug}${location.search || ''}`} replace />
+}
+
+function LegacyPrintRedirect() {
+  const location = useLocation()
+  const slug = location.pathname.replace(/^\/piece\//, '').replace(/\/print\/?$/, '')
+  return <Navigate to={`/post/${slug}/print${location.search || ''}`} replace />
 }

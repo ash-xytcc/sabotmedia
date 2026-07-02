@@ -126,6 +126,7 @@ export function ProjectPage({ pieces }) {
 
   return (
     <main className={`page project-page ${theme.className}`}>
+      <PublicationTopbar />
       <section className="project-hero">
         <EditableText as="div" className="project-hero__eyebrow" field={heroBlock?.eyebrowField || 'projectPage.hero.eyebrow'}>
           project archive

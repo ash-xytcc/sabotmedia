@@ -125,7 +125,6 @@ export function ContentListPage() {
               {tab === 'trash' ? (
                 <button type="button" className="button" onClick={() => setItems(saveNativeCollection(items.filter((item) => item.status !== 'trash')))} disabled={trashCount === 0}>Empty Trash</button>
               ) : null}
-              <select><option>All dates</option></select>
               <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}><option value="all">All categories</option>{categories.map((c) => <option key={c} value={c}>{c}</option>)}</select>
               <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search Posts" />
             </div>
@@ -136,6 +135,7 @@ export function ContentListPage() {
               <tr>
                 <th><input type="checkbox" checked={selectedIds.length === visible.length && visible.length > 0} onChange={(e) => setSelectedIds(e.target.checked ? visible.map((item) => item.id) : [])} /></th>
                 <th>Title</th>
+                <th>Status</th>
                 <th>Author</th>
                 <th>Categories</th>
                 <th>Tags</th>
@@ -152,10 +152,11 @@ export function ContentListPage() {
                       <div className="wp-row-actions">
                         <Link to={`/native-bridge?edit=${item.id}`}>Edit</Link>
                         <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || item.projects || []).join(', ') }) }}>Quick Edit</button>
+                        {item.status === 'published' ? <Link to={`/post/${item.slug}`}>View</Link> : null}
                         {item.status !== 'trash' ? <button type="button" onClick={async () => { setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash')); pushNotice('Post moved to Trash.', 'warning') }}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
-                        <Link to={item.status === 'published' ? `/post/${item.slug}` : `/native-preview/${item.id}`}>{item.status === 'published' ? 'View' : 'Preview'}</Link>
                       </div>
                     </td>
+                    <td>{item.status || item.workflowState || 'draft'}</td>
                     <td>{item.author || 'sabotmedia'}</td>
                     <td>{(item.projects || item.categories || ['Uncategorized']).join(', ')}</td>
                     <td>{(item.tags || []).join(', ') || '—'}</td>
@@ -163,7 +164,7 @@ export function ContentListPage() {
                   </tr>
                   {quickEditId === item.id ? (
                     <tr className="wp-quick-edit-row" key={`${item.id}-qe`}>
-                      <td colSpan={6}>
+                      <td colSpan={7}>
                         <div className="wp-quick-edit">
                           <input value={quickEdit.title} onChange={(e) => setQuickEdit((c) => ({ ...c, title: e.target.value }))} placeholder="Title" />
                           <input value={quickEdit.slug} onChange={(e) => setQuickEdit((c) => ({ ...c, slug: e.target.value }))} placeholder="Slug" />
