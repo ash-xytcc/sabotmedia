@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { listSurfaceConfigs } from '../lib/publicSurfaceTargets'
+import { adminRoutes } from '../routing/routes'
 
 function buildPages() {
   const staticPages = [
@@ -13,7 +14,7 @@ function buildPages() {
   const fromTargets = listSurfaceConfigs().map((target) => ({
     id: `surface-${target.key}`,
     title: `${target.title}`,
-    path: target.route || '/draft',
+    path: target.route || adminRoutes.liveEditor,
   }))
 
   const deduped = new Map()
@@ -31,7 +32,7 @@ export function PagesListPage() {
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <h1>Pages</h1>
-          <Link className="button button--primary" to="/draft">Add New</Link>
+          <Link className="button button--primary" to={adminRoutes.liveEditor}>Add New</Link>
         </div>
 
         <section className="wp-meta-box">
@@ -57,9 +58,9 @@ export function PagesListPage() {
                   <td>
                     <strong className="content-table__title">{page.title}</strong>
                     <div className="wp-row-actions">
-                      <Link to="/draft">Edit Site</Link>
+                      <Link to={adminRoutes.liveEditor}>Edit Site</Link>
                       <Link to={page.path}>View</Link>
-                      <Link to="/customize">Customize</Link>
+                      <Link to={adminRoutes.customize}>Customize</Link>
                     </div>
                   </td>
                   <td>{page.path}</td>

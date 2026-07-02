@@ -8,14 +8,14 @@ const MENU = [
   { to: adminRoutes.dashboard, label: 'Dashboard' },
   { to: adminRoutes.posts, label: 'Posts' },
   { to: adminRoutes.printlab, label: 'Printlab' },
-  { to: '/native-bridge?new=article', label: 'Add New' },
+  { to: adminRoutes.addNew, label: 'Add New' },
   { to: adminRoutes.media, label: 'Media' },
-  { to: '/pages', label: 'Pages' },
-  { to: '/customize', label: 'Customize' },
-  { to: '/tools', label: 'Tools' },
+  { to: adminRoutes.pages, label: 'Pages' },
+  { to: adminRoutes.customize, label: 'Customize' },
+  { to: adminRoutes.tools, label: 'Tools' },
   { to: adminRoutes.qa, label: 'QA' },
   { to: adminRoutes.settings, label: 'Settings' },
-  { to: '/users', label: 'Users' },
+  { to: adminRoutes.users, label: 'Users' },
 ]
 
 function AdminBarMenu({ label, children, className = '' }) {
@@ -74,8 +74,8 @@ export function AdminRail() {
 
           <AdminBarMenu label="My Sites">
             <Link to="/" className="wp-admin-topbar__dropdown-link">{primarySiteName}</Link>
-            <Link to="/sites" className="wp-admin-topbar__dropdown-link">Manage Sites</Link>
-            <Link to="/settings/sites" className="wp-admin-topbar__dropdown-link">Connect Domain</Link>
+            <Link to={adminRoutes.sites} className="wp-admin-topbar__dropdown-link">Manage Sites</Link>
+            <Link to={`${adminRoutes.settings}/sites`} className="wp-admin-topbar__dropdown-link">Connect Domain</Link>
           </AdminBarMenu>
 
           <Link to="/" className="wp-admin-topbar__link wp-admin-topbar__brand-logo-link" aria-label="Sabot Media home">
@@ -83,19 +83,19 @@ export function AdminRail() {
           </Link>
 
           <AdminBarMenu label="+ New">
-            <Link to="/native-bridge?new=article" className="wp-admin-topbar__dropdown-link">Post</Link>
-            <Link to="/media" className="wp-admin-topbar__dropdown-link">Media</Link>
-            <Link to="/pages" className="wp-admin-topbar__dropdown-link">Page</Link>
-            <Link to="/users" className="wp-admin-topbar__dropdown-link">User</Link>
+            <Link to={adminRoutes.addNew} className="wp-admin-topbar__dropdown-link">Post</Link>
+            <Link to={adminRoutes.media} className="wp-admin-topbar__dropdown-link">Media</Link>
+            <Link to={adminRoutes.pages} className="wp-admin-topbar__dropdown-link">Page</Link>
+            <Link to={adminRoutes.users} className="wp-admin-topbar__dropdown-link">User</Link>
           </AdminBarMenu>
 
-          <Link to="/customize" className="wp-admin-topbar__link">Customize</Link>
+          <Link to={adminRoutes.customize} className="wp-admin-topbar__link">Customize</Link>
         </div>
 
         <div className="wp-admin-topbar__right">
           <AdminBarMenu label="Howdy sabotmedia" className="wp-admin-topbar__menu--right">
-            <Link to="/users" className="wp-admin-topbar__dropdown-link">Profile</Link>
-            <Link to="/" className="wp-admin-topbar__dropdown-link">Log Out</Link>
+            <Link to={adminRoutes.users} className="wp-admin-topbar__dropdown-link">Profile</Link>
+            <Link to="/logout" className="wp-admin-topbar__dropdown-link">Log Out</Link>
           </AdminBarMenu>
         </div>
       </div>

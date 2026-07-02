@@ -9,6 +9,7 @@ import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 import { validatePublicConfig } from '../lib/publicConfigSchema'
 import { AdminFrame } from './AdminRail'
+import { adminRoutes } from '../routing/routes'
 
 function unwrapImportedPayload(raw) {
   if (raw?.publicSite) return raw.publicSite
@@ -189,7 +190,7 @@ export function PublicDraftPage() {
                     <Link className="button" to={page.path}>
                       View
                     </Link>
-                    <Link className="button" to="/customize">
+                    <Link className="button" to={adminRoutes.customize}>
                       Customize
                     </Link>
                   </div>

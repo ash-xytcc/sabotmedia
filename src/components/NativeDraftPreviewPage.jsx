@@ -5,6 +5,7 @@ import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { renderImportedBody } from '../lib/renderImportedBody'
 import { resolveNativeBodyHtml } from '../lib/nativePublicFeed'
+import { adminRoutes } from '../routing/routes'
 
 export function NativeDraftPreviewPage() {
   const { id = '' } = useParams()
@@ -40,7 +41,7 @@ export function NativeDraftPreviewPage() {
     return <Navigate to={`/post/${entry.slug}`} replace />
   }
 
-  if (state === 'loaded' && !entry) return <Navigate to="/content" replace />
+  if (state === 'loaded' && !entry) return <Navigate to={adminRoutes.posts} replace />
 
   const image = entry?.featuredImage || entry?.heroImage || ''
   const bodyNodes = useMemo(() => renderImportedBody(resolveNativeBodyHtml(entry || {}), 'read'), [entry])
@@ -61,7 +62,7 @@ export function NativeDraftPreviewPage() {
           <span>{entry?.target || 'general'}</span>
         </div>
         <div className="review-card__actions">
-          <Link className="button button--primary" to={`/native-bridge?edit=${entry?.id || id}`}>
+          <Link className="button button--primary" to={`${adminRoutes.nativeBridge}?edit=${entry?.id || id}`}>
             Back to editor
           </Link>
           {entry?.slug && entry?.status === 'published' ? (

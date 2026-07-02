@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { DEFAULT_SETTINGS, loadWpSettings, saveWpSettings } from '../lib/wpAdminLocal'
 import { getPieces } from '../lib/pieces'
+import { adminRoutes } from '../routing/routes'
 
 const USER_ROLE_SETTINGS_KEY = 'sabot-wp-clone-user-role-settings-v1'
 
@@ -30,7 +31,7 @@ export function PagesAdminPage() {
     { title: 'Home', slug: 'home', path: '/', type: 'Public page', customizeSection: 'homepage' },
     { title: 'Archive', slug: 'archive', path: '/archive', type: 'Public index', customizeSection: 'navigation' },
     { title: 'Post template', slug: 'post-template', path: samplePostPath, type: 'Template', customizeSection: 'colors' },
-    { title: 'Printlab', slug: 'printlab', path: '/printlab', type: 'Admin tool', customizeSection: 'masthead' },
+    { title: 'Printlab', slug: 'printlab', path: adminRoutes.printlab, type: 'Admin tool', customizeSection: 'masthead' },
   ]
 
   return (
@@ -57,8 +58,8 @@ export function PagesAdminPage() {
                     <strong className="content-table__title">{page.title}</strong>
                     <div className="wp-row-actions">
                       <Link to={page.path}>View</Link>
-                      <Link to={`/draft?page=${page.slug}`}>Edit Live</Link>
-                      <Link to={`/customize?section=${page.customizeSection}`}>Customize</Link>
+                      <Link to={`${adminRoutes.liveEditor}?page=${page.slug}`}>Edit Live</Link>
+                      <Link to={`${adminRoutes.customize}?section=${page.customizeSection}`}>Customize</Link>
                     </div>
                   </td>
                   <td>{page.slug}</td>

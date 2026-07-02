@@ -15,6 +15,7 @@ import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { normalizeNativeDisplaySettings } from '../lib/publicDisplayModes'
 import { classicEditorBodyToHtml } from '../lib/classicEditorBody'
 import { getDefaultFeaturedTitleDisplayForContentType } from '../lib/featuredTitleDisplay'
+import { adminRoutes } from '../routing/routes'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -679,7 +680,7 @@ export function NativeContentBridgePage() {
       <main className="page wp-admin-screen wp-edit-screen">
         <div className="wp-screen-header">
           <h1>{searchParams.get('edit') || searchParams.get('import') ? 'Edit Post' : 'Add New Post'}</h1>
-          <Link className="button" to="/native-bridge?new=article">Add New</Link>
+          <Link className="button" to={adminRoutes.addNew}>Add New</Link>
         </div>
         <WpAdminNotices />
 

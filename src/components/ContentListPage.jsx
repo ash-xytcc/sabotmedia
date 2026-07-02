@@ -4,6 +4,7 @@ import { getPieces } from '../lib/pieces'
 import { createNativeEntryFromImportedPiece, loadNativeCollection, slugify, upsertNativeEntry, saveNativeCollection } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
+import { adminRoutes } from '../routing/routes'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -123,7 +124,7 @@ export function ContentListPage() {
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <h1>Posts</h1>
-          <Link className="button button--primary" to="/native-bridge?new=article">Add New</Link>
+          <Link className="button button--primary" to={adminRoutes.addNew}>Add New</Link>
         </div>
         <WpAdminNotices />
 
@@ -170,7 +171,7 @@ export function ContentListPage() {
                     <td>
                       <strong className="content-table__title">{item.title || 'Untitled'}</strong>
                       <div className="wp-row-actions">
-                        <Link to={item.isImportedArchive ? `/native-bridge?import=${item.importSlug || item.slug}` : `/native-bridge?edit=${item.id}`}>Edit</Link>
+                        <Link to={item.isImportedArchive ? `${adminRoutes.nativeBridge}?import=${item.importSlug || item.slug}` : `${adminRoutes.nativeBridge}?edit=${item.id}`}>Edit</Link>
                         {item.isImportedArchive ? null : <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || item.projects || []).join(', ') }) }}>Quick Edit</button>}
                         {item.status === 'published' ? <Link to={`/post/${item.slug}`}>View</Link> : null}
                         {item.isImportedArchive ? <span>Imported archive</span> : item.status !== 'trash' ? <button type="button" onClick={async () => { setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash')); pushNotice('Post moved to Trash.', 'warning') }}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}

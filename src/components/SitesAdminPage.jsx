@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { createSiteDraft, loadSites, saveSites, SITE_STATUS_OPTIONS } from '../lib/siteDomains'
+import { adminRoutes } from '../routing/routes'
 
 const EMPTY_FORM = {
   name: '',
@@ -53,7 +54,7 @@ export function SitesAdminPage() {
       <main className="page wp-admin-screen wp-sites-screen">
         <div className="wp-screen-header">
           <h1>Sites & Domains</h1>
-          <Link className="button" to="/settings">Back to Settings</Link>
+          <Link className="button" to={adminRoutes.settings}>Back to Settings</Link>
         </div>
 
         <div className="notice notice-warning">

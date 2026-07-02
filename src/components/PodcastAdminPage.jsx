@@ -4,6 +4,7 @@ import { AdminFrame } from './AdminRail'
 import { getPieces } from '../lib/pieces'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import { loadPodcastSettings } from '../lib/podcastSettings'
+import { adminRoutes } from '../routing/routes'
 
 function toDisplayDate(value) {
   const d = new Date(String(value || ''))
@@ -64,8 +65,8 @@ export function PodcastAdminPage({ pieces }) {
         <div className="wp-screen-header">
           <h1>Podcast Episodes</h1>
           <div className="review-card__actions">
-            <Link className="button" to="/podcasts/settings">Podcast Settings</Link>
-            <Link className="button button--primary" to="/native-bridge?new=podcast">Add Episode</Link>
+            <Link className="button" to={`${adminRoutes.podcasts}/settings`}>Podcast Settings</Link>
+            <Link className="button button--primary" to={`${adminRoutes.nativeBridge}?new=podcast`}>Add Episode</Link>
           </div>
         </div>
 
@@ -109,7 +110,7 @@ export function PodcastAdminPage({ pieces }) {
                   <td>
                     <div className="wp-row-actions">
                       {episode.slug ? <Link to={`/post/${episode.slug}`} target="_blank" rel="noreferrer">View</Link> : null}
-                      {episode.source === 'native' ? <Link to={`/native-bridge?edit=${episode.id}`}>Edit</Link> : <span>Imported</span>}
+                      {episode.source === 'native' ? <Link to={`${adminRoutes.nativeBridge}?edit=${episode.id}`}>Edit</Link> : <span>Imported</span>}
                     </div>
                   </td>
                 </tr>

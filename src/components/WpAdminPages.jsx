@@ -10,6 +10,7 @@ import { loadCustomizerSettings, saveCustomizerSettings } from '../lib/customize
 import { exportLocalSiteBackupJson } from '../lib/localSiteBackup'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import { loadWpSettings, saveWpSettings } from '../lib/wpAdminLocal'
+import { adminRoutes } from '../routing/routes'
 
 export { PagesAdminPage, SettingsAdminPage, UsersAdminPage }
 
@@ -47,7 +48,7 @@ export function CustomizeAdminPage() {
         <div className="wp-screen-header">
           <h1>Customize</h1>
           <div>
-            <Link className="button" to="/draft">Edit Live</Link>{' '}
+            <Link className="button" to={adminRoutes.liveEditor}>Edit Live</Link>{' '}
             <button className="button button--primary" type="button" onClick={saveCustomize}>Save Changes</button>
           </div>
         </div>

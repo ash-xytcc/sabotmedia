@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { loadPodcastSettings, savePodcastSettings } from '../lib/podcastSettings'
+import { adminRoutes } from '../routing/routes'
 
 export function PodcastSettingsPage() {
   const [settings, setSettings] = useState(() => loadPodcastSettings())
@@ -23,7 +24,7 @@ export function PodcastSettingsPage() {
         <div className="wp-screen-header">
           <h1>Podcast Settings</h1>
           <div className="review-card__actions">
-            <Link className="button" to="/podcasts">Back to Episodes</Link>
+            <Link className="button" to={adminRoutes.podcasts}>Back to Episodes</Link>
             <button className="button button--primary" type="button" onClick={onSave}>Save Podcast Settings</button>
           </div>
         </div>

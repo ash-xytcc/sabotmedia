@@ -5,6 +5,7 @@ import { useAdminAuth } from './AdminAuthContext'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
+import { adminRoutes } from '../routing/routes'
 
 export function PublicAdminToolbar() {
   const siteTitle = 'Sabot Media'
@@ -64,7 +65,7 @@ export function PublicAdminToolbar() {
     if (!postMatch) return ''
     const slug = postMatch[2]
     const found = nativeItems.find((item) => item.slug === slug)
-    return found ? `/native-bridge?edit=${found.id}` : ''
+    return found ? `${adminRoutes.nativeBridge}?edit=${found.id}` : ''
   }, [location.pathname, nativeItems])
 
   const editSiteLink = useMemo(() => {
@@ -86,11 +87,11 @@ export function PublicAdminToolbar() {
         <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/'} aria-label={`${siteTitle} home`}>
           <img src={mastheadLogo} alt={siteTitle} className="wp-public-admin-bar__brand-logo" />
         </a>
-        <a className="wp-public-admin-bar__item" href={'/admin'}>Dashboard</a>
-        <a className="wp-public-admin-bar__item" href={'/native-bridge?new=article'}>New</a>
-        <a className="wp-public-admin-bar__item" href={'/content'}>Posts</a>
-        <a className="wp-public-admin-bar__item" href={'/media'}>Media</a>
-        <a className="wp-public-admin-bar__item" href={'/customize'}>Customize</a>
+        <a className="wp-public-admin-bar__item" href={adminRoutes.dashboard}>Dashboard</a>
+        <a className="wp-public-admin-bar__item" href={adminRoutes.addNew}>New</a>
+        <a className="wp-public-admin-bar__item" href={adminRoutes.posts}>Posts</a>
+        <a className="wp-public-admin-bar__item" href={adminRoutes.media}>Media</a>
+        <a className="wp-public-admin-bar__item" href={adminRoutes.customize}>Customize</a>
         {editPostLink ? <a className="wp-public-admin-bar__item" href={editPostLink}>Edit Post</a> : null}
         <a className="wp-public-admin-bar__item" href={editSiteLink}>Edit Site</a>
       </div>

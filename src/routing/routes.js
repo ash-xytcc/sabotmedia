@@ -16,20 +16,36 @@ export const publicRoutes = Object.freeze({
 export const adminRoutes = Object.freeze({
   dashboard: '/wp-admin',
   posts: '/wp-admin/posts',
+  addNew: '/wp-admin/add-new',
+  nativeBridge: '/wp-admin/native-bridge',
   media: '/wp-admin/media',
+  pages: '/wp-admin/pages',
   projects: '/wp-admin/projects',
   printlab: '/wp-admin/printlab',
+  customize: '/wp-admin/customize',
+  liveEditor: '/wp-admin/live-editor',
+  tools: '/wp-admin/tools',
   qa: '/wp-admin/qa',
   settings: '/wp-admin/settings',
+  users: '/wp-admin/users',
+  sites: '/wp-admin/sites',
+  podcasts: '/wp-admin/podcasts',
+  overrides: '/wp-admin/overrides',
 })
 
 export const routeRedirects = Object.freeze([
   { from: '/admin', to: adminRoutes.dashboard },
   { from: '/content', to: adminRoutes.posts },
+  { from: '/posts', to: adminRoutes.posts },
   { from: '/media', to: adminRoutes.media },
-  { from: '/projects/:slug', to: publicRoutes.project },
+  { from: '/pages', to: adminRoutes.pages },
   { from: '/printlab', to: adminRoutes.printlab },
+  { from: '/customize', to: adminRoutes.customize },
+  { from: '/draft', to: adminRoutes.liveEditor },
+  { from: '/tools', to: adminRoutes.tools },
   { from: '/settings', to: adminRoutes.settings },
+  { from: '/users', to: adminRoutes.users },
+  { from: '/sites', to: adminRoutes.sites },
 ])
 
 export function postPath(slug) {

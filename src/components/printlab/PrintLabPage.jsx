@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { adminRoutes } from '../../routing/routes'
 import { getImportedImage } from '../../lib/getImportedImage'
 import { AdminFrame } from '../AdminRail'
 import { usePrintlabSources } from './hooks/usePrintlabSources'
@@ -1877,7 +1878,7 @@ export function PrintLabPage({ pieces = [] }) {
       <main className={`page wp-admin-screen print-lab-page${toolMode === 'canvas' ? ' print-lab-page--canvas-mode' : ''}`}>
         <div className="wp-screen-header print-lab-screen-header">
           <h1>Printlab</h1>
-          <Link className="button" to="/content">Back to Posts</Link>
+          <Link className="button" to={adminRoutes.posts}>Back to Posts</Link>
         </div>
 
         <section

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
+import { adminRoutes } from '../routing/routes'
 
 const SECTIONS = [
   ['Site Identity', 'Edit title, tagline, and publication identity ing.'],
@@ -34,7 +35,7 @@ export function CustomizePage() {
           </div>
 
           <p className="description">
-            Existing legacy draft/config tools are still available under <Link to="/draft">Site Editor</Link>, but Customize should become the primary friendly surface.
+            Existing legacy draft/config tools are still available under <Link to={adminRoutes.liveEditor}>Site Editor</Link>, but Customize should become the primary friendly surface.
           </p>
         </section>
       </main>

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { EditableText } from './EditableText'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
 import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
+import { adminRoutes } from '../routing/routes'
 
 function WorkflowStep({ title, body, action, to }) {
   return (
@@ -54,12 +55,12 @@ export function AdminWorkflowCard() {
       </EditableText>
 
       <div className="admin-workflow-card__grid">
-        <WorkflowStep title={title1} body={body1} action={action1} to="/review" />
-        <WorkflowStep title={title2} body={body2} action={action2} to="/overrides" />
-        <WorkflowStep title={title3} body={body3} action={action3} to="/podcasts" />
-        <WorkflowStep title={title4} body={body4} action={action4} to="/native-bridge" />
+        <WorkflowStep title={title1} body={body1} action={action1} to={adminRoutes.qa} />
+        <WorkflowStep title={title2} body={body2} action={action2} to={adminRoutes.overrides} />
+        <WorkflowStep title={title3} body={body3} action={action3} to={adminRoutes.podcasts} />
+        <WorkflowStep title={title4} body={body4} action={action4} to={adminRoutes.nativeBridge} />
         <WorkflowStep title={title5} body={body5} action={action5} to="/updates" />
-        <WorkflowStep title={title6} body={body6} action={action6} to="/draft" />
+        <WorkflowStep title={title6} body={body6} action={action6} to={adminRoutes.liveEditor} />
       </div>
     </section>
   )
