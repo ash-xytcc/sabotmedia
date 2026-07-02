@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { loadNativeCollection, slugify, upsertNativeEntry, saveNativeCollection } from '../lib/nativePublicContent'
+import { getPieces } from '../lib/pieces'
+import { createNativeEntryFromImportedPiece, loadNativeCollection, slugify, upsertNativeEntry, saveNativeCollection } from '../lib/nativePublicContent'
 import { AdminFrame } from './AdminRail'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 
@@ -35,18 +36,37 @@ export function ContentListPage() {
     loadNativeCollection({ includeFuture: 1 }).then((loaded) => setItems(Array.isArray(loaded) ? loaded : []))
   }, [])
 
-  const categories = useMemo(() => [...new Set(items.flatMap((item) => item.projects || item.categories || []))].filter(Boolean), [items])
+  const allRows = useMemo(() => {
+    const nativeSlugKeys = new Set(items.map((item) => String(item.slug || '').toLowerCase()).filter(Boolean))
+    const nativeSourceKeys = new Set(items.map((item) => String(item.sourcePostId || item.sourceExternalId || '').toLowerCase()).filter(Boolean))
+    const importedRows = getPieces()
+      .filter((piece) => {
+        const slugKey = String(piece.slug || '').toLowerCase()
+        const sourceKey = String(piece.sourcePostId || piece.id || '').toLowerCase()
+        return !nativeSlugKeys.has(slugKey) && !nativeSourceKeys.has(sourceKey)
+      })
+      .map((piece) => ({
+        ...createNativeEntryFromImportedPiece(piece),
+        isImportedArchive: true,
+        importSlug: piece.slug,
+      }))
+
+    return [...items, ...importedRows]
+  }, [items])
+
+  const categories = useMemo(() => [...new Set(allRows.flatMap((item) => item.projects || item.categories || []))].filter(Boolean), [allRows])
   const [categoryFilter, setCategoryFilter] = useState('all')
 
   const visible = useMemo(() => {
     const q = query.toLowerCase()
-    return items.filter((item) => {
+    return allRows.filter((item) => {
       const bucket = getBucket(item)
       if (tab !== 'all' && bucket !== tab) return false
       if (categoryFilter !== 'all' && !(item.projects || item.categories || []).includes(categoryFilter)) return false
       return !q || [item.title, item.slug, item.author, ...(item.tags || [])].join(' ').toLowerCase().includes(q)
     })
-  }, [items, tab, query, categoryFilter])
+  }, [allRows, tab, query, categoryFilter])
+  const selectableVisible = useMemo(() => visible.filter((item) => !item.isImportedArchive), [visible])
   const trashCount = useMemo(() => items.filter((item) => item.status === 'trash').length, [items])
 
   async function saveQuickEdit(id) {
@@ -133,7 +153,7 @@ export function ContentListPage() {
           <table className="content-table wp-posts-table">
             <thead>
               <tr>
-                <th><input type="checkbox" checked={selectedIds.length === visible.length && visible.length > 0} onChange={(e) => setSelectedIds(e.target.checked ? visible.map((item) => item.id) : [])} /></th>
+                <th><input type="checkbox" checked={selectedIds.length === selectableVisible.length && selectableVisible.length > 0} onChange={(e) => setSelectedIds(e.target.checked ? selectableVisible.map((item) => item.id) : [])} /></th>
                 <th>Title</th>
                 <th>Status</th>
                 <th>Author</th>
@@ -146,21 +166,21 @@ export function ContentListPage() {
               {visible.map((item) => (
                 <Fragment key={item.id}>
                   <tr key={item.id}>
-                    <td><input type="checkbox" checked={selectedIds.includes(item.id)} onChange={(e) => setSelectedIds((current) => e.target.checked ? [...new Set([...current, item.id])] : current.filter((id) => id !== item.id))} /></td>
+                    <td>{item.isImportedArchive ? null : <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={(e) => setSelectedIds((current) => e.target.checked ? [...new Set([...current, item.id])] : current.filter((id) => id !== item.id))} />}</td>
                     <td>
                       <strong className="content-table__title">{item.title || 'Untitled'}</strong>
                       <div className="wp-row-actions">
-                        <Link to={`/native-bridge?edit=${item.id}`}>Edit</Link>
-                        <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || item.projects || []).join(', ') }) }}>Quick Edit</button>
+                        <Link to={item.isImportedArchive ? `/native-bridge?import=${item.importSlug || item.slug}` : `/native-bridge?edit=${item.id}`}>Edit</Link>
+                        {item.isImportedArchive ? null : <button type="button" onClick={() => { setQuickEditId(item.id); setQuickEdit({ title: item.title || '', slug: item.slug || '', status: item.status || 'draft', tags: (item.tags || []).join(', '), categories: (item.categories || item.projects || []).join(', ') }) }}>Quick Edit</button>}
                         {item.status === 'published' ? <Link to={`/post/${item.slug}`}>View</Link> : null}
-                        {item.status !== 'trash' ? <button type="button" onClick={async () => { setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash')); pushNotice('Post moved to Trash.', 'warning') }}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
+                        {item.isImportedArchive ? <span>Imported archive</span> : item.status !== 'trash' ? <button type="button" onClick={async () => { setItems(await upsertNativeEntry(items, { ...item, status: 'trash' }, 'trash')); pushNotice('Post moved to Trash.', 'warning') }}>Trash</button> : <button type="button" onClick={async () => setItems(await upsertNativeEntry(items, { ...item, status: 'draft' }, 'restore'))}>Restore</button>}
                       </div>
                     </td>
-                    <td>{item.status || item.workflowState || 'draft'}</td>
+                    <td>{item.isImportedArchive ? 'published / imported' : item.status || item.workflowState || 'draft'}</td>
                     <td>{item.author || 'sabotmedia'}</td>
                     <td>{(item.projects || item.categories || ['Uncategorized']).join(', ')}</td>
                     <td>{(item.tags || []).join(', ') || '—'}</td>
-                    <td>{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '—'}</td>
+                    <td>{(item.publishedAt || item.updatedAt) ? new Date(item.publishedAt || item.updatedAt).toLocaleDateString() : '—'}</td>
                   </tr>
                   {quickEditId === item.id ? (
                     <tr className="wp-quick-edit-row" key={`${item.id}-qe`}>

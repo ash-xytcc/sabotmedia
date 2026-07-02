@@ -1,5 +1,5 @@
 import { getImportedImage } from './getImportedImage'
-import { loadNativeCollection } from './nativePublicContent'
+import { loadNativeCollection, slugify } from './nativePublicContent'
 import { classicEditorBodyToHtml } from './classicEditorBody'
 
 export function isPublishedNativeEntry(item) {
@@ -15,6 +15,13 @@ export function isPublishedNativeEntry(item) {
 
 export function normalizeNativePublicPiece(item) {
   const publishedAt = item.publishedAt || item.updatedAt || new Date().toISOString()
+  const primaryProject =
+    item.primaryProject ||
+    (Array.isArray(item.projects) && item.projects[0]) ||
+    (Array.isArray(item.categories) && item.categories[0]) ||
+    (item.target && item.target !== 'projects' ? item.target : '') ||
+    'General'
+  const primaryProjectSlug = item.primaryProjectSlug || slugify(primaryProject) || 'general'
   const type =
     item.contentType === 'podcast'
       ? 'podcast'
@@ -45,8 +52,8 @@ export function normalizeNativePublicPiece(item) {
     type,
     contentType: type,
     target: item.target || 'general',
-    primaryProject: item.target || 'General',
-    primaryProjectSlug: item.target || 'general',
+    primaryProject,
+    primaryProjectSlug,
     tags: Array.isArray(item.tags) ? item.tags : [],
     bodyHtml: resolveNativeBodyHtml(item),
     richBody: Array.isArray(item.richBody) ? item.richBody : [],
@@ -57,8 +64,8 @@ export function normalizeNativePublicPiece(item) {
     heroImage: image,
     imageUrl: image,
     href: `/post/${item.slug || item.id}`,
-    relatedAssets: [],
-    relatedPrintLinks: [],
+    relatedAssets: Array.isArray(item.relatedAssets) ? item.relatedAssets : [],
+    relatedPrintLinks: Array.isArray(item.relatedPrintLinks) ? item.relatedPrintLinks : [],
     hasPrintAssets: Boolean(item.hasPrintAssets || type === 'print'),
     hidden: false,
     reviewFlags: [],
@@ -77,16 +84,20 @@ export function mergeNativeAndImportedPieces(importedPieces = [], nativePieces =
   const byKey = new Map()
 
   for (const item of importedPieces || []) {
-    byKey.set(`imported:${item.slug || item.id}`, item)
+    byKey.set(getPublicPieceMergeKey(item), item)
   }
 
   for (const item of nativePieces || []) {
-    byKey.set(`native:${item.slug || item.id}`, item)
+    byKey.set(getPublicPieceMergeKey(item), item)
   }
 
   return [...byKey.values()]
     .filter((item) => item?.hidden !== true)
     .sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0) - new Date(a.publishedAt || a.updatedAt || 0))
+}
+
+function getPublicPieceMergeKey(item) {
+  return String(item?.slug || item?.sourcePostId || item?.id || '').trim().toLowerCase()
 }
 
 export function resolveNativeBodyHtml(item) {

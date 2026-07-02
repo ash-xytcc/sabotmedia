@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { getPieces } from '../lib/pieces'
 import {
   createEmptyNativeEntry,
+  createNativeEntryFromImportedPiece,
   loadNativeCollection,
   slugify,
   upsertNativeEntryLocal,
@@ -201,6 +202,7 @@ function saveLocalRevision(postId, draft, note) {
       status: String(draft?.status || 'draft'),
       workflowState: String(draft?.workflowState || 'draft'),
       publishedAt: String(draft?.publishedAt || ''),
+      author: String(draft?.author || ''),
       podcastAudioUrl: String(draft?.podcastAudioUrl || ''),
       podcastRssEnclosureUrl: String(draft?.podcastRssEnclosureUrl || ''),
       podcastDuration: String(draft?.podcastDuration || ''),
@@ -231,6 +233,8 @@ function toAutosaveFingerprint(draft, allowComments) {
     contentType: draft?.contentType || 'dispatch',
     status: draft?.status || 'draft',
     workflowState: draft?.workflowState || 'draft',
+    publishedAt: draft?.publishedAt || '',
+    author: draft?.author || '',
     scheduledFor: draft?.scheduledFor || '',
     tags: Array.isArray(draft?.tags) ? draft.tags : [],
     categories: Array.isArray(draft?.categories) ? draft.categories : [],
@@ -262,6 +266,10 @@ function applyDisplayPatch(current, patch) {
       ...patch,
     }),
   }
+}
+
+function liveBodyToBodyHtml(body = '') {
+  return classicEditorBodyToHtml(body)
 }
 
 export function NativeContentBridgePage() {
@@ -314,8 +322,14 @@ export function NativeContentBridgePage() {
       const loaded = await loadNativeCollection({ includeFuture: 1 })
       setItems(Array.isArray(loaded) ? loaded : [])
       const editId = searchParams.get('edit')
+      const importSlug = searchParams.get('import')
       const mode = searchParams.get('new') || 'article'
-      const found = (loaded || []).find((item) => item.id === editId)
+      const importedPiece = importSlug
+        ? getPieces().find((piece) => piece.slug === importSlug || String(piece.id || '') === importSlug || String(piece.sourcePostId || '') === importSlug)
+        : null
+      const found = importSlug
+        ? (loaded || []).find((item) => item.slug === importedPiece?.slug || item.sourcePostId === String(importedPiece?.sourcePostId || importedPiece?.id || ''))
+        : (loaded || []).find((item) => item.id === editId)
       if (found) {
         setActiveId(found.id)
         setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [], slugManuallyEdited: true })
@@ -323,6 +337,14 @@ export function NativeContentBridgePage() {
         setAllowComments(found.allowComments ?? true)
         setRevisions(loadLocalRevisions(found.id))
         lastAutosaveFingerprintRef.current = toAutosaveFingerprint(found, found.allowComments ?? true)
+      } else if (importedPiece) {
+        const importedDraft = createNativeEntryFromImportedPiece(importedPiece)
+        setActiveId(importedDraft.id)
+        setDraft({ ...importedDraft, tags: importedDraft.tags || [], categories: importedDraft.categories || importedDraft.projects || [], slugManuallyEdited: true })
+        setPermalinkDraft(importedDraft.slug || '')
+        setAllowComments(importedDraft.allowComments ?? true)
+        setRevisions(loadLocalRevisions(importedDraft.id))
+        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(importedDraft, importedDraft.allowComments ?? true)
       } else {
         const fresh = createTypedEntry(mode)
         setActiveId(fresh.id)
@@ -414,6 +436,7 @@ export function NativeContentBridgePage() {
       projects: normalizedCategories,
       featuredImage: merged.featuredImage || merged.heroImage || '',
       heroImage: merged.heroImage || merged.featuredImage || '',
+      bodyHtml: liveBodyToBodyHtml(merged.body || ''),
       featuredImageTitle: merged.featuredImageTitle || '',
       featuredImageAlt: merged.featuredImageAlt || '',
       featuredImageCaption: merged.featuredImageCaption || '',
@@ -637,7 +660,7 @@ export function NativeContentBridgePage() {
     <AdminFrame>
       <main className="page wp-admin-screen wp-edit-screen">
         <div className="wp-screen-header">
-          <h1>{searchParams.get('edit') ? 'Edit Post' : 'Add New Post'}</h1>
+          <h1>{searchParams.get('edit') || searchParams.get('import') ? 'Edit Post' : 'Add New Post'}</h1>
           <Link className="button" to="/native-bridge?new=article">Add New</Link>
         </div>
         <WpAdminNotices />
@@ -717,6 +740,22 @@ export function NativeContentBridgePage() {
             <section className="wp-meta-box">
               <h2>Publish</h2>
               <label className="native-content-editor__field">
+                <span>Author</span>
+                <input
+                  value={draft.author || ''}
+                  onChange={(event) => setDraft((current) => ({ ...current, author: event.target.value }))}
+                  placeholder="Sabot Media"
+                />
+              </label>
+              <label className="native-content-editor__field">
+                <span>Publication date</span>
+                <input
+                  type="datetime-local"
+                  value={toLocalDateTime(draft.publishedAt)}
+                  onChange={(event) => setDraft((current) => ({ ...current, publishedAt: fromLocalDateTime(event.target.value) }))}
+                />
+              </label>
+              <label className="native-content-editor__field">
                 <span>Status</span>
                 <select value={draft.status || 'draft'} onChange={(event) => setDraft((current) => ({ ...current, status: event.target.value, workflowState: event.target.value }))}>
                   <option value="draft">Draft</option>
@@ -739,7 +778,7 @@ export function NativeContentBridgePage() {
                 <button className="button" type="button" onClick={() => handleSave('save draft', { status: 'draft', workflowState: 'draft' })}>Save Draft</button>
                 <button className="button" type="button" onClick={handlePreviewChanges}>Preview</button>
                 <button className="button button--primary" type="button" onClick={() => handleSave('publish', { status: 'published', workflowState: 'published' })}>Publish</button>
-                {searchParams.get('edit') ? <button className="button button-link-delete" type="button" onClick={handleMoveToTrash}>Trash</button> : null}
+                {searchParams.get('edit') || searchParams.get('import') ? <button className="button button-link-delete" type="button" onClick={handleMoveToTrash}>Trash</button> : null}
               </div>
               {autosaveState.status === 'saved' ? <p className="description">Autosaved {formatAutosaveTime(autosaveState.at)}</p> : null}
               {publishSuccess ? <p className="description" role="status">Saved: <Link to={publishSuccess.slug ? `/post/${publishSuccess.slug}` : `/native-preview/${publishSuccess.id}`}>{publishSuccess.title}</Link></p> : null}

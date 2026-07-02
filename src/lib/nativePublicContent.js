@@ -3,6 +3,7 @@ import {
   saveNativeEntry,
   removeNativeEntry,
 } from './nativePublicContentApi'
+import { getImportedImage } from './getImportedImage'
 import { normalizeNativeDisplaySettings } from './publicDisplayModes'
 
 const FALLBACK_STORAGE_KEY = 'sabot-native-public-content-v1'
@@ -48,10 +49,15 @@ export function createEmptyNativeEntry() {
     podcastTranscript: '',
     podcastSummary: '',
     podcastCoverImage: '',
+    relatedAssets: [],
+    relatedPrintLinks: [],
+    seoTitle: '',
+    seoDescription: '',
     createdAt: now,
     updatedAt: now,
     publishedAt: '',
     scheduledFor: '',
+    allowComments: true,
   }
 }
 
@@ -109,6 +115,10 @@ export function normalizeNativeEntry(input) {
     podcastCoverImage: String(raw.podcastCoverImage || raw.featuredImage || raw.heroImage || ''),
     fullTranscript: String(raw.fullTranscript || ''),
     transcriptNotes: String(raw.transcriptNotes || ''),
+    relatedAssets: Array.isArray(raw.relatedAssets) ? raw.relatedAssets : [],
+    relatedPrintLinks: Array.isArray(raw.relatedPrintLinks) ? raw.relatedPrintLinks : [],
+    seoTitle: String(raw.seoTitle || raw.metaTitle || ''),
+    seoDescription: String(raw.seoDescription || raw.metaDescription || ''),
     categories: normalizeTags(raw.categories || raw.projects),
     projects: normalizeTags(raw.projects || raw.categories),
     tags: normalizeTags(raw.tags),
@@ -116,7 +126,56 @@ export function normalizeNativeEntry(input) {
     updatedAt: String(raw.updatedAt || new Date().toISOString()),
     publishedAt: String(raw.publishedAt || ''),
     scheduledFor: normalizeDateString(raw.scheduledFor || ''),
+    allowComments: raw.allowComments !== false,
   }
+}
+
+export function createNativeEntryFromImportedPiece(piece = {}) {
+  const now = new Date().toISOString()
+  const slug = slugify(piece.slug || piece.title || piece.id || '')
+  const sourcePostId = String(piece.sourcePostId || piece.id || slug)
+  const projects = normalizeTags(piece.projects || piece.primaryProject || piece.primaryProjectSlug)
+  const featuredImage = String(piece.featuredImage || piece.heroImage || piece.imageUrl || getImportedImage(piece) || '')
+  const publishedAt = normalizeDateString(piece.publishedAt || piece.date || '') || now
+  const contentType = mapImportedContentType(piece.type || piece.contentType)
+
+  return normalizeNativeEntry({
+    id: `imported-${sourcePostId || slug}`,
+    schemaVersion: NATIVE_CONTENT_SCHEMA_VERSION,
+    contentType,
+    status: 'published',
+    workflowState: 'published',
+    target: projects.length ? 'projects' : 'general',
+    title: piece.title || '',
+    slug,
+    excerpt: piece.excerpt || piece.subtitle || '',
+    body: piece.bodyHtml || piece.body || '',
+    bodyHtml: piece.bodyHtml || piece.body || '',
+    richBody: Array.isArray(piece.richBody) ? piece.richBody : [],
+    author: piece.author || 'Sabot Media',
+    sourceType: 'imported',
+    sourceKind: 'imported',
+    sourceLabel: piece.sourcePostType || piece.type || 'imported archive',
+    sourceUrl: piece.sourceUrl || '',
+    sourceExternalId: sourcePostId,
+    sourcePostId,
+    sourceNotes: piece.sourceNotes || '',
+    categories: projects,
+    projects,
+    tags: piece.tags || [],
+    featuredImage,
+    heroImage: featuredImage,
+    featuredImageTitle: piece.featuredImageTitle || piece.title || '',
+    featuredImageAlt: piece.featuredImageAlt || '',
+    featuredImageCaption: piece.featuredImageCaption || '',
+    hasPrintAssets: Boolean(piece.hasPrintAssets || contentType === 'print'),
+    relatedAssets: piece.relatedAssets || [],
+    relatedPrintLinks: piece.relatedPrintLinks || [],
+    createdAt: piece.createdAt || publishedAt,
+    updatedAt: now,
+    publishedAt,
+    allowComments: piece.allowComments !== false,
+  })
 }
 
 export function normalizeNativeCollection(input) {
@@ -321,4 +380,12 @@ function normalizeTags(value) {
       .filter(Boolean)
   }
   return []
+}
+
+function mapImportedContentType(value) {
+  const type = String(value || '').toLowerCase()
+  if (type === 'podcast' || type === 'audio') return 'podcast'
+  if (['print', 'zine', 'comic'].includes(type)) return 'print'
+  if (type === 'note') return 'note'
+  return 'dispatch'
 }
