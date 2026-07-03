@@ -1,12 +1,14 @@
 const STORAGE_KEY = 'sabot.feedSettings.v1'
 
 export const DEFAULT_FEED_SETTINGS = {
-  feedsIntroTitle: 'Subscribe to Sabot Media',
-  feedsIntroBody: `Sabot Media publishes as a public archive, not just a scrolling website. The archive can be followed through feeds for the whole publication, formats, projects, collections, authors, and future series.
+  feedsIntroTitle: 'Follow the Sabot Media archive',
+  feedsIntroBody: `Sabot Media is built as a public archive, not just a front page that disappears into yesterday. Feeds let readers, researchers, RSS apps, podcast apps, librarians, mirror sites, and other tools follow new work without waiting for an algorithm to notice us.
 
-Feeds let readers use their own tools instead of waiting for an algorithm to notice us. RSS readers, podcast apps, archiving tools, and other sites can check these feeds for new work and mirror or preserve what we publish.
+The main feed follows everything we publish. Format feeds follow one kind of work, like articles, comics, podcasts, newsletters, or print material. Project and collection feeds follow bodies of work. Topic and series feeds follow recurring subjects. Byline feeds follow public byline labels, not legal names.
 
-Every feed is generated from editable metadata. If a category, project, author label, topic, or series name is wrong, it can be changed from the backend without rewriting the site.`,
+Those labels are editorial metadata, and they are editable. If an imported category is wrong, if a project name changes, if a contributor publishes under a collective name, or if a byline should never expose a real name, editors can rename or hide the feed term from the backend.
+
+This is boring old-internet infrastructure on purpose. Boring infrastructure can be subscribed to, mirrored, printed, archived, scraped, and preserved by people instead of trapped inside a platform feed run by someone else's machinery.`,
   feedBasePath: '/feeds',
   exposeMainFeed: true,
   exposeFormatFeeds: true,
@@ -17,8 +19,9 @@ Every feed is generated from editable metadata. If a category, project, author l
   exposeSeriesFeeds: true,
   aliases: {
     author: {
-      sabotmedia: 'Sabot Media',
-      'Sabot Media': 'Sabot Media',
+      sabotmedia: 'Sabot Media Collective',
+      'sabotmedia': 'Sabot Media Collective',
+      'Sabot Media': 'Sabot Media Collective',
     },
     format: {
       post: 'article',
