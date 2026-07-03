@@ -166,7 +166,7 @@ export function ToolsAdminPage() {
     try {
       const nativeItems = await loadNativeCollection({ includeFuture: 1 })
       downloadRssBundle([...(Array.isArray(nativeItems) ? nativeItems : []), ...getPieces()])
-      setStatus('RSS bundle exported.')
+      setStatus('RSS bundle exported. This is a JSON package containing multiple XML feeds for software, not a human-readable article.')
     } catch {
       setStatus('RSS export failed.')
     }
@@ -186,8 +186,17 @@ export function ToolsAdminPage() {
             <button type="button" className="button button--primary" onClick={exportBackup}>
               Export Backup JSON
             </button>
+          </div>
+        </section>
+
+        <section className="wp-meta-box">
+          <h2>Syndication</h2>
+          <p className="description">The RSS bundle is a machine-readable package of XML feeds: everything, formats, projects, collections, author labels, topics, series, and podcasts. Edit labels and hide junk imported categories before exposing feeds publicly.</p>
+          <div className="review-card__actions">
+            <Link className="button button--primary" to={adminRoutes.feeds}>Edit Feed Settings</Link>
+            <Link className="button" to="/feeds">View Public Feeds Page</Link>
             <button type="button" className="button" onClick={exportRss}>
-              Generate RSS Bundle
+              Export RSS Bundle JSON
             </button>
           </div>
           {status ? <p className="description" role="status">{status}</p> : null}
