@@ -30,6 +30,7 @@ const ADMIN_PREFIXES = [
 ]
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+const PAGE_METHODS = new Set(['GET', 'HEAD'])
 const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/session'])
 
 export async function onRequest(context) {
@@ -49,29 +50,25 @@ export async function onRequest(context) {
 
   const permission = await resolvePublicSitePermission(context)
   if (permission.canEdit) {
+    if (isAdminRoute && PAGE_METHODS.has(method) && context.env?.ASSETS?.fetch) {
+      const indexUrl = new URL('/index.html', url.origin)
+      return context.env.ASSETS.fetch(new Request(indexUrl.toString(), context.request))
+    }
+
     return context.next()
   }
 
   if (isApiWrite) {
-    return json({
-      ok: false,
-      canEdit: false,
-      error: permission.reason || 'authentication required',
-      authMode: permission.mode || 'locked',
-    }, 403)
+    return new Response(JSON.stringify({ ok: false, canEdit: false, error: permission.reason || 'authentication required', authMode: permission.mode || 'locked' }, null, 2), {
+      status: 403,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+        'cache-control': 'no-store',
+      },
+    })
   }
 
   const loginUrl = new URL('/login', url.origin)
   loginUrl.searchParams.set('returnTo', `${url.pathname}${url.search || ''}${url.hash || ''}`)
   return Response.redirect(loginUrl.toString(), 302)
-}
-
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data, null, 2), {
-    status,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
-    },
-  })
 }
