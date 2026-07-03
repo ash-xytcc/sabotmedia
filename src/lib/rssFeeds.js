@@ -1,3 +1,5 @@
+import { loadFeedSettings, normalizeFeedTerm, slugifyFeedTerm } from './feedSettings'
+
 function escapeXml(value = '') {
   return String(value || '')
     .replaceAll('&', '&amp;')
@@ -11,20 +13,24 @@ function itemDate(item) {
   return Number.isFinite(d.getTime()) ? d.toUTCString() : new Date().toUTCString()
 }
 
-function normalizeFeedItem(item) {
+function normalizeFeedItem(item, settings) {
   const slug = item.slug || item.id || ''
+  const author = normalizeFeedTerm('author', item.author || item.byline || 'Sabot Media', settings) || 'Sabot Media'
+  const category = normalizeFeedTerm('format', item.contentType || item.type || 'article', settings) || 'article'
+
   return {
     title: item.title || slug || 'Untitled',
     link: slug ? `https://sabot.media/post/${slug}` : 'https://sabot.media/archive',
     description: item.excerpt || item.summary || '',
     date: itemDate(item),
-    author: item.author || 'Sabot Media',
-    category: item.contentType || item.type || 'article',
+    author,
+    category,
   }
 }
 
-export function buildRssXml(title, description, items = []) {
-  const feedItems = items.map(normalizeFeedItem)
+export function buildRssXml(title, description, items = [], options = {}) {
+  const settings = options.settings || loadFeedSettings()
+  const feedItems = items.map((item) => normalizeFeedItem(item, settings))
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
@@ -45,12 +51,22 @@ ${feedItems.map((item) => `    <item>
 </rss>`
 }
 
-function groupBy(items, getter) {
+function getValues(item, fields = []) {
+  const values = []
+  for (const field of fields) {
+    const value = item?.[field]
+    if (Array.isArray(value)) values.push(...value)
+    else if (value) values.push(value)
+  }
+  return values
+}
+
+function groupBy(items, kind, getter, settings) {
   const groups = {}
   for (const item of items) {
     const keys = getter(item)
     for (const key of Array.isArray(keys) ? keys : [keys]) {
-      const clean = String(key || '').trim()
+      const clean = normalizeFeedTerm(kind, key, settings)
       if (!clean) continue
       groups[clean] = groups[clean] || []
       groups[clean].push(item)
@@ -59,37 +75,91 @@ function groupBy(items, getter) {
   return groups
 }
 
-export function buildRssBundle(items = []) {
+function addGroupedFeeds(bundle, { prefix, titlePrefix, descriptionPrefix, groups, settings }) {
+  for (const [term, groupItems] of Object.entries(groups)) {
+    const slug = slugifyFeedTerm(term)
+    bundle[`${prefix}/${slug}.xml`] = buildRssXml(`${titlePrefix} / ${term}`, `${descriptionPrefix} ${term}.`, groupItems, { settings })
+  }
+}
+
+export function buildRssBundle(items = [], options = {}) {
+  const settings = options.settings || loadFeedSettings()
   const visible = items.filter((item) => item.status === 'published' || item.workflowState === 'published' || item.publishedAt)
-  const bundle = {
-    'all-content.xml': buildRssXml('Sabot Media', 'All published Sabot Media content.', visible),
+  const bundle = {}
+
+  if (settings.exposeMainFeed !== false) {
+    bundle['all-content.xml'] = buildRssXml('Sabot Media', 'All published Sabot Media content.', visible, { settings })
   }
 
-  for (const [project, projectItems] of Object.entries(groupBy(visible, (item) => item.projects || item.primaryProject || item.categories || []))) {
-    bundle[`projects/${project}.xml`] = buildRssXml(`Sabot Media / ${project}`, `Published content for ${project}.`, projectItems)
+  if (settings.exposeProjectFeeds !== false) {
+    addGroupedFeeds(bundle, {
+      prefix: 'projects',
+      titlePrefix: 'Sabot Media',
+      descriptionPrefix: 'Published content for',
+      groups: groupBy(visible, 'project', (item) => getValues(item, ['projects', 'primaryProject', 'categories']), settings),
+      settings,
+    })
   }
 
-  for (const [collection, collectionItems] of Object.entries(groupBy(visible, (item) => item.collections || item.collection || []))) {
-    bundle[`collections/${collection}.xml`] = buildRssXml(`Sabot Media / ${collection}`, `Published content in ${collection}.`, collectionItems)
+  if (settings.exposeCollectionFeeds !== false) {
+    addGroupedFeeds(bundle, {
+      prefix: 'collections',
+      titlePrefix: 'Sabot Media',
+      descriptionPrefix: 'Published content in',
+      groups: groupBy(visible, 'collection', (item) => getValues(item, ['collections', 'collection']), settings),
+      settings,
+    })
   }
 
-  for (const [format, formatItems] of Object.entries(groupBy(visible, (item) => item.contentType || item.type || 'article'))) {
-    bundle[`formats/${format}.xml`] = buildRssXml(`Sabot Media / ${format}`, `Published ${format} content.`, formatItems)
+  if (settings.exposeFormatFeeds !== false) {
+    addGroupedFeeds(bundle, {
+      prefix: 'formats',
+      titlePrefix: 'Sabot Media',
+      descriptionPrefix: 'Published',
+      groups: groupBy(visible, 'format', (item) => item.contentType || item.type || 'article', settings),
+      settings,
+    })
   }
 
-  for (const [author, authorItems] of Object.entries(groupBy(visible, (item) => item.author || 'Sabot Media'))) {
-    bundle[`authors/${author}.xml`] = buildRssXml(`Sabot Media / ${author}`, `Published content by ${author}.`, authorItems)
+  if (settings.exposeAuthorFeeds !== false) {
+    addGroupedFeeds(bundle, {
+      prefix: 'authors',
+      titlePrefix: 'Sabot Media',
+      descriptionPrefix: 'Published content by',
+      groups: groupBy(visible, 'author', (item) => item.author || item.byline || 'Sabot Media', settings),
+      settings,
+    })
   }
 
-  const podcasts = visible.filter((item) => String(item.contentType || item.type || '').toLowerCase().includes('podcast'))
-  bundle['podcasts/all.xml'] = buildRssXml('Sabot Media Podcasts', 'Published podcast episodes from Sabot Media.', podcasts)
+  if (settings.exposeTopicFeeds !== false) {
+    addGroupedFeeds(bundle, {
+      prefix: 'topics',
+      titlePrefix: 'Sabot Media',
+      descriptionPrefix: 'Published content tagged',
+      groups: groupBy(visible, 'topic', (item) => getValues(item, ['topics', 'tags']), settings),
+      settings,
+    })
+  }
+
+  if (settings.exposeSeriesFeeds !== false) {
+    addGroupedFeeds(bundle, {
+      prefix: 'series',
+      titlePrefix: 'Sabot Media',
+      descriptionPrefix: 'Published content in',
+      groups: groupBy(visible, 'series', (item) => getValues(item, ['series', 'seriesSlug']), settings),
+      settings,
+    })
+  }
+
+  const podcasts = visible.filter((item) => String(normalizeFeedTerm('format', item.contentType || item.type || '', settings)).toLowerCase().includes('podcast'))
+  if (podcasts.length) bundle['podcasts/all.xml'] = buildRssXml('Sabot Media Podcasts', 'Published podcast episodes from Sabot Media.', podcasts, { settings })
 
   return bundle
 }
 
-export function downloadRssBundle(items = []) {
+export function downloadRssBundle(items = [], options = {}) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
-  const blob = new Blob([JSON.stringify(buildRssBundle(items), null, 2)], { type: 'application/json' })
+  const blob = new Blob([JSON.stringify(buildRssBundle(items, options), null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
