@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { loadSites } from '../lib/siteDomains'
 import { adminRoutes } from '../routing/routes'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
+import { AdminCommandPalette } from './AdminCommandPalette'
 
 const MENU = [
   { to: adminRoutes.dashboard, label: 'Dashboard' },
@@ -61,16 +62,23 @@ function AdminBarMenu({ label, children, className = '' }) {
 export function AdminRail() {
   const location = useLocation()
   const [sites, setSites] = useState(() => loadSites())
+  const [paletteOpenTick, setPaletteOpenTick] = useState(0)
 
   useEffect(() => {
     setSites(loadSites())
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!paletteOpenTick) return
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))
+  }, [paletteOpenTick])
 
   const primarySite = sites[0]
   const primarySiteName = String(primarySite?.name || 'Sabot Media').trim() || 'Sabot Media'
 
   return (
     <>
+      <AdminCommandPalette />
       <div className="wp-admin-topbar" role="navigation" aria-label="SabotPress admin bar">
         <div className="wp-admin-topbar__left">
           <Link to={adminRoutes.dashboard} className="wp-admin-topbar__link wp-admin-topbar__link--icon" aria-label="SabotPress" title="SabotPress">
@@ -97,6 +105,7 @@ export function AdminRail() {
           </AdminBarMenu>
 
           <Link to={adminRoutes.customize} className="wp-admin-topbar__link">Customize</Link>
+          <button type="button" className="wp-admin-topbar__button wp-admin-topbar__command" onClick={() => setPaletteOpenTick((tick) => tick + 1)}>⌘K</button>
         </div>
 
         <div className="wp-admin-topbar__right">
