@@ -14,6 +14,7 @@ const MENU = [
   { to: adminRoutes.pages, label: 'Pages' },
   { to: adminRoutes.collections, label: 'Collections' },
   { to: adminRoutes.publications, label: 'Publications' },
+  { to: adminRoutes.feeds, label: 'Feeds' },
   { to: adminRoutes.customize, label: 'Customize' },
   { to: adminRoutes.tools, label: 'Tools' },
   { to: adminRoutes.siteHealth, label: 'Site Health' },
