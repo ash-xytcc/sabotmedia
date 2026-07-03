@@ -15,7 +15,7 @@ function itemDate(item) {
 
 function normalizeFeedItem(item, settings) {
   const slug = item.slug || item.id || ''
-  const author = normalizeFeedTerm('author', item.author || item.byline || 'Sabot Media', settings) || 'Sabot Media'
+  const author = normalizeFeedTerm('author', item.author || item.byline || 'Sabot Media Collective', settings) || 'Sabot Media Collective'
   const category = normalizeFeedTerm('format', item.contentType || item.type || 'article', settings) || 'article'
 
   return {
@@ -123,10 +123,10 @@ export function buildRssBundle(items = [], options = {}) {
 
   if (settings.exposeAuthorFeeds !== false) {
     addGroupedFeeds(bundle, {
-      prefix: 'authors',
+      prefix: 'bylines',
       titlePrefix: 'Sabot Media',
-      descriptionPrefix: 'Published content by',
-      groups: groupBy(visible, 'author', (item) => item.author || item.byline || 'Sabot Media', settings),
+      descriptionPrefix: 'Published under the public byline label',
+      groups: groupBy(visible, 'author', (item) => item.author || item.byline || 'Sabot Media Collective', settings),
       settings,
     })
   }
