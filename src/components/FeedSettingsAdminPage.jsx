@@ -5,12 +5,12 @@ import { loadFeedSettings, resetFeedSettings, saveFeedSettings } from '../lib/fe
 import { buildRssBundle, downloadRssBundle } from '../lib/rssFeeds'
 
 const KINDS = [
-  ['format', 'Formats'],
-  ['project', 'Projects'],
-  ['collection', 'Collections'],
-  ['author', 'Author labels'],
-  ['topic', 'Topics'],
-  ['series', 'Series'],
+  ['format', 'Formats', 'Formats are broad reading lanes like article, podcast, comic, newsletter, zine, print, or audio.'],
+  ['project', 'Projects', 'Projects are public buckets used to browse bodies of work. Imported categories may need cleanup here.'],
+  ['collection', 'Collections', 'Collections are curated bodies of work, campaigns, issues, or publication packages.'],
+  ['author', 'Public byline labels', 'Bylines are public labels only. Use handles, collectives, pseudonyms, or house names. Never expose a legal name unless that is intentional.'],
+  ['topic', 'Topics', 'Topics are subject tags readers can follow across formats and projects.'],
+  ['series', 'Series', 'Series are recurring lines of work, columns, comics, newsletters, or podcasts.'],
 ]
 
 function listToText(value = []) {
@@ -42,7 +42,7 @@ function collectTerms(items = [], kind) {
   const terms = new Set()
   for (const item of items) {
     if (kind === 'format') terms.add(item.contentType || item.type || 'article')
-    if (kind === 'author') terms.add(item.author || item.byline || 'Sabot Media')
+    if (kind === 'author') terms.add(item.author || item.byline || 'Sabot Media Collective')
     if (kind === 'project') [item.primaryProject, ...(item.projects || []), ...(item.categories || [])].forEach((value) => value && terms.add(value))
     if (kind === 'collection') [item.collection, ...(item.collections || [])].forEach((value) => value && terms.add(value))
     if (kind === 'topic') [...(item.topics || []), ...(item.tags || [])].forEach((value) => value && terms.add(value))
@@ -84,7 +84,7 @@ export function FeedSettingsAdminPage() {
   function save() {
     const next = saveFeedSettings(settings)
     setSettings(next)
-    setStatus('Feed settings saved in this browser. Export a backup after major taxonomy cleanup.')
+    setStatus('Feed settings saved in this browser. Export a backup after major taxonomy cleanup so the settings can be restored after deploys or device changes.')
   }
 
   function reset() {
@@ -98,15 +98,20 @@ export function FeedSettingsAdminPage() {
       <main className="page wp-admin-screen feeds-admin-page">
         <div className="wp-screen-header">
           <div>
-            <h1>Feeds</h1>
-            <p className="description">Control public RSS taxonomy, aliases, labels, visibility, and the public explanation page.</p>
+            <h1>Feeds & Syndication</h1>
+            <p className="description">Control the public RSS taxonomy, aliases, hidden labels, public explanation page, and privacy-safe byline behavior.</p>
           </div>
           <div className="review-card__actions">
-            <button className="button" type="button" onClick={() => downloadRssBundle(pieces, { settings })}>Export RSS Bundle</button>
+            <button className="button" type="button" onClick={() => downloadRssBundle(pieces, { settings })}>Download RSS Bundle</button>
             <button className="button" type="button" onClick={reset}>Reset</button>
             <button className="button button--primary" type="button" onClick={save}>Save Feed Settings</button>
           </div>
         </div>
+
+        <section className="wp-meta-box">
+          <h2>What this controls</h2>
+          <p className="description">Every published piece can appear in multiple feeds at once: the main feed, a format feed, a project feed, a collection feed, a topic feed, a series feed, and a public byline feed. Change the labels here to clean up imported categories without touching every article by hand. This is where wrong labels get renamed, junk labels get hidden, and bylines stay pseudonymous or collective when they need to.</p>
+        </section>
 
         <section className="wp-meta-box">
           <h2>Public feeds page</h2>
@@ -117,7 +122,7 @@ export function FeedSettingsAdminPage() {
             </label>
             <label>
               <span>Intro copy</span>
-              <textarea rows={9} value={settings.feedsIntroBody || ''} onChange={(event) => updateField('feedsIntroBody', event.target.value)} />
+              <textarea rows={11} value={settings.feedsIntroBody || ''} onChange={(event) => updateField('feedsIntroBody', event.target.value)} />
             </label>
           </div>
         </section>
@@ -130,7 +135,7 @@ export function FeedSettingsAdminPage() {
               ['exposeFormatFeeds', 'Formats'],
               ['exposeProjectFeeds', 'Projects'],
               ['exposeCollectionFeeds', 'Collections'],
-              ['exposeAuthorFeeds', 'Author labels'],
+              ['exposeAuthorFeeds', 'Public byline labels'],
               ['exposeTopicFeeds', 'Topics'],
               ['exposeSeriesFeeds', 'Series'],
             ].map(([field, label]) => (
@@ -140,12 +145,13 @@ export function FeedSettingsAdminPage() {
               </label>
             ))}
           </div>
-          <p className="description">Generated now: {Object.keys(bundle).length} feed files.</p>
+          <p className="description">Generated now: {Object.keys(bundle).length} feed files. The download is a JSON bundle containing XML feed files, which looks ugly in a text editor because, naturally, it is food for machines.</p>
         </section>
 
-        {KINDS.map(([kind, label]) => (
+        {KINDS.map(([kind, label, help]) => (
           <section className="wp-meta-box" key={kind}>
             <h2>{label}</h2>
+            <p className="description">{help}</p>
             <p className="description">Use one alias per line, like <code>old label =&gt; new label</code>. Hide wrong/imported junk terms by listing them below.</p>
             <div className="feed-taxonomy-grid">
               <label>
