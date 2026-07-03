@@ -20,7 +20,6 @@ This is boring old-internet infrastructure on purpose. Boring infrastructure can
   aliases: {
     author: {
       sabotmedia: 'Sabot Media Collective',
-      'sabotmedia': 'Sabot Media Collective',
       'Sabot Media': 'Sabot Media Collective',
     },
     format: {
