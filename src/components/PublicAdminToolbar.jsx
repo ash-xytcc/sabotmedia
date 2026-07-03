@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { usePublicEdit } from './PublicEditContext'
 import { useAdminAuth } from './AdminAuthContext'
 import { getEditorPermissionsSnapshot } from '../lib/editorPermissions'
@@ -84,16 +84,16 @@ export function PublicAdminToolbar() {
   return (
     <div className="wp-public-admin-bar" role="navigation" aria-label="Editor toolbar">
       <div className="wp-public-admin-bar__left">
-        <a className="wp-public-admin-bar__item wp-public-admin-bar__brand" href={'/'} aria-label={`${siteTitle} home`}>
+        <Link className="wp-public-admin-bar__item wp-public-admin-bar__brand" to="/" aria-label={`${siteTitle} home`}>
           <img src={mastheadLogo} alt={siteTitle} className="wp-public-admin-bar__brand-logo" />
-        </a>
-        <a className="wp-public-admin-bar__item" href={adminRoutes.dashboard}>Dashboard</a>
-        <a className="wp-public-admin-bar__item" href={adminRoutes.addNew}>New</a>
-        <a className="wp-public-admin-bar__item" href={adminRoutes.posts}>Posts</a>
-        <a className="wp-public-admin-bar__item" href={adminRoutes.media}>Media</a>
-        <a className="wp-public-admin-bar__item" href={adminRoutes.customize}>Customize</a>
-        {editPostLink ? <a className="wp-public-admin-bar__item" href={editPostLink}>Edit Post</a> : null}
-        <a className="wp-public-admin-bar__item" href={editSiteLink}>Edit Site</a>
+        </Link>
+        <Link className="wp-public-admin-bar__item" to={adminRoutes.dashboard}>Dashboard</Link>
+        <Link className="wp-public-admin-bar__item" to={adminRoutes.addNew}>New</Link>
+        <Link className="wp-public-admin-bar__item" to={adminRoutes.posts}>Posts</Link>
+        <Link className="wp-public-admin-bar__item" to={adminRoutes.media}>Media</Link>
+        <Link className="wp-public-admin-bar__item" to={adminRoutes.customize}>Customize</Link>
+        {editPostLink ? <Link className="wp-public-admin-bar__item" to={editPostLink}>Edit Post</Link> : null}
+        <Link className="wp-public-admin-bar__item" to={editSiteLink}>Edit Site</Link>
       </div>
       <div className="wp-public-admin-bar__right">
         <button className="wp-public-admin-bar__item" type="button" onClick={handleLogout}>Logout</button>
