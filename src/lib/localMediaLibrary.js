@@ -34,6 +34,14 @@ function normalizeMediaItem(item) {
     source: String(item.source || 'local-upload'),
     mimeType: String(item.mimeType || ''),
     extension: String(item.extension || ''),
+    thumbnailUrl: String(item.thumbnailUrl || item.thumbUrl || url),
+    fullUrl: String(item.fullUrl || url),
+    creator: String(item.creator || ''),
+    license: String(item.license || ''),
+    licenseUrl: String(item.licenseUrl || ''),
+    attribution: String(item.attribution || ''),
+    mediaType: String(item.mediaType || (String(item.mimeType || '').includes('svg') ? 'svg' : 'image')),
+    landingUrl: String(item.landingUrl || ''),
   }
 }
 

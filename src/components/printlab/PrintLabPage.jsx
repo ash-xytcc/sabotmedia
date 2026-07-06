@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { adminRoutes } from '../../routing/routes'
 import { getImportedImage } from '../../lib/getImportedImage'
+import { addLocalMediaItem } from '../../lib/localMediaLibrary'
 import { AdminFrame } from '../AdminRail'
 import { usePrintlabSources } from './hooks/usePrintlabSources'
 import {
@@ -18,6 +19,7 @@ import {
   systemCanvasFontOptions,
 } from './lib/canvasMath'
 import { buildExportHtml } from './lib/exportHtml'
+import { normalizePrintlabAsset } from './lib/assetSources'
 import { CanvasFloatingToolbar } from './CanvasFloatingToolbar'
 import {
   getCanvasOutput,
@@ -45,8 +47,16 @@ import { TileSheetRenderer } from './renderers/TileSheetRenderer'
 const sourceOptions = [
   { id: 'upload', label: 'Upload Image', help: 'Use a new image from your computer.' },
   { id: 'media', label: 'Media Library', help: 'Reuse an image already saved in Sabot Media.' },
+  { id: 'url', label: 'URL Import', help: 'Use an image or SVG from a direct URL.' },
+  { id: 'openverse', label: 'Openverse', help: 'Search openly licensed images from Openverse.' },
+  { id: 'wikimedia', label: 'Wikimedia Commons', help: 'Search files and license metadata from Wikimedia Commons.' },
+  { id: 'iconify', label: 'Iconify Icons', help: 'Search open source SVG icons from Iconify.' },
+  { id: 'loc', label: 'Library of Congress', help: 'Search digitized image records from the Library of Congress.' },
+  { id: 'archive', label: 'Internet Archive', help: 'Search image/text records from the Internet Archive when results are usable.' },
   { id: 'post', label: 'CMS Post', help: 'Use an existing article/post as source material.' },
 ]
+
+const externalSourceIds = ['openverse', 'wikimedia', 'iconify', 'loc', 'archive']
 
 const toolOptions = [
   { id: 'tile', label: 'Tile Sheet', shortLabel: 'T' },
@@ -168,6 +178,40 @@ function renderParagraphs(text) {
   return paragraphs.map((paragraph, index) => <p key={`${index}-${paragraph.slice(0, 16)}`}>{paragraph}</p>)
 }
 
+function getAssetImageUrl(asset) {
+  return asset?.fullUrl || asset?.url || asset?.thumbnailUrl || ''
+}
+
+function getAssetAttribution(asset) {
+  const normalized = normalizePrintlabAsset(asset)
+  if (!normalized) return null
+  const hasAttribution = normalized.attribution || normalized.creator || normalized.license || normalized.licenseUrl || normalized.source
+  if (!hasAttribution) return null
+  return {
+    id: normalized.id,
+    title: normalized.title,
+    source: normalized.source,
+    creator: normalized.creator,
+    license: normalized.license,
+    licenseUrl: normalized.licenseUrl,
+    attribution: normalized.attribution,
+    fullUrl: normalized.fullUrl,
+    landingUrl: normalized.landingUrl,
+    mediaType: normalized.mediaType,
+  }
+}
+
+function dedupeAttributions(items = []) {
+  const seen = new Set()
+  return items.filter((item) => {
+    if (!item) return false
+    const key = item.id || item.fullUrl || item.attribution
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 export function PrintLabPage({ pieces = [] }) {
   const {
     publishedPieces,
@@ -185,6 +229,18 @@ export function PrintLabPage({ pieces = [] }) {
     setSelectedMediaId,
     uploadImage,
     setUploadImage,
+    urlInput,
+    setUrlInput,
+    urlAsset,
+    importUrl,
+    assetQuery,
+    setAssetQuery,
+    assetResults,
+    assetState,
+    assetError,
+    searchAssets,
+    selectedAssetId,
+    setSelectedAssetId,
     isLoading,
   } = usePrintlabSources(pieces)
   const [toolMode, setToolMode] = useState('tile')
@@ -285,6 +341,14 @@ export function PrintLabPage({ pieces = [] }) {
   const selectedCanvasBlock = canvasBlocks.find((block) => block.id === selectedCanvasBlockId) || null
   const uploadedFontFaceCss = useMemo(() => getUploadedFontFaceCss(uploadedCanvasFonts), [uploadedCanvasFonts])
   const readerOrderPages = useMemo(() => getReaderOrderPages(publication), [publication])
+  const currentImageAttribution = useMemo(() => getAssetAttribution(currentImage), [currentImage])
+  const usedAttributions = useMemo(() => {
+    const pageAttributions = readerOrderPages.flatMap((page) => (
+      (page.blocks || []).map((block) => getAssetAttribution(block.asset || block.attributionAsset || block.assetAttribution))
+    ))
+    const activeSourceAttribution = currentImageUrl ? currentImageAttribution : null
+    return dedupeAttributions([activeSourceAttribution, ...pageAttributions])
+  }, [currentImageAttribution, currentImageUrl, readerOrderPages])
 
   function updateActiveCanvasPage(patchOrFn, options = {}) {
     const { markDirty = true } = options
@@ -422,12 +486,16 @@ export function PrintLabPage({ pieces = [] }) {
       imageTitle: currentImageTitle,
     })
 
-    setCanvasBlocks(nextBlocks.map((block) => clampCanvasBlock(block, canvasSize)), { markDirty: false })
+    setCanvasBlocks(nextBlocks.map((block) => clampCanvasBlock(
+      block.type === 'image' && currentImageAttribution ? { ...block, asset: currentImageAttribution } : block,
+      canvasSize
+    )), { markDirty: false })
     setSelectedCanvasBlockId(nextBlocks[0]?.id || '')
     setCanvasInteraction(null)
   }, [
     currentImageTitle,
     currentImageUrl,
+    currentImageAttribution,
     pageTitle,
     selectedPostBody,
     selectedPostExcerpt,
@@ -445,8 +513,10 @@ export function PrintLabPage({ pieces = [] }) {
     if (!currentImageUrl) return 'No source selected'
     if (sourceType === 'upload') return 'Uploaded image'
     if (sourceType === 'media') return 'Media image'
+    if (sourceType === 'url') return 'URL import'
+    if (externalSourceIds.includes(sourceType)) return currentImage?.source || 'External asset'
     return 'Image source'
-  }, [currentImageUrl, selectedPiece, selectedPostTitle, sourceType])
+  }, [currentImage, currentImageUrl, selectedPiece, selectedPostTitle, sourceType])
   const missingSourceMessage = toolMode === 'split'
     ? 'Select or upload an image to split a poster across printable pages.'
     : 'Select or upload an image to build a tile sheet.'
@@ -711,10 +781,12 @@ export function PrintLabPage({ pieces = [] }) {
 
   function addCanvasImageBlock() {
     if (!currentImageUrl) return
+    const attribution = getAssetAttribution(currentImage)
     const block = clampCanvasBlock(makeCanvasBlock('image', {
       src: currentImageUrl,
       title: currentImageTitle || 'Image',
       name: currentImageTitle || 'Image',
+      asset: attribution || undefined,
       x: Math.max(24, canvasSize.width - 330),
       y: 92,
       width: 260,
@@ -722,6 +794,69 @@ export function PrintLabPage({ pieces = [] }) {
     }), canvasSize)
     setCanvasBlocks((blocks) => [...blocks, block])
     setSelectedCanvasBlockId(block.id)
+  }
+
+  function addCanvasAssetBlock(asset) {
+    const normalized = normalizePrintlabAsset(asset)
+    const url = getAssetImageUrl(normalized)
+    if (!normalized || !url) return
+    const attribution = getAssetAttribution(normalized)
+    const block = clampCanvasBlock(makeCanvasBlock('image', {
+      src: url,
+      title: normalized.title || 'Image',
+      name: normalized.title || 'Image',
+      asset: attribution || undefined,
+      x: Math.max(24, canvasSize.width - 330),
+      y: 92,
+      width: normalized.mediaType === 'svg' ? 180 : 260,
+      height: normalized.mediaType === 'svg' ? 180 : 220,
+      fit: normalized.mediaType === 'svg' ? 'contain' : 'cover',
+    }), canvasSize)
+    setCanvasBlocks((blocks) => [...blocks, block])
+    setSelectedCanvasBlockId(block.id)
+    setToolMode('canvas')
+    setCanvasToolsOpen(true)
+    setActionStatus(`Inserted "${normalized.title}" in the canvas with attribution metadata.`)
+    window.setTimeout(fitCanvasToViewport, 0)
+  }
+
+  function handleUseAsset(asset) {
+    const normalized = normalizePrintlabAsset(asset)
+    if (!normalized) return
+    if (externalSourceIds.includes(sourceType)) setSelectedAssetId(normalized.id)
+    if (!tileCaption.trim()) setTileCaption(normalized.title)
+    if (toolMode === 'canvas') {
+      addCanvasAssetBlock(normalized)
+      return
+    }
+    setActionStatus(`Using "${normalized.title}" from ${normalized.source}. Attribution metadata is preserved.`)
+  }
+
+  function handleSaveAssetToLibrary(asset) {
+    const normalized = normalizePrintlabAsset(asset)
+    const url = getAssetImageUrl(normalized)
+    if (!normalized || !url) return
+    addLocalMediaItem({
+      id: `external-${normalized.source.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`,
+      url,
+      dataUrl: url,
+      fullUrl: normalized.fullUrl,
+      thumbnailUrl: normalized.thumbnailUrl,
+      title: normalized.title,
+      filename: '',
+      alt: normalized.title,
+      caption: normalized.attribution,
+      description: normalized.landingUrl || normalized.fullUrl,
+      source: normalized.source,
+      creator: normalized.creator,
+      license: normalized.license,
+      licenseUrl: normalized.licenseUrl,
+      attribution: normalized.attribution,
+      mediaType: normalized.mediaType,
+      landingUrl: normalized.landingUrl,
+      uploadedAt: new Date().toISOString(),
+    })
+    setActionStatus(`Saved "${normalized.title}" to the Media Library with attribution metadata.`)
   }
 
   function deleteSelectedCanvasBlock() {
@@ -1120,20 +1255,88 @@ export function PrintLabPage({ pieces = [] }) {
 
   function handleDownloadHtml() {
     if (!hasUsableOutput || !previewRef.current) return
-    const html = buildExportHtml(previewRef.current.outerHTML, pageTitle || zineTitle || currentImageTitle || 'Printlab Output', { fontsHref: printlabGoogleFontsHref })
+    const html = buildExportHtml(previewRef.current.outerHTML, pageTitle || zineTitle || currentImageTitle || 'Printlab Output', {
+      fontsHref: printlabGoogleFontsHref,
+      attributions: usedAttributions,
+    })
     downloadFile(makeDownloadName(pageTitle || zineTitle || currentImageTitle || toolMode, 'html'), html, 'text/html;charset=utf-8')
     setActionStatus('HTML downloaded.')
   }
 
   function handleDownloadText() {
     if (!hasUsableOutput) return
-    downloadFile(makeDownloadName(pageTitle || zineTitle || currentImageTitle || toolMode, 'txt'), currentTextContent, 'text/plain;charset=utf-8')
+    const attributionText = usedAttributions.length
+      ? `\n\nAttribution\n${usedAttributions.map((asset) => [
+        asset.title || 'Untitled asset',
+        asset.source ? `Source: ${asset.source}` : '',
+        asset.creator ? `Creator: ${asset.creator}` : '',
+        asset.license ? `License: ${asset.license}` : '',
+        asset.licenseUrl ? `License URL: ${asset.licenseUrl}` : '',
+        asset.attribution ? `Attribution: ${asset.attribution}` : '',
+      ].filter(Boolean).join('\n')).join('\n\n')}`
+      : ''
+    downloadFile(makeDownloadName(pageTitle || zineTitle || currentImageTitle || toolMode, 'txt'), `${currentTextContent}${attributionText}`, 'text/plain;charset=utf-8')
     setActionStatus('Text downloaded.')
   }
 
   function handlePrint() {
     if (!hasUsableOutput) return
     window.print()
+  }
+
+  function renderAssetCard(asset) {
+    const normalized = normalizePrintlabAsset(asset)
+    if (!normalized) return null
+    const selected = normalized.id === selectedAssetId || normalized.id === currentImage?.id
+    return (
+      <article className={`print-lab-asset-card${selected ? ' is-selected' : ''}`} key={normalized.id}>
+        <button
+          className="print-lab-asset-card__pick"
+          type="button"
+          aria-pressed={selected}
+          onClick={() => {
+            setSelectedAssetId(normalized.id)
+            setActionStatus(`Selected "${normalized.title}". Use in design to place it.`)
+          }}
+        >
+          <span className="print-lab-asset-card__thumb">
+            <img src={normalized.thumbnailUrl || normalized.fullUrl} alt="" loading="lazy" />
+          </span>
+          <span className="print-lab-asset-card__body">
+            <strong>{normalized.title || 'Untitled asset'}</strong>
+            <span>{normalized.source || 'External source'}</span>
+            {normalized.license ? <small>License: {normalized.license}</small> : null}
+            {normalized.creator ? <small>Creator: {normalized.creator}</small> : null}
+          </span>
+        </button>
+        <div className="print-lab-asset-card__actions">
+          <button className="button button--primary" type="button" onClick={() => handleUseAsset(normalized)}>Use in design</button>
+          <button className="button" type="button" onClick={() => handleSaveAssetToLibrary(normalized)}>Save to Media Library</button>
+        </div>
+      </article>
+    )
+  }
+
+  function renderAttributionPanel() {
+    return (
+      <fieldset className="print-lab-control-group print-lab-attribution-panel">
+        <legend>Attribution</legend>
+        {usedAttributions.length ? (
+          <div className="print-lab-attribution-list">
+            {usedAttributions.map((asset) => (
+              <article key={asset.id || asset.fullUrl}>
+                <strong>{asset.title || 'Untitled asset'}</strong>
+                <span>{[asset.source, asset.creator, asset.license].filter(Boolean).join(' / ')}</span>
+                {asset.attribution ? <p>{asset.attribution}</p> : null}
+                {asset.licenseUrl ? <a href={asset.licenseUrl} target="_blank" rel="noreferrer">License</a> : null}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="print-lab-empty-note print-lab-empty-note--compact">No external asset attribution has been added yet.</p>
+        )}
+      </fieldset>
+    )
   }
 
   function renderSourcePanel() {
@@ -1211,6 +1414,71 @@ export function PrintLabPage({ pieces = [] }) {
                 </div>
               ) : (
                 <p className="print-lab-empty-note">No existing images are available.</p>
+              )}
+            </div>
+          ) : null}
+
+          {sourceType === 'url' ? (
+            <div className="print-lab-source-section">
+              <label className="print-lab-field">
+                <span>Image or SVG URL</span>
+                <input value={urlInput} onChange={(event) => setUrlInput(event.target.value)} placeholder="https://example.org/image.jpg" />
+              </label>
+              <button
+                className="button button--primary"
+                type="button"
+                onClick={() => {
+                  try {
+                    const asset = importUrl()
+                    if (asset && !tileCaption.trim()) setTileCaption(asset.title)
+                    setActionStatus(asset ? `Imported URL: ${asset.title}. Add license metadata before publishing.` : '')
+                  } catch (err) {
+                    setActionStatus(String(err?.message || err))
+                  }
+                }}
+              >
+                Import URL
+              </button>
+              {urlAsset ? renderAssetCard(urlAsset) : (
+                <p className="print-lab-empty-note print-lab-empty-note--compact">URL imports are marked as unknown license until you verify and edit the metadata.</p>
+              )}
+            </div>
+          ) : null}
+
+          {externalSourceIds.includes(sourceType) ? (
+            <div className="print-lab-source-section">
+              <div className="print-lab-source-search">
+                <label className="print-lab-field">
+                  <span>Asset search</span>
+                  <input
+                    value={assetQuery}
+                    onChange={(event) => setAssetQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault()
+                        searchAssets(sourceType, assetQuery)
+                      }
+                    }}
+                    placeholder={sourceType === 'iconify' ? 'home, arrow, radio' : 'strike poster, mutual aid, forest'}
+                  />
+                </label>
+                <button className="button button--primary" type="button" onClick={() => searchAssets(sourceType, assetQuery)} disabled={assetState === 'loading'}>
+                  {assetState === 'loading' ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+              {assetError ? <p className="print-lab-empty-note print-lab-empty-note--compact">{assetError}</p> : null}
+              {sourceType === 'iconify' ? (
+                <p className="print-lab-source-help">Iconify icons render as SVGs. Icon set licenses vary, so verify the specific set before publishing.</p>
+              ) : null}
+              {assetState === 'loaded' && !assetResults.length ? (
+                <p className="print-lab-empty-note">No assets found.</p>
+              ) : null}
+              {assetResults.length ? (
+                <div className="print-lab-asset-results">
+                  {assetResults.map((asset) => renderAssetCard(asset))}
+                </div>
+              ) : (
+                assetState === 'idle' ? <p className="print-lab-empty-note">Search {sourceOptions.find((option) => option.id === sourceType)?.label} to pull in reusable assets.</p> : null
               )}
             </div>
           ) : null}
@@ -1717,6 +1985,8 @@ export function PrintLabPage({ pieces = [] }) {
             </p>
           ) : null}
 
+          {renderAttributionPanel()}
+
           <div className="print-lab-actions">
             <button className="button button--primary print-lab-print-button" type="button" disabled={!hasUsableOutput} onClick={handlePrint}>
               Print
@@ -1825,6 +2095,7 @@ export function PrintLabPage({ pieces = [] }) {
                     src: currentImageUrl,
                     title: currentImageTitle || contextBlock.title || 'Image',
                     name: currentImageTitle || contextBlock.name || 'Image',
+                    asset: currentImageAttribution || undefined,
                   })
                   setCanvasContextMenu(null)
                 }}

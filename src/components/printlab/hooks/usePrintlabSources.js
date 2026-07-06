@@ -3,6 +3,7 @@ import { getImportedImage } from '../../../lib/getImportedImage'
 import { loadLocalMediaItems } from '../../../lib/localMediaLibrary'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../../../lib/nativePublicFeed'
 import { useWordPressPieces } from '../../../lib/useWordPressPieces'
+import { importUrlAsset, normalizePrintlabAsset, searchAssetSource } from '../lib/assetSources'
 
 function getPieceId(piece) {
   const source = piece?.sourceKind || piece?.sourcePostType || piece?.origin || 'imported'
@@ -118,6 +119,22 @@ function getPostMediaItems(pieces = []) {
   }).filter(Boolean)
 }
 
+function normalizeMediaAsset(item) {
+  return normalizePrintlabAsset({
+    id: item.id,
+    title: item.title || item.filename || 'Uploaded media',
+    thumbnailUrl: item.thumbnailUrl || item.url || item.dataUrl,
+    fullUrl: item.fullUrl || item.url || item.dataUrl,
+    source: item.source || 'local-upload',
+    creator: item.creator || '',
+    license: item.license || '',
+    licenseUrl: item.licenseUrl || '',
+    attribution: item.attribution || '',
+    mediaType: item.mediaType || 'image',
+    landingUrl: item.landingUrl || '',
+  })
+}
+
 export function usePrintlabSources(pieces = []) {
   const [nativePieces, setNativePieces] = useState([])
   const [nativeState, setNativeState] = useState('loading')
@@ -126,6 +143,14 @@ export function usePrintlabSources(pieces = []) {
   const [selectedId, setSelectedId] = useState('')
   const [selectedMediaId, setSelectedMediaId] = useState('')
   const [uploadImage, setUploadImage] = useState(null)
+  const [urlInput, setUrlInput] = useState('')
+  const [urlAsset, setUrlAsset] = useState(null)
+  const [externalSourceId, setExternalSourceId] = useState('openverse')
+  const [assetQuery, setAssetQuery] = useState('')
+  const [assetResults, setAssetResults] = useState([])
+  const [assetState, setAssetState] = useState('idle')
+  const [assetError, setAssetError] = useState('')
+  const [selectedAssetId, setSelectedAssetId] = useState('')
   const wordpressFeed = useWordPressPieces(pieces)
 
   useEffect(() => {
@@ -179,9 +204,17 @@ export function usePrintlabSources(pieces = []) {
     const localItems = localMedia.map((item) => ({
       id: item.id,
       url: item.url || item.dataUrl,
+      fullUrl: item.fullUrl || item.url || item.dataUrl,
+      thumbnailUrl: item.thumbnailUrl || item.url || item.dataUrl,
       title: item.title || item.filename || 'Uploaded media',
       source: item.source || 'local-upload',
       meta: item.filename || '',
+      creator: item.creator || '',
+      license: item.license || '',
+      licenseUrl: item.licenseUrl || '',
+      attribution: item.attribution || '',
+      mediaType: item.mediaType || 'image',
+      landingUrl: item.landingUrl || '',
     }))
     return dedupeImageItems([...localItems, ...getPostMediaItems(publishedPieces)])
   }, [localMedia, publishedPieces])
@@ -197,8 +230,18 @@ export function usePrintlabSources(pieces = []) {
     ))
   }, [mediaItems])
 
+  useEffect(() => {
+    if (!['openverse', 'wikimedia', 'iconify', 'loc', 'archive'].includes(sourceType)) return
+    setExternalSourceId(sourceType)
+    setAssetResults([])
+    setSelectedAssetId('')
+    setAssetState('idle')
+    setAssetError('')
+  }, [sourceType])
+
   const selectedPiece = publishedPieces.find((piece) => getPieceId(piece) === selectedId) || null
   const selectedMedia = mediaItems.find((item) => item.id === selectedMediaId) || null
+  const selectedExternalAsset = assetResults.find((item) => item.id === selectedAssetId) || null
   const selectedPostImage = getFeaturedImage(selectedPiece)
   const selectedPostHtml = getPreviewHtml(selectedPiece)
   const selectedPostBody = useMemo(() => getPlainTextFromHtml(selectedPostHtml), [selectedPostHtml])
@@ -208,17 +251,59 @@ export function usePrintlabSources(pieces = []) {
 
   const currentImage = useMemo(() => {
     if (sourceType === 'upload') return uploadImage
-    if (sourceType === 'media') return selectedMedia
+    if (sourceType === 'media') return selectedMedia ? normalizeMediaAsset(selectedMedia) : null
+    if (sourceType === 'url') return urlAsset
+    if (['openverse', 'wikimedia', 'iconify', 'loc', 'archive'].includes(sourceType)) return selectedExternalAsset
     if (sourceType === 'post' && selectedPiece) {
       return selectedPostImage ? {
         id: getPieceId(selectedPiece),
         url: selectedPostImage,
+        fullUrl: selectedPostImage,
+        thumbnailUrl: selectedPostImage,
         title: selectedPostTitle || 'Post image',
         source: getContentType(selectedPiece),
+        creator: '',
+        license: '',
+        licenseUrl: '',
+        attribution: '',
+        mediaType: 'image',
       } : null
     }
     return null
-  }, [selectedMedia, selectedPiece, selectedPostImage, selectedPostTitle, sourceType, uploadImage])
+  }, [selectedExternalAsset, selectedMedia, selectedPiece, selectedPostImage, selectedPostTitle, sourceType, uploadImage, urlAsset])
+
+  async function searchAssets(nextSourceId = externalSourceId, nextQuery = assetQuery) {
+    const q = String(nextQuery || '').trim()
+    if (!q) {
+      setAssetResults([])
+      setSelectedAssetId('')
+      setAssetState('idle')
+      setAssetError('')
+      return []
+    }
+    try {
+      setAssetState('loading')
+      setAssetError('')
+      const results = await searchAssetSource(nextSourceId, q)
+      setAssetResults(results)
+      setSelectedAssetId((current) => (results.some((item) => item.id === current) ? current : (results[0]?.id || '')))
+      setAssetState('loaded')
+      return results
+    } catch (err) {
+      setAssetResults([])
+      setSelectedAssetId('')
+      setAssetState('error')
+      setAssetError(String(err?.message || err))
+      return []
+    }
+  }
+
+  function importUrl() {
+    const asset = importUrlAsset(urlInput)
+    setUrlAsset(asset)
+    setSourceType('url')
+    return asset
+  }
 
   return {
     publishedPieces,
@@ -239,6 +324,23 @@ export function usePrintlabSources(pieces = []) {
     setSelectedMediaId,
     uploadImage,
     setUploadImage,
+    urlInput,
+    setUrlInput,
+    urlAsset,
+    setUrlAsset,
+    importUrl,
+    externalSourceId,
+    setExternalSourceId,
+    assetQuery,
+    setAssetQuery,
+    assetResults,
+    setAssetResults,
+    assetState,
+    assetError,
+    searchAssets,
+    selectedAssetId,
+    setSelectedAssetId,
+    selectedExternalAsset,
     isLoading,
   }
 }
