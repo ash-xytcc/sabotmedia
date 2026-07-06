@@ -40,18 +40,48 @@ export const assetModeOptions = [
 ]
 
 const editorialExpansionMap = [
-  { pattern: /mutual\s+aid/i, terms: ['solidarity', 'community', 'neighbors', 'food', 'free food', 'food distribution', 'collective', 'organizing', 'housing', 'volunteers', 'relief', 'support', 'care', 'protest', 'labor', 'union', 'cooperative', 'commons'] },
-  { pattern: /labor|union|strike/i, terms: ['workers', 'picket', 'organizing', 'solidarity', 'shop floor'] },
-  { pattern: /zine/i, terms: ['booklet', 'pamphlet', 'pages', 'xerox', 'fold'] },
-  { pattern: /print|poster/i, terms: ['press', 'flyer', 'broadside', 'paper', 'halftone'] },
-  { pattern: /podcast|radio/i, terms: ['mic', 'microphone', 'headphones', 'broadcast', 'audio'] },
+  { pattern: /mutual\s+aid/i, terms: ['solidarity', 'support', 'care', 'community', 'people', 'group', 'hands', 'heart', 'donation', 'volunteer', 'volunteers', 'food', 'box', 'package', 'supplies', 'pantry', 'home', 'house', 'housing', 'medical', 'cross', 'neighbors', 'collective', 'organizing', 'megaphone'] },
+  { pattern: /labor|union|strike/i, terms: ['worker', 'workers', 'union', 'strike', 'tools', 'gear', 'wrench', 'hammer', 'factory', 'hands', 'people', 'solidarity', 'banner', 'picket', 'megaphone', 'organizing', 'shop floor'] },
+  { pattern: /zine/i, terms: ['paper', 'copy', 'photocopy', 'scissors', 'tape', 'staple', 'paperclip', 'typewriter', 'newspaper', 'halftone', 'print', 'fold', 'cut', 'crop', 'collage', 'booklet', 'pamphlet', 'pages', 'xerox'] },
+  { pattern: /print|poster/i, terms: ['printer', 'press', 'flyer', 'broadside', 'paper', 'document', 'file', 'halftone'] },
+  { pattern: /podcast|radio/i, terms: ['broadcast', 'signal', 'antenna', 'tower', 'mic', 'microphone', 'headphones', 'audio', 'waveform', 'rss'] },
+  { pattern: /dog|puppy|pet|paw/i, terms: ['dog', 'pet', 'animal', 'paw', 'puppy'] },
+  { pattern: /cat|kitten/i, terms: ['cat', 'pet', 'animal', 'paw', 'kitten'] },
+  { pattern: /food|meal|pantry/i, terms: ['meal', 'bread', 'soup', 'bowl', 'apple', 'basket', 'box', 'package', 'pantry', 'kitchen', 'fork', 'spoon'] },
+  { pattern: /home|house|housing/i, terms: ['home', 'house', 'building', 'shelter', 'neighborhood'] },
+  { pattern: /medical|health|clinic/i, terms: ['medical', 'health', 'cross', 'first aid', 'hospital', 'care'] },
+  { pattern: /newspaper|news|press/i, terms: ['newspaper', 'news', 'press', 'article', 'document', 'dispatch'] },
+  { pattern: /map|location|pin/i, terms: ['map', 'location', 'pin', 'marker', 'route', 'atlas'] },
+  { pattern: /badge|label|sticker|frame/i, terms: ['badge', 'label', 'sticker', 'frame', 'border', 'tag'] },
+  { pattern: /halftone|redaction/i, terms: ['halftone', 'dots', 'redaction', 'censor', 'blackout', 'document'] },
 ]
 
 const iconifyFallbacks = [
-  { pattern: /mutual\s+aid|community\s+aid|aid/i, terms: ['heart', 'hands', 'home', 'people', 'group', 'medical', 'food', 'box', 'package', 'megaphone', 'fist', 'community', 'volunteer', 'donation', 'share'] },
-  { pattern: /podcast/i, terms: ['mic', 'radio', 'headphones'] },
-  { pattern: /print|printing/i, terms: ['printer', 'file', 'document'] },
-  { pattern: /zine|booklet/i, terms: ['book', 'booklet', 'pages'] },
+  { pattern: /mutual\s+aid|community\s+aid|aid/i, terms: ['heart', 'hands', 'home', 'house', 'people', 'group', 'medical', 'cross', 'food', 'box', 'package', 'supplies', 'pantry', 'megaphone', 'fist', 'community', 'volunteer', 'donation', 'share'] },
+  { pattern: /podcast/i, terms: ['mic', 'microphone', 'radio', 'headphones', 'rss'] },
+  { pattern: /print|printing/i, terms: ['printer', 'file', 'document', 'paper'] },
+  { pattern: /zine|booklet/i, terms: ['book', 'booklet', 'pages', 'paper', 'scissors', 'tape'] },
+  { pattern: /dog|puppy/i, terms: ['dog', 'pet', 'animal', 'paw', 'puppy'] },
+  { pattern: /cat|kitten/i, terms: ['cat', 'pet', 'animal', 'paw', 'kitten'] },
+  { pattern: /food/i, terms: ['meal', 'bread', 'soup', 'bowl', 'apple', 'basket', 'box', 'package', 'pantry', 'kitchen', 'fork', 'spoon'] },
+  { pattern: /radio/i, terms: ['broadcast', 'signal', 'antenna', 'tower', 'microphone', 'podcast', 'audio', 'waveform', 'rss'] },
+  { pattern: /labor|union|strike/i, terms: ['worker', 'union', 'strike', 'tools', 'gear', 'wrench', 'hammer', 'factory', 'hands', 'people', 'solidarity', 'banner', 'picket', 'megaphone'] },
+]
+
+const preferredIconifyPrefixes = [
+  'material-symbols',
+  'lucide',
+  'tabler',
+  'ph',
+  'heroicons',
+  'feather',
+  'bi',
+  'mdi',
+  'carbon',
+  'fluent',
+  'openmoji',
+  'game-icons',
+  'simple-icons',
 ]
 
 const localPackSeed = [
@@ -101,6 +131,60 @@ function includesAny(haystack, needles) {
   return needles.some((needle) => needle && value.includes(needle))
 }
 
+function splitIconParts(icon = '') {
+  const [prefix = '', iconName = ''] = String(icon || '').split(':')
+  const words = iconName.split(/[^a-z0-9]+/i).filter(Boolean)
+  return { prefix, iconName, words }
+}
+
+function scoreIconifyIcon(icon, query, terms = []) {
+  const exact = cleanText(query).toLowerCase()
+  const { prefix, iconName, words } = splitIconParts(icon)
+  const compactName = iconName.toLowerCase()
+  const wordSet = new Set(words.map((word) => word.toLowerCase()))
+  let score = 0
+  if (preferredIconifyPrefixes.includes(prefix)) score += 100 - preferredIconifyPrefixes.indexOf(prefix) * 5
+  if (exact && (compactName === exact || wordSet.has(exact))) score += 160
+  if (exact && compactName.includes(exact)) score += 90
+  terms.forEach((term, index) => {
+    if (!term) return
+    if (compactName === term || wordSet.has(term)) score += Math.max(30, 76 - index * 3)
+    else if (compactName.includes(term)) score += Math.max(12, 42 - index * 2)
+  })
+  if (exact && exact !== 'arrow' && compactName.includes('arrow')) score -= 28
+  if (/labor/i.test(exact) && compactName.includes('laboratory')) score -= 80
+  return score
+}
+
+function diversifyIconifyIcons(icons = [], query, terms = [], limit = 72) {
+  const sorted = icons
+    .map((icon) => ({ icon, score: scoreIconifyIcon(icon, query, terms), prefix: splitIconParts(icon).prefix }))
+    .sort((a, b) => b.score - a.score || a.icon.localeCompare(b.icon))
+
+  const selected = []
+  const used = new Set()
+  const prefixCounts = new Map()
+
+  for (const item of sorted) {
+    if (used.has(item.icon)) continue
+    const count = prefixCounts.get(item.prefix) || 0
+    if (count >= 4 && selected.length < Math.min(40, limit)) continue
+    used.add(item.icon)
+    prefixCounts.set(item.prefix, count + 1)
+    selected.push(item.icon)
+    if (selected.length >= limit) return selected
+  }
+
+  for (const item of sorted) {
+    if (used.has(item.icon)) continue
+    used.add(item.icon)
+    selected.push(item.icon)
+    if (selected.length >= limit) break
+  }
+
+  return selected
+}
+
 function makePackSvgDataUrl(title, mode) {
   const initials = title.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase()
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420"><rect width="640" height="420" fill="#f6f1e8"/><rect x="34" y="34" width="572" height="352" fill="none" stroke="#1d2327" stroke-width="12"/><path d="M72 316h496M72 284h360M72 252h420" stroke="#c22b26" stroke-width="11" stroke-linecap="square"/><text x="72" y="132" font-family="Arial Black, Impact, sans-serif" font-size="82" fill="#1d2327">${initials}</text><text x="76" y="184" font-family="Arial, sans-serif" font-size="28" fill="#50575e">${mode.toUpperCase()}</text></svg>`
@@ -112,6 +196,13 @@ export function expandEditorialQuery(query = '') {
   const words = q.split(/\s+/).filter((word) => word.length > 2)
   const mapped = editorialExpansionMap.flatMap((entry) => (entry.pattern.test(q) ? entry.terms : []))
   return uniqueValues([q, ...words, ...mapped])
+}
+
+export function expandElementQuery(query = '') {
+  const q = cleanText(query)
+  const words = q.split(/\s+/).filter((word) => word.length > 2)
+  const iconTerms = iconifyFallbacks.flatMap((entry) => (entry.pattern.test(q) ? entry.terms : []))
+  return uniqueValues([q, ...words, ...expandEditorialQuery(q), ...iconTerms])
 }
 
 function getOpenverseAttribution(item) {
@@ -248,7 +339,7 @@ function normalizeCommons(page) {
 function normalizeIconify(icon) {
   const name = String(icon || '').trim()
   if (!name || !name.includes(':')) return null
-  const [prefix, iconName] = name.split(':')
+  const { prefix, iconName, words } = splitIconParts(name)
   const svgUrl = `https://api.iconify.design/${encodeURIComponent(prefix)}/${encodeURIComponent(iconName)}.svg`
   return normalizePrintlabAsset({
     id: `iconify:${name}`,
@@ -267,7 +358,8 @@ function normalizeIconify(icon) {
     mediaType: 'icon',
     mimeType: 'image/svg+xml',
     landingPageUrl: `https://icon-sets.iconify.design/${encodeURIComponent(prefix)}/${encodeURIComponent(iconName)}/`,
-    tags: [prefix, iconName, 'svg', 'icon'],
+    tags: [prefix, iconName, ...words, 'svg', 'icon', 'vector', 'element'],
+    category: 'Icons',
     raw: icon,
   })
 }
@@ -340,21 +432,21 @@ async function searchIconifyTerm(term, limit = 36) {
 async function searchIconifyWithFallbacks(query, expandedTerms = []) {
   const words = query.split(/\s+/).filter((word) => word.length > 2)
   const mapped = iconifyFallbacks.flatMap((entry) => (entry.pattern.test(query) ? entry.terms : []))
-  const terms = uniqueValues([query, ...mapped, ...words, ...expandedTerms])
+  const terms = uniqueValues([query, ...mapped, ...words, ...expandElementQuery(query), ...expandedTerms])
   const icons = []
   const seen = new Set()
 
   for (const term of terms) {
-    const matches = await searchIconifyTerm(term, 36)
+    const matches = await searchIconifyTerm(term, 256)
     for (const icon of matches) {
       if (!icon || seen.has(icon)) continue
       seen.add(icon)
       icons.push(icon)
-      if (icons.length >= 36) return icons
     }
+    if (icons.length >= 420) break
   }
 
-  return icons
+  return diversifyIconifyIcons(icons, query, terms, 72)
 }
 
 function modeMatchesAsset(asset, mode) {
@@ -362,7 +454,7 @@ function modeMatchesAsset(asset, mode) {
   const mediaType = cleanText(asset.mediaType).toLowerCase()
   const haystack = [asset.title, asset.description, asset.sourceLabel, ...(asset.tags || [])].join(' ').toLowerCase()
   if (mode === 'photos') return ['photo', 'image'].includes(mediaType) || (mediaType === 'image' && asset.source !== 'iconify')
-  if (mode === 'elements') return asset.source === 'printlab-elements' || mediaType === 'element'
+  if (mode === 'elements') return ['printlab-elements', 'iconify', 'local-packs'].includes(asset.source) || ['element', 'icon', 'illustration', 'graphic'].includes(mediaType)
   if (mode === 'illustrations') return ['illustration', 'graphic', 'element'].includes(mediaType) || includesAny(haystack, ['woodcut', 'poster', 'graphic'])
   if (mode === 'icons') return mediaType === 'icon' || asset.source === 'iconify' || includesAny(haystack, ['icon'])
   if (mode === 'historical') return ['wikimedia', 'local-packs'].includes(asset.source) && includesAny(haystack, ['historical', 'labor', 'archive', 'woodcut'])
@@ -388,13 +480,17 @@ function rankAsset(asset, query, expandedTerms, mode) {
   const strongText = `${title} ${tags}`
   const expandedMatches = expandedTerms.filter((term) => strongText.includes(term))
   let score = 0
-  if (asset.source === 'printlab-elements') score += mode === 'elements' ? 230 : 180
+  const titleWords = new Set(title.split(/[^a-z0-9]+/i).filter(Boolean))
+  const exactIconName = asset.source === 'iconify' && exact && (title.endsWith(`:${exact}`) || titleWords.has(exact))
+  if (asset.source === 'printlab-elements') score += mode === 'elements' ? 150 : 180
   if (asset.source === 'local-media') score += 160
-  if (asset.source === 'local-packs') score += 110
-  if (asset.source === 'iconify') score += mode === 'icons' ? 95 : 50
-  if (asset.source === 'printlab-elements' && exact && (title.includes(exact) || tags.includes(exact) || category.includes(exact))) score += 120
+  if (asset.source === 'local-packs') score += mode === 'elements' ? 125 : 110
+  if (asset.source === 'iconify') score += mode === 'icons' ? 150 : mode === 'elements' ? 175 : 50
+  if (asset.source === 'iconify' && preferredIconifyPrefixes.includes(asset.creator)) score += 90 - preferredIconifyPrefixes.indexOf(asset.creator) * 5
+  if (asset.source === 'iconify' && exactIconName) score += 150
+  if (asset.source === 'printlab-elements' && exact && (title.includes(exact) || tags.includes(exact) || category.includes(exact))) score += 95
   if (asset.source === 'local-packs' && exact && (title.includes(exact) || tags.includes(exact) || category.includes(exact))) score += 95
-  if (asset.source === 'iconify' && exact && (title.includes(exact) || tags.includes(exact))) score += 70
+  if (asset.source === 'iconify' && exact && (title.includes(exact) || tags.includes(exact))) score += 115
   if (exact && title === exact) score += 80
   if (exact && title.includes(exact)) score += 70
   if (exact && tags.includes(exact)) score += 62
@@ -425,7 +521,7 @@ const providers = [
     label: 'Printlab Elements',
     modes: ['everything', 'elements', 'illustrations', 'icons', 'textures', 'maps', 'documents'],
     async search({ query, expandedTerms, mode }) {
-      const terms = expandedTerms.length ? expandedTerms : expandEditorialQuery(query)
+      const terms = mode === 'elements' ? expandElementQuery(query) : expandedTerms.length ? expandedTerms : expandEditorialQuery(query)
       return getPrintlabElements()
         .map(normalizePrintlabAsset)
         .filter(Boolean)
@@ -449,9 +545,9 @@ const providers = [
   {
     id: 'local-packs',
     label: 'Local Asset Packs',
-    modes: ['everything', 'illustrations', 'icons', 'historical', 'textures', 'documents'],
+    modes: ['everything', 'elements', 'illustrations', 'icons', 'historical', 'textures', 'documents'],
     async search({ query, expandedTerms, mode }) {
-      const terms = expandedTerms.length ? expandedTerms : expandEditorialQuery(query)
+      const terms = mode === 'elements' ? expandElementQuery(query) : expandedTerms.length ? expandedTerms : expandEditorialQuery(query)
       return localPackSeed
         .map(normalizeLocalPack)
         .filter(Boolean)
@@ -497,7 +593,7 @@ const providers = [
   {
     id: 'iconify',
     label: 'Iconify',
-    modes: ['everything', 'icons'],
+    modes: ['everything', 'elements', 'icons'],
     async search({ query, expandedTerms }) {
       if (!query) return []
       const icons = await searchIconifyWithFallbacks(query, expandedTerms)
@@ -515,7 +611,7 @@ export async function searchUnifiedAssets({
   localMedia = [],
 } = {}) {
   const cleanQuery = cleanText(query)
-  const expandedTerms = expandEditorialQuery(cleanQuery)
+  const expandedTerms = mode === 'elements' ? expandElementQuery(cleanQuery) : expandEditorialQuery(cleanQuery)
   const activeProviders = providers.filter((provider) => (
     (!sourceIds.length || sourceIds.includes(provider.id)) &&
     (mode === 'everything' || provider.modes.includes(mode))
