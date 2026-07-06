@@ -21,6 +21,7 @@ function getCommonsMetadata(info, key) {
 }
 
 function normalizeAsset(asset) {
+  if (!asset || typeof asset !== 'object') return null
   const fullUrl = compactUrl(asset.fullUrl || asset.url || asset.thumbnailUrl)
   const thumbnailUrl = compactUrl(asset.thumbnailUrl || fullUrl)
   if (!fullUrl && !thumbnailUrl) return null
