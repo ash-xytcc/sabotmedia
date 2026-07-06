@@ -222,6 +222,7 @@ function getAssetAttribution(asset) {
     landingUrl: normalized.landingPageUrl,
     landingPageUrl: normalized.landingPageUrl,
     mediaType: normalized.mediaType,
+    category: normalized.category,
     originalProvider: normalized.originalProvider || normalized.source,
     originalId: normalized.originalId || normalized.id,
   }
@@ -871,6 +872,7 @@ export function PrintLabPage({ pieces = [] }) {
         attribution: normalized.attributionText,
         attributionText: normalized.attributionText,
         mediaType: normalized.mediaType,
+        category: normalized.category,
         mimeType: blob.type || normalized.mimeType,
         landingUrl: normalized.landingPageUrl,
         landingPageUrl: normalized.landingPageUrl,
@@ -950,6 +952,7 @@ export function PrintLabPage({ pieces = [] }) {
       attribution: normalized.attributionText,
       attributionText: normalized.attributionText,
       mediaType: normalized.mediaType,
+      category: normalized.category,
       landingUrl: normalized.landingPageUrl,
       landingPageUrl: normalized.landingPageUrl,
       originalProvider: normalized.originalProvider || normalized.source,
@@ -1452,6 +1455,7 @@ export function PrintLabPage({ pieces = [] }) {
           <span className="print-lab-asset-card__body">
             <strong>{normalized.title || 'Untitled asset'}</strong>
             <span>{normalized.sourceLabel || normalized.source || 'External source'}</span>
+            {normalized.category ? <small>{normalized.category}</small> : null}
             {normalized.license ? <small>License: {normalized.license}</small> : null}
             {normalized.creator ? <small>Creator: {normalized.creator}</small> : null}
             {sourceWarning ? <small>{sourceWarning}</small> : null}

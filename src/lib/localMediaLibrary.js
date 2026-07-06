@@ -44,6 +44,7 @@ function normalizeMediaItem(item) {
     attribution: String(item.attribution || ''),
     attributionText: String(item.attributionText || item.attribution || ''),
     mediaType: String(item.mediaType || (String(item.mimeType || '').includes('svg') ? 'svg' : 'image')),
+    category: String(item.category || ''),
     landingUrl: String(item.landingUrl || item.landingPageUrl || ''),
     landingPageUrl: String(item.landingPageUrl || item.landingUrl || ''),
     sourceLabel: String(item.sourceLabel || item.source || ''),

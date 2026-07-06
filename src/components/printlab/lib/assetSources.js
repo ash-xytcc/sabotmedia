@@ -18,13 +18,17 @@
  * @property {string} mimeType
  * @property {string} attributionText
  * @property {string[]} tags
+ * @property {string} category
  * @property {unknown} raw
  */
+
+import { getPrintlabElements } from './printlabElements.js'
 
 const htmlStripper = /<[^>]*>/g
 
 export const assetModeOptions = [
   { id: 'everything', label: 'Search Everything' },
+  { id: 'elements', label: 'Elements' },
   { id: 'photos', label: 'Photos' },
   { id: 'illustrations', label: 'Illustrations' },
   { id: 'icons', label: 'Icons' },
@@ -167,6 +171,7 @@ export function normalizePrintlabAsset(asset) {
     mimeType: cleanText(asset.mimeType || asset.mime || ''),
     attributionText,
     tags: uniqueValues(safeArray(asset.tags).length ? asset.tags : String(asset.tags || '').split(',')),
+    category: cleanText(asset.category || ''),
     raw: asset.raw ?? asset,
     originalProvider: cleanText(asset.originalProvider || source),
     originalId: String(asset.originalId || asset.id || ''),
@@ -286,6 +291,7 @@ function normalizeLocalMedia(item) {
     mediaType: item?.mediaType || 'image',
     mimeType: item?.mimeType || '',
     attributionText: item?.attributionText || item?.attribution || item?.caption || '',
+    category: item?.category || '',
     tags: item?.tags || [],
     raw: item,
   })
@@ -356,7 +362,8 @@ function modeMatchesAsset(asset, mode) {
   const mediaType = cleanText(asset.mediaType).toLowerCase()
   const haystack = [asset.title, asset.description, asset.sourceLabel, ...(asset.tags || [])].join(' ').toLowerCase()
   if (mode === 'photos') return ['photo', 'image'].includes(mediaType) || (mediaType === 'image' && asset.source !== 'iconify')
-  if (mode === 'illustrations') return ['illustration', 'graphic'].includes(mediaType) || includesAny(haystack, ['woodcut', 'poster', 'graphic'])
+  if (mode === 'elements') return asset.source === 'printlab-elements' || mediaType === 'element'
+  if (mode === 'illustrations') return ['illustration', 'graphic', 'element'].includes(mediaType) || includesAny(haystack, ['woodcut', 'poster', 'graphic'])
   if (mode === 'icons') return mediaType === 'icon' || asset.source === 'iconify' || includesAny(haystack, ['icon'])
   if (mode === 'historical') return ['wikimedia', 'local-packs'].includes(asset.source) && includesAny(haystack, ['historical', 'labor', 'archive', 'woodcut'])
   if (mode === 'audio') return mediaType === 'audio'
@@ -377,15 +384,21 @@ function rankAsset(asset, query, expandedTerms, mode) {
   const title = cleanText(asset.title).toLowerCase()
   const description = cleanText(asset.description).toLowerCase()
   const tags = (asset.tags || []).join(' ').toLowerCase()
+  const category = cleanText(asset.category).toLowerCase()
   const strongText = `${title} ${tags}`
   const expandedMatches = expandedTerms.filter((term) => strongText.includes(term))
   let score = 0
+  if (asset.source === 'printlab-elements') score += mode === 'elements' ? 230 : 180
   if (asset.source === 'local-media') score += 160
   if (asset.source === 'local-packs') score += 110
   if (asset.source === 'iconify') score += mode === 'icons' ? 95 : 50
+  if (asset.source === 'printlab-elements' && exact && (title.includes(exact) || tags.includes(exact) || category.includes(exact))) score += 120
+  if (asset.source === 'local-packs' && exact && (title.includes(exact) || tags.includes(exact) || category.includes(exact))) score += 95
+  if (asset.source === 'iconify' && exact && (title.includes(exact) || tags.includes(exact))) score += 70
   if (exact && title === exact) score += 80
   if (exact && title.includes(exact)) score += 70
   if (exact && tags.includes(exact)) score += 62
+  if (exact && category.includes(exact)) score += 58
   if (expandedMatches.length) score += Math.min(70, expandedMatches.length * 18)
   if (expandedTerms.some((term) => description.includes(term))) score += 8
   if (modeMatchesAsset(asset, mode)) score += 28
@@ -407,6 +420,19 @@ function dedupeAssets(items) {
 }
 
 const providers = [
+  {
+    id: 'printlab-elements',
+    label: 'Printlab Elements',
+    modes: ['everything', 'elements', 'illustrations', 'icons', 'textures', 'maps', 'documents'],
+    async search({ query, expandedTerms, mode }) {
+      const terms = expandedTerms.length ? expandedTerms : expandEditorialQuery(query)
+      return getPrintlabElements()
+        .map(normalizePrintlabAsset)
+        .filter(Boolean)
+        .filter((asset) => modeMatchesAsset(asset, mode))
+        .filter((asset) => textMatchesAsset(asset, terms))
+    },
+  },
   {
     id: 'local-media',
     label: 'Sabot Media Library',
