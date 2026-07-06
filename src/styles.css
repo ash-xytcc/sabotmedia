@@ -17722,6 +17722,14 @@ button.print-lab-half-fold-panel__label:focus-visible {
 }
 
 /* PRINTLAB_ASSET_LIBRARY_EXPANSION */
+.print-lab-page:not(.print-lab-page--canvas-mode) .print-lab-desk {
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr) minmax(230px, 260px) !important;
+}
+
+.print-lab-desk--canvas-mode:not(.is-source-collapsed):not(.is-tools-collapsed) {
+  grid-template-columns: minmax(320px, 400px) minmax(0, 1fr) minmax(260px, 320px) !important;
+}
+
 .print-lab-source-pane {
   overflow: hidden !important;
 }
@@ -17766,8 +17774,13 @@ button.print-lab-half-fold-panel__label:focus-visible {
 }
 
 .print-lab-asset-browser__search {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: grid;
   gap: 8px;
+  padding-bottom: 8px;
+  background: var(--printlab-panel);
 }
 
 .print-lab-asset-browser__search .button {
@@ -17845,10 +17858,11 @@ button.print-lab-half-fold-panel__label:focus-visible {
   display: grid;
   gap: 10px;
   min-width: 0;
+  max-width: 100%;
   border: 1px solid #dcdcde;
   border-radius: 8px;
   background: #fff;
-  padding: 10px;
+  padding: 12px;
 }
 
 .print-lab-asset-card.is-selected {
@@ -17860,7 +17874,7 @@ button.print-lab-half-fold-panel__label:focus-visible {
   width: 100%;
   min-width: 0;
   display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
+  grid-template-columns: 96px minmax(0, 1fr);
   align-items: start;
   gap: 10px;
   border: 0;
@@ -17872,8 +17886,8 @@ button.print-lab-half-fold-panel__label:focus-visible {
 }
 
 .print-lab-asset-card__thumb {
-  width: 88px;
-  height: 88px;
+  width: 96px;
+  height: 96px;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -17889,6 +17903,17 @@ button.print-lab-half-fold-panel__label:focus-visible {
   display: block;
 }
 
+.print-lab-asset-card__thumb > span {
+  padding: 6px;
+  color: #646970;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 .print-lab-asset-card__body {
   min-width: 0;
   display: grid;
@@ -17900,7 +17925,10 @@ button.print-lab-half-fold-panel__label:focus-visible {
 .print-lab-asset-card__body span,
 .print-lab-asset-card__body small {
   min-width: 0;
+  max-width: 100%;
   overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
 }
 
 .print-lab-asset-card__body strong {
@@ -17915,6 +17943,10 @@ button.print-lab-half-fold-panel__label:focus-visible {
 
 .print-lab-asset-card__body span,
 .print-lab-asset-card__body small {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
   color: #646970;
   font-size: 12px;
   line-height: 1.3;
@@ -18012,17 +18044,29 @@ button.print-lab-half-fold-panel__label:focus-visible {
 }
 
 @media (max-width: 1180px) {
+  .print-lab-page:not(.print-lab-page--canvas-mode) .print-lab-desk,
+  .print-lab-desk--canvas-mode:not(.is-source-collapsed):not(.is-tools-collapsed) {
+    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr) minmax(220px, 260px) !important;
+  }
+
   .print-lab-asset-card__pick {
-    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-columns: 82px minmax(0, 1fr);
   }
 
   .print-lab-asset-card__thumb {
-    width: 76px;
-    height: 76px;
+    width: 82px;
+    height: 82px;
   }
 
   .print-lab-asset-card__actions {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .print-lab-page:not(.print-lab-page--canvas-mode) .print-lab-desk,
+  .print-lab-desk--canvas-mode {
+    grid-template-columns: 1fr !important;
   }
 }
 

@@ -171,6 +171,15 @@ function downloadFile(filename, content, type) {
   URL.revokeObjectURL(url)
 }
 
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Unable to read imported asset'))
+    reader.readAsDataURL(blob)
+  })
+}
+
 function renderParagraphs(text) {
   const paragraphs = String(text || '').split(/\n{2,}/).map((line) => line.trim()).filter(Boolean)
   if (!paragraphs.length) return null
@@ -180,6 +189,16 @@ function renderParagraphs(text) {
 function getAssetImageUrl(asset) {
   const normalized = normalizePrintlabAsset(asset)
   return normalized?.downloadUrl || normalized?.previewUrl || normalized?.thumbnailUrl || ''
+}
+
+function isInlineAssetUrl(url = '') {
+  return /^data:|^blob:/i.test(String(url || ''))
+}
+
+function canAttemptLocalImport(asset, url) {
+  if (!url || isInlineAssetUrl(url)) return false
+  if (asset?.source === 'local-media') return false
+  return /^https?:/i.test(url)
 }
 
 function getAssetAttribution(asset) {
@@ -809,10 +828,71 @@ export function PrintLabPage({ pieces = [] }) {
     setSelectedCanvasBlockId(block.id)
   }
 
-  function addCanvasAssetBlock(asset) {
+  async function prepareAssetForCanvas(asset) {
     const normalized = normalizePrintlabAsset(asset)
     const url = getAssetImageUrl(normalized)
-    if (!normalized || !url) return
+    if (!normalized || !url) return { asset: normalized, url: '' }
+    if (!canAttemptLocalImport(normalized, url)) return { asset: normalized, url }
+
+    try {
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`asset fetch failed: ${res.status}`)
+      const blob = await res.blob()
+      if (!blob.type.startsWith('image/') && !blob.type.includes('svg')) throw new Error('unsupported asset type')
+      const dataUrl = await blobToDataUrl(blob)
+      const imported = normalizePrintlabAsset({
+        ...normalized,
+        id: `${normalized.id}:local-import:${Date.now()}`,
+        downloadUrl: dataUrl,
+        previewUrl: dataUrl,
+        thumbnailUrl: dataUrl,
+        fullUrl: dataUrl,
+        url: dataUrl,
+        mimeType: blob.type || normalized.mimeType,
+      })
+      addLocalMediaItem({
+        id: `canvas-import-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        url: dataUrl,
+        dataUrl,
+        fullUrl: dataUrl,
+        previewUrl: dataUrl,
+        downloadUrl: dataUrl,
+        thumbnailUrl: dataUrl,
+        title: normalized.title,
+        filename: '',
+        alt: normalized.title,
+        caption: normalized.attributionText,
+        description: normalized.description || normalized.landingPageUrl || normalized.downloadUrl,
+        source: normalized.sourceLabel || normalized.source,
+        sourceLabel: normalized.sourceLabel,
+        creator: normalized.creator,
+        license: normalized.license,
+        licenseUrl: normalized.licenseUrl,
+        attribution: normalized.attributionText,
+        attributionText: normalized.attributionText,
+        mediaType: normalized.mediaType,
+        mimeType: blob.type || normalized.mimeType,
+        landingUrl: normalized.landingPageUrl,
+        landingPageUrl: normalized.landingPageUrl,
+        originalProvider: normalized.originalProvider || normalized.source,
+        originalId: normalized.originalId || normalized.id,
+        uploadedAt: new Date().toISOString(),
+      })
+      refreshLocalMedia()
+      return { asset: imported || normalized, url: dataUrl, imported: true }
+    } catch {
+      return { asset: normalized, url, imported: false }
+    }
+  }
+
+  async function addCanvasAssetBlock(asset) {
+    const prepared = await prepareAssetForCanvas(asset)
+    const normalized = normalizePrintlabAsset(prepared.asset)
+    const url = prepared.url || getAssetImageUrl(normalized)
+    if (!normalized || !url) {
+      setActionStatus('This asset does not include a usable image URL.')
+      return
+    }
     const attribution = getAssetAttribution(normalized)
     const block = clampCanvasBlock(makeCanvasBlock('image', {
       src: url,
@@ -821,25 +901,25 @@ export function PrintLabPage({ pieces = [] }) {
       asset: attribution || undefined,
       x: Math.max(24, canvasSize.width - 330),
       y: 92,
-      width: normalized.mediaType === 'svg' ? 180 : 260,
-      height: normalized.mediaType === 'svg' ? 180 : 220,
-      fit: normalized.mediaType === 'svg' ? 'contain' : 'cover',
+      width: normalized.mediaType === 'icon' ? 180 : 260,
+      height: normalized.mediaType === 'icon' ? 180 : 220,
+      fit: normalized.mediaType === 'icon' ? 'contain' : 'cover',
     }), canvasSize)
     setCanvasBlocks((blocks) => [...blocks, block])
     setSelectedCanvasBlockId(block.id)
     setToolMode('canvas')
     setCanvasToolsOpen(true)
-    setActionStatus(`Inserted "${normalized.title}" in the canvas with attribution metadata.`)
+    setActionStatus(`Inserted "${normalized.title}" in the canvas with attribution metadata${prepared.imported ? ' and a local cached copy' : ''}.`)
     window.setTimeout(fitCanvasToViewport, 0)
   }
 
-  function handleUseAsset(asset) {
+  async function handleUseAsset(asset) {
     const normalized = normalizePrintlabAsset(asset)
     if (!normalized) return
     if (sourceType === 'assets') setSelectedAssetId(normalized.id)
     if (!tileCaption.trim()) setTileCaption(normalized.title)
     if (toolMode === 'canvas') {
-      addCanvasAssetBlock(normalized)
+      await addCanvasAssetBlock(normalized)
       return
     }
     setActionStatus(`Using "${normalized.title}" from ${normalized.sourceLabel || normalized.source}. Attribution metadata is preserved.`)
@@ -1337,7 +1417,7 @@ export function PrintLabPage({ pieces = [] }) {
     const normalized = normalizePrintlabAsset(asset)
     if (!normalized) return null
     const selected = normalized.id === selectedAssetId || normalized.id === currentImage?.id
-    const previewUrl = normalized.thumbnailUrl || normalized.fullUrl || normalized.url || ''
+    const previewUrl = normalized.thumbnailUrl || normalized.previewUrl || normalized.downloadUrl || ''
     const sourceWarning = rightsWarningBySource[normalized.source] || ''
     return (
       <article className={`print-lab-asset-card${selected ? ' is-selected' : ''}`} key={normalized.id}>
@@ -1351,7 +1431,23 @@ export function PrintLabPage({ pieces = [] }) {
           }}
         >
           <span className="print-lab-asset-card__thumb">
-            {previewUrl ? <img src={previewUrl} alt="" loading="lazy" /> : <span>{normalized.mediaType || 'asset'}</span>}
+            {previewUrl ? (
+              <>
+                <img
+                  src={previewUrl}
+                  alt=""
+                  loading="lazy"
+                  onError={(event) => {
+                    event.currentTarget.hidden = true
+                    const fallback = event.currentTarget.nextElementSibling
+                    if (fallback) fallback.hidden = false
+                  }}
+                />
+                <span hidden>{normalized.mediaType || normalized.sourceLabel || 'asset'}</span>
+              </>
+            ) : (
+              <span>{normalized.mediaType || normalized.sourceLabel || 'asset'}</span>
+            )}
           </span>
           <span className="print-lab-asset-card__body">
             <strong>{normalized.title || 'Untitled asset'}</strong>

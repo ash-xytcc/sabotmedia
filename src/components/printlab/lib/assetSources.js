@@ -36,7 +36,7 @@ export const assetModeOptions = [
 ]
 
 const editorialExpansionMap = [
-  { pattern: /mutual\s+aid/i, terms: ['solidarity', 'community', 'food', 'neighbors', 'collective', 'organizing', 'housing', 'volunteers'] },
+  { pattern: /mutual\s+aid/i, terms: ['solidarity', 'community', 'neighbors', 'food', 'free food', 'food distribution', 'collective', 'organizing', 'housing', 'volunteers', 'relief', 'support', 'care', 'protest', 'labor', 'union', 'cooperative', 'commons'] },
   { pattern: /labor|union|strike/i, terms: ['workers', 'picket', 'organizing', 'solidarity', 'shop floor'] },
   { pattern: /zine/i, terms: ['booklet', 'pamphlet', 'pages', 'xerox', 'fold'] },
   { pattern: /print|poster/i, terms: ['press', 'flyer', 'broadside', 'paper', 'halftone'] },
@@ -44,7 +44,7 @@ const editorialExpansionMap = [
 ]
 
 const iconifyFallbacks = [
-  { pattern: /mutual\s+aid|community\s+aid|aid/i, terms: ['heart', 'hands', 'group', 'people', 'medical', 'food', 'home'] },
+  { pattern: /mutual\s+aid|community\s+aid|aid/i, terms: ['heart', 'hands', 'home', 'people', 'group', 'medical', 'food', 'box', 'package', 'megaphone', 'fist', 'community', 'volunteer', 'donation', 'share'] },
   { pattern: /podcast/i, terms: ['mic', 'radio', 'headphones'] },
   { pattern: /print|printing/i, terms: ['printer', 'file', 'document'] },
   { pattern: /zine|booklet/i, terms: ['book', 'booklet', 'pages'] },
@@ -334,7 +334,7 @@ async function searchIconifyTerm(term, limit = 36) {
 async function searchIconifyWithFallbacks(query, expandedTerms = []) {
   const words = query.split(/\s+/).filter((word) => word.length > 2)
   const mapped = iconifyFallbacks.flatMap((entry) => (entry.pattern.test(query) ? entry.terms : []))
-  const terms = uniqueValues([query, ...words, ...expandedTerms, ...mapped])
+  const terms = uniqueValues([query, ...mapped, ...words, ...expandedTerms])
   const icons = []
   const seen = new Set()
 
@@ -368,24 +368,31 @@ function modeMatchesAsset(asset, mode) {
 
 function textMatchesAsset(asset, terms) {
   if (!terms.length) return true
-  const haystack = [asset.title, asset.creator, asset.description, asset.sourceLabel, asset.license, ...(asset.tags || [])].join(' ').toLowerCase()
+  const haystack = [asset.title, asset.description, ...(asset.tags || [])].join(' ').toLowerCase()
   return terms.some((term) => haystack.includes(term))
 }
 
 function rankAsset(asset, query, expandedTerms, mode) {
   const exact = cleanText(query).toLowerCase()
   const title = cleanText(asset.title).toLowerCase()
+  const description = cleanText(asset.description).toLowerCase()
   const tags = (asset.tags || []).join(' ').toLowerCase()
+  const strongText = `${title} ${tags}`
+  const expandedMatches = expandedTerms.filter((term) => strongText.includes(term))
   let score = 0
-  if (asset.source === 'local-media') score += 100
-  if (asset.source === 'local-packs') score += 45
+  if (asset.source === 'local-media') score += 160
+  if (asset.source === 'local-packs') score += 110
+  if (asset.source === 'iconify') score += mode === 'icons' ? 95 : 50
   if (exact && title === exact) score += 80
-  if (exact && title.includes(exact)) score += 42
-  if (expandedTerms.some((term) => title.includes(term))) score += 24
-  if (expandedTerms.some((term) => tags.includes(term))) score += 20
-  if (asset.license || asset.licenseUrl || asset.attributionText) score += 12
-  if (asset.thumbnailUrl || asset.previewUrl) score += 10
-  if (modeMatchesAsset(asset, mode)) score += 20
+  if (exact && title.includes(exact)) score += 70
+  if (exact && tags.includes(exact)) score += 62
+  if (expandedMatches.length) score += Math.min(70, expandedMatches.length * 18)
+  if (expandedTerms.some((term) => description.includes(term))) score += 8
+  if (modeMatchesAsset(asset, mode)) score += 28
+  if (asset.thumbnailUrl || asset.previewUrl) score += 14
+  if (asset.license || asset.licenseUrl || asset.attributionText) score += 7
+  if (asset.source === 'wikimedia' || asset.source === 'openverse') score -= 8
+  if (/mutual\s+aid/i.test(exact) && /fund|axis|finance|bank/i.test(title)) score -= 90
   return score
 }
 
