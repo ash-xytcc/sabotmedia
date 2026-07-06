@@ -48,11 +48,11 @@ const sourceOptions = [
   { id: 'upload', label: 'Upload Image', help: 'Use a new image from your computer.' },
   { id: 'media', label: 'Sabot Media Library', help: 'Use already uploaded site assets from the Sabot Media Library.' },
   { id: 'url', label: 'URL Import', help: 'Use a direct image or SVG URL only when the license is known.' },
-  { id: 'openverse', label: 'Openverse', help: 'Search public domain and Creative Commons images from Openverse.' },
-  { id: 'wikimedia', label: 'Wikimedia Commons', help: 'Search Commons files and check each license before publishing.' },
-  { id: 'iconify', label: 'Iconify Icons', help: 'Search open icon sets; licenses vary by icon set.' },
-  { id: 'loc', label: 'Library of Congress', help: 'Search historical archive images; rights status varies.' },
-  { id: 'archive', label: 'Internet Archive', help: 'Search archive materials; rights status varies.' },
+  { id: 'openverse', label: 'Openverse', help: 'Search openly licensed images.' },
+  { id: 'wikimedia', label: 'Wikimedia Commons', help: 'Search Commons files. Check license before use.' },
+  { id: 'iconify', label: 'Iconify Icons', help: 'Search SVG icons. Licenses vary by set.' },
+  { id: 'loc', label: 'Library of Congress', help: 'Search historical records. Rights vary.' },
+  { id: 'archive', label: 'Internet Archive', help: 'Search archived media. Rights vary.' },
   { id: 'post', label: 'CMS Post', help: 'Use an existing article/post as source material.' },
 ]
 
@@ -1491,7 +1491,11 @@ export function PrintLabPage({ pieces = [] }) {
               ) : null}
               {assetState === 'loading' ? <p className="print-lab-empty-note">Searching {sourceOptions.find((option) => option.id === sourceType)?.label}...</p> : null}
               {assetState === 'loaded' && !assetResults.length ? (
-                <p className="print-lab-empty-note">No assets found.</p>
+                <p className="print-lab-empty-note">
+                  {sourceType === 'iconify'
+                    ? 'No icons found. Try a simpler noun like heart, group, printer, mic, or book.'
+                    : 'No assets found. Try a broader search term.'}
+                </p>
               ) : null}
               {assetResults.length ? (
                 <div className="print-lab-asset-results">

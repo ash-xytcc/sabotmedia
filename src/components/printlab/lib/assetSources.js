@@ -160,6 +160,50 @@ function safeArray(value) {
   return Array.isArray(value) ? value : []
 }
 
+function uniqueValues(values = []) {
+  const seen = new Set()
+  return values.map((value) => cleanText(value).toLowerCase()).filter((value) => {
+    if (!value || seen.has(value)) return false
+    seen.add(value)
+    return true
+  })
+}
+
+const iconifyFallbacks = [
+  { pattern: /mutual\s+aid|community\s+aid|aid/i, terms: ['heart', 'hands', 'group', 'people', 'medical', 'food', 'home'] },
+  { pattern: /podcast/i, terms: ['mic', 'radio', 'headphones'] },
+  { pattern: /print|printing/i, terms: ['printer', 'file', 'document'] },
+  { pattern: /zine|booklet/i, terms: ['book', 'booklet', 'pages'] },
+]
+
+async function searchIconifyTerm(term, limit = 36) {
+  const url = new URL('https://api.iconify.design/search')
+  url.searchParams.set('query', term)
+  url.searchParams.set('limit', String(limit))
+  const data = await fetchJson(url)
+  return safeArray(data.icons)
+}
+
+async function searchIconifyWithFallbacks(query) {
+  const words = query.split(/\s+/).filter((word) => word.length > 2)
+  const mapped = iconifyFallbacks.flatMap((entry) => (entry.pattern.test(query) ? entry.terms : []))
+  const terms = uniqueValues([query, ...words, ...mapped])
+  const icons = []
+  const seen = new Set()
+
+  for (const term of terms) {
+    const matches = await searchIconifyTerm(term, 36)
+    for (const icon of matches) {
+      if (!icon || seen.has(icon)) continue
+      seen.add(icon)
+      icons.push(icon)
+      if (icons.length >= 36) return icons
+    }
+  }
+
+  return icons
+}
+
 export function normalizePrintlabAsset(asset) {
   return normalizeAsset(asset)
 }
@@ -195,7 +239,7 @@ export async function searchAssetSource(sourceId, query) {
   if (sourceId === 'openverse') {
     const url = new URL('https://api.openverse.org/v1/images/')
     url.searchParams.set('q', q)
-    url.searchParams.set('page_size', '24')
+    url.searchParams.set('page_size', '20')
     const data = await fetchJson(url)
     return safeArray(data.results).map(normalizeOpenverse).filter(Boolean)
   }
@@ -218,11 +262,8 @@ export async function searchAssetSource(sourceId, query) {
   }
 
   if (sourceId === 'iconify') {
-    const url = new URL('https://api.iconify.design/search')
-    url.searchParams.set('query', q)
-    url.searchParams.set('limit', '36')
-    const data = await fetchJson(url)
-    return safeArray(data.icons).map(normalizeIconify).filter(Boolean)
+    const icons = await searchIconifyWithFallbacks(q)
+    return icons.map(normalizeIconify).filter(Boolean)
   }
 
   if (sourceId === 'loc') {
