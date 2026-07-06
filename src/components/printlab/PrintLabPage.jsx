@@ -19,7 +19,7 @@ import {
   systemCanvasFontOptions,
 } from './lib/canvasMath'
 import { buildExportHtml } from './lib/exportHtml'
-import { normalizePrintlabAsset } from './lib/assetSources'
+import { assetModeOptions, assetProviders, normalizePrintlabAsset } from './lib/assetSources'
 import { CanvasFloatingToolbar } from './CanvasFloatingToolbar'
 import {
   getCanvasOutput,
@@ -45,23 +45,16 @@ import { PosterSplitRenderer } from './renderers/PosterSplitRenderer'
 import { TileSheetRenderer } from './renderers/TileSheetRenderer'
 
 const sourceOptions = [
+  { id: 'assets', label: 'Asset Browser', help: 'Search local media, local packs, open images, and icons.' },
   { id: 'upload', label: 'Upload Image', help: 'Use a new image from your computer.' },
-  { id: 'media', label: 'Sabot Media Library', help: 'Use already uploaded site assets from the Sabot Media Library.' },
   { id: 'url', label: 'URL Import', help: 'Use a direct image or SVG URL only when the license is known.' },
-  { id: 'openverse', label: 'Openverse', help: 'Search openly licensed images.' },
-  { id: 'wikimedia', label: 'Wikimedia Commons', help: 'Search Commons files. Check license before use.' },
-  { id: 'iconify', label: 'Iconify Icons', help: 'Search SVG icons. Licenses vary by set.' },
-  { id: 'loc', label: 'Library of Congress', help: 'Search historical records. Rights vary.' },
-  { id: 'archive', label: 'Internet Archive', help: 'Search archived media. Rights vary.' },
   { id: 'post', label: 'CMS Post', help: 'Use an existing article/post as source material.' },
 ]
 
-const externalSourceIds = ['openverse', 'wikimedia', 'iconify', 'loc', 'archive']
 const rightsWarningBySource = {
   iconify: 'License varies by icon set. Verify before publishing.',
-  loc: 'Historical archive rights vary. Verify before publishing.',
-  archive: 'Archive item rights vary. Verify before publishing.',
   wikimedia: 'Check the Commons license and attribution requirements before publishing.',
+  openverse: 'Openverse results may have different Creative Commons terms. Check before publishing.',
 }
 
 const toolOptions = [
@@ -186,25 +179,32 @@ function renderParagraphs(text) {
 
 function getAssetImageUrl(asset) {
   const normalized = normalizePrintlabAsset(asset)
-  return normalized?.fullUrl || normalized?.url || normalized?.thumbnailUrl || ''
+  return normalized?.downloadUrl || normalized?.previewUrl || normalized?.thumbnailUrl || ''
 }
 
 function getAssetAttribution(asset) {
   const normalized = normalizePrintlabAsset(asset)
   if (!normalized) return null
-  const hasAttribution = normalized.attribution || normalized.creator || normalized.license || normalized.licenseUrl || normalized.source
+  const hasAttribution = normalized.attributionText || normalized.creator || normalized.license || normalized.licenseUrl || normalized.sourceLabel
   if (!hasAttribution) return null
   return {
     id: normalized.id,
     title: normalized.title,
-    source: normalized.source,
+    source: normalized.sourceLabel || normalized.source,
+    sourceLabel: normalized.sourceLabel,
     creator: normalized.creator,
     license: normalized.license,
     licenseUrl: normalized.licenseUrl,
-    attribution: normalized.attribution,
-    fullUrl: normalized.fullUrl,
-    landingUrl: normalized.landingUrl,
+    attribution: normalized.attributionText,
+    attributionText: normalized.attributionText,
+    fullUrl: normalized.downloadUrl,
+    downloadUrl: normalized.downloadUrl,
+    previewUrl: normalized.previewUrl,
+    landingUrl: normalized.landingPageUrl,
+    landingPageUrl: normalized.landingPageUrl,
     mediaType: normalized.mediaType,
+    originalProvider: normalized.originalProvider || normalized.source,
+    originalId: normalized.originalId || normalized.id,
   }
 }
 
@@ -241,9 +241,15 @@ export function PrintLabPage({ pieces = [] }) {
     setUrlInput,
     urlAsset,
     importUrl,
+    assetMode,
+    setAssetMode,
+    selectedAssetSourceIds,
+    setSelectedAssetSourceIds,
     assetQuery,
     setAssetQuery,
     assetResults,
+    assetProviderStates,
+    assetExpandedTerms,
     assetState,
     assetError,
     searchAssets,
@@ -520,9 +526,8 @@ export function PrintLabPage({ pieces = [] }) {
     }
     if (!currentImageUrl) return 'No source selected'
     if (sourceType === 'upload') return 'Uploaded image'
-    if (sourceType === 'media') return 'Media image'
+    if (sourceType === 'assets') return currentImage?.sourceLabel || currentImage?.source || 'Asset browser'
     if (sourceType === 'url') return 'URL import'
-    if (externalSourceIds.includes(sourceType)) return currentImage?.source || 'External asset'
     return 'Image source'
   }, [currentImage, currentImageUrl, selectedPiece, selectedPostTitle, sourceType])
   const missingSourceMessage = toolMode === 'split'
@@ -831,13 +836,13 @@ export function PrintLabPage({ pieces = [] }) {
   function handleUseAsset(asset) {
     const normalized = normalizePrintlabAsset(asset)
     if (!normalized) return
-    if (externalSourceIds.includes(sourceType)) setSelectedAssetId(normalized.id)
+    if (sourceType === 'assets') setSelectedAssetId(normalized.id)
     if (!tileCaption.trim()) setTileCaption(normalized.title)
     if (toolMode === 'canvas') {
       addCanvasAssetBlock(normalized)
       return
     }
-    setActionStatus(`Using "${normalized.title}" from ${normalized.source}. Attribution metadata is preserved.`)
+    setActionStatus(`Using "${normalized.title}" from ${normalized.sourceLabel || normalized.source}. Attribution metadata is preserved.`)
   }
 
   function handleSaveAssetToLibrary(asset) {
@@ -849,19 +854,26 @@ export function PrintLabPage({ pieces = [] }) {
       url,
       dataUrl: url,
       fullUrl: normalized.fullUrl,
+      previewUrl: normalized.previewUrl,
+      downloadUrl: normalized.downloadUrl,
       thumbnailUrl: normalized.thumbnailUrl,
       title: normalized.title,
       filename: '',
       alt: normalized.title,
-      caption: normalized.attribution,
-      description: normalized.landingUrl || normalized.fullUrl,
-      source: normalized.source,
+      caption: normalized.attributionText,
+      description: normalized.description || normalized.landingPageUrl || normalized.fullUrl,
+      source: normalized.sourceLabel || normalized.source,
+      sourceLabel: normalized.sourceLabel,
       creator: normalized.creator,
       license: normalized.license,
       licenseUrl: normalized.licenseUrl,
-      attribution: normalized.attribution,
+      attribution: normalized.attributionText,
+      attributionText: normalized.attributionText,
       mediaType: normalized.mediaType,
-      landingUrl: normalized.landingUrl,
+      landingUrl: normalized.landingPageUrl,
+      landingPageUrl: normalized.landingPageUrl,
+      originalProvider: normalized.originalProvider || normalized.source,
+      originalId: normalized.originalId || normalized.id,
       uploadedAt: new Date().toISOString(),
     })
     refreshLocalMedia()
@@ -1293,12 +1305,40 @@ export function PrintLabPage({ pieces = [] }) {
     window.print()
   }
 
+  function runAssetSearch(overrides = {}) {
+    const nextMode = overrides.mode || assetMode
+    const nextSourceIds = Array.isArray(overrides.sourceIds) ? overrides.sourceIds : selectedAssetSourceIds
+    return searchAssets({ query: assetQuery, mode: nextMode, sourceIds: nextSourceIds })
+  }
+
+  function updateAssetMode(nextMode) {
+    const nextSourceIds = selectedAssetSourceIds.filter((id) => {
+      const provider = assetProviders.find((item) => item.id === id)
+      return provider && (nextMode === 'everything' || provider.modes.includes(nextMode))
+    })
+    setAssetMode(nextMode)
+    if (nextSourceIds.length !== selectedAssetSourceIds.length) setSelectedAssetSourceIds(nextSourceIds)
+    if (assetQuery.trim()) runAssetSearch({ mode: nextMode, sourceIds: nextSourceIds })
+  }
+
+  function toggleAssetSource(providerId) {
+    const nextSourceIds = selectedAssetSourceIds.includes(providerId)
+      ? selectedAssetSourceIds.filter((id) => id !== providerId)
+      : [...selectedAssetSourceIds, providerId]
+    setSelectedAssetSourceIds(nextSourceIds)
+    if (assetQuery.trim()) runAssetSearch({ sourceIds: nextSourceIds })
+  }
+
+  function getProviderState(providerId) {
+    return assetProviderStates.find((provider) => provider.id === providerId) || null
+  }
+
   function renderAssetCard(asset) {
     const normalized = normalizePrintlabAsset(asset)
     if (!normalized) return null
     const selected = normalized.id === selectedAssetId || normalized.id === currentImage?.id
     const previewUrl = normalized.thumbnailUrl || normalized.fullUrl || normalized.url || ''
-    const sourceWarning = rightsWarningBySource[sourceType] || ''
+    const sourceWarning = rightsWarningBySource[normalized.source] || ''
     return (
       <article className={`print-lab-asset-card${selected ? ' is-selected' : ''}`} key={normalized.id}>
         <button
@@ -1315,7 +1355,7 @@ export function PrintLabPage({ pieces = [] }) {
           </span>
           <span className="print-lab-asset-card__body">
             <strong>{normalized.title || 'Untitled asset'}</strong>
-            <span>{normalized.source || 'External source'}</span>
+            <span>{normalized.sourceLabel || normalized.source || 'External source'}</span>
             {normalized.license ? <small>License: {normalized.license}</small> : null}
             {normalized.creator ? <small>Creator: {normalized.creator}</small> : null}
             {sourceWarning ? <small>{sourceWarning}</small> : null}
@@ -1332,6 +1372,109 @@ export function PrintLabPage({ pieces = [] }) {
           <button className="button" type="button" onClick={() => handleSaveAssetToLibrary(normalized)}>Save to Media Library</button>
         </div>
       </article>
+    )
+  }
+
+  function renderAssetBrowser() {
+    const activeProviderErrors = assetProviderStates.filter((provider) => provider.error)
+    const visibleProviders = assetProviders.filter((provider) => assetMode === 'everything' || provider.modes.includes(assetMode))
+    return (
+      <div className="print-lab-asset-browser">
+        <div className="print-lab-asset-browser__search">
+          <label className="print-lab-field">
+            <span>Search assets</span>
+            <input
+              value={assetQuery}
+              onChange={(event) => setAssetQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  runAssetSearch()
+                }
+              }}
+              placeholder="mutual aid, labor poster, halftone, radio"
+            />
+          </label>
+          <button className="button button--primary" type="button" onClick={() => runAssetSearch()} disabled={assetState === 'loading'}>
+            {assetState === 'loading' ? 'Searching...' : 'Search'}
+          </button>
+        </div>
+
+        <div className="print-lab-asset-browser__modes" role="tablist" aria-label="Asset modes">
+          {assetModeOptions.map((option) => (
+            <button
+              className={assetMode === option.id ? 'is-active' : ''}
+              key={option.id}
+              type="button"
+              role="tab"
+              aria-selected={assetMode === option.id}
+              onClick={() => updateAssetMode(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="print-lab-asset-browser__sources" aria-label="Asset source filters">
+          <button
+            className={!selectedAssetSourceIds.length ? 'is-active' : ''}
+            type="button"
+            aria-pressed={!selectedAssetSourceIds.length}
+            onClick={() => {
+              setSelectedAssetSourceIds([])
+              if (assetQuery.trim()) runAssetSearch({ sourceIds: [] })
+            }}
+          >
+            All Sources
+          </button>
+          {visibleProviders.map((provider) => {
+            const state = getProviderState(provider.id)
+            const selected = selectedAssetSourceIds.includes(provider.id)
+            return (
+              <button
+                className={`${selected ? 'is-active' : ''}${state?.error ? ' has-error' : ''}`}
+                key={provider.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => toggleAssetSource(provider.id)}
+                title={state?.error || provider.label}
+              >
+                <span>{provider.label}</span>
+                {state && !state.error ? <small>{state.count}</small> : null}
+              </button>
+            )
+          })}
+        </div>
+
+        {assetExpandedTerms.length > 1 ? (
+          <p className="print-lab-source-help">Also considering: {assetExpandedTerms.slice(1, 7).join(', ')}</p>
+        ) : null}
+
+        {activeProviderErrors.length ? (
+          <div className="print-lab-provider-warnings">
+            {activeProviderErrors.map((provider) => (
+              <p className="print-lab-empty-note print-lab-empty-note--compact" key={provider.id}>
+                {provider.label}: {provider.error}
+              </p>
+            ))}
+          </div>
+        ) : null}
+
+        {assetError ? <p className="print-lab-empty-note print-lab-empty-note--compact">{assetError}</p> : null}
+        {assetState === 'loading' ? <p className="print-lab-empty-note">Searching selected providers...</p> : null}
+        {assetState === 'loaded' && !assetResults.length ? (
+          <p className="print-lab-empty-note">No assets found. Try a broader search or switch to Search Everything.</p>
+        ) : null}
+        {assetState === 'idle' ? (
+          <p className="print-lab-empty-note">Search across local media, asset packs, Openverse, Wikimedia Commons, and Iconify.</p>
+        ) : null}
+
+        {assetResults.length ? (
+          <div className="print-lab-asset-results">
+            {assetResults.map((asset) => renderAssetCard(asset))}
+          </div>
+        ) : null}
+      </div>
     )
   }
 
@@ -1385,6 +1528,8 @@ export function PrintLabPage({ pieces = [] }) {
             {sourceOptions.find((option) => option.id === sourceType)?.help}
           </p>
 
+          {sourceType === 'assets' ? renderAssetBrowser() : null}
+
           {sourceType === 'upload' ? (
             <div className="print-lab-source-section">
               <label className="print-lab-field">
@@ -1399,40 +1544,6 @@ export function PrintLabPage({ pieces = [] }) {
                 </div>
               ) : (
                 <p className="print-lab-empty-note print-lab-empty-note--compact">Choose an image to use in Tile Sheet, Poster Split, Page Layout, Zine, or Canvas.</p>
-              )}
-            </div>
-          ) : null}
-
-          {sourceType === 'media' ? (
-            <div className="print-lab-source-section">
-              <p className="print-lab-source-help">Selecting a media item makes it the current image source, just like uploading an image.</p>
-              {mediaItems.length ? (
-                <div className="print-lab-source-list" role="listbox" aria-label="Existing images">
-                  {mediaItems.map((item) => {
-                    const selected = item.id === selectedMediaId
-                    return (
-                      <button
-                        className={`print-lab-source-row${selected ? ' is-selected' : ''}`}
-                        key={item.id}
-                        type="button"
-                        role="option"
-                        aria-selected={selected}
-                        onClick={() => setSelectedMediaId(item.id)}
-                      >
-                        <img className="print-lab-source-row__thumb" src={item.url} alt="" loading="lazy" />
-                        <span className="print-lab-source-row__content">
-                          <strong>{item.title || 'Untitled image'}</strong>
-                          <span className="print-lab-source-row__meta">
-                            <span>{item.source || 'image'}</span>
-                            {item.meta ? <span>{item.meta}</span> : null}
-                          </span>
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              ) : (
-                <p className="print-lab-empty-note">No existing images are available.</p>
               )}
             </div>
           ) : null}
@@ -1460,49 +1571,6 @@ export function PrintLabPage({ pieces = [] }) {
               </button>
               {urlAsset ? renderAssetCard(urlAsset) : (
                 <p className="print-lab-empty-note print-lab-empty-note--compact">URL imports are marked as unknown license until you verify and edit the metadata.</p>
-              )}
-            </div>
-          ) : null}
-
-          {externalSourceIds.includes(sourceType) ? (
-            <div className="print-lab-source-section">
-              <div className="print-lab-source-search">
-                <label className="print-lab-field">
-                  <span>Asset search</span>
-                  <input
-                    value={assetQuery}
-                    onChange={(event) => setAssetQuery(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault()
-                        searchAssets(sourceType, assetQuery)
-                      }
-                    }}
-                    placeholder={sourceType === 'iconify' ? 'home, arrow, radio' : 'strike poster, mutual aid, forest'}
-                  />
-                </label>
-                <button className="button button--primary" type="button" onClick={() => searchAssets(sourceType, assetQuery)} disabled={assetState === 'loading'}>
-                  {assetState === 'loading' ? 'Searching...' : 'Search'}
-                </button>
-              </div>
-              {assetError ? <p className="print-lab-empty-note print-lab-empty-note--compact">{assetError}</p> : null}
-              {rightsWarningBySource[sourceType] ? (
-                <p className="print-lab-source-help">{rightsWarningBySource[sourceType]}</p>
-              ) : null}
-              {assetState === 'loading' ? <p className="print-lab-empty-note">Searching {sourceOptions.find((option) => option.id === sourceType)?.label}...</p> : null}
-              {assetState === 'loaded' && !assetResults.length ? (
-                <p className="print-lab-empty-note">
-                  {sourceType === 'iconify'
-                    ? 'No icons found. Try a simpler noun like heart, group, printer, mic, or book.'
-                    : 'No assets found. Try a broader search term.'}
-                </p>
-              ) : null}
-              {assetResults.length ? (
-                <div className="print-lab-asset-results">
-                  {assetResults.map((asset) => renderAssetCard(asset))}
-                </div>
-              ) : (
-                assetState === 'idle' ? <p className="print-lab-empty-note">Search {sourceOptions.find((option) => option.id === sourceType)?.label} to pull in reusable assets.</p> : null
               )}
             </div>
           ) : null}

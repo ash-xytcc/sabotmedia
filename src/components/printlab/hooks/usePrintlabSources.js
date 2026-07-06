@@ -3,7 +3,7 @@ import { getImportedImage } from '../../../lib/getImportedImage'
 import { loadLocalMediaItems } from '../../../lib/localMediaLibrary'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../../../lib/nativePublicFeed'
 import { useWordPressPieces } from '../../../lib/useWordPressPieces'
-import { importUrlAsset, normalizePrintlabAsset, searchAssetSource } from '../lib/assetSources'
+import { importUrlAsset, normalizePrintlabAsset, searchUnifiedAssets } from '../lib/assetSources'
 
 function getPieceId(piece) {
   const source = piece?.sourceKind || piece?.sourcePostType || piece?.origin || 'imported'
@@ -139,15 +139,18 @@ export function usePrintlabSources(pieces = []) {
   const [nativePieces, setNativePieces] = useState([])
   const [nativeState, setNativeState] = useState('loading')
   const [localMedia, setLocalMedia] = useState([])
-  const [sourceType, setSourceType] = useState('upload')
+  const [sourceType, setSourceType] = useState('assets')
   const [selectedId, setSelectedId] = useState('')
   const [selectedMediaId, setSelectedMediaId] = useState('')
   const [uploadImage, setUploadImage] = useState(null)
   const [urlInput, setUrlInput] = useState('')
   const [urlAsset, setUrlAsset] = useState(null)
-  const [externalSourceId, setExternalSourceId] = useState('openverse')
+  const [assetMode, setAssetMode] = useState('everything')
+  const [selectedAssetSourceIds, setSelectedAssetSourceIds] = useState([])
   const [assetQuery, setAssetQuery] = useState('')
   const [assetResults, setAssetResults] = useState([])
+  const [assetProviderStates, setAssetProviderStates] = useState([])
+  const [assetExpandedTerms, setAssetExpandedTerms] = useState([])
   const [assetState, setAssetState] = useState('idle')
   const [assetError, setAssetError] = useState('')
   const [selectedAssetId, setSelectedAssetId] = useState('')
@@ -235,13 +238,14 @@ export function usePrintlabSources(pieces = []) {
   }, [mediaItems])
 
   useEffect(() => {
-    if (!['openverse', 'wikimedia', 'iconify', 'loc', 'archive'].includes(sourceType)) return
-    setExternalSourceId(sourceType)
+    if (sourceType !== 'assets') return
     setAssetResults([])
     setSelectedAssetId('')
+    setAssetProviderStates([])
+    setAssetExpandedTerms([])
     setAssetState('idle')
     setAssetError('')
-  }, [sourceType])
+  }, [assetMode, selectedAssetSourceIds, sourceType])
 
   const selectedPiece = publishedPieces.find((piece) => getPieceId(piece) === selectedId) || null
   const selectedMedia = mediaItems.find((item) => item.id === selectedMediaId) || null
@@ -257,7 +261,7 @@ export function usePrintlabSources(pieces = []) {
     if (sourceType === 'upload') return uploadImage
     if (sourceType === 'media') return selectedMedia ? normalizeMediaAsset(selectedMedia) : null
     if (sourceType === 'url') return urlAsset
-    if (['openverse', 'wikimedia', 'iconify', 'loc', 'archive'].includes(sourceType)) return selectedExternalAsset
+    if (sourceType === 'assets') return selectedExternalAsset
     if (sourceType === 'post' && selectedPiece) {
       return selectedPostImage ? {
         id: getPieceId(selectedPiece),
@@ -276,26 +280,31 @@ export function usePrintlabSources(pieces = []) {
     return null
   }, [selectedExternalAsset, selectedMedia, selectedPiece, selectedPostImage, selectedPostTitle, sourceType, uploadImage, urlAsset])
 
-  async function searchAssets(nextSourceId = externalSourceId, nextQuery = assetQuery) {
+  async function searchAssets(options = {}) {
+    const nextQuery = typeof options === 'string' ? options : (options.query ?? assetQuery)
+    const nextMode = typeof options === 'object' && options.mode ? options.mode : assetMode
+    const nextSourceIds = typeof options === 'object' && Array.isArray(options.sourceIds) ? options.sourceIds : selectedAssetSourceIds
     const q = String(nextQuery || '').trim()
-    if (!q) {
-      setAssetResults([])
-      setSelectedAssetId('')
-      setAssetState('idle')
-      setAssetError('')
-      return []
-    }
     try {
       setAssetState('loading')
       setAssetError('')
-      const results = await searchAssetSource(nextSourceId, q)
-      setAssetResults(results)
-      setSelectedAssetId((current) => (results.some((item) => item.id === current) ? current : (results[0]?.id || '')))
+      const data = await searchUnifiedAssets({
+        query: q,
+        mode: nextMode,
+        sourceIds: nextSourceIds,
+        localMedia,
+      })
+      setAssetResults(data.results)
+      setAssetProviderStates(data.providers)
+      setAssetExpandedTerms(data.expandedTerms)
+      setSelectedAssetId((current) => (data.results.some((item) => item.id === current) ? current : (data.results[0]?.id || '')))
       setAssetState('loaded')
-      return results
+      return data.results
     } catch (err) {
       setAssetResults([])
       setSelectedAssetId('')
+      setAssetProviderStates([])
+      setAssetExpandedTerms([])
       setAssetState('error')
       setAssetError(String(err?.message || err))
       return []
@@ -334,12 +343,16 @@ export function usePrintlabSources(pieces = []) {
     urlAsset,
     setUrlAsset,
     importUrl,
-    externalSourceId,
-    setExternalSourceId,
+    assetMode,
+    setAssetMode,
+    selectedAssetSourceIds,
+    setSelectedAssetSourceIds,
     assetQuery,
     setAssetQuery,
     assetResults,
     setAssetResults,
+    assetProviderStates,
+    assetExpandedTerms,
     assetState,
     assetError,
     searchAssets,

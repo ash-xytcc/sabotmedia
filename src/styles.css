@@ -17759,6 +17759,79 @@ button.print-lab-half-fold-panel__label:focus-visible {
   min-height: 38px;
 }
 
+.print-lab-asset-browser {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.print-lab-asset-browser__search {
+  display: grid;
+  gap: 8px;
+}
+
+.print-lab-asset-browser__search .button {
+  width: 100%;
+  min-height: 40px;
+  justify-content: center;
+}
+
+.print-lab-asset-browser__modes,
+.print-lab-asset-browser__sources {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.print-lab-asset-browser__modes button,
+.print-lab-asset-browser__sources button {
+  min-width: 0;
+  border: 1px solid #c3c4c7;
+  border-radius: 999px;
+  background: #fff;
+  color: #1d2327;
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.15;
+  cursor: pointer;
+}
+
+.print-lab-asset-browser__sources button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.print-lab-asset-browser__sources small {
+  display: inline-grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 999px;
+  background: #f0f0f1;
+  color: #50575e;
+  font-size: 10px;
+}
+
+.print-lab-asset-browser__modes button.is-active,
+.print-lab-asset-browser__sources button.is-active {
+  border-color: #2271b1;
+  background: #eaf3fb;
+  color: #0a4b78;
+}
+
+.print-lab-asset-browser__sources button.has-error {
+  border-color: #c22b26;
+  color: #8a1f1a;
+}
+
+.print-lab-provider-warnings {
+  display: grid;
+  gap: 6px;
+}
+
 .print-lab-asset-results {
   min-height: 0;
   max-height: none;
@@ -17950,6 +18023,53 @@ button.print-lab-half-fold-panel__label:focus-visible {
 
   .print-lab-asset-card__actions {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .print-lab-page {
+    --printlab-panel: #151515;
+    --printlab-ink: #f6f1e8;
+    --printlab-stage: #0f1115;
+    --printlab-rule: #3a3f45;
+  }
+
+  .print-lab-asset-card,
+  .print-lab-asset-browser__modes button,
+  .print-lab-asset-browser__sources button,
+  .print-lab-asset-card__actions .button {
+    border-color: #3a3f45 !important;
+    background: #1f2328 !important;
+    color: #f6f1e8 !important;
+  }
+
+  .print-lab-asset-card__body strong,
+  .print-lab-attribution-list strong {
+    color: #f6f1e8;
+  }
+
+  .print-lab-asset-card__body span,
+  .print-lab-asset-card__body small,
+  .print-lab-attribution-list span,
+  .print-lab-attribution-list p {
+    color: #c8c1b8;
+  }
+
+  .print-lab-asset-card__thumb,
+  .print-lab-attribution-list article {
+    border-color: #3a3f45;
+    background: #111418;
+  }
+
+  .print-lab-asset-browser__modes button.is-active,
+  .print-lab-asset-browser__sources button.is-active {
+    border-color: #79b8ff !important;
+    background: #12324a !important;
+    color: #eaf3fb !important;
+  }
+
+  .print-lab-asset-card__links a {
+    color: #8ec8ff;
   }
 }
 

@@ -36,12 +36,19 @@ function normalizeMediaItem(item) {
     extension: String(item.extension || ''),
     thumbnailUrl: String(item.thumbnailUrl || item.thumbUrl || url),
     fullUrl: String(item.fullUrl || url),
+    previewUrl: String(item.previewUrl || item.thumbnailUrl || url),
+    downloadUrl: String(item.downloadUrl || item.fullUrl || url),
     creator: String(item.creator || ''),
     license: String(item.license || ''),
     licenseUrl: String(item.licenseUrl || ''),
     attribution: String(item.attribution || ''),
+    attributionText: String(item.attributionText || item.attribution || ''),
     mediaType: String(item.mediaType || (String(item.mimeType || '').includes('svg') ? 'svg' : 'image')),
-    landingUrl: String(item.landingUrl || ''),
+    landingUrl: String(item.landingUrl || item.landingPageUrl || ''),
+    landingPageUrl: String(item.landingPageUrl || item.landingUrl || ''),
+    sourceLabel: String(item.sourceLabel || item.source || ''),
+    originalProvider: String(item.originalProvider || item.source || ''),
+    originalId: String(item.originalId || item.id || ''),
   }
 }
 
