@@ -180,6 +180,10 @@ export function usePrintlabSources(pieces = []) {
     setLocalMedia(loadLocalMediaItems())
   }, [])
 
+  function refreshLocalMedia() {
+    setLocalMedia(loadLocalMediaItems())
+  }
+
   const publishedPieces = useMemo(() => {
     const importedPieces = (wordpressFeed.pieces || pieces).filter(isPublishedPiece)
     return mergeNativeAndImportedPieces(importedPieces, nativePieces)
@@ -324,6 +328,7 @@ export function usePrintlabSources(pieces = []) {
     setSelectedMediaId,
     uploadImage,
     setUploadImage,
+    refreshLocalMedia,
     urlInput,
     setUrlInput,
     urlAsset,

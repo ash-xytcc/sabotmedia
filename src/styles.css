@@ -17822,6 +17822,21 @@ button.print-lab-half-fold-panel__label:focus-visible {
   gap: 6px;
 }
 
+.print-lab-asset-card__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.print-lab-asset-card__links a {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #0a4b78;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .print-lab-asset-card__actions .button {
   width: 100%;
   justify-content: center;

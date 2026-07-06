@@ -46,17 +46,23 @@ import { TileSheetRenderer } from './renderers/TileSheetRenderer'
 
 const sourceOptions = [
   { id: 'upload', label: 'Upload Image', help: 'Use a new image from your computer.' },
-  { id: 'media', label: 'Media Library', help: 'Reuse an image already saved in Sabot Media.' },
-  { id: 'url', label: 'URL Import', help: 'Use an image or SVG from a direct URL.' },
-  { id: 'openverse', label: 'Openverse', help: 'Search openly licensed images from Openverse.' },
-  { id: 'wikimedia', label: 'Wikimedia Commons', help: 'Search files and license metadata from Wikimedia Commons.' },
-  { id: 'iconify', label: 'Iconify Icons', help: 'Search open source SVG icons from Iconify.' },
-  { id: 'loc', label: 'Library of Congress', help: 'Search digitized image records from the Library of Congress.' },
-  { id: 'archive', label: 'Internet Archive', help: 'Search image/text records from the Internet Archive when results are usable.' },
+  { id: 'media', label: 'Sabot Media Library', help: 'Use already uploaded site assets from the Sabot Media Library.' },
+  { id: 'url', label: 'URL Import', help: 'Use a direct image or SVG URL only when the license is known.' },
+  { id: 'openverse', label: 'Openverse', help: 'Search public domain and Creative Commons images from Openverse.' },
+  { id: 'wikimedia', label: 'Wikimedia Commons', help: 'Search Commons files and check each license before publishing.' },
+  { id: 'iconify', label: 'Iconify Icons', help: 'Search open icon sets; licenses vary by icon set.' },
+  { id: 'loc', label: 'Library of Congress', help: 'Search historical archive images; rights status varies.' },
+  { id: 'archive', label: 'Internet Archive', help: 'Search archive materials; rights status varies.' },
   { id: 'post', label: 'CMS Post', help: 'Use an existing article/post as source material.' },
 ]
 
 const externalSourceIds = ['openverse', 'wikimedia', 'iconify', 'loc', 'archive']
+const rightsWarningBySource = {
+  iconify: 'License varies by icon set. Verify before publishing.',
+  loc: 'Historical archive rights vary. Verify before publishing.',
+  archive: 'Archive item rights vary. Verify before publishing.',
+  wikimedia: 'Check the Commons license and attribution requirements before publishing.',
+}
 
 const toolOptions = [
   { id: 'tile', label: 'Tile Sheet', shortLabel: 'T' },
@@ -179,7 +185,8 @@ function renderParagraphs(text) {
 }
 
 function getAssetImageUrl(asset) {
-  return asset?.fullUrl || asset?.url || asset?.thumbnailUrl || ''
+  const normalized = normalizePrintlabAsset(asset)
+  return normalized?.fullUrl || normalized?.url || normalized?.thumbnailUrl || ''
 }
 
 function getAssetAttribution(asset) {
@@ -229,6 +236,7 @@ export function PrintLabPage({ pieces = [] }) {
     setSelectedMediaId,
     uploadImage,
     setUploadImage,
+    refreshLocalMedia,
     urlInput,
     setUrlInput,
     urlAsset,
@@ -856,6 +864,7 @@ export function PrintLabPage({ pieces = [] }) {
       landingUrl: normalized.landingUrl,
       uploadedAt: new Date().toISOString(),
     })
+    refreshLocalMedia()
     setActionStatus(`Saved "${normalized.title}" to the Media Library with attribution metadata.`)
   }
 
@@ -1267,12 +1276,12 @@ export function PrintLabPage({ pieces = [] }) {
     if (!hasUsableOutput) return
     const attributionText = usedAttributions.length
       ? `\n\nAttribution\n${usedAttributions.map((asset) => [
-        asset.title || 'Untitled asset',
-        asset.source ? `Source: ${asset.source}` : '',
-        asset.creator ? `Creator: ${asset.creator}` : '',
-        asset.license ? `License: ${asset.license}` : '',
-        asset.licenseUrl ? `License URL: ${asset.licenseUrl}` : '',
-        asset.attribution ? `Attribution: ${asset.attribution}` : '',
+        asset?.title || 'Untitled asset',
+        asset?.source ? `Source: ${asset.source}` : '',
+        asset?.creator ? `Creator: ${asset.creator}` : '',
+        asset?.license ? `License: ${asset.license}` : '',
+        asset?.licenseUrl ? `License URL: ${asset.licenseUrl}` : '',
+        asset?.attribution ? `Attribution: ${asset.attribution}` : '',
       ].filter(Boolean).join('\n')).join('\n\n')}`
       : ''
     downloadFile(makeDownloadName(pageTitle || zineTitle || currentImageTitle || toolMode, 'txt'), `${currentTextContent}${attributionText}`, 'text/plain;charset=utf-8')
@@ -1288,6 +1297,8 @@ export function PrintLabPage({ pieces = [] }) {
     const normalized = normalizePrintlabAsset(asset)
     if (!normalized) return null
     const selected = normalized.id === selectedAssetId || normalized.id === currentImage?.id
+    const previewUrl = normalized.thumbnailUrl || normalized.fullUrl || normalized.url || ''
+    const sourceWarning = rightsWarningBySource[sourceType] || ''
     return (
       <article className={`print-lab-asset-card${selected ? ' is-selected' : ''}`} key={normalized.id}>
         <button
@@ -1300,15 +1311,22 @@ export function PrintLabPage({ pieces = [] }) {
           }}
         >
           <span className="print-lab-asset-card__thumb">
-            <img src={normalized.thumbnailUrl || normalized.fullUrl} alt="" loading="lazy" />
+            {previewUrl ? <img src={previewUrl} alt="" loading="lazy" /> : <span>{normalized.mediaType || 'asset'}</span>}
           </span>
           <span className="print-lab-asset-card__body">
             <strong>{normalized.title || 'Untitled asset'}</strong>
             <span>{normalized.source || 'External source'}</span>
             {normalized.license ? <small>License: {normalized.license}</small> : null}
             {normalized.creator ? <small>Creator: {normalized.creator}</small> : null}
+            {sourceWarning ? <small>{sourceWarning}</small> : null}
           </span>
         </button>
+        {(normalized.licenseUrl || normalized.landingUrl) ? (
+          <div className="print-lab-asset-card__links">
+            {normalized.licenseUrl ? <a href={normalized.licenseUrl} target="_blank" rel="noreferrer">License URL</a> : null}
+            {normalized.landingUrl ? <a href={normalized.landingUrl} target="_blank" rel="noreferrer">Landing page</a> : null}
+          </div>
+        ) : null}
         <div className="print-lab-asset-card__actions">
           <button className="button button--primary" type="button" onClick={() => handleUseAsset(normalized)}>Use in design</button>
           <button className="button" type="button" onClick={() => handleSaveAssetToLibrary(normalized)}>Save to Media Library</button>
@@ -1324,11 +1342,12 @@ export function PrintLabPage({ pieces = [] }) {
         {usedAttributions.length ? (
           <div className="print-lab-attribution-list">
             {usedAttributions.map((asset) => (
-              <article key={asset.id || asset.fullUrl}>
-                <strong>{asset.title || 'Untitled asset'}</strong>
-                <span>{[asset.source, asset.creator, asset.license].filter(Boolean).join(' / ')}</span>
-                {asset.attribution ? <p>{asset.attribution}</p> : null}
-                {asset.licenseUrl ? <a href={asset.licenseUrl} target="_blank" rel="noreferrer">License</a> : null}
+              <article key={asset?.id || asset?.fullUrl || asset?.attribution}>
+                <strong>{asset?.title || 'Untitled asset'}</strong>
+                <span>{[asset?.source, asset?.creator, asset?.license].filter(Boolean).join(' / ')}</span>
+                {asset?.attribution ? <p>{asset.attribution}</p> : null}
+                {asset?.licenseUrl ? <a href={asset.licenseUrl} target="_blank" rel="noreferrer">License</a> : null}
+                {asset?.landingUrl ? <a href={asset.landingUrl} target="_blank" rel="noreferrer">Landing page</a> : null}
               </article>
             ))}
           </div>
@@ -1467,9 +1486,10 @@ export function PrintLabPage({ pieces = [] }) {
                 </button>
               </div>
               {assetError ? <p className="print-lab-empty-note print-lab-empty-note--compact">{assetError}</p> : null}
-              {sourceType === 'iconify' ? (
-                <p className="print-lab-source-help">Iconify icons render as SVGs. Icon set licenses vary, so verify the specific set before publishing.</p>
+              {rightsWarningBySource[sourceType] ? (
+                <p className="print-lab-source-help">{rightsWarningBySource[sourceType]}</p>
               ) : null}
+              {assetState === 'loading' ? <p className="print-lab-empty-note">Searching {sourceOptions.find((option) => option.id === sourceType)?.label}...</p> : null}
               {assetState === 'loaded' && !assetResults.length ? (
                 <p className="print-lab-empty-note">No assets found.</p>
               ) : null}

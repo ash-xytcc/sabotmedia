@@ -48,22 +48,24 @@ function normalizeAsset(asset) {
 }
 
 function normalizeOpenverse(item) {
+  if (!item || typeof item !== 'object') return null
   return normalizeAsset({
-    id: `openverse:${item.id || item.url}`,
-    title: item.title,
-    thumbnailUrl: item.thumbnail || item.url,
-    fullUrl: item.url || item.thumbnail,
-    source: item.source ? `Openverse / ${item.source}` : 'Openverse',
-    creator: item.creator,
-    license: item.license,
-    licenseUrl: item.license_url,
+    id: `openverse:${item?.id || item?.url || ''}`,
+    title: item?.title,
+    thumbnailUrl: item?.thumbnail || item?.url,
+    fullUrl: item?.url || item?.thumbnail,
+    source: item?.source ? `Openverse / ${item.source}` : 'Openverse',
+    creator: item?.creator,
+    license: item?.license,
+    licenseUrl: item?.license_url,
     attribution: getOpenverseAttribution(item),
     mediaType: 'image',
-    landingUrl: item.foreign_landing_url,
+    landingUrl: item?.foreign_landing_url,
   })
 }
 
 function normalizeCommons(page) {
+  if (!page || typeof page !== 'object') return null
   const info = page?.imageinfo?.[0] || {}
   const objectName = getCommonsMetadata(info, 'ObjectName')
   const title = objectName || cleanText(page?.title || '').replace(/^File:/, '')
@@ -108,14 +110,16 @@ function normalizeIconify(icon) {
 }
 
 function normalizeLoc(item) {
+  if (!item || typeof item !== 'object') return null
   const images = Array.isArray(item?.image_url) ? item.image_url : []
+  const contributors = Array.isArray(item?.contributor) ? item.contributor.join(', ') : item?.contributor
   return normalizeAsset({
     id: `loc:${item?.id || item?.url || item?.title}`,
     title: item?.title,
     thumbnailUrl: images[0] || item?.image_url || item?.item?.image_url?.[0],
     fullUrl: images[images.length - 1] || images[0] || item?.url,
     source: 'Library of Congress',
-    creator: Array.isArray(item?.contributor) ? item.contributor.join(', ') : item?.contributor,
+    creator: contributors,
     license: item?.rights || item?.subject?.join(', ') || 'Rights status varies',
     licenseUrl: item?.url,
     attribution: [item?.title, item?.rights || 'Library of Congress'].filter(Boolean).join(' / '),
@@ -125,18 +129,20 @@ function normalizeLoc(item) {
 }
 
 function normalizeArchive(item) {
+  if (!item || typeof item !== 'object') return null
   const identifier = cleanText(item?.identifier)
   if (!identifier) return null
+  const creator = Array.isArray(item?.creator) ? item.creator.join(', ') : item?.creator
   return normalizeAsset({
     id: `internet-archive:${identifier}`,
     title: item?.title || identifier,
     thumbnailUrl: `https://archive.org/services/img/${encodeURIComponent(identifier)}`,
     fullUrl: `https://archive.org/services/img/${encodeURIComponent(identifier)}`,
     source: 'Internet Archive',
-    creator: Array.isArray(item?.creator) ? item.creator.join(', ') : item?.creator,
+    creator,
     license: item?.licenseurl ? 'See license URL' : (item?.rights || 'Rights status varies'),
     licenseUrl: item?.licenseurl || '',
-    attribution: [item?.title || identifier, item?.creator, 'Internet Archive', item?.licenseurl || item?.rights].filter(Boolean).join(' / '),
+    attribution: [item?.title || identifier, creator, 'Internet Archive', item?.licenseurl || item?.rights].filter(Boolean).join(' / '),
     mediaType: 'image',
     landingUrl: `https://archive.org/details/${encodeURIComponent(identifier)}`,
   })
@@ -146,7 +152,12 @@ async function fetchJson(url) {
   const res = await fetch(url, { headers: { accept: 'application/json' } })
   const data = await res.json().catch(() => null)
   if (!res.ok) throw new Error(data?.detail || data?.error || `Search failed: ${res.status}`)
+  if (!data || typeof data !== 'object') throw new Error('Search returned an unreadable response.')
   return data
+}
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : []
 }
 
 export function normalizePrintlabAsset(asset) {
@@ -186,7 +197,7 @@ export async function searchAssetSource(sourceId, query) {
     url.searchParams.set('q', q)
     url.searchParams.set('page_size', '24')
     const data = await fetchJson(url)
-    return (data.results || []).map(normalizeOpenverse).filter(Boolean)
+    return safeArray(data.results).map(normalizeOpenverse).filter(Boolean)
   }
 
   if (sourceId === 'wikimedia') {
@@ -202,7 +213,8 @@ export async function searchAssetSource(sourceId, query) {
     url.searchParams.set('iiprop', 'url|extmetadata|mime|user')
     url.searchParams.set('iiurlwidth', '360')
     const data = await fetchJson(url)
-    return Object.values(data.query?.pages || {}).map(normalizeCommons).filter(Boolean)
+    const pages = data.query?.pages && typeof data.query.pages === 'object' ? Object.values(data.query.pages) : []
+    return pages.map(normalizeCommons).filter(Boolean)
   }
 
   if (sourceId === 'iconify') {
@@ -210,8 +222,7 @@ export async function searchAssetSource(sourceId, query) {
     url.searchParams.set('query', q)
     url.searchParams.set('limit', '36')
     const data = await fetchJson(url)
-    const icons = Array.isArray(data.icons) ? data.icons : []
-    return icons.map(normalizeIconify).filter(Boolean)
+    return safeArray(data.icons).map(normalizeIconify).filter(Boolean)
   }
 
   if (sourceId === 'loc') {
@@ -221,7 +232,7 @@ export async function searchAssetSource(sourceId, query) {
     url.searchParams.set('fa', 'online-format:image')
     url.searchParams.set('c', '24')
     const data = await fetchJson(url)
-    return (data.results || []).map(normalizeLoc).filter(Boolean)
+    return safeArray(data.results).map(normalizeLoc).filter(Boolean)
   }
 
   if (sourceId === 'archive') {
@@ -235,7 +246,7 @@ export async function searchAssetSource(sourceId, query) {
     url.searchParams.set('rows', '24')
     url.searchParams.set('output', 'json')
     const data = await fetchJson(url)
-    return (data.response?.docs || []).map(normalizeArchive).filter(Boolean)
+    return safeArray(data.response?.docs).map(normalizeArchive).filter(Boolean)
   }
 
   return []
