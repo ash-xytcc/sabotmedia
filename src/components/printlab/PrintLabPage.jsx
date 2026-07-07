@@ -77,6 +77,20 @@ const marginPresets = {
 }
 const printlabGoogleFontsHref = 'https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&family=Libre+Baskerville:wght@400;700&family=Merriweather:wght@400;700;900&family=Oswald:wght@400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Roboto+Condensed:wght@400;700&family=Source+Serif+4:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap'
 const fontUploadAccept = '.ttf,.otf,.woff,.woff2'
+const canvasHistoryLimit = 80
+
+function cloneCanvasHistoryValue(value) {
+  if (typeof structuredClone === 'function') return structuredClone(value)
+  return JSON.parse(JSON.stringify(value))
+}
+
+function serializeCanvasHistorySnapshot(snapshot) {
+  return JSON.stringify({
+    publication: snapshot.publication,
+    selectedCanvasBlockId: snapshot.selectedCanvasBlockId,
+    canvasBackground: snapshot.canvasBackground,
+  })
+}
 
 function getPieceId(piece) {
   const source = piece?.sourceKind || piece?.sourcePostType || piece?.origin || 'imported'
@@ -308,6 +322,8 @@ export function PrintLabPage({ pieces = [] }) {
   const [publication, setPublication] = useState(() => createEmptyPublication({ title: 'Printlab Publication' }))
   const [publicationDirty, setPublicationDirty] = useState(false)
   const [selectedCanvasBlockId, setSelectedCanvasBlockId] = useState('')
+  const [canvasHistoryPast, setCanvasHistoryPast] = useState([])
+  const [canvasHistoryFuture, setCanvasHistoryFuture] = useState([])
   const [canvasInteraction, setCanvasInteraction] = useState(null)
   const [canvasZoom, setCanvasZoom] = useState(1)
   const [canvasSourceOpen, setCanvasSourceOpen] = useState(false)
@@ -320,6 +336,29 @@ export function PrintLabPage({ pieces = [] }) {
   const previewRef = useRef(null)
   const canvasRef = useRef(null)
   const canvasViewportRef = useRef(null)
+  const isRestoringCanvasHistoryRef = useRef(false)
+  const pendingCanvasInteractionHistoryRef = useRef(null)
+  const publicationRef = useRef(publication)
+  const selectedCanvasBlockIdRef = useRef(selectedCanvasBlockId)
+  const canvasBackgroundRef = useRef('#fffdf8')
+  const canvasHistoryPastRef = useRef([])
+  const canvasHistoryFutureRef = useRef([])
+
+  useEffect(() => {
+    publicationRef.current = publication
+  }, [publication])
+
+  useEffect(() => {
+    selectedCanvasBlockIdRef.current = selectedCanvasBlockId
+  }, [selectedCanvasBlockId])
+
+  useEffect(() => {
+    canvasHistoryPastRef.current = canvasHistoryPast
+  }, [canvasHistoryPast])
+
+  useEffect(() => {
+    canvasHistoryFutureRef.current = canvasHistoryFuture
+  }, [canvasHistoryFuture])
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -386,8 +425,94 @@ export function PrintLabPage({ pieces = [] }) {
     return dedupeAttributions([activeSourceAttribution, ...pageAttributions])
   }, [currentImageAttribution, currentImageUrl, readerOrderPages])
 
+  useEffect(() => {
+    canvasBackgroundRef.current = canvasBackground
+  }, [canvasBackground])
+
+  function makeCanvasHistorySnapshot(label = 'Canvas edit') {
+    return {
+      publication: cloneCanvasHistoryValue(publicationRef.current),
+      selectedCanvasBlockId: selectedCanvasBlockIdRef.current,
+      canvasBackground: canvasBackgroundRef.current,
+      timestamp: Date.now(),
+      label,
+    }
+  }
+
+  function pushCanvasHistory(label = 'Canvas edit') {
+    if (isRestoringCanvasHistoryRef.current) return
+    pushCanvasHistorySnapshot(makeCanvasHistorySnapshot(label))
+  }
+
+  function pushCanvasHistorySnapshot(snapshot) {
+    if (isRestoringCanvasHistoryRef.current || !snapshot) return
+    const snapshotSignature = serializeCanvasHistorySnapshot(snapshot)
+    const past = canvasHistoryPastRef.current
+    const latest = past[past.length - 1]
+    if (latest && serializeCanvasHistorySnapshot(latest) === snapshotSignature) return
+    const nextPast = [...past, snapshot].slice(-canvasHistoryLimit)
+    canvasHistoryPastRef.current = nextPast
+    canvasHistoryFutureRef.current = []
+    setCanvasHistoryPast(nextPast)
+    setCanvasHistoryFuture([])
+  }
+
+  function restoreCanvasHistory(snapshot) {
+    if (!snapshot) return
+    isRestoringCanvasHistoryRef.current = true
+    setPublication(cloneCanvasHistoryValue(snapshot.publication))
+    setPublicationDirty(true)
+    setSelectedCanvasBlockId(snapshot.selectedCanvasBlockId || '')
+    setEditingTextBlockId('')
+    setCanvasInteraction(null)
+    setCanvasContextMenu(null)
+    window.setTimeout(() => {
+      isRestoringCanvasHistoryRef.current = false
+      fitCanvasToViewport()
+    }, 0)
+  }
+
+  function canUndo() {
+    return canvasHistoryPastRef.current.length > 0
+  }
+
+  function canRedo() {
+    return canvasHistoryFutureRef.current.length > 0
+  }
+
+  function undoCanvasEdit() {
+    const past = canvasHistoryPastRef.current
+    if (!past.length) return
+    const current = makeCanvasHistorySnapshot('Redo canvas edit')
+    const previous = past[past.length - 1]
+    const nextPast = past.slice(0, -1)
+    const nextFuture = [current, ...canvasHistoryFutureRef.current].slice(0, canvasHistoryLimit)
+    canvasHistoryPastRef.current = nextPast
+    canvasHistoryFutureRef.current = nextFuture
+    setCanvasHistoryPast(nextPast)
+    setCanvasHistoryFuture(nextFuture)
+    restoreCanvasHistory(previous)
+    setActionStatus('Undid last canvas edit.')
+  }
+
+  function redoCanvasEdit() {
+    const future = canvasHistoryFutureRef.current
+    if (!future.length) return
+    const current = makeCanvasHistorySnapshot('Undo canvas edit')
+    const nextSnapshot = future[0]
+    const nextFuture = future.slice(1)
+    const nextPast = [...canvasHistoryPastRef.current, current].slice(-canvasHistoryLimit)
+    canvasHistoryPastRef.current = nextPast
+    canvasHistoryFutureRef.current = nextFuture
+    setCanvasHistoryPast(nextPast)
+    setCanvasHistoryFuture(nextFuture)
+    restoreCanvasHistory(nextSnapshot)
+    setActionStatus('Redid canvas edit.')
+  }
+
   function updateActiveCanvasPage(patchOrFn, options = {}) {
-    const { markDirty = true } = options
+    const { markDirty = true, history = markDirty, historyLabel = 'Canvas edit' } = options
+    if (history) pushCanvasHistory(historyLabel)
     if (markDirty) setPublicationDirty(true)
     setPublication((current) => {
       const pages = Array.isArray(current.pages) && current.pages.length
@@ -426,7 +551,7 @@ export function PrintLabPage({ pieces = [] }) {
   }
 
   function setCanvasBackground(nextBackground) {
-    updateActiveCanvasPage({ background: nextBackground, backgroundColor: nextBackground })
+    updateActiveCanvasPage({ background: nextBackground, backgroundColor: nextBackground }, { historyLabel: 'Change canvas background' })
   }
 
   function updatePublicationTitle(nextTitle) {
@@ -456,6 +581,7 @@ export function PrintLabPage({ pieces = [] }) {
   }
 
   function addPublicationPage() {
+    pushCanvasHistory('Add publication page')
     const nextIndex = publicationPages.length + 1
     const nextPreset = 'portrait'
     const nextSize = canvasPresetOptions[nextPreset] || canvasPresetOptions.portrait
@@ -481,6 +607,7 @@ export function PrintLabPage({ pieces = [] }) {
   }
 
   function duplicateActivePublicationPage() {
+    pushCanvasHistory('Duplicate publication page')
     setPublicationDirty(true)
     setPublication((current) => copyPublicationPage(current, current.activePageId))
     setSelectedCanvasBlockId('')
@@ -490,6 +617,7 @@ export function PrintLabPage({ pieces = [] }) {
 
   function deleteActivePublicationPage() {
     if (publicationPages.length <= 1) return
+    pushCanvasHistory('Delete publication page')
     setPublicationDirty(true)
     setPublication((current) => removePublicationPage(current, current.activePageId))
     setSelectedCanvasBlockId('')
@@ -498,7 +626,7 @@ export function PrintLabPage({ pieces = [] }) {
   }
 
   function renameActivePublicationPage(nextLabel) {
-    updateActiveCanvasPage({ label: nextLabel, title: nextLabel })
+    updateActiveCanvasPage({ label: nextLabel, title: nextLabel }, { historyLabel: 'Rename publication page' })
   }
 
   useEffect(() => {
@@ -703,12 +831,12 @@ export function PrintLabPage({ pieces = [] }) {
     zineTitle,
   ])
 
-  function updateCanvasBlock(id, patchOrFn) {
+  function updateCanvasBlock(id, patchOrFn, options = {}) {
     setCanvasBlocks((blocks) => blocks.map((block) => {
       if (block.id !== id) return block
       const patch = typeof patchOrFn === 'function' ? patchOrFn(block) : patchOrFn
       return clampCanvasBlock({ ...block, ...patch }, canvasSize)
-    }))
+    }), { historyLabel: options.historyLabel || 'Update canvas block', history: options.history })
   }
 
   function applyMarginPreset(presetId) {
@@ -742,6 +870,7 @@ export function PrintLabPage({ pieces = [] }) {
       setActionStatus('No usable title, image, excerpt, or body text was found for the selected CMS post.')
       return
     }
+    pushCanvasHistory(replace ? 'Replace publication content' : 'Flow post into publication')
     const isZineFlow = postFlowMode === 'zine'
     const buildPages = isZineFlow ? buildZinePublicationFromPost : buildPublicationPagesFromPost
     const pages = buildPages({
@@ -801,6 +930,7 @@ export function PrintLabPage({ pieces = [] }) {
   }
 
   function addCanvasTextBlock() {
+    pushCanvasHistory('Add text block')
     const block = clampCanvasBlock(makeCanvasBlock('text', {
       text: 'New text block',
       x: 72,
@@ -809,13 +939,14 @@ export function PrintLabPage({ pieces = [] }) {
       height: 86,
       fontSize: 24,
     }), canvasSize)
-    setCanvasBlocks((blocks) => [...blocks, block])
+    setCanvasBlocks((blocks) => [...blocks, block], { history: false })
     setSelectedCanvasBlockId(block.id)
-    setEditingTextBlockId(block.id)
+    setEditingTextBlockId('')
   }
 
   function addCanvasImageBlock() {
     if (!currentImageUrl) return
+    pushCanvasHistory('Add image block')
     const attribution = getAssetAttribution(currentImage)
     const block = clampCanvasBlock(makeCanvasBlock('image', {
       src: currentImageUrl,
@@ -827,7 +958,7 @@ export function PrintLabPage({ pieces = [] }) {
       width: 260,
       height: 220,
     }), canvasSize)
-    setCanvasBlocks((blocks) => [...blocks, block])
+    setCanvasBlocks((blocks) => [...blocks, block], { history: false })
     setSelectedCanvasBlockId(block.id)
   }
 
@@ -864,7 +995,7 @@ export function PrintLabPage({ pieces = [] }) {
           foregroundBounds: result.bounds,
           foregroundRatio: result.foregroundRatio,
         },
-      })
+      }, { historyLabel: 'Remove image background' })
       setSelectedCanvasBlockId(block.id)
       setSmartToolStatus('Background removed. The cutout is still movable, resizable, and exportable.')
       setActionStatus(`Removed background from "${title}".`)
@@ -942,7 +1073,7 @@ export function PrintLabPage({ pieces = [] }) {
           ...newBlocks,
           ...blocks.slice(index + 1),
         ]
-      })
+      }, { historyLabel: 'Magic Split image' })
       setSelectedCanvasBlockId(newBlocks[0]?.id || block.id)
       setCanvasToolsOpen(true)
       setToolMode('canvas')
@@ -1033,7 +1164,7 @@ export function PrintLabPage({ pieces = [] }) {
       height: normalized.mediaType === 'icon' ? 180 : 220,
       fit: normalized.mediaType === 'icon' ? 'contain' : 'cover',
     }), canvasSize)
-    setCanvasBlocks((blocks) => [...blocks, block])
+    setCanvasBlocks((blocks) => [...blocks, block], { historyLabel: 'Add asset to canvas' })
     setSelectedCanvasBlockId(block.id)
     setToolMode('canvas')
     setCanvasToolsOpen(true)
@@ -1091,7 +1222,7 @@ export function PrintLabPage({ pieces = [] }) {
 
   function deleteSelectedCanvasBlock() {
     if (!selectedCanvasBlockId) return
-    setCanvasBlocks((blocks) => blocks.filter((block) => block.id !== selectedCanvasBlockId))
+    setCanvasBlocks((blocks) => blocks.filter((block) => block.id !== selectedCanvasBlockId), { historyLabel: 'Delete canvas block' })
     setSelectedCanvasBlockId('')
     setEditingTextBlockId('')
     setCanvasContextMenu(null)
@@ -1107,7 +1238,7 @@ export function PrintLabPage({ pieces = [] }) {
       x: Number(selectedCanvasBlock.x || 0) + 24,
       y: Number(selectedCanvasBlock.y || 0) + 24,
     }, canvasSize)
-    setCanvasBlocks((blocks) => [...blocks, duplicate])
+    setCanvasBlocks((blocks) => [...blocks, duplicate], { historyLabel: 'Duplicate canvas block' })
     setSelectedCanvasBlockId(duplicate.id)
     setCanvasContextMenu(null)
   }
@@ -1125,7 +1256,7 @@ export function PrintLabPage({ pieces = [] }) {
         ;[next[index], next[index - 1]] = [next[index - 1], next[index]]
       }
       return next
-    })
+    }, { historyLabel: 'Change canvas layer order' })
   }
 
   function changeCanvasPreset(nextPreset) {
@@ -1153,7 +1284,7 @@ export function PrintLabPage({ pieces = [] }) {
         cropTop: Number(block.cropTop || 0) * scaleY,
         cropBottom: Number(block.cropBottom || 0) * scaleY,
       }, nextSize)),
-    }))
+    }), { historyLabel: 'Change canvas preset' })
     window.setTimeout(fitCanvasToViewport, 0)
   }
 
@@ -1174,6 +1305,7 @@ export function PrintLabPage({ pieces = [] }) {
     setSelectedCanvasBlockId(block.id)
     setEditingTextBlockId('')
     setCanvasContextMenu(null)
+    pendingCanvasInteractionHistoryRef.current = makeCanvasHistorySnapshot('Move canvas block')
     const point = getCanvasPoint(event)
     const mediaFrame = getCanvasMediaFrame(block)
     setCanvasInteraction({
@@ -1206,6 +1338,7 @@ export function PrintLabPage({ pieces = [] }) {
     setSelectedCanvasBlockId(block.id)
     setEditingTextBlockId('')
     setCanvasContextMenu(null)
+    pendingCanvasInteractionHistoryRef.current = makeCanvasHistorySnapshot(isCanvasCropBlock(block) && handle.length === 1 ? 'Crop image' : 'Resize canvas block')
     const point = getCanvasPoint(event)
     const mediaFrame = getCanvasMediaFrame(block)
     const isCropHandle = isCanvasCropBlock(block) && handle.length === 1
@@ -1259,6 +1392,10 @@ export function PrintLabPage({ pieces = [] }) {
       const point = getCanvasPoint(event)
       const dx = point.x - canvasInteraction.startX
       const dy = point.y - canvasInteraction.startY
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        pushCanvasHistorySnapshot(pendingCanvasInteractionHistoryRef.current)
+        pendingCanvasInteractionHistoryRef.current = null
+      }
       const bounds = {
         width: canvasInteraction.canvasWidth || canvasSize.width,
         height: canvasInteraction.canvasHeight || canvasSize.height,
@@ -1355,10 +1492,11 @@ export function PrintLabPage({ pieces = [] }) {
           }
         }
         return { x: nextX, y: nextY, width: nextWidth, height: nextHeight }
-      })
+      }, { history: false })
     }
 
     function handleUp() {
+      pendingCanvasInteractionHistoryRef.current = null
       setCanvasInteraction(null)
     }
 
@@ -1374,10 +1512,25 @@ export function PrintLabPage({ pieces = [] }) {
 
   useEffect(() => {
     function isEditableTarget(target) {
-      return Boolean(target?.closest?.('input, textarea, select, [contenteditable="true"]'))
+      return Boolean(target?.closest?.('input, textarea, select, [contenteditable="true"], [contenteditable=""], [role="textbox"]'))
     }
 
     function handleKeyDown(event) {
+      const key = String(event.key || '').toLowerCase()
+      const isUndo = (event.ctrlKey || event.metaKey) && !event.shiftKey && key === 'z'
+      const isRedo = (event.ctrlKey || event.metaKey) && (key === 'y' || (event.shiftKey && key === 'z'))
+      if ((isUndo || isRedo) && !isEditableTarget(event.target)) {
+        if (isUndo && canUndo()) {
+          event.preventDefault()
+          undoCanvasEdit()
+          return
+        }
+        if (isRedo && canRedo()) {
+          event.preventDefault()
+          redoCanvasEdit()
+          return
+        }
+      }
       if (event.key === 'Escape' && editingTextBlockId) {
         setEditingTextBlockId('')
         return
@@ -1399,7 +1552,7 @@ export function PrintLabPage({ pieces = [] }) {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('pointerdown', handlePointerDown)
     }
-  }, [canvasContextMenu, editingTextBlockId, selectedCanvasBlockId])
+  }, [canvasContextMenu, editingTextBlockId, selectedCanvasBlockId, canvasHistoryPast, canvasHistoryFuture])
 
   useEffect(() => {
     if (toolMode !== 'canvas') return undefined
@@ -2169,6 +2322,8 @@ export function PrintLabPage({ pieces = [] }) {
                 </label>
               </div>
               <div className="print-lab-canvas-tools">
+                <button className="button" type="button" disabled={!canUndo()} onClick={undoCanvasEdit}>Undo</button>
+                <button className="button" type="button" disabled={!canRedo()} onClick={redoCanvasEdit}>Redo</button>
                 <button className="button" type="button" onClick={addCanvasTextBlock}>Add Text</button>
                 <button className="button" type="button" disabled={!currentImageUrl} onClick={addCanvasImageBlock}>Add Image</button>
                 <button className="button button--primary" type="button" disabled={selectedCanvasBlock?.type !== 'image'} onClick={magicSplitSelectedImage}>Magic Split</button>
@@ -2417,7 +2572,7 @@ export function PrintLabPage({ pieces = [] }) {
                     title: currentImageTitle || contextBlock.title || 'Image',
                     name: currentImageTitle || contextBlock.name || 'Image',
                     asset: currentImageAttribution || undefined,
-                  })
+                  }, { historyLabel: 'Replace canvas image' })
                   setCanvasContextMenu(null)
                 }}
               >
