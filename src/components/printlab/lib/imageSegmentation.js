@@ -2,6 +2,13 @@ function clampValue(value, min, max) {
   return Math.min(max, Math.max(min, value))
 }
 
+function getSegmentationEndpoint() {
+  if (typeof window !== 'undefined' && window.__PRINTLAB_SEGMENTATION_ENDPOINT__) {
+    return window.__PRINTLAB_SEGMENTATION_ENDPOINT__
+  }
+  return import.meta.env?.VITE_PRINTLAB_SEGMENTATION_ENDPOINT || '/api/printlab/segment'
+}
+
 function getPixelIndex(width, x, y) {
   return ((y * width) + x) * 4
 }
@@ -243,6 +250,155 @@ function mergeNearbyComponents(components, mergeDistance = 10) {
   return merged
 }
 
+function decodeBase64Bytes(value = '') {
+  const base64 = String(value || '').includes(',') ? String(value).split(',').pop() : String(value || '')
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
+  return bytes
+}
+
+function decodeRleMask(mask, width, height) {
+  const counts = Array.isArray(mask?.counts) ? mask.counts : []
+  const bytes = new Uint8Array(width * height)
+  let cursor = 0
+  let value = Number(mask?.startsWithForeground ? 1 : 0)
+  for (const count of counts) {
+    const run = Math.max(0, Number(count) || 0)
+    bytes.fill(value, cursor, Math.min(bytes.length, cursor + run))
+    cursor += run
+    value = value ? 0 : 1
+    if (cursor >= bytes.length) break
+  }
+  return bytes
+}
+
+function decodeMaskBytes(mask, width, height) {
+  if (!mask) return null
+  if (Array.isArray(mask)) return Uint8Array.from(mask.map((value) => (value ? 1 : 0)))
+  if (typeof mask === 'string' && !mask.startsWith('data:image/')) {
+    return decodeBase64Bytes(mask).map((value) => (value ? 1 : 0))
+  }
+  if (typeof mask === 'object' && Array.isArray(mask.counts)) return decodeRleMask(mask, width, height)
+  if (typeof mask === 'object' && Array.isArray(mask.data)) return Uint8Array.from(mask.data.map((value) => (value ? 1 : 0)))
+  if (typeof mask === 'object' && typeof mask.data === 'string') return decodeBase64Bytes(mask.data).map((value) => (value ? 1 : 0))
+  return null
+}
+
+async function maskImageToBytes(maskSrc, width, height) {
+  const { context } = await imageToCanvas(maskSrc, Math.max(width, height))
+  const frame = context.getImageData(0, 0, width, height)
+  const bytes = new Uint8Array(width * height)
+  for (let position = 0; position < bytes.length; position += 1) {
+    const index = position * 4
+    const alpha = frame.data[index + 3]
+    const luminance = (frame.data[index] + frame.data[index + 1] + frame.data[index + 2]) / 3
+    bytes[position] = alpha > 16 && luminance > 16 ? 1 : 0
+  }
+  return bytes
+}
+
+export async function maskToTransparentPng(src, mask, bbox, sourceWidth, sourceHeight) {
+  const [boxX = 0, boxY = 0, boxWidth = sourceWidth, boxHeight = sourceHeight] = Array.isArray(bbox) ? bbox : [0, 0, sourceWidth, sourceHeight]
+  const { canvas, context, width, height, scale } = await imageToCanvas(src, Math.max(sourceWidth || 1, sourceHeight || 1))
+  const frame = context.getImageData(0, 0, width, height)
+  const maskWidth = Math.max(1, Math.round(Number(mask?.width || sourceWidth || width) * scale))
+  const maskHeight = Math.max(1, Math.round(Number(mask?.height || sourceHeight || height) * scale))
+  let maskBytes = typeof mask === 'string' && mask.startsWith('data:image/')
+    ? await maskImageToBytes(mask, maskWidth, maskHeight)
+    : decodeMaskBytes(mask, maskWidth, maskHeight)
+  if (!maskBytes) throw new Error('Segmentation endpoint returned an unreadable mask.')
+
+  const minX = clampValue(Math.round(boxX * scale), 0, width - 1)
+  const minY = clampValue(Math.round(boxY * scale), 0, height - 1)
+  const cropWidth = Math.max(1, clampValue(Math.round(boxWidth * scale), 1, width - minX))
+  const cropHeight = Math.max(1, clampValue(Math.round(boxHeight * scale), 1, height - minY))
+  const outputCanvas = document.createElement('canvas')
+  outputCanvas.width = cropWidth
+  outputCanvas.height = cropHeight
+  const outputContext = outputCanvas.getContext('2d', { willReadFrequently: true })
+  if (!outputContext) throw new Error('Canvas image processing is unavailable in this browser.')
+  const outputFrame = outputContext.createImageData(cropWidth, cropHeight)
+
+  const maskCoversCrop = maskBytes.length === cropWidth * cropHeight
+  for (let y = 0; y < cropHeight; y += 1) {
+    for (let x = 0; x < cropWidth; x += 1) {
+      const sourceX = minX + x
+      const sourceY = minY + y
+      const sourceIndex = ((sourceY * width) + sourceX) * 4
+      const maskIndex = maskCoversCrop ? (y * cropWidth) + x : (sourceY * maskWidth) + sourceX
+      if (!maskBytes[maskIndex]) continue
+      const targetIndex = ((y * cropWidth) + x) * 4
+      outputFrame.data[targetIndex] = frame.data[sourceIndex]
+      outputFrame.data[targetIndex + 1] = frame.data[sourceIndex + 1]
+      outputFrame.data[targetIndex + 2] = frame.data[sourceIndex + 2]
+      outputFrame.data[targetIndex + 3] = frame.data[sourceIndex + 3]
+    }
+  }
+
+  outputContext.putImageData(outputFrame, 0, 0)
+  return outputCanvas.toDataURL('image/png')
+}
+
+async function requestSegmentation(src, mode) {
+  const endpoint = getSegmentationEndpoint()
+  if (!endpoint || !globalThis.fetch) return null
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ image: src, mode }),
+  })
+  if (res.status === 404 || res.status === 501) return null
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.error || `Segmentation failed: ${res.status}`)
+  if (!data || typeof data !== 'object') return null
+  return data
+}
+
+async function normalizeRemoteObjects(src, data) {
+  const sourceWidth = Math.max(1, Number(data?.sourceWidth || 1))
+  const sourceHeight = Math.max(1, Number(data?.sourceHeight || 1))
+  const objects = []
+  for (const object of Array.isArray(data?.objects) ? data.objects : []) {
+    const bbox = Array.isArray(object?.bbox)
+      ? object.bbox
+      : [object?.x || 0, object?.y || 0, object?.width || sourceWidth, object?.height || sourceHeight]
+    const objectSrc = object?.src || (object?.mask ? await maskToTransparentPng(src, object.mask, bbox, sourceWidth, sourceHeight) : '')
+    if (!objectSrc) continue
+    const [x, y, width, height] = bbox
+    objects.push({
+      id: object?.id || `remote-object-${objects.length + 1}`,
+      src: objectSrc,
+      bbox,
+      x,
+      y,
+      width,
+      height,
+      area: Number(object?.area || width * height),
+      score: Number(object?.score || 0),
+      source: 'segmentation-endpoint',
+    })
+  }
+  return { sourceWidth, sourceHeight, objects }
+}
+
+async function normalizeRemoteForeground(src, data) {
+  const foreground = data?.foreground || {}
+  const sourceWidth = Math.max(1, Number(data?.sourceWidth || foreground.sourceWidth || 1))
+  const sourceHeight = Math.max(1, Number(data?.sourceHeight || foreground.sourceHeight || 1))
+  const bbox = Array.isArray(foreground.bbox) ? foreground.bbox : [0, 0, sourceWidth, sourceHeight]
+  const foregroundSrc = foreground.src || (foreground.mask ? await maskToTransparentPng(src, foreground.mask, bbox, sourceWidth, sourceHeight) : '')
+  if (!foregroundSrc) return null
+  const [, , width, height] = bbox
+  return {
+    src: foregroundSrc,
+    bounds: { x: bbox[0], y: bbox[1], width, height },
+    foregroundRatio: Number(foreground.foregroundRatio || ((width * height) / Math.max(1, sourceWidth * sourceHeight))),
+    score: Number(foreground.score || 0),
+    source: 'segmentation-endpoint',
+  }
+}
+
 export function loadImageForCanvas(src) {
   return new Promise((resolve, reject) => {
     if (!src) {
@@ -274,6 +430,16 @@ export async function imageToCanvas(src, maxSide = 1600) {
 }
 
 export async function removeBackgroundFromImage(src, options = {}) {
+  if (!options.forceFallback) {
+    try {
+      const remote = await requestSegmentation(src, 'foreground')
+      const normalized = remote ? await normalizeRemoteForeground(src, remote) : null
+      if (normalized?.src) return normalized
+    } catch (err) {
+      if (options.failOnEndpointError) throw err
+    }
+  }
+
   const { canvas, context, width, height, scale } = await imageToCanvas(src, options.maxSide || 1600)
   const frame = context.getImageData(0, 0, width, height)
   const { backgroundMask, backgroundColor, tolerance } = buildBackgroundMask(frame, options)
@@ -315,6 +481,20 @@ export async function removeBackgroundFromImage(src, options = {}) {
 }
 
 export async function extractImageObjects(src, options = {}) {
+  if (!options.forceFallback) {
+    try {
+      const remote = await requestSegmentation(src, 'objects')
+      const normalized = remote ? await normalizeRemoteObjects(src, remote) : null
+      if (normalized?.objects?.length) return normalized
+    } catch (err) {
+      if (options.failOnEndpointError) throw err
+    }
+  }
+
+  return componentMaskFallback(src, options)
+}
+
+export async function componentMaskFallback(src, options = {}) {
   const { canvas, context, width, height, scale } = await imageToCanvas(src, options.maxSide || 1600)
   const frame = context.getImageData(0, 0, width, height)
   const { backgroundMask, backgroundColor, tolerance } = buildBackgroundMask(frame, options)
@@ -326,9 +506,8 @@ export async function extractImageObjects(src, options = {}) {
     .sort((a, b) => b.area - a.area)
     .slice(0, Number(options.maxObjects ?? 24))
 
-  // TODO: This boundary is intentionally clean so a later SAM/ONNX/server-side
-  // segmentation backend can replace only the mask/component phase while preserving
-  // Printlab's normal top-level canvas block integration.
+  // TODO: replace this fallback with SAM/ONNX automatic mask generation once the
+  // configurable segmentation endpoint is backed by a model service.
   const objects = components.map((component, index) => {
     const padding = Math.max(2, Math.round(Math.min(width, height) * 0.006))
     const minX = clampValue(component.minX - padding, 0, width - 1)

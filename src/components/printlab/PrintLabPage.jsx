@@ -833,7 +833,7 @@ export function PrintLabPage({ pieces = [] }) {
 
   function getSelectedImageBlock() {
     if (selectedCanvasBlock?.type === 'image' && selectedCanvasBlock.src) return selectedCanvasBlock
-    return [...canvasBlocks].reverse().find((block) => block.type === 'image' && block.src) || null
+    return null
   }
 
   async function removeSelectedImageBackground() {
@@ -857,8 +857,8 @@ export function PrintLabPage({ pieces = [] }) {
           ...(block.asset || {}),
           title: `${title} Cutout`,
           sourceLabel: 'Printlab BG Remove',
-          attributionText: block.asset?.attributionText || block.asset?.attribution || 'Background removed locally in Printlab.',
-          attribution: block.asset?.attributionText || block.asset?.attribution || 'Background removed locally in Printlab.',
+          attributionText: block.asset?.attributionText || block.asset?.attribution || 'Background removed in Printlab.',
+          attribution: block.asset?.attributionText || block.asset?.attribution || 'Background removed in Printlab.',
           derivedFrom: block.asset?.derivedFrom || block.id,
           extractionType: 'background-remove',
           foregroundBounds: result.bounds,
@@ -897,14 +897,16 @@ export function PrintLabPage({ pieces = [] }) {
       const sourceHeight = Math.max(1, Number(result.sourceHeight || block.height || 1))
       const newBlocks = objects.map((object, index) => {
         const objectTitle = `${title} Layer ${index + 1}`
+        const bbox = object.bbox || [object.x, object.y, object.width, object.height]
+        const [sourceX = 0, sourceY = 0, sourceW = sourceWidth, sourceH = sourceHeight] = bbox.map((value) => Number(value || 0))
         return clampCanvasBlock(makeCanvasBlock('image', {
           src: object.src,
           title: objectTitle,
           name: objectTitle,
-          x: Number(block.x || 0) + ((Number(object.x || 0) / sourceWidth) * Number(block.width || 1)),
-          y: Number(block.y || 0) + ((Number(object.y || 0) / sourceHeight) * Number(block.height || 1)),
-          width: Math.max(24, (Number(object.width || 1) / sourceWidth) * Number(block.width || 1)),
-          height: Math.max(24, (Number(object.height || 1) / sourceHeight) * Number(block.height || 1)),
+          x: Number(block.x || 0) + ((sourceX / sourceWidth) * Number(block.width || 1)),
+          y: Number(block.y || 0) + ((sourceY / sourceHeight) * Number(block.height || 1)),
+          width: Math.max(24, (sourceW / sourceWidth) * Number(block.width || 1)),
+          height: Math.max(24, (sourceH / sourceHeight) * Number(block.height || 1)),
           fit: 'contain',
           asset: {
             ...(block.asset || {}),
