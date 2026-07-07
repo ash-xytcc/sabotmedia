@@ -15,8 +15,6 @@ const visualElements = [
   ['Torn Paper Edge', 'Collage', 'collage', ['torn paper', 'edge', 'collage', 'zine', 'paper'], 'tornEdge'],
   ['Stapled Paper Scrap', 'Collage', 'collage', ['staple', 'paper', 'scrap', 'collage', 'zine'], 'staple'],
   ['Ink Smear', 'Collage', 'texture', ['ink', 'smear', 'brush', 'texture', 'zine'], 'smear'],
-  ['Magic Splitter', 'Smart Tools', 'tool', ['magic splitter', 'splitter', 'slice', 'poster split', 'tile', 'crop', 'cut', 'tool'], 'splitter'],
-  ['Background Remover', 'Smart Tools', 'tool', ['background remover', 'background tool', 'cutout', 'transparent', 'subject', 'tool'], 'bgremove'],
 ]
 
 function slugify(value = '') {
@@ -64,8 +62,6 @@ function renderSvg(title, kind) {
     tornEdge: '<path d="M26 102 50 90l24 18 28-16 26 16 28-16 24 16 28-14 24 10v68l-24-10-28 14-24-16-28 16-26-16-28 16-24-18-26 12Z" fill="#fff" stroke="#111" stroke-width="8"/>',
     staple: '<path d="M54 54h148v148H54Z" fill="#fff" stroke="#111" stroke-width="8"/><path d="M94 42v50M116 42v50" stroke="#999" stroke-width="8"/><path d="M76 132h104" stroke="#c22b26" stroke-width="7"/>',
     smear: '<path d="M38 126c34-34 70-6 98-30 26-22 56-10 82 4-18 36-50 34-78 50-38 22-74 12-102-24Z" fill="#111" opacity=".88"/><path d="M48 172c52 8 104-10 158 0" stroke="#c22b26" stroke-width="10" stroke-linecap="round"/>',
-    splitter: '<rect x="42" y="42" width="172" height="172" fill="#e7edf2" stroke="#111" stroke-width="8"/><path d="M128 42v172M42 128h172" stroke="#c22b26" stroke-width="8"/><path d="M76 76h104M76 180h104" stroke="#111" stroke-width="6"/>',
-    bgremove: '<circle cx="102" cy="96" r="42" fill="#e7edf2" stroke="#111" stroke-width="8"/><path d="M58 210c8-50 42-78 86-78s78 28 86 78" fill="#e7edf2" stroke="#111" stroke-width="8"/><path d="M42 42 214 214" stroke="#c22b26" stroke-width="10" stroke-linecap="round"/>',
   }
   return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256" role="img" aria-label="${label}">${base}<g>${map[kind] || map.polaroid}</g></svg>`
 }
@@ -74,17 +70,16 @@ export function getPrintlabElements() {
   return visualElements.map(([title, category, bucket, tags, kind]) => {
     const url = dataUrl(renderSvg(title, kind))
     const allTags = [...tags, category, bucket, title, ...title.split(/\s+/)]
-    const isTool = bucket === 'tool'
     return {
       id: `printlab-element:${slugify(category)}:${slugify(title)}`,
       title,
-      description: isTool ? 'Printlab smart workflow shortcut.' : `${category} visual asset for Printlab layouts.`,
+      description: `${category} visual asset for Printlab layouts.`,
       thumbnailUrl: url,
       previewUrl: url,
       downloadUrl: url,
       source: 'printlab-elements',
-      sourceLabel: isTool ? 'Printlab Smart Tools' : 'Printlab Elements',
-      mediaType: isTool ? 'tool' : 'element',
+      sourceLabel: 'Printlab Elements',
+      mediaType: 'element',
       mimeType: 'image/svg+xml',
       license: 'MIT',
       licenseUrl: '',
@@ -93,7 +88,7 @@ export function getPrintlabElements() {
       tags: allTags,
       category,
       bucket,
-      raw: { title, category, bucket, tags: allTags, tool: isTool ? slugify(title) : '' },
+      raw: { title, category, bucket, tags: allTags },
     }
   })
 }
