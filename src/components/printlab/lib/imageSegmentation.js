@@ -2,11 +2,13 @@ function clampValue(value, min, max) {
   return Math.min(max, Math.max(min, value))
 }
 
+const bundledSegmentationEndpoint = '/api/printlab/segment'
+
 function getSegmentationEndpoint() {
   if (typeof window !== 'undefined' && window.__PRINTLAB_SEGMENTATION_ENDPOINT__) {
     return window.__PRINTLAB_SEGMENTATION_ENDPOINT__
   }
-  return import.meta.env?.VITE_PRINTLAB_SEGMENTATION_ENDPOINT || '/api/printlab/segment'
+  return import.meta.env?.VITE_PRINTLAB_SEGMENTATION_ENDPOINT || bundledSegmentationEndpoint
 }
 
 function getPixelIndex(width, x, y) {
@@ -286,7 +288,13 @@ function decodeMaskBytes(mask, width, height) {
 }
 
 async function maskImageToBytes(maskSrc, width, height) {
-  const { context } = await imageToCanvas(maskSrc, Math.max(width, height))
+  const image = await loadImageForCanvas(maskSrc)
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const context = canvas.getContext('2d', { willReadFrequently: true })
+  if (!context) throw new Error('Canvas image processing is unavailable in this browser.')
+  context.drawImage(image, 0, 0, width, height)
   const frame = context.getImageData(0, 0, width, height)
   const bytes = new Uint8Array(width * height)
   for (let position = 0; position < bytes.length; position += 1) {
@@ -340,19 +348,27 @@ export async function maskToTransparentPng(src, mask, bbox, sourceWidth, sourceH
   return outputCanvas.toDataURL('image/png')
 }
 
-async function requestSegmentation(src, mode) {
+export async function requestSegmentation(src, mode, options = {}) {
   const endpoint = getSegmentationEndpoint()
   if (!endpoint || !globalThis.fetch) return null
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ image: src, mode }),
-  })
-  if (res.status === 404 || res.status === 501) return null
-  const data = await res.json().catch(() => null)
-  if (!res.ok) throw new Error(data?.error || `Segmentation failed: ${res.status}`)
-  if (!data || typeof data !== 'object') return null
-  return data
+  const timeoutMs = Math.max(1000, Number(options.timeoutMs || 8000))
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+  const timeout = controller ? globalThis.setTimeout(() => controller.abort(), timeoutMs) : null
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ image: src, mode, options }),
+      signal: controller?.signal,
+    })
+    if (res.status === 404 || res.status === 501) return null
+    const data = await res.json().catch(() => null)
+    if (!res.ok) throw new Error(data?.error || `Segmentation failed: ${res.status}`)
+    if (!data || typeof data !== 'object') return null
+    return data
+  } finally {
+    if (timeout) globalThis.clearTimeout(timeout)
+  }
 }
 
 async function normalizeRemoteObjects(src, data) {
@@ -432,7 +448,7 @@ export async function imageToCanvas(src, maxSide = 1600) {
 export async function removeBackgroundFromImage(src, options = {}) {
   if (!options.forceFallback) {
     try {
-      const remote = await requestSegmentation(src, 'foreground')
+      const remote = await requestSegmentation(src, 'foreground', options)
       const normalized = remote ? await normalizeRemoteForeground(src, remote) : null
       if (normalized?.src) return normalized
     } catch (err) {
@@ -483,7 +499,7 @@ export async function removeBackgroundFromImage(src, options = {}) {
 export async function extractImageObjects(src, options = {}) {
   if (!options.forceFallback) {
     try {
-      const remote = await requestSegmentation(src, 'objects')
+      const remote = await requestSegmentation(src, 'objects', options)
       const normalized = remote ? await normalizeRemoteObjects(src, remote) : null
       if (normalized?.objects?.length) return normalized
     } catch (err) {
