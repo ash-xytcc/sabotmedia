@@ -99,6 +99,29 @@ export function CanvasRenderer({
     return () => window.removeEventListener('printlab:split-selected-image', handleSplitSelectedImage)
   }, [canvasBlocks, selectedCanvasBlockId, setSelectedCanvasBlockId, updateCanvasBlock])
 
+  useEffect(() => {
+    function handleApplyImageSource(event) {
+      const nextSrc = event?.detail?.src || ''
+      if (!nextSrc) return
+      const selectedBlock = canvasBlocks.find((block) => block.id === selectedCanvasBlockId && block.type === 'image')
+      const fallbackBlock = [...canvasBlocks].reverse().find((block) => block.type === 'image')
+      const block = selectedBlock || fallbackBlock
+      if (!block?.id) {
+        window.alert('Add or select an image on the canvas first.')
+        return
+      }
+      updateCanvasBlock(block.id, {
+        src: nextSrc,
+        title: event?.detail?.title || `${block.title || 'Image'} Cutout`,
+        name: event?.detail?.title || `${block.name || block.title || 'Image'} Cutout`,
+        fit: block.fit === 'split' ? 'split' : 'contain',
+      })
+      setSelectedCanvasBlockId(block.id)
+    }
+    window.addEventListener('printlab:apply-selected-image-src', handleApplyImageSource)
+    return () => window.removeEventListener('printlab:apply-selected-image-src', handleApplyImageSource)
+  }, [canvasBlocks, selectedCanvasBlockId, setSelectedCanvasBlockId, updateCanvasBlock])
+
   return (
     <article className="print-lab-preview print-lab-output print-lab-preview--canvas" ref={previewRef}>
       {uploadedFontFaceCss ? <style>{uploadedFontFaceCss}</style> : null}
