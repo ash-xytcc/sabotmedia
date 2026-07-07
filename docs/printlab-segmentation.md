@@ -15,7 +15,39 @@ The browser adapter checks for a segmentation endpoint in this order:
 2. `VITE_PRINTLAB_SEGMENTATION_ENDPOINT`
 3. The bundled Cloudflare Pages stub at `/api/printlab/segment`
 
-The bundled endpoint returns `501 SEGMENTATION_NOT_CONFIGURED` until a real model service is connected. No `.onnx` model files are committed to this repo.
+The bundled endpoint returns `501 SEGMENTATION_NOT_CONFIGURED` until a real model service is connected. No `.onnx`, `.pth`, `.pt`, or other model checkpoint files are committed to this repo.
+
+## Model-backed service
+
+A SAM-backed reference service now lives at:
+
+```txt
+services/printlab-segmentation/
+```
+
+It exposes:
+
+- `GET /health`
+- `POST /segment`
+
+Run it locally, then set:
+
+```bash
+VITE_PRINTLAB_SEGMENTATION_ENDPOINT=http://localhost:8000/segment
+```
+
+Common service env vars:
+
+```bash
+PRINTLAB_SEGMENTATION_CHECKPOINT=/models/sam_vit_b_01ec64.pth
+PRINTLAB_SEGMENTATION_MODEL_TYPE=vit_b
+PRINTLAB_SEGMENTATION_DEVICE=cpu
+PRINTLAB_SEGMENTATION_CORS_ORIGINS=http://localhost:5173
+```
+
+Use `vit_b` first. Bigger models can produce better masks, but they are heavier and should be treated like machinery, not decorative confetti.
+
+See `services/printlab-segmentation/README.md` for local and Docker setup.
 
 ## Request Shape
 
@@ -44,7 +76,8 @@ Preferred response:
       "id": "object-1",
       "src": "data:image/png;base64,...",
       "bbox": [120, 80, 320, 260],
-      "score": 0.94
+      "score": 0.94,
+      "area": 12345
     }
   ]
 }
@@ -63,7 +96,8 @@ Preferred response:
   "foreground": {
     "src": "data:image/png;base64,...",
     "bbox": [90, 42, 900, 690],
-    "score": 0.96
+    "score": 0.96,
+    "area": 12345
   }
 }
 ```
@@ -74,11 +108,11 @@ If `foreground.src` is omitted, the adapter can composite from `foreground.mask`
 
 When no endpoint is configured, or the endpoint returns `404`, `501`, times out, or fails at the network layer, Printlab uses a local browser fallback. The fallback estimates the background from image edges, flood-fills likely background, then extracts connected foreground components.
 
-This fallback is intentionally lightweight and is not Canva/SAM-quality. It is meant to keep the tool useful until a service can run Segment Anything, MobileSAM, SAM2, or another ONNX-backed segmentation model.
+This fallback is intentionally lightweight and is not Canva/SAM-quality. It is meant to keep the tool present until the model-backed service is running. If Magic Split cannot find separate objects, or BG Remove removes too much, the browser fallback has reached its limit. That is not a UI bug; it means the real segmentation service is not configured or not responding.
 
 ## Backend Notes
 
-A future Worker or service should:
+The service should:
 
 - run SAM/MobileSAM/SAM2 or an equivalent ONNX segmentation model;
 - generate object masks for Magic Split;
