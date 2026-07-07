@@ -23,7 +23,7 @@ function wirePrintlabSmartTools() {
       if (splitButton) splitButton.click()
       return
     }
-    window.dispatchEvent(new CustomEvent('printlab:background-tool'))
+    window.alert('Background Remover needs a selected canvas image. The full cutout action is next.')
   }, true)
 }
 
