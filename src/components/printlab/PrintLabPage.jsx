@@ -20,6 +20,7 @@ import {
 } from './lib/canvasMath'
 import { buildExportHtml } from './lib/exportHtml'
 import { assetModeOptions, assetProviders, normalizePrintlabAsset } from './lib/assetSources'
+import { extractImageObjects, removeBackgroundFromImage } from './lib/imageSegmentation'
 import { CanvasFloatingToolbar } from './CanvasFloatingToolbar'
 import {
   getCanvasOutput,
@@ -279,6 +280,7 @@ export function PrintLabPage({ pieces = [] }) {
   } = usePrintlabSources(pieces)
   const [toolMode, setToolMode] = useState('tile')
   const [actionStatus, setActionStatus] = useState('')
+  const [smartToolStatus, setSmartToolStatus] = useState('')
 
   const [tileRows, setTileRows] = useState(3)
   const [tileColumns, setTileColumns] = useState(3)
@@ -827,6 +829,128 @@ export function PrintLabPage({ pieces = [] }) {
     }), canvasSize)
     setCanvasBlocks((blocks) => [...blocks, block])
     setSelectedCanvasBlockId(block.id)
+  }
+
+  function getSelectedImageBlock() {
+    if (selectedCanvasBlock?.type === 'image' && selectedCanvasBlock.src) return selectedCanvasBlock
+    return [...canvasBlocks].reverse().find((block) => block.type === 'image' && block.src) || null
+  }
+
+  async function removeSelectedImageBackground() {
+    const block = getSelectedImageBlock()
+    if (!block?.src) {
+      setActionStatus('Select an image on the canvas first.')
+      setSmartToolStatus('Select an image on the canvas first.')
+      return
+    }
+    const title = block.title || block.name || 'Image'
+    setSmartToolStatus('Removing background...')
+    setActionStatus('Removing background from the selected image...')
+    try {
+      const result = await removeBackgroundFromImage(block.src)
+      updateCanvasBlock(block.id, {
+        src: result.src,
+        fit: 'contain',
+        title: `${title} Cutout`,
+        name: `${block.name || title} Cutout`,
+        asset: {
+          ...(block.asset || {}),
+          title: `${title} Cutout`,
+          sourceLabel: 'Printlab BG Remove',
+          attributionText: block.asset?.attributionText || block.asset?.attribution || 'Background removed locally in Printlab.',
+          attribution: block.asset?.attributionText || block.asset?.attribution || 'Background removed locally in Printlab.',
+          derivedFrom: block.asset?.derivedFrom || block.id,
+          extractionType: 'background-remove',
+          foregroundBounds: result.bounds,
+          foregroundRatio: result.foregroundRatio,
+        },
+      })
+      setSelectedCanvasBlockId(block.id)
+      setSmartToolStatus('Background removed. The cutout is still movable, resizable, and exportable.')
+      setActionStatus(`Removed background from "${title}".`)
+    } catch (err) {
+      const message = err?.message || 'Background remover failed.'
+      setSmartToolStatus(message)
+      setActionStatus(message)
+    }
+  }
+
+  async function magicSplitSelectedImage() {
+    const block = getSelectedImageBlock()
+    if (!block?.src) {
+      setActionStatus('Select an image on the canvas first.')
+      setSmartToolStatus('Select an image on the canvas first.')
+      return
+    }
+    const title = block.title || block.name || 'Image'
+    setSmartToolStatus('Finding objects in the selected image...')
+    setActionStatus('Finding objects in the selected image...')
+    try {
+      const result = await extractImageObjects(block.src)
+      const objects = result.objects || []
+      if (objects.length < 2) {
+        setSmartToolStatus('Magic Split could not find separate objects. Try an image with clearer separated elements.')
+        setActionStatus('Magic Split could not find separate objects. Try an image with clearer separated elements.')
+        return
+      }
+      const sourceWidth = Math.max(1, Number(result.sourceWidth || block.width || 1))
+      const sourceHeight = Math.max(1, Number(result.sourceHeight || block.height || 1))
+      const newBlocks = objects.map((object, index) => {
+        const objectTitle = `${title} Layer ${index + 1}`
+        return clampCanvasBlock(makeCanvasBlock('image', {
+          src: object.src,
+          title: objectTitle,
+          name: objectTitle,
+          x: Number(block.x || 0) + ((Number(object.x || 0) / sourceWidth) * Number(block.width || 1)),
+          y: Number(block.y || 0) + ((Number(object.y || 0) / sourceHeight) * Number(block.height || 1)),
+          width: Math.max(24, (Number(object.width || 1) / sourceWidth) * Number(block.width || 1)),
+          height: Math.max(24, (Number(object.height || 1) / sourceHeight) * Number(block.height || 1)),
+          fit: 'contain',
+          asset: {
+            ...(block.asset || {}),
+            title: objectTitle,
+            sourceLabel: 'Printlab Magic Split',
+            attributionText: block.asset?.attributionText || block.asset?.attribution || 'Extracted from selected image in Printlab.',
+            attribution: block.asset?.attributionText || block.asset?.attribution || 'Extracted from selected image in Printlab.',
+            derivedFrom: block.asset?.derivedFrom || block.id,
+            extractionType: 'magic-split',
+            objectBounds: object.bounds,
+          },
+        }), canvasSize)
+      })
+
+      setCanvasBlocks((blocks) => {
+        const index = blocks.findIndex((item) => item.id === block.id)
+        const referenceBlock = clampCanvasBlock({
+          ...block,
+          title: `${title} Original Reference`,
+          name: `${block.name || title} Original Reference`,
+          opacity: 0.2,
+          fit: block.fit || 'cover',
+          asset: {
+            ...(block.asset || {}),
+            title: `${title} Original Reference`,
+            sourceLabel: block.asset?.sourceLabel || 'Original image',
+          },
+        }, canvasSize)
+        if (index < 0) return [referenceBlock, ...newBlocks]
+        return [
+          ...blocks.slice(0, index),
+          referenceBlock,
+          ...newBlocks,
+          ...blocks.slice(index + 1),
+        ]
+      })
+      setSelectedCanvasBlockId(newBlocks[0]?.id || block.id)
+      setCanvasToolsOpen(true)
+      setToolMode('canvas')
+      setSmartToolStatus(`Magic Split created ${newBlocks.length} movable elements.`)
+      setActionStatus(`Magic Split created ${newBlocks.length} movable elements.`)
+    } catch (err) {
+      const message = err?.message || 'Magic Split failed.'
+      setSmartToolStatus(message)
+      setActionStatus(message)
+    }
   }
 
   async function prepareAssetForCanvas(asset) {
@@ -2045,11 +2169,14 @@ export function PrintLabPage({ pieces = [] }) {
               <div className="print-lab-canvas-tools">
                 <button className="button" type="button" onClick={addCanvasTextBlock}>Add Text</button>
                 <button className="button" type="button" disabled={!currentImageUrl} onClick={addCanvasImageBlock}>Add Image</button>
+                <button className="button button--primary" type="button" disabled={selectedCanvasBlock?.type !== 'image'} onClick={magicSplitSelectedImage}>Magic Split</button>
+                <button className="button" type="button" disabled={selectedCanvasBlock?.type !== 'image'} onClick={removeSelectedImageBackground}>BG Remove</button>
                 <button className="button" type="button" disabled={!selectedCanvasBlock} onClick={duplicateSelectedCanvasBlock}>Duplicate</button>
                 <button className="button" type="button" disabled={!selectedCanvasBlock} onClick={deleteSelectedCanvasBlock}>Delete</button>
                 <button className="button" type="button" disabled={!selectedCanvasBlock} onClick={() => moveSelectedCanvasBlock('down')}>Send Back</button>
                 <button className="button" type="button" disabled={!selectedCanvasBlock} onClick={() => moveSelectedCanvasBlock('up')}>Bring Forward</button>
               </div>
+              {smartToolStatus ? <p className="print-lab-empty-note print-lab-empty-note--compact">{smartToolStatus}</p> : null}
               {selectedCanvasBlock ? (
                 <div className="print-lab-canvas-inspector">
                   <strong>{selectedCanvasBlock.title || selectedCanvasBlock.name || (selectedCanvasBlock.type === 'image' ? 'Image block' : 'Text block')}</strong>
