@@ -1,6 +1,98 @@
 import { useEffect } from 'react'
 import { canvasResizeHandles, getCanvasFontFamily, getCanvasMediaFrame } from '../lib/canvasMath'
 
+function numericStyle(node, property, fallback = 0) {
+  const value = Number.parseFloat(node?.style?.[property] || '')
+  if (Number.isFinite(value)) return value
+  const computed = Number.parseFloat(window.getComputedStyle(node)?.[property] || '')
+  return Number.isFinite(computed) ? computed : fallback
+}
+
+function makeDraggableDomPiece(piece) {
+  piece.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    event.stopPropagation()
+    const startX = event.clientX
+    const startY = event.clientY
+    const startLeft = numericStyle(piece, 'left')
+    const startTop = numericStyle(piece, 'top')
+    piece.classList.add('is-selected')
+    piece.setPointerCapture?.(event.pointerId)
+    const move = (moveEvent) => {
+      piece.style.left = `${startLeft + (moveEvent.clientX - startX)}px`
+      piece.style.top = `${startTop + (moveEvent.clientY - startY)}px`
+    }
+    const up = () => {
+      piece.removeEventListener('pointermove', move)
+      piece.removeEventListener('pointerup', up)
+      piece.removeEventListener('pointercancel', up)
+    }
+    piece.addEventListener('pointermove', move)
+    piece.addEventListener('pointerup', up)
+    piece.addEventListener('pointercancel', up)
+  })
+}
+
+function splitSelectedImageDom(canvasRef, rows = 2, columns = 2) {
+  const stage = canvasRef.current
+  if (!stage) return false
+  const selected = stage.querySelector('.print-lab-canvas-block.is-selected img')?.closest('.print-lab-canvas-block')
+  const fallback = Array.from(stage.querySelectorAll('.print-lab-canvas-block--image')).pop()
+  const sourceBlock = selected || fallback
+  const sourceImage = sourceBlock?.querySelector('img')
+  if (!sourceBlock || !sourceImage?.src) return false
+
+  const x = numericStyle(sourceBlock, 'left')
+  const y = numericStyle(sourceBlock, 'top')
+  const width = Math.max(1, numericStyle(sourceBlock, 'width', sourceBlock.offsetWidth || 1))
+  const height = Math.max(1, numericStyle(sourceBlock, 'height', sourceBlock.offsetHeight || 1))
+  const pieceWidth = width / columns
+  const pieceHeight = height / rows
+  const gap = 10
+  const created = []
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      const piece = document.createElement('div')
+      piece.className = 'print-lab-canvas-block print-lab-canvas-block--image print-lab-canvas-block--split-piece'
+      piece.style.position = 'absolute'
+      piece.style.left = `${x + (column * (pieceWidth + gap))}px`
+      piece.style.top = `${y + (row * (pieceHeight + gap))}px`
+      piece.style.width = `${pieceWidth}px`
+      piece.style.height = `${pieceHeight}px`
+      piece.style.overflow = 'hidden'
+      piece.style.opacity = sourceBlock.style.opacity || '1'
+      piece.dataset.printlabSplitPiece = 'true'
+
+      const image = document.createElement('img')
+      image.src = sourceImage.src
+      image.alt = ''
+      image.draggable = false
+      image.style.position = 'absolute'
+      image.style.left = `${-(column * pieceWidth)}px`
+      image.style.top = `${-(row * pieceHeight)}px`
+      image.style.width = `${width}px`
+      image.style.height = `${height}px`
+      image.style.maxWidth = 'none'
+      image.style.objectFit = 'fill'
+      image.style.pointerEvents = 'none'
+      piece.appendChild(image)
+
+      const label = document.createElement('span')
+      label.className = 'print-lab-canvas-block__label'
+      label.textContent = `Split ${row + 1}.${column + 1}`
+      piece.appendChild(label)
+      makeDraggableDomPiece(piece)
+      created.push(piece)
+    }
+  }
+
+  sourceBlock.after(...created)
+  sourceBlock.remove()
+  return true
+}
+
 export function CanvasRenderer({
   previewRef,
   output,
@@ -27,6 +119,17 @@ export function CanvasRenderer({
     if (!node) return
     node.focus()
   }, [canvasRef, editingTextBlockId])
+
+  useEffect(() => {
+    function handleSplitSelectedImage(event) {
+      const rows = Math.max(1, Math.min(8, Number(event?.detail?.rows || 2)))
+      const columns = Math.max(1, Math.min(8, Number(event?.detail?.columns || 2)))
+      const ok = splitSelectedImageDom(canvasRef, rows, columns)
+      if (!ok) window.alert('Add or select an image on the canvas before using Magic Splitter.')
+    }
+    window.addEventListener('printlab:split-selected-image', handleSplitSelectedImage)
+    return () => window.removeEventListener('printlab:split-selected-image', handleSplitSelectedImage)
+  }, [canvasRef])
 
   return (
     <article className="print-lab-preview print-lab-output print-lab-preview--canvas" ref={previewRef}>
