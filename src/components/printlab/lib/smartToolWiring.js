@@ -1,11 +1,3 @@
-function findButtonByLabel(label) {
-  const target = String(label || '').toLowerCase()
-  return Array.from(document.querySelectorAll('button')).find((button) => {
-    const text = `${button.getAttribute('aria-label') || ''} ${button.textContent || ''}`.toLowerCase()
-    return text.includes(target)
-  }) || null
-}
-
 function wirePrintlabSmartTools() {
   if (typeof document === 'undefined' || window.__printlabSmartToolWiring) return
   window.__printlabSmartToolWiring = true
@@ -19,8 +11,7 @@ function wirePrintlabSmartTools() {
     event.stopPropagation()
     event.stopImmediatePropagation?.()
     if (title.includes('magic splitter')) {
-      const splitButton = findButtonByLabel('poster split')
-      if (splitButton) splitButton.click()
+      window.dispatchEvent(new CustomEvent('printlab:split-selected-image', { detail: { rows: 2, columns: 2 } }))
       return
     }
     window.alert('Background Remover needs a selected canvas image. The full cutout action is next.')
