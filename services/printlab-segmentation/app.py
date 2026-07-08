@@ -2,7 +2,7 @@ import base64
 import io
 import os
 from functools import lru_cache
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.request import Request, urlopen
 
@@ -117,6 +117,60 @@ def mask_to_png_data_url(rgb: np.ndarray, mask: np.ndarray, bbox: List[float]) -
     rgba[:, :, :3] = crop_rgb
     rgba[:, :, 3] = np.where(crop_mask, 255, 0).astype(np.uint8)
     return image_to_data_url(Image.fromarray(rgba, mode='RGBA'))
+
+
+def rgba_bounds(image: Image.Image, alpha_threshold: int = 12) -> Optional[Tuple[int, int, int, int, int]]:
+    rgba = image.convert('RGBA')
+    alpha = np.asarray(rgba.getchannel('A'))
+    mask = alpha > alpha_threshold
+    if not np.any(mask):
+        return None
+    ys, xs = np.where(mask)
+    x1 = int(xs.min())
+    y1 = int(ys.min())
+    x2 = int(xs.max()) + 1
+    y2 = int(ys.max()) + 1
+    area = int(mask.sum())
+    return x1, y1, x2 - x1, y2 - y1, area
+
+
+def foreground_response_from_rgba(rgba_image: Image.Image, source_width: int, source_height: int, options: Dict[str, Any], source: str) -> Dict[str, Any]:
+    alpha_threshold = int(options.get('alphaThreshold', os.getenv('PRINTLAB_ALPHA_THRESHOLD', '12')))
+    bounds = rgba_bounds(rgba_image, alpha_threshold)
+    if not bounds:
+        raise ValueError('background remover produced an empty foreground')
+    x, y, width, height, area = bounds
+    crop = rgba_image.convert('RGBA').crop((x, y, x + width, y + height))
+    return {
+        'sourceWidth': source_width,
+        'sourceHeight': source_height,
+        'foreground': {
+            'src': image_to_data_url(crop),
+            'bbox': [float(x), float(y), float(width), float(height)],
+            'score': 1.0,
+            'area': area,
+            'foregroundRatio': area / max(1, source_width * source_height),
+            'source': source,
+        },
+    }
+
+
+@lru_cache(maxsize=1)
+def get_rembg_session():
+    model_name = os.getenv('PRINTLAB_REMBG_MODEL', 'u2net').strip() or 'u2net'
+    from rembg import new_session
+    return new_session(model_name)
+
+
+def remove_background_with_rembg(image: Image.Image, options: Dict[str, Any]) -> Dict[str, Any]:
+    from rembg import remove
+
+    source_width, source_height = image.size
+    session = get_rembg_session()
+    rgba = remove(image.convert('RGBA'), session=session)
+    if not isinstance(rgba, Image.Image):
+        rgba = Image.open(io.BytesIO(rgba)).convert('RGBA')
+    return foreground_response_from_rgba(rgba, source_width, source_height, options, 'rembg')
 
 
 def bbox_iou(a: List[float], b: List[float]) -> float:
@@ -243,17 +297,31 @@ def generate_masks(rgb: np.ndarray) -> List[Dict[str, Any]]:
 def health():
     configured = bool(os.getenv('PRINTLAB_SEGMENTATION_CHECKPOINT', '').strip())
     model_loaded = get_mask_generator.cache_info().currsize > 0
+    rembg_model = os.getenv('PRINTLAB_REMBG_MODEL', 'u2net')
     return {
         'ok': True,
         'configured': configured,
         'modelLoaded': model_loaded,
         'modelType': os.getenv('PRINTLAB_SEGMENTATION_MODEL_TYPE', 'vit_b'),
+        'backgroundModel': rembg_model,
+        'backgroundModelLoaded': get_rembg_session.cache_info().currsize > 0,
     }
 
 
 @app.post('/segment')
 def segment(request: SegmentRequest):
     image = decode_input_image(request.image)
+
+    if request.mode == 'foreground' and not request.options.get('disableRembg'):
+        try:
+            return remove_background_with_rembg(image, request.options or {})
+        except Exception as exc:
+            if request.options.get('failOnRembgError'):
+                raise HTTPException(
+                    status_code=502,
+                    detail={'error': f'Background remover failed: {exc}', 'code': 'REMBG_FAILED'},
+                ) from exc
+
     rgb = np.asarray(image, dtype=np.uint8)
     height, width = rgb.shape[:2]
     masks = generate_masks(rgb)
@@ -293,5 +361,6 @@ def segment(request: SegmentRequest):
             'bbox': bbox,
             'score': float(foreground.get('_score', foreground.get('predicted_iou', 0))),
             'area': int(foreground.get('area', 0)),
+            'source': 'sam',
         },
     }
