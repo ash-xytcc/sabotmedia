@@ -4,7 +4,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PRINTLAB_SEGMENTATION_CHECKPOINT=/models/sam_vit_b_01ec64.pth \
     PRINTLAB_SEGMENTATION_MODEL_TYPE=vit_b \
-    PRINTLAB_SEGMENTATION_DEVICE=cpu
+    PRINTLAB_SEGMENTATION_DEVICE=cpu \
+    PRINTLAB_REMBG_MODEL=u2net
 
 WORKDIR /app
 
@@ -18,6 +19,11 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
 
 RUN mkdir -p /models \
     && curl -L --fail --retry 3 -o /models/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
+
+RUN python - <<'PY'
+from rembg import new_session
+new_session('u2net')
+PY
 
 COPY app.py ./app.py
 
