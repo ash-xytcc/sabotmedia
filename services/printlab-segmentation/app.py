@@ -2,7 +2,9 @@ import base64
 import io
 import os
 from functools import lru_cache
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
+from urllib.parse import urljoin, urlparse
+from urllib.request import Request, urlopen
 
 import numpy as np
 from fastapi import FastAPI, HTTPException
@@ -27,17 +29,68 @@ app.add_middleware(
 )
 
 
-def decode_data_url(image_value: str) -> Image.Image:
-    if not image_value:
+def read_image_from_bytes(raw: bytes) -> Image.Image:
+    image = Image.open(io.BytesIO(raw))
+    return ImageOps.exif_transpose(image).convert('RGB')
+
+
+def fetch_image_url(url: str) -> bytes:
+    request = Request(
+        url,
+        headers={
+            'user-agent': 'PrintlabSegmentation/0.1',
+            'accept': 'image/*,*/*;q=0.8',
+        },
+    )
+    with urlopen(request, timeout=float(os.getenv('PRINTLAB_SEGMENTATION_FETCH_TIMEOUT', '20'))) as response:
+        content_type = response.headers.get('content-type', '')
+        raw = response.read(int(os.getenv('PRINTLAB_SEGMENTATION_MAX_IMAGE_BYTES', '25000000')))
+        if not raw:
+            raise ValueError('empty image response')
+        if content_type and 'image' not in content_type.lower() and not content_type.lower().startswith('application/octet-stream'):
+            raise ValueError(f'URL did not return an image content-type: {content_type}')
+        return raw
+
+
+def resolve_image_url(value: str) -> str:
+    if value.startswith('//'):
+        return f'https:{value}'
+    parsed = urlparse(value)
+    if parsed.scheme in ('http', 'https'):
+        return value
+    if value.startswith('/'):
+        public_origin = os.getenv('PRINTLAB_SEGMENTATION_PUBLIC_ORIGIN', 'http://localhost:8788')
+        return urljoin(public_origin.rstrip('/') + '/', value.lstrip('/'))
+    raise ValueError('image was not a data URL, absolute URL, or root-relative URL')
+
+
+def decode_input_image(image_value: str) -> Image.Image:
+    value = str(image_value or '').strip()
+    if not value:
         raise HTTPException(status_code=400, detail={'error': 'No image provided', 'code': 'NO_IMAGE'})
-    payload = image_value.split(',', 1)[1] if ',' in image_value else image_value
+
     try:
-        raw = base64.b64decode(payload, validate=False)
-        image = Image.open(io.BytesIO(raw))
-        image = ImageOps.exif_transpose(image).convert('RGB')
-        return image
+        if value.startswith('data:image/'):
+            payload = value.split(',', 1)[1] if ',' in value else ''
+            if not payload:
+                raise ValueError('missing data URL payload')
+            return read_image_from_bytes(base64.b64decode(payload, validate=False))
+
+        parsed = urlparse(value)
+        if value.startswith('/') or parsed.scheme in ('http', 'https') or value.startswith('//'):
+            return read_image_from_bytes(fetch_image_url(resolve_image_url(value)))
+
+        return read_image_from_bytes(base64.b64decode(value, validate=False))
     except Exception as exc:
-        raise HTTPException(status_code=400, detail={'error': f'Could not decode image: {exc}', 'code': 'BAD_IMAGE'}) from exc
+        preview = value[:90]
+        raise HTTPException(
+            status_code=400,
+            detail={
+                'error': f'Could not decode image: {exc}',
+                'code': 'BAD_IMAGE',
+                'imagePreview': preview,
+            },
+        ) from exc
 
 
 def image_to_data_url(image: Image.Image) -> str:
@@ -200,7 +253,7 @@ def health():
 
 @app.post('/segment')
 def segment(request: SegmentRequest):
-    image = decode_data_url(request.image)
+    image = decode_input_image(request.image)
     rgb = np.asarray(image, dtype=np.uint8)
     height, width = rgb.shape[:2]
     masks = generate_masks(rgb)
