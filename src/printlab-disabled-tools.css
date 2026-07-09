@@ -36,3 +36,34 @@
 .print-lab-page button:disabled {
   opacity: 0.55;
 }
+
+/* Fieldset legends have weird browser-native layout behavior, because even form headers needed folklore.
+   Force Printlab group headings back into normal block flow. */
+.print-lab-page .print-lab-control-group {
+  border: 0 !important;
+  margin: 0 0 14px !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
+.print-lab-page .print-lab-control-group > legend {
+  display: block !important;
+  float: none !important;
+  position: static !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+  color: #50575e !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+  transform: none !important;
+  white-space: nowrap !important;
+}
+
+.print-lab-page .print-lab-control-group > :not(legend) + :not(legend) {
+  margin-top: 8px;
+}
