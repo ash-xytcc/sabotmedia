@@ -162,15 +162,84 @@ def get_rembg_session():
     return new_session(model_name)
 
 
-def remove_background_with_rembg(image: Image.Image, options: Dict[str, Any]) -> Dict[str, Any]:
+def run_rembg(image: Image.Image):
     from rembg import remove
 
-    source_width, source_height = image.size
     session = get_rembg_session()
     rgba = remove(image.convert('RGBA'), session=session)
     if not isinstance(rgba, Image.Image):
         rgba = Image.open(io.BytesIO(rgba)).convert('RGBA')
+    return rgba.convert('RGBA')
+
+
+def remove_background_with_rembg(image: Image.Image, options: Dict[str, Any]) -> Dict[str, Any]:
+    source_width, source_height = image.size
+    rgba = run_rembg(image)
     return foreground_response_from_rgba(rgba, source_width, source_height, options, 'rembg')
+
+
+def objects_response_from_rgba(rgba_image: Image.Image, source_width: int, source_height: int, options: Dict[str, Any], source: str) -> Dict[str, Any]:
+    try:
+        import cv2
+    except Exception as exc:
+        raise ValueError(f'OpenCV is required for object splitting: {exc}') from exc
+
+    alpha_threshold = int(options.get('alphaThreshold', os.getenv('PRINTLAB_ALPHA_THRESHOLD', '12')))
+    max_objects = int(options.get('maxObjects', 24))
+    min_area_ratio = float(options.get('magicSplitMinAreaRatio', options.get('minAreaRatio', 0.002)))
+    max_area_ratio = float(options.get('magicSplitMaxAreaRatio', options.get('maxAreaRatio', 0.98)))
+    image_area = max(1, source_width * source_height)
+    min_area = max(16, int(round(image_area * min_area_ratio)))
+    max_area = max(min_area, int(round(image_area * max_area_ratio)))
+
+    rgba = np.asarray(rgba_image.convert('RGBA'), dtype=np.uint8)
+    alpha = rgba[:, :, 3]
+    mask = (alpha > alpha_threshold).astype(np.uint8)
+
+    if int(mask.sum()) <= 0:
+        raise ValueError('background remover produced no alpha mask to split')
+
+    merge_pixels = int(options.get('magicSplitMergePixels', options.get('mergePixels', 0)))
+    if merge_pixels > 0:
+        kernel_size = max(1, (merge_pixels * 2) + 1)
+        kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+    labels_count, labels, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+    candidates = []
+    for label in range(1, labels_count):
+        x, y, width, height, area = [int(value) for value in stats[label]]
+        if area < min_area or area > max_area:
+            continue
+        if width <= 0 or height <= 0:
+            continue
+        candidates.append((label, x, y, width, height, area))
+
+    candidates.sort(key=lambda item: item[5], reverse=True)
+    objects = []
+    for index, (label, x, y, width, height, area) in enumerate(candidates[:max_objects]):
+        crop = rgba[y:y + height, x:x + width].copy()
+        component_alpha = np.where(labels[y:y + height, x:x + width] == label, crop[:, :, 3], 0).astype(np.uint8)
+        crop[:, :, 3] = component_alpha
+        objects.append({
+            'id': f'object-{index + 1}',
+            'src': image_to_data_url(Image.fromarray(crop, mode='RGBA')),
+            'bbox': [float(x), float(y), float(width), float(height)],
+            'score': float(area / image_area),
+            'area': area,
+            'source': source,
+        })
+
+    if not objects:
+        raise ValueError('Could not identify separate alpha objects')
+
+    return {'sourceWidth': source_width, 'sourceHeight': source_height, 'objects': objects}
+
+
+def split_objects_with_rembg(image: Image.Image, options: Dict[str, Any]) -> Dict[str, Any]:
+    source_width, source_height = image.size
+    rgba = run_rembg(image)
+    return objects_response_from_rgba(rgba, source_width, source_height, options, 'rembg-alpha-split')
 
 
 def bbox_iou(a: List[float], b: List[float]) -> float:
@@ -312,6 +381,16 @@ def health():
 def segment(request: SegmentRequest):
     image = decode_input_image(request.image)
 
+    if request.mode == 'objects' and not request.options.get('disableRembgObjects'):
+        try:
+            return split_objects_with_rembg(image, request.options or {})
+        except Exception as exc:
+            if request.options.get('failOnRembgError'):
+                raise HTTPException(
+                    status_code=502,
+                    detail={'error': f'Object splitter failed: {exc}', 'code': 'REMBG_OBJECTS_FAILED'},
+                ) from exc
+
     if request.mode == 'foreground' and not request.options.get('disableRembg'):
         try:
             return remove_background_with_rembg(image, request.options or {})
@@ -338,6 +417,7 @@ def segment(request: SegmentRequest):
                 'bbox': bbox,
                 'score': float(mask_record.get('_score', mask_record.get('predicted_iou', 0))),
                 'area': int(mask_record.get('area', 0)),
+                'source': 'sam',
             })
         if not objects:
             raise HTTPException(status_code=422, detail={'error': 'Could not identify separate objects', 'code': 'NO_OBJECT_MASKS'})
