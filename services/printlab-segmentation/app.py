@@ -207,15 +207,15 @@ def objects_response_from_layout(image: Image.Image, options: Dict[str, Any]) ->
     rgb = np.asarray(image.convert('RGB'), dtype=np.uint8)
     background = estimate_layout_background(rgb)
     distance = np.linalg.norm(rgb.astype(np.float32) - background.reshape(1, 1, 3), axis=2)
-    tolerance = float(options.get('layoutTolerance', options.get('colorTolerance', 26)))
+    tolerance = float(options.get('layoutTolerance', options.get('colorTolerance', 30)))
     content_mask = (distance > tolerance).astype(np.uint8)
 
     if int(content_mask.sum()) <= 0:
         raise ValueError('layout splitter found no visible content')
 
     min_side = max(1, min(source_width, source_height))
-    close_pixels = int(options.get('layoutClosePixels', max(2, round(min_side * 0.006))))
-    dilate_pixels = int(options.get('layoutDilatePixels', max(1, round(min_side * 0.004))))
+    close_pixels = int(options.get('layoutClosePixels', 0))
+    dilate_pixels = int(options.get('layoutDilatePixels', 0))
     if close_pixels > 0:
         close_kernel = np.ones((close_pixels * 2 + 1, close_pixels * 2 + 1), dtype=np.uint8)
         content_mask = cv2.morphologyEx(content_mask, cv2.MORPH_CLOSE, close_kernel)
@@ -225,27 +225,40 @@ def objects_response_from_layout(image: Image.Image, options: Dict[str, Any]) ->
 
     labels_count, labels, stats, _ = cv2.connectedComponentsWithStats(content_mask, 8)
     image_area = max(1, source_width * source_height)
-    min_area_ratio = float(options.get('layoutMinAreaRatio', options.get('minAreaRatio', 0.0012)))
-    max_area_ratio = float(options.get('layoutMaxAreaRatio', options.get('maxAreaRatio', 0.985)))
-    min_area = max(18, int(round(image_area * min_area_ratio)))
+    min_area_ratio = float(options.get('layoutMinAreaRatio', options.get('minAreaRatio', 0.0008)))
+    max_area_ratio = float(options.get('layoutMaxAreaRatio', options.get('maxAreaRatio', 0.78)))
+    min_area = max(12, int(round(image_area * min_area_ratio)))
     max_area = max(min_area, int(round(image_area * max_area_ratio)))
-    min_dimension = int(options.get('layoutMinDimension', max(4, round(min_side * 0.018))))
+    min_dimension = int(options.get('layoutMinDimension', max(3, round(min_side * 0.012))))
     max_objects = int(options.get('maxObjects', 24))
-    rect_density = float(options.get('layoutRectAlphaDensity', 0.34))
+    rect_density = float(options.get('layoutRectAlphaDensity', 0.58))
+    edge_margin = int(options.get('layoutEdgeMargin', max(2, round(min_side * 0.01))))
+    huge_edge_ratio = float(options.get('layoutHugeEdgeRatio', 0.36))
 
     candidates = []
     for label in range(1, labels_count):
         x, y, width, height, area = [int(value) for value in stats[label]]
+        if width <= 0 or height <= 0:
+            continue
+        bbox_area_ratio = (width * height) / image_area
+        touches_edges = sum([
+            x <= edge_margin,
+            y <= edge_margin,
+            x + width >= source_width - edge_margin,
+            y + height >= source_height - edge_margin,
+        ])
         if area < min_area or area > max_area:
             continue
-        if width < min_dimension and height < min_dimension:
+        if bbox_area_ratio > max_area_ratio:
             continue
-        if width <= 0 or height <= 0:
+        if touches_edges >= 2 and bbox_area_ratio > huge_edge_ratio:
+            continue
+        if width < min_dimension and height < min_dimension:
             continue
         density = area / max(1, width * height)
         candidates.append((label, x, y, width, height, area, density))
 
-    if len(candidates) < int(options.get('layoutMinObjects', 2)):
+    if len(candidates) < int(options.get('layoutMinObjects', 1)):
         raise ValueError('layout splitter did not find enough objects')
 
     candidates.sort(key=lambda item: (item[2], item[1], -item[5]))
@@ -335,7 +348,8 @@ def bbox_iou(a: List[float], b: List[float]) -> float:
     ax2, ay2 = ax + aw, ay + ah
     bx2, by2 = bx + bw, by + bh
     ix1, iy1 = max(ax, bx), max(ay, by)
-    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    ix2, iy2 = min(ax2, bx2)
+    iy2 = min(ay2, by2)
     iw, ih = max(0.0, ix2 - ix1), max(0.0, iy2 - iy1)
     intersection = iw * ih
     union = (aw * ah) + (bw * bh) - intersection
