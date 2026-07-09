@@ -5,45 +5,14 @@
   display: none !important;
 }
 
-/* Admin-wide button reset. WordPress-ish buttons, custom buttons, and links were inheriting mismatched
-   foreground/background rules, because apparently buttons needed factional politics. */
+/* Admin-wide button contrast guard.
+   Filled buttons must use white text. Outline buttons stay white with blue text. Apparently this is a thing we need to explain to CSS now. */
 .admin-frame .button,
 .admin-frame button.button,
 .admin-frame a.button,
 .admin-frame input.button {
-  min-height: 36px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  border: 1px solid #2271b1 !important;
-  border-radius: 4px !important;
-  background: #ffffff !important;
-  color: #135e96 !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  line-height: 1.1 !important;
-  padding: 8px 12px !important;
-  text-decoration: none !important;
   text-shadow: none !important;
-  box-shadow: none !important;
-  opacity: 1;
-}
-
-.admin-frame .button:hover,
-.admin-frame button.button:hover,
-.admin-frame a.button:hover,
-.admin-frame input.button:hover,
-.admin-frame .button:focus-visible,
-.admin-frame button.button:focus-visible,
-.admin-frame a.button:focus-visible,
-.admin-frame input.button:focus-visible {
-  border-color: #0a4b78 !important;
-  background: #f0f6fc !important;
-  color: #0a4b78 !important;
-  outline: 2px solid transparent !important;
-  box-shadow: 0 0 0 1px #2271b1 !important;
+  box-shadow: none;
 }
 
 .admin-frame .button-primary,
@@ -54,13 +23,11 @@
 .admin-frame a.button--primary,
 .admin-frame input.button-primary,
 .admin-frame input.button--primary,
-.admin-frame [class*="button-primary"],
-.admin-frame [class*="button--primary"] {
+.admin-frame [class~="button-primary"],
+.admin-frame [class~="button--primary"] {
   color: #ffffff !important;
   background: #2271b1 !important;
   border-color: #135e96 !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
 }
 
 .admin-frame .button-primary:hover,
@@ -71,8 +38,8 @@
 .admin-frame a.button--primary:hover,
 .admin-frame input.button-primary:hover,
 .admin-frame input.button--primary:hover,
-.admin-frame [class*="button-primary"]:hover,
-.admin-frame [class*="button--primary"]:hover,
+.admin-frame [class~="button-primary"]:hover,
+.admin-frame [class~="button--primary"]:hover,
 .admin-frame .button-primary:focus-visible,
 .admin-frame .button--primary:focus-visible,
 .admin-frame button.button-primary:focus-visible,
@@ -81,16 +48,13 @@
 .admin-frame a.button--primary:focus-visible,
 .admin-frame input.button-primary:focus-visible,
 .admin-frame input.button--primary:focus-visible,
-.admin-frame [class*="button-primary"]:focus-visible,
-.admin-frame [class*="button--primary"]:focus-visible {
+.admin-frame [class~="button-primary"]:focus-visible,
+.admin-frame [class~="button--primary"]:focus-visible {
   color: #ffffff !important;
   background: #135e96 !important;
   border-color: #0a4b78 !important;
 }
 
-.admin-frame .button *,
-.admin-frame button.button *,
-.admin-frame a.button *,
 .admin-frame .button-primary *,
 .admin-frame .button--primary * {
   color: inherit !important;
@@ -103,177 +67,14 @@
   cursor: not-allowed !important;
 }
 
-/* Printlab page breathing room. The old version worked like a ship in a bottle: technically impressive,
-   practically hostile to hands and eyes. */
-.print-lab-page {
-  max-width: none !important;
-  width: 100% !important;
-  padding-bottom: 32px !important;
-}
-
-.admin-frame__main:has(.print-lab-page) {
-  padding: 18px 18px 32px !important;
-}
-
-.print-lab-screen-header {
-  margin-bottom: 14px !important;
-}
-
-.print-lab-desk {
-  width: 100% !important;
-  max-width: none !important;
-  grid-template-columns: minmax(320px, 380px) minmax(560px, 1fr) minmax(320px, 380px) !important;
-  gap: 16px !important;
-  align-items: stretch !important;
-}
-
-.print-lab-source-pane,
-.print-lab-tool-panel,
-.print-lab-preview-wrap {
-  height: calc(100vh - 128px) !important;
-  max-height: none !important;
-  border-radius: 10px !important;
-}
-
-.print-lab-source-pane,
-.print-lab-tool-panel {
-  background: #ffffff !important;
-  border: 1px solid #c3c4c7 !important;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08) !important;
-}
-
-.print-lab-preview-wrap {
-  padding: 18px !important;
-  background: #111820 !important;
-  border-color: #27313b !important;
-}
-
-.print-lab-pane-header {
-  min-height: 48px !important;
-  padding: 12px 14px !important;
-  background: #f6f7f7 !important;
-  color: #1d2327 !important;
-}
-
-.print-lab-pane-header h2,
-.print-lab-pane-header span {
-  transform: none !important;
-  text-indent: 0 !important;
-  line-height: 1.2 !important;
-}
-
-.print-lab-pane-body,
-.print-lab-tool-scroll {
-  padding: 14px !important;
-}
-
-.print-lab-control-group {
-  border: 0 !important;
-  margin: 0 0 18px !important;
-  padding: 0 !important;
-  display: block !important;
-}
-
-.print-lab-control-group > legend {
-  display: block !important;
+/* Fix native fieldset legend weirdness without changing the panel/grid layout. */
+.print-lab-page .print-lab-control-group > legend {
   float: none !important;
   position: static !important;
+  display: block !important;
   width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 0 10px !important;
+  margin: 0 0 8px !important;
   padding: 0 !important;
-  color: #50575e !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  line-height: 1.2 !important;
-  letter-spacing: 0.03em !important;
-  text-transform: uppercase !important;
   transform: none !important;
-  white-space: nowrap !important;
-}
-
-.print-lab-control-group > :not(legend) + :not(legend) {
-  margin-top: 10px !important;
-}
-
-.print-lab-output-summary,
-.print-lab-publication-panel,
-.print-lab-reader-order-panel,
-.print-lab-canvas-document,
-.print-lab-canvas-inspector,
-.print-lab-canvas-layers,
-.print-lab-attribution-panel,
-.print-lab-source-section,
-.print-lab-asset-browser {
-  border-radius: 8px !important;
-}
-
-.print-lab-layout-selector {
-  gap: 9px !important;
-}
-
-.print-lab-layout-selector button {
-  min-height: 48px !important;
-  border-radius: 8px !important;
-  padding: 8px 10px !important;
-}
-
-.print-lab-margin-presets,
-.print-lab-canvas-tools,
-.print-lab-page-actions,
-.print-lab-asset-browser__modes,
-.print-lab-asset-browser__sources,
-.print-lab-asset-card__actions {
-  gap: 8px !important;
-}
-
-.print-lab-margin-presets .button,
-.print-lab-canvas-tools .button,
-.print-lab-page-actions .button,
-.print-lab-asset-card__actions .button,
-.print-lab-source-action .button {
-  min-height: 38px !important;
-  white-space: nowrap !important;
-}
-
-.print-lab-field input,
-.print-lab-field select,
-.print-lab-field textarea {
-  min-height: 40px !important;
-}
-
-.print-lab-canvas-topbar {
-  gap: 10px !important;
-}
-
-.print-lab-canvas-topbar > div:not(.print-lab-canvas-zoombar) {
-  min-width: 124px !important;
-  padding: 10px 12px !important;
-  border-radius: 8px !important;
-}
-
-.print-lab-preview,
-.print-lab-canvas-stage,
-.print-lab-canvas-surface {
-  border-radius: 8px !important;
-}
-
-@media (max-width: 1240px) {
-  .print-lab-desk {
-    grid-template-columns: minmax(290px, 330px) minmax(480px, 1fr) minmax(290px, 330px) !important;
-  }
-}
-
-@media (max-width: 1040px) {
-  .print-lab-desk {
-    grid-template-columns: 1fr !important;
-  }
-
-  .print-lab-source-pane,
-  .print-lab-tool-panel,
-  .print-lab-preview-wrap {
-    position: static !important;
-    height: auto !important;
-    min-height: 360px !important;
-  }
+  line-height: 1.2 !important;
 }
