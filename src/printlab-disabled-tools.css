@@ -4,3 +4,35 @@
 .print-lab-floating-toolbar__hint {
   display: none !important;
 }
+
+/* WordPress admin button styles and Printlab's custom button styles fight like two raccoons in a filing cabinet.
+   Keep filled blue Printlab buttons readable instead of blue-on-blue. */
+.print-lab-page .button--primary,
+.print-lab-page .button-primary,
+.print-lab-page button.button--primary,
+.print-lab-page button.button-primary,
+.print-lab-page .print-lab-asset-card__actions .button--primary,
+.print-lab-page .print-lab-source-action .button-primary,
+.print-lab-page .print-lab-canvas-tools .button--primary {
+  color: #ffffff !important;
+  background: #2271b1 !important;
+  border-color: #135e96 !important;
+  text-shadow: none !important;
+}
+
+.print-lab-page .button--primary:hover,
+.print-lab-page .button-primary:hover,
+.print-lab-page button.button--primary:hover,
+.print-lab-page button.button-primary:hover,
+.print-lab-page .print-lab-asset-card__actions .button--primary:hover,
+.print-lab-page .print-lab-source-action .button-primary:hover,
+.print-lab-page .print-lab-canvas-tools .button--primary:hover {
+  color: #ffffff !important;
+  background: #135e96 !important;
+  border-color: #0a4b78 !important;
+}
+
+.print-lab-page .button:disabled,
+.print-lab-page button:disabled {
+  opacity: 0.55;
+}
