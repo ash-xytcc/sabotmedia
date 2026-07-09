@@ -19,7 +19,7 @@ class SegmentRequest(BaseModel):
     options: Dict[str, Any] = Field(default_factory=dict)
 
 
-app = FastAPI(title='Printlab Segmentation Service', version='0.1.0')
+app = FastAPI(title='Printlab Segmentation Service', version='0.2.0')
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv('PRINTLAB_SEGMENTATION_CORS_ORIGINS', '*').split(','),
@@ -38,7 +38,7 @@ def fetch_image_url(url: str) -> bytes:
     request = Request(
         url,
         headers={
-            'user-agent': 'PrintlabSegmentation/0.1',
+            'user-agent': 'PrintlabSegmentation/0.2',
             'accept': 'image/*,*/*;q=0.8',
         },
     )
@@ -82,14 +82,9 @@ def decode_input_image(image_value: str) -> Image.Image:
 
         return read_image_from_bytes(base64.b64decode(value, validate=False))
     except Exception as exc:
-        preview = value[:90]
         raise HTTPException(
             status_code=400,
-            detail={
-                'error': f'Could not decode image: {exc}',
-                'code': 'BAD_IMAGE',
-                'imagePreview': preview,
-            },
+            detail={'error': f'Could not decode image: {exc}', 'code': 'BAD_IMAGE', 'imagePreview': value[:90]},
         ) from exc
 
 
@@ -99,44 +94,61 @@ def image_to_data_url(image: Image.Image) -> str:
     return 'data:image/png;base64,' + base64.b64encode(buffer.getvalue()).decode('ascii')
 
 
-def clip_bbox(bbox: List[float], width: int, height: int) -> Tuple[int, int, int, int]:
-    x, y, w, h = [int(round(float(value))) for value in bbox]
-    x = max(0, min(width - 1, x))
-    y = max(0, min(height - 1, y))
-    w = max(1, min(width - x, w))
-    h = max(1, min(height - y, h))
-    return x, y, w, h
+def bbox_iou(a: List[float], b: List[float]) -> float:
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    ax2, ay2 = ax + aw, ay + ah
+    bx2, by2 = bx + bw, by + bh
+    ix1, iy1 = max(ax, bx), max(ay, by)
+    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    iw, ih = max(0.0, ix2 - ix1), max(0.0, iy2 - iy1)
+    intersection = iw * ih
+    union = (aw * ah) + (bw * bh) - intersection
+    return intersection / union if union else 0.0
 
 
-def mask_to_png_data_url(rgb: np.ndarray, mask: np.ndarray, bbox: List[float]) -> str:
-    height, width = mask.shape[:2]
-    x, y, w, h = clip_bbox(bbox, width, height)
-    crop_rgb = rgb[y:y + h, x:x + w]
-    crop_mask = mask[y:y + h, x:x + w]
-    rgba = np.zeros((h, w, 4), dtype=np.uint8)
-    rgba[:, :, :3] = crop_rgb
-    rgba[:, :, 3] = np.where(crop_mask, 255, 0).astype(np.uint8)
-    return image_to_data_url(Image.fromarray(rgba, mode='RGBA'))
-
-
-def rgba_bounds(image: Image.Image, alpha_threshold: int = 12) -> Optional[Tuple[int, int, int, int, int]]:
-    rgba = image.convert('RGBA')
-    alpha = np.asarray(rgba.getchannel('A'))
-    mask = alpha > alpha_threshold
+def mask_bounds(mask: np.ndarray) -> Optional[Tuple[int, int, int, int, int]]:
     if not np.any(mask):
         return None
-    ys, xs = np.where(mask)
+    ys, xs = np.where(mask > 0)
     x1 = int(xs.min())
     y1 = int(ys.min())
     x2 = int(xs.max()) + 1
     y2 = int(ys.max()) + 1
-    area = int(mask.sum())
-    return x1, y1, x2 - x1, y2 - y1, area
+    return x1, y1, x2 - x1, y2 - y1, int(mask.sum())
+
+
+def crop_rgb_with_mask(rgb: np.ndarray, mask: np.ndarray, bbox: Tuple[int, int, int, int], rectangular_alpha: bool = False) -> str:
+    x, y, width, height = bbox
+    crop_rgb = rgb[y:y + height, x:x + width]
+    crop_mask = mask[y:y + height, x:x + width]
+    rgba = np.zeros((height, width, 4), dtype=np.uint8)
+    rgba[:, :, :3] = crop_rgb
+    rgba[:, :, 3] = 255 if rectangular_alpha else np.where(crop_mask > 0, 255, 0).astype(np.uint8)
+    return image_to_data_url(Image.fromarray(rgba, mode='RGBA'))
+
+
+@lru_cache(maxsize=1)
+def get_rembg_session():
+    model_name = os.getenv('PRINTLAB_REMBG_MODEL', 'u2netp').strip() or 'u2netp'
+    from rembg import new_session
+    return new_session(model_name)
+
+
+def run_rembg(image: Image.Image) -> Image.Image:
+    from rembg import remove
+
+    session = get_rembg_session()
+    rgba = remove(image.convert('RGBA'), session=session)
+    if not isinstance(rgba, Image.Image):
+        rgba = Image.open(io.BytesIO(rgba)).convert('RGBA')
+    return rgba.convert('RGBA')
 
 
 def foreground_response_from_rgba(rgba_image: Image.Image, source_width: int, source_height: int, options: Dict[str, Any], source: str) -> Dict[str, Any]:
     alpha_threshold = int(options.get('alphaThreshold', os.getenv('PRINTLAB_ALPHA_THRESHOLD', '12')))
-    bounds = rgba_bounds(rgba_image, alpha_threshold)
+    alpha = np.asarray(rgba_image.convert('RGBA').getchannel('A'))
+    bounds = mask_bounds((alpha > alpha_threshold).astype(np.uint8))
     if not bounds:
         raise ValueError('background remover produced an empty foreground')
     x, y, width, height, area = bounds
@@ -155,46 +167,79 @@ def foreground_response_from_rgba(rgba_image: Image.Image, source_width: int, so
     }
 
 
-@lru_cache(maxsize=1)
-def get_rembg_session():
-    model_name = os.getenv('PRINTLAB_REMBG_MODEL', 'u2net').strip() or 'u2net'
-    from rembg import new_session
-    return new_session(model_name)
-
-
-def run_rembg(image: Image.Image):
-    from rembg import remove
-
-    session = get_rembg_session()
-    rgba = remove(image.convert('RGBA'), session=session)
-    if not isinstance(rgba, Image.Image):
-        rgba = Image.open(io.BytesIO(rgba)).convert('RGBA')
-    return rgba.convert('RGBA')
-
-
 def remove_background_with_rembg(image: Image.Image, options: Dict[str, Any]) -> Dict[str, Any]:
     source_width, source_height = image.size
-    rgba = run_rembg(image)
-    return foreground_response_from_rgba(rgba, source_width, source_height, options, 'rembg')
+    return foreground_response_from_rgba(run_rembg(image), source_width, source_height, options, 'rembg')
 
 
 def estimate_layout_background(rgb: np.ndarray) -> np.ndarray:
-    top = rgb[0, :, :]
-    bottom = rgb[-1, :, :]
-    left = rgb[:, 0, :]
-    right = rgb[:, -1, :]
-    edges = np.concatenate([top, bottom, left, right], axis=0).astype(np.float32)
+    edges = np.concatenate([rgb[0, :, :], rgb[-1, :, :], rgb[:, 0, :], rgb[:, -1, :]], axis=0).astype(np.float32)
     return np.median(edges, axis=0)
 
 
-def crop_object_from_mask(rgb: np.ndarray, mask: np.ndarray, bbox: Tuple[int, int, int, int], rectangular_alpha: bool) -> str:
+def add_object(objects: List[Dict[str, Any]], rgb: np.ndarray, mask: np.ndarray, bbox: Tuple[int, int, int, int], area: int, source: str, rectangular_alpha: bool = False) -> None:
     x, y, width, height = bbox
-    crop_rgb = rgb[y:y + height, x:x + width]
-    crop_mask = mask[y:y + height, x:x + width]
-    rgba = np.zeros((height, width, 4), dtype=np.uint8)
-    rgba[:, :, :3] = crop_rgb
-    rgba[:, :, 3] = 255 if rectangular_alpha else np.where(crop_mask > 0, 255, 0).astype(np.uint8)
-    return image_to_data_url(Image.fromarray(rgba, mode='RGBA'))
+    candidate_bbox = [float(x), float(y), float(width), float(height)]
+    if any(bbox_iou(candidate_bbox, item.get('bbox', [])) >= 0.72 for item in objects):
+        return
+    image_area = max(1, rgb.shape[0] * rgb.shape[1])
+    objects.append({
+        'id': f'object-{len(objects) + 1}',
+        'src': crop_rgb_with_mask(rgb, mask, bbox, rectangular_alpha),
+        'bbox': candidate_bbox,
+        'score': float(area / image_area),
+        'area': int(area),
+        'source': source,
+    })
+
+
+def collect_component_objects(objects: List[Dict[str, Any]], rgb: np.ndarray, mask: np.ndarray, options: Dict[str, Any], source: str, relaxed: bool = False) -> None:
+    try:
+        import cv2
+    except Exception as exc:
+        raise ValueError(f'OpenCV is required for layout splitting: {exc}') from exc
+
+    height, width = mask.shape[:2]
+    image_area = max(1, width * height)
+    min_side = max(1, min(width, height))
+    min_area_ratio = float(options.get('layoutMinAreaRatio', options.get('minAreaRatio', 0.00035 if relaxed else 0.00075)))
+    max_bbox_ratio = float(options.get('layoutMaxAreaRatio', options.get('maxAreaRatio', 0.96 if relaxed else 0.82)))
+    min_area = max(8, int(round(image_area * min_area_ratio)))
+    min_dimension = int(options.get('layoutMinDimension', max(2, round(min_side * (0.008 if relaxed else 0.012)))))
+    edge_margin = int(options.get('layoutEdgeMargin', max(2, round(min_side * 0.01))))
+    huge_edge_ratio = float(options.get('layoutHugeEdgeRatio', 0.86 if relaxed else 0.62))
+    rect_density = float(options.get('layoutRectAlphaDensity', 0.62))
+
+    labels_count, labels, stats, _ = cv2.connectedComponentsWithStats(mask.astype(np.uint8), 8)
+    candidates = []
+    for label in range(1, labels_count):
+        x, y, box_width, box_height, area = [int(value) for value in stats[label]]
+        if box_width <= 0 or box_height <= 0:
+            continue
+        bbox_area_ratio = (box_width * box_height) / image_area
+        touches_edges = sum([
+            x <= edge_margin,
+            y <= edge_margin,
+            x + box_width >= width - edge_margin,
+            y + box_height >= height - edge_margin,
+        ])
+        if area < min_area:
+            continue
+        if bbox_area_ratio > max_bbox_ratio:
+            continue
+        if touches_edges >= 3 and bbox_area_ratio > huge_edge_ratio:
+            continue
+        if box_width < min_dimension and box_height < min_dimension:
+            continue
+        density = area / max(1, box_width * box_height)
+        candidates.append((label, x, y, box_width, box_height, area, density))
+
+    candidates.sort(key=lambda item: item[5], reverse=True)
+    for label, x, y, box_width, box_height, area, density in candidates:
+        if len(objects) >= int(options.get('maxObjects', 24)):
+            break
+        component_mask = (labels == label).astype(np.uint8)
+        add_object(objects, rgb, component_mask, (x, y, box_width, box_height), area, source, density >= rect_density)
 
 
 def objects_response_from_layout(image: Image.Image, options: Dict[str, Any]) -> Dict[str, Any]:
@@ -207,272 +252,72 @@ def objects_response_from_layout(image: Image.Image, options: Dict[str, Any]) ->
     rgb = np.asarray(image.convert('RGB'), dtype=np.uint8)
     background = estimate_layout_background(rgb)
     distance = np.linalg.norm(rgb.astype(np.float32) - background.reshape(1, 1, 3), axis=2)
-    tolerance = float(options.get('layoutTolerance', options.get('colorTolerance', 30)))
-    content_mask = (distance > tolerance).astype(np.uint8)
+    gray = np.mean(rgb.astype(np.float32), axis=2)
 
-    if int(content_mask.sum()) <= 0:
-        raise ValueError('layout splitter found no visible content')
+    objects: List[Dict[str, Any]] = []
+    base_tolerance = float(options.get('layoutTolerance', options.get('colorTolerance', 28)))
+    masks = [
+        ('layout-visible', (distance > base_tolerance).astype(np.uint8), False),
+        ('layout-soft', (distance > max(12, base_tolerance * 0.55)).astype(np.uint8), True),
+        ('layout-dark', (gray < float(options.get('layoutDarkThreshold', 205))).astype(np.uint8), True),
+        ('layout-deep-dark', (gray < float(options.get('layoutDeepDarkThreshold', 155))).astype(np.uint8), True),
+    ]
 
-    min_side = max(1, min(source_width, source_height))
-    close_pixels = int(options.get('layoutClosePixels', 0))
-    dilate_pixels = int(options.get('layoutDilatePixels', 0))
-    if close_pixels > 0:
-        close_kernel = np.ones((close_pixels * 2 + 1, close_pixels * 2 + 1), dtype=np.uint8)
-        content_mask = cv2.morphologyEx(content_mask, cv2.MORPH_CLOSE, close_kernel)
-    if dilate_pixels > 0:
-        dilate_kernel = np.ones((dilate_pixels * 2 + 1, dilate_pixels * 2 + 1), dtype=np.uint8)
-        content_mask = cv2.dilate(content_mask, dilate_kernel, iterations=1)
-
-    labels_count, labels, stats, _ = cv2.connectedComponentsWithStats(content_mask, 8)
-    image_area = max(1, source_width * source_height)
-    min_area_ratio = float(options.get('layoutMinAreaRatio', options.get('minAreaRatio', 0.0008)))
-    max_area_ratio = float(options.get('layoutMaxAreaRatio', options.get('maxAreaRatio', 0.78)))
-    min_area = max(12, int(round(image_area * min_area_ratio)))
-    max_area = max(min_area, int(round(image_area * max_area_ratio)))
-    min_dimension = int(options.get('layoutMinDimension', max(3, round(min_side * 0.012))))
-    max_objects = int(options.get('maxObjects', 24))
-    rect_density = float(options.get('layoutRectAlphaDensity', 0.58))
-    edge_margin = int(options.get('layoutEdgeMargin', max(2, round(min_side * 0.01))))
-    huge_edge_ratio = float(options.get('layoutHugeEdgeRatio', 0.36))
-
-    candidates = []
-    for label in range(1, labels_count):
-        x, y, width, height, area = [int(value) for value in stats[label]]
-        if width <= 0 or height <= 0:
+    for source, mask, relaxed in masks:
+        if int(mask.sum()) <= 0:
             continue
-        bbox_area_ratio = (width * height) / image_area
-        touches_edges = sum([
-            x <= edge_margin,
-            y <= edge_margin,
-            x + width >= source_width - edge_margin,
-            y + height >= source_height - edge_margin,
-        ])
-        if area < min_area or area > max_area:
-            continue
-        if bbox_area_ratio > max_area_ratio:
-            continue
-        if touches_edges >= 2 and bbox_area_ratio > huge_edge_ratio:
-            continue
-        if width < min_dimension and height < min_dimension:
-            continue
-        density = area / max(1, width * height)
-        candidates.append((label, x, y, width, height, area, density))
+        collect_component_objects(objects, rgb, mask, options, source, relaxed=relaxed)
+        if len(objects) >= int(options.get('maxObjects', 24)):
+            break
 
-    if len(candidates) < int(options.get('layoutMinObjects', 1)):
-        raise ValueError('layout splitter did not find enough objects')
+    if len(objects) < int(options.get('layoutMinObjects', 2)):
+        dark_mask = (gray < float(options.get('layoutFallbackDarkThreshold', 215))).astype(np.uint8)
+        bounds = mask_bounds(dark_mask)
+        if bounds:
+            x, y, box_width, box_height, area = bounds
+            add_object(objects, rgb, dark_mask, (x, y, box_width, box_height), area, 'layout-dark-fallback', False)
 
-    candidates.sort(key=lambda item: (item[2], item[1], -item[5]))
-    objects = []
-    for index, (label, x, y, width, height, area, density) in enumerate(candidates[:max_objects]):
-        component_mask = (labels == label).astype(np.uint8)
-        rectangular_alpha = density >= rect_density
-        objects.append({
-            'id': f'object-{index + 1}',
-            'src': crop_object_from_mask(rgb, component_mask, (x, y, width, height), rectangular_alpha),
-            'bbox': [float(x), float(y), float(width), float(height)],
-            'score': float(area / image_area),
-            'area': area,
-            'source': 'layout-split',
-        })
-
-    return {'sourceWidth': source_width, 'sourceHeight': source_height, 'objects': objects}
-
-
-def objects_response_from_rgba(rgba_image: Image.Image, source_width: int, source_height: int, options: Dict[str, Any], source: str) -> Dict[str, Any]:
-    try:
-        import cv2
-    except Exception as exc:
-        raise ValueError(f'OpenCV is required for object splitting: {exc}') from exc
-
-    alpha_threshold = int(options.get('alphaThreshold', os.getenv('PRINTLAB_ALPHA_THRESHOLD', '12')))
-    max_objects = int(options.get('maxObjects', 24))
-    min_area_ratio = float(options.get('magicSplitMinAreaRatio', options.get('minAreaRatio', 0.002)))
-    max_area_ratio = float(options.get('magicSplitMaxAreaRatio', options.get('maxAreaRatio', 0.98)))
-    image_area = max(1, source_width * source_height)
-    min_area = max(16, int(round(image_area * min_area_ratio)))
-    max_area = max(min_area, int(round(image_area * max_area_ratio)))
-
-    rgba = np.asarray(rgba_image.convert('RGBA'), dtype=np.uint8)
-    alpha = rgba[:, :, 3]
-    mask = (alpha > alpha_threshold).astype(np.uint8)
-
-    if int(mask.sum()) <= 0:
-        raise ValueError('background remover produced no alpha mask to split')
-
-    merge_pixels = int(options.get('magicSplitMergePixels', options.get('mergePixels', 0)))
-    if merge_pixels > 0:
-        kernel_size = max(1, (merge_pixels * 2) + 1)
-        kernel = np.ones((kernel_size, kernel_size), dtype=np.uint8)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-
-    labels_count, labels, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
-    candidates = []
-    for label in range(1, labels_count):
-        x, y, width, height, area = [int(value) for value in stats[label]]
-        if area < min_area or area > max_area:
-            continue
-        if width <= 0 or height <= 0:
-            continue
-        candidates.append((label, x, y, width, height, area))
-
-    candidates.sort(key=lambda item: item[5], reverse=True)
-    objects = []
-    for index, (label, x, y, width, height, area) in enumerate(candidates[:max_objects]):
-        crop = rgba[y:y + height, x:x + width].copy()
-        component_alpha = np.where(labels[y:y + height, x:x + width] == label, crop[:, :, 3], 0).astype(np.uint8)
-        crop[:, :, 3] = component_alpha
-        objects.append({
-            'id': f'object-{index + 1}',
-            'src': image_to_data_url(Image.fromarray(crop, mode='RGBA')),
-            'bbox': [float(x), float(y), float(width), float(height)],
-            'score': float(area / image_area),
-            'area': area,
-            'source': source,
-        })
+    if len(objects) < int(options.get('layoutMinObjects', 2)):
+        content_mask = (distance > max(10, base_tolerance * 0.45)).astype(np.uint8)
+        bounds = mask_bounds(content_mask)
+        if bounds:
+            x, y, box_width, box_height, area = bounds
+            add_object(objects, rgb, content_mask, (x, y, box_width, box_height), area, 'layout-content-fallback', False)
 
     if not objects:
-        raise ValueError('Could not identify separate alpha objects')
+        raise ValueError('layout splitter did not find visible objects')
 
-    return {'sourceWidth': source_width, 'sourceHeight': source_height, 'objects': objects}
+    objects.sort(key=lambda item: (item['bbox'][1], item['bbox'][0], -item['area']))
+    return {'sourceWidth': source_width, 'sourceHeight': source_height, 'objects': objects[:int(options.get('maxObjects', 24))]}
 
 
-def split_objects_with_rembg(image: Image.Image, options: Dict[str, Any]) -> Dict[str, Any]:
+def objects_response_from_rembg(image: Image.Image, options: Dict[str, Any]) -> Dict[str, Any]:
+    rgba_image = run_rembg(image)
     source_width, source_height = image.size
-    rgba = run_rembg(image)
-    return objects_response_from_rgba(rgba, source_width, source_height, options, 'rembg-alpha-split')
-
-
-def bbox_iou(a: List[float], b: List[float]) -> float:
-    ax, ay, aw, ah = a
-    bx, by, bw, bh = b
-    ax2, ay2 = ax + aw, ay + ah
-    bx2, by2 = bx + bw, by + bh
-    ix1, iy1 = max(ax, bx), max(ay, by)
-    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
-    iw, ih = max(0.0, ix2 - ix1), max(0.0, iy2 - iy1)
-    intersection = iw * ih
-    union = (aw * ah) + (bw * bh) - intersection
-    return intersection / union if union else 0.0
-
-
-def touches_edge_count(bbox: List[float], width: int, height: int, margin: int = 3) -> int:
-    x, y, w, h = bbox
-    return sum([
-        x <= margin,
-        y <= margin,
-        x + w >= width - margin,
-        y + h >= height - margin,
-    ])
-
-
-def score_mask(mask_record: Dict[str, Any], width: int, height: int) -> float:
-    bbox = mask_record.get('bbox', [0, 0, width, height])
-    x, y, w, h = bbox
-    area_ratio = float(mask_record.get('area', 0)) / max(1, width * height)
-    center_x = x + (w / 2)
-    center_y = y + (h / 2)
-    center_distance = ((center_x - (width / 2)) ** 2 + (center_y - (height / 2)) ** 2) ** 0.5
-    max_distance = ((width / 2) ** 2 + (height / 2) ** 2) ** 0.5
-    center_score = 1 - min(1, center_distance / max_distance)
-    edge_penalty = touches_edge_count(bbox, width, height) * 0.12
-    iou_score = float(mask_record.get('predicted_iou', 0.7))
-    stability = float(mask_record.get('stability_score', 0.7))
-    useful_area = min(1.0, max(0.0, area_ratio * 4))
-    return (iou_score * 0.34) + (stability * 0.26) + (center_score * 0.25) + (useful_area * 0.15) - edge_penalty
-
-
-def filter_masks(masks: List[Dict[str, Any]], width: int, height: int, options: Dict[str, Any]) -> List[Dict[str, Any]]:
-    min_area_ratio = float(options.get('minAreaRatio', 0.0015))
-    max_area_ratio = float(options.get('maxAreaRatio', 0.82))
-    min_iou = float(options.get('minPredictedIou', 0.72))
-    min_stability = float(options.get('minStabilityScore', 0.72))
-    dedupe_iou = float(options.get('dedupeIou', 0.88))
-    image_area = max(1, width * height)
-    filtered: List[Dict[str, Any]] = []
-
-    for mask_record in masks:
-        bbox = mask_record.get('bbox') or [0, 0, width, height]
-        area_ratio = float(mask_record.get('area', 0)) / image_area
-        if area_ratio < min_area_ratio or area_ratio > max_area_ratio:
-            continue
-        if float(mask_record.get('predicted_iou', 1)) < min_iou:
-            continue
-        if float(mask_record.get('stability_score', 1)) < min_stability:
-            continue
-        _, _, box_w, box_h = bbox
-        if (box_w / width) > 0.96 and (box_h / height) > 0.96:
-            continue
-        candidate = dict(mask_record)
-        candidate['_score'] = score_mask(candidate, width, height)
-        filtered.append(candidate)
-
-    filtered.sort(key=lambda item: item.get('_score', 0), reverse=True)
-    deduped: List[Dict[str, Any]] = []
-    for item in filtered:
-        if any(bbox_iou(item.get('bbox', []), existing.get('bbox', [])) >= dedupe_iou for existing in deduped):
-            continue
-        deduped.append(item)
-    return deduped
-
-
-@lru_cache(maxsize=1)
-def get_mask_generator():
-    checkpoint = os.getenv('PRINTLAB_SEGMENTATION_CHECKPOINT', '').strip()
-    model_type = os.getenv('PRINTLAB_SEGMENTATION_MODEL_TYPE', 'vit_b').strip() or 'vit_b'
-    device = os.getenv('PRINTLAB_SEGMENTATION_DEVICE', 'cpu').strip() or 'cpu'
-    if not checkpoint:
-        raise HTTPException(
-            status_code=501,
-            detail={'error': 'Segmentation model not configured', 'code': 'SEGMENTATION_NOT_CONFIGURED'},
-        )
-    if not os.path.exists(checkpoint):
-        raise HTTPException(
-            status_code=501,
-            detail={'error': f'Segmentation checkpoint not found: {checkpoint}', 'code': 'CHECKPOINT_NOT_FOUND'},
-        )
-    try:
-        import torch
-        from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
-    except Exception as exc:
-        raise HTTPException(
-            status_code=501,
-            detail={'error': f'SAM dependencies are not installed: {exc}', 'code': 'SAM_DEPENDENCIES_MISSING'},
-        ) from exc
-
-    if model_type not in sam_model_registry:
-        raise HTTPException(status_code=400, detail={'error': f'Unsupported SAM model type: {model_type}', 'code': 'BAD_MODEL_TYPE'})
-
-    sam = sam_model_registry[model_type](checkpoint=checkpoint)
-    sam.to(device=device)
-    if device == 'cuda' and hasattr(torch, 'cuda'):
-        torch.cuda.empty_cache()
-
-    return SamAutomaticMaskGenerator(
-        model=sam,
-        points_per_side=int(os.getenv('PRINTLAB_SAM_POINTS_PER_SIDE', '32')),
-        pred_iou_thresh=float(os.getenv('PRINTLAB_SAM_PRED_IOU_THRESH', '0.76')),
-        stability_score_thresh=float(os.getenv('PRINTLAB_SAM_STABILITY_THRESH', '0.76')),
-        crop_n_layers=int(os.getenv('PRINTLAB_SAM_CROP_N_LAYERS', '1')),
-        min_mask_region_area=int(os.getenv('PRINTLAB_SAM_MIN_MASK_REGION_AREA', '64')),
-    )
-
-
-def generate_masks(rgb: np.ndarray) -> List[Dict[str, Any]]:
-    generator = get_mask_generator()
-    return generator.generate(rgb)
+    rgb = np.asarray(image.convert('RGB'), dtype=np.uint8)
+    alpha_threshold = int(options.get('alphaThreshold', os.getenv('PRINTLAB_ALPHA_THRESHOLD', '12')))
+    alpha = np.asarray(rgba_image.getchannel('A'))
+    mask = (alpha > alpha_threshold).astype(np.uint8)
+    objects: List[Dict[str, Any]] = []
+    collect_component_objects(objects, rgb, mask, options, 'rembg-alpha-split', relaxed=True)
+    if not objects:
+        bounds = mask_bounds(mask)
+        if bounds:
+            x, y, box_width, box_height, area = bounds
+            add_object(objects, rgb, mask, (x, y, box_width, box_height), area, 'rembg-alpha-fallback', False)
+    if not objects:
+        raise ValueError('background remover produced no object masks')
+    return {'sourceWidth': source_width, 'sourceHeight': source_height, 'objects': objects[:int(options.get('maxObjects', 24))]}
 
 
 @app.get('/health')
 def health():
-    configured = bool(os.getenv('PRINTLAB_SEGMENTATION_CHECKPOINT', '').strip())
-    model_loaded = get_mask_generator.cache_info().currsize > 0
-    rembg_model = os.getenv('PRINTLAB_REMBG_MODEL', 'u2net')
     return {
         'ok': True,
-        'configured': configured,
-        'modelLoaded': model_loaded,
-        'modelType': os.getenv('PRINTLAB_SEGMENTATION_MODEL_TYPE', 'vit_b'),
-        'backgroundModel': rembg_model,
+        'configured': False,
+        'modelLoaded': False,
+        'modelType': 'layout-rembg',
+        'backgroundModel': os.getenv('PRINTLAB_REMBG_MODEL', 'u2netp'),
         'backgroundModelLoaded': get_rembg_session.cache_info().currsize > 0,
     }
 
@@ -480,77 +325,25 @@ def health():
 @app.post('/segment')
 def segment(request: SegmentRequest):
     image = decode_input_image(request.image)
+    options = request.options or {}
 
-    if request.mode == 'objects' and not request.options.get('disableLayoutObjects'):
+    if request.mode == 'foreground' and not options.get('disableRembg'):
         try:
-            return objects_response_from_layout(image, request.options or {})
+            return remove_background_with_rembg(image, options)
         except Exception as exc:
-            if request.options.get('failOnLayoutError'):
-                raise HTTPException(
-                    status_code=502,
-                    detail={'error': f'Layout splitter failed: {exc}', 'code': 'LAYOUT_OBJECTS_FAILED'},
-                ) from exc
+            raise HTTPException(status_code=502, detail={'error': f'Background remover failed: {exc}', 'code': 'REMBG_FAILED'}) from exc
 
-    if request.mode == 'objects' and not request.options.get('disableRembgObjects'):
+    if request.mode == 'objects' and not options.get('disableLayoutObjects'):
         try:
-            return split_objects_with_rembg(image, request.options or {})
-        except Exception as exc:
-            if request.options.get('failOnRembgError'):
-                raise HTTPException(
-                    status_code=502,
-                    detail={'error': f'Object splitter failed: {exc}', 'code': 'REMBG_OBJECTS_FAILED'},
-                ) from exc
+            return objects_response_from_layout(image, options)
+        except Exception as layout_exc:
+            if options.get('failOnLayoutError'):
+                raise HTTPException(status_code=502, detail={'error': f'Layout splitter failed: {layout_exc}', 'code': 'LAYOUT_OBJECTS_FAILED'}) from layout_exc
 
-    if request.mode == 'foreground' and not request.options.get('disableRembg'):
+    if request.mode == 'objects' and not options.get('disableRembgObjects'):
         try:
-            return remove_background_with_rembg(image, request.options or {})
-        except Exception as exc:
-            if request.options.get('failOnRembgError'):
-                raise HTTPException(
-                    status_code=502,
-                    detail={'error': f'Background remover failed: {exc}', 'code': 'REMBG_FAILED'},
-                ) from exc
+            return objects_response_from_rembg(image, options)
+        except Exception as rembg_exc:
+            raise HTTPException(status_code=422, detail={'error': f'Could not identify separate objects: {rembg_exc}', 'code': 'NO_OBJECT_MASKS'}) from rembg_exc
 
-    rgb = np.asarray(image, dtype=np.uint8)
-    height, width = rgb.shape[:2]
-    masks = generate_masks(rgb)
-    filtered = filter_masks(masks, width, height, request.options or {})
-
-    if request.mode == 'objects':
-        max_objects = int(request.options.get('maxObjects', 24))
-        objects = []
-        for index, mask_record in enumerate(filtered[:max_objects]):
-            bbox = [float(value) for value in mask_record['bbox']]
-            objects.append({
-                'id': f'object-{index + 1}',
-                'src': mask_to_png_data_url(rgb, mask_record['segmentation'], bbox),
-                'bbox': bbox,
-                'score': float(mask_record.get('_score', mask_record.get('predicted_iou', 0))),
-                'area': int(mask_record.get('area', 0)),
-                'source': 'sam',
-            })
-        if not objects:
-            raise HTTPException(status_code=422, detail={'error': 'Could not identify separate objects', 'code': 'NO_OBJECT_MASKS'})
-        return {'sourceWidth': width, 'sourceHeight': height, 'objects': objects}
-
-    foreground_candidates = filtered or filter_masks(
-        masks,
-        width,
-        height,
-        {**request.options, 'minPredictedIou': 0.62, 'minStabilityScore': 0.62, 'maxAreaRatio': 0.9},
-    )
-    if not foreground_candidates:
-        raise HTTPException(status_code=422, detail={'error': 'Could not identify a foreground subject', 'code': 'NO_FOREGROUND_MASK'})
-    foreground = max(foreground_candidates, key=lambda item: score_mask(item, width, height))
-    bbox = [float(value) for value in foreground['bbox']]
-    return {
-        'sourceWidth': width,
-        'sourceHeight': height,
-        'foreground': {
-            'src': mask_to_png_data_url(rgb, foreground['segmentation'], bbox),
-            'bbox': bbox,
-            'score': float(foreground.get('_score', foreground.get('predicted_iou', 0))),
-            'area': int(foreground.get('area', 0)),
-            'source': 'sam',
-        },
-    }
+    raise HTTPException(status_code=422, detail={'error': 'Could not identify separate objects', 'code': 'NO_OBJECT_MASKS'})
