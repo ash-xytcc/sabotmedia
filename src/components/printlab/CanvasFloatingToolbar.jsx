@@ -116,6 +116,12 @@ export function CanvasFloatingToolbar({
                   Use selected
                 </button>
               ) : null}
+              <button type="button" onClick={onDuplicate} title="Duplicate this image, then drag side handles to crop the copy into its own layer.">
+                Crop copy
+              </button>
+              <small className="print-lab-floating-toolbar__hint">
+                Manual layer split: duplicate, then drag side handles to crop each copy.
+              </small>
             </>
           )}
           <button type="button" onClick={onDuplicate}>Duplicate</button>
