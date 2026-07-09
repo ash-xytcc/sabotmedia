@@ -178,6 +178,93 @@ def remove_background_with_rembg(image: Image.Image, options: Dict[str, Any]) ->
     return foreground_response_from_rgba(rgba, source_width, source_height, options, 'rembg')
 
 
+def estimate_layout_background(rgb: np.ndarray) -> np.ndarray:
+    top = rgb[0, :, :]
+    bottom = rgb[-1, :, :]
+    left = rgb[:, 0, :]
+    right = rgb[:, -1, :]
+    edges = np.concatenate([top, bottom, left, right], axis=0).astype(np.float32)
+    return np.median(edges, axis=0)
+
+
+def crop_object_from_mask(rgb: np.ndarray, mask: np.ndarray, bbox: Tuple[int, int, int, int], rectangular_alpha: bool) -> str:
+    x, y, width, height = bbox
+    crop_rgb = rgb[y:y + height, x:x + width]
+    crop_mask = mask[y:y + height, x:x + width]
+    rgba = np.zeros((height, width, 4), dtype=np.uint8)
+    rgba[:, :, :3] = crop_rgb
+    rgba[:, :, 3] = 255 if rectangular_alpha else np.where(crop_mask > 0, 255, 0).astype(np.uint8)
+    return image_to_data_url(Image.fromarray(rgba, mode='RGBA'))
+
+
+def objects_response_from_layout(image: Image.Image, options: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        import cv2
+    except Exception as exc:
+        raise ValueError(f'OpenCV is required for layout splitting: {exc}') from exc
+
+    source_width, source_height = image.size
+    rgb = np.asarray(image.convert('RGB'), dtype=np.uint8)
+    background = estimate_layout_background(rgb)
+    distance = np.linalg.norm(rgb.astype(np.float32) - background.reshape(1, 1, 3), axis=2)
+    tolerance = float(options.get('layoutTolerance', options.get('colorTolerance', 26)))
+    content_mask = (distance > tolerance).astype(np.uint8)
+
+    if int(content_mask.sum()) <= 0:
+        raise ValueError('layout splitter found no visible content')
+
+    min_side = max(1, min(source_width, source_height))
+    close_pixels = int(options.get('layoutClosePixels', max(2, round(min_side * 0.006))))
+    dilate_pixels = int(options.get('layoutDilatePixels', max(1, round(min_side * 0.004))))
+    if close_pixels > 0:
+        close_kernel = np.ones((close_pixels * 2 + 1, close_pixels * 2 + 1), dtype=np.uint8)
+        content_mask = cv2.morphologyEx(content_mask, cv2.MORPH_CLOSE, close_kernel)
+    if dilate_pixels > 0:
+        dilate_kernel = np.ones((dilate_pixels * 2 + 1, dilate_pixels * 2 + 1), dtype=np.uint8)
+        content_mask = cv2.dilate(content_mask, dilate_kernel, iterations=1)
+
+    labels_count, labels, stats, _ = cv2.connectedComponentsWithStats(content_mask, 8)
+    image_area = max(1, source_width * source_height)
+    min_area_ratio = float(options.get('layoutMinAreaRatio', options.get('minAreaRatio', 0.0012)))
+    max_area_ratio = float(options.get('layoutMaxAreaRatio', options.get('maxAreaRatio', 0.985)))
+    min_area = max(18, int(round(image_area * min_area_ratio)))
+    max_area = max(min_area, int(round(image_area * max_area_ratio)))
+    min_dimension = int(options.get('layoutMinDimension', max(4, round(min_side * 0.018))))
+    max_objects = int(options.get('maxObjects', 24))
+    rect_density = float(options.get('layoutRectAlphaDensity', 0.34))
+
+    candidates = []
+    for label in range(1, labels_count):
+        x, y, width, height, area = [int(value) for value in stats[label]]
+        if area < min_area or area > max_area:
+            continue
+        if width < min_dimension and height < min_dimension:
+            continue
+        if width <= 0 or height <= 0:
+            continue
+        density = area / max(1, width * height)
+        candidates.append((label, x, y, width, height, area, density))
+
+    if len(candidates) < int(options.get('layoutMinObjects', 2)):
+        raise ValueError('layout splitter did not find enough objects')
+
+    candidates.sort(key=lambda item: (item[2], item[1], -item[5]))
+    objects = []
+    for index, (label, x, y, width, height, area, density) in enumerate(candidates[:max_objects]):
+        component_mask = (labels == label).astype(np.uint8)
+        rectangular_alpha = density >= rect_density
+        objects.append({
+            'id': f'object-{index + 1}',
+            'src': crop_object_from_mask(rgb, component_mask, (x, y, width, height), rectangular_alpha),
+            'bbox': [float(x), float(y), float(width), float(height)],
+            'score': float(area / image_area),
+            'area': area,
+            'source': 'layout-split',
+        })
+
+    return {'sourceWidth': source_width, 'sourceHeight': source_height, 'objects': objects}
+
+
 def objects_response_from_rgba(rgba_image: Image.Image, source_width: int, source_height: int, options: Dict[str, Any], source: str) -> Dict[str, Any]:
     try:
         import cv2
@@ -380,6 +467,16 @@ def health():
 @app.post('/segment')
 def segment(request: SegmentRequest):
     image = decode_input_image(request.image)
+
+    if request.mode == 'objects' and not request.options.get('disableLayoutObjects'):
+        try:
+            return objects_response_from_layout(image, request.options or {})
+        except Exception as exc:
+            if request.options.get('failOnLayoutError'):
+                raise HTTPException(
+                    status_code=502,
+                    detail={'error': f'Layout splitter failed: {exc}', 'code': 'LAYOUT_OBJECTS_FAILED'},
+                ) from exc
 
     if request.mode == 'objects' and not request.options.get('disableRembgObjects'):
         try:
