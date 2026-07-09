@@ -1,0 +1,6 @@
+/* Hide failed Printlab auto-splitting experiments. Keep BG Remove alive. */
+.print-lab-canvas-tools > .button--primary,
+.print-lab-floating-toolbar button[title="Duplicate this image, then drag side handles to crop the copy into its own layer."],
+.print-lab-floating-toolbar__hint {
+  display: none !important;
+}
