@@ -78,3 +78,136 @@
   transform: none !important;
   line-height: 1.2 !important;
 }
+
+/* Targeted Printlab polish, not the previous CSS grenade.
+   This keeps the working layout, but makes Canvas mode less cramped and makes collapsed side panes actually collapse. */
+.print-lab-page--canvas-mode .print-lab-screen-header {
+  margin-bottom: 12px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-desk {
+  gap: 12px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-desk.is-source-collapsed {
+  grid-template-columns: 48px minmax(0, 1fr) minmax(210px, 250px) !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-desk.is-tools-collapsed {
+  grid-template-columns: minmax(210px, 250px) minmax(0, 1fr) 48px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-desk.is-source-collapsed.is-tools-collapsed {
+  grid-template-columns: 48px minmax(0, 1fr) 48px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-source-pane.is-collapsed,
+.print-lab-page--canvas-mode .print-lab-tool-panel.is-collapsed {
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  overflow: hidden !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-source-pane.is-collapsed .print-lab-pane-body,
+.print-lab-page--canvas-mode .print-lab-tool-panel.is-collapsed .print-lab-tool-scroll {
+  display: none !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-source-pane.is-collapsed .print-lab-pane-header,
+.print-lab-page--canvas-mode .print-lab-tool-panel.is-collapsed .print-lab-pane-header {
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 10px 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-source-pane.is-collapsed .print-lab-pane-header h2,
+.print-lab-page--canvas-mode .print-lab-tool-panel.is-collapsed .print-lab-pane-header h2,
+.print-lab-page--canvas-mode .print-lab-source-pane.is-collapsed .print-lab-pane-header span,
+.print-lab-page--canvas-mode .print-lab-tool-panel.is-collapsed .print-lab-pane-header span {
+  writing-mode: vertical-rl !important;
+  text-orientation: mixed !important;
+  overflow: visible !important;
+  max-width: 24px !important;
+  white-space: nowrap !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-source-pane.is-collapsed .print-lab-pane-toggle,
+.print-lab-page--canvas-mode .print-lab-tool-panel.is-collapsed .print-lab-pane-toggle {
+  min-width: 34px !important;
+  min-height: 34px !important;
+  padding: 5px !important;
+  writing-mode: vertical-rl !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-preview-wrap {
+  background: #111820 !important;
+  border-color: #27313b !important;
+  padding: 12px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-canvas-topbar {
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-canvas-topbar > div:not(.print-lab-canvas-zoombar) {
+  min-width: 104px !important;
+  padding: 9px 10px !important;
+  border-radius: 7px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-canvas-topbar span {
+  letter-spacing: 0.04em !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-canvas-zoombar {
+  gap: 4px !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-canvas-zoombar .button,
+.print-lab-page--canvas-mode .print-lab-canvas-zoombar button {
+  min-height: 30px !important;
+  min-width: 34px !important;
+  padding: 5px 8px !important;
+  font-size: 12px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-floating-toolbar {
+  border-radius: 8px !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22) !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-floating-toolbar label,
+.print-lab-page--canvas-mode .print-lab-floating-toolbar__segmented,
+.print-lab-page--canvas-mode .print-lab-floating-toolbar__color {
+  min-height: 34px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-floating-toolbar input,
+.print-lab-page--canvas-mode .print-lab-floating-toolbar select {
+  min-height: 34px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-floating-toolbar button {
+  min-height: 34px !important;
+  white-space: nowrap !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-canvas-stage,
+.print-lab-page--canvas-mode .print-lab-canvas-surface,
+.print-lab-page--canvas-mode .print-lab-canvas-block {
+  border-radius: 6px !important;
+}
+
+.print-lab-page--canvas-mode .print-lab-tool-scroll,
+.print-lab-page--canvas-mode .print-lab-pane-body {
+  scrollbar-width: thin;
+}
