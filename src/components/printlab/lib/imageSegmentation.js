@@ -351,7 +351,7 @@ export async function maskToTransparentPng(src, mask, bbox, sourceWidth, sourceH
 export async function requestSegmentation(src, mode, options = {}) {
   const endpoint = getSegmentationEndpoint()
   if (!endpoint || !globalThis.fetch) return null
-  const timeoutMs = Math.max(1000, Number(options.timeoutMs || 8000))
+  const timeoutMs = Math.max(1000, Number(options.timeoutMs || 120000))
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
   const timeout = controller ? globalThis.setTimeout(() => controller.abort(), timeoutMs) : null
   try {
