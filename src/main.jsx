@@ -22,6 +22,7 @@ import './audio-lab-shortcuts.css'
 import './audioLabKeyboardShortcuts.js'
 import './audioLabWorkspaceControls.js'
 import './audioLabTaskPages.js'
+import './audioLabTaskNavigationFix.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
