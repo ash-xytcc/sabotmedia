@@ -17,9 +17,11 @@ import './audio-lab-workspace.css'
 import './audio-lab-workspace-final.css'
 import './audio-lab-waveform-focus.css'
 import './audio-lab-professional-polish.css'
+import './audio-lab-task-pages.css'
 import './audio-lab-shortcuts.css'
 import './audioLabKeyboardShortcuts.js'
 import './audioLabWorkspaceControls.js'
+import './audioLabTaskPages.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
