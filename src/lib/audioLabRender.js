@@ -1,3 +1,5 @@
+import { applyAudioEffects, filterEffects } from './audioLabEffects'
+
 export function clampAudioTime(value, duration = 0) {
   const max = Math.max(0, Number(duration) || 0)
   const next = Number(value)
@@ -176,8 +178,52 @@ function addClipped(target, index, value) {
   target[index] = Math.max(-1, Math.min(1, (target[index] || 0) + value))
 }
 
+function renderEmptyStereo(length, sampleRate) {
+  return createBuffer(2, length, sampleRate)
+}
+
+function addMonoClipToStereo(targetBuffer, sourceBuffer, clip, gain = 1) {
+  const sampleRate = targetBuffer.sampleRate
+  const sourceStartFrame = Math.max(0, Math.floor(Number(clip.sourceStart || 0) * sourceBuffer.sampleRate))
+  const sourceEndFrame = Math.min(sourceBuffer.length, Math.ceil(Number(clip.sourceEnd || sourceBuffer.duration || 0) * sourceBuffer.sampleRate))
+  const targetStartFrame = Math.max(0, Math.floor(Number(clip.timelineStart || 0) * sampleRate))
+  const frameCount = Math.min(sourceEndFrame - sourceStartFrame, targetBuffer.length - targetStartFrame)
+  if (frameCount <= 0 || gain <= 0) return
+
+  const left = targetBuffer.getChannelData(0)
+  const right = targetBuffer.getChannelData(Math.min(1, targetBuffer.numberOfChannels - 1))
+
+  for (let index = 0; index < frameCount; index += 1) {
+    const sourceFrame = sourceStartFrame + index
+    const targetFrame = targetStartFrame + index
+    const mono = sourceBuffer.numberOfChannels === 1
+      ? getSourceSample(sourceBuffer, 0, sourceFrame)
+      : (getSourceSample(sourceBuffer, 0, sourceFrame) + getSourceSample(sourceBuffer, 1, sourceFrame)) / 2
+    addClipped(left, targetFrame, mono * gain)
+    addClipped(right, targetFrame, mono * gain)
+  }
+}
+
+function addTrackToMaster(masterBuffer, trackBuffer, track = {}) {
+  const trackGain = Math.max(0, Number(track.gain ?? 1))
+  const trackPan = Math.max(-1, Math.min(1, Number(track.pan || 0)))
+  const panLeft = trackPan <= 0 ? 1 : 1 - trackPan
+  const panRight = trackPan >= 0 ? 1 : 1 + trackPan
+  const masterLeft = masterBuffer.getChannelData(0)
+  const masterRight = masterBuffer.getChannelData(Math.min(1, masterBuffer.numberOfChannels - 1))
+  const trackLeft = trackBuffer.getChannelData(0)
+  const trackRight = trackBuffer.getChannelData(Math.min(1, trackBuffer.numberOfChannels - 1))
+  const length = Math.min(masterBuffer.length, trackBuffer.length)
+
+  for (let frame = 0; frame < length; frame += 1) {
+    addClipped(masterLeft, frame, trackLeft[frame] * trackGain * panLeft)
+    addClipped(masterRight, frame, trackRight[frame] * trackGain * panRight)
+  }
+}
+
 export function renderMultitrackMixdown(project = {}, sourceBuffers = new Map()) {
   const tracks = Array.isArray(project.tracks) ? project.tracks : []
+  const effects = Array.isArray(project.effects) ? project.effects : []
   const sampleRate = [...sourceBuffers.values()][0]?.sampleRate || 44100
   const soloActive = tracks.some((track) => track.solo)
   const projectDuration = computeProjectDuration(project)
@@ -185,53 +231,42 @@ export function renderMultitrackMixdown(project = {}, sourceBuffers = new Map())
   if (!tracks.length || projectDuration <= 0) {
     const asset = Array.isArray(project.sourceAssets) ? project.sourceAssets[0] : null
     const source = asset ? sourceBuffers.get(asset.id) : null
-    if (source) return renderAudioEditGraph(source, project.edits || [], asset.id)
+    if (source) {
+      const edited = renderAudioEditGraph(source, project.edits || [], asset.id)
+      return applyAudioEffects(edited, filterEffects(effects, 'master'))
+    }
     return createBuffer(2, sampleRate, sampleRate)
   }
 
   const length = Math.max(1, Math.ceil(projectDuration * sampleRate))
-  const mix = createBuffer(2, length, sampleRate)
-  const left = mix.getChannelData(0)
-  const right = mix.getChannelData(1)
+  const master = renderEmptyStereo(length, sampleRate)
 
   for (const track of tracks) {
     if (track.muted) continue
     if (soloActive && !track.solo) continue
 
-    const trackGain = Math.max(0, Number(track.gain ?? 1))
-    const trackPan = Math.max(-1, Math.min(1, Number(track.pan || 0)))
-    const panLeft = trackPan <= 0 ? 1 : 1 - trackPan
-    const panRight = trackPan >= 0 ? 1 : 1 + trackPan
+    let trackBuffer = renderEmptyStereo(length, sampleRate)
 
     for (const clip of Array.isArray(track.clips) ? track.clips : []) {
       if (clip.muted) continue
       const rawBuffer = sourceBuffers.get(String(clip.assetId || ''))
       if (!rawBuffer) continue
 
-      const sourceBuffer = renderAudioEditGraph(rawBuffer, project.edits || [], clip.assetId)
-      const sourceStartFrame = Math.max(0, Math.floor(Number(clip.sourceStart || 0) * sourceBuffer.sampleRate))
-      const sourceEndFrame = Math.min(sourceBuffer.length, Math.ceil(Number(clip.sourceEnd || sourceBuffer.duration || 0) * sourceBuffer.sampleRate))
-      const targetStartFrame = Math.max(0, Math.floor(Number(clip.timelineStart || 0) * sampleRate))
-      const frameCount = Math.min(sourceEndFrame - sourceStartFrame, mix.length - targetStartFrame)
-      const clipGain = Math.max(0, Number(clip.gain ?? 1))
-      const totalGain = trackGain * clipGain
-
-      if (frameCount <= 0 || totalGain <= 0) continue
-
-      for (let index = 0; index < frameCount; index += 1) {
-        const sourceFrame = sourceStartFrame + index
-        const targetFrame = targetStartFrame + index
-        const mono = sourceBuffer.numberOfChannels === 1
-          ? getSourceSample(sourceBuffer, 0, sourceFrame)
-          : (getSourceSample(sourceBuffer, 0, sourceFrame) + getSourceSample(sourceBuffer, 1, sourceFrame)) / 2
-
-        addClipped(left, targetFrame, mono * totalGain * panLeft)
-        addClipped(right, targetFrame, mono * totalGain * panRight)
-      }
+      const editedSource = renderAudioEditGraph(rawBuffer, project.edits || [], clip.assetId)
+      const clipEffects = filterEffects(effects, 'clip', { trackId: track.id, clipId: clip.id, assetId: clip.assetId })
+      const sourceBuffer = clipEffects.length ? applyAudioEffects(editedSource, clipEffects) : editedSource
+      addMonoClipToStereo(trackBuffer, sourceBuffer, clip, Math.max(0, Number(clip.gain ?? 1)))
     }
+
+    const trackEffects = filterEffects(effects, 'track', { trackId: track.id })
+    if (trackEffects.length) trackBuffer = applyAudioEffects(trackBuffer, trackEffects)
+    addTrackToMaster(master, trackBuffer, track)
   }
 
-  return mix
+  const selectionEffects = filterEffects(effects, 'selection')
+  const masterEffects = filterEffects(effects, 'master')
+  const fullChain = [...selectionEffects, ...masterEffects]
+  return fullChain.length ? applyAudioEffects(master, fullChain) : master
 }
 
 export function encodeWav(audioBuffer) {
