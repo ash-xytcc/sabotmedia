@@ -15,6 +15,15 @@ import {
   slugifyAudioLab,
 } from '../lib/audioLabStore'
 import {
+  clampAudioTime,
+  encodeWav,
+  getEditsForAsset,
+  makeAudioDownloadName,
+  makeAudioEditOperation,
+  normalizeAudioSelection,
+  renderAudioEditGraph,
+} from '../lib/audioLabRender'
+import {
   createEmptyNativeEntry,
   loadNativeCollection,
   upsertNativeEntryWithMeta,
@@ -150,8 +159,35 @@ function getRecordingStatusLabel(status = '') {
   }[status] || 'Idle'
 }
 
-function WaveformCanvas({ peaks, duration, currentTime, onSeek, isLoading }) {
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
+function WaveformCanvas({
+  peaks,
+  duration,
+  currentTime,
+  selectionStart,
+  selectionEnd,
+  onSeek,
+  onSelectionChange,
+  isLoading,
+}) {
   const canvasRef = useRef(null)
+  const dragRef = useRef(null)
+
+  function timeFromEvent(event) {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const pct = (event.clientX - rect.left) / Math.max(1, rect.width)
+    return clampAudioTime(pct * (duration || 0), duration || 0)
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -190,7 +226,7 @@ function WaveformCanvas({ peaks, duration, currentTime, onSeek, isLoading }) {
         context.fillStyle = 'rgba(255,255,255,0.72)'
         context.font = '600 14px system-ui, sans-serif'
         context.textAlign = 'center'
-        context.fillText(isLoading ? 'Decoding waveform…' : 'Import or record audio to generate waveform', width / 2, mid)
+        context.fillText(isLoading ? 'Rendering waveform…' : 'Import or record audio to generate waveform', width / 2, mid)
         return
       }
 
@@ -201,6 +237,22 @@ function WaveformCanvas({ peaks, duration, currentTime, onSeek, isLoading }) {
         const barHeight = Math.max(1, peak * usable * 0.5)
         context.fillRect(x, mid - barHeight, Math.max(1, barWidth * 0.72), barHeight * 2)
       })
+
+      const selection = normalizeAudioSelection(selectionStart, selectionEnd, duration)
+      if (selection.hasSelection) {
+        const x1 = (selection.start / Math.max(1, duration || 1)) * width
+        const x2 = (selection.end / Math.max(1, duration || 1)) * width
+        context.fillStyle = 'rgba(240, 195, 60, 0.22)'
+        context.fillRect(x1, 0, Math.max(2, x2 - x1), height)
+        context.strokeStyle = 'rgba(240, 195, 60, 0.88)'
+        context.lineWidth = 1
+        context.beginPath()
+        context.moveTo(x1, 0)
+        context.lineTo(x1, height)
+        context.moveTo(x2, 0)
+        context.lineTo(x2, height)
+        context.stroke()
+      }
 
       const progress = duration ? Math.max(0, Math.min(1, currentTime / duration)) : 0
       const progressX = progress * width
@@ -223,7 +275,7 @@ function WaveformCanvas({ peaks, duration, currentTime, onSeek, isLoading }) {
       window.cancelAnimationFrame(frame)
       window.removeEventListener('resize', draw)
     }
-  }, [peaks, duration, currentTime, isLoading])
+  }, [peaks, duration, currentTime, selectionStart, selectionEnd, isLoading])
 
   return (
     <canvas
@@ -231,11 +283,33 @@ function WaveformCanvas({ peaks, duration, currentTime, onSeek, isLoading }) {
       className="audio-lab-waveform"
       role="img"
       aria-label="Audio waveform timeline"
-      onClick={(event) => {
-        if (!duration || typeof onSeek !== 'function') return
-        const rect = event.currentTarget.getBoundingClientRect()
-        const pct = (event.clientX - rect.left) / Math.max(1, rect.width)
-        onSeek(Math.max(0, Math.min(duration, pct * duration)))
+      onPointerDown={(event) => {
+        if (!duration) return
+        event.currentTarget.setPointerCapture?.(event.pointerId)
+        const start = timeFromEvent(event)
+        dragRef.current = { start, moved: false }
+        onSelectionChange?.(start, start)
+      }}
+      onPointerMove={(event) => {
+        if (!dragRef.current || !duration) return
+        const next = timeFromEvent(event)
+        if (Math.abs(next - dragRef.current.start) > 0.03) dragRef.current.moved = true
+        onSelectionChange?.(dragRef.current.start, next)
+      }}
+      onPointerUp={(event) => {
+        if (!dragRef.current || !duration) return
+        const drag = dragRef.current
+        const end = timeFromEvent(event)
+        dragRef.current = null
+        event.currentTarget.releasePointerCapture?.(event.pointerId)
+
+        if (!drag.moved || Math.abs(end - drag.start) < 0.03) {
+          onSelectionChange?.(0, 0)
+          onSeek?.(drag.start)
+          return
+        }
+
+        onSelectionChange?.(drag.start, end)
       }}
     />
   )
@@ -265,7 +339,7 @@ function ProjectSidebar({ projects, activeProjectId, onNewProject, onOpenProject
             <small>{shortDate(project.updatedAt)}</small>
           </button>
         )) : (
-          <p className="audio-lab-empty">No projects yet. Import a file or create a new project.</p>
+          <p className="audio-lab-empty">No projects yet. Import, record, or create a new project.</p>
         )}
       </div>
     </aside>
@@ -312,7 +386,72 @@ function RecordPanel({
       </div>
 
       {!canRecord ? <p className="description audio-lab-record-warning">This browser does not support MediaRecorder microphone capture.</p> : null}
-      <p className="description audio-lab-record-local-note">Recordings are saved locally in this browser for now. Server upload/export comes later, because apparently audio files like being heavy little bricks.</p>
+      <p className="description audio-lab-record-local-note">Recordings are saved locally in this browser for now. Server upload/export comes later, because audio files like being heavy little bricks.</p>
+    </section>
+  )
+}
+
+function SelectionToolbar({
+  selection,
+  duration,
+  edits,
+  redoStack,
+  isRendering,
+  hasAudio,
+  onSelectionChange,
+  onClear,
+  onSelectAll,
+  onEdit,
+  onUndo,
+  onRedo,
+  onExport,
+}) {
+  const hasSelection = selection.hasSelection
+
+  return (
+    <section className="audio-lab-selection-toolbar" aria-label="Single-track edit controls">
+      <div className="audio-lab-selection-readout">
+        <label>
+          <span>Start</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={selection.start.toFixed(2)}
+            disabled={!hasAudio}
+            onChange={(event) => onSelectionChange(Number(event.target.value), selection.end)}
+          />
+        </label>
+        <label>
+          <span>End</span>
+          <input
+            type="number"
+            min="0"
+            max={duration || 0}
+            step="0.01"
+            value={selection.end.toFixed(2)}
+            disabled={!hasAudio}
+            onChange={(event) => onSelectionChange(selection.start, Number(event.target.value))}
+          />
+        </label>
+        <div className="audio-lab-selection-duration">
+          <span>Duration</span>
+          <strong>{formatAudioLabDuration(selection.duration)}</strong>
+        </div>
+      </div>
+
+      <div className="audio-lab-edit-actions">
+        <button type="button" className="button" onClick={onSelectAll} disabled={!hasAudio}>Select All</button>
+        <button type="button" className="button" onClick={onClear} disabled={!hasAudio}>Clear Selection</button>
+        <button type="button" className="button" onClick={() => onEdit('trim')} disabled={!hasSelection || isRendering}>Trim</button>
+        <button type="button" className="button" onClick={() => onEdit('delete')} disabled={!hasSelection || isRendering}>Delete</button>
+        <button type="button" className="button" onClick={() => onEdit('silence')} disabled={!hasSelection || isRendering}>Silence</button>
+        <button type="button" className="button" onClick={onUndo} disabled={!edits.length || isRendering}>Undo</button>
+        <button type="button" className="button" onClick={onRedo} disabled={!redoStack.length || isRendering}>Redo</button>
+        <button type="button" className="button button--primary" onClick={onExport} disabled={!hasAudio || isRendering}>Export WAV</button>
+      </div>
+
+      <p className="description audio-lab-edit-note">Edits are non-destructive. Original source is preserved. The preview is rendered from JSON edit operations, because eating the master file would be barbarism with a progress bar.</p>
     </section>
   )
 }
@@ -338,14 +477,18 @@ export function AudioLabPage() {
   const [peaks, setPeaks] = useState([])
   const [duration, setDuration] = useState(0)
   const [currentTime, setCurrentTime] = useState(0)
+  const [selectionRange, setSelectionRange] = useState({ start: 0, end: 0 })
+  const [sourceBuffer, setSourceBuffer] = useState(null)
+  const [renderedBuffer, setRenderedBuffer] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isDecoding, setIsDecoding] = useState(false)
+  const [isRendering, setIsRendering] = useState(false)
   const [recordStatus, setRecordStatus] = useState('idle')
   const [recordElapsed, setRecordElapsed] = useState(0)
   const [recordLevel, setRecordLevel] = useState(0)
   const [recordMimeType, setRecordMimeType] = useState('')
   const [canPauseRecording, setCanPauseRecording] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('AudioLab Phase 2 is ready. Import audio or record a native take to start a project.')
+  const [statusMessage, setStatusMessage] = useState('AudioLab Phase 3 is ready. Import, record, select, edit, and export a single track.')
   const [errorMessage, setErrorMessage] = useState('')
 
   const recorderSupported = canUseRecorder()
@@ -364,6 +507,10 @@ export function AudioLabPage() {
         setActiveProject(project)
         activeProjectRef.current = project
         setSelectedAssetId(project.episode?.audioAssetId || project.sourceAssets?.[0]?.id || '')
+        setSelectionRange({
+          start: Number(project.transport?.selectionStart || 0),
+          end: Number(project.transport?.selectionEnd || 0),
+        })
       }
       return
     }
@@ -373,6 +520,10 @@ export function AudioLabPage() {
       setActiveProject(project)
       activeProjectRef.current = project
       setSelectedAssetId(project?.episode?.audioAssetId || project?.sourceAssets?.[0]?.id || '')
+      setSelectionRange({
+        start: Number(project?.transport?.selectionStart || 0),
+        end: Number(project?.transport?.selectionEnd || 0),
+      })
     }
   }
 
@@ -408,6 +559,17 @@ export function AudioLabPage() {
     return activeProject.sourceAssets.find((asset) => asset.id === selectedAssetId) || activeProject.sourceAssets[0]
   }, [activeProject, selectedAssetId])
 
+  const selectedEdits = useMemo(
+    () => getEditsForAsset(activeProject?.edits || [], selectedAsset?.id || ''),
+    [activeProject?.edits, selectedAsset?.id]
+  )
+  const selectedRedoStack = useMemo(
+    () => getEditsForAsset(activeProject?.redoStack || [], selectedAsset?.id || ''),
+    [activeProject?.redoStack, selectedAsset?.id]
+  )
+  const editSignature = useMemo(() => JSON.stringify(selectedEdits), [selectedEdits])
+  const selection = normalizeAudioSelection(selectionRange.start, selectionRange.end, duration)
+
   useEffect(() => {
     let cancelled = false
     let objectUrl = ''
@@ -417,32 +579,70 @@ export function AudioLabPage() {
       setIsPlaying(false)
       setPeaks([])
       setAudioUrl('')
+      setSourceBuffer(null)
+      setRenderedBuffer(null)
       setDuration(selectedAsset?.duration || 0)
 
       if (!selectedAsset?.id) return
 
       try {
         setIsDecoding(true)
+        setIsRendering(Boolean(selectedEdits.length))
         setErrorMessage('')
         const stored = await getAudioLabAsset(selectedAsset.id)
         const blob = stored?.blob
         if (!blob) throw new Error('The original audio blob is missing from local AudioLab storage')
 
-        objectUrl = URL.createObjectURL(blob)
         const decoded = await decodeAudioBlob(blob)
-        const nextPeaks = buildWaveformPeaks(decoded)
+        let rendered = decoded
+        let playbackBlob = blob
+
+        if (selectedEdits.length) {
+          rendered = renderAudioEditGraph(decoded, selectedEdits, selectedAsset.id)
+          playbackBlob = encodeWav(rendered)
+        }
+
+        objectUrl = URL.createObjectURL(playbackBlob)
+        const nextPeaks = buildWaveformPeaks(rendered)
 
         if (cancelled) return
         setAudioUrl(objectUrl)
+        setSourceBuffer(decoded)
+        setRenderedBuffer(rendered)
         setPeaks(nextPeaks)
-        setDuration(decoded.duration || selectedAsset.duration || 0)
-        setStatusMessage(`Loaded ${selectedAsset.filename}. Original source preserved. Edits are project JSON only.`)
+        setDuration(rendered.duration || 0)
+        setSelectionRange((range) => ({
+          start: clampAudioTime(range.start, rendered.duration || 0),
+          end: clampAudioTime(range.end, rendered.duration || 0),
+        }))
+        setStatusMessage(selectedEdits.length
+          ? `Rendered ${selectedEdits.length} edit operation${selectedEdits.length === 1 ? '' : 's'} for ${selectedAsset.filename}.`
+          : `Loaded ${selectedAsset.filename}. Original source preserved. Edits are project JSON only.`)
       } catch (error) {
         if (!cancelled) {
-          setErrorMessage(error.message || 'Unable to decode audio')
+          setErrorMessage(error.message || 'Unable to decode or render audio')
+          try {
+            const stored = await getAudioLabAsset(selectedAsset.id)
+            if (stored?.blob) {
+              const fallbackUrl = URL.createObjectURL(stored.blob)
+              objectUrl = fallbackUrl
+              const decoded = await decodeAudioBlob(stored.blob)
+              setAudioUrl(fallbackUrl)
+              setSourceBuffer(decoded)
+              setRenderedBuffer(decoded)
+              setPeaks(buildWaveformPeaks(decoded))
+              setDuration(decoded.duration || selectedAsset.duration || 0)
+              setStatusMessage('Preview rendering failed. Falling back to original playback until the edit graph is fixed.')
+            }
+          } catch {
+            // leave the first error visible
+          }
         }
       } finally {
-        if (!cancelled) setIsDecoding(false)
+        if (!cancelled) {
+          setIsDecoding(false)
+          setIsRendering(false)
+        }
       }
     }
 
@@ -452,7 +652,7 @@ export function AudioLabPage() {
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [selectedAsset?.id])
+  }, [selectedAsset?.id, editSignature])
 
   function stopInputMeter() {
     if (recordingAnimationRef.current) {
@@ -536,6 +736,7 @@ export function AudioLabPage() {
     setActiveProject(project)
     activeProjectRef.current = project
     setSelectedAssetId('')
+    setSelectionRange({ start: 0, end: 0 })
     setStatusMessage('New AudioLab project created. Import or record an audio source to build the waveform.')
     await refreshProjects(project.id)
   }
@@ -546,6 +747,10 @@ export function AudioLabPage() {
     setActiveProject(project)
     activeProjectRef.current = project
     setSelectedAssetId(project.episode?.audioAssetId || project.sourceAssets?.[0]?.id || '')
+    setSelectionRange({
+      start: Number(project.transport?.selectionStart || 0),
+      end: Number(project.transport?.selectionEnd || 0),
+    })
     setStatusMessage(`Opened ${project.title || 'AudioLab project'}.`)
   }
 
@@ -559,6 +764,26 @@ export function AudioLabPage() {
     return saved
   }
 
+  function updateActiveProject(nextProject) {
+    setActiveProject(nextProject)
+    activeProjectRef.current = nextProject
+  }
+
+  function updateSelection(start, end) {
+    const next = normalizeAudioSelection(start, end, duration)
+    setSelectionRange({ start: next.start, end: next.end })
+
+    if (!activeProjectRef.current) return
+    updateActiveProject({
+      ...activeProjectRef.current,
+      transport: {
+        ...(activeProjectRef.current.transport || {}),
+        selectionStart: next.start,
+        selectionEnd: next.end,
+      },
+    })
+  }
+
   async function attachAssetToProject(asset, decoded, sourceLabel = 'Imported') {
     const baseProject = activeProjectRef.current || createEmptyAudioLabProject({ title: asset.title })
     const title = baseProject.title === 'Untitled AudioLab Project' ? asset.title : baseProject.title
@@ -568,6 +793,12 @@ export function AudioLabPage() {
       sourceAssets: [asset, ...(baseProject.sourceAssets || []).filter((item) => item.id !== asset.id)],
       tracks: makeSingleTrackForAsset(asset),
       edits: Array.isArray(baseProject.edits) ? baseProject.edits : [],
+      redoStack: [],
+      transport: {
+        ...(baseProject.transport || {}),
+        selectionStart: 0,
+        selectionEnd: 0,
+      },
       episode: {
         ...(baseProject.episode || {}),
         title: baseProject.episode?.title && baseProject.episode.title !== 'Untitled AudioLab Project' ? baseProject.episode.title : title,
@@ -580,6 +811,9 @@ export function AudioLabPage() {
     setActiveProject(saved)
     activeProjectRef.current = saved
     setSelectedAssetId(asset.id)
+    setSelectionRange({ start: 0, end: 0 })
+    setSourceBuffer(decoded)
+    setRenderedBuffer(decoded)
     setPeaks(buildWaveformPeaks(decoded))
     setDuration(decoded.duration || asset.duration || 0)
     setCurrentTime(0)
@@ -768,7 +1002,7 @@ export function AudioLabPage() {
   }
 
   function handleSeek(value) {
-    const nextTime = Math.max(0, Math.min(duration || 0, Number(value) || 0))
+    const nextTime = clampAudioTime(value, duration || 0)
     if (audioRef.current) audioRef.current.currentTime = nextTime
     setCurrentTime(nextTime)
   }
@@ -776,8 +1010,7 @@ export function AudioLabPage() {
   function updateProjectFields(fields) {
     if (!activeProject) return
     const nextProject = { ...activeProject, ...fields }
-    setActiveProject(nextProject)
-    activeProjectRef.current = nextProject
+    updateActiveProject(nextProject)
   }
 
   function updateEpisodeFields(fields) {
@@ -792,8 +1025,81 @@ export function AudioLabPage() {
     }
 
     const nextProject = { ...activeProject, episode: nextEpisode }
-    setActiveProject(nextProject)
-    activeProjectRef.current = nextProject
+    updateActiveProject(nextProject)
+  }
+
+  function handleEdit(type) {
+    if (!activeProjectRef.current || !selectedAsset?.id || !selection.hasSelection) return
+    const edit = makeAudioEditOperation(type, selectedAsset.id, selection.start, selection.end)
+    const nextProject = {
+      ...activeProjectRef.current,
+      edits: [...(activeProjectRef.current.edits || []), edit],
+      redoStack: [],
+      transport: {
+        ...(activeProjectRef.current.transport || {}),
+        selectionStart: 0,
+        selectionEnd: 0,
+      },
+    }
+
+    setSelectionRange({ start: 0, end: 0 })
+    updateActiveProject(nextProject)
+    setStatusMessage(`${type[0].toUpperCase()}${type.slice(1)} operation added. Preview re-rendering from the original source.`)
+  }
+
+  function handleUndo() {
+    const project = activeProjectRef.current
+    if (!project?.edits?.length) return
+    const edits = [...project.edits]
+    const last = edits.pop()
+    const nextProject = {
+      ...project,
+      edits,
+      redoStack: [last, ...(project.redoStack || [])],
+    }
+    updateActiveProject(nextProject)
+    setStatusMessage('Undo applied. Preview re-rendering from the edit graph.')
+  }
+
+  function handleRedo() {
+    const project = activeProjectRef.current
+    if (!project?.redoStack?.length) return
+    const redoStack = [...project.redoStack]
+    const next = redoStack.shift()
+    const nextProject = {
+      ...project,
+      edits: [...(project.edits || []), next],
+      redoStack,
+    }
+    updateActiveProject(nextProject)
+    setStatusMessage('Redo applied. Preview re-rendering from the edit graph.')
+  }
+
+  async function handleExportWav() {
+    if (!selectedAsset?.id) return
+
+    try {
+      setErrorMessage('')
+      setIsRendering(true)
+      setStatusMessage('Rendering WAV export from non-destructive edit graph…')
+
+      let buffer = renderedBuffer
+      if (!buffer) {
+        const stored = await getAudioLabAsset(selectedAsset.id)
+        if (!stored?.blob) throw new Error('Original source blob is missing')
+        const decoded = await decodeAudioBlob(stored.blob)
+        buffer = renderAudioEditGraph(decoded, selectedEdits, selectedAsset.id)
+      }
+
+      const wav = encodeWav(buffer)
+      const filename = makeAudioDownloadName(activeProject?.title || selectedAsset.title || 'audiolab-export', 'wav')
+      downloadBlob(wav, filename)
+      setStatusMessage(`Exported ${filename}. Original source remains untouched.`)
+    } catch (error) {
+      setErrorMessage(error.message || 'Unable to export WAV')
+    } finally {
+      setIsRendering(false)
+    }
   }
 
   async function handleCreateEpisodeDraft() {
@@ -826,7 +1132,7 @@ export function AudioLabPage() {
         sourceLabel: 'AudioLab project',
         sourceExternalId: project.id,
         sourcePostId: project.id,
-        podcastDuration: formatAudioLabDuration(asset?.duration || duration || 0),
+        podcastDuration: formatAudioLabDuration(duration || asset?.duration || 0),
         podcastSummary: description,
         relatedAssets: [
           {
@@ -834,9 +1140,10 @@ export function AudioLabPage() {
             projectId: project.id,
             assetId: asset?.id || '',
             filename: asset?.filename || '',
-            duration: asset?.duration || duration || 0,
+            duration: duration || asset?.duration || 0,
             source: asset?.source || '',
-            note: 'Audio source is preserved in local AudioLab IndexedDB storage until an export/upload pipeline is added.',
+            edits: selectedEdits.length,
+            note: 'Audio source is preserved in local AudioLab IndexedDB storage. Phase 3 can export a local edited WAV, but server upload is not added yet.',
           },
         ],
       }
@@ -869,6 +1176,7 @@ export function AudioLabPage() {
   const episodeEditLink = activeProject?.episode?.nativeEntryId
     ? `${adminRoutes.nativeBridge}?edit=${encodeURIComponent(activeProject.episode.nativeEntryId)}`
     : `${adminRoutes.nativeBridge}?new=podcast`
+  const isBusyRendering = isDecoding || isRendering
 
   return (
     <AdminFrame>
@@ -877,7 +1185,7 @@ export function AudioLabPage() {
           <div>
             <p className="audio-lab-eyebrow">Native SabotPress audio desk</p>
             <h1>AudioLab</h1>
-            <p className="description">Phase 2: import, native browser recording, waveform rendering, playback transport, local project save/reopen, and episode draft attachment.</p>
+            <p className="description">Phase 3: import, record, waveform selection, non-destructive single-track edits, rendered preview, WAV export, and episode draft attachment.</p>
           </div>
           <div className="review-card__actions">
             <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Import Audio</button>
@@ -912,7 +1220,13 @@ export function AudioLabPage() {
               <div className="audio-lab-source-picker">
                 <span>Source</span>
                 {activeProject?.sourceAssets?.length ? (
-                  <select value={selectedAsset?.id || ''} onChange={(event) => setSelectedAssetId(event.target.value)}>
+                  <select
+                    value={selectedAsset?.id || ''}
+                    onChange={(event) => {
+                      setSelectedAssetId(event.target.value)
+                      updateSelection(0, 0)
+                    }}
+                  >
                     {activeProject.sourceAssets.map((asset) => (
                       <option key={asset.id} value={asset.id}>{asset.filename}</option>
                     ))}
@@ -936,8 +1250,24 @@ export function AudioLabPage() {
               onStop={handleStopRecording}
             />
 
+            <SelectionToolbar
+              selection={selection}
+              duration={duration}
+              edits={selectedEdits}
+              redoStack={selectedRedoStack}
+              isRendering={isBusyRendering}
+              hasAudio={Boolean(selectedAsset)}
+              onSelectionChange={updateSelection}
+              onClear={() => updateSelection(0, 0)}
+              onSelectAll={() => updateSelection(0, duration || 0)}
+              onEdit={handleEdit}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onExport={handleExportWav}
+            />
+
             <div className="audio-lab-transport" aria-label="Playback transport">
-              <button type="button" className="button button--primary audio-lab-play" onClick={handleTransportToggle} disabled={!audioUrl}>
+              <button type="button" className="button button--primary audio-lab-play" onClick={handleTransportToggle} disabled={!audioUrl || isBusyRendering}>
                 {isPlaying ? 'Pause' : 'Play'}
               </button>
               <button type="button" className="button" onClick={() => handleSeek(0)} disabled={!audioUrl}>Stop</button>
@@ -968,9 +1298,19 @@ export function AudioLabPage() {
                 <div className="audio-lab-track-controls">
                   <strong>{track?.name || 'Main Track'}</strong>
                   <span>{selectedAsset?.mimeType || 'No source'}</span>
-                  <small>{selectedAsset ? `${formatBytes(selectedAsset.size)} · ${formatAudioLabDuration(selectedAsset.duration || duration)} · ${selectedAsset.source || 'source'}` : 'Import or record audio'}</small>
+                  <small>{selectedAsset ? `${formatBytes(selectedAsset.size)} · ${formatAudioLabDuration(duration || selectedAsset.duration)} · ${selectedAsset.source || 'source'}` : 'Import or record audio'}</small>
+                  <small>{selectedEdits.length ? `${selectedEdits.length} edit${selectedEdits.length === 1 ? '' : 's'} active` : 'No edits'}</small>
                 </div>
-                <WaveformCanvas peaks={peaks} duration={duration} currentTime={currentTime} isLoading={isDecoding} onSeek={handleSeek} />
+                <WaveformCanvas
+                  peaks={peaks}
+                  duration={duration}
+                  currentTime={currentTime}
+                  selectionStart={selection.start}
+                  selectionEnd={selection.end}
+                  isLoading={isBusyRendering}
+                  onSeek={handleSeek}
+                  onSelectionChange={updateSelection}
+                />
               </div>
             </div>
 
@@ -995,8 +1335,26 @@ export function AudioLabPage() {
                 <div><dt>Sources</dt><dd>{activeProject?.sourceAssets?.length || 0}</dd></div>
                 <div><dt>Tracks</dt><dd>{activeProject?.tracks?.length || 0}</dd></div>
                 <div><dt>Edits</dt><dd>{activeProject?.edits?.length || 0}</dd></div>
+                <div><dt>Redo</dt><dd>{activeProject?.redoStack?.length || 0}</dd></div>
               </dl>
-              <p className="description">Phase 2 still does not destructively edit audio. Imported files and recorded takes stay in IndexedDB. The project stores references, timeline data, and future edit operations as JSON. Sensible for once.</p>
+              <p className="description">Phase 3 edits audio non-destructively. Imported files and recorded takes stay in IndexedDB. Delete, silence, and trim are stored as JSON operations and rendered into the preview/export only.</p>
+            </section>
+
+            <section className="audio-lab-panel audio-lab-edit-log">
+              <p className="audio-lab-eyebrow">Edit graph</p>
+              <h2>Single-track operations</h2>
+              {selectedEdits.length ? (
+                <ol>
+                  {selectedEdits.map((edit) => (
+                    <li key={edit.id}>
+                      <strong>{edit.type}</strong>
+                      <span>{formatAudioLabDuration(edit.start)} to {formatAudioLabDuration(edit.end)}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="description">No edits on this source yet.</p>
+              )}
             </section>
 
             <section className="audio-lab-panel">
