@@ -51,7 +51,7 @@ function itemXml(item, origin) {
   const pubDate = new Date(item.publishedAt || item.updatedAt || item.createdAt || Date.now()).toUTCString()
   const description = item.podcastSummary || item.excerpt || stripHtml(item.bodyHtml || item.body || '')
   const duration = String(item.podcastDuration || '').trim()
-  const explicit = item.podcastExplicit ? 'yes' : 'no'
+  const explicit = getExplicit(item) ? 'yes' : 'no'
 
   return `    <item>
       <title>${escapeXml(item.title || 'Untitled episode')}</title>
@@ -65,7 +65,9 @@ ${duration ? `      <itunes:duration>${escapeXml(duration)}</itunes:duration>\n`
 }
 
 function getAudioUrl(item = {}) {
-  return String(item.podcastRssEnclosureUrl || item.podcastAudioUrl || item.audioSourceUrl || '').trim()
+  const url = String(item.podcastRssEnclosureUrl || item.podcastAudioUrl || item.audioSourceUrl || '').trim()
+  if (!url || url.startsWith('audiolab-local://')) return ''
+  return url
 }
 
 function getMimeType(item = {}) {
@@ -78,6 +80,12 @@ function getFileSize(item = {}) {
   if (item.podcastFileSize) return Number(item.podcastFileSize || 0)
   const asset = getAudioAsset(item)
   return Number(asset?.size || asset?.length || 0)
+}
+
+function getExplicit(item = {}) {
+  if (typeof item.podcastExplicit === 'boolean') return item.podcastExplicit
+  const asset = getAudioAsset(item)
+  return Boolean(asset?.explicit || asset?.rssEnclosure?.explicit)
 }
 
 function getAudioAsset(item = {}) {
