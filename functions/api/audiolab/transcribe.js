@@ -154,21 +154,71 @@ function getProviderDiagnostics(context) {
 
 async function transcribeWithWorkersAi(context, { bytes, language, prompt }, workersAi = getWorkersAiBinding(context)) {
   const model = String(context.env?.SABOT_TRANSCRIPTION_MODEL || '@cf/openai/whisper-large-v3-turbo')
-  const audio = Array.from(new Uint8Array(bytes))
-  const payload = { audio }
-  if (language) payload.language = language
-  if (prompt) payload.prompt = prompt
-  const result = await workersAi.run(model, payload)
-  return {
-    provider: 'cloudflare-workers-ai',
-    engine: model,
-    raw: result,
-    text: result?.text || result?.transcription || '',
-    language: result?.language || language || '',
-    segments: result?.segments || result?.chunks || [],
-    words: result?.words || [],
-    vtt: result?.vtt || '',
+  const common = makeWorkersAiCommonInput({ language, prompt })
+  const attempts = makeWorkersAiAudioPayloads(bytes)
+  const errors = []
+
+  for (const attempt of attempts) {
+    try {
+      const payload = { ...common, audio: attempt.audio() }
+      const result = await workersAi.run(model, payload)
+      return {
+        provider: 'cloudflare-workers-ai',
+        engine: model,
+        transport: attempt.label,
+        raw: result,
+        text: result?.text || result?.transcription || result?.transcription_info?.text || '',
+        language: result?.language || result?.transcription_info?.language || language || '',
+        segments: result?.segments || result?.chunks || result?.transcription_info?.segments || [],
+        words: result?.words || [],
+        vtt: result?.vtt || '',
+      }
+    } catch (error) {
+      errors.push(`${attempt.label}: ${String(error?.message || error).slice(0, 500)}`)
+    }
   }
+
+  throw new Error(`Cloudflare Workers AI transcription failed for all supported audio payload formats. ${errors.join(' | ')}`)
+}
+
+function makeWorkersAiCommonInput({ language = '', prompt = '' } = {}) {
+  const input = { task: 'transcribe' }
+  if (language) input.language = language
+  if (prompt) input.initial_prompt = prompt
+  return input
+}
+
+function makeWorkersAiAudioPayloads(bytes) {
+  const buffer = bytes instanceof ArrayBuffer ? bytes : bytes?.buffer
+  return [
+    {
+      label: 'arraybuffer-binary',
+      audio: () => buffer,
+    },
+    {
+      label: 'uint8array-binary',
+      audio: () => new Uint8Array(buffer),
+    },
+    {
+      label: 'number-array',
+      audio: () => Array.from(new Uint8Array(buffer)),
+    },
+    {
+      label: 'base64-string',
+      audio: () => arrayBufferToBase64(buffer),
+    },
+  ]
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  const chunkSize = 0x8000
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.subarray(index, index + chunkSize)
+    binary += String.fromCharCode(...chunk)
+  }
+  return btoa(binary)
 }
 
 async function transcribeWithOpenAi(context, { bytes, mimeType, filename, language, prompt }) {
@@ -214,6 +264,7 @@ function normalizeTranscriptResult(result = {}, fallback = {}) {
     language: String(result.language || raw.language || fallback.language || ''),
     provider: String(result.provider || ''),
     engine: String(result.engine || ''),
+    transport: String(result.transport || ''),
     filename: String(fallback.filename || ''),
     mimeType: String(fallback.mimeType || ''),
     generatedAt: new Date().toISOString(),
