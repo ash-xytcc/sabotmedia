@@ -17,11 +17,27 @@ export async function onRequestOptions() {
   return new Response(null, {
     status: 204,
     headers: {
-      allow: 'POST,OPTIONS',
-      'access-control-allow-methods': 'POST,OPTIONS',
+      allow: 'GET,POST,OPTIONS',
+      'access-control-allow-methods': 'GET,POST,OPTIONS',
       'access-control-allow-headers': 'content-type',
     },
   })
+}
+
+export async function onRequestGet(context) {
+  try {
+    const permission = await resolvePublicSitePermission(context)
+    if (!permission.canEdit) {
+      return json({ ok: false, error: permission.reason || 'valid session required', canEdit: false }, 403)
+    }
+
+    return json({
+      ok: true,
+      diagnostics: getProviderDiagnostics(context),
+    })
+  } catch (error) {
+    return json({ ok: false, error: String(error?.message || error) }, 500)
+  }
 }
 
 export async function onRequestPost(context) {
@@ -53,6 +69,7 @@ export async function onRequestPost(context) {
 
     return json({
       ok: true,
+      diagnostics: getProviderDiagnostics(context),
       transcript: normalizeTranscriptResult(result, {
         filename,
         mimeType,
@@ -60,7 +77,7 @@ export async function onRequestPost(context) {
       }),
     })
   } catch (error) {
-    return json({ ok: false, error: String(error?.message || error) }, 500)
+    return json({ ok: false, error: String(error?.message || error), diagnostics: getProviderDiagnostics(context) }, 500)
   }
 }
 
@@ -91,9 +108,10 @@ async function resolveAudioSource(context, form) {
 }
 
 async function transcribeAudio(context, input) {
-  if (context.env?.AI?.run) {
+  const workersAi = getWorkersAiBinding(context)
+  if (workersAi?.run) {
     try {
-      return await transcribeWithWorkersAi(context, input)
+      return await transcribeWithWorkersAi(context, input, workersAi)
     } catch (error) {
       if (!context.env?.OPENAI_API_KEY) throw error
     }
@@ -103,16 +121,44 @@ async function transcribeAudio(context, input) {
     return transcribeWithOpenAi(context, input)
   }
 
-  throw new Error('No transcription provider configured. Add a Cloudflare Workers AI binding named AI, or set OPENAI_API_KEY.')
+  const diagnostics = getProviderDiagnostics(context)
+  throw new Error(`No transcription provider configured. Cloudflare AI binding AI present: ${diagnostics.workersAi.hasAI}. AI.run available: ${diagnostics.workersAi.hasRun}. OpenAI fallback present: ${diagnostics.openAi.hasKey}. Check that the Workers AI binding is named AI on the same Pages project and environment as this deployment.`)
 }
 
-async function transcribeWithWorkersAi(context, { bytes, language, prompt }) {
+function getWorkersAiBinding(context) {
+  return context?.env?.AI || null
+}
+
+function getProviderDiagnostics(context) {
+  const env = context?.env || {}
+  const envKeys = Object.keys(env).sort()
+  const aiBinding = env.AI
+  return {
+    workersAi: {
+      hasAI: Boolean(aiBinding),
+      hasRun: typeof aiBinding?.run === 'function',
+      bindingType: aiBinding ? Object.prototype.toString.call(aiBinding) : '',
+      configuredModel: String(env.SABOT_TRANSCRIPTION_MODEL || '@cf/openai/whisper-large-v3-turbo'),
+    },
+    openAi: {
+      hasKey: Boolean(env.OPENAI_API_KEY),
+      configuredModel: String(env.SABOT_OPENAI_TRANSCRIPTION_MODEL || env.OPENAI_TRANSCRIPTION_MODEL || 'gpt-4o-mini-transcribe'),
+    },
+    environment: {
+      exposedKeys: envKeys.filter((key) => /AI|OPENAI|TRANSCRIPTION|SABOT|CF/i.test(key)).slice(0, 60),
+      hasSessionSecret: Boolean(env.SABOT_SESSION_SECRET),
+      hasAdminToken: Boolean(env.SABOT_ADMIN_TOKEN),
+    },
+  }
+}
+
+async function transcribeWithWorkersAi(context, { bytes, language, prompt }, workersAi = getWorkersAiBinding(context)) {
   const model = String(context.env?.SABOT_TRANSCRIPTION_MODEL || '@cf/openai/whisper-large-v3-turbo')
   const audio = Array.from(new Uint8Array(bytes))
   const payload = { audio }
   if (language) payload.language = language
   if (prompt) payload.prompt = prompt
-  const result = await context.env.AI.run(model, payload)
+  const result = await workersAi.run(model, payload)
   return {
     provider: 'cloudflare-workers-ai',
     engine: model,
