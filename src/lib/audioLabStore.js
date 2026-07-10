@@ -54,14 +54,13 @@ async function withStore(storeName, mode, callback) {
   try {
     const transaction = db.transaction(storeName, mode)
     const store = transaction.objectStore(storeName)
-    const result = await callback(store, transaction)
-
-    await new Promise((resolve, reject) => {
+    const transactionDone = new Promise((resolve, reject) => {
       transaction.oncomplete = () => resolve()
       transaction.onerror = () => reject(transaction.error || new Error('AudioLab transaction failed'))
       transaction.onabort = () => reject(transaction.error || new Error('AudioLab transaction aborted'))
     })
-
+    const result = await callback(store, transaction)
+    await transactionDone
     return result
   } finally {
     db.close()
