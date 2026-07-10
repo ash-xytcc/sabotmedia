@@ -4,9 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "predev": "node scripts/patch-audiolab-transcript-panel.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/patch-audiolab-transcript-panel.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "import:wordpress": "node scripts/import-wordpress.mjs",
