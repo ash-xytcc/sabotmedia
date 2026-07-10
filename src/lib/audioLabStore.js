@@ -113,7 +113,14 @@ export function normalizeAudioLabAsset(asset = {}) {
 
 function normalizeEditOperation(edit = {}) {
   if (!edit?.id || !['delete', 'silence', 'trim'].includes(String(edit.type || ''))) return null
-  return { id: String(edit.id), type: String(edit.type), assetId: String(edit.assetId || ''), start: Math.max(0, Number(edit.start) || 0), end: Math.max(0, Number(edit.end) || 0), createdAt: String(edit.createdAt || nowIso()) }
+  return {
+    id: String(edit.id),
+    type: String(edit.type),
+    assetId: String(edit.assetId || ''),
+    start: Math.max(0, Number(edit.start) || 0),
+    end: Math.max(0, Number(edit.end) || 0),
+    createdAt: String(edit.createdAt || nowIso()),
+  }
 }
 
 function normalizeEditList(value) {
@@ -126,7 +133,19 @@ const EFFECT_SCOPES = new Set(['master', 'track', 'clip', 'selection'])
 function normalizeEffect(effect = {}) {
   if (!effect?.id || !EFFECT_TYPES.has(String(effect.type || ''))) return null
   const scope = EFFECT_SCOPES.has(String(effect.scope || '')) ? String(effect.scope) : 'master'
-  return { id: String(effect.id), type: String(effect.type), scope, trackId: String(effect.trackId || ''), clipId: String(effect.clipId || ''), assetId: String(effect.assetId || ''), start: Math.max(0, Number(effect.start || 0)), end: Math.max(0, Number(effect.end || 0)), params: effect.params && typeof effect.params === 'object' ? effect.params : {}, enabled: effect.enabled !== false, createdAt: String(effect.createdAt || nowIso()) }
+  return {
+    id: String(effect.id),
+    type: String(effect.type),
+    scope,
+    trackId: String(effect.trackId || ''),
+    clipId: String(effect.clipId || ''),
+    assetId: String(effect.assetId || ''),
+    start: Math.max(0, Number(effect.start || 0)),
+    end: Math.max(0, Number(effect.end || 0)),
+    params: effect.params && typeof effect.params === 'object' ? effect.params : {},
+    enabled: effect.enabled !== false,
+    createdAt: String(effect.createdAt || nowIso()),
+  }
 }
 
 function normalizeEffects(value) {
@@ -136,7 +155,16 @@ function normalizeEffects(value) {
 export function makeAudioLabClip(asset, fields = {}) {
   const normalized = normalizeAudioLabAsset(asset) || {}
   const sourceEnd = Number(fields.sourceEnd ?? normalized.duration ?? 0)
-  return normalizeAudioLabClip({ id: fields.id || makeId('clip'), assetId: fields.assetId || normalized.id || '', name: fields.name || normalized.title || normalized.filename || 'Audio clip', timelineStart: fields.timelineStart ?? 0, sourceStart: fields.sourceStart ?? 0, sourceEnd, gain: fields.gain ?? 1, muted: fields.muted || false }, normalized)
+  return normalizeAudioLabClip({
+    id: fields.id || makeId('clip'),
+    assetId: fields.assetId || normalized.id || '',
+    name: fields.name || normalized.title || normalized.filename || 'Audio clip',
+    timelineStart: fields.timelineStart ?? 0,
+    sourceStart: fields.sourceStart ?? 0,
+    sourceEnd,
+    gain: fields.gain ?? 1,
+    muted: fields.muted || false,
+  }, normalized)
 }
 
 export function normalizeAudioLabClip(clip = {}, asset = null) {
@@ -145,16 +173,43 @@ export function normalizeAudioLabClip(clip = {}, asset = null) {
   const sourceStart = clampNumber(clip.sourceStart ?? 0, 0, Math.max(assetDuration, Number(clip.sourceEnd || 0), 0))
   const fallbackEnd = assetDuration || Math.max(sourceStart, Number(clip.sourceEnd || 0))
   const sourceEnd = clampNumber(clip.sourceEnd ?? fallbackEnd, sourceStart, Math.max(fallbackEnd, sourceStart))
-  return { id: String(clip.id || makeId('clip')), assetId: String(clip.assetId || asset?.id || ''), name: String(clip.name || asset?.title || asset?.filename || 'Audio clip'), timelineStart: Math.max(0, Number(clip.timelineStart || 0)), sourceStart, sourceEnd, gain: Math.max(0, Number(clip.gain ?? 1)), muted: Boolean(clip.muted) }
+  return {
+    id: String(clip.id || makeId('clip')),
+    assetId: String(clip.assetId || asset?.id || ''),
+    name: String(clip.name || asset?.title || asset?.filename || 'Audio clip'),
+    timelineStart: Math.max(0, Number(clip.timelineStart || 0)),
+    sourceStart,
+    sourceEnd,
+    gain: Math.max(0, Number(clip.gain ?? 1)),
+    muted: Boolean(clip.muted),
+  }
 }
 
 export function makeAudioLabTrack(fields = {}) {
-  return normalizeAudioLabTrack({ id: fields.id || makeId('track'), name: fields.name || 'Audio Track', type: 'audio', muted: Boolean(fields.muted), solo: Boolean(fields.solo), gain: fields.gain ?? 1, pan: fields.pan ?? 0, clips: Array.isArray(fields.clips) ? fields.clips : [] })
+  return normalizeAudioLabTrack({
+    id: fields.id || makeId('track'),
+    name: fields.name || 'Audio Track',
+    type: 'audio',
+    muted: Boolean(fields.muted),
+    solo: Boolean(fields.solo),
+    gain: fields.gain ?? 1,
+    pan: fields.pan ?? 0,
+    clips: Array.isArray(fields.clips) ? fields.clips : [],
+  })
 }
 
 export function normalizeAudioLabTrack(track = {}, assetsById = new Map()) {
   const clips = Array.isArray(track.clips) ? track.clips.map((clip) => normalizeAudioLabClip(clip, assetsById.get(String(clip?.assetId || '')))).filter(Boolean) : []
-  return { id: String(track.id || makeId('track')), name: String(track.name || 'Audio Track'), type: 'audio', muted: Boolean(track.muted), solo: Boolean(track.solo), gain: Math.max(0, Number(track.gain ?? 1)), pan: clampNumber(track.pan ?? 0, -1, 1), clips }
+  return {
+    id: String(track.id || makeId('track')),
+    name: String(track.name || 'Audio Track'),
+    type: 'audio',
+    muted: Boolean(track.muted),
+    solo: Boolean(track.solo),
+    gain: Math.max(0, Number(track.gain ?? 1)),
+    pan: clampNumber(track.pan ?? 0, -1, 1),
+    clips,
+  }
 }
 
 function normalizeTrackList(project = {}, sourceAssets = []) {
@@ -175,47 +230,129 @@ function compactHistory(value) {
   }).filter(Boolean)
 }
 
-function normalizeRenderedEpisode(value = {}) {
-  if (!value || typeof value !== 'object') return null
-  const mediaId = String(value.mediaId || value.id || value.assetId || '')
-  const localAssetId = String(value.localAssetId || value.assetId || (String(value.url || '').startsWith('audiolab-local://') ? String(value.url).replace('audiolab-local://', '') : ''))
-  const publicUrl = String(value.publicUrl || (/^https?:\/\//i.test(String(value.url || '')) || String(value.url || '').startsWith('/api/') ? value.url : '') || '')
-  const filename = String(value.filename || '')
-  if (!mediaId && !localAssetId && !filename) return null
-  const uploaded = Boolean(publicUrl)
+function isPublicAudioUrl(value = '') {
+  const url = String(value || '')
+  return /^https?:\/\//i.test(url) || url.startsWith('/api/') || url.startsWith('/media/')
+}
+
+function isLocalAudioUrl(value = '') {
+  return String(value || '').startsWith('audiolab-local://')
+}
+
+function normalizeRenderedMedia(value = {}, fallback = {}) {
+  const raw = value && typeof value === 'object' ? value : {}
+  const url = String(raw.publicUrl || raw.url || fallback.publicUrl || fallback.url || '')
+  const localAssetId = String(raw.localAssetId || raw.assetId || fallback.localAssetId || fallback.assetId || (isLocalAudioUrl(url) ? url.replace('audiolab-local://', '') : ''))
+  const publicUrl = String(raw.publicUrl || (isPublicAudioUrl(raw.url) ? raw.url : '') || fallback.publicUrl || '')
+  const mediaId = String(raw.mediaId || raw.id || fallback.mediaId || fallback.id || '')
+  const filename = String(raw.filename || fallback.filename || '')
+  const mimeType = String(raw.mimeType || fallback.mimeType || 'audio/wav')
+  const size = Number(raw.size || fallback.size || 0)
+  const duration = Number(raw.duration || fallback.duration || 0)
+
+  if (!mediaId && !localAssetId && !filename && !publicUrl) return null
+
   return {
     mediaId,
-    assetId: localAssetId || String(value.assetId || mediaId),
+    id: mediaId,
+    assetId: localAssetId || String(raw.assetId || fallback.assetId || mediaId),
     localAssetId,
     filename,
-    mimeType: String(value.mimeType || 'audio/wav'),
-    size: Number(value.size || 0),
-    duration: Number(value.duration || 0),
+    mimeType,
+    size,
+    duration,
     publicUrl,
-    storageKey: String(value.storageKey || ''),
-    url: publicUrl || String(value.url || (localAssetId ? `audiolab-local://${localAssetId}` : '')),
-    createdAt: String(value.createdAt || nowIso()),
-    uploadedAt: String(value.uploadedAt || ''),
+    url: publicUrl || (localAssetId ? `audiolab-local://${localAssetId}` : String(raw.url || fallback.url || '')),
+    storageKey: String(raw.storageKey || fallback.storageKey || ''),
+    role: String(raw.role || fallback.role || ''),
+    codec: String(raw.codec || fallback.codec || ''),
+    bitrateKbps: Number(raw.bitrateKbps || fallback.bitrateKbps || 0),
+    createdAt: String(raw.createdAt || fallback.createdAt || nowIso()),
+    uploadedAt: String(raw.uploadedAt || fallback.uploadedAt || ''),
+    status: publicUrl ? 'uploaded' : String(raw.status || fallback.status || 'local'),
+    source: String(raw.source || fallback.source || 'audiolab-render'),
+    projectId: String(raw.projectId || fallback.projectId || ''),
+  }
+}
+
+function normalizeRenderedEpisode(value = {}) {
+  if (!value || typeof value !== 'object') return null
+
+  const legacy = normalizeRenderedMedia(value)
+  const master = normalizeRenderedMedia(value.master || null, {
+    ...legacy,
+    role: 'master',
+    mimeType: legacy?.mimeType || 'audio/wav',
+  })
+  const delivery = normalizeRenderedMedia(value.delivery || null, { role: 'delivery' })
+  const preferredPublicUrl = String(
+    value.preferredPublicUrl ||
+    delivery?.publicUrl ||
+    master?.publicUrl ||
+    legacy?.publicUrl ||
+    ''
+  )
+  const preferredMimeType = String(value.preferredMimeType || delivery?.mimeType || master?.mimeType || legacy?.mimeType || '')
+  const preferredFileSize = Number(value.preferredFileSize || delivery?.size || master?.size || legacy?.size || 0)
+  const localAssetId = String(value.localAssetId || legacy?.localAssetId || master?.localAssetId || '')
+
+  if (!legacy && !master && !delivery && !preferredPublicUrl && !localAssetId) return null
+
+  return {
+    mediaId: String(value.mediaId || legacy?.mediaId || master?.mediaId || ''),
+    assetId: localAssetId || String(value.assetId || legacy?.assetId || master?.assetId || ''),
+    localAssetId,
+    filename: String(value.filename || master?.filename || legacy?.filename || ''),
+    mimeType: String(value.mimeType || master?.mimeType || legacy?.mimeType || 'audio/wav'),
+    size: Number(value.size || master?.size || legacy?.size || 0),
+    duration: Number(value.duration || master?.duration || delivery?.duration || legacy?.duration || 0),
+    publicUrl: preferredPublicUrl || master?.publicUrl || legacy?.publicUrl || '',
+    storageKey: String(value.storageKey || master?.storageKey || legacy?.storageKey || ''),
+    url: preferredPublicUrl || String(value.url || legacy?.url || master?.url || ''),
+    master,
+    delivery,
+    preferredPublicUrl,
+    preferredMimeType,
+    preferredFileSize,
+    createdAt: String(value.createdAt || legacy?.createdAt || master?.createdAt || nowIso()),
+    uploadedAt: String(value.uploadedAt || delivery?.uploadedAt || master?.uploadedAt || legacy?.uploadedAt || ''),
     renderSourceHash: String(value.renderSourceHash || ''),
-    status: uploaded ? 'uploaded' : String(value.status || 'local'),
+    status: delivery?.publicUrl ? 'delivery-ready' : master?.publicUrl ? 'master-uploaded' : String(value.status || legacy?.status || 'local'),
     source: String(value.source || 'audiolab-render'),
-    projectId: String(value.projectId || ''),
+    projectId: String(value.projectId || legacy?.projectId || master?.projectId || ''),
   }
 }
 
 function normalizeTranscriptCue(cue = {}) {
   if (!cue) return null
-  return { id: String(cue.id || makeId('cue')), start: Math.max(0, Number(cue.start || 0)), end: Math.max(0, Number(cue.end || 0)), speaker: String(cue.speaker || ''), text: String(cue.text || '') }
+  return {
+    id: String(cue.id || makeId('cue')),
+    start: Math.max(0, Number(cue.start || 0)),
+    end: Math.max(0, Number(cue.end || 0)),
+    speaker: String(cue.speaker || ''),
+    text: String(cue.text || ''),
+  }
 }
 
 function normalizeTranscript(value = {}) {
   const raw = value && typeof value === 'object' ? value : {}
-  return { mode: raw.mode === 'timestamped' ? 'timestamped' : 'plain', text: String(raw.text || ''), cues: Array.isArray(raw.cues) ? raw.cues.map(normalizeTranscriptCue).filter(Boolean) : [], updatedAt: String(raw.updatedAt || '') }
+  return {
+    mode: raw.mode === 'timestamped' ? 'timestamped' : 'plain',
+    text: String(raw.text || ''),
+    cues: Array.isArray(raw.cues) ? raw.cues.map(normalizeTranscriptCue).filter(Boolean) : [],
+    updatedAt: String(raw.updatedAt || ''),
+  }
 }
 
 function normalizeMarker(marker = {}) {
   if (!marker) return null
-  return { id: String(marker.id || makeId('marker')), time: Math.max(0, Number(marker.time || 0)), title: String(marker.title || 'Marker'), note: String(marker.note || ''), createdAt: String(marker.createdAt || nowIso()) }
+  return {
+    id: String(marker.id || makeId('marker')),
+    time: Math.max(0, Number(marker.time || 0)),
+    title: String(marker.title || 'Marker'),
+    note: String(marker.note || ''),
+    createdAt: String(marker.createdAt || nowIso()),
+  }
 }
 
 function normalizeMarkers(value) {
@@ -224,13 +361,47 @@ function normalizeMarkers(value) {
 
 function normalizeEpisode(value = {}, title = '', sourceAssets = []) {
   const episode = value && typeof value === 'object' ? value : {}
-  return { title: String(episode.title || title), slug: slugifyAudioLab(episode.slug || episode.title || title), description: String(episode.description || ''), status: String(episode.status || 'draft'), audioAssetId: String(episode.audioAssetId || sourceAssets[0]?.id || ''), nativeEntryId: String(episode.nativeEntryId || ''), nativeEntrySlug: String(episode.nativeEntrySlug || ''), updatedAt: String(episode.updatedAt || ''), credits: String(episode.credits || ''), license: String(episode.license || ''), explicit: Boolean(episode.explicit), season: String(episode.season || ''), episodeNumber: String(episode.episodeNumber || ''), coverImage: String(episode.coverImage || '') }
+  return {
+    title: String(episode.title || title),
+    slug: slugifyAudioLab(episode.slug || episode.title || title),
+    description: String(episode.description || ''),
+    status: String(episode.status || 'draft'),
+    audioAssetId: String(episode.audioAssetId || sourceAssets[0]?.id || ''),
+    nativeEntryId: String(episode.nativeEntryId || ''),
+    nativeEntrySlug: String(episode.nativeEntrySlug || ''),
+    updatedAt: String(episode.updatedAt || ''),
+    credits: String(episode.credits || ''),
+    license: String(episode.license || ''),
+    explicit: Boolean(episode.explicit),
+    season: String(episode.season || ''),
+    episodeNumber: String(episode.episodeNumber || ''),
+    coverImage: String(episode.coverImage || ''),
+    audioStatus: String(episode.audioStatus || ''),
+  }
 }
 
 export function createEmptyAudioLabProject(fields = {}) {
   const createdAt = fields.createdAt || nowIso()
   const title = String(fields.title || 'Untitled AudioLab Project')
-  return normalizeAudioLabProject({ id: fields.id || makeId('audio-project'), schemaVersion: 1, title, status: fields.status || 'draft', createdAt, updatedAt: fields.updatedAt || createdAt, sourceAssets: Array.isArray(fields.sourceAssets) ? fields.sourceAssets : [], tracks: Array.isArray(fields.tracks) ? fields.tracks : [], edits: Array.isArray(fields.edits) ? fields.edits : [], effects: Array.isArray(fields.effects) ? fields.effects : [], history: Array.isArray(fields.history) ? fields.history : [], redoStack: Array.isArray(fields.redoStack) ? fields.redoStack : [], renderedEpisode: fields.renderedEpisode || null, transcript: fields.transcript || { mode: 'plain', text: '', cues: [], updatedAt: '' }, markers: Array.isArray(fields.markers) ? fields.markers : [], transport: { zoom: Number(fields.transport?.zoom || 1), selectionStart: Number(fields.transport?.selectionStart || 0), selectionEnd: Number(fields.transport?.selectionEnd || 0) }, episode: normalizeEpisode(fields.episode, title, fields.sourceAssets || []) })
+  return normalizeAudioLabProject({
+    id: fields.id || makeId('audio-project'),
+    schemaVersion: 1,
+    title,
+    status: fields.status || 'draft',
+    createdAt,
+    updatedAt: fields.updatedAt || createdAt,
+    sourceAssets: Array.isArray(fields.sourceAssets) ? fields.sourceAssets : [],
+    tracks: Array.isArray(fields.tracks) ? fields.tracks : [],
+    edits: Array.isArray(fields.edits) ? fields.edits : [],
+    effects: Array.isArray(fields.effects) ? fields.effects : [],
+    history: Array.isArray(fields.history) ? fields.history : [],
+    redoStack: Array.isArray(fields.redoStack) ? fields.redoStack : [],
+    renderedEpisode: fields.renderedEpisode || null,
+    transcript: fields.transcript || { mode: 'plain', text: '', cues: [], updatedAt: '' },
+    markers: Array.isArray(fields.markers) ? fields.markers : [],
+    transport: fields.transport || { zoom: 1, selectionStart: 0, selectionEnd: 0 },
+    episode: normalizeEpisode(fields.episode, title, fields.sourceAssets || []),
+  })
 }
 
 export function normalizeAudioLabProject(project = {}) {
@@ -238,7 +409,33 @@ export function normalizeAudioLabProject(project = {}) {
   const title = String(project.title || 'Untitled AudioLab Project')
   const sourceAssets = Array.isArray(project.sourceAssets) ? project.sourceAssets.map(normalizeAudioLabAsset).filter(Boolean) : []
   const tracks = normalizeTrackList(project, sourceAssets)
-  return { id: String(project.id || makeId('audio-project')), schemaVersion: 1, title, status: String(project.status || 'draft'), createdAt, updatedAt: String(project.updatedAt || createdAt), sourceAssets, tracks, edits: normalizeEditList(project.edits), effects: normalizeEffects(project.effects), history: compactHistory(project.history), redoStack: compactHistory(project.redoStack), renderedEpisode: normalizeRenderedEpisode(project.renderedEpisode), transcript: normalizeTranscript(project.transcript), markers: normalizeMarkers(project.markers), transport: { zoom: Math.max(0.25, Number(project.transport?.zoom || 1)), selectionStart: Math.max(0, Number(project.transport?.selectionStart || 0)), selectionEnd: Math.max(0, Number(project.transport?.selectionEnd || 0)), playhead: Math.max(0, Number(project.transport?.playhead || 0)), selectedTrackId: String(project.transport?.selectedTrackId || tracks[0]?.id || ''), selectedClipId: String(project.transport?.selectedClipId || '') }, episode: normalizeEpisode(project.episode, title, sourceAssets) }
+
+  return {
+    id: String(project.id || makeId('audio-project')),
+    schemaVersion: 1,
+    title,
+    status: String(project.status || 'draft'),
+    createdAt,
+    updatedAt: String(project.updatedAt || createdAt),
+    sourceAssets,
+    tracks,
+    edits: normalizeEditList(project.edits),
+    effects: normalizeEffects(project.effects),
+    history: compactHistory(project.history),
+    redoStack: compactHistory(project.redoStack),
+    renderedEpisode: normalizeRenderedEpisode(project.renderedEpisode),
+    transcript: normalizeTranscript(project.transcript),
+    markers: normalizeMarkers(project.markers),
+    transport: {
+      zoom: Math.max(0.25, Number(project.transport?.zoom || 1)),
+      selectionStart: Math.max(0, Number(project.transport?.selectionStart || 0)),
+      selectionEnd: Math.max(0, Number(project.transport?.selectionEnd || 0)),
+      playhead: Math.max(0, Number(project.transport?.playhead || 0)),
+      selectedTrackId: String(project.transport?.selectedTrackId || tracks[0]?.id || ''),
+      selectedClipId: String(project.transport?.selectedClipId || ''),
+    },
+    episode: normalizeEpisode(project.episode, title, sourceAssets),
+  }
 }
 
 export async function listAudioLabProjects() {
@@ -267,14 +464,31 @@ export async function deleteAudioLabProject(id) {
 export async function putAudioLabAssetFromBlob(blob, fields = {}) {
   if (!blob) throw new Error('No audio blob supplied')
   const filename = String(fields.filename || 'audio-source')
-  const asset = { id: fields.id || makeId('audio-asset'), filename, title: String(fields.title || filename.replace(/\.[^.]+$/, '') || 'Audio source'), mimeType: String(fields.mimeType || blob.type || 'audio/webm'), size: Number(fields.size || blob.size || 0), duration: Number(fields.duration || 0), createdAt: fields.createdAt || nowIso(), source: fields.source || 'upload', blob }
+  const asset = {
+    id: fields.id || makeId('audio-asset'),
+    filename,
+    title: String(fields.title || filename.replace(/\.[^.]+$/, '') || 'Audio source'),
+    mimeType: String(fields.mimeType || blob.type || 'audio/webm'),
+    size: Number(fields.size || blob.size || 0),
+    duration: Number(fields.duration || 0),
+    createdAt: fields.createdAt || nowIso(),
+    source: fields.source || 'upload',
+    blob,
+  }
   await withStore(ASSET_STORE, 'readwrite', (store) => requestToPromise(store.put(asset)))
   return normalizeAudioLabAsset(asset)
 }
 
 export async function putAudioLabAssetFromFile(file, fields = {}) {
   if (!file) throw new Error('No audio file selected')
-  return putAudioLabAssetFromBlob(file, { ...fields, filename: String(file.name || 'audio-source'), title: String(fields.title || String(file.name || '').replace(/\.[^.]+$/, '') || 'Audio source'), mimeType: String(file.type || fields.mimeType || 'audio/mpeg'), size: Number(file.size || 0), source: fields.source || 'upload' })
+  return putAudioLabAssetFromBlob(file, {
+    ...fields,
+    filename: String(file.name || 'audio-source'),
+    title: String(fields.title || String(file.name || '').replace(/\.[^.]+$/, '') || 'Audio source'),
+    mimeType: String(file.type || fields.mimeType || 'audio/mpeg'),
+    size: Number(file.size || 0),
+    source: fields.source || 'upload',
+  })
 }
 
 export async function getAudioLabAsset(id) {
