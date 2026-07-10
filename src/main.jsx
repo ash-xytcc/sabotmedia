@@ -9,6 +9,7 @@ import './audio-lab.css'
 import './audio-lab-recording.css'
 import './audio-lab-phase4.css'
 import './audio-lab-phase5.css'
+import './audio-lab-phase6.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
