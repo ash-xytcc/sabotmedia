@@ -8,6 +8,7 @@ const COMMANDS = [
   { label: 'Posts', description: 'Browse and edit content', to: adminRoutes.posts, keywords: ['articles', 'content'] },
   { label: 'Media Library', description: 'Upload and manage images and files', to: adminRoutes.media, keywords: ['images', 'files', 'uploads'] },
   { label: 'Printlab', description: 'Open printable layout tools', to: adminRoutes.printlab, keywords: ['print', 'zine', 'poster'] },
+  { label: 'AudioLab', description: 'Record, import, waveform, and attach audio projects', to: adminRoutes.audiolab, keywords: ['audio', 'podcast', 'waveform', 'episode'] },
   { label: 'Collections', description: 'Organize bodies of work', to: adminRoutes.collections, keywords: ['projects', 'archive'] },
   { label: 'Publications', description: 'Build zines, readers, and editions', to: adminRoutes.publications, keywords: ['zine', 'booklet', 'issue'] },
   { label: 'Customize', description: 'Edit site appearance and public copy', to: adminRoutes.customize, keywords: ['theme', 'live edit'] },
