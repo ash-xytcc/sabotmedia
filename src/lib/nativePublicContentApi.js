@@ -18,17 +18,11 @@ export async function fetchNativeEntries(params = {}) {
   const res = await fetch(url.pathname + url.search, {
     method: 'GET',
     credentials: 'same-origin',
-    headers: {
-      accept: 'application/json',
-    },
+    headers: { accept: 'application/json' },
   })
 
   const data = await safeJson(res)
-
-  if (!res.ok || !data?.ok) {
-    throw new Error(data?.error || `native content fetch failed: ${res.status}`)
-  }
-
+  if (!res.ok || !data?.ok) throw new Error(data?.error || `native content fetch failed: ${res.status}`)
   return data
 }
 
@@ -36,18 +30,12 @@ export async function saveNativeEntry(item, revisionNote = 'save') {
   const res = await fetch('/api/native-content', {
     method: 'POST',
     credentials: 'same-origin',
-    headers: {
-      'content-type': 'application/json',
-    },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ item, revisionNote }),
   })
 
   const data = await safeJson(res)
-
-  if (!res.ok || !data?.ok) {
-    throw new Error(data?.error || `native content save failed: ${res.status}`)
-  }
-
+  if (!res.ok || !data?.ok) throw new Error(data?.error || `native content save failed: ${res.status}`)
   return data
 }
 
@@ -60,7 +48,7 @@ export async function uploadAudioLabMedia({
   duration = 0,
   role = 'master',
   codec = '',
-  bitrateKbps = '',
+  bitrateKbps = 0,
   sourceMediaId = '',
 } = {}) {
   if (!file) throw new Error('No rendered audio file supplied')
@@ -73,7 +61,7 @@ export async function uploadAudioLabMedia({
   form.set('duration', String(duration || 0))
   form.set('role', role === 'delivery' ? 'delivery' : 'master')
   form.set('codec', codec || '')
-  form.set('bitrateKbps', String(bitrateKbps || ''))
+  form.set('bitrateKbps', String(bitrateKbps || 0))
   form.set('sourceMediaId', sourceMediaId || '')
 
   const res = await fetch('/api/audiolab/media', {
@@ -96,17 +84,11 @@ export async function removeNativeEntry(idOrSlug) {
   const res = await fetch(url.pathname + url.search, {
     method: 'DELETE',
     credentials: 'same-origin',
-    headers: {
-      accept: 'application/json',
-    },
+    headers: { accept: 'application/json' },
   })
 
   const data = await safeJson(res)
-
-  if (!res.ok || !data?.ok) {
-    throw new Error(data?.error || `native content delete failed: ${res.status}`)
-  }
-
+  if (!res.ok || !data?.ok) throw new Error(data?.error || `native content delete failed: ${res.status}`)
   return data
 }
 
@@ -122,17 +104,11 @@ export async function fetchNativeRevisions(params = {}) {
   const res = await fetch(url.pathname + url.search, {
     method: 'GET',
     credentials: 'same-origin',
-    headers: {
-      accept: 'application/json',
-    },
+    headers: { accept: 'application/json' },
   })
 
   const data = await safeJson(res)
-
-  if (!res.ok || !data?.ok) {
-    throw new Error(data?.error || `native revisions fetch failed: ${res.status}`)
-  }
-
+  if (!res.ok || !data?.ok) throw new Error(data?.error || `native revisions fetch failed: ${res.status}`)
   return data
 }
 
@@ -140,17 +116,11 @@ export async function restoreNativeRevision(revisionId) {
   const res = await fetch('/api/native-content-revisions', {
     method: 'POST',
     credentials: 'same-origin',
-    headers: {
-      'content-type': 'application/json',
-    },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ revisionId }),
   })
 
   const data = await safeJson(res)
-
-  if (!res.ok || !data?.ok) {
-    throw new Error(data?.error || `native revision restore failed: ${res.status}`)
-  }
-
+  if (!res.ok || !data?.ok) throw new Error(data?.error || `native revision restore failed: ${res.status}`)
   return data
 }
