@@ -138,7 +138,38 @@ export function setStructuredArticleData(piece = {}, { url = '', image = '' } = 
 }
 
 export function getPodcastAudioUrl(piece = {}) {
-  return String(piece.podcastAudioUrl || piece.podcastRssEnclosureUrl || piece.audioSourceUrl || piece.enclosureUrl || '').trim()
+  const delivery = getPodcastDeliveryAsset(piece)
+  const deliveryUrl = delivery?.url || delivery?.publicUrl || delivery?.rssEnclosure?.url || piece.podcastDeliveryAudioUrl || ''
+  if (isPublicPodcastAudioUrl(deliveryUrl)) return String(deliveryUrl).trim()
+
+  const direct = String(piece.podcastAudioUrl || piece.podcastRssEnclosureUrl || piece.audioSourceUrl || piece.enclosureUrl || '').trim()
+  if (isPublicPodcastAudioUrl(direct)) return direct
+
+  const asset = getPodcastAudioAsset(piece)
+  const assetUrl = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
+  return isPublicPodcastAudioUrl(assetUrl) ? String(assetUrl).trim() : ''
+}
+
+export function getPodcastDeliveryAsset(piece = {}) {
+  return (Array.isArray(piece.relatedAssets) ? piece.relatedAssets : []).find((asset) => {
+    const haystack = `${asset?.type || ''} ${asset?.role || ''} ${asset?.source || ''} ${asset?.mimeType || ''}`
+    const url = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
+    return /delivery|compressed|opus|mp3|m4a|webm/i.test(haystack) && isPublicPodcastAudioUrl(url)
+  }) || null
+}
+
+export function getPodcastAudioAsset(piece = {}) {
+  return (Array.isArray(piece.relatedAssets) ? piece.relatedAssets : []).find((asset) => {
+    const haystack = `${asset?.type || ''} ${asset?.source || ''} ${asset?.mimeType || ''}`
+    const url = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
+    return /audiolab|audio/i.test(haystack) && isPublicPodcastAudioUrl(url)
+  }) || null
+}
+
+export function isPublicPodcastAudioUrl(value = '') {
+  const raw = String(value || '').trim()
+  if (!raw || raw.startsWith('audiolab-local://')) return false
+  return /^https?:\/\//i.test(raw) || raw.startsWith('/api/audiolab/media')
 }
 
 export function getPlainText(html = '') {
@@ -162,7 +193,7 @@ function countOverlap(set, values = []) {
 }
 
 function isDownloadUrl(value = '') {
-  return /\.(pdf|zip|epub|mp3|wav|m4a|docx?|png|jpe?g)$/i.test(String(value || '').split('?')[0])
+  return /\.(pdf|zip|epub|mp3|wav|m4a|webm|docx?|png|jpe?g)$/i.test(String(value || '').split('?')[0])
 }
 
 function inferDownloadType(value = '') {
