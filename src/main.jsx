@@ -14,6 +14,7 @@ import './audio-lab-phase7.css'
 import './audio-lab-phase8.css'
 import './audio-lab-fullscreen.css'
 import './audio-lab-workspace.css'
+import './audio-lab-shortcuts.css'
 import './audioLabKeyboardShortcuts.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
