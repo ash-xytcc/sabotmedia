@@ -38,9 +38,7 @@ export async function onRequestPost(context) {
 
     const form = await context.request.formData()
     const file = form.get('file') || form.get('audio')
-    if (!file || typeof file.arrayBuffer !== 'function') {
-      return json({ ok: false, error: 'missing audio file' }, 400)
-    }
+    if (!file || typeof file.arrayBuffer !== 'function') return json({ ok: false, error: 'missing audio file' }, 400)
 
     const declaredMimeType = String(form.get('mimeType') || file.type || 'audio/wav').toLowerCase()
     const mimeType = normalizeAudioMimeType(declaredMimeType)
@@ -54,24 +52,29 @@ export async function onRequestPost(context) {
 
     const projectId = sanitizeSegment(form.get('projectId') || 'project')
     const mediaId = createId('audiolab-media')
-    const filename = sanitizeFilename(form.get('filename') || file.name || `${mediaId}.wav`)
+    const role = normalizeRole(form.get('role') || 'master')
+    const filename = sanitizeFilename(form.get('filename') || file.name || `${mediaId}.${extensionForMime(mimeType)}`)
     const duration = Number(form.get('duration') || 0)
     const title = String(form.get('title') || filename).slice(0, 240)
-    const storageKey = `audio/audiolab/${projectId}/${mediaId}-${filename}`
+    const codec = String(form.get('codec') || '').slice(0, 80)
+    const bitrateKbps = Number(form.get('bitrateKbps') || 0)
+    const sourceMediaId = String(form.get('sourceMediaId') || '').slice(0, 160)
+    const storageKey = `audio/audiolab/${projectId}/${role}/${mediaId}-${filename}`
     const bytes = await file.arrayBuffer()
     const createdAt = new Date().toISOString()
 
     await bucket.put(storageKey, bytes, {
-      httpMetadata: {
-        contentType: mimeType,
-        cacheControl: 'public, max-age=31536000, immutable',
-      },
+      httpMetadata: { contentType: mimeType, cacheControl: 'public, max-age=31536000, immutable' },
       customMetadata: {
         mediaId,
         projectId,
+        role,
         source: 'audiolab-render',
         title,
         duration: String(duration || ''),
+        codec,
+        bitrateKbps: String(bitrateKbps || ''),
+        sourceMediaId,
         createdAt,
       },
     })
@@ -83,12 +86,16 @@ export async function onRequestPost(context) {
         id: mediaId,
         mediaId,
         projectId,
+        role,
         filename,
         mimeType,
         size,
         duration,
         publicUrl,
         storageKey,
+        codec,
+        bitrateKbps,
+        sourceMediaId,
         createdAt,
         source: 'audiolab-render',
       },
@@ -116,10 +123,7 @@ export async function onRequestGet(context) {
     const size = Number(head.size || 0)
     const rangeHeader = context.request.headers.get('range') || ''
     const range = parseRange(rangeHeader, size)
-    const object = range
-      ? await bucket.get(storageKey, { range: { offset: range.start, length: range.end - range.start + 1 } })
-      : await bucket.get(storageKey)
-
+    const object = range ? await bucket.get(storageKey, { range: { offset: range.start, length: range.end - range.start + 1 } }) : await bucket.get(storageKey)
     if (!object?.body) return text('audio not found', 404)
 
     const headers = new Headers()
@@ -174,6 +178,20 @@ function normalizeAudioMimeType(value) {
   return type || 'audio/wav'
 }
 
+function normalizeRole(value) {
+  return String(value || '').toLowerCase() === 'delivery' ? 'delivery' : 'master'
+}
+
+function extensionForMime(mimeType = '') {
+  const lower = String(mimeType).toLowerCase()
+  if (lower.includes('webm')) return 'webm'
+  if (lower.includes('ogg')) return 'ogg'
+  if (lower.includes('mpeg')) return 'mp3'
+  if (lower.includes('mp4') || lower.includes('aac')) return 'm4a'
+  if (lower.includes('flac')) return 'flac'
+  return 'wav'
+}
+
 function guessContentType(key = '') {
   const lower = String(key).toLowerCase()
   if (lower.endsWith('.webm')) return 'audio/webm'
@@ -196,10 +214,7 @@ function parseRange(header = '', size = 0) {
 }
 
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data, null, 2), {
-    status,
-    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
-  })
+  return new Response(JSON.stringify(data, null, 2), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } })
 }
 
 function text(body, status = 200) {
