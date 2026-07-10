@@ -51,6 +51,29 @@ export async function saveNativeEntry(item, revisionNote = 'save') {
   return data
 }
 
+export async function uploadAudioLabMedia({ file, projectId = '', title = '', filename = '', mimeType = '', duration = 0 } = {}) {
+  if (!file) throw new Error('No rendered audio file supplied')
+  const form = new FormData()
+  form.set('file', file, filename || file.name || 'audiolab-render.wav')
+  form.set('projectId', projectId)
+  form.set('title', title || filename || file.name || 'AudioLab episode')
+  form.set('filename', filename || file.name || 'audiolab-render.wav')
+  form.set('mimeType', mimeType || file.type || 'audio/wav')
+  form.set('duration', String(duration || 0))
+
+  const res = await fetch('/api/audiolab/media', {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: form,
+  })
+
+  const data = await safeJson(res)
+  if (!res.ok || !data?.ok || !data?.media?.publicUrl) {
+    throw new Error(data?.error || `AudioLab media upload failed: ${res.status}`)
+  }
+  return data.media
+}
+
 export async function removeNativeEntry(idOrSlug) {
   const url = new URL('/api/native-content', window.location.origin)
   url.searchParams.set('id', idOrSlug)
