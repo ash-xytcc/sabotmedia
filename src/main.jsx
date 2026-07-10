@@ -11,7 +11,9 @@ import './audio-lab-phase4.css'
 import './audio-lab-phase5.css'
 import './audio-lab-phase6.css'
 import './audio-lab-phase7.css'
+import './audio-lab-phase8.css'
 import './audioLabPhase7Bridge.js'
+import './audioLabPhase8Delivery.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
