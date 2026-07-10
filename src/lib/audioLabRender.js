@@ -30,8 +30,19 @@ export function makeAudioEditOperation(type, assetId, start, end) {
   }
 }
 
+export function makeAudioDownloadName(label = 'audiolab-export', extension = 'wav') {
+  const safe = String(label || 'audiolab-export')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 56)
+
+  return `${safe || 'audiolab-export'}.${extension}`
+}
+
 function createBuffer(numberOfChannels, length, sampleRate) {
-  const safeChannels = Math.max(1, Number(numberOfChannels) || 1)
+  const safeChannels = Math.max(1, Math.min(2, Number(numberOfChannels) || 1))
   const safeLength = Math.max(1, Math.floor(Number(length) || 1))
   const safeRate = Math.max(8000, Number(sampleRate) || 44100)
 
@@ -134,6 +145,95 @@ export function renderAudioEditGraph(sourceBuffer, edits = [], assetId = '') {
   return current
 }
 
+export function getClipDuration(clip = {}) {
+  return Math.max(0, Number(clip.sourceEnd || 0) - Number(clip.sourceStart || 0))
+}
+
+export function computeProjectDuration(project = {}) {
+  const tracks = Array.isArray(project.tracks) ? project.tracks : []
+  let max = 0
+
+  for (const track of tracks) {
+    for (const clip of Array.isArray(track.clips) ? track.clips : []) {
+      if (clip.muted) continue
+      max = Math.max(max, Number(clip.timelineStart || 0) + getClipDuration(clip))
+    }
+  }
+
+  if (!max && Array.isArray(project.sourceAssets) && project.sourceAssets[0]) {
+    max = Number(project.sourceAssets[0].duration || 0)
+  }
+
+  return Math.max(0, max)
+}
+
+function getSourceSample(sourceBuffer, sourceChannel, frame) {
+  const channel = Math.min(Math.max(0, sourceChannel), sourceBuffer.numberOfChannels - 1)
+  return sourceBuffer.getChannelData(channel)[frame] || 0
+}
+
+function addClipped(target, index, value) {
+  target[index] = Math.max(-1, Math.min(1, (target[index] || 0) + value))
+}
+
+export function renderMultitrackMixdown(project = {}, sourceBuffers = new Map()) {
+  const tracks = Array.isArray(project.tracks) ? project.tracks : []
+  const sampleRate = [...sourceBuffers.values()][0]?.sampleRate || 44100
+  const soloActive = tracks.some((track) => track.solo)
+  const projectDuration = computeProjectDuration(project)
+
+  if (!tracks.length || projectDuration <= 0) {
+    const asset = Array.isArray(project.sourceAssets) ? project.sourceAssets[0] : null
+    const source = asset ? sourceBuffers.get(asset.id) : null
+    if (source) return renderAudioEditGraph(source, project.edits || [], asset.id)
+    return createBuffer(2, sampleRate, sampleRate)
+  }
+
+  const length = Math.max(1, Math.ceil(projectDuration * sampleRate))
+  const mix = createBuffer(2, length, sampleRate)
+  const left = mix.getChannelData(0)
+  const right = mix.getChannelData(1)
+
+  for (const track of tracks) {
+    if (track.muted) continue
+    if (soloActive && !track.solo) continue
+
+    const trackGain = Math.max(0, Number(track.gain ?? 1))
+    const trackPan = Math.max(-1, Math.min(1, Number(track.pan || 0)))
+    const panLeft = trackPan <= 0 ? 1 : 1 - trackPan
+    const panRight = trackPan >= 0 ? 1 : 1 + trackPan
+
+    for (const clip of Array.isArray(track.clips) ? track.clips : []) {
+      if (clip.muted) continue
+      const rawBuffer = sourceBuffers.get(String(clip.assetId || ''))
+      if (!rawBuffer) continue
+
+      const sourceBuffer = renderAudioEditGraph(rawBuffer, project.edits || [], clip.assetId)
+      const sourceStartFrame = Math.max(0, Math.floor(Number(clip.sourceStart || 0) * sourceBuffer.sampleRate))
+      const sourceEndFrame = Math.min(sourceBuffer.length, Math.ceil(Number(clip.sourceEnd || sourceBuffer.duration || 0) * sourceBuffer.sampleRate))
+      const targetStartFrame = Math.max(0, Math.floor(Number(clip.timelineStart || 0) * sampleRate))
+      const frameCount = Math.min(sourceEndFrame - sourceStartFrame, mix.length - targetStartFrame)
+      const clipGain = Math.max(0, Number(clip.gain ?? 1))
+      const totalGain = trackGain * clipGain
+
+      if (frameCount <= 0 || totalGain <= 0) continue
+
+      for (let index = 0; index < frameCount; index += 1) {
+        const sourceFrame = sourceStartFrame + index
+        const targetFrame = targetStartFrame + index
+        const mono = sourceBuffer.numberOfChannels === 1
+          ? getSourceSample(sourceBuffer, 0, sourceFrame)
+          : (getSourceSample(sourceBuffer, 0, sourceFrame) + getSourceSample(sourceBuffer, 1, sourceFrame)) / 2
+
+        addClipped(left, targetFrame, mono * totalGain * panLeft)
+        addClipped(right, targetFrame, mono * totalGain * panRight)
+      }
+    }
+  }
+
+  return mix
+}
+
 export function encodeWav(audioBuffer) {
   if (!audioBuffer) throw new Error('No rendered audio to export')
 
@@ -181,15 +281,4 @@ export function encodeWav(audioBuffer) {
   }
 
   return new Blob([view], { type: 'audio/wav' })
-}
-
-export function makeAudioDownloadName(label = 'audiolab-export', extension = 'wav') {
-  const safe = String(label || 'audiolab-export')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 56)
-
-  return `${safe || 'audiolab-export'}.${extension}`
 }
