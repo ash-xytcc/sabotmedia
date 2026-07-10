@@ -8,6 +8,7 @@ import './printlab-disabled-tools.css'
 import './audio-lab.css'
 import './audio-lab-recording.css'
 import './audio-lab-phase4.css'
+import './audio-lab-phase5.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
