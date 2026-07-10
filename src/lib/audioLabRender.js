@@ -152,7 +152,8 @@ export function getClipDuration(clip = {}) {
 }
 
 export function computeProjectDuration(project = {}) {
-  const tracks = Array.isArray(project.tracks) ? project.tracks : []
+  const safeProject = project || {}
+  const tracks = Array.isArray(safeProject.tracks) ? safeProject.tracks : []
   let max = 0
 
   for (const track of tracks) {
@@ -162,8 +163,8 @@ export function computeProjectDuration(project = {}) {
     }
   }
 
-  if (!max && Array.isArray(project.sourceAssets) && project.sourceAssets[0]) {
-    max = Number(project.sourceAssets[0].duration || 0)
+  if (!max && Array.isArray(safeProject.sourceAssets) && safeProject.sourceAssets[0]) {
+    max = Number(safeProject.sourceAssets[0].duration || 0)
   }
 
   return Math.max(0, max)
@@ -222,17 +223,19 @@ function addTrackToMaster(masterBuffer, trackBuffer, track = {}) {
 }
 
 export function renderMultitrackMixdown(project = {}, sourceBuffers = new Map()) {
-  const tracks = Array.isArray(project.tracks) ? project.tracks : []
-  const effects = Array.isArray(project.effects) ? project.effects : []
-  const sampleRate = [...sourceBuffers.values()][0]?.sampleRate || 44100
+  const safeProject = project || {}
+  const safeBuffers = sourceBuffers || new Map()
+  const tracks = Array.isArray(safeProject.tracks) ? safeProject.tracks : []
+  const effects = Array.isArray(safeProject.effects) ? safeProject.effects : []
+  const sampleRate = [...safeBuffers.values()][0]?.sampleRate || 44100
   const soloActive = tracks.some((track) => track.solo)
-  const projectDuration = computeProjectDuration(project)
+  const projectDuration = computeProjectDuration(safeProject)
 
   if (!tracks.length || projectDuration <= 0) {
-    const asset = Array.isArray(project.sourceAssets) ? project.sourceAssets[0] : null
-    const source = asset ? sourceBuffers.get(asset.id) : null
+    const asset = Array.isArray(safeProject.sourceAssets) ? safeProject.sourceAssets[0] : null
+    const source = asset ? safeBuffers.get(asset.id) : null
     if (source) {
-      const edited = renderAudioEditGraph(source, project.edits || [], asset.id)
+      const edited = renderAudioEditGraph(source, safeProject.edits || [], asset.id)
       return applyAudioEffects(edited, filterEffects(effects, 'master'))
     }
     return createBuffer(2, sampleRate, sampleRate)
@@ -249,10 +252,10 @@ export function renderMultitrackMixdown(project = {}, sourceBuffers = new Map())
 
     for (const clip of Array.isArray(track.clips) ? track.clips : []) {
       if (clip.muted) continue
-      const rawBuffer = sourceBuffers.get(String(clip.assetId || ''))
+      const rawBuffer = safeBuffers.get(String(clip.assetId || ''))
       if (!rawBuffer) continue
 
-      const editedSource = renderAudioEditGraph(rawBuffer, project.edits || [], clip.assetId)
+      const editedSource = renderAudioEditGraph(rawBuffer, safeProject.edits || [], clip.assetId)
       const clipEffects = filterEffects(effects, 'clip', { trackId: track.id, clipId: clip.id, assetId: clip.assetId })
       const sourceBuffer = clipEffects.length ? applyAudioEffects(editedSource, clipEffects) : editedSource
       addMonoClipToStereo(trackBuffer, sourceBuffer, clip, Math.max(0, Number(clip.gain ?? 1)))
