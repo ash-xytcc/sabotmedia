@@ -1,3 +1,5 @@
+import { normalizeAudioEffects } from './audioLabEffects'
+
 const DB_NAME = 'sabotpress-audiolab-v1'
 const DB_VERSION = 1
 const PROJECT_STORE = 'projects'
@@ -238,6 +240,7 @@ export function createEmptyAudioLabProject(fields = {}) {
     sourceAssets: Array.isArray(fields.sourceAssets) ? fields.sourceAssets : [],
     tracks: Array.isArray(fields.tracks) ? fields.tracks : [],
     edits: Array.isArray(fields.edits) ? fields.edits : [],
+    effects: Array.isArray(fields.effects) ? fields.effects : [],
     history: Array.isArray(fields.history) ? fields.history : [],
     redoStack: Array.isArray(fields.redoStack) ? fields.redoStack : [],
     transport: {
@@ -276,6 +279,7 @@ export function normalizeAudioLabProject(project = {}) {
     sourceAssets,
     tracks,
     edits: normalizeEditList(project.edits),
+    effects: normalizeAudioEffects(project.effects),
     history: compactHistory(project.history),
     redoStack: compactHistory(project.redoStack),
     transport: {
