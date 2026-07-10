@@ -29,6 +29,14 @@ import {
   renderMultitrackMixdown,
 } from '../lib/audioLabRender'
 import {
+  AUDIO_EFFECT_PRESETS,
+  AUDIO_EFFECT_SCOPES,
+  AUDIO_EFFECT_TYPES,
+  getAudioEffectLabel,
+  getDefaultEffectParams,
+  makeAudioEffectOperation,
+} from '../lib/audioLabEffects'
+import {
   createEmptyNativeEntry,
   loadNativeCollection,
   upsertNativeEntryWithMeta,
@@ -59,7 +67,7 @@ async function decodeAudioBlob(blob) {
       try {
         await context.close()
       } catch {
-        // Browser audio contexts are tiny haunted doors. Sometimes they close later.
+        // tiny haunted audio context, safely ignored
       }
     }
   }
@@ -67,7 +75,6 @@ async function decodeAudioBlob(blob) {
 
 function buildWaveformPeaks(audioBuffer, peakCount = waveformPeakCount) {
   if (!audioBuffer?.length) return []
-
   const channels = Math.max(1, audioBuffer.numberOfChannels || 1)
   const samplesPerPeak = Math.max(1, Math.floor(audioBuffer.length / peakCount))
   const peaks = []
@@ -197,7 +204,6 @@ function WaveformCanvas({ peaks, duration, currentTime, selectionStart, selectio
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return undefined
-
     let frame = 0
 
     function draw() {
@@ -216,7 +222,6 @@ function WaveformCanvas({ peaks, duration, currentTime, selectionStart, selectio
 
       const mid = height / 2
       const usable = height - 48
-
       context.strokeStyle = 'rgba(255, 255, 255, 0.16)'
       context.lineWidth = 1
       context.beginPath()
@@ -262,7 +267,6 @@ function WaveformCanvas({ peaks, duration, currentTime, selectionStart, selectio
 
     frame = window.requestAnimationFrame(draw)
     window.addEventListener('resize', draw)
-
     return () => {
       window.cancelAnimationFrame(frame)
       window.removeEventListener('resize', draw)
@@ -317,28 +321,17 @@ function ProjectSidebar({ projects, activeProjectId, onNewProject, onOpenProject
   return (
     <aside className="audio-lab-sidebar" aria-label="AudioLab projects">
       <div className="audio-lab-sidebar__header">
-        <div>
-          <p className="audio-lab-eyebrow">Projects</p>
-          <h2>AudioLab</h2>
-        </div>
+        <div><p className="audio-lab-eyebrow">Projects</p><h2>AudioLab</h2></div>
         <button type="button" className="button button--primary" onClick={onNewProject}>New</button>
       </div>
-
       <div className="audio-lab-project-list">
         {projects.length ? projects.map((project) => (
-          <button
-            type="button"
-            key={project.id}
-            className={`audio-lab-project-card${project.id === activeProjectId ? ' is-active' : ''}`}
-            onClick={() => onOpenProject(project.id)}
-          >
+          <button type="button" key={project.id} className={`audio-lab-project-card${project.id === activeProjectId ? ' is-active' : ''}`} onClick={() => onOpenProject(project.id)}>
             <strong>{project.title || 'Untitled AudioLab Project'}</strong>
-            <span>{project.tracks?.length || 0} tracks · {project.sourceAssets?.length || 0} sources</span>
+            <span>{project.tracks?.length || 0} tracks · {project.sourceAssets?.length || 0} sources · {project.effects?.length || 0} effects</span>
             <small>{shortDate(project.updatedAt)}</small>
           </button>
-        )) : (
-          <p className="audio-lab-empty">No projects yet. Import, record, or create a new project.</p>
-        )}
+        )) : <p className="audio-lab-empty">No projects yet. Import, record, or create a new project.</p>}
       </div>
     </aside>
   )
@@ -352,12 +345,7 @@ function RecordPanel({ canRecord, recordStatus, recordMimeType, recordElapsed, r
 
   return (
     <section className="audio-lab-record-panel" aria-label="Audio recording controls">
-      <div className="audio-lab-record-panel__meta">
-        <p className="audio-lab-eyebrow">Record</p>
-        <strong>{getRecordingStatusLabel(recordStatus)}</strong>
-        <span>{formatAudioLabDuration(recordElapsed)}</span>
-        <small>{recordMimeType || 'Recorder will choose the best supported format.'}</small>
-      </div>
+      <div className="audio-lab-record-panel__meta"><p className="audio-lab-eyebrow">Record</p><strong>{getRecordingStatusLabel(recordStatus)}</strong><span>{formatAudioLabDuration(recordElapsed)}</span><small>{recordMimeType || 'Recorder will choose the best supported format.'}</small></div>
       <div className="audio-lab-record-meter" aria-label="Live microphone level"><span style={{ width: levelPct }} /></div>
       <div className="audio-lab-record-actions">
         <button type="button" className="button button--primary" onClick={onStart} disabled={!canRecord || isBusy || isRecording || isPaused}>{recordStatus === 'ready' ? 'Record Another Take' : 'Record'}</button>
@@ -373,7 +361,6 @@ function RecordPanel({ canRecord, recordStatus, recordMimeType, recordElapsed, r
 
 function SelectionToolbar({ selection, duration, edits, canUndo, canRedo, isRendering, hasAudio, onSelectionChange, onClear, onSelectAll, onEdit, onUndo, onRedo, onExport }) {
   const disabled = !selection.hasSelection || isRendering
-
   return (
     <section className="audio-lab-selection-toolbar" aria-label="Selection and edit controls">
       <div className="audio-lab-selection-fields">
@@ -391,7 +378,7 @@ function SelectionToolbar({ selection, duration, edits, canUndo, canRedo, isRend
         <button type="button" className="button" onClick={onRedo} disabled={!canRedo || isRendering}>Redo</button>
         <button type="button" className="button button--primary" onClick={onExport} disabled={!hasAudio || isRendering}>Export WAV</button>
       </div>
-      <p className="description">Edits are non-destructive. Original sources are preserved. {edits.length ? `${edits.length} legacy selection edit${edits.length === 1 ? '' : 's'} active.` : 'No legacy selection edits on this source.'}</p>
+      <p className="description">Edits and effects are non-destructive. Originals remain preserved. {edits.length ? `${edits.length} legacy selection edit${edits.length === 1 ? '' : 's'} active.` : 'No legacy selection edits on this source.'}</p>
     </section>
   )
 }
@@ -399,19 +386,10 @@ function SelectionToolbar({ selection, duration, edits, canUndo, canRedo, isRend
 function SourceBin({ assets, selectedTrackId, onAddToTrack }) {
   return (
     <section className="audio-lab-panel audio-lab-source-bin">
-      <p className="audio-lab-eyebrow">Sources</p>
-      <h2>Project assets</h2>
-      {assets.length ? (
-        <div className="audio-lab-source-bin__list">
-          {assets.map((asset) => (
-            <div key={asset.id} className="audio-lab-source-bin__item">
-              <strong>{asset.filename}</strong>
-              <span>{formatAudioLabDuration(asset.duration)} · {asset.source || 'upload'} · {formatBytes(asset.size)}</span>
-              <button type="button" className="button" onClick={() => onAddToTrack(asset.id)} disabled={!selectedTrackId}>Add to selected track</button>
-            </div>
-          ))}
-        </div>
-      ) : <p className="description">No sources yet. Import or record something. Revolutionary, I know.</p>}
+      <p className="audio-lab-eyebrow">Sources</p><h2>Project assets</h2>
+      {assets.length ? <div className="audio-lab-source-bin__list">{assets.map((asset) => (
+        <div key={asset.id} className="audio-lab-source-bin__item"><strong>{asset.filename}</strong><span>{formatAudioLabDuration(asset.duration)} · {asset.source || 'upload'} · {formatBytes(asset.size)}</span><button type="button" className="button" onClick={() => onAddToTrack(asset.id)} disabled={!selectedTrackId}>Add to selected track</button></div>
+      ))}</div> : <p className="description">No sources yet. Import or record something.</p>}
     </section>
   )
 }
@@ -424,69 +402,35 @@ function MultitrackTimeline({ project, duration, currentTime, selection, selecte
 
   return (
     <section className="audio-lab-multitrack" aria-label="Multitrack timeline">
-      <div className="audio-lab-timeline-actions">
-        <button type="button" className="button" onClick={onAddTrack}>Add Track</button>
-        <span>{tracks.length} track{tracks.length === 1 ? '' : 's'}</span>
-      </div>
-      <div className="audio-lab-multitrack-scroll">
-        <div className="audio-lab-multitrack-inner" style={{ minWidth: `${width}px` }}>
-          <div className="audio-lab-multitrack-ruler">
-            <span>0:00</span>
-            <span>{formatAudioLabDuration((duration || computeProjectDuration(project) || 0) / 2)}</span>
-            <span>{formatAudioLabDuration(duration || computeProjectDuration(project) || 0)}</span>
-          </div>
-          <div className="audio-lab-playhead" style={{ left: `${150 + playheadLeft}px` }} />
-          {selectionRange.hasSelection ? (
-            <div className="audio-lab-multitrack-selection" style={{ left: `${150 + selectionRange.start * timelinePixelsPerSecond}px`, width: `${selectionRange.duration * timelinePixelsPerSecond}px` }} />
-          ) : null}
-          {tracks.map((track) => (
-            <div key={track.id} className={`audio-lab-multitrack-row${track.id === selectedTrackId ? ' is-selected' : ''}`}>
-              <div className="audio-lab-multitrack-controls" onClick={() => onSelectTrack(track.id)}>
-                <input value={track.name} onChange={(event) => onUpdateTrack(track.id, { name: event.target.value })} aria-label="Track name" />
-                <div className="audio-lab-track-buttons">
-                  <button type="button" className={track.muted ? 'is-active' : ''} onClick={(event) => { event.stopPropagation(); onUpdateTrack(track.id, { muted: !track.muted }) }}>Mute</button>
-                  <button type="button" className={track.solo ? 'is-active' : ''} onClick={(event) => { event.stopPropagation(); onUpdateTrack(track.id, { solo: !track.solo }) }}>Solo</button>
-                  <button type="button" onClick={(event) => { event.stopPropagation(); onDuplicateTrack(track.id) }}>Dup</button>
-                  <button type="button" onClick={(event) => { event.stopPropagation(); onDeleteTrack(track.id) }} disabled={track.clips?.length > 0}>Del</button>
-                </div>
-                <label>Gain <input type="number" min="0" step="0.05" value={track.gain} onChange={(event) => onUpdateTrack(track.id, { gain: event.target.value })} /></label>
-                <label>Pan <input type="number" min="-1" max="1" step="0.05" value={track.pan} onChange={(event) => onUpdateTrack(track.id, { pan: event.target.value })} /></label>
-              </div>
-              <div className="audio-lab-multitrack-lane" onClick={() => onSelectTrack(track.id)}>
-                {(track.clips || []).map((clip) => {
-                  const clipDuration = getClipDuration(clip)
-                  return (
-                    <button
-                      type="button"
-                      key={clip.id}
-                      className={`audio-lab-clip${clip.id === selectedClipId ? ' is-selected' : ''}${clip.muted ? ' is-muted' : ''}`}
-                      style={{ left: `${clip.timelineStart * timelinePixelsPerSecond}px`, width: `${Math.max(36, clipDuration * timelinePixelsPerSecond)}px` }}
-                      onMouseDown={(event) => onStartClipDrag(event, track.id, clip)}
-                      onClick={(event) => { event.stopPropagation(); onSelectClip(track.id, clip.id) }}
-                    >
-                      <strong>{clip.name}</strong>
-                      <span>{formatAudioLabDuration(clipDuration)}</span>
-                    </button>
-                  )
-                })}
-              </div>
+      <div className="audio-lab-timeline-actions"><button type="button" className="button" onClick={onAddTrack}>Add Track</button><span>{tracks.length} track{tracks.length === 1 ? '' : 's'}</span></div>
+      <div className="audio-lab-multitrack-scroll"><div className="audio-lab-multitrack-inner" style={{ minWidth: `${width}px` }}>
+        <div className="audio-lab-multitrack-ruler"><span>0:00</span><span>{formatAudioLabDuration((duration || computeProjectDuration(project) || 0) / 2)}</span><span>{formatAudioLabDuration(duration || computeProjectDuration(project) || 0)}</span></div>
+        <div className="audio-lab-playhead" style={{ left: `${150 + playheadLeft}px` }} />
+        {selectionRange.hasSelection ? <div className="audio-lab-multitrack-selection" style={{ left: `${150 + selectionRange.start * timelinePixelsPerSecond}px`, width: `${selectionRange.duration * timelinePixelsPerSecond}px` }} /> : null}
+        {tracks.map((track) => (
+          <div key={track.id} className={`audio-lab-multitrack-row${track.id === selectedTrackId ? ' is-selected' : ''}`}>
+            <div className="audio-lab-multitrack-controls" onClick={() => onSelectTrack(track.id)}>
+              <input value={track.name} onChange={(event) => onUpdateTrack(track.id, { name: event.target.value })} aria-label="Track name" />
+              <div className="audio-lab-track-buttons"><button type="button" className={track.muted ? 'is-active' : ''} onClick={(event) => { event.stopPropagation(); onUpdateTrack(track.id, { muted: !track.muted }) }}>Mute</button><button type="button" className={track.solo ? 'is-active' : ''} onClick={(event) => { event.stopPropagation(); onUpdateTrack(track.id, { solo: !track.solo }) }}>Solo</button><button type="button" onClick={(event) => { event.stopPropagation(); onDuplicateTrack(track.id) }}>Dup</button><button type="button" onClick={(event) => { event.stopPropagation(); onDeleteTrack(track.id) }} disabled={track.clips?.length > 0}>Del</button></div>
+              <label>Gain <input type="number" min="0" step="0.05" value={track.gain} onChange={(event) => onUpdateTrack(track.id, { gain: event.target.value })} /></label>
+              <label>Pan <input type="number" min="-1" max="1" step="0.05" value={track.pan} onChange={(event) => onUpdateTrack(track.id, { pan: event.target.value })} /></label>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="audio-lab-multitrack-lane" onClick={() => onSelectTrack(track.id)}>
+              {(track.clips || []).map((clip) => {
+                const clipDuration = getClipDuration(clip)
+                return <button type="button" key={clip.id} className={`audio-lab-clip${clip.id === selectedClipId ? ' is-selected' : ''}${clip.muted ? ' is-muted' : ''}`} style={{ left: `${clip.timelineStart * timelinePixelsPerSecond}px`, width: `${Math.max(36, clipDuration * timelinePixelsPerSecond)}px` }} onMouseDown={(event) => onStartClipDrag(event, track.id, clip)} onClick={(event) => { event.stopPropagation(); onSelectClip(track.id, clip.id) }}><strong>{clip.name}</strong><span>{formatAudioLabDuration(clipDuration)}</span></button>
+              })}
+            </div>
+          </div>
+        ))}
+      </div></div>
     </section>
   )
 }
 
 function ClipInspector({ project, selectedTrack, selectedClip, assets, currentTime, onUpdateClip, onDeleteClip, onSplitClip, onMoveClipToTrack }) {
   if (!selectedClip || !selectedTrack) {
-    return (
-      <section className="audio-lab-panel audio-lab-clip-inspector">
-        <p className="audio-lab-eyebrow">Clip inspector</p>
-        <h2>No clip selected</h2>
-        <p className="description">Select a clip in the timeline to trim, split, move, rename, or delete it.</p>
-      </section>
-    )
+    return <section className="audio-lab-panel audio-lab-clip-inspector"><p className="audio-lab-eyebrow">Clip inspector</p><h2>No clip selected</h2><p className="description">Select a clip in the timeline to trim, split, move, rename, or delete it.</p></section>
   }
 
   const asset = assets.find((item) => item.id === selectedClip.assetId)
@@ -494,22 +438,81 @@ function ClipInspector({ project, selectedTrack, selectedClip, assets, currentTi
 
   return (
     <section className="audio-lab-panel audio-lab-clip-inspector">
-      <p className="audio-lab-eyebrow">Clip inspector</p>
-      <h2>{selectedClip.name || 'Selected clip'}</h2>
+      <p className="audio-lab-eyebrow">Clip inspector</p><h2>{selectedClip.name || 'Selected clip'}</h2>
       <label className="audio-lab-field"><span>Clip name</span><input value={selectedClip.name || ''} onChange={(event) => onUpdateClip({ name: event.target.value })} /></label>
       <label className="audio-lab-field"><span>Track</span><select value={selectedTrack.id} onChange={(event) => onMoveClipToTrack(event.target.value)}>{(project?.tracks || []).map((track) => <option key={track.id} value={track.id}>{track.name}</option>)}</select></label>
-      <label className="audio-lab-field"><span>Timeline start</span><input type="number" min="0" step="0.01" value={Number(selectedClip.timelineStart || 0)} onChange={(event) => onUpdateClip({ timelineStart: event.target.value })} /></label>
-      <label className="audio-lab-field"><span>Source start</span><input type="number" min="0" step="0.01" value={Number(selectedClip.sourceStart || 0)} onChange={(event) => onUpdateClip({ sourceStart: event.target.value })} /></label>
-      <label className="audio-lab-field"><span>Source end</span><input type="number" min="0" step="0.01" value={Number(selectedClip.sourceEnd || 0)} onChange={(event) => onUpdateClip({ sourceEnd: event.target.value })} /></label>
-      <label className="audio-lab-field"><span>Clip gain</span><input type="number" min="0" step="0.05" value={Number(selectedClip.gain ?? 1)} onChange={(event) => onUpdateClip({ gain: event.target.value })} /></label>
+      <label className="audio-lab-field"><span>Timeline start</span><input type="number" min="0" step="0.01" value={Number(selectedClip.timelineStart || 0)} onChange={(event) => onUpdateClip({ timelineStart: Math.max(0, Number(event.target.value) || 0) })} /></label>
+      <label className="audio-lab-field"><span>Source start</span><input type="number" min="0" step="0.01" value={Number(selectedClip.sourceStart || 0)} onChange={(event) => onUpdateClip({ sourceStart: Math.max(0, Number(event.target.value) || 0) })} /></label>
+      <label className="audio-lab-field"><span>Source end</span><input type="number" min="0" step="0.01" value={Number(selectedClip.sourceEnd || 0)} onChange={(event) => onUpdateClip({ sourceEnd: Math.max(0, Number(event.target.value) || 0) })} /></label>
+      <label className="audio-lab-field"><span>Clip gain</span><input type="number" min="0" step="0.05" value={Number(selectedClip.gain ?? 1)} onChange={(event) => onUpdateClip({ gain: Math.max(0, Number(event.target.value) || 0) })} /></label>
       <label className="audio-lab-checkbox"><input type="checkbox" checked={Boolean(selectedClip.muted)} onChange={(event) => onUpdateClip({ muted: event.target.checked })} /> Muted</label>
-      <dl className="audio-lab-facts">
-        <div><dt>Source</dt><dd>{asset?.filename || selectedClip.assetId}</dd></div>
-        <div><dt>Duration</dt><dd>{formatAudioLabDuration(clipDuration)}</dd></div>
-        <div><dt>Playhead</dt><dd>{formatAudioLabDuration(currentTime)}</dd></div>
-      </dl>
-      <button type="button" className="button" onClick={onSplitClip}>Split at playhead</button>
-      <button type="button" className="button audio-lab-danger-button" onClick={onDeleteClip}>Delete selected clip</button>
+      <p className="description">{asset?.filename || 'Unknown source'} · {formatAudioLabDuration(clipDuration)} · playhead {formatAudioLabDuration(currentTime)}</p>
+      <div className="audio-lab-edit-actions"><button type="button" className="button" onClick={onSplitClip}>Split at playhead</button><button type="button" className="button" onClick={onDeleteClip}>Delete clip</button></div>
+    </section>
+  )
+}
+
+function EffectParamControls({ type, params, onChange }) {
+  function update(key, value) {
+    onChange({ ...params, [key]: value })
+  }
+
+  if (type === 'amplify') return <label className="audio-lab-field"><span>Gain dB</span><input type="number" step="0.5" value={params.gainDb ?? 3} onChange={(event) => update('gainDb', Number(event.target.value))} /></label>
+  if (type === 'normalize') return <label className="audio-lab-field"><span>Target dB</span><input type="number" step="0.5" value={params.targetDb ?? -1} onChange={(event) => update('targetDb', Number(event.target.value))} /></label>
+  if (type === 'limiter') return <label className="audio-lab-field"><span>Ceiling dB</span><input type="number" step="0.5" value={params.ceilingDb ?? -1} onChange={(event) => update('ceilingDb', Number(event.target.value))} /></label>
+  if (type === 'high-pass' || type === 'low-pass') return <label className="audio-lab-field"><span>Frequency Hz</span><input type="number" min="20" step="10" value={params.frequencyHz ?? (type === 'high-pass' ? 80 : 12000)} onChange={(event) => update('frequencyHz', Number(event.target.value))} /></label>
+  if (type === 'compressor') return <div className="audio-lab-effect-param-grid"><label className="audio-lab-field"><span>Threshold dB</span><input type="number" step="1" value={params.thresholdDb ?? -18} onChange={(event) => update('thresholdDb', Number(event.target.value))} /></label><label className="audio-lab-field"><span>Ratio</span><input type="number" min="1" step="0.25" value={params.ratio ?? 3} onChange={(event) => update('ratio', Number(event.target.value))} /></label><label className="audio-lab-field"><span>Makeup dB</span><input type="number" step="0.5" value={params.makeupGainDb ?? 0} onChange={(event) => update('makeupGainDb', Number(event.target.value))} /></label></div>
+  if (type === 'noise-gate') return <div className="audio-lab-effect-param-grid"><label className="audio-lab-field"><span>Threshold dB</span><input type="number" step="1" value={params.thresholdDb ?? -45} onChange={(event) => update('thresholdDb', Number(event.target.value))} /></label><label className="audio-lab-field"><span>Reduction dB</span><input type="number" step="1" value={params.reductionDb ?? -60} onChange={(event) => update('reductionDb', Number(event.target.value))} /></label></div>
+  return <p className="description">Linear fade. The selected scope determines where the ramp lands.</p>
+}
+
+function EffectsPanel({ project, selectedTrack, selectedClip, selection, onAddEffect, onAddPreset, onToggleEffect, onDeleteEffect, onUpdateEffect, onMoveEffect }) {
+  const [scope, setScope] = useState('master')
+  const [type, setType] = useState('normalize')
+  const [params, setParams] = useState(getDefaultEffectParams('normalize'))
+  const canUseSelection = selection.hasSelection
+
+  useEffect(() => {
+    setParams(getDefaultEffectParams(type))
+  }, [type])
+
+  const addDisabled = (scope === 'track' && !selectedTrack) || (scope === 'clip' && !selectedClip) || (scope === 'selection' && !canUseSelection)
+
+  return (
+    <section className="audio-lab-panel audio-lab-effects-panel">
+      <p className="audio-lab-eyebrow">Effects</p><h2>Effects rack</h2>
+      <p className="description">Effects are non-destructive and rendered into preview/export. Originals remain preserved.</p>
+      <div className="audio-lab-effect-builder">
+        <label className="audio-lab-field"><span>Target</span><select value={scope} onChange={(event) => setScope(event.target.value)}>{AUDIO_EFFECT_SCOPES.map((item) => <option key={item} value={item}>{item === 'master' ? 'Master mix' : item === 'track' ? 'Selected track' : item === 'clip' ? 'Selected clip' : 'Current selection'}</option>)}</select></label>
+        <label className="audio-lab-field"><span>Effect</span><select value={type} onChange={(event) => setType(event.target.value)}>{AUDIO_EFFECT_TYPES.map((item) => <option key={item} value={item}>{getAudioEffectLabel(item)}</option>)}</select></label>
+        <EffectParamControls type={type} params={params} onChange={setParams} />
+        {addDisabled ? <p className="description">Choose the required track, clip, or selection before adding this effect. Because buttons should not lie, unlike basically everything else.</p> : null}
+        <button type="button" className="button button--primary" disabled={addDisabled} onClick={() => onAddEffect({ type, scope, params })}>Add effect</button>
+      </div>
+      <div className="audio-lab-effect-presets">
+        <p className="audio-lab-eyebrow">Quick actions</p>
+        <button type="button" className="button" onClick={() => onAddEffect({ type: 'normalize', scope: 'master', params: { targetDb: -1 } })}>Normalize master to -1 dB</button>
+        <button type="button" className="button" onClick={() => onAddEffect({ type: 'compressor', scope: 'master', params: { thresholdDb: -18, ratio: 3, attackMs: 10, releaseMs: 120, makeupGainDb: 0 } })}>Gentle voice compressor</button>
+        <button type="button" className="button" onClick={() => onAddEffect({ type: 'high-pass', scope: 'master', params: { frequencyHz: 80 } })}>High-pass voice cleanup</button>
+        <button type="button" className="button" disabled={!canUseSelection} onClick={() => onAddEffect({ type: 'fade-in', scope: 'selection', params: { curve: 'linear' } })}>Fade selected region in</button>
+        <button type="button" className="button" disabled={!canUseSelection} onClick={() => onAddEffect({ type: 'fade-out', scope: 'selection', params: { curve: 'linear' } })}>Fade selected region out</button>
+        <button type="button" className="button" onClick={() => onAddEffect({ type: 'limiter', scope: 'master', params: { ceilingDb: -1 } })}>Hard limit master to -1 dB</button>
+      </div>
+      <div className="audio-lab-effect-presets">
+        <p className="audio-lab-eyebrow">Presets</p>
+        {AUDIO_EFFECT_PRESETS.map((preset) => <button key={preset.id} type="button" className="button" onClick={() => onAddPreset(preset)}>{preset.label}</button>)}
+      </div>
+      <div className="audio-lab-effect-chain">
+        <p className="audio-lab-eyebrow">Chain</p>
+        {project?.effects?.length ? project.effects.map((effect, index) => (
+          <div key={effect.id} className={`audio-lab-effect-chain__item${effect.enabled === false ? ' is-bypassed' : ''}`}>
+            <strong>{index + 1}. {getAudioEffectLabel(effect.type)}</strong>
+            <span>{effect.scope}{effect.trackId ? ` · ${effect.trackId}` : ''}{effect.clipId ? ` · ${effect.clipId}` : ''}</span>
+            <div className="audio-lab-effect-chain__actions"><button type="button" className="button" onClick={() => onToggleEffect(effect.id)}>{effect.enabled === false ? 'Enable' : 'Bypass'}</button><button type="button" className="button" onClick={() => onMoveEffect(effect.id, -1)} disabled={index === 0}>Up</button><button type="button" className="button" onClick={() => onMoveEffect(effect.id, 1)} disabled={index === project.effects.length - 1}>Down</button><button type="button" className="button" onClick={() => onDeleteEffect(effect.id)}>Delete</button></div>
+            <EffectParamControls type={effect.type} params={effect.params || {}} onChange={(nextParams) => onUpdateEffect(effect.id, { params: nextParams })} />
+          </div>
+        )) : <p className="description">No effects yet. Audio remains offensively natural.</p>}
+      </div>
     </section>
   )
 }
@@ -518,7 +521,7 @@ export function AudioLabPage() {
   const audioRef = useRef(null)
   const fileInputRef = useRef(null)
   const activeProjectRef = useRef(null)
-  const renderUrlRef = useRef('')
+  const clipDragRef = useRef(null)
   const mediaRecorderRef = useRef(null)
   const recordingStreamRef = useRef(null)
   const recordingChunksRef = useRef([])
@@ -528,7 +531,6 @@ export function AudioLabPage() {
   const recordingAnimationRef = useRef(0)
   const recordingStartedAtRef = useRef(0)
   const recordingAccumulatedMsRef = useRef(0)
-  const clipDragRef = useRef(null)
 
   const [projects, setProjects] = useState([])
   const [activeProject, setActiveProject] = useState(null)
@@ -539,14 +541,14 @@ export function AudioLabPage() {
   const [currentTime, setCurrentTime] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isRendering, setIsRendering] = useState(false)
+  const [renderedBuffer, setRenderedBuffer] = useState(null)
+  const [selectionRange, setSelectionRange] = useState({ start: 0, end: 0 })
   const [recordStatus, setRecordStatus] = useState('idle')
   const [recordElapsed, setRecordElapsed] = useState(0)
   const [recordLevel, setRecordLevel] = useState(0)
   const [recordMimeType, setRecordMimeType] = useState('')
   const [canPauseRecording, setCanPauseRecording] = useState(false)
-  const [renderedBuffer, setRenderedBuffer] = useState(null)
-  const [selectionRange, setSelectionRange] = useState({ start: 0, end: 0 })
-  const [statusMessage, setStatusMessage] = useState('AudioLab Phase 4 is ready. Import, record, arrange clips, and mix down tracks.')
+  const [statusMessage, setStatusMessage] = useState('AudioLab Phase 5 is ready. Import, record, edit, mix, master, and export locally.')
   const [errorMessage, setErrorMessage] = useState('')
 
   const recorderSupported = canUseRecorder()
@@ -554,27 +556,6 @@ export function AudioLabPage() {
   useEffect(() => {
     activeProjectRef.current = activeProject
   }, [activeProject])
-
-  useEffect(() => () => {
-    cleanupRecordingResources({ clearChunks: true })
-    if (renderUrlRef.current) URL.revokeObjectURL(renderUrlRef.current)
-  }, [])
-
-  useEffect(() => {
-    if (recordStatus !== 'recording') {
-      if (recordStatus === 'paused') setRecordElapsed(recordingAccumulatedMsRef.current / 1000)
-      return undefined
-    }
-
-    const updateElapsed = () => {
-      const liveMs = recordingStartedAtRef.current ? Date.now() - recordingStartedAtRef.current : 0
-      setRecordElapsed((recordingAccumulatedMsRef.current + liveMs) / 1000)
-    }
-
-    updateElapsed()
-    const interval = window.setInterval(updateElapsed, 200)
-    return () => window.clearInterval(interval)
-  }, [recordStatus])
 
   const selectedAsset = useMemo(() => {
     if (!activeProject?.sourceAssets?.length) return null
@@ -585,57 +566,64 @@ export function AudioLabPage() {
   const selectedClipId = activeProject?.transport?.selectedClipId || ''
   const selectedTrack = activeProject?.tracks?.find((track) => track.id === selectedTrackId) || activeProject?.tracks?.[0] || null
   const selectedClip = selectedTrack?.clips?.find((clip) => clip.id === selectedClipId) || null
+  const selectedEdits = selectedAsset ? getEditsForAsset(activeProject?.edits || [], selectedAsset.id) : []
   const selection = normalizeAudioSelection(selectionRange.start, selectionRange.end, duration)
-  const selectedEdits = getEditsForAsset(activeProject?.edits || [], selectedAsset?.id || '')
-  const renderKey = JSON.stringify({
-    id: activeProject?.id || '',
-    assets: activeProject?.sourceAssets?.map((asset) => [asset.id, asset.duration]) || [],
-    tracks: activeProject?.tracks || [],
-    edits: activeProject?.edits || [],
-  })
-
-  async function refreshProjects(selectId = '') {
-    const loaded = await listAudioLabProjects()
-    setProjects(loaded)
-
-    if (selectId) {
-      const project = await getAudioLabProject(selectId)
-      if (project) openProjectInState(project)
-      return
-    }
-
-    if (!activeProjectRef.current && loaded[0]) {
-      const project = await getAudioLabProject(loaded[0].id)
-      if (project) openProjectInState(project)
-    }
-  }
+  const canUndo = Boolean(activeProject?.history?.some((entry) => entry?.tracks))
+  const canRedo = Boolean(activeProject?.redoStack?.some((entry) => entry?.tracks))
+  const totalClips = (activeProject?.tracks || []).reduce((sum, track) => sum + (track.clips?.length || 0), 0)
 
   function openProjectInState(project) {
     const normalized = normalizeAudioLabProject(project)
     setActiveProject(normalized)
     activeProjectRef.current = normalized
     setSelectedAssetId(normalized.episode?.audioAssetId || normalized.sourceAssets?.[0]?.id || '')
-    setSelectionRange({
-      start: normalized.transport?.selectionStart || 0,
-      end: normalized.transport?.selectionEnd || 0,
-    })
-    setCurrentTime(normalized.transport?.playhead || 0)
+    setSelectionRange({ start: normalized.transport?.selectionStart || 0, end: normalized.transport?.selectionEnd || 0 })
+  }
+
+  async function refreshProjects(selectId = '') {
+    const loaded = await listAudioLabProjects()
+    setProjects(loaded)
+    if (selectId) {
+      const project = await getAudioLabProject(selectId)
+      if (project) openProjectInState(project)
+      return
+    }
+    if (!activeProjectRef.current && loaded[0]) {
+      const project = await getAudioLabProject(loaded[0].id)
+      if (project) openProjectInState(project)
+    }
   }
 
   useEffect(() => {
     refreshProjects().catch((error) => setErrorMessage(error.message || 'Unable to load AudioLab projects'))
+    return () => cleanupRecordingResources({ clearChunks: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    let cancelled = false
+    if (recordStatus !== 'recording') {
+      if (recordStatus === 'paused') setRecordElapsed(recordingAccumulatedMsRef.current / 1000)
+      return undefined
+    }
+    const updateElapsed = () => {
+      const liveMs = recordingStartedAtRef.current ? Date.now() - recordingStartedAtRef.current : 0
+      setRecordElapsed((recordingAccumulatedMsRef.current + liveMs) / 1000)
+    }
+    updateElapsed()
+    const interval = window.setInterval(updateElapsed, 200)
+    return () => window.clearInterval(interval)
+  }, [recordStatus])
 
-    async function renderProject() {
-      if (!activeProject?.sourceAssets?.length) {
+  useEffect(() => {
+    let cancelled = false
+    let objectUrl = ''
+
+    async function renderProjectPreview() {
+      if (!activeProject) {
+        setAudioUrl('')
         setPeaks([])
         setDuration(0)
         setRenderedBuffer(null)
-        setAudioUrl('')
         return
       }
 
@@ -643,42 +631,36 @@ export function AudioLabPage() {
         setIsRendering(true)
         setErrorMessage('')
         const buffers = new Map()
-
-        for (const asset of activeProject.sourceAssets) {
+        for (const asset of activeProject.sourceAssets || []) {
           const stored = await getAudioLabAsset(asset.id)
           if (!stored?.blob) continue
-          const decoded = await decodeAudioBlob(stored.blob)
-          buffers.set(asset.id, decoded)
+          buffers.set(asset.id, await decodeAudioBlob(stored.blob))
         }
-
+        const mix = renderMultitrackMixdown(activeProject, buffers)
+        const wav = encodeWav(mix)
+        objectUrl = URL.createObjectURL(wav)
         if (cancelled) return
-        if (!buffers.size) throw new Error('Original audio blobs are missing from local AudioLab storage')
-
-        const mixdown = renderMultitrackMixdown(activeProject, buffers)
-        const wav = encodeWav(mixdown)
-        const nextUrl = URL.createObjectURL(wav)
-
-        if (renderUrlRef.current) URL.revokeObjectURL(renderUrlRef.current)
-        renderUrlRef.current = nextUrl
-        setAudioUrl(nextUrl)
-        setRenderedBuffer(mixdown)
-        setPeaks(buildWaveformPeaks(mixdown))
-        setDuration(mixdown.duration || computeProjectDuration(activeProject) || 0)
-        setStatusMessage('Rendered multitrack preview from preserved source blobs and project JSON.')
+        setRenderedBuffer(mix)
+        setAudioUrl(objectUrl)
+        setPeaks(buildWaveformPeaks(mix))
+        setDuration(mix.duration || computeProjectDuration(activeProject) || 0)
+        setCurrentTime((time) => Math.min(time, mix.duration || 0))
+        setStatusMessage(`Rendered preview: ${activeProject.tracks?.length || 0} tracks, ${totalClips} clips, ${activeProject.effects?.length || 0} effects.`)
       } catch (error) {
-        if (!cancelled) setErrorMessage(error.message || 'Unable to render multitrack preview')
+        if (!cancelled) {
+          setErrorMessage(error.message || 'Unable to render AudioLab preview')
+        }
       } finally {
         if (!cancelled) setIsRendering(false)
       }
     }
 
-    renderProject()
-
+    renderProjectPreview()
     return () => {
       cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [renderKey])
+  }, [activeProject?.id, JSON.stringify(activeProject?.tracks || []), JSON.stringify(activeProject?.edits || []), JSON.stringify(activeProject?.effects || []), activeProject?.sourceAssets?.length])
 
   function updateActiveProject(nextProject) {
     const normalized = normalizeAudioLabProject(nextProject)
@@ -689,17 +671,15 @@ export function AudioLabPage() {
   function updateProjectWithHistory(mutator, message = 'Project updated.') {
     const before = activeProjectRef.current
     if (!before) return
-    const draft = stripProjectHistory(before)
-    const changed = mutator(draft) || draft
-    const next = commitProjectHistory(before, changed)
-    updateActiveProject(next)
+    const next = normalizeAudioLabProject(mutator(before))
+    updateActiveProject(commitProjectHistory(before, next))
     setStatusMessage(message)
   }
 
   async function handleNewProject() {
     const project = await saveAudioLabProject(createEmptyAudioLabProject({ title: 'Untitled AudioLab Project' }))
     openProjectInState(project)
-    setStatusMessage('New AudioLab project created. Import or record an audio source to start arranging tracks.')
+    setStatusMessage('New AudioLab project created.')
     await refreshProjects(project.id)
   }
 
@@ -715,7 +695,7 @@ export function AudioLabPage() {
     const saved = await saveAudioLabProject(project)
     openProjectInState(saved)
     await refreshProjects(saved.id)
-    setStatusMessage('Project saved. Tracks, clips, and edit graph stored as lightweight JSON.')
+    setStatusMessage('Project saved. Sources preserved. Edits/effects stored as JSON.')
     return saved
   }
 
@@ -735,37 +715,17 @@ export function AudioLabPage() {
 
   async function attachAssetToProject(asset, sourceLabel = 'Imported') {
     const baseProject = activeProjectRef.current || createEmptyAudioLabProject({ title: asset.title })
-    const selected = baseProject.transport?.selectedTrackId || baseProject.tracks?.[0]?.id || 'track-main'
-    const tracks = baseProject.tracks?.length ? baseProject.tracks : [makeAudioLabTrack({ id: selected, name: 'Main Track' })]
-    const nextTracks = tracks.map((track, index) => {
-      if (track.id !== selected && index !== 0) return track
-      if (track.id !== selected && tracks.some((item) => item.id === selected)) return track
-      return {
-        ...track,
-        clips: [
-          ...(track.clips || []),
-          makeAudioLabClip(asset, { timelineStart: computeProjectDuration(baseProject) ? currentTime : 0 }),
-        ],
-      }
-    })
+    const tracks = baseProject.tracks?.length ? baseProject.tracks : [makeAudioLabTrack({ name: 'Main Track' })]
+    const selected = baseProject.transport?.selectedTrackId || tracks[0].id
     const title = baseProject.title === 'Untitled AudioLab Project' ? asset.title : baseProject.title
     const nextProject = normalizeAudioLabProject({
       ...baseProject,
       title,
       sourceAssets: [asset, ...(baseProject.sourceAssets || []).filter((item) => item.id !== asset.id)],
-      tracks: nextTracks,
-      episode: {
-        ...(baseProject.episode || {}),
-        title: baseProject.episode?.title && baseProject.episode.title !== 'Untitled AudioLab Project' ? baseProject.episode.title : title,
-        slug: baseProject.episode?.slug || slugifyAudioLab(title),
-        audioAssetId: asset.id,
-      },
-      transport: {
-        ...(baseProject.transport || {}),
-        selectedTrackId: selected,
-      },
+      tracks: tracks.map((track) => track.id === selected ? { ...track, clips: [...(track.clips || []), makeAudioLabClip(asset, { timelineStart: computeProjectDuration(baseProject) || 0 })] } : track),
+      episode: { ...(baseProject.episode || {}), title, slug: baseProject.episode?.slug || slugifyAudioLab(title), audioAssetId: asset.id },
+      transport: { ...(baseProject.transport || {}), selectedTrackId: selected },
     })
-
     const saved = await saveAudioLabProject(nextProject)
     openProjectInState(saved)
     setSelectedAssetId(asset.id)
@@ -782,7 +742,6 @@ export function AudioLabPage() {
       setErrorMessage('Choose an audio file. The browser bureaucracy is strict today.')
       return
     }
-
     try {
       setErrorMessage('')
       setIsRendering(true)
@@ -798,10 +757,8 @@ export function AudioLabPage() {
   }
 
   function stopInputMeter() {
-    if (recordingAnimationRef.current) {
-      window.cancelAnimationFrame(recordingAnimationRef.current)
-      recordingAnimationRef.current = 0
-    }
+    if (recordingAnimationRef.current) window.cancelAnimationFrame(recordingAnimationRef.current)
+    recordingAnimationRef.current = 0
     try { recordingSourceRef.current?.disconnect?.() } catch { /* ignore */ }
     try { recordingAudioContextRef.current?.close?.() } catch { /* ignore */ }
     recordingSourceRef.current = null
@@ -852,7 +809,6 @@ export function AudioLabPage() {
       setRecordLevel(Math.min(1, max * 1.4))
       recordingAnimationRef.current = window.requestAnimationFrame(tick)
     }
-
     tick()
   }
 
@@ -862,7 +818,6 @@ export function AudioLabPage() {
       setErrorMessage('This browser does not support native MediaRecorder microphone capture.')
       return
     }
-
     try {
       if (audioRef.current) audioRef.current.pause()
       setErrorMessage('')
@@ -870,14 +825,12 @@ export function AudioLabPage() {
       setRecordLevel(0)
       setRecordStatus('requesting')
       setStatusMessage('Requesting microphone access…')
-
       let stream
       try {
         stream = await window.navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false } })
       } catch {
         stream = await window.navigator.mediaDevices.getUserMedia({ audio: true })
       }
-
       const preferredMimeType = getPreferredRecordingMimeType()
       const recorder = new window.MediaRecorder(stream, preferredMimeType ? { mimeType: preferredMimeType } : undefined)
       recordingChunksRef.current = []
@@ -888,24 +841,9 @@ export function AudioLabPage() {
       setRecordMimeType(recorder.mimeType || preferredMimeType || 'browser default')
       setCanPauseRecording(typeof recorder.pause === 'function' && typeof recorder.resume === 'function')
       setupInputMeter(stream)
-
-      recorder.ondataavailable = (event) => {
-        if (event.data?.size) recordingChunksRef.current.push(event.data)
-      }
-      recorder.onerror = (event) => {
-        setRecordStatus('error')
-        setErrorMessage(event.error?.message || 'Recording failed')
-        cleanupRecordingResources({ clearChunks: true })
-      }
-      recorder.onstop = () => {
-        finishRecordingTake(recorder).catch((error) => {
-          setRecordStatus('error')
-          setErrorMessage(error.message || 'Unable to save recorded take')
-          cleanupRecordingResources({ clearChunks: true })
-          setIsRendering(false)
-        })
-      }
-
+      recorder.ondataavailable = (event) => { if (event.data?.size) recordingChunksRef.current.push(event.data) }
+      recorder.onerror = (event) => { setRecordStatus('error'); setErrorMessage(event.error?.message || 'Recording failed'); cleanupRecordingResources({ clearChunks: true }) }
+      recorder.onstop = () => { finishRecordingTake(recorder).catch((error) => { setRecordStatus('error'); setErrorMessage(error.message || 'Unable to save recorded take'); cleanupRecordingResources({ clearChunks: true }); setIsRendering(false) }) }
       recorder.start(1000)
       setRecordStatus('recording')
       setStatusMessage('Recording. The microphone is now doing something useful for once.')
@@ -951,21 +889,13 @@ export function AudioLabPage() {
     try {
       setRecordStatus('saving')
       setIsRendering(true)
-      const chunks = recordingChunksRef.current
       const mimeType = recorder.mimeType || getPreferredRecordingMimeType() || 'audio/webm'
-      const blob = new Blob(chunks, { type: mimeType })
+      const blob = new Blob(recordingChunksRef.current, { type: mimeType })
       if (!blob.size) throw new Error('Recording produced an empty audio file')
       releaseRecordingStream()
       const decoded = await decodeAudioBlob(blob)
       const filename = makeRecordingFilename(blob.type || mimeType)
-      const asset = await putAudioLabAssetFromBlob(blob, {
-        filename,
-        title: filename.replace(/\.[^.]+$/, ''),
-        mimeType: blob.type || mimeType,
-        size: blob.size,
-        duration: decoded.duration || recordElapsed || 0,
-        source: 'browser-recording',
-      })
+      const asset = await putAudioLabAssetFromBlob(blob, { filename, title: filename.replace(/\.[^.]+$/, ''), mimeType: blob.type || mimeType, size: blob.size, duration: decoded.duration || recordElapsed || 0, source: 'browser-recording' })
       await attachAssetToProject(asset, 'Recorded')
       setRecordStatus('ready')
       setRecordElapsed(decoded.duration || recordElapsed || 0)
@@ -979,27 +909,15 @@ export function AudioLabPage() {
   async function handleTransportToggle() {
     const element = audioRef.current
     if (!element || !audioUrl) return
-    if (isPlaying) {
-      element.pause()
-      return
-    }
-    try {
-      await element.play()
-    } catch (error) {
-      setErrorMessage(error.message || 'Playback failed')
-    }
+    if (isPlaying) { element.pause(); return }
+    try { await element.play() } catch (error) { setErrorMessage(error.message || 'Playback failed') }
   }
 
   function handleSeek(value) {
-    const nextTime = clampAudioTime(value, duration || computeProjectDuration(activeProject))
+    const nextTime = clampAudioTime(value, duration || 0)
     if (audioRef.current) audioRef.current.currentTime = nextTime
     setCurrentTime(nextTime)
-    if (activeProjectRef.current) {
-      updateActiveProject({
-        ...activeProjectRef.current,
-        transport: { ...(activeProjectRef.current.transport || {}), playhead: nextTime },
-      })
-    }
+    if (activeProjectRef.current) updateActiveProject({ ...activeProjectRef.current, transport: { ...(activeProjectRef.current.transport || {}), playhead: nextTime } })
   }
 
   function updateProjectFields(fields) {
@@ -1008,34 +926,25 @@ export function AudioLabPage() {
   }
 
   function updateEpisodeFields(fields) {
-    const project = activeProjectRef.current
-    if (!project) return
-    const nextEpisode = { ...(project.episode || {}), ...fields }
+    if (!activeProjectRef.current) return
+    const nextEpisode = { ...(activeProjectRef.current.episode || {}), ...fields }
     if (fields.title && !fields.slug) nextEpisode.slug = slugifyAudioLab(fields.title)
-    updateActiveProject({ ...project, episode: nextEpisode })
+    updateActiveProject({ ...activeProjectRef.current, episode: nextEpisode })
   }
 
   function handleLegacyEdit(type) {
     if (!activeProjectRef.current || !selectedAsset?.id || !selection.hasSelection) return
-    updateProjectWithHistory((project) => ({
-      ...project,
-      edits: [...(project.edits || []), makeAudioEditOperation(type, selectedAsset.id, selection.start, selection.end)],
-      transport: { ...(project.transport || {}), selectionStart: 0, selectionEnd: 0 },
-    }), `${type[0].toUpperCase()}${type.slice(1)} edit added. Preview re-rendering from original sources.`)
+    const edit = makeAudioEditOperation(type, selectedAsset.id, selection.start, selection.end)
+    updateProjectWithHistory((project) => ({ ...project, edits: [...(project.edits || []), edit], transport: { ...(project.transport || {}), selectionStart: 0, selectionEnd: 0 } }), `${type} operation added.`)
     setSelectionRange({ start: 0, end: 0 })
   }
 
   function handleUndo() {
     const project = activeProjectRef.current
-    const history = Array.isArray(project?.history) ? project.history : []
-    const previous = history[history.length - 1]
+    const previous = project?.history?.[project.history.length - 1]
     if (!previous?.tracks) return
-    updateActiveProject(normalizeAudioLabProject({
-      ...previous,
-      history: history.slice(0, -1),
-      redoStack: [stripProjectHistory(project), ...(project.redoStack || [])].slice(0, 30),
-    }))
-    setStatusMessage('Undo applied. Multitrack preview re-rendering.')
+    updateActiveProject(normalizeAudioLabProject({ ...previous, history: (project.history || []).slice(0, -1), redoStack: [stripProjectHistory(project), ...(project.redoStack || [])] }))
+    setStatusMessage('Undo applied. Preview re-rendering.')
   }
 
   function handleRedo() {
@@ -1043,12 +952,8 @@ export function AudioLabPage() {
     const redoStack = Array.isArray(project?.redoStack) ? project.redoStack : []
     const next = redoStack[0]
     if (!next?.tracks) return
-    updateActiveProject(normalizeAudioLabProject({
-      ...next,
-      history: [...(project.history || []), stripProjectHistory(project)].slice(-30),
-      redoStack: redoStack.slice(1),
-    }))
-    setStatusMessage('Redo applied. Multitrack preview re-rendering.')
+    updateActiveProject(normalizeAudioLabProject({ ...next, history: [...(project.history || []), stripProjectHistory(project)].slice(-30), redoStack: redoStack.slice(1) }))
+    setStatusMessage('Redo applied. Preview re-rendering.')
   }
 
   async function handleExportWav() {
@@ -1059,7 +964,7 @@ export function AudioLabPage() {
       const wav = encodeWav(renderedBuffer)
       const filename = makeAudioDownloadName(activeProject?.title || 'audiolab-mixdown', 'wav')
       downloadBlob(wav, filename)
-      setStatusMessage(`Exported ${filename}. This is the multitrack mixdown. Originals remain untouched.`)
+      setStatusMessage(`Exported ${filename}. Effects included. Originals remain untouched.`)
     } catch (error) {
       setErrorMessage(error.message || 'Unable to export WAV')
     } finally {
@@ -1068,57 +973,35 @@ export function AudioLabPage() {
   }
 
   function handleAddTrack() {
-    updateProjectWithHistory((project) => {
-      const track = makeAudioLabTrack({ name: `Audio Track ${(project.tracks?.length || 0) + 1}` })
-      return { ...project, tracks: [...(project.tracks || []), track], transport: { ...(project.transport || {}), selectedTrackId: track.id } }
-    }, 'Track added.')
+    updateProjectWithHistory((project) => { const track = makeAudioLabTrack({ name: `Audio Track ${(project.tracks?.length || 0) + 1}` }); return { ...project, tracks: [...(project.tracks || []), track], transport: { ...(project.transport || {}), selectedTrackId: track.id } } }, 'Track added.')
   }
 
   function handleUpdateTrack(trackId, patch) {
-    updateProjectWithHistory((project) => ({
-      ...project,
-      tracks: (project.tracks || []).map((track) => track.id === trackId ? { ...track, ...patch, gain: patch.gain ?? track.gain, pan: patch.pan ?? track.pan } : track),
-      transport: { ...(project.transport || {}), selectedTrackId: trackId },
-    }), 'Track updated.')
+    updateProjectWithHistory((project) => ({ ...project, tracks: (project.tracks || []).map((track) => track.id === trackId ? { ...track, ...patch, gain: patch.gain ?? track.gain, pan: patch.pan ?? track.pan } : track), transport: { ...(project.transport || {}), selectedTrackId: trackId } }), 'Track updated.')
   }
 
   function handleDeleteTrack(trackId) {
     const track = activeProjectRef.current?.tracks?.find((item) => item.id === trackId)
     if (track?.clips?.length) return
-    updateProjectWithHistory((project) => {
-      const tracks = (project.tracks || []).filter((item) => item.id !== trackId)
-      return { ...project, tracks, transport: { ...(project.transport || {}), selectedTrackId: tracks[0]?.id || '', selectedClipId: '' } }
-    }, 'Empty track deleted.')
+    updateProjectWithHistory((project) => { const tracks = (project.tracks || []).filter((item) => item.id !== trackId); return { ...project, tracks, transport: { ...(project.transport || {}), selectedTrackId: tracks[0]?.id || '', selectedClipId: '' } } }, 'Empty track deleted.')
   }
 
   function handleDuplicateTrack(trackId) {
     const track = activeProjectRef.current?.tracks?.find((item) => item.id === trackId)
     if (!track) return
-    updateProjectWithHistory((project) => {
-      const copy = makeAudioLabTrack({ ...track, id: makeAudioLabId('track'), name: `${track.name} Copy`, clips: (track.clips || []).map((clip) => ({ ...clip, id: makeAudioLabId('clip') })) })
-      return { ...project, tracks: [...(project.tracks || []), copy], transport: { ...(project.transport || {}), selectedTrackId: copy.id, selectedClipId: '' } }
-    }, 'Track duplicated.')
+    updateProjectWithHistory((project) => { const copy = makeAudioLabTrack({ ...track, id: makeAudioLabId('track'), name: `${track.name} Copy`, clips: (track.clips || []).map((clip) => ({ ...clip, id: makeAudioLabId('clip') })) }); return { ...project, tracks: [...(project.tracks || []), copy], transport: { ...(project.transport || {}), selectedTrackId: copy.id, selectedClipId: '' } } }, 'Track duplicated.')
   }
 
   function handleSelectTrack(trackId) {
-    const project = activeProjectRef.current
-    if (!project) return
-    updateActiveProject({ ...project, transport: { ...(project.transport || {}), selectedTrackId: trackId } })
+    if (!activeProjectRef.current) return
+    updateActiveProject({ ...activeProjectRef.current, transport: { ...(activeProjectRef.current.transport || {}), selectedTrackId: trackId } })
   }
 
   function handleSelectClip(trackId, clipId) {
     const project = activeProjectRef.current
     if (!project) return
     const clip = project.tracks?.find((track) => track.id === trackId)?.clips?.find((item) => item.id === clipId)
-    updateActiveProject({
-      ...project,
-      transport: {
-        ...(project.transport || {}),
-        selectedTrackId: trackId,
-        selectedClipId: clipId,
-        playhead: clip?.timelineStart ?? project.transport?.playhead ?? 0,
-      },
-    })
+    updateActiveProject({ ...project, transport: { ...(project.transport || {}), selectedTrackId: trackId, selectedClipId: clipId, playhead: clip?.timelineStart ?? project.transport?.playhead ?? 0 } })
     if (clip) setSelectedAssetId(clip.assetId)
   }
 
@@ -1128,32 +1011,18 @@ export function AudioLabPage() {
     updateProjectWithHistory((project) => {
       const tracks = project.tracks?.length ? project.tracks : [makeAudioLabTrack({ name: 'Main Track' })]
       const targetId = project.transport?.selectedTrackId || tracks[0].id
-      return {
-        ...project,
-        tracks: tracks.map((track) => track.id === targetId ? { ...track, clips: [...(track.clips || []), makeAudioLabClip(asset, { timelineStart: currentTime || computeProjectDuration(project) || 0 })] } : track),
-        transport: { ...(project.transport || {}), selectedTrackId: targetId },
-      }
+      return { ...project, tracks: tracks.map((track) => track.id === targetId ? { ...track, clips: [...(track.clips || []), makeAudioLabClip(asset, { timelineStart: currentTime || computeProjectDuration(project) || 0 })] } : track), transport: { ...(project.transport || {}), selectedTrackId: targetId } }
     }, 'Source added as a clip.')
   }
 
   function handleUpdateSelectedClip(patch) {
     if (!selectedClip || !selectedTrack) return
-    updateProjectWithHistory((project) => ({
-      ...project,
-      tracks: (project.tracks || []).map((track) => track.id !== selectedTrack.id ? track : {
-        ...track,
-        clips: (track.clips || []).map((clip) => clip.id === selectedClip.id ? { ...clip, ...patch } : clip),
-      }),
-    }), 'Clip updated.')
+    updateProjectWithHistory((project) => ({ ...project, tracks: (project.tracks || []).map((track) => track.id !== selectedTrack.id ? track : { ...track, clips: (track.clips || []).map((clip) => clip.id === selectedClip.id ? { ...clip, ...patch } : clip) }) }), 'Clip updated.')
   }
 
   function handleDeleteSelectedClip() {
     if (!selectedClip || !selectedTrack) return
-    updateProjectWithHistory((project) => ({
-      ...project,
-      tracks: (project.tracks || []).map((track) => track.id !== selectedTrack.id ? track : { ...track, clips: (track.clips || []).filter((clip) => clip.id !== selectedClip.id) }),
-      transport: { ...(project.transport || {}), selectedClipId: '' },
-    }), 'Clip deleted.')
+    updateProjectWithHistory((project) => ({ ...project, tracks: (project.tracks || []).map((track) => track.id !== selectedTrack.id ? track : { ...track, clips: (track.clips || []).filter((clip) => clip.id !== selectedClip.id) }), transport: { ...(project.transport || {}), selectedClipId: '' } }), 'Clip deleted.')
   }
 
   function handleSplitSelectedClip() {
@@ -1161,36 +1030,13 @@ export function AudioLabPage() {
     const clipStart = Number(selectedClip.timelineStart || 0)
     const splitOffset = currentTime - clipStart
     const clipDuration = getClipDuration(selectedClip)
-    if (splitOffset <= 0.02 || splitOffset >= clipDuration - 0.02) {
-      setErrorMessage('Move the playhead inside the selected clip before splitting.')
-      return
-    }
-
-    updateProjectWithHistory((project) => ({
-      ...project,
-      tracks: (project.tracks || []).map((track) => track.id !== selectedTrack.id ? track : {
-        ...track,
-        clips: (track.clips || []).flatMap((clip) => {
-          if (clip.id !== selectedClip.id) return [clip]
-          const first = { ...clip, sourceEnd: Number(clip.sourceStart || 0) + splitOffset }
-          const second = { ...clip, id: makeAudioLabId('clip'), timelineStart: currentTime, sourceStart: Number(clip.sourceStart || 0) + splitOffset, name: `${clip.name} split` }
-          return [first, second]
-        }),
-      }),
-    }), 'Clip split at playhead.')
+    if (splitOffset <= 0.02 || splitOffset >= clipDuration - 0.02) { setErrorMessage('Move the playhead inside the selected clip before splitting.'); return }
+    updateProjectWithHistory((project) => ({ ...project, tracks: (project.tracks || []).map((track) => track.id !== selectedTrack.id ? track : { ...track, clips: (track.clips || []).flatMap((clip) => { if (clip.id !== selectedClip.id) return [clip]; const first = { ...clip, sourceEnd: Number(clip.sourceStart || 0) + splitOffset }; const second = { ...clip, id: makeAudioLabId('clip'), timelineStart: currentTime, sourceStart: Number(clip.sourceStart || 0) + splitOffset, name: `${clip.name} split` }; return [first, second] }) }) }), 'Clip split at playhead.')
   }
 
   function handleMoveClipToTrack(targetTrackId) {
     if (!selectedClip || !selectedTrack || targetTrackId === selectedTrack.id) return
-    updateProjectWithHistory((project) => ({
-      ...project,
-      tracks: (project.tracks || []).map((track) => {
-        if (track.id === selectedTrack.id) return { ...track, clips: (track.clips || []).filter((clip) => clip.id !== selectedClip.id) }
-        if (track.id === targetTrackId) return { ...track, clips: [...(track.clips || []), selectedClip] }
-        return track
-      }),
-      transport: { ...(project.transport || {}), selectedTrackId: targetTrackId, selectedClipId: selectedClip.id },
-    }), 'Clip moved to another track.')
+    updateProjectWithHistory((project) => ({ ...project, tracks: (project.tracks || []).map((track) => { if (track.id === selectedTrack.id) return { ...track, clips: (track.clips || []).filter((clip) => clip.id !== selectedClip.id) }; if (track.id === targetTrackId) return { ...track, clips: [...(track.clips || []), selectedClip] }; return track }), transport: { ...(project.transport || {}), selectedTrackId: targetTrackId, selectedClipId: selectedClip.id } }), 'Clip moved to another track.')
   }
 
   function handleStartClipDrag(event, trackId, clip) {
@@ -1202,40 +1048,68 @@ export function AudioLabPage() {
     const startX = event.clientX
     const startTime = Number(clip.timelineStart || 0)
     clipDragRef.current = { before: stripProjectHistory(before), trackId, clipId: clip.id, startX, startTime }
-
     const handleMove = (moveEvent) => {
       const drag = clipDragRef.current
       if (!drag || !activeProjectRef.current) return
       const delta = (moveEvent.clientX - drag.startX) / timelinePixelsPerSecond
       const nextStart = Math.max(0, drag.startTime + delta)
       const project = activeProjectRef.current
-      updateActiveProject({
-        ...project,
-        tracks: (project.tracks || []).map((track) => track.id !== drag.trackId ? track : {
-          ...track,
-          clips: (track.clips || []).map((item) => item.id === drag.clipId ? { ...item, timelineStart: nextStart } : item),
-        }),
-      })
+      updateActiveProject({ ...project, tracks: (project.tracks || []).map((track) => track.id !== drag.trackId ? track : { ...track, clips: (track.clips || []).map((item) => item.id === drag.clipId ? { ...item, timelineStart: nextStart } : item) }) })
     }
-
     const handleUp = () => {
       const drag = clipDragRef.current
       clipDragRef.current = null
       window.removeEventListener('mousemove', handleMove)
       window.removeEventListener('mouseup', handleUp)
-      if (drag && activeProjectRef.current) {
-        updateActiveProject(commitProjectHistory(drag.before, activeProjectRef.current))
-        setStatusMessage('Clip moved on the timeline.')
-      }
+      if (drag && activeProjectRef.current) { updateActiveProject(commitProjectHistory(drag.before, activeProjectRef.current)); setStatusMessage('Clip moved on the timeline.') }
     }
-
     window.addEventListener('mousemove', handleMove)
     window.addEventListener('mouseup', handleUp)
   }
 
+  function scopeDetailsForEffect(scope) {
+    if (scope === 'track') return { trackId: selectedTrack?.id || '' }
+    if (scope === 'clip') return { trackId: selectedTrack?.id || '', clipId: selectedClip?.id || '', assetId: selectedClip?.assetId || '' }
+    if (scope === 'selection') return { start: selection.start, end: selection.end }
+    return {}
+  }
+
+  function handleAddEffect(fields) {
+    const effect = makeAudioEffectOperation({ ...fields, ...scopeDetailsForEffect(fields.scope) })
+    updateProjectWithHistory((project) => ({ ...project, effects: [...(project.effects || []), effect] }), `${getAudioEffectLabel(effect.type)} effect added.`)
+  }
+
+  function handleAddPreset(preset) {
+    const effects = (preset.effects || []).map((effect) => makeAudioEffectOperation({ ...effect, ...scopeDetailsForEffect(effect.scope || 'master') }))
+    updateProjectWithHistory((project) => ({ ...project, effects: [...(project.effects || []), ...effects] }), `${preset.label} preset added.`)
+  }
+
+  function handleToggleEffect(effectId) {
+    updateProjectWithHistory((project) => ({ ...project, effects: (project.effects || []).map((effect) => effect.id === effectId ? { ...effect, enabled: effect.enabled === false } : effect) }), 'Effect bypass toggled.')
+  }
+
+  function handleDeleteEffect(effectId) {
+    updateProjectWithHistory((project) => ({ ...project, effects: (project.effects || []).filter((effect) => effect.id !== effectId) }), 'Effect deleted.')
+  }
+
+  function handleUpdateEffect(effectId, patch) {
+    updateProjectWithHistory((project) => ({ ...project, effects: (project.effects || []).map((effect) => effect.id === effectId ? { ...effect, ...patch } : effect) }), 'Effect updated.')
+  }
+
+  function handleMoveEffect(effectId, direction) {
+    updateProjectWithHistory((project) => {
+      const effects = [...(project.effects || [])]
+      const index = effects.findIndex((effect) => effect.id === effectId)
+      const nextIndex = index + direction
+      if (index < 0 || nextIndex < 0 || nextIndex >= effects.length) return project
+      const [effect] = effects.splice(index, 1)
+      effects.splice(nextIndex, 0, effect)
+      return { ...project, effects }
+    }, 'Effect order changed.')
+  }
+
   async function handleCreateEpisodeDraft() {
     if (!activeProject) return
-
     try {
       setErrorMessage('')
       const savedProject = await handleSaveProject(activeProject)
@@ -1246,7 +1120,6 @@ export function AudioLabPage() {
       const asset = project.sourceAssets.find((item) => item.id === (episode.audioAssetId || selectedAsset?.id)) || selectedAsset
       const title = episode.title || project.title || 'Untitled AudioLab Episode'
       const description = episode.description || ''
-
       const payload = {
         ...nativeEntry,
         id: episode.nativeEntryId || `audiolab-${project.id}`,
@@ -1265,24 +1138,10 @@ export function AudioLabPage() {
         sourcePostId: project.id,
         podcastDuration: formatAudioLabDuration(duration || asset?.duration || 0),
         podcastSummary: description,
-        relatedAssets: [{
-          type: 'audiolab-project',
-          projectId: project.id,
-          assetId: asset?.id || '',
-          filename: asset?.filename || '',
-          duration: duration || asset?.duration || 0,
-          source: asset?.source || '',
-          tracks: project.tracks?.length || 0,
-          clips: (project.tracks || []).reduce((sum, track) => sum + (track.clips?.length || 0), 0),
-          note: 'Audio sources are preserved in local AudioLab IndexedDB storage. Phase 4 exports a local multitrack WAV, but server upload is not added yet.',
-        }],
+        relatedAssets: [{ type: 'audiolab-project', projectId: project.id, assetId: asset?.id || '', filename: asset?.filename || '', duration: duration || asset?.duration || 0, source: asset?.source || '', tracks: project.tracks?.length || 0, clips: totalClips, effects: project.effects?.length || 0, note: 'Audio sources are preserved in local AudioLab IndexedDB storage. Phase 5 exports a local mastered WAV, but server upload is not added yet.' }],
       }
-
       const result = await upsertNativeEntryWithMeta(items, payload, 'AudioLab episode draft')
-      const nextProject = await saveAudioLabProject({
-        ...project,
-        episode: { ...episode, title, slug: payload.slug, description, status: 'draft', nativeEntryId: result.item.id, nativeEntrySlug: result.item.slug, updatedAt: new Date().toISOString() },
-      })
+      const nextProject = await saveAudioLabProject({ ...project, episode: { ...episode, title, slug: payload.slug, description, status: 'draft', nativeEntryId: result.item.id, nativeEntrySlug: result.item.slug, updatedAt: new Date().toISOString() } })
       openProjectInState(nextProject)
       await refreshProjects(nextProject.id)
       setStatusMessage(result.synced ? 'Episode draft attached and synced.' : 'Episode draft attached locally. Remote sync can catch up later.')
@@ -1291,88 +1150,31 @@ export function AudioLabPage() {
     }
   }
 
-  const episodeEditLink = activeProject?.episode?.nativeEntryId
-    ? `${adminRoutes.nativeBridge}?edit=${encodeURIComponent(activeProject.episode.nativeEntryId)}`
-    : `${adminRoutes.nativeBridge}?new=podcast`
-  const canUndo = Boolean(activeProject?.history?.some((entry) => entry?.tracks))
-  const canRedo = Boolean(activeProject?.redoStack?.some((entry) => entry?.tracks))
-  const totalClips = (activeProject?.tracks || []).reduce((sum, track) => sum + (track.clips?.length || 0), 0)
+  const episodeEditLink = activeProject?.episode?.nativeEntryId ? `${adminRoutes.nativeBridge}?edit=${encodeURIComponent(activeProject.episode.nativeEntryId)}` : `${adminRoutes.nativeBridge}?new=podcast`
 
   return (
     <AdminFrame>
       <main className="page wp-admin-screen audio-lab-page">
-        <div className="wp-screen-header audio-lab-header">
-          <div>
-            <p className="audio-lab-eyebrow">Native SabotPress audio desk</p>
-            <h1>AudioLab</h1>
-            <p className="description">Phase 4: multitrack timeline, clip management, mute/solo/gain/pan, mixdown preview, WAV export, and episode draft attachment.</p>
-          </div>
-          <div className="review-card__actions">
-            <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Import Audio</button>
-            <button type="button" className="button button--primary" onClick={() => handleSaveProject()} disabled={!activeProject}>Save Project</button>
-          </div>
-        </div>
-
+        <div className="wp-screen-header audio-lab-header"><div><p className="audio-lab-eyebrow">Native SabotPress audio desk</p><h1>AudioLab</h1><p className="description">Phase 5: multitrack timeline, clip management, effects rack, mastering tools, mixdown preview, WAV export, and episode draft attachment.</p></div><div className="review-card__actions"><button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Import Audio</button><button type="button" className="button button--primary" onClick={() => handleSaveProject()} disabled={!activeProject}>Save Project</button></div></div>
         <input ref={fileInputRef} className="audio-lab-file-input" type="file" accept="audio/*" onChange={handleImportFile} />
         {errorMessage ? <p className="notice notice-error audio-lab-notice">{errorMessage}</p> : null}
         {statusMessage ? <p className="notice notice-info audio-lab-notice">{statusMessage}</p> : null}
-
-        <section className="audio-lab-workbench audio-lab-workbench--phase4">
+        <section className="audio-lab-workbench audio-lab-workbench--phase4 audio-lab-workbench--phase5">
           <ProjectSidebar projects={projects} activeProjectId={activeProject?.id || ''} onNewProject={handleNewProject} onOpenProject={handleOpenProject} />
-
           <section className="audio-lab-editor" aria-label="Audio editor">
-            <div className="audio-lab-project-strip">
-              <label className="audio-lab-field"><span>Project title</span><input value={activeProject?.title || ''} placeholder="Untitled AudioLab Project" onChange={(event) => updateProjectFields({ title: event.target.value })} /></label>
-              <div className="audio-lab-source-picker"><span>Selected source</span>{activeProject?.sourceAssets?.length ? <select value={selectedAsset?.id || ''} onChange={(event) => setSelectedAssetId(event.target.value)}>{activeProject.sourceAssets.map((asset) => <option key={asset.id} value={asset.id}>{asset.filename}</option>)}</select> : <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Choose audio</button>}</div>
-            </div>
-
+            <div className="audio-lab-project-strip"><label className="audio-lab-field"><span>Project title</span><input value={activeProject?.title || ''} placeholder="Untitled AudioLab Project" onChange={(event) => updateProjectFields({ title: event.target.value })} /></label><div className="audio-lab-source-picker"><span>Selected source</span>{activeProject?.sourceAssets?.length ? <select value={selectedAsset?.id || ''} onChange={(event) => setSelectedAssetId(event.target.value)}>{activeProject.sourceAssets.map((asset) => <option key={asset.id} value={asset.id}>{asset.filename}</option>)}</select> : <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Choose audio</button>}</div></div>
             <RecordPanel canRecord={recorderSupported} recordStatus={recordStatus} recordMimeType={recordMimeType} recordElapsed={recordElapsed} recordLevel={recordLevel} canPauseRecording={canPauseRecording} onStart={handleStartRecording} onPause={handlePauseRecording} onResume={handleResumeRecording} onStop={handleStopRecording} />
-
             <SelectionToolbar selection={selection} duration={duration} edits={selectedEdits} canUndo={canUndo} canRedo={canRedo} isRendering={isRendering} hasAudio={Boolean(activeProject?.sourceAssets?.length)} onSelectionChange={updateSelection} onClear={() => updateSelection(0, 0)} onSelectAll={() => updateSelection(0, duration || 0)} onEdit={handleLegacyEdit} onUndo={handleUndo} onRedo={handleRedo} onExport={handleExportWav} />
-
-            <div className="audio-lab-transport" aria-label="Playback transport">
-              <button type="button" className="button button--primary audio-lab-play" onClick={handleTransportToggle} disabled={!audioUrl || isRendering}>{isPlaying ? 'Pause' : 'Play'}</button>
-              <button type="button" className="button" onClick={() => handleSeek(0)} disabled={!audioUrl}>Stop</button>
-              <div className="audio-lab-time-readout"><strong>{formatAudioLabDuration(currentTime)}</strong><span>/ {formatAudioLabDuration(duration)}</span></div>
-              <input className="audio-lab-seeker" type="range" min="0" max={duration || 0} step="0.01" value={Math.min(currentTime, duration || 0)} onChange={(event) => handleSeek(event.target.value)} disabled={!audioUrl} aria-label="Seek audio timeline" />
-            </div>
-
-            <div className="audio-lab-timeline-shell">
-              <div className="audio-lab-ruler"><span>Mix overview</span><span>{isRendering ? 'Rendering…' : `${activeProject?.tracks?.length || 0} tracks · ${totalClips} clips`}</span><span>{formatAudioLabDuration(duration || 0)}</span></div>
-              <WaveformCanvas peaks={peaks} duration={duration} currentTime={currentTime} selectionStart={selection.start} selectionEnd={selection.end} isLoading={isRendering} onSeek={handleSeek} onSelectionChange={updateSelection} />
-              <MultitrackTimeline project={activeProject} duration={duration} currentTime={currentTime} selection={selection} selectedTrackId={selectedTrackId} selectedClipId={selectedClipId} onAddTrack={handleAddTrack} onSelectTrack={handleSelectTrack} onSelectClip={handleSelectClip} onUpdateTrack={handleUpdateTrack} onDeleteTrack={handleDeleteTrack} onDuplicateTrack={handleDuplicateTrack} onStartClipDrag={handleStartClipDrag} />
-            </div>
-
+            <div className="audio-lab-transport" aria-label="Playback transport"><button type="button" className="button button--primary audio-lab-play" onClick={handleTransportToggle} disabled={!audioUrl || isRendering}>{isPlaying ? 'Pause' : 'Play'}</button><button type="button" className="button" onClick={() => handleSeek(0)} disabled={!audioUrl}>Stop</button><div className="audio-lab-time-readout"><strong>{formatAudioLabDuration(currentTime)}</strong><span>/ {formatAudioLabDuration(duration)}</span></div><input className="audio-lab-seeker" type="range" min="0" max={duration || 0} step="0.01" value={Math.min(currentTime, duration || 0)} onChange={(event) => handleSeek(event.target.value)} disabled={!audioUrl} aria-label="Seek audio timeline" /></div>
+            <div className="audio-lab-timeline-shell"><div className="audio-lab-ruler"><span>Master overview</span><span>{isRendering ? 'Rendering…' : `${activeProject?.tracks?.length || 0} tracks · ${totalClips} clips · ${activeProject?.effects?.length || 0} effects`}</span><span>{formatAudioLabDuration(duration || 0)}</span></div><WaveformCanvas peaks={peaks} duration={duration} currentTime={currentTime} selectionStart={selection.start} selectionEnd={selection.end} isLoading={isRendering} onSeek={handleSeek} onSelectionChange={updateSelection} /><MultitrackTimeline project={activeProject} duration={duration} currentTime={currentTime} selection={selection} selectedTrackId={selectedTrackId} selectedClipId={selectedClipId} onAddTrack={handleAddTrack} onSelectTrack={handleSelectTrack} onSelectClip={handleSelectClip} onUpdateTrack={handleUpdateTrack} onDeleteTrack={handleDeleteTrack} onDuplicateTrack={handleDuplicateTrack} onStartClipDrag={handleStartClipDrag} /></div>
             <audio ref={audioRef} src={audioUrl} preload="metadata" onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={() => setIsPlaying(false)} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime || 0)} onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || duration || 0)} />
           </section>
-
           <aside className="audio-lab-project-sidebar" aria-label="Project details">
             <SourceBin assets={activeProject?.sourceAssets || []} selectedTrackId={selectedTrackId} onAddToTrack={handleAddAssetToTrack} />
             <ClipInspector project={activeProject} selectedTrack={selectedTrack} selectedClip={selectedClip} assets={activeProject?.sourceAssets || []} currentTime={currentTime} onUpdateClip={handleUpdateSelectedClip} onDeleteClip={handleDeleteSelectedClip} onSplitClip={handleSplitSelectedClip} onMoveClipToTrack={handleMoveClipToTrack} />
-
-            <section className="audio-lab-panel">
-              <p className="audio-lab-eyebrow">Project JSON</p>
-              <h2>Preserved source model</h2>
-              <dl className="audio-lab-facts">
-                <div><dt>Project ID</dt><dd>{activeProject?.id || '—'}</dd></div>
-                <div><dt>Sources</dt><dd>{activeProject?.sourceAssets?.length || 0}</dd></div>
-                <div><dt>Tracks</dt><dd>{activeProject?.tracks?.length || 0}</dd></div>
-                <div><dt>Clips</dt><dd>{totalClips}</dd></div>
-                <div><dt>Edits</dt><dd>{activeProject?.edits?.length || 0}</dd></div>
-                <div><dt>Undo</dt><dd>{activeProject?.history?.length || 0}</dd></div>
-              </dl>
-              <p className="description">Phase 4 stores tracks, clips, mute, solo, gain, pan, and source ranges as JSON. Audio blobs stay in IndexedDB. The preview and export are rendered mixdowns.</p>
-            </section>
-
-            <section className="audio-lab-panel">
-              <p className="audio-lab-eyebrow">Episode attachment</p>
-              <h2>Podcast draft</h2>
-              <label className="audio-lab-field"><span>Episode title</span><input value={activeProject?.episode?.title || ''} onChange={(event) => updateEpisodeFields({ title: event.target.value })} /></label>
-              <label className="audio-lab-field"><span>Slug</span><input value={activeProject?.episode?.slug || ''} onChange={(event) => updateEpisodeFields({ slug: slugifyAudioLab(event.target.value) })} /></label>
-              <label className="audio-lab-field"><span>Description / show notes</span><textarea rows={7} value={activeProject?.episode?.description || ''} onChange={(event) => updateEpisodeFields({ description: event.target.value })} /></label>
-              <button type="button" className="button button--primary" onClick={handleCreateEpisodeDraft} disabled={!activeProject || !activeProject.sourceAssets?.length}>Attach Podcast Draft</button>
-              {activeProject?.episode?.nativeEntryId ? <Link className="button audio-lab-edit-episode" to={episodeEditLink}>Open attached draft</Link> : null}
-            </section>
+            <EffectsPanel project={activeProject} selectedTrack={selectedTrack} selectedClip={selectedClip} selection={selection} onAddEffect={handleAddEffect} onAddPreset={handleAddPreset} onToggleEffect={handleToggleEffect} onDeleteEffect={handleDeleteEffect} onUpdateEffect={handleUpdateEffect} onMoveEffect={handleMoveEffect} />
+            <section className="audio-lab-panel"><p className="audio-lab-eyebrow">Project JSON</p><h2>Preserved source model</h2><dl className="audio-lab-facts"><div><dt>Project ID</dt><dd>{activeProject?.id || '—'}</dd></div><div><dt>Sources</dt><dd>{activeProject?.sourceAssets?.length || 0}</dd></div><div><dt>Tracks</dt><dd>{activeProject?.tracks?.length || 0}</dd></div><div><dt>Clips</dt><dd>{totalClips}</dd></div><div><dt>Edits</dt><dd>{activeProject?.edits?.length || 0}</dd></div><div><dt>Effects</dt><dd>{activeProject?.effects?.length || 0}</dd></div><div><dt>Undo</dt><dd>{activeProject?.history?.length || 0}</dd></div></dl><p className="description">Phase 5 stores tracks, clips, edits, and effects as JSON. Audio blobs stay in IndexedDB. Preview and export are rendered mixdowns.</p></section>
+            <section className="audio-lab-panel"><p className="audio-lab-eyebrow">Episode attachment</p><h2>Podcast draft</h2><label className="audio-lab-field"><span>Episode title</span><input value={activeProject?.episode?.title || ''} onChange={(event) => updateEpisodeFields({ title: event.target.value })} /></label><label className="audio-lab-field"><span>Slug</span><input value={activeProject?.episode?.slug || ''} onChange={(event) => updateEpisodeFields({ slug: slugifyAudioLab(event.target.value) })} /></label><label className="audio-lab-field"><span>Description / show notes</span><textarea rows={7} value={activeProject?.episode?.description || ''} onChange={(event) => updateEpisodeFields({ description: event.target.value })} /></label><button type="button" className="button button--primary" onClick={handleCreateEpisodeDraft} disabled={!activeProject || !activeProject.sourceAssets?.length}>Attach Podcast Draft</button>{activeProject?.episode?.nativeEntryId ? <Link className="button audio-lab-edit-episode" to={episodeEditLink}>Open attached draft</Link> : null}</section>
           </aside>
         </section>
       </main>
