@@ -1,0 +1,94 @@
+/* AudioLab automatic transcription workspace. Scoped to AudioLab task pages. */
+.audio-lab-auto-transcribe-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.audio-lab-auto-transcribe-card p {
+  margin: 0;
+  color: #c6d0dc;
+  line-height: 1.45;
+}
+
+.audio-lab-task-field {
+  display: grid;
+  gap: 5px;
+  color: #aeb8c4;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.audio-lab-task-field input {
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 9px;
+  text-transform: none;
+}
+
+.audio-lab-transcribe-button {
+  width: 100%;
+  justify-content: center;
+}
+
+#audio-lab-transcript-status {
+  min-height: 42px;
+  padding: 9px;
+  border: 1px solid #344252;
+  background: #141c25;
+}
+
+.audio-lab-transcript-preview {
+  min-height: 0;
+  padding-top: 8px;
+  border-top: 1px solid #344252;
+}
+
+.audio-lab-transcript-preview h3 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.audio-lab-transcript-cues {
+  max-height: 38vh;
+  overflow: auto;
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.audio-lab-transcript-cues li {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #344252;
+  background: #101820;
+}
+
+.audio-lab-transcript-cues time {
+  color: #8ebcff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.audio-lab-transcript-cues span {
+  min-width: 0;
+  color: #e8eef6;
+  line-height: 1.35;
+}
+
+.audio-lab-transcript-editor {
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+@media (max-width: 900px) {
+  .audio-lab-transcript-cues li {
+    grid-template-columns: 1fr;
+  }
+}
