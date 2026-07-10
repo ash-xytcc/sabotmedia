@@ -21,25 +21,20 @@ export function makeAudioLabId(prefix = 'audio') {
 
 function openAudioLabDb() {
   if (!canUseIndexedDb()) return Promise.reject(new Error('IndexedDB is not available in this browser'))
-
   return new Promise((resolve, reject) => {
     const request = window.indexedDB.open(DB_NAME, DB_VERSION)
-
     request.onupgradeneeded = () => {
       const db = request.result
-
       if (!db.objectStoreNames.contains(PROJECT_STORE)) {
         const projects = db.createObjectStore(PROJECT_STORE, { keyPath: 'id' })
         projects.createIndex('updatedAt', 'updatedAt', { unique: false })
         projects.createIndex('createdAt', 'createdAt', { unique: false })
       }
-
       if (!db.objectStoreNames.contains(ASSET_STORE)) {
         const assets = db.createObjectStore(ASSET_STORE, { keyPath: 'id' })
         assets.createIndex('createdAt', 'createdAt', { unique: false })
       }
     }
-
     request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(request.error || new Error('Unable to open AudioLab database'))
   })
@@ -54,7 +49,6 @@ function requestToPromise(request) {
 
 async function withStore(storeName, mode, callback) {
   const db = await openAudioLabDb()
-
   try {
     const transaction = db.transaction(storeName, mode)
     const store = transaction.objectStore(storeName)
@@ -82,23 +76,16 @@ export function formatAudioLabDuration(seconds = 0) {
   const hrs = Math.floor(total / 3600)
   const mins = Math.floor((total % 3600) / 60)
   const secs = total % 60
-
   if (hrs) return `${hrs}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
   return `${mins}:${String(secs).padStart(2, '0')}`
 }
 
 export function slugifyAudioLab(value = '') {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+  return String(value || '').trim().toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 }
 
 export function normalizeAudioLabAsset(asset = {}) {
   if (!asset?.id) return null
-
   return {
     id: String(asset.id),
     filename: String(asset.filename || 'audio-source'),
@@ -106,7 +93,7 @@ export function normalizeAudioLabAsset(asset = {}) {
     mimeType: String(asset.mimeType || 'audio/mpeg'),
     size: Number(asset.size || 0),
     duration: Number(asset.duration || 0),
-    createdAt: String(asset.createdAt || new Date().toISOString()),
+    createdAt: String(asset.createdAt || nowIso()),
     source: String(asset.source || 'upload'),
   }
 }
@@ -169,18 +156,36 @@ function normalizeTrackList(project = {}, sourceAssets = []) {
 
 function compactHistory(value) {
   if (!Array.isArray(value)) return []
-  return value.slice(-30).map((entry) => {
-    if (!entry || typeof entry !== 'object') return null
-    return JSON.parse(JSON.stringify({ ...entry, history: [], redoStack: [] }))
-  }).filter(Boolean)
+  return value.slice(-30).map((entry) => entry && typeof entry === 'object' ? JSON.parse(JSON.stringify({ ...entry, history: [], redoStack: [] })) : null).filter(Boolean)
 }
 
 function normalizeRenderedEpisode(value = {}) {
   if (!value || typeof value !== 'object') return null
-  const mediaId = String(value.mediaId || value.assetId || '')
+  const mediaId = String(value.mediaId || value.id || value.assetId || '')
+  const localAssetId = String(value.localAssetId || value.assetId || (String(value.url || '').startsWith('audiolab-local://') ? String(value.url).replace('audiolab-local://', '') : ''))
   const filename = String(value.filename || '')
-  if (!mediaId && !filename) return null
-  return { mediaId, assetId: String(value.assetId || mediaId), filename, mimeType: String(value.mimeType || 'audio/wav'), size: Number(value.size || 0), duration: Number(value.duration || 0), url: String(value.url || (mediaId ? `audiolab-local://${mediaId}` : '')), createdAt: String(value.createdAt || nowIso()), renderSourceHash: String(value.renderSourceHash || ''), status: String(value.status || 'local-ready'), source: String(value.source || 'audiolab-render'), projectId: String(value.projectId || '') }
+  if (!mediaId && !localAssetId && !filename && !value.publicUrl) return null
+  const publicUrl = String(value.publicUrl || (!String(value.url || '').startsWith('audiolab-local://') ? value.url || '' : ''))
+  const status = ['local', 'uploading', 'uploaded', 'failed', 'local-ready'].includes(String(value.status || '')) ? String(value.status) : (publicUrl ? 'uploaded' : 'local')
+  return {
+    mediaId,
+    id: mediaId,
+    assetId: String(value.assetId || localAssetId || mediaId),
+    localAssetId,
+    filename,
+    mimeType: String(value.mimeType || 'audio/wav'),
+    size: Number(value.size || 0),
+    duration: Number(value.duration || 0),
+    url: String(publicUrl || value.url || (localAssetId ? `audiolab-local://${localAssetId}` : '')),
+    publicUrl,
+    storageKey: String(value.storageKey || ''),
+    createdAt: String(value.createdAt || nowIso()),
+    uploadedAt: String(value.uploadedAt || ''),
+    renderSourceHash: String(value.renderSourceHash || ''),
+    status,
+    source: String(value.source || 'audiolab-render'),
+    projectId: String(value.projectId || ''),
+  }
 }
 
 function normalizeTranscriptCue(cue = {}) {
