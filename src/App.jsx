@@ -17,6 +17,7 @@ import { NativeDraftPreviewPage } from './components/NativeDraftPreviewPage'
 import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PrintLabPage } from './components/PrintLabPage'
+import { AudioLabPage } from './components/AudioLabPage'
 import { PublicationLandingPage, PublicationReaderPage, PublicationsIndexPage } from './components/PublicationReaderPage'
 import { PublicationSystemPage } from './components/PublicationSystemPage'
 import { CollectionsIndexPage } from './components/CollectionsIndexPage'
@@ -87,6 +88,7 @@ const ADMIN_SHELL_PATHS = [
   '/tools',
   '/site-health',
   '/printlab',
+  '/audiolab',
   '/settings',
   '/sites',
   '/wp-admin',
@@ -97,6 +99,7 @@ const ADMIN_SHELL_PATHS = [
   '/wp-admin/publications',
   '/wp-admin/feeds',
   '/wp-admin/printlab',
+  '/wp-admin/audiolab',
   '/wp-admin/site-health',
   '/wp-admin/settings',
 ]
@@ -171,6 +174,8 @@ function RouteMeta({ pieces = [] }) {
       '/login': ['Editor Login', 'Editor login for Sabot Media administrators.'],
       '/wp-login': ['Editor Login', 'Editor login for Sabot Media administrators.'],
       '/logout': ['Editor Logout', 'Log out of Sabot Media editor tools.'],
+      '/audiolab': ['AudioLab', 'Native SabotPress audio project editor.'],
+      '/wp-admin/audiolab': ['AudioLab', 'Native SabotPress audio project editor.'],
     }[pathname]
 
     if (routeMeta) {
@@ -372,6 +377,8 @@ export default function App() {
               <Route path="/printlab" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
               <Route path={adminRoutes.printlab} element={protect(<PrintLabPage pieces={pieces} />)} />
               <Route path="/tools/print" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
+              <Route path="/audiolab" element={protect(<Navigate to={adminRoutes.audiolab} replace />)} />
+              <Route path={adminRoutes.audiolab} element={protect(<AudioLabPage />)} />
               <Route path="/settings" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
               <Route path={adminRoutes.settings} element={protect(<SettingsAdminPage />)} />
               <Route path="/settings/social" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
@@ -387,6 +394,7 @@ export default function App() {
               <Route path="/settings/*" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
               <Route path="/tools/*" element={protect(<Navigate to={adminRoutes.tools} replace />)} />
               <Route path="/printlab/*" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
+              <Route path="/audiolab/*" element={protect(<Navigate to={adminRoutes.audiolab} replace />)} />
               <Route path="/native-bridge/*" element={protect(<LegacyNativeBridgeRedirect />)} />
               <Route path="/podcasts" element={protect(<Navigate to={adminRoutes.podcasts} replace />)} />
               <Route path="/podcasts/settings" element={protect(<Navigate to={`${adminRoutes.podcasts}/settings`} replace />)} />
