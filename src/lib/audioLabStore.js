@@ -15,6 +15,10 @@ function makeId(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
+export function makeAudioLabId(prefix = 'audio') {
+  return makeId(prefix)
+}
+
 function openAudioLabDb() {
   if (!canUseIndexedDb()) return Promise.reject(new Error('IndexedDB is not available in this browser'))
 
@@ -86,6 +90,12 @@ export function slugifyAudioLab(value = '') {
     .replace(/^-+|-+$/g, '')
 }
 
+function clampNumber(value, min, max) {
+  const parsed = Number(value)
+  const safe = Number.isFinite(parsed) ? parsed : min
+  return Math.min(max, Math.max(min, safe))
+}
+
 function normalizeEditOperation(edit = {}) {
   if (!edit?.id || !['delete', 'silence', 'trim'].includes(String(edit.type || ''))) return null
 
@@ -103,6 +113,117 @@ function normalizeEditList(value) {
   return Array.isArray(value) ? value.map(normalizeEditOperation).filter(Boolean) : []
 }
 
+export function normalizeAudioLabAsset(asset = {}) {
+  if (!asset?.id) return null
+
+  return {
+    id: String(asset.id),
+    filename: String(asset.filename || 'audio-source'),
+    title: String(asset.title || String(asset.filename || '').replace(/\.[^.]+$/, '') || 'Audio source'),
+    mimeType: String(asset.mimeType || 'audio/mpeg'),
+    size: Number(asset.size || 0),
+    duration: Number(asset.duration || 0),
+    createdAt: String(asset.createdAt || nowIso()),
+    source: String(asset.source || 'upload'),
+  }
+}
+
+export function makeAudioLabClip(asset, fields = {}) {
+  const normalized = normalizeAudioLabAsset(asset) || {}
+  const sourceEnd = Number(fields.sourceEnd ?? normalized.duration ?? 0)
+
+  return normalizeAudioLabClip({
+    id: fields.id || makeId('clip'),
+    assetId: fields.assetId || normalized.id || '',
+    name: fields.name || normalized.title || normalized.filename || 'Audio clip',
+    timelineStart: fields.timelineStart ?? 0,
+    sourceStart: fields.sourceStart ?? 0,
+    sourceEnd,
+    gain: fields.gain ?? 1,
+    muted: fields.muted || false,
+  }, normalized)
+}
+
+export function normalizeAudioLabClip(clip = {}, asset = null) {
+  if (!clip?.assetId && !asset?.id) return null
+  const assetDuration = Number(asset?.duration || 0)
+  const sourceStart = clampNumber(clip.sourceStart ?? 0, 0, Math.max(assetDuration, Number(clip.sourceEnd || 0), 0))
+  const fallbackEnd = assetDuration || Math.max(sourceStart, Number(clip.sourceEnd || 0))
+  const sourceEnd = clampNumber(clip.sourceEnd ?? fallbackEnd, sourceStart, Math.max(fallbackEnd, sourceStart))
+
+  return {
+    id: String(clip.id || makeId('clip')),
+    assetId: String(clip.assetId || asset?.id || ''),
+    name: String(clip.name || asset?.title || asset?.filename || 'Audio clip'),
+    timelineStart: Math.max(0, Number(clip.timelineStart || 0)),
+    sourceStart,
+    sourceEnd,
+    gain: Math.max(0, Number(clip.gain ?? 1)),
+    muted: Boolean(clip.muted),
+  }
+}
+
+export function makeAudioLabTrack(fields = {}) {
+  return normalizeAudioLabTrack({
+    id: fields.id || makeId('track'),
+    name: fields.name || 'Audio Track',
+    type: 'audio',
+    muted: Boolean(fields.muted),
+    solo: Boolean(fields.solo),
+    gain: fields.gain ?? 1,
+    pan: fields.pan ?? 0,
+    clips: Array.isArray(fields.clips) ? fields.clips : [],
+  })
+}
+
+export function normalizeAudioLabTrack(track = {}, assetsById = new Map()) {
+  const clips = Array.isArray(track.clips)
+    ? track.clips.map((clip) => normalizeAudioLabClip(clip, assetsById.get(String(clip?.assetId || '')))).filter(Boolean)
+    : []
+
+  return {
+    id: String(track.id || makeId('track')),
+    name: String(track.name || 'Audio Track'),
+    type: 'audio',
+    muted: Boolean(track.muted),
+    solo: Boolean(track.solo),
+    gain: Math.max(0, Number(track.gain ?? 1)),
+    pan: clampNumber(track.pan ?? 0, -1, 1),
+    clips,
+  }
+}
+
+function normalizeTrackList(project = {}, sourceAssets = []) {
+  const assetsById = new Map(sourceAssets.map((asset) => [asset.id, asset]))
+  const existingTracks = Array.isArray(project.tracks) ? project.tracks : []
+  const normalized = existingTracks.map((track) => normalizeAudioLabTrack(track, assetsById)).filter(Boolean)
+
+  if (normalized.length) return normalized
+
+  const firstAsset = sourceAssets[0]
+  if (!firstAsset) return []
+
+  return [
+    makeAudioLabTrack({
+      id: 'track-main',
+      name: 'Main Track',
+      clips: [makeAudioLabClip(firstAsset)],
+    }),
+  ]
+}
+
+function compactHistory(value) {
+  if (!Array.isArray(value)) return []
+  return value.slice(-30).map((entry) => {
+    if (!entry || typeof entry !== 'object') return null
+    return JSON.parse(JSON.stringify({
+      ...entry,
+      history: [],
+      redoStack: [],
+    }))
+  }).filter(Boolean)
+}
+
 export function createEmptyAudioLabProject(fields = {}) {
   const createdAt = fields.createdAt || nowIso()
   const title = String(fields.title || 'Untitled AudioLab Project')
@@ -117,6 +238,7 @@ export function createEmptyAudioLabProject(fields = {}) {
     sourceAssets: Array.isArray(fields.sourceAssets) ? fields.sourceAssets : [],
     tracks: Array.isArray(fields.tracks) ? fields.tracks : [],
     edits: Array.isArray(fields.edits) ? fields.edits : [],
+    history: Array.isArray(fields.history) ? fields.history : [],
     redoStack: Array.isArray(fields.redoStack) ? fields.redoStack : [],
     transport: {
       zoom: Number(fields.transport?.zoom || 1),
@@ -136,27 +258,13 @@ export function createEmptyAudioLabProject(fields = {}) {
   })
 }
 
-export function normalizeAudioLabAsset(asset = {}) {
-  if (!asset?.id) return null
-
-  return {
-    id: String(asset.id),
-    filename: String(asset.filename || 'audio-source'),
-    title: String(asset.title || String(asset.filename || '').replace(/\.[^.]+$/, '') || 'Audio source'),
-    mimeType: String(asset.mimeType || 'audio/mpeg'),
-    size: Number(asset.size || 0),
-    duration: Number(asset.duration || 0),
-    createdAt: String(asset.createdAt || nowIso()),
-    source: String(asset.source || 'upload'),
-  }
-}
-
 export function normalizeAudioLabProject(project = {}) {
   const createdAt = String(project.createdAt || nowIso())
   const title = String(project.title || 'Untitled AudioLab Project')
   const sourceAssets = Array.isArray(project.sourceAssets)
     ? project.sourceAssets.map(normalizeAudioLabAsset).filter(Boolean)
     : []
+  const tracks = normalizeTrackList(project, sourceAssets)
 
   return {
     id: String(project.id || makeId('audio-project')),
@@ -166,13 +274,17 @@ export function normalizeAudioLabProject(project = {}) {
     createdAt,
     updatedAt: String(project.updatedAt || createdAt),
     sourceAssets,
-    tracks: Array.isArray(project.tracks) ? project.tracks : [],
+    tracks,
     edits: normalizeEditList(project.edits),
-    redoStack: normalizeEditList(project.redoStack),
+    history: compactHistory(project.history),
+    redoStack: compactHistory(project.redoStack),
     transport: {
-      zoom: Number(project.transport?.zoom || 1),
-      selectionStart: Number(project.transport?.selectionStart || 0),
-      selectionEnd: Number(project.transport?.selectionEnd || 0),
+      zoom: Math.max(0.25, Number(project.transport?.zoom || 1)),
+      selectionStart: Math.max(0, Number(project.transport?.selectionStart || 0)),
+      selectionEnd: Math.max(0, Number(project.transport?.selectionEnd || 0)),
+      playhead: Math.max(0, Number(project.transport?.playhead || 0)),
+      selectedTrackId: String(project.transport?.selectedTrackId || tracks[0]?.id || ''),
+      selectedClipId: String(project.transport?.selectedClipId || ''),
     },
     episode: {
       title: String(project.episode?.title || title),
@@ -268,22 +380,10 @@ export function makeSingleTrackForAsset(asset) {
   if (!normalized) return []
 
   return [
-    {
+    makeAudioLabTrack({
       id: 'track-main',
       name: 'Main Track',
-      type: 'audio',
-      gain: 1,
-      pan: 0,
-      clips: [
-        {
-          id: makeId('clip'),
-          assetId: normalized.id,
-          name: normalized.title,
-          timelineStart: 0,
-          sourceStart: 0,
-          sourceEnd: normalized.duration || 0,
-        },
-      ],
-    },
+      clips: [makeAudioLabClip(normalized)],
+    }),
   ]
 }
