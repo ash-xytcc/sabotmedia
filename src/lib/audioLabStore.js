@@ -197,23 +197,37 @@ export async function deleteAudioLabProject(id) {
   return true
 }
 
-export async function putAudioLabAssetFromFile(file, fields = {}) {
-  if (!file) throw new Error('No audio file selected')
+export async function putAudioLabAssetFromBlob(blob, fields = {}) {
+  if (!blob) throw new Error('No audio blob supplied')
 
+  const filename = String(fields.filename || 'audio-source')
   const asset = {
     id: fields.id || makeId('audio-asset'),
-    filename: String(file.name || 'audio-source'),
-    title: String(fields.title || String(file.name || '').replace(/\.[^.]+$/, '') || 'Audio source'),
-    mimeType: String(file.type || fields.mimeType || 'audio/mpeg'),
-    size: Number(file.size || 0),
+    filename,
+    title: String(fields.title || filename.replace(/\.[^.]+$/, '') || 'Audio source'),
+    mimeType: String(fields.mimeType || blob.type || 'audio/webm'),
+    size: Number(fields.size || blob.size || 0),
     duration: Number(fields.duration || 0),
     createdAt: fields.createdAt || nowIso(),
     source: fields.source || 'upload',
-    blob: file,
+    blob,
   }
 
   await withStore(ASSET_STORE, 'readwrite', (store) => requestToPromise(store.put(asset)))
   return normalizeAudioLabAsset(asset)
+}
+
+export async function putAudioLabAssetFromFile(file, fields = {}) {
+  if (!file) throw new Error('No audio file selected')
+
+  return putAudioLabAssetFromBlob(file, {
+    ...fields,
+    filename: String(file.name || 'audio-source'),
+    title: String(fields.title || String(file.name || '').replace(/\.[^.]+$/, '') || 'Audio source'),
+    mimeType: String(file.type || fields.mimeType || 'audio/mpeg'),
+    size: Number(file.size || 0),
+    source: fields.source || 'upload',
+  })
 }
 
 export async function getAudioLabAsset(id) {
