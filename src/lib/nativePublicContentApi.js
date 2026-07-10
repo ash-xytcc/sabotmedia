@@ -51,7 +51,18 @@ export async function saveNativeEntry(item, revisionNote = 'save') {
   return data
 }
 
-export async function uploadAudioLabMedia({ file, projectId = '', title = '', filename = '', mimeType = '', duration = 0 } = {}) {
+export async function uploadAudioLabMedia({
+  file,
+  projectId = '',
+  title = '',
+  filename = '',
+  mimeType = '',
+  duration = 0,
+  role = 'master',
+  codec = '',
+  bitrateKbps = '',
+  sourceMediaId = '',
+} = {}) {
   if (!file) throw new Error('No rendered audio file supplied')
   const form = new FormData()
   form.set('file', file, filename || file.name || 'audiolab-render.wav')
@@ -60,6 +71,10 @@ export async function uploadAudioLabMedia({ file, projectId = '', title = '', fi
   form.set('filename', filename || file.name || 'audiolab-render.wav')
   form.set('mimeType', mimeType || file.type || 'audio/wav')
   form.set('duration', String(duration || 0))
+  form.set('role', role === 'delivery' ? 'delivery' : 'master')
+  form.set('codec', codec || '')
+  form.set('bitrateKbps', String(bitrateKbps || ''))
+  form.set('sourceMediaId', sourceMediaId || '')
 
   const res = await fetch('/api/audiolab/media', {
     method: 'POST',
