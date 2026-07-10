@@ -117,8 +117,8 @@ function markReady() {
   if (page) page.dataset.audiolabShortcutsReady = 'true'
 }
 
-if (isAudioLabRoute()) {
-  window.addEventListener('keydown', handleShortcut, true)
-  window.addEventListener('load', markReady)
-  window.setTimeout(markReady, 250)
-}
+window.addEventListener('keydown', handleShortcut, true)
+window.addEventListener('load', markReady)
+window.addEventListener('popstate', () => window.setTimeout(markReady, 80))
+window.setInterval(markReady, 1000)
+window.setTimeout(markReady, 250)
