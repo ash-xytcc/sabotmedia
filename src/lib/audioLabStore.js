@@ -86,6 +86,23 @@ export function slugifyAudioLab(value = '') {
     .replace(/^-+|-+$/g, '')
 }
 
+function normalizeEditOperation(edit = {}) {
+  if (!edit?.id || !['delete', 'silence', 'trim'].includes(String(edit.type || ''))) return null
+
+  return {
+    id: String(edit.id),
+    type: String(edit.type),
+    assetId: String(edit.assetId || ''),
+    start: Math.max(0, Number(edit.start) || 0),
+    end: Math.max(0, Number(edit.end) || 0),
+    createdAt: String(edit.createdAt || nowIso()),
+  }
+}
+
+function normalizeEditList(value) {
+  return Array.isArray(value) ? value.map(normalizeEditOperation).filter(Boolean) : []
+}
+
 export function createEmptyAudioLabProject(fields = {}) {
   const createdAt = fields.createdAt || nowIso()
   const title = String(fields.title || 'Untitled AudioLab Project')
@@ -100,6 +117,7 @@ export function createEmptyAudioLabProject(fields = {}) {
     sourceAssets: Array.isArray(fields.sourceAssets) ? fields.sourceAssets : [],
     tracks: Array.isArray(fields.tracks) ? fields.tracks : [],
     edits: Array.isArray(fields.edits) ? fields.edits : [],
+    redoStack: Array.isArray(fields.redoStack) ? fields.redoStack : [],
     transport: {
       zoom: Number(fields.transport?.zoom || 1),
       selectionStart: Number(fields.transport?.selectionStart || 0),
@@ -149,7 +167,8 @@ export function normalizeAudioLabProject(project = {}) {
     updatedAt: String(project.updatedAt || createdAt),
     sourceAssets,
     tracks: Array.isArray(project.tracks) ? project.tracks : [],
-    edits: Array.isArray(project.edits) ? project.edits : [],
+    edits: normalizeEditList(project.edits),
+    redoStack: normalizeEditList(project.redoStack),
     transport: {
       zoom: Number(project.transport?.zoom || 1),
       selectionStart: Number(project.transport?.selectionStart || 0),
