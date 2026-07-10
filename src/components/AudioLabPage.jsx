@@ -9,6 +9,7 @@ import {
   getAudioLabProject,
   listAudioLabProjects,
   makeSingleTrackForAsset,
+  putAudioLabAssetFromBlob,
   putAudioLabAssetFromFile,
   saveAudioLabProject,
   slugifyAudioLab,
@@ -20,6 +21,12 @@ import {
 } from '../lib/nativePublicContent'
 
 const waveformPeakCount = 1100
+const preferredRecordingMimeTypes = [
+  'audio/webm;codecs=opus',
+  'audio/webm',
+  'audio/ogg;codecs=opus',
+  'audio/mp4',
+]
 
 function getAudioContext() {
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext
@@ -93,6 +100,56 @@ function textToHtml(text = '') {
     .join('\n')
 }
 
+function canUseRecorder() {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.MediaRecorder !== 'undefined' &&
+    typeof window.navigator !== 'undefined' &&
+    typeof window.navigator.mediaDevices?.getUserMedia === 'function'
+  )
+}
+
+function getPreferredRecordingMimeType() {
+  if (typeof window === 'undefined' || !window.MediaRecorder) return ''
+  return preferredRecordingMimeTypes.find((mimeType) => {
+    if (typeof window.MediaRecorder.isTypeSupported !== 'function') return false
+    return window.MediaRecorder.isTypeSupported(mimeType)
+  }) || ''
+}
+
+function getRecordingExtension(mimeType = '') {
+  const value = String(mimeType || '').toLowerCase()
+  if (value.includes('ogg')) return 'ogg'
+  if (value.includes('mp4')) return 'm4a'
+  if (value.includes('mpeg')) return 'mp3'
+  if (value.includes('wav')) return 'wav'
+  return 'webm'
+}
+
+function makeRecordingFilename(mimeType = '') {
+  const date = new Date()
+  const pad = (value) => String(value).padStart(2, '0')
+  const stamp = [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join('-')
+  const time = `${pad(date.getHours())}${pad(date.getMinutes())}`
+  return `audiolab-take-${stamp}-${time}.${getRecordingExtension(mimeType)}`
+}
+
+function getRecordingStatusLabel(status = '') {
+  return {
+    idle: 'Idle',
+    requesting: 'Requesting mic',
+    recording: 'Recording',
+    paused: 'Paused',
+    saving: 'Saving take',
+    ready: 'Ready',
+    error: 'Error',
+  }[status] || 'Idle'
+}
+
 function WaveformCanvas({ peaks, duration, currentTime, onSeek, isLoading }) {
   const canvasRef = useRef(null)
 
@@ -133,7 +190,7 @@ function WaveformCanvas({ peaks, duration, currentTime, onSeek, isLoading }) {
         context.fillStyle = 'rgba(255,255,255,0.72)'
         context.font = '600 14px system-ui, sans-serif'
         context.textAlign = 'center'
-        context.fillText(isLoading ? 'Decoding waveform…' : 'Import audio to generate waveform', width / 2, mid)
+        context.fillText(isLoading ? 'Decoding waveform…' : 'Import or record audio to generate waveform', width / 2, mid)
         return
       }
 
@@ -215,9 +272,65 @@ function ProjectSidebar({ projects, activeProjectId, onNewProject, onOpenProject
   )
 }
 
+function RecordPanel({
+  canRecord,
+  recordStatus,
+  recordMimeType,
+  recordElapsed,
+  recordLevel,
+  canPauseRecording,
+  onStart,
+  onPause,
+  onResume,
+  onStop,
+}) {
+  const isRecording = recordStatus === 'recording'
+  const isPaused = recordStatus === 'paused'
+  const isBusy = recordStatus === 'requesting' || recordStatus === 'saving'
+  const levelPct = `${Math.round(Math.max(0, Math.min(1, recordLevel || 0)) * 100)}%`
+
+  return (
+    <section className="audio-lab-record-panel" aria-label="Audio recording controls">
+      <div className="audio-lab-record-panel__meta">
+        <p className="audio-lab-eyebrow">Record</p>
+        <strong>{getRecordingStatusLabel(recordStatus)}</strong>
+        <span>{formatAudioLabDuration(recordElapsed)}</span>
+        <small>{recordMimeType || 'Recorder will choose the best supported format.'}</small>
+      </div>
+
+      <div className="audio-lab-record-meter" aria-label="Live microphone level">
+        <span style={{ width: levelPct }} />
+      </div>
+
+      <div className="audio-lab-record-actions">
+        <button type="button" className="button button--primary" onClick={onStart} disabled={!canRecord || isBusy || isRecording || isPaused}>
+          {recordStatus === 'ready' ? 'Record Another Take' : 'Record'}
+        </button>
+        <button type="button" className="button" onClick={onPause} disabled={!canPauseRecording || !isRecording}>Pause</button>
+        <button type="button" className="button" onClick={onResume} disabled={!canPauseRecording || !isPaused}>Resume</button>
+        <button type="button" className="button" onClick={onStop} disabled={!isRecording && !isPaused}>Stop</button>
+      </div>
+
+      {!canRecord ? <p className="description audio-lab-record-warning">This browser does not support MediaRecorder microphone capture.</p> : null}
+      <p className="description audio-lab-record-local-note">Recordings are saved locally in this browser for now. Server upload/export comes later, because apparently audio files like being heavy little bricks.</p>
+    </section>
+  )
+}
+
 export function AudioLabPage() {
   const audioRef = useRef(null)
   const fileInputRef = useRef(null)
+  const activeProjectRef = useRef(null)
+  const mediaRecorderRef = useRef(null)
+  const recordingStreamRef = useRef(null)
+  const recordingChunksRef = useRef([])
+  const recordingAudioContextRef = useRef(null)
+  const recordingSourceRef = useRef(null)
+  const recordingAnalyserRef = useRef(null)
+  const recordingAnimationRef = useRef(0)
+  const recordingStartedAtRef = useRef(0)
+  const recordingAccumulatedMsRef = useRef(0)
+
   const [projects, setProjects] = useState([])
   const [activeProject, setActiveProject] = useState(null)
   const [selectedAssetId, setSelectedAssetId] = useState('')
@@ -227,8 +340,19 @@ export function AudioLabPage() {
   const [currentTime, setCurrentTime] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isDecoding, setIsDecoding] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('AudioLab Phase 1 is ready. Import audio to start a native project.')
+  const [recordStatus, setRecordStatus] = useState('idle')
+  const [recordElapsed, setRecordElapsed] = useState(0)
+  const [recordLevel, setRecordLevel] = useState(0)
+  const [recordMimeType, setRecordMimeType] = useState('')
+  const [canPauseRecording, setCanPauseRecording] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('AudioLab Phase 2 is ready. Import audio or record a native take to start a project.')
   const [errorMessage, setErrorMessage] = useState('')
+
+  const recorderSupported = canUseRecorder()
+
+  useEffect(() => {
+    activeProjectRef.current = activeProject
+  }, [activeProject])
 
   async function refreshProjects(selectId = '') {
     const loaded = await listAudioLabProjects()
@@ -238,14 +362,16 @@ export function AudioLabPage() {
       const project = await getAudioLabProject(selectId)
       if (project) {
         setActiveProject(project)
+        activeProjectRef.current = project
         setSelectedAssetId(project.episode?.audioAssetId || project.sourceAssets?.[0]?.id || '')
       }
       return
     }
 
-    if (!activeProject && loaded[0]) {
+    if (!activeProjectRef.current && loaded[0]) {
       const project = await getAudioLabProject(loaded[0].id)
       setActiveProject(project)
+      activeProjectRef.current = project
       setSelectedAssetId(project?.episode?.audioAssetId || project?.sourceAssets?.[0]?.id || '')
     }
   }
@@ -255,6 +381,26 @@ export function AudioLabPage() {
       setErrorMessage(error.message || 'Unable to load AudioLab projects')
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (recordStatus !== 'recording') {
+      if (recordStatus === 'paused') setRecordElapsed(recordingAccumulatedMsRef.current / 1000)
+      return undefined
+    }
+
+    const updateElapsed = () => {
+      const liveMs = recordingStartedAtRef.current ? Date.now() - recordingStartedAtRef.current : 0
+      setRecordElapsed((recordingAccumulatedMsRef.current + liveMs) / 1000)
+    }
+
+    updateElapsed()
+    const interval = window.setInterval(updateElapsed, 200)
+    return () => window.clearInterval(interval)
+  }, [recordStatus])
+
+  useEffect(() => () => {
+    cleanupRecordingResources({ clearChunks: true })
   }, [])
 
   const selectedAsset = useMemo(() => {
@@ -308,11 +454,89 @@ export function AudioLabPage() {
     }
   }, [selectedAsset?.id])
 
+  function stopInputMeter() {
+    if (recordingAnimationRef.current) {
+      window.cancelAnimationFrame(recordingAnimationRef.current)
+      recordingAnimationRef.current = 0
+    }
+
+    try {
+      recordingSourceRef.current?.disconnect?.()
+    } catch {
+      // ignore meter disconnect noise
+    }
+
+    try {
+      recordingAudioContextRef.current?.close?.()
+    } catch {
+      // ignore context close noise
+    }
+
+    recordingSourceRef.current = null
+    recordingAnalyserRef.current = null
+    recordingAudioContextRef.current = null
+    setRecordLevel(0)
+  }
+
+  function releaseRecordingStream() {
+    const stream = recordingStreamRef.current
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop())
+    }
+    recordingStreamRef.current = null
+  }
+
+  function cleanupRecordingResources({ clearChunks = false } = {}) {
+    stopInputMeter()
+    releaseRecordingStream()
+    mediaRecorderRef.current = null
+    recordingStartedAtRef.current = 0
+    recordingAccumulatedMsRef.current = 0
+    if (clearChunks) recordingChunksRef.current = []
+    setCanPauseRecording(false)
+  }
+
+  function setupInputMeter(stream) {
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext
+    if (!AudioContextCtor) return
+
+    const context = new AudioContextCtor()
+    const source = context.createMediaStreamSource(stream)
+    const analyser = context.createAnalyser()
+    const data = new Uint8Array(analyser.frequencyBinCount)
+
+    analyser.fftSize = 256
+    analyser.smoothingTimeConstant = 0.72
+    source.connect(analyser)
+
+    recordingAudioContextRef.current = context
+    recordingSourceRef.current = source
+    recordingAnalyserRef.current = analyser
+
+    function tick() {
+      const liveAnalyser = recordingAnalyserRef.current
+      if (!liveAnalyser) return
+
+      liveAnalyser.getByteTimeDomainData(data)
+      let max = 0
+      for (let index = 0; index < data.length; index += 1) {
+        const value = Math.abs((data[index] || 128) - 128) / 128
+        if (value > max) max = value
+      }
+
+      setRecordLevel(Math.min(1, max * 1.4))
+      recordingAnimationRef.current = window.requestAnimationFrame(tick)
+    }
+
+    tick()
+  }
+
   async function handleNewProject() {
     const project = await saveAudioLabProject(createEmptyAudioLabProject({ title: 'Untitled AudioLab Project' }))
     setActiveProject(project)
+    activeProjectRef.current = project
     setSelectedAssetId('')
-    setStatusMessage('New AudioLab project created. Import an audio source to build the waveform.')
+    setStatusMessage('New AudioLab project created. Import or record an audio source to build the waveform.')
     await refreshProjects(project.id)
   }
 
@@ -320,16 +544,47 @@ export function AudioLabPage() {
     const project = await getAudioLabProject(id)
     if (!project) return
     setActiveProject(project)
+    activeProjectRef.current = project
     setSelectedAssetId(project.episode?.audioAssetId || project.sourceAssets?.[0]?.id || '')
     setStatusMessage(`Opened ${project.title || 'AudioLab project'}.`)
   }
 
-  async function handleSaveProject(project = activeProject) {
+  async function handleSaveProject(project = activeProjectRef.current) {
     if (!project) return null
     const saved = await saveAudioLabProject(project)
     setActiveProject(saved)
+    activeProjectRef.current = saved
     await refreshProjects(saved.id)
     setStatusMessage('Project saved. Originals preserved. Edit graph stored as JSON.')
+    return saved
+  }
+
+  async function attachAssetToProject(asset, decoded, sourceLabel = 'Imported') {
+    const baseProject = activeProjectRef.current || createEmptyAudioLabProject({ title: asset.title })
+    const title = baseProject.title === 'Untitled AudioLab Project' ? asset.title : baseProject.title
+    const nextProject = {
+      ...baseProject,
+      title,
+      sourceAssets: [asset, ...(baseProject.sourceAssets || []).filter((item) => item.id !== asset.id)],
+      tracks: makeSingleTrackForAsset(asset),
+      edits: Array.isArray(baseProject.edits) ? baseProject.edits : [],
+      episode: {
+        ...(baseProject.episode || {}),
+        title: baseProject.episode?.title && baseProject.episode.title !== 'Untitled AudioLab Project' ? baseProject.episode.title : title,
+        slug: baseProject.episode?.slug || slugifyAudioLab(title),
+        audioAssetId: asset.id,
+      },
+    }
+
+    const saved = await saveAudioLabProject(nextProject)
+    setActiveProject(saved)
+    activeProjectRef.current = saved
+    setSelectedAssetId(asset.id)
+    setPeaks(buildWaveformPeaks(decoded))
+    setDuration(decoded.duration || asset.duration || 0)
+    setCurrentTime(0)
+    setStatusMessage(`${sourceLabel} ${asset.filename}. Waveform generated from the preserved original.`)
+    await refreshProjects(saved.id)
     return saved
   }
 
@@ -349,32 +604,149 @@ export function AudioLabPage() {
       setIsDecoding(true)
       const decoded = await decodeAudioBlob(file)
       const asset = await putAudioLabAssetFromFile(file, { duration: decoded.duration || 0 })
-      const baseProject = activeProject || createEmptyAudioLabProject({ title: asset.title })
-      const title = baseProject.title === 'Untitled AudioLab Project' ? asset.title : baseProject.title
-      const nextProject = {
-        ...baseProject,
-        title,
-        sourceAssets: [asset, ...(baseProject.sourceAssets || []).filter((item) => item.id !== asset.id)],
-        tracks: makeSingleTrackForAsset(asset),
-        edits: Array.isArray(baseProject.edits) ? baseProject.edits : [],
-        episode: {
-          ...(baseProject.episode || {}),
-          title: baseProject.episode?.title && baseProject.episode.title !== 'Untitled AudioLab Project' ? baseProject.episode.title : title,
-          slug: baseProject.episode?.slug || slugifyAudioLab(title),
-          audioAssetId: asset.id,
-        },
-      }
-
-      const saved = await saveAudioLabProject(nextProject)
-      setActiveProject(saved)
-      setSelectedAssetId(asset.id)
-      setPeaks(buildWaveformPeaks(decoded))
-      setDuration(decoded.duration || 0)
-      setStatusMessage(`Imported ${asset.filename}. Waveform generated from the preserved original.`)
-      await refreshProjects(saved.id)
+      await attachAssetToProject(asset, decoded, 'Imported')
     } catch (error) {
       setErrorMessage(error.message || 'Unable to import audio')
     } finally {
+      setIsDecoding(false)
+    }
+  }
+
+  async function handleStartRecording() {
+    if (!recorderSupported) {
+      setRecordStatus('error')
+      setErrorMessage('This browser does not support native MediaRecorder microphone capture.')
+      return
+    }
+
+    try {
+      if (audioRef.current) audioRef.current.pause()
+      setErrorMessage('')
+      setRecordElapsed(0)
+      setRecordLevel(0)
+      setRecordStatus('requesting')
+      setStatusMessage('Requesting microphone access…')
+
+      let stream
+      try {
+        stream = await window.navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: false,
+            autoGainControl: false,
+          },
+        })
+      } catch {
+        stream = await window.navigator.mediaDevices.getUserMedia({ audio: true })
+      }
+
+      const preferredMimeType = getPreferredRecordingMimeType()
+      const options = preferredMimeType ? { mimeType: preferredMimeType } : undefined
+      const recorder = new window.MediaRecorder(stream, options)
+
+      recordingChunksRef.current = []
+      recordingAccumulatedMsRef.current = 0
+      recordingStartedAtRef.current = Date.now()
+      recordingStreamRef.current = stream
+      mediaRecorderRef.current = recorder
+      setRecordMimeType(recorder.mimeType || preferredMimeType || 'browser default')
+      setCanPauseRecording(typeof recorder.pause === 'function' && typeof recorder.resume === 'function')
+      setupInputMeter(stream)
+
+      recorder.ondataavailable = (event) => {
+        if (event.data?.size) recordingChunksRef.current.push(event.data)
+      }
+
+      recorder.onerror = (event) => {
+        setRecordStatus('error')
+        setErrorMessage(event.error?.message || 'Recording failed')
+        cleanupRecordingResources({ clearChunks: true })
+      }
+
+      recorder.onstop = () => {
+        finishRecordingTake(recorder).catch((error) => {
+          setRecordStatus('error')
+          setErrorMessage(error.message || 'Unable to save recorded take')
+          cleanupRecordingResources({ clearChunks: true })
+          setIsDecoding(false)
+        })
+      }
+
+      recorder.start(1000)
+      setRecordStatus('recording')
+      setStatusMessage('Recording. Speak clearly into the tiny surveillance flower, except this one is yours.')
+    } catch (error) {
+      setRecordStatus('error')
+      setErrorMessage(error?.name === 'NotAllowedError' ? 'Microphone permission was denied.' : (error.message || 'Unable to start recording'))
+      cleanupRecordingResources({ clearChunks: true })
+    }
+  }
+
+  function handlePauseRecording() {
+    const recorder = mediaRecorderRef.current
+    if (!recorder || recorder.state !== 'recording' || typeof recorder.pause !== 'function') return
+
+    recordingAccumulatedMsRef.current += Date.now() - recordingStartedAtRef.current
+    recordingStartedAtRef.current = 0
+    recorder.pause()
+    setRecordStatus('paused')
+    setStatusMessage('Recording paused.')
+  }
+
+  function handleResumeRecording() {
+    const recorder = mediaRecorderRef.current
+    if (!recorder || recorder.state !== 'paused' || typeof recorder.resume !== 'function') return
+
+    recordingStartedAtRef.current = Date.now()
+    recorder.resume()
+    setRecordStatus('recording')
+    setStatusMessage('Recording resumed.')
+  }
+
+  function handleStopRecording() {
+    const recorder = mediaRecorderRef.current
+    if (!recorder || recorder.state === 'inactive') return
+
+    if (recorder.state === 'recording' && recordingStartedAtRef.current) {
+      recordingAccumulatedMsRef.current += Date.now() - recordingStartedAtRef.current
+    }
+
+    recordingStartedAtRef.current = 0
+    setRecordElapsed(recordingAccumulatedMsRef.current / 1000)
+    setRecordStatus('saving')
+    setStatusMessage('Stopping recording and saving raw take…')
+    stopInputMeter()
+    recorder.stop()
+  }
+
+  async function finishRecordingTake(recorder) {
+    try {
+      setRecordStatus('saving')
+      setIsDecoding(true)
+      const chunks = recordingChunksRef.current
+      const mimeType = recorder.mimeType || getPreferredRecordingMimeType() || 'audio/webm'
+      const blob = new Blob(chunks, { type: mimeType })
+
+      if (!blob.size) throw new Error('Recording produced an empty audio file')
+
+      releaseRecordingStream()
+      const decoded = await decodeAudioBlob(blob)
+      const filename = makeRecordingFilename(blob.type || mimeType)
+      const asset = await putAudioLabAssetFromBlob(blob, {
+        filename,
+        title: filename.replace(/\.[^.]+$/, ''),
+        mimeType: blob.type || mimeType,
+        size: blob.size,
+        duration: decoded.duration || recordElapsed || 0,
+        source: 'browser-recording',
+      })
+
+      await attachAssetToProject(asset, decoded, 'Recorded')
+      setRecordStatus('ready')
+      setRecordElapsed(decoded.duration || recordElapsed || 0)
+      setStatusMessage(`Recorded ${asset.filename}. Raw take preserved locally and attached to the active project.`)
+    } finally {
+      cleanupRecordingResources({ clearChunks: true })
       setIsDecoding(false)
     }
   }
@@ -403,7 +775,9 @@ export function AudioLabPage() {
 
   function updateProjectFields(fields) {
     if (!activeProject) return
-    setActiveProject({ ...activeProject, ...fields })
+    const nextProject = { ...activeProject, ...fields }
+    setActiveProject(nextProject)
+    activeProjectRef.current = nextProject
   }
 
   function updateEpisodeFields(fields) {
@@ -417,7 +791,9 @@ export function AudioLabPage() {
       nextEpisode.slug = slugifyAudioLab(fields.title)
     }
 
-    setActiveProject({ ...activeProject, episode: nextEpisode })
+    const nextProject = { ...activeProject, episode: nextEpisode }
+    setActiveProject(nextProject)
+    activeProjectRef.current = nextProject
   }
 
   async function handleCreateEpisodeDraft() {
@@ -459,6 +835,7 @@ export function AudioLabPage() {
             assetId: asset?.id || '',
             filename: asset?.filename || '',
             duration: asset?.duration || duration || 0,
+            source: asset?.source || '',
             note: 'Audio source is preserved in local AudioLab IndexedDB storage until an export/upload pipeline is added.',
           },
         ],
@@ -480,6 +857,7 @@ export function AudioLabPage() {
       })
 
       setActiveProject(nextProject)
+      activeProjectRef.current = nextProject
       await refreshProjects(nextProject.id)
       setStatusMessage(result.synced ? 'Episode draft attached and synced.' : 'Episode draft attached locally. Remote sync can catch up later.')
     } catch (error) {
@@ -499,7 +877,7 @@ export function AudioLabPage() {
           <div>
             <p className="audio-lab-eyebrow">Native SabotPress audio desk</p>
             <h1>AudioLab</h1>
-            <p className="description">Phase 1: import, waveform rendering, playback transport, project save/reopen, and episode draft attachment.</p>
+            <p className="description">Phase 2: import, native browser recording, waveform rendering, playback transport, local project save/reopen, and episode draft attachment.</p>
           </div>
           <div className="review-card__actions">
             <button type="button" className="button" onClick={() => fileInputRef.current?.click()}>Import Audio</button>
@@ -545,6 +923,19 @@ export function AudioLabPage() {
               </div>
             </div>
 
+            <RecordPanel
+              canRecord={recorderSupported}
+              recordStatus={recordStatus}
+              recordMimeType={recordMimeType}
+              recordElapsed={recordElapsed}
+              recordLevel={recordLevel}
+              canPauseRecording={canPauseRecording}
+              onStart={handleStartRecording}
+              onPause={handlePauseRecording}
+              onResume={handleResumeRecording}
+              onStop={handleStopRecording}
+            />
+
             <div className="audio-lab-transport" aria-label="Playback transport">
               <button type="button" className="button button--primary audio-lab-play" onClick={handleTransportToggle} disabled={!audioUrl}>
                 {isPlaying ? 'Pause' : 'Play'}
@@ -577,7 +968,7 @@ export function AudioLabPage() {
                 <div className="audio-lab-track-controls">
                   <strong>{track?.name || 'Main Track'}</strong>
                   <span>{selectedAsset?.mimeType || 'No source'}</span>
-                  <small>{selectedAsset ? `${formatBytes(selectedAsset.size)} · ${formatAudioLabDuration(selectedAsset.duration || duration)}` : 'Import audio'}</small>
+                  <small>{selectedAsset ? `${formatBytes(selectedAsset.size)} · ${formatAudioLabDuration(selectedAsset.duration || duration)} · ${selectedAsset.source || 'source'}` : 'Import or record audio'}</small>
                 </div>
                 <WaveformCanvas peaks={peaks} duration={duration} currentTime={currentTime} isLoading={isDecoding} onSeek={handleSeek} />
               </div>
@@ -605,7 +996,7 @@ export function AudioLabPage() {
                 <div><dt>Tracks</dt><dd>{activeProject?.tracks?.length || 0}</dd></div>
                 <div><dt>Edits</dt><dd>{activeProject?.edits?.length || 0}</dd></div>
               </dl>
-              <p className="description">Phase 1 does not destructively edit audio. The original file stays in IndexedDB. The project stores references, timeline data, and future edit operations as JSON. Sensible for once.</p>
+              <p className="description">Phase 2 still does not destructively edit audio. Imported files and recorded takes stay in IndexedDB. The project stores references, timeline data, and future edit operations as JSON. Sensible for once.</p>
             </section>
 
             <section className="audio-lab-panel">
