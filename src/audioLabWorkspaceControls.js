@@ -1,9 +1,12 @@
 const MIN_ZOOM = 0.5
-const MAX_ZOOM = 4
+const MAX_ZOOM = 8
 const DEFAULT_ZOOM = 1
+const MIN_WAVE_HEIGHT = 240
+const MAX_WAVE_HEIGHT = 760
 
 let cleanupTimer = 0
 let activePinch = null
+let closeButtonsReady = false
 
 function isAudioLabRoute() {
   return typeof window !== 'undefined' && /\/wp-admin\/audiolab(?:\/|$)/.test(window.location.pathname)
@@ -24,34 +27,77 @@ function currentZoom() {
   return clamp(node?.dataset.audiolabZoom || DEFAULT_ZOOM, MIN_ZOOM, MAX_ZOOM)
 }
 
+function defaultWaveHeight() {
+  return clamp(Math.round(window.innerHeight * 0.48), 320, 620)
+}
+
+function currentWaveHeight() {
+  const node = page()
+  return clamp(node?.dataset.audiolabWaveHeight || defaultWaveHeight(), MIN_WAVE_HEIGHT, MAX_WAVE_HEIGHT)
+}
+
+function setCssZoom(node, zoom) {
+  node.dataset.audiolabZoom = String(zoom)
+  node.style.setProperty('--audiolab-zoom-scale', String(zoom))
+  node.style.setProperty('--audiolab-overview-zoom', String(zoom))
+  node.style.setProperty('--audiolab-waveform-width', `${Math.max(100, Math.round(zoom * 100))}%`)
+}
+
+function setCssWaveHeight(node, height) {
+  node.dataset.audiolabWaveHeight = String(height)
+  node.style.setProperty('--audiolab-waveform-height', `${Math.round(height)}px`)
+}
+
+function timelineScroller() {
+  return document.querySelector('.audio-lab-page .audio-lab-timeline-shell') || document.querySelector('.audio-lab-page .audio-lab-multitrack-scroll')
+}
+
 function setZoom(next, { centerX = null, source = 'Zoom' } = {}) {
   const node = page()
   if (!node) return false
   const oldZoom = currentZoom()
   const zoom = clamp(next, MIN_ZOOM, MAX_ZOOM)
-  const scroll = document.querySelector('.audio-lab-page .audio-lab-multitrack-scroll')
+  const scroll = timelineScroller()
 
   if (scroll && centerX != null) {
     const rect = scroll.getBoundingClientRect()
     const localX = Math.max(0, centerX - rect.left)
     const before = (scroll.scrollLeft + localX) / Math.max(0.001, oldZoom)
-    node.dataset.audiolabZoom = String(zoom)
-    node.style.setProperty('--audiolab-zoom-scale', String(zoom))
-    node.style.setProperty('--audiolab-overview-zoom', String(Math.min(1.35, Math.max(1, zoom * 0.72))))
+    setCssZoom(node, zoom)
     window.requestAnimationFrame(() => {
       scroll.scrollLeft = Math.max(0, before * zoom - localX)
+      window.dispatchEvent(new Event('resize'))
     })
   } else {
-    node.dataset.audiolabZoom = String(zoom)
-    node.style.setProperty('--audiolab-zoom-scale', String(zoom))
-    node.style.setProperty('--audiolab-overview-zoom', String(Math.min(1.35, Math.max(1, zoom * 0.72))))
+    setCssZoom(node, zoom)
+    window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
   }
 
-  showZoom(`${source}: ${Math.round(zoom * 100)}%`)
+  pulseGesture()
+  showZoom(`<strong>${source}: ${Math.round(zoom * 100)}%</strong><small>Horizontal waveform zoom</small>`)
   return true
 }
 
-function showZoom(label) {
+function setWaveHeight(next, { source = 'Wave height' } = {}) {
+  const node = page()
+  if (!node) return false
+  const height = clamp(next, MIN_WAVE_HEIGHT, MAX_WAVE_HEIGHT)
+  setCssWaveHeight(node, height)
+  window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
+  pulseGesture()
+  showZoom(`<strong>${source}: ${Math.round(height)}px</strong><small>Vertical waveform workspace</small>`)
+  return true
+}
+
+function pulseGesture() {
+  const node = page()
+  if (!node) return
+  node.classList.add('is-waveform-gesture')
+  window.clearTimeout(pulseGesture.timer)
+  pulseGesture.timer = window.setTimeout(() => node.classList.remove('is-waveform-gesture'), 450)
+}
+
+function showZoom(html) {
   const node = page()
   if (!node) return
   let toast = node.querySelector('.audio-lab-zoom-toast')
@@ -61,7 +107,7 @@ function showZoom(label) {
     toast.setAttribute('role', 'status')
     node.appendChild(toast)
   }
-  toast.textContent = label
+  toast.innerHTML = html
   toast.classList.add('is-visible')
   window.clearTimeout(showZoom.timer)
   showZoom.timer = window.setTimeout(() => toast.classList.remove('is-visible'), 900)
@@ -76,11 +122,17 @@ function handleWheel(event) {
 
   const pinchWheel = event.ctrlKey || event.metaKey
   const altWheelZoom = event.altKey
-  if (!pinchWheel && !altWheelZoom) return
+  const verticalWaveZoom = event.shiftKey
+  if (!pinchWheel && !altWheelZoom && !verticalWaveZoom) return
 
   event.preventDefault()
   event.stopPropagation()
+
   const factor = Math.exp(-event.deltaY * 0.0025)
+  if (verticalWaveZoom) {
+    setWaveHeight(currentWaveHeight() * factor, { source: pinchWheel || altWheelZoom ? 'Pinch height' : 'Wave height' })
+    return
+  }
   setZoom(currentZoom() * factor, { centerX: event.clientX, source: pinchWheel ? 'Pinch zoom' : 'Wheel zoom' })
 }
 
@@ -91,6 +143,11 @@ function distance(touches) {
   return Math.sqrt(dx * dx + dy * dy)
 }
 
+function axisDistance(touches, axis) {
+  const [a, b] = touches
+  return Math.abs(axis === 'x' ? a.clientX - b.clientX : a.clientY - b.clientY)
+}
+
 function midpoint(touches) {
   const [a, b] = touches
   return { x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 }
@@ -98,16 +155,31 @@ function midpoint(touches) {
 
 function handleTouchStart(event) {
   if (!isAudioLabRoute() || !isTimelineTarget(event.target) || event.touches.length !== 2) return
-  activePinch = { startDistance: distance(event.touches), startZoom: currentZoom() }
+  activePinch = {
+    startDistance: distance(event.touches),
+    startXDistance: axisDistance(event.touches, 'x'),
+    startYDistance: axisDistance(event.touches, 'y'),
+    startZoom: currentZoom(),
+    startWaveHeight: currentWaveHeight(),
+  }
 }
 
 function handleTouchMove(event) {
   if (!activePinch || event.touches.length !== 2 || !isTimelineTarget(event.target)) return
   event.preventDefault()
-  const nextDistance = distance(event.touches)
   const center = midpoint(event.touches)
-  const ratio = nextDistance / Math.max(1, activePinch.startDistance)
-  setZoom(activePinch.startZoom * ratio, { centerX: center.x, source: 'Pinch zoom' })
+  const nextDistance = distance(event.touches)
+  const nextXDistance = axisDistance(event.touches, 'x')
+  const nextYDistance = axisDistance(event.touches, 'y')
+  const xRatio = nextXDistance / Math.max(1, activePinch.startXDistance)
+  const yRatio = nextYDistance / Math.max(1, activePinch.startYDistance)
+  const overallRatio = nextDistance / Math.max(1, activePinch.startDistance)
+
+  if (Math.abs(yRatio - 1) > Math.abs(xRatio - 1) * 1.15) {
+    setWaveHeight(activePinch.startWaveHeight * yRatio, { source: 'Pinch height' })
+  } else {
+    setZoom(activePinch.startZoom * overallRatio, { centerX: center.x, source: 'Pinch zoom' })
+  }
 }
 
 function handleTouchEnd(event) {
@@ -218,6 +290,15 @@ function handleKeydown(event) {
   if ((event.ctrlKey || event.metaKey) && key === '0') {
     event.preventDefault()
     setZoom(DEFAULT_ZOOM, { source: 'Fit zoom' })
+    setWaveHeight(defaultWaveHeight(), { source: 'Fit height' })
+  }
+  if ((event.ctrlKey || event.metaKey) && key === '2') {
+    event.preventDefault()
+    setWaveHeight(currentWaveHeight() * 1.12, { source: 'Wave taller' })
+  }
+  if ((event.ctrlKey || event.metaKey) && key === '4') {
+    event.preventDefault()
+    setWaveHeight(currentWaveHeight() / 1.12, { source: 'Wave shorter' })
   }
 }
 
@@ -225,8 +306,8 @@ function markControlsReady() {
   const node = page()
   if (!node) return
   node.dataset.audiolabWorkspaceControls = 'true'
-  node.style.setProperty('--audiolab-zoom-scale', String(currentZoom()))
-  node.style.setProperty('--audiolab-overview-zoom', String(Math.min(1.35, Math.max(1, currentZoom() * 0.72))))
+  setCssZoom(node, currentZoom())
+  setCssWaveHeight(node, currentWaveHeight())
 
   const dock = document.querySelector('.audio-lab-page .audio-lab-project-sidebar')
   if (dock && !dock.hasAttribute('aria-expanded')) dock.setAttribute('aria-expanded', 'false')
