@@ -11,6 +11,16 @@ const FALLBACK_STORAGE_KEY = 'sabot-native-public-content-v1'
 
 export const NATIVE_CONTENT_SCHEMA_VERSION = 3
 
+function normalizeBoolean(value, fallback = false) {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === 'true') return true
+    if (normalized === 'false') return false
+  }
+  return fallback
+}
+
 export function createEmptyNativeEntry() {
   const now = new Date().toISOString()
   return {
@@ -52,6 +62,15 @@ export function createEmptyNativeEntry() {
     podcastTranscript: '',
     podcastSummary: '',
     podcastCoverImage: '',
+    podcastMimeType: '',
+    podcastFileSize: '',
+    podcastExplicit: false,
+    podcastCredits: '',
+    podcastLicense: '',
+    podcastMarkers: [],
+    podcastTranscriptCues: [],
+    podcastAudioMediaId: '',
+    podcastAudioStorageKey: '',
     relatedAssets: [],
     relatedPrintLinks: [],
     seoTitle: '',
@@ -117,6 +136,15 @@ export function normalizeNativeEntry(input) {
     podcastTranscript: String(raw.podcastTranscript || raw.fullTranscript || ''),
     podcastSummary: String(raw.podcastSummary || raw.audioSummary || ''),
     podcastCoverImage: String(raw.podcastCoverImage || raw.featuredImage || raw.heroImage || ''),
+    podcastMimeType: String(raw.podcastMimeType || raw.podcastEnclosureType || ''),
+    podcastFileSize: String(raw.podcastFileSize || raw.podcastEnclosureLength || ''),
+    podcastExplicit: normalizeBoolean(raw.podcastExplicit, false),
+    podcastCredits: String(raw.podcastCredits || ''),
+    podcastLicense: String(raw.podcastLicense || ''),
+    podcastMarkers: Array.isArray(raw.podcastMarkers) ? raw.podcastMarkers : [],
+    podcastTranscriptCues: Array.isArray(raw.podcastTranscriptCues) ? raw.podcastTranscriptCues : [],
+    podcastAudioMediaId: String(raw.podcastAudioMediaId || ''),
+    podcastAudioStorageKey: String(raw.podcastAudioStorageKey || ''),
     fullTranscript: String(raw.fullTranscript || ''),
     transcriptNotes: String(raw.transcriptNotes || ''),
     relatedAssets: Array.isArray(raw.relatedAssets) ? raw.relatedAssets : [],
