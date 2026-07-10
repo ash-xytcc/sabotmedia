@@ -71,6 +71,9 @@ export function createEmptyNativeEntry() {
     podcastTranscriptCues: [],
     podcastAudioMediaId: '',
     podcastAudioStorageKey: '',
+    podcastMasterAudioUrl: '',
+    podcastDeliveryAudioUrl: '',
+    podcastDeliveryStatus: '',
     relatedAssets: [],
     relatedPrintLinks: [],
     seoTitle: '',
@@ -145,6 +148,9 @@ export function normalizeNativeEntry(input) {
     podcastTranscriptCues: Array.isArray(raw.podcastTranscriptCues) ? raw.podcastTranscriptCues : [],
     podcastAudioMediaId: String(raw.podcastAudioMediaId || ''),
     podcastAudioStorageKey: String(raw.podcastAudioStorageKey || ''),
+    podcastMasterAudioUrl: String(raw.podcastMasterAudioUrl || ''),
+    podcastDeliveryAudioUrl: String(raw.podcastDeliveryAudioUrl || ''),
+    podcastDeliveryStatus: String(raw.podcastDeliveryStatus || ''),
     fullTranscript: String(raw.fullTranscript || ''),
     transcriptNotes: String(raw.transcriptNotes || ''),
     relatedAssets: Array.isArray(raw.relatedAssets) ? raw.relatedAssets : [],
@@ -216,9 +222,7 @@ export function createNativeEntryFromImportedPiece(piece = {}) {
 
 export function normalizeNativeCollection(input) {
   const arr = Array.isArray(input) ? input : []
-  return arr.map(normalizeNativeEntry).sort((a, b) => {
-    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  })
+  return arr.map(normalizeNativeEntry).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 }
 
 function loadLocalNativeCollection() {
@@ -233,32 +237,18 @@ function loadLocalNativeCollection() {
 
 function mergeNativeCollections(primary = [], secondary = []) {
   const byId = new Map()
-
-  for (const item of normalizeNativeCollection(secondary)) {
-    byId.set(item.id, item)
-  }
-
-  for (const item of normalizeNativeCollection(primary)) {
-    byId.set(item.id, item)
-  }
-
+  for (const item of normalizeNativeCollection(secondary)) byId.set(item.id, item)
+  for (const item of normalizeNativeCollection(primary)) byId.set(item.id, item)
   return normalizeNativeCollection([...byId.values()])
 }
 
 export async function loadNativeCollection(params = {}) {
   const localItems = loadLocalNativeCollection()
-
   try {
     const data = await fetchNativeEntries(params)
     const remoteItems = normalizeNativeCollection(data?.items || [])
     const merged = mergeNativeCollections(remoteItems, localItems)
-
-    try {
-      window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(merged))
-    } catch {
-      // ignore
-    }
-
+    try { window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(merged)) } catch { /* ignore */ }
     return merged
   } catch {
     return localItems
@@ -267,11 +257,7 @@ export async function loadNativeCollection(params = {}) {
 
 export function saveNativeCollection(items) {
   const normalized = normalizeNativeCollection(items)
-  try {
-    window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(normalized))
-  } catch {
-    // ignore
-  }
+  try { window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(normalized)) } catch { /* ignore */ }
   return normalized
 }
 
@@ -279,18 +265,10 @@ export function upsertNativeEntryLocal(items, entry) {
   const normalizedEntry = normalizeNativeEntry({
     ...entry,
     updatedAt: new Date().toISOString(),
-    publishedAt: ['published', 'scheduled'].includes(String(entry?.status || ''))
-      ? String(entry.publishedAt || new Date().toISOString())
-      : String(entry?.publishedAt || ''),
+    publishedAt: ['published', 'scheduled'].includes(String(entry?.status || '')) ? String(entry.publishedAt || new Date().toISOString()) : String(entry?.publishedAt || ''),
   })
-
   const localBase = mergeNativeCollections(items || [], loadLocalNativeCollection())
-  const nextItems = normalizeNativeCollection(
-    localBase.some((item) => item.id === normalizedEntry.id)
-      ? localBase.map((item) => (item.id === normalizedEntry.id ? normalizedEntry : item))
-      : [normalizedEntry, ...localBase]
-  )
-
+  const nextItems = normalizeNativeCollection(localBase.some((item) => item.id === normalizedEntry.id) ? localBase.map((item) => (item.id === normalizedEntry.id ? normalizedEntry : item)) : [normalizedEntry, ...localBase])
   try {
     window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(nextItems))
     return { items: nextItems, item: normalizedEntry, ok: true }
@@ -308,26 +286,15 @@ export async function upsertNativeEntryWithMeta(items, entry, revisionNote = 'sa
   const normalizedEntry = normalizeNativeEntry({
     ...entry,
     updatedAt: new Date().toISOString(),
-    publishedAt: ['published', 'scheduled'].includes(String(entry?.status || ''))
-      ? String(entry.publishedAt || new Date().toISOString())
-      : String(entry?.publishedAt || ''),
+    publishedAt: ['published', 'scheduled'].includes(String(entry?.status || '')) ? String(entry.publishedAt || new Date().toISOString()) : String(entry?.publishedAt || ''),
   })
-
   const localBase = mergeNativeCollections(items || [], loadLocalNativeCollection())
-  const locallySaved = saveNativeCollection(
-    localBase.some((item) => item.id === normalizedEntry.id)
-      ? localBase.map((item) => (item.id === normalizedEntry.id ? normalizedEntry : item))
-      : [normalizedEntry, ...localBase]
-  )
+  const locallySaved = saveNativeCollection(localBase.some((item) => item.id === normalizedEntry.id) ? localBase.map((item) => (item.id === normalizedEntry.id ? normalizedEntry : item)) : [normalizedEntry, ...localBase])
 
   try {
     const data = await saveNativeEntry(normalizedEntry, revisionNote)
     const saved = normalizeNativeEntry(data?.item || normalizedEntry)
-    const merged = saveNativeCollection(
-      locallySaved.some((item) => item.id === saved.id)
-        ? locallySaved.map((item) => (item.id === saved.id ? saved : item))
-        : [saved, ...locallySaved]
-    )
+    const merged = saveNativeCollection(locallySaved.some((item) => item.id === saved.id) ? locallySaved.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...locallySaved])
     return { items: merged, item: saved, synced: true }
   } catch {
     return { items: locallySaved, item: normalizedEntry, synced: false }
@@ -344,14 +311,7 @@ export async function deleteNativeEntry(items, id) {
 }
 
 export function exportNativeCollection(items) {
-  return JSON.stringify(
-    {
-      schemaVersion: NATIVE_CONTENT_SCHEMA_VERSION,
-      items: normalizeNativeCollection(items),
-    },
-    null,
-    2
-  )
+  return JSON.stringify({ schemaVersion: NATIVE_CONTENT_SCHEMA_VERSION, items: normalizeNativeCollection(items) }, null, 2)
 }
 
 export function importNativeCollection(raw) {
@@ -369,12 +329,7 @@ export function getLatestPublishedNativeEntry(items, target = '') {
 }
 
 export function slugify(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+  return String(value || '').trim().toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 }
 
 function isScheduledVisible(item) {
@@ -406,15 +361,8 @@ function normalizeEnum(value, allowed) {
 }
 
 function normalizeTags(value) {
-  if (Array.isArray(value)) {
-    return value.map((item) => String(item).trim()).filter(Boolean)
-  }
-  if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean)
-  }
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean)
+  if (typeof value === 'string') return value.split(',').map((item) => item.trim()).filter(Boolean)
   return []
 }
 
