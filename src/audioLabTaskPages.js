@@ -1,5 +1,6 @@
 import {
   formatAudioLabDuration,
+  getAudioLabAsset,
   getAudioLabProject,
   listAudioLabProjects,
   makeAudioLabId,
@@ -55,9 +56,7 @@ async function getActiveProject() {
   const params = currentSearch()
   const projectId = params.get('project') || ''
   const projects = await listAudioLabProjects()
-  const project = projectId
-    ? await getAudioLabProject(projectId)
-    : projects[0]
+  const project = projectId ? await getAudioLabProject(projectId) : projects[0]
   return { projects, project: project || projects[0] || null }
 }
 
@@ -98,13 +97,13 @@ function renderEmpty(shell) {
   shell.innerHTML = `
     <div class="audio-lab-task-card audio-lab-task-card--empty">
       <h1>No AudioLab project yet</h1>
-      <p>Go back to the editor, import or record audio, then use the workflow pages. Revolutionary, I know.</p>
+      <p>Go back to the editor, import or record audio, then use the workflow pages.</p>
       <a class="button button--primary" href="/wp-admin/audiolab">Back to editor</a>
     </div>
   `
 }
 
-function renderTaskHeader({ shell, task, project, projects }) {
+function renderTaskHeader({ task, project, projects }) {
   const title = TASKS.find((item) => item.id === task)?.label || 'Workflow'
   return `
     <header class="audio-lab-task-header">
@@ -129,19 +128,132 @@ function renderTaskHeader({ shell, task, project, projects }) {
   `
 }
 
-function attachProjectSelect(project) {
+function attachProjectSelect() {
   const select = document.getElementById('audio-lab-task-project-select')
   if (!select) return
   select.addEventListener('change', () => {
     const params = currentSearch()
     params.set('project', select.value)
-    window.location.href = `/wp-admin/audiolab?${params.toString()}`
+    const nextUrl = `/wp-admin/audiolab?${params.toString()}`
+    window.history.pushState({}, '', nextUrl)
+    renderTaskPage()
   })
 }
 
+function getRenderedLocalAssetId(rendered = {}) {
+  return String(
+    rendered?.delivery?.localAssetId ||
+    rendered?.delivery?.assetId ||
+    rendered?.master?.localAssetId ||
+    rendered?.master?.assetId ||
+    rendered?.localAssetId ||
+    rendered?.assetId ||
+    ''
+  )
+}
+
+function getPublicAudioUrl(rendered = {}) {
+  return String(rendered?.preferredPublicUrl || rendered?.delivery?.publicUrl || rendered?.master?.publicUrl || rendered?.publicUrl || '')
+}
+
+function chooseTranscriptionSource(project = {}) {
+  const rendered = project.renderedEpisode || {}
+  const renderedAssetId = getRenderedLocalAssetId(rendered)
+  if (renderedAssetId) return { type: 'asset', id: renderedAssetId, label: 'Rendered episode audio' }
+  const publicUrl = getPublicAudioUrl(rendered)
+  if (publicUrl) return { type: 'url', url: publicUrl, label: 'Public rendered audio URL' }
+  const episodeAssetId = project.episode?.audioAssetId || ''
+  if (episodeAssetId) return { type: 'asset', id: episodeAssetId, label: 'Episode source audio' }
+  const first = project.sourceAssets?.[0]
+  if (first?.id) return { type: 'asset', id: first.id, label: first.filename || 'First source asset' }
+  return null
+}
+
+function normalizeTranscriptForSave(transcript = {}) {
+  const cues = Array.isArray(transcript.cues) ? transcript.cues.map((cue, index) => ({
+    id: String(cue.id || makeAudioLabId('cue')),
+    start: Math.max(0, Number(cue.start || 0)),
+    end: Math.max(0, Number(cue.end || cue.start || 0)),
+    speaker: String(cue.speaker || ''),
+    text: String(cue.text || ''),
+  })).filter((cue) => cue.text.trim()) : []
+  return {
+    mode: cues.length ? 'timestamped' : 'plain',
+    text: String(transcript.text || cues.map((cue) => cue.text).join(' ') || ''),
+    cues,
+    updatedAt: new Date().toISOString(),
+    generatedAt: String(transcript.generatedAt || new Date().toISOString()),
+    language: String(transcript.language || ''),
+    provider: String(transcript.provider || ''),
+    engine: String(transcript.engine || ''),
+  }
+}
+
+function cuesSummary(cues = []) {
+  if (!Array.isArray(cues) || !cues.length) return '<p class="description">No timestamped cues yet.</p>'
+  return `
+    <ol class="audio-lab-transcript-cues">
+      ${cues.slice(0, 24).map((cue) => `<li><time>${formatAudioLabDuration(cue.start)}${cue.end ? `–${formatAudioLabDuration(cue.end)}` : ''}</time><span>${escapeHtml(cue.text)}</span></li>`).join('')}
+    </ol>
+    ${cues.length > 24 ? `<p class="description">Showing 24 of ${cues.length} cues. Full text is in the editor.</p>` : ''}
+  `
+}
+
+async function runAutoTranscription({ shell, project, textarea }) {
+  const status = shell.querySelector('#audio-lab-transcript-status')
+  const button = shell.querySelector('#audio-lab-transcribe-run')
+  const language = shell.querySelector('#audio-lab-transcript-language')?.value || ''
+  const source = chooseTranscriptionSource(project)
+  if (!source) {
+    toast(shell, 'No rendered or source audio available to transcribe.')
+    return
+  }
+
+  try {
+    button.disabled = true
+    button.textContent = 'Transcribing…'
+    status.textContent = 'Preparing audio for transcription…'
+    const form = new FormData()
+    form.set('projectId', project.id)
+    form.set('title', project.episode?.title || project.title || 'AudioLab episode')
+    if (language) form.set('language', language)
+
+    if (source.type === 'asset') {
+      const stored = await getAudioLabAsset(source.id)
+      if (!stored?.blob) throw new Error('Audio blob is missing locally. Render or re-import the audio first.')
+      form.set('filename', stored.filename || 'audiolab-audio')
+      form.set('mimeType', stored.mimeType || stored.blob.type || 'audio/wav')
+      form.set('file', stored.blob, stored.filename || 'audiolab-audio')
+    } else {
+      form.set('mediaUrl', source.url)
+      form.set('filename', 'audiolab-public-audio')
+    }
+
+    status.textContent = 'Sending audio to transcription provider…'
+    const response = await fetch('/api/audiolab/transcribe', { method: 'POST', body: form })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok || !data.ok) throw new Error(data.error || `Transcription failed: ${response.status}`)
+
+    const nextTranscript = normalizeTranscriptForSave(data.transcript || {})
+    const saved = await saveAudioLabProject({ ...project, transcript: nextTranscript })
+    textarea.value = nextTranscript.text || ''
+    status.textContent = `Transcript created with ${nextTranscript.cues.length} timestamped cues. Saveback complete.`
+    toast(shell, `Auto transcript saved for ${saved.title || 'AudioLab project'}.`)
+    renderTaskPage()
+  } catch (error) {
+    status.textContent = error.message || 'Automatic transcription failed.'
+    toast(shell, error.message || 'Automatic transcription failed.')
+  } finally {
+    button.disabled = false
+    button.textContent = 'Auto transcribe audio'
+  }
+}
+
 function renderTranscript({ shell, project, projects }) {
+  const transcript = project.transcript || { mode: 'plain', text: '', cues: [] }
+  const source = chooseTranscriptionSource(project)
   shell.innerHTML = `
-    ${renderTaskHeader({ shell, task: 'transcript', project, projects })}
+    ${renderTaskHeader({ task: 'transcript', project, projects })}
     <section class="audio-lab-task-grid audio-lab-task-grid--transcript">
       <article class="audio-lab-task-card audio-lab-task-card--wide">
         <div class="audio-lab-task-card__header">
@@ -150,30 +262,41 @@ function renderTranscript({ shell, project, projects }) {
             <h2>Transcript and correction</h2>
           </div>
           <div class="audio-lab-task-inline-actions">
-            <button type="button" class="button" id="audio-lab-transcript-import">Import .txt</button>
+            <button type="button" class="button" id="audio-lab-transcript-import">Import .txt/.vtt/.srt</button>
             <button type="button" class="button button--primary" id="audio-lab-transcript-save">Save transcript</button>
           </div>
         </div>
-        <textarea id="audio-lab-transcript-text" class="audio-lab-transcript-editor" placeholder="Automatic transcript output and human corrections go here. Not in a two-inch dock, because we are not monsters.">${escapeHtml(project.transcript?.text || '')}</textarea>
+        <textarea id="audio-lab-transcript-text" class="audio-lab-transcript-editor" placeholder="Automatic transcript output and human corrections go here.">${escapeHtml(transcript.text || '')}</textarea>
         <input id="audio-lab-transcript-file" type="file" accept=".txt,.vtt,.srt,text/plain,text/vtt" hidden />
       </article>
-      <aside class="audio-lab-task-card">
+      <aside class="audio-lab-task-card audio-lab-auto-transcribe-card">
         <p class="audio-lab-eyebrow">Automatic transcript</p>
-        <h2>Auto transcription target</h2>
-        <p>Manual typing is demoted to correction/import. The next real feature should wire a transcription endpoint so this page can generate a transcript from the rendered episode audio.</p>
-        <button type="button" class="button" disabled>Auto transcribe, endpoint not wired yet</button>
-        <p class="description">This is intentionally a full page now. The editor workspace is for waveforms. Transcript work lives here, where sentences have room to exist like civilized little worms.</p>
+        <h2>Descript-style first pass</h2>
+        <p>This generates a full editable transcript from the rendered episode audio when available, otherwise from the selected/source audio. Manual typing is now demoted to correction, as decency requires.</p>
+        <dl class="audio-lab-task-facts">
+          <div><dt>Source</dt><dd>${escapeHtml(source?.label || 'none')}</dd></div>
+          <div><dt>Current cues</dt><dd>${transcript.cues?.length || 0}</dd></div>
+          <div><dt>Engine</dt><dd>${escapeHtml(transcript.engine || transcript.provider || 'not generated yet')}</dd></div>
+          <div><dt>Generated</dt><dd>${escapeHtml(transcript.generatedAt || transcript.updatedAt || 'never')}</dd></div>
+        </dl>
+        <label class="audio-lab-task-field"><span>Language hint</span><input id="audio-lab-transcript-language" placeholder="optional, e.g. en" value="${escapeHtml(transcript.language || '')}" /></label>
+        <button type="button" class="button button--primary audio-lab-transcribe-button" id="audio-lab-transcribe-run" ${source ? '' : 'disabled'}>Auto transcribe audio</button>
+        <p id="audio-lab-transcript-status" class="description">${source ? 'Ready to transcribe. Rendered episode audio is preferred.' : 'No audio source available yet.'}</p>
+        <div class="audio-lab-transcript-preview">
+          <h3>Timestamped cues</h3>
+          ${cuesSummary(transcript.cues || [])}
+        </div>
       </aside>
     </section>
   `
-  attachProjectSelect(project)
+  attachProjectSelect()
   const textarea = shell.querySelector('#audio-lab-transcript-text')
   shell.querySelector('#audio-lab-transcript-save')?.addEventListener('click', async () => {
     await saveAudioLabProject({
       ...project,
       transcript: {
         ...(project.transcript || {}),
-        mode: 'plain',
+        mode: (project.transcript?.cues || []).length ? 'timestamped' : 'plain',
         text: textarea.value,
         updatedAt: new Date().toISOString(),
       },
@@ -188,12 +311,13 @@ function renderTranscript({ shell, project, projects }) {
     textarea.value = await file.text()
     toast(shell, `Imported ${file.name}. Save when ready.`)
   })
+  shell.querySelector('#audio-lab-transcribe-run')?.addEventListener('click', () => runAutoTranscription({ shell, project, textarea }))
 }
 
 function renderMarkers({ shell, project, projects }) {
   const markers = project.markers || []
   shell.innerHTML = `
-    ${renderTaskHeader({ shell, task: 'markers', project, projects })}
+    ${renderTaskHeader({ task: 'markers', project, projects })}
     <section class="audio-lab-task-card">
       <div class="audio-lab-task-card__header">
         <div><p class="audio-lab-eyebrow">Chapters</p><h2>Markers</h2></div>
@@ -212,7 +336,7 @@ function renderMarkers({ shell, project, projects }) {
       <div class="audio-lab-task-footer"><button type="button" class="button button--primary" id="audio-lab-markers-save">Save markers</button></div>
     </section>
   `
-  attachProjectSelect(project)
+  attachProjectSelect()
   const collect = () => Array.from(shell.querySelectorAll('.audio-lab-marker-row')).map((row) => ({
     id: project.markers?.[Number(row.dataset.markerIndex)]?.id || makeAudioLabId('marker'),
     time: Math.max(0, Number(row.querySelector('[data-marker-field="time"]')?.value || 0)),
@@ -240,7 +364,7 @@ function renderMarkers({ shell, project, projects }) {
 function renderMetadata({ shell, project, projects }) {
   const episode = project.episode || {}
   shell.innerHTML = `
-    ${renderTaskHeader({ shell, task: 'metadata', project, projects })}
+    ${renderTaskHeader({ task: 'metadata', project, projects })}
     <section class="audio-lab-task-card audio-lab-metadata-form">
       <p class="audio-lab-eyebrow">Episode metadata</p>
       <h2>Podcast fields</h2>
@@ -257,7 +381,7 @@ function renderMetadata({ shell, project, projects }) {
       <div class="audio-lab-task-footer"><button type="button" class="button button--primary" id="episode-save">Save metadata</button></div>
     </section>
   `
-  attachProjectSelect(project)
+  attachProjectSelect()
   shell.querySelector('#episode-save')?.addEventListener('click', async () => {
     const title = shell.querySelector('#episode-title')?.value || project.title
     const slug = shell.querySelector('#episode-slug')?.value || slugifyAudioLab(title)
@@ -282,9 +406,9 @@ function renderMetadata({ shell, project, projects }) {
 
 function renderPublish({ shell, project, projects }) {
   const rendered = project.renderedEpisode || {}
-  const publicUrl = rendered.preferredPublicUrl || rendered.delivery?.publicUrl || rendered.master?.publicUrl || rendered.publicUrl || ''
+  const publicUrl = getPublicAudioUrl(rendered)
   shell.innerHTML = `
-    ${renderTaskHeader({ shell, task: 'publish', project, projects })}
+    ${renderTaskHeader({ task: 'publish', project, projects })}
     <section class="audio-lab-task-grid">
       <article class="audio-lab-task-card">
         <p class="audio-lab-eyebrow">Publishing status</p>
@@ -307,17 +431,18 @@ function renderPublish({ shell, project, projects }) {
           <li class="${publicUrl ? 'ok' : 'bad'}">Public audio URL</li>
           <li class="${rendered.preferredMimeType || rendered.mimeType ? 'ok' : 'bad'}">MIME type</li>
           <li class="${rendered.preferredFileSize || rendered.size ? 'ok' : 'bad'}">File size</li>
+          <li class="${project.transcript?.text ? 'ok' : 'bad'}">Transcript</li>
         </ul>
       </article>
     </section>
   `
-  attachProjectSelect(project)
+  attachProjectSelect()
 }
 
 function renderEffects({ shell, project, projects }) {
   const effects = project.effects || []
   shell.innerHTML = `
-    ${renderTaskHeader({ shell, task: 'effects', project, projects })}
+    ${renderTaskHeader({ task: 'effects', project, projects })}
     <section class="audio-lab-task-card">
       <p class="audio-lab-eyebrow">Effects rack</p>
       <h2>Current chain</h2>
@@ -325,20 +450,20 @@ function renderEffects({ shell, project, projects }) {
       <p class="description">Detailed clip/track-scoped effect editing still belongs beside the waveform for now. This page keeps the chain readable without stealing editor space.</p>
     </section>
   `
-  attachProjectSelect(project)
+  attachProjectSelect()
 }
 
 function renderSources({ shell, project, projects }) {
   const sources = project.sourceAssets || []
   shell.innerHTML = `
-    ${renderTaskHeader({ shell, task: 'sources', project, projects })}
+    ${renderTaskHeader({ task: 'sources', project, projects })}
     <section class="audio-lab-task-card">
       <p class="audio-lab-eyebrow">Source assets</p>
       <h2>Preserved audio sources</h2>
       ${sources.length ? `<div class="audio-lab-source-table">${sources.map((asset) => `<div><strong>${escapeHtml(asset.filename)}</strong><span>${formatAudioLabDuration(asset.duration)} · ${escapeHtml(asset.mimeType)} · ${Number(asset.size || 0)} bytes</span></div>`).join('')}</div>` : '<p class="description">No sources yet.</p>'}
     </section>
   `
-  attachProjectSelect(project)
+  attachProjectSelect()
 }
 
 function toast(shell, message) {
@@ -351,10 +476,10 @@ function toast(shell, message) {
   note.textContent = message
   note.classList.add('is-visible')
   window.clearTimeout(toast.timer)
-  toast.timer = window.setTimeout(() => note.classList.remove('is-visible'), 1200)
+  toast.timer = window.setTimeout(() => note.classList.remove('is-visible'), 1600)
 }
 
-async function renderTaskPage() {
+export async function renderTaskPage() {
   if (!isAudioLabRoute()) return
   const root = page()
   if (!root) return
@@ -382,6 +507,7 @@ async function renderTaskPage() {
 
 window.addEventListener('load', renderTaskPage)
 window.addEventListener('popstate', () => window.setTimeout(renderTaskPage, 80))
+window.addEventListener('audiolab-task-navigation', () => window.setTimeout(renderTaskPage, 20))
 window.setInterval(() => {
   if (!isAudioLabRoute()) return
   const root = page()
