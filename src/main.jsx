@@ -5,6 +5,7 @@ import App from './App'
 import './styles.css'
 import './admin-polish.css'
 import './printlab-disabled-tools.css'
+import './audio-lab.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
