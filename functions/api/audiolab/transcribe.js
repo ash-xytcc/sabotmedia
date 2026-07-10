@@ -1,0 +1,217 @@
+import { resolvePublicSitePermission } from '../_lib/publicSiteAuth.js'
+
+const MAX_TRANSCRIBE_BYTES = 1024 * 1024 * 120
+const ALLOWED_AUDIO_TYPES = new Set([
+  'audio/wav',
+  'audio/wave',
+  'audio/x-wav',
+  'audio/webm',
+  'audio/ogg',
+  'audio/mpeg',
+  'audio/mp4',
+  'audio/aac',
+  'audio/flac',
+])
+
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      allow: 'POST,OPTIONS',
+      'access-control-allow-methods': 'POST,OPTIONS',
+      'access-control-allow-headers': 'content-type',
+    },
+  })
+}
+
+export async function onRequestPost(context) {
+  try {
+    const permission = await resolvePublicSitePermission(context)
+    if (!permission.canEdit) {
+      return json({ ok: false, error: permission.reason || 'valid session required', canEdit: false }, 403)
+    }
+
+    const form = await context.request.formData()
+    const source = await resolveAudioSource(context, form)
+    if (!source.bytes?.byteLength) return json({ ok: false, error: 'missing audio file or public audio URL' }, 400)
+    if (source.bytes.byteLength > MAX_TRANSCRIBE_BYTES) return json({ ok: false, error: 'audio file is too large for this transcription endpoint' }, 413)
+
+    const mimeType = normalizeAudioMimeType(form.get('mimeType') || source.mimeType || 'audio/wav')
+    if (!ALLOWED_AUDIO_TYPES.has(mimeType)) return json({ ok: false, error: `unsupported audio MIME type: ${mimeType}` }, 415)
+
+    const language = String(form.get('language') || context.env?.SABOT_TRANSCRIPTION_LANGUAGE || '').trim()
+    const prompt = String(form.get('prompt') || context.env?.SABOT_TRANSCRIPTION_PROMPT || '').trim()
+    const filename = sanitizeFilename(form.get('filename') || source.filename || `audiolab-transcription.${extensionForMime(mimeType)}`)
+
+    const result = await transcribeAudio(context, {
+      bytes: source.bytes,
+      mimeType,
+      filename,
+      language,
+      prompt,
+    })
+
+    return json({
+      ok: true,
+      transcript: normalizeTranscriptResult(result, {
+        filename,
+        mimeType,
+        language,
+      }),
+    })
+  } catch (error) {
+    return json({ ok: false, error: String(error?.message || error) }, 500)
+  }
+}
+
+async function resolveAudioSource(context, form) {
+  const file = form.get('file') || form.get('audio')
+  if (file && typeof file.arrayBuffer === 'function') {
+    return {
+      bytes: await file.arrayBuffer(),
+      mimeType: file.type || form.get('mimeType') || 'audio/wav',
+      filename: file.name || form.get('filename') || 'audiolab-audio',
+    }
+  }
+
+  const mediaUrl = String(form.get('mediaUrl') || form.get('audioUrl') || '').trim()
+  if (!mediaUrl) return { bytes: null, mimeType: '', filename: '' }
+  const requestUrl = new URL(context.request.url)
+  const targetUrl = new URL(mediaUrl, requestUrl.origin)
+  if (targetUrl.origin !== requestUrl.origin) throw new Error('Only same-origin audio URLs can be transcribed by this endpoint')
+  if (!targetUrl.pathname.startsWith('/api/audiolab/media')) throw new Error('Unsupported audio URL for transcription')
+
+  const response = await fetch(targetUrl.toString())
+  if (!response.ok) throw new Error(`Unable to fetch audio URL for transcription: ${response.status}`)
+  return {
+    bytes: await response.arrayBuffer(),
+    mimeType: response.headers.get('content-type') || form.get('mimeType') || 'audio/wav',
+    filename: targetUrl.searchParams.get('filename') || 'audiolab-audio',
+  }
+}
+
+async function transcribeAudio(context, input) {
+  if (context.env?.AI?.run) {
+    try {
+      return await transcribeWithWorkersAi(context, input)
+    } catch (error) {
+      if (!context.env?.OPENAI_API_KEY) throw error
+    }
+  }
+
+  if (context.env?.OPENAI_API_KEY) {
+    return transcribeWithOpenAi(context, input)
+  }
+
+  throw new Error('No transcription provider configured. Add a Cloudflare Workers AI binding named AI, or set OPENAI_API_KEY.')
+}
+
+async function transcribeWithWorkersAi(context, { bytes, language, prompt }) {
+  const model = String(context.env?.SABOT_TRANSCRIPTION_MODEL || '@cf/openai/whisper-large-v3-turbo')
+  const audio = Array.from(new Uint8Array(bytes))
+  const payload = { audio }
+  if (language) payload.language = language
+  if (prompt) payload.prompt = prompt
+  const result = await context.env.AI.run(model, payload)
+  return {
+    provider: 'cloudflare-workers-ai',
+    engine: model,
+    raw: result,
+    text: result?.text || result?.transcription || '',
+    language: result?.language || language || '',
+    segments: result?.segments || result?.chunks || [],
+    words: result?.words || [],
+    vtt: result?.vtt || '',
+  }
+}
+
+async function transcribeWithOpenAi(context, { bytes, mimeType, filename, language, prompt }) {
+  const model = String(context.env?.SABOT_OPENAI_TRANSCRIPTION_MODEL || context.env?.OPENAI_TRANSCRIPTION_MODEL || 'gpt-4o-mini-transcribe')
+  const form = new FormData()
+  form.set('model', model)
+  form.set('file', new Blob([bytes], { type: mimeType }), filename)
+  form.set('response_format', 'verbose_json')
+  form.append('timestamp_granularities[]', 'segment')
+  if (language) form.set('language', language)
+  if (prompt) form.set('prompt', prompt)
+
+  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${context.env.OPENAI_API_KEY}` },
+    body: form,
+  })
+
+  const textBody = await response.text()
+  let data = null
+  try { data = JSON.parse(textBody) } catch { data = { text: textBody } }
+  if (!response.ok) throw new Error(data?.error?.message || `OpenAI transcription failed: ${response.status}`)
+  return {
+    provider: 'openai',
+    engine: model,
+    raw: data,
+    text: data?.text || '',
+    language: data?.language || language || '',
+    segments: data?.segments || [],
+    words: data?.words || [],
+  }
+}
+
+function normalizeTranscriptResult(result = {}, fallback = {}) {
+  const raw = result.raw && typeof result.raw === 'object' ? result.raw : {}
+  const cues = normalizeCues(result.segments || raw.segments || raw.chunks || [])
+  const text = String(result.text || raw.text || cues.map((cue) => cue.text).join(' ') || '').trim()
+  return {
+    mode: cues.length ? 'timestamped' : 'plain',
+    text,
+    cues,
+    words: Array.isArray(result.words || raw.words) ? (result.words || raw.words).slice(0, 20000) : [],
+    language: String(result.language || raw.language || fallback.language || ''),
+    provider: String(result.provider || ''),
+    engine: String(result.engine || ''),
+    filename: String(fallback.filename || ''),
+    mimeType: String(fallback.mimeType || ''),
+    generatedAt: new Date().toISOString(),
+  }
+}
+
+function normalizeCues(segments) {
+  if (!Array.isArray(segments)) return []
+  return segments.map((segment, index) => {
+    const start = Number(segment.start ?? segment.timestamp?.[0] ?? segment.from ?? 0)
+    const end = Number(segment.end ?? segment.timestamp?.[1] ?? segment.to ?? start)
+    const text = String(segment.text || segment.chunk || segment.sentence || '').trim()
+    if (!text) return null
+    return {
+      id: `cue-${index + 1}`,
+      start: Math.max(0, Number.isFinite(start) ? start : 0),
+      end: Math.max(0, Number.isFinite(end) ? end : start),
+      speaker: String(segment.speaker || ''),
+      text,
+    }
+  }).filter(Boolean)
+}
+
+function normalizeAudioMimeType(value) {
+  const type = String(value || '').split(';')[0].trim().toLowerCase()
+  if (type === 'audio/x-wav' || type === 'audio/wave') return 'audio/wav'
+  return type || 'audio/wav'
+}
+
+function sanitizeFilename(value) {
+  const cleaned = String(value || 'audio.wav').split(/[\\/]/).pop().trim().replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '')
+  return (cleaned || 'audio.wav').slice(0, 160)
+}
+
+function extensionForMime(mimeType = '') {
+  const lower = String(mimeType).toLowerCase()
+  if (lower.includes('webm')) return 'webm'
+  if (lower.includes('ogg')) return 'ogg'
+  if (lower.includes('mpeg')) return 'mp3'
+  if (lower.includes('mp4') || lower.includes('aac')) return 'm4a'
+  if (lower.includes('flac')) return 'flac'
+  return 'wav'
+}
+
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data, null, 2), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } })
+}
