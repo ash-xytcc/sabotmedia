@@ -19,6 +19,7 @@ import './audio-lab-waveform-focus.css'
 import './audio-lab-professional-polish.css'
 import './audio-lab-task-pages.css'
 import './audio-lab-transcription.css'
+import './audio-lab-direct-manipulation.css'
 import './audio-lab-shortcuts.css'
 import './audioLabKeyboardShortcuts.js'
 import './audioLabWorkspaceControls.js'
@@ -26,6 +27,7 @@ import './audioLabTaskPages.js'
 import './audioLabTaskNavigationFix.js'
 import './audioLabFastTranscription.js'
 import './audioLabLongTranscription.js'
+import './audioLabDirectManipulation.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
