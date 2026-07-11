@@ -61,6 +61,8 @@ const DEFAULT_GLOSSARY_TERMS = [
 let transformersPromise = null
 const pipelineCache = new Map()
 let activeRunId = ''
+let activeRunCancelRequested = false
+let activeRunState = null
 
 function isAudioLabRoute() {
   return typeof window !== 'undefined' && /\/wp-admin\/audiolab(?:\/|$)/.test(window.location.pathname)
@@ -412,20 +414,74 @@ function dedupeAdjacentCues(cues = []) {
   return deduped
 }
 
-function normalizeTranscriptForSave({ textParts = [], cues = [], language = '', glossary = [], quality = 'fast', partial = false } = {}) {
+function normalizeTranscriptForSave({ textParts = [], cues = [], language = '', glossary = [], quality = 'fast', partial = false, cancelled = false } = {}) {
   const cleanTextParts = textParts.map((part) => cleanupTranscriptText(part, glossary)).filter(Boolean)
   const cleanCues = dedupeAdjacentCues(cues.map((cue) => ({ ...cue, text: cleanupTranscriptText(cue.text, glossary) })).filter((cue) => String(cue.text || '').trim()))
   const text = cleanTextParts.length ? cleanTextParts.join('\n\n') : cleanCues.map((cue) => cue.text).join('\n\n')
+  const suffix = cancelled ? ' cancelled partial' : partial ? ' partial' : ''
   return {
     mode: cleanCues.length ? 'timestamped' : 'plain',
     text: cleanupTranscriptText(text, glossary),
     cues: cleanCues,
     language: String(language || ''),
     provider: 'browser-local',
-    engine: `${TRANSCRIPT_MODEL_OPTIONS[quality]?.label || 'Local Whisper'}${partial ? ' partial' : ''}`,
+    engine: `${TRANSCRIPT_MODEL_OPTIONS[quality]?.label || 'Local Whisper'}${suffix}`,
     quality,
+    cancelled: Boolean(cancelled),
     updatedAt: new Date().toISOString(),
     generatedAt: new Date().toISOString(),
+  }
+}
+
+function hasTranscriptProgress(state = activeRunState) {
+  return Boolean(state && (state.textParts?.length || state.cues?.length))
+}
+
+function setCancelButtonState(shell, running = false, cancelling = false) {
+  const cancelButton = shell?.querySelector?.('#audio-lab-transcript-cancel-local')
+  if (!cancelButton) return
+  cancelButton.hidden = !running && !cancelling
+  cancelButton.disabled = !running || cancelling
+  cancelButton.textContent = cancelling ? 'Cancelling…' : 'Cancel transcription'
+}
+
+async function persistRunProgress(state = activeRunState, { cancelled = false, chunkIndex = 0, totalChunks = 0 } = {}) {
+  if (!state?.project || !hasTranscriptProgress(state)) return null
+  const transcript = normalizeTranscriptForSave({
+    textParts: state.textParts || [],
+    cues: state.cues || [],
+    language: state.language || '',
+    glossary: state.glossary || [],
+    quality: state.quality || 'fast',
+    partial: !cancelled,
+    cancelled,
+  })
+  await saveAudioLabProject({ ...state.project, transcript, transcriptGlossary: state.glossary || [] })
+  if (state.textarea) state.textarea.value = transcript.text || ''
+  if (state.shell) {
+    const where = chunkIndex && totalChunks ? ` after chunk ${chunkIndex}/${totalChunks}` : ''
+    setStatus(state.shell, cancelled ? `Cancelled local transcription${where}. Saved the partial transcript.` : `Saved local partial transcript${where}. Keep the tab open, because naturally browsers hate responsibility.`)
+  }
+  return transcript
+}
+
+function requestCancelLocalTranscription(shell = null) {
+  if (!activeRunId) return
+  activeRunCancelRequested = true
+  activeRunId = ''
+  setCancelButtonState(shell || activeRunState?.shell, true, true)
+  setStatus(shell || activeRunState?.shell, 'Cancelling local transcription after the current chunk finishes. The model will not politely stop mid-thought, because naturally it has one job and no manners.')
+  persistRunProgress(activeRunState, { cancelled: true, chunkIndex: activeRunState?.lastCompletedChunk || 0, totalChunks: activeRunState?.totalChunks || 0 })
+    .catch((error) => toast(shell || activeRunState?.shell, error.message || 'Could not save cancelled transcript.'))
+}
+
+function assertNotCancelled(runId, state = activeRunState) {
+  if (activeRunCancelRequested || activeRunId !== runId) {
+    const error = new Error('Local transcription cancelled. Partial transcript was saved when available.')
+    error.cancelled = true
+    error.chunkIndex = state?.lastCompletedChunk || 0
+    error.totalChunks = state?.totalChunks || 0
+    throw error
   }
 }
 
@@ -450,74 +506,114 @@ function appendTextPartFromResult(textParts, result = {}, chunkCues = [], glossa
 }
 
 async function runLocalTranscription(shell, button, textarea) {
-  ensureTranscriptQualityControls(shell, await getActiveProject())
+  const projectForControls = await getActiveProject()
+  ensureTranscriptQualityControls(shell, projectForControls)
   const runId = makeAudioLabId('local-transcribe')
   activeRunId = runId
+  activeRunCancelRequested = false
   const language = shell.querySelector('#audio-lab-transcript-language')?.value || ''
   const quality = getSelectedQuality(shell)
-  const project = await getActiveProject()
+  const project = projectForControls
   if (!project) throw new Error('No AudioLab project is open.')
   const source = chooseTranscriptionSource(project)
   if (!source) throw new Error('No rendered or source audio available to transcribe.')
   const glossary = getGlossaryTerms(shell, project)
   localStorage.setItem('audioLab.localTranscriptionQuality', quality)
 
+  const state = {
+    runId,
+    project,
+    shell,
+    textarea,
+    textParts: [],
+    cues: [],
+    language,
+    glossary,
+    quality,
+    lastCompletedChunk: 0,
+    totalChunks: 0,
+  }
+  activeRunState = state
+
   button.disabled = true
   button.textContent = 'Preparing local…'
+  setCancelButtonState(shell, true, false)
   setStatus(shell, `Loading audio for local ${TRANSCRIPT_MODEL_OPTIONS[quality].label}. No OpenAI. No Cloudflare AI. Just your browser doing unpaid speech labor.`)
 
-  const rawAudio = await resolveSourceBlob(project, source)
-  setStatus(shell, `Decoding ${rawAudio.label || rawAudio.filename} (${formatBytes(rawAudio.blob.size)}) locally…`)
-  await sleep(20)
-  const decoded = await decodeBlob(rawAudio.blob)
-
-  setStatus(shell, `Preparing ${formatDuration(decoded.duration || 0)} of mono 16 kHz audio for local Whisper…`)
-  await sleep(20)
-  const prepared = downmixAndResample(decoded, TARGET_SAMPLE_RATE)
-  const chunks = makeLocalChunks(prepared, quality)
-
-  button.textContent = 'Loading model…'
-  const transcriber = await getTranscriber(shell, language, quality)
-
-  const textParts = []
-  const cues = []
-  button.textContent = `Local 0/${chunks.length}`
-  setStatus(shell, `Running ${TRANSCRIPT_MODEL_OPTIONS[quality].label} in ${chunks.length} browser chunks with ${LOCAL_CHUNK_OVERLAP_SECONDS}s overlap and glossary repair.`)
-  await sleep(50)
-
-  for (let index = 0; index < chunks.length; index += 1) {
-    if (activeRunId !== runId) throw new Error('Local transcription was interrupted by a newer run.')
-    const chunk = chunks[index]
-    button.textContent = `Local ${index + 1}/${chunks.length}`
-    setStatus(shell, `Local chunk ${index + 1}/${chunks.length}: ${formatDuration(chunk.offset)}–${formatDuration(chunk.offset + chunk.duration)}. Model: ${TRANSCRIPT_MODEL_OPTIONS[quality].label}.`)
+  try {
+    assertNotCancelled(runId, state)
+    const rawAudio = await resolveSourceBlob(project, source)
+    assertNotCancelled(runId, state)
+    setStatus(shell, `Decoding ${rawAudio.label || rawAudio.filename} (${formatBytes(rawAudio.blob.size)}) locally…`)
     await sleep(20)
+    assertNotCancelled(runId, state)
+    const decoded = await decodeBlob(rawAudio.blob)
 
-    const result = await transcriber(chunk.samples, {
-      sampling_rate: prepared.sampleRate,
-      chunk_length_s: Math.min(TRANSCRIPT_MODEL_OPTIONS[quality].chunkSeconds, Math.max(5, chunk.duration)),
-      stride_length_s: 0,
-      return_timestamps: true,
-      task: 'transcribe',
-      language: language || undefined,
-    })
+    assertNotCancelled(runId, state)
+    setStatus(shell, `Preparing ${formatDuration(decoded.duration || 0)} of mono 16 kHz audio for local Whisper…`)
+    await sleep(20)
+    const prepared = downmixAndResample(decoded, TARGET_SAMPLE_RATE)
+    const chunks = makeLocalChunks(prepared, quality)
+    state.totalChunks = chunks.length
 
-    const chunkCues = normalizeChunks(result || {}, chunk.offset, chunk.overlap, glossary)
-    cues.push(...chunkCues)
-    appendTextPartFromResult(textParts, result || {}, chunkCues, glossary)
+    assertNotCancelled(runId, state)
+    button.textContent = 'Loading model…'
+    const transcriber = await getTranscriber(shell, language, quality)
 
-    const isSavePoint = (index + 1) % PARTIAL_SAVE_EVERY_CHUNKS === 0 || index === chunks.length - 1
-    if (isSavePoint) {
-      const partialTranscript = normalizeTranscriptForSave({ textParts, cues, language, glossary, quality, partial: index !== chunks.length - 1 })
-      await savePartialTranscript(project, partialTranscript, textarea, shell, index + 1, chunks.length, glossary)
+    assertNotCancelled(runId, state)
+    button.textContent = `Local 0/${chunks.length}`
+    setStatus(shell, `Running ${TRANSCRIPT_MODEL_OPTIONS[quality].label} in ${chunks.length} browser chunks with ${LOCAL_CHUNK_OVERLAP_SECONDS}s overlap and glossary repair.`)
+    await sleep(50)
+
+    for (let index = 0; index < chunks.length; index += 1) {
+      assertNotCancelled(runId, state)
+      const chunk = chunks[index]
+      button.textContent = `Local ${index + 1}/${chunks.length}`
+      setStatus(shell, `Local chunk ${index + 1}/${chunks.length}: ${formatDuration(chunk.offset)}–${formatDuration(chunk.offset + chunk.duration)}. Model: ${TRANSCRIPT_MODEL_OPTIONS[quality].label}.`)
+      await sleep(20)
+      assertNotCancelled(runId, state)
+
+      const result = await transcriber(chunk.samples, {
+        sampling_rate: prepared.sampleRate,
+        chunk_length_s: Math.min(TRANSCRIPT_MODEL_OPTIONS[quality].chunkSeconds, Math.max(5, chunk.duration)),
+        stride_length_s: 0,
+        return_timestamps: true,
+        task: 'transcribe',
+        language: language || undefined,
+      })
+
+      assertNotCancelled(runId, state)
+      const chunkCues = normalizeChunks(result || {}, chunk.offset, chunk.overlap, glossary)
+      state.cues.push(...chunkCues)
+      appendTextPartFromResult(state.textParts, result || {}, chunkCues, glossary)
+      state.lastCompletedChunk = index + 1
+
+      const isSavePoint = (index + 1) % PARTIAL_SAVE_EVERY_CHUNKS === 0 || index === chunks.length - 1
+      if (isSavePoint) {
+        const partialTranscript = normalizeTranscriptForSave({ textParts: state.textParts, cues: state.cues, language, glossary, quality, partial: index !== chunks.length - 1 })
+        await savePartialTranscript(project, partialTranscript, textarea, shell, index + 1, chunks.length, glossary)
+      }
     }
-  }
 
-  const nextTranscript = normalizeTranscriptForSave({ textParts, cues, language, glossary, quality, partial: false })
-  const saved = await saveAudioLabProject({ ...project, transcript: nextTranscript, transcriptGlossary: glossary })
-  if (textarea) textarea.value = nextTranscript.text || ''
-  setStatus(shell, `Local transcript saved with ${nextTranscript.cues.length} timestamped cues. Engine: ${TRANSCRIPT_MODEL_OPTIONS[quality].label}.`)
-  toast(shell, `Local transcript saved for ${saved.title || 'AudioLab project'}.`)
-  window.dispatchEvent(new Event('audiolab-task-navigation'))
+    const nextTranscript = normalizeTranscriptForSave({ textParts: state.textParts, cues: state.cues, language, glossary, quality, partial: false })
+    const saved = await saveAudioLabProject({ ...project, transcript: nextTranscript, transcriptGlossary: glossary })
+    if (textarea) textarea.value = nextTranscript.text || ''
+    setStatus(shell, `Local transcript saved with ${nextTranscript.cues.length} timestamped cues. Engine: ${TRANSCRIPT_MODEL_OPTIONS[quality].label}.`)
+    toast(shell, `Local transcript saved for ${saved.title || 'AudioLab project'}.`)
+    window.dispatchEvent(new Event('audiolab-task-navigation'))
+  } catch (error) {
+    if (error?.cancelled || activeRunCancelRequested) {
+      await persistRunProgress(state, { cancelled: true, chunkIndex: state.lastCompletedChunk, totalChunks: state.totalChunks })
+      toast(shell, 'Local transcription cancelled. Partial transcript saved when available.')
+      return
+    }
+    throw error
+  } finally {
+    if (activeRunState?.runId === runId) activeRunState = null
+    if (activeRunId === runId) activeRunId = ''
+    activeRunCancelRequested = false
+    setCancelButtonState(shell, false, false)
+  }
 }
 
 function transcriptFromTextarea(project = {}, textarea = null, shell = null) {
@@ -641,12 +737,13 @@ function ensureTranscriptQualityControls(shell, project = {}) {
     </label>
     <div class="audio-lab-task-inline-actions audio-lab-local-transcript-actions">
       <button type="button" class="button" id="audio-lab-transcript-clean-local">Clean up transcript</button>
+      <button type="button" class="button" id="audio-lab-transcript-cancel-local" hidden disabled>Cancel transcription</button>
       <button type="button" class="button" data-audio-lab-export="txt">Export TXT</button>
       <button type="button" class="button" data-audio-lab-export="md">Export MD</button>
       <button type="button" class="button" data-audio-lab-export="srt">Export SRT</button>
       <button type="button" class="button" data-audio-lab-export="vtt">Export VTT</button>
     </div>
-    <p class="description">Glossary terms are used after each local Whisper chunk to repair names, project titles, podcast names, and common machine-hearing garbage. Because apparently "anarchist" and "inner guest" are now enemies.</p>
+    <p class="description">Glossary terms are used after each local Whisper chunk to repair names, project titles, podcast names, and common machine-hearing garbage. Cancel stops before the next chunk and saves partial progress when available.</p>
   `
   card.insertBefore(panel, button)
 
@@ -658,6 +755,7 @@ function ensureTranscriptQualityControls(shell, project = {}) {
       toast(shell, error.message || 'Transcript cleanup failed.')
     })
   })
+  panel.querySelector('#audio-lab-transcript-cancel-local')?.addEventListener('click', () => requestCancelLocalTranscription(shell))
   panel.querySelectorAll('[data-audio-lab-export]').forEach((exportButton) => {
     exportButton.addEventListener('click', () => {
       exportTranscript(shell, textarea, exportButton.dataset.audioLabExport).catch((error) => {
@@ -688,11 +786,17 @@ function handleTranscribeClick(event) {
   if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation()
 
   runLocalTranscription(shell, button, textarea).catch((error) => {
+    if (error?.cancelled) {
+      setStatus(shell, 'Local transcription cancelled. Partial transcript saved when available.')
+      toast(shell, 'Local transcription cancelled.')
+      return
+    }
     setStatus(shell, error.message || 'Local automatic transcription failed.')
     toast(shell, error.message || 'Local automatic transcription failed.')
   }).finally(() => {
     button.disabled = false
     button.textContent = 'Auto transcribe audio'
+    setCancelButtonState(shell, false, false)
   })
 }
 
