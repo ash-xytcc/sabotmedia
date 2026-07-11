@@ -1,7 +1,7 @@
 import { resolvePublicSitePermission } from '../_lib/publicSiteAuth.js'
 
 const MAX_TRANSCRIBE_BYTES = 1024 * 1024 * 16
-const MAX_BASE64_FALLBACK_BYTES = 1024 * 384
+const MAX_WORKERS_AI_BYTES = 1024 * 384
 const ALLOWED_AUDIO_TYPES = new Set([
   'audio/wav',
   'audio/wave',
@@ -54,7 +54,7 @@ export async function onRequestPost(context) {
     if (source.bytes.byteLength > MAX_TRANSCRIBE_BYTES) {
       return json({
         ok: false,
-        error: `audio file is too large for a single transcription request (${formatBytes(source.bytes.byteLength)}). Use the browser chunked transcript path.`,
+        error: `audio file is too large for one transcription request (${formatBytes(source.bytes.byteLength)}). Use the browser chunked transcript path.`,
       }, 413)
     }
 
@@ -114,21 +114,29 @@ async function resolveAudioSource(context, form) {
 }
 
 async function transcribeAudio(context, input) {
-  const workersAi = getWorkersAiBinding(context)
-  if (workersAi?.run) {
-    try {
-      return await transcribeWithWorkersAi(context, input, workersAi)
-    } catch (error) {
-      if (!context.env?.OPENAI_API_KEY) throw error
-    }
-  }
-
   if (context.env?.OPENAI_API_KEY) {
     return transcribeWithOpenAi(context, input)
   }
 
+  if (!workersAiTranscriptionEnabled(context)) {
+    throw new Error('Interview transcription needs OPENAI_API_KEY in this deployment. Cloudflare Workers AI direct transcription has been disabled because it repeatedly exceeded resource limits and failed on short interview chunks. Add OPENAI_API_KEY to the Pages environment, redeploy, then rerun Auto transcribe.')
+  }
+
+  const workersAi = getWorkersAiBinding(context)
+  if (workersAi?.run) {
+    if (input.bytes.byteLength > MAX_WORKERS_AI_BYTES) {
+      throw new Error(`Cloudflare Workers AI fallback only accepts tiny clips up to ${formatBytes(MAX_WORKERS_AI_BYTES)}. Add OPENAI_API_KEY for interview transcription.`)
+    }
+    return transcribeWithWorkersAi(context, input, workersAi)
+  }
+
   const diagnostics = getProviderDiagnostics(context)
-  throw new Error(`No transcription provider configured. Cloudflare AI binding AI present: ${diagnostics.workersAi.hasAI}. AI.run available: ${diagnostics.workersAi.hasRun}. OpenAI fallback present: ${diagnostics.openAi.hasKey}. Check that the Workers AI binding is named AI on the same Pages project and environment as this deployment.`)
+  throw new Error(`No transcription provider configured. Cloudflare AI binding AI present: ${diagnostics.workersAi.hasAI}. AI.run available: ${diagnostics.workersAi.hasRun}. OpenAI fallback present: ${diagnostics.openAi.hasKey}.`)
+}
+
+function workersAiTranscriptionEnabled(context) {
+  const value = String(context.env?.SABOT_ALLOW_WORKERS_AI_TRANSCRIPTION || '').toLowerCase()
+  return value === 'true' || value === '1' || value === 'yes'
 }
 
 function getWorkersAiBinding(context) {
@@ -139,14 +147,15 @@ function getProviderDiagnostics(context) {
   const env = context?.env || {}
   const envKeys = Object.keys(env).sort()
   const aiBinding = env.AI
+  const workersAiEnabled = workersAiTranscriptionEnabled(context)
   return {
     workersAi: {
       hasAI: Boolean(aiBinding),
       hasRun: typeof aiBinding?.run === 'function',
+      enabled: workersAiEnabled,
       bindingType: aiBinding ? Object.prototype.toString.call(aiBinding) : '',
       configuredModel: String(env.SABOT_TRANSCRIPTION_MODEL || '@cf/openai/whisper-large-v3-turbo'),
-      maxSingleRequest: formatBytes(MAX_TRANSCRIBE_BYTES),
-      base64FallbackLimit: formatBytes(MAX_BASE64_FALLBACK_BYTES),
+      maxSingleRequest: workersAiEnabled ? formatBytes(MAX_WORKERS_AI_BYTES) : 'disabled for interview transcription',
     },
     openAi: {
       hasKey: Boolean(env.OPENAI_API_KEY),
@@ -160,33 +169,24 @@ function getProviderDiagnostics(context) {
   }
 }
 
-async function transcribeWithWorkersAi(context, { bytes, mimeType, language, prompt }, workersAi = getWorkersAiBinding(context)) {
+async function transcribeWithWorkersAi(context, { bytes, language, prompt }, workersAi = getWorkersAiBinding(context)) {
   const model = String(context.env?.SABOT_TRANSCRIPTION_MODEL || '@cf/openai/whisper-large-v3-turbo')
-  const common = makeWorkersAiCommonInput({ language, prompt })
-  const attempts = makeWorkersAiAudioPayloads(bytes, mimeType)
-  const errors = []
-
-  for (const attempt of attempts) {
-    try {
-      const payload = { ...common, audio: attempt.audio() }
-      const result = await workersAi.run(model, payload)
-      return {
-        provider: 'cloudflare-workers-ai',
-        engine: model,
-        transport: attempt.label,
-        raw: result,
-        text: result?.text || result?.transcription || result?.transcription_info?.text || '',
-        language: result?.language || result?.transcription_info?.language || language || '',
-        segments: result?.segments || result?.chunks || result?.transcription_info?.segments || [],
-        words: result?.words || [],
-        vtt: result?.vtt || '',
-      }
-    } catch (error) {
-      errors.push(`${attempt.label}: ${String(error?.message || error).slice(0, 260)}`)
-    }
+  const payload = {
+    ...makeWorkersAiCommonInput({ language, prompt }),
+    audio: arrayBufferToBase64(bytes),
   }
-
-  throw new Error(`Cloudflare Workers AI transcription failed for documented audio payload formats. ${errors.join(' | ')}`)
+  const result = await workersAi.run(model, payload)
+  return {
+    provider: 'cloudflare-workers-ai',
+    engine: model,
+    transport: 'base64-small-opt-in',
+    raw: result,
+    text: result?.text || result?.transcription || result?.transcription_info?.text || '',
+    language: result?.language || result?.transcription_info?.language || language || '',
+    segments: result?.segments || result?.chunks || result?.transcription_info?.segments || [],
+    words: result?.words || [],
+    vtt: result?.vtt || '',
+  }
 }
 
 function makeWorkersAiCommonInput({ language = '', prompt = '' } = {}) {
@@ -198,31 +198,6 @@ function makeWorkersAiCommonInput({ language = '', prompt = '' } = {}) {
   if (language) input.language = language
   if (prompt) input.initial_prompt = prompt
   return input
-}
-
-function makeWorkersAiAudioPayloads(bytes, mimeType = 'audio/wav') {
-  const buffer = bytes instanceof ArrayBuffer ? bytes : bytes?.buffer
-  const normalizedMime = normalizeAudioMimeType(mimeType || 'audio/wav')
-  const uint8 = () => new Uint8Array(buffer)
-  const attempts = [
-    {
-      label: 'object-body-uint8array',
-      audio: () => ({ body: uint8(), contentType: normalizedMime }),
-    },
-    {
-      label: 'object-body-arraybuffer',
-      audio: () => ({ body: buffer, contentType: normalizedMime }),
-    },
-  ]
-
-  if (buffer.byteLength <= MAX_BASE64_FALLBACK_BYTES) {
-    attempts.push({
-      label: 'base64-string-small-fallback',
-      audio: () => arrayBufferToBase64(buffer),
-    })
-  }
-
-  return attempts
 }
 
 function arrayBufferToBase64(buffer) {
