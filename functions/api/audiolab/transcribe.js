@@ -1,6 +1,7 @@
 import { resolvePublicSitePermission } from '../_lib/publicSiteAuth.js'
 
 const MAX_TRANSCRIBE_BYTES = 1024 * 1024 * 16
+const MAX_BASE64_FALLBACK_BYTES = 1024 * 384
 const ALLOWED_AUDIO_TYPES = new Set([
   'audio/wav',
   'audio/wave',
@@ -145,6 +146,7 @@ function getProviderDiagnostics(context) {
       bindingType: aiBinding ? Object.prototype.toString.call(aiBinding) : '',
       configuredModel: String(env.SABOT_TRANSCRIPTION_MODEL || '@cf/openai/whisper-large-v3-turbo'),
       maxSingleRequest: formatBytes(MAX_TRANSCRIBE_BYTES),
+      base64FallbackLimit: formatBytes(MAX_BASE64_FALLBACK_BYTES),
     },
     openAi: {
       hasKey: Boolean(env.OPENAI_API_KEY),
@@ -202,11 +204,7 @@ function makeWorkersAiAudioPayloads(bytes, mimeType = 'audio/wav') {
   const buffer = bytes instanceof ArrayBuffer ? bytes : bytes?.buffer
   const normalizedMime = normalizeAudioMimeType(mimeType || 'audio/wav')
   const uint8 = () => new Uint8Array(buffer)
-  return [
-    {
-      label: 'base64-string-documented',
-      audio: () => arrayBufferToBase64(buffer),
-    },
+  const attempts = [
     {
       label: 'object-body-uint8array',
       audio: () => ({ body: uint8(), contentType: normalizedMime }),
@@ -216,6 +214,15 @@ function makeWorkersAiAudioPayloads(bytes, mimeType = 'audio/wav') {
       audio: () => ({ body: buffer, contentType: normalizedMime }),
     },
   ]
+
+  if (buffer.byteLength <= MAX_BASE64_FALLBACK_BYTES) {
+    attempts.push({
+      label: 'base64-string-small-fallback',
+      audio: () => arrayBufferToBase64(buffer),
+    })
+  }
+
+  return attempts
 }
 
 function arrayBufferToBase64(buffer) {
