@@ -10,9 +10,12 @@ const TRANSFORMERS_MODULE_URL = 'https://cdn.jsdelivr.net/npm/@xenova/transforme
 const DEFAULT_EN_MODEL = 'Xenova/whisper-tiny.en'
 const DEFAULT_MULTI_MODEL = 'Xenova/whisper-tiny'
 const TARGET_SAMPLE_RATE = 16000
+const LOCAL_CHUNK_SECONDS = 20
+const PARTIAL_SAVE_EVERY_CHUNKS = 2
 
 let transformersPromise = null
 const pipelineCache = new Map()
+let activeRunId = ''
 
 function isAudioLabRoute() {
   return typeof window !== 'undefined' && /\/wp-admin\/audiolab(?:\/|$)/.test(window.location.pathname)
@@ -82,11 +85,22 @@ function toast(shell, message) {
   toast.timer = window.setTimeout(() => note.classList.remove('is-visible'), 2200)
 }
 
+function sleep(ms = 0) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms))
+}
+
 function formatBytes(value = 0) {
   const bytes = Math.max(0, Number(value) || 0)
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
   if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${bytes} B`
+}
+
+function formatDuration(seconds = 0) {
+  const safe = Math.max(0, Number(seconds) || 0)
+  const mins = Math.floor(safe / 60)
+  const secs = Math.floor(safe % 60)
+  return `${mins}:${String(secs).padStart(2, '0')}`
 }
 
 function pickModel(language = '') {
@@ -105,7 +119,7 @@ async function loadTransformers(shell) {
       return mod
     })
   }
-  setStatus(shell, 'Loading local transcription engine in this browser. First run downloads the tiny Whisper model, because apparently freedom weighs 75 MB.')
+  setStatus(shell, 'Loading local transcription engine. First run downloads the tiny Whisper model into browser cache. Free, but not magic, because apparently we still live here.')
   return transformersPromise
 }
 
@@ -194,7 +208,24 @@ function downmixAndResample(buffer, targetRate = TARGET_SAMPLE_RATE) {
   return { samples, sampleRate: targetRate, duration }
 }
 
-function normalizeChunks(result = {}) {
+function makeLocalChunks({ samples, sampleRate, duration }) {
+  const chunkFrames = Math.max(1, Math.floor(LOCAL_CHUNK_SECONDS * sampleRate))
+  const chunks = []
+  for (let startFrame = 0; startFrame < samples.length; startFrame += chunkFrames) {
+    const endFrame = Math.min(samples.length, startFrame + chunkFrames)
+    const offset = startFrame / sampleRate
+    chunks.push({
+      index: chunks.length,
+      offset,
+      duration: (endFrame - startFrame) / sampleRate,
+      samples: samples.slice(startFrame, endFrame),
+      totalDuration: duration,
+    })
+  }
+  return chunks
+}
+
+function normalizeChunks(result = {}, offset = 0) {
   const chunks = Array.isArray(result.chunks) ? result.chunks : []
   return chunks.map((chunk, index) => {
     const timestamp = Array.isArray(chunk.timestamp) ? chunk.timestamp : []
@@ -204,8 +235,8 @@ function normalizeChunks(result = {}) {
     if (!text) return null
     return {
       id: makeAudioLabId('cue'),
-      start: Math.max(0, Number.isFinite(start) ? start : 0),
-      end: Math.max(0, Number.isFinite(end) ? end : start),
+      start: Math.max(0, (Number.isFinite(start) ? start : 0) + offset),
+      end: Math.max(0, (Number.isFinite(end) ? end : start) + offset),
       speaker: '',
       text,
       order: index,
@@ -213,22 +244,30 @@ function normalizeChunks(result = {}) {
   }).filter(Boolean)
 }
 
-function normalizeTranscriptForSave(result = {}, language = '') {
-  const cues = normalizeChunks(result)
-  const text = String(result.text || cues.map((cue) => cue.text).join(' ') || '').trim()
+function normalizeTranscriptForSave({ textParts = [], cues = [], language = '', partial = false } = {}) {
+  const cleanTextParts = textParts.map((part) => String(part || '').trim()).filter(Boolean)
+  const cleanCues = cues.filter((cue) => String(cue.text || '').trim())
   return {
-    mode: cues.length ? 'timestamped' : 'plain',
-    text,
-    cues,
+    mode: cleanCues.length ? 'timestamped' : 'plain',
+    text: cleanTextParts.join('\n\n'),
+    cues: cleanCues,
     language: String(language || ''),
     provider: 'browser-local',
-    engine: 'transformers.js-whisper-tiny',
+    engine: partial ? 'transformers.js-whisper-tiny-local-chunked-partial' : 'transformers.js-whisper-tiny-local-chunked',
     updatedAt: new Date().toISOString(),
     generatedAt: new Date().toISOString(),
   }
 }
 
+async function savePartialTranscript(project, transcript, textarea, shell, chunkIndex, totalChunks) {
+  await saveAudioLabProject({ ...project, transcript })
+  if (textarea) textarea.value = transcript.text || ''
+  setStatus(shell, `Saved local partial transcript after chunk ${chunkIndex}/${totalChunks}. Keep the tab open, because naturally browsers hate responsibility.`)
+}
+
 async function runLocalTranscription(shell, button, textarea) {
+  const runId = makeAudioLabId('local-transcribe')
+  activeRunId = runId
   const language = shell.querySelector('#audio-lab-transcript-language')?.value || ''
   const project = await getActiveProject()
   if (!project) throw new Error('No AudioLab project is open.')
@@ -237,31 +276,58 @@ async function runLocalTranscription(shell, button, textarea) {
 
   button.disabled = true
   button.textContent = 'Preparing local…'
-  setStatus(shell, 'Loading audio for local browser transcription. No OpenAI. No Cloudflare AI. Just your computer doing the work, like it has rent due.')
+  setStatus(shell, 'Loading audio for local browser transcription. No OpenAI. No Cloudflare AI. Your browser is doing the job, which is both noble and annoying.')
 
   const rawAudio = await resolveSourceBlob(project, source)
   setStatus(shell, `Decoding ${rawAudio.label || rawAudio.filename} (${formatBytes(rawAudio.blob.size)}) locally…`)
+  await sleep(20)
   const decoded = await decodeBlob(rawAudio.blob)
-  setStatus(shell, `Preparing ${Math.round(decoded.duration || 0)}s of mono 16 kHz audio for local Whisper…`)
+
+  setStatus(shell, `Preparing ${formatDuration(decoded.duration || 0)} of mono 16 kHz audio for local Whisper…`)
+  await sleep(20)
   const prepared = downmixAndResample(decoded, TARGET_SAMPLE_RATE)
+  const chunks = makeLocalChunks(prepared)
 
-  button.textContent = 'Local transcribing…'
+  button.textContent = 'Loading model…'
   const transcriber = await getTranscriber(shell, language)
-  setStatus(shell, `Running local Whisper on ${Math.round(prepared.duration || 0)}s of audio. This may be slow, but at least nobody is billing you for the privilege.`)
 
-  const result = await transcriber(prepared.samples, {
-    sampling_rate: prepared.sampleRate,
-    chunk_length_s: 30,
-    stride_length_s: 5,
-    return_timestamps: true,
-    task: 'transcribe',
-    language: language || undefined,
-  })
+  const textParts = []
+  const cues = []
+  button.textContent = `Local 0/${chunks.length}`
+  setStatus(shell, `Running local Whisper in ${chunks.length} browser chunks of about ${LOCAL_CHUNK_SECONDS}s. Slow, but no provider bill and no 230-request clown ritual.`)
+  await sleep(50)
 
-  const nextTranscript = normalizeTranscriptForSave(result || {}, language)
+  for (let index = 0; index < chunks.length; index += 1) {
+    if (activeRunId !== runId) throw new Error('Local transcription was interrupted by a newer run.')
+    const chunk = chunks[index]
+    button.textContent = `Local ${index + 1}/${chunks.length}`
+    setStatus(shell, `Local chunk ${index + 1}/${chunks.length}: ${formatDuration(chunk.offset)}–${formatDuration(chunk.offset + chunk.duration)}. Keep this tab awake.`)
+    await sleep(20)
+
+    const result = await transcriber(chunk.samples, {
+      sampling_rate: prepared.sampleRate,
+      chunk_length_s: Math.min(LOCAL_CHUNK_SECONDS, Math.max(5, chunk.duration)),
+      stride_length_s: 0,
+      return_timestamps: true,
+      task: 'transcribe',
+      language: language || undefined,
+    })
+
+    const chunkText = String(result?.text || '').trim()
+    if (chunkText) textParts.push(chunkText)
+    cues.push(...normalizeChunks(result || {}, chunk.offset))
+
+    const isSavePoint = (index + 1) % PARTIAL_SAVE_EVERY_CHUNKS === 0 || index === chunks.length - 1
+    if (isSavePoint) {
+      const partialTranscript = normalizeTranscriptForSave({ textParts, cues, language, partial: index !== chunks.length - 1 })
+      await savePartialTranscript(project, partialTranscript, textarea, shell, index + 1, chunks.length)
+    }
+  }
+
+  const nextTranscript = normalizeTranscriptForSave({ textParts, cues, language, partial: false })
   const saved = await saveAudioLabProject({ ...project, transcript: nextTranscript })
   if (textarea) textarea.value = nextTranscript.text || ''
-  setStatus(shell, `Local transcript saved with ${nextTranscript.cues.length} timestamped cues. Engine: browser-local Whisper tiny.`)
+  setStatus(shell, `Local transcript saved with ${nextTranscript.cues.length} timestamped cues. Engine: browser-local Whisper tiny, chunked.`)
   toast(shell, `Local transcript saved for ${saved.title || 'AudioLab project'}.`)
   window.dispatchEvent(new Event('audiolab-task-navigation'))
 }
