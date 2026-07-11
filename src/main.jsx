@@ -24,6 +24,7 @@ import './audioLabKeyboardShortcuts.js'
 import './audioLabWorkspaceControls.js'
 import './audioLabTaskPages.js'
 import './audioLabTaskNavigationFix.js'
+import './audioLabFastTranscription.js'
 import './audioLabLongTranscription.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
