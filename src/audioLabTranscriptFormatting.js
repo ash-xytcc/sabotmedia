@@ -4,7 +4,10 @@ import {
   saveAudioLabProject,
 } from './lib/audioLabStore'
 
-const FORMAT_VERSION = 'interview-paragraphs-v1'
+const FORMAT_VERSION = 'interview-paragraphs-v2'
+let autoFormatTimer = 0
+let enhanceTimer = 0
+let observerStarted = false
 
 function isAudioLabRoute() {
   return typeof window !== 'undefined' && /\/wp-admin\/audiolab(?:\/|$)/.test(window.location.pathname)
@@ -20,6 +23,10 @@ async function getActiveProject() {
   const projects = await listAudioLabProjects()
   const project = projectId ? await getAudioLabProject(projectId) : projects[0]
   return project || projects[0] || null
+}
+
+function transcriptShell() {
+  return document.querySelector('.audio-lab-task-shell') || document.querySelector('[data-audiolab-task="transcript"]') || null
 }
 
 function statusElement(shell) {
@@ -64,7 +71,7 @@ function wordCount(value = '') {
 
 function looksLikeHostPrompt(text = '') {
   const value = String(text || '').trim().toLowerCase()
-  return /^(so|yeah|cool|right|okay|ok|that makes sense|i love that|i wonder|this honestly|on that note|thank you|very cool|more broadly|how do you|what barriers|do you see|can you|could you)\b/.test(value)
+  return /^(so|yeah|cool|right|okay|ok|that makes sense|i love that|i wonder|this honestly|on that note|thank you|very cool|more broadly|how do you|what barriers|do you see|can you|could you|tell me|what do you|what would you|i'm curious|i am curious)\b/.test(value)
     || value.includes('?')
 }
 
@@ -74,6 +81,7 @@ function shouldBreakTurn(current, nextCue) {
   const nextText = String(nextCue.text || '').trim()
   const gap = Number(nextCue.start || 0) - Number(current.end || 0)
   if (gap > 2.4 && wordCount(currentText) > 18) return true
+  if (gap > 4.5) return true
   if (current.speaker === 'Host' && currentText.includes('?')) return true
   if (current.speaker === 'Guest' && looksLikeHostPrompt(nextText)) return true
   if (wordCount(currentText) > 115 && sentenceCount(currentText) >= 3) return true
@@ -219,7 +227,7 @@ function formatTranscript(project = {}) {
   }
 }
 
-async function formatAndSaveTranscript(shell = document.querySelector('.audio-lab-task-shell'), { force = false } = {}) {
+async function formatAndSaveTranscript(shell = transcriptShell(), { force = false } = {}) {
   if (!isAudioLabRoute()) return null
   const project = await getActiveProject()
   if (!project?.transcript) throw new Error('No transcript is available to format yet.')
@@ -236,11 +244,24 @@ async function formatAndSaveTranscript(shell = document.querySelector('.audio-la
   return nextTranscript
 }
 
-function injectFormattingButton(shell, project = {}) {
-  if (!shell || shell.dataset.transcriptFormatterEnhanced === 'true') return
-  const actions = shell.querySelector('.audio-lab-local-transcript-actions')
-  if (!actions) return
-  shell.dataset.transcriptFormatterEnhanced = 'true'
+function ensureFormattingActions(shell) {
+  const card = shell?.querySelector?.('.audio-lab-auto-transcribe-card')
+  const transcribeButton = shell?.querySelector?.('#audio-lab-transcribe-run')
+  if (!shell || !card || !transcribeButton) return null
+
+  let actions = shell.querySelector('.audio-lab-local-transcript-actions')
+  if (actions) return actions
+
+  actions = document.createElement('div')
+  actions.className = 'audio-lab-task-inline-actions audio-lab-local-transcript-actions audio-lab-transcript-format-actions'
+  transcribeButton.insertAdjacentElement('beforebegin', actions)
+  return actions
+}
+
+function injectFormattingButton(shell) {
+  if (!shell || shell.querySelector('#audio-lab-transcript-format-speakers')) return true
+  const actions = ensureFormattingActions(shell)
+  if (!actions) return false
 
   const button = document.createElement('button')
   button.type = 'button'
@@ -249,7 +270,7 @@ function injectFormattingButton(shell, project = {}) {
   button.textContent = 'Format speakers / paragraphs'
 
   const exportAnchor = actions.querySelector('[data-audio-lab-export]')
-  actions.insertBefore(button, exportAnchor || null)
+  actions.insertBefore(button, exportAnchor || actions.firstChild || null)
 
   button.addEventListener('click', () => {
     formatAndSaveTranscript(shell, { force: true }).catch((error) => {
@@ -257,30 +278,69 @@ function injectFormattingButton(shell, project = {}) {
       toast(shell, error.message || 'Transcript formatting failed.')
     })
   })
+
+  return true
 }
 
 async function enhanceOpenTranscriptShell() {
-  if (!isAudioLabRoute()) return
-  const shell = document.querySelector('.audio-lab-task-shell')
-  if (!shell || !shell.querySelector('#audio-lab-transcribe-run')) return
-  const project = await getActiveProject()
-  injectFormattingButton(shell, project)
+  if (!isAudioLabRoute()) return false
+  const shell = transcriptShell()
+  if (!shell || !shell.querySelector('#audio-lab-transcribe-run')) return false
+  return injectFormattingButton(shell)
 }
 
-function scheduleAutoFormat() {
-  window.setTimeout(() => {
-    const shell = document.querySelector('.audio-lab-task-shell')
+function scheduleEnhance(delay = 120) {
+  window.clearTimeout(enhanceTimer)
+  enhanceTimer = window.setTimeout(() => {
+    enhanceOpenTranscriptShell().then((ok) => {
+      if (!ok) {
+        window.setTimeout(enhanceOpenTranscriptShell, 350)
+        window.setTimeout(enhanceOpenTranscriptShell, 900)
+        window.setTimeout(enhanceOpenTranscriptShell, 1800)
+      }
+    })
+  }, delay)
+}
+
+function scheduleAutoFormat(delay = 300) {
+  window.clearTimeout(autoFormatTimer)
+  autoFormatTimer = window.setTimeout(() => {
+    const shell = transcriptShell()
     formatAndSaveTranscript(shell, { force: false }).catch(() => {
       // Formatting is an enhancement. Do not nag the user if no transcript exists yet.
     })
-  }, 250)
+  }, delay)
 }
 
-window.addEventListener('load', () => window.setTimeout(enhanceOpenTranscriptShell, 120))
-window.addEventListener('popstate', () => window.setTimeout(enhanceOpenTranscriptShell, 120))
-window.addEventListener('audiolab:navigation', () => window.setTimeout(enhanceOpenTranscriptShell, 120))
-window.addEventListener('audiolab-task-navigation', () => {
-  window.setTimeout(enhanceOpenTranscriptShell, 120)
-  scheduleAutoFormat()
+function startTranscriptObserver() {
+  if (observerStarted || typeof MutationObserver === 'undefined') return
+  observerStarted = true
+  const observer = new MutationObserver(() => {
+    if (!isAudioLabRoute()) return
+    const shell = transcriptShell()
+    if (!shell || !shell.querySelector('#audio-lab-transcribe-run')) return
+    injectFormattingButton(shell)
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
+}
+
+window.audioLabFormatTranscript = () => formatAndSaveTranscript(transcriptShell(), { force: true })
+window.addEventListener('load', () => {
+  startTranscriptObserver()
+  scheduleEnhance(120)
+  scheduleEnhance(650)
 })
-window.setTimeout(enhanceOpenTranscriptShell, 300)
+window.addEventListener('popstate', () => scheduleEnhance(120))
+window.addEventListener('audiolab:navigation', () => scheduleEnhance(120))
+window.addEventListener('audiolab-task-navigation', () => {
+  scheduleEnhance(120)
+  scheduleAutoFormat(450)
+  scheduleAutoFormat(1400)
+})
+window.addEventListener('audiolab:local-transcript-saved', () => {
+  scheduleEnhance(120)
+  scheduleAutoFormat(250)
+})
+startTranscriptObserver()
+scheduleEnhance(250)
+scheduleEnhance(1000)
