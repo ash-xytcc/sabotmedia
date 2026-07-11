@@ -28,6 +28,7 @@ import './audioLabWorkspaceControls.js'
 import './audioLabTaskPages.js'
 import './audioLabTaskNavigationFix.js'
 import './audioLabLocalTranscription.js'
+import './audioLabTranscriptFormatting.js'
 import './audioLabDirectManipulation.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
