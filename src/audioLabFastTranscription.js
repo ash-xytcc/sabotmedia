@@ -8,6 +8,7 @@ import {
 
 const TARGET_SAMPLE_RATE = 16000
 const PREP_THRESHOLD_BYTES = 1024 * 1024 * 6
+const PREPARED_CHUNK_DATA_BYTES = Math.floor(1024 * 1024 * 1.5)
 const TRANSCRIBE_RETRY_STATUSES = new Set([429, 502, 503, 504])
 const preparedCache = new Map()
 
@@ -58,7 +59,7 @@ function chooseTranscriptionSource(project = {}) {
 
 function setStatus(shell, message) {
   const status = shell?.querySelector?.('#audio-lab-transcript-status')
-  if (status) status.textContent = message
+  if (status) status.textContent = cleanErrorText(message)
 }
 
 function toast(shell, message) {
@@ -69,7 +70,7 @@ function toast(shell, message) {
     shell.appendChild(note)
   }
   if (!note) return
-  note.textContent = message
+  note.textContent = cleanErrorText(message)
   note.classList.add('is-visible')
   window.clearTimeout(toast.timer)
   toast.timer = window.setTimeout(() => note.classList.remove('is-visible'), 1800)
@@ -86,18 +87,45 @@ function formatBytes(value = 0) {
   return `${bytes} B`
 }
 
+function stripHtml(value = '') {
+  return String(value || '')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function cleanErrorText(value = '') {
+  const text = String(value || '')
+  if (!text) return ''
+  if (/<!doctype html|<html[\s>]/i.test(text)) {
+    const plain = stripHtml(text)
+    if (/1102|exceeded resource limits/i.test(plain)) return 'Cloudflare Worker exceeded resource limits while transcribing. The prepared audio request was too large, so AudioLab will now use smaller chunks after this deploy.'
+    return plain.slice(0, 360) || 'Cloudflare returned an HTML error page instead of JSON.'
+  }
+  return text.length > 520 ? `${text.slice(0, 520)}…` : text
+}
+
 async function postTranscription(form, { label = 'audio', retries = 1 } = {}) {
   let lastError = null
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     const response = await fetch('/api/audiolab/transcribe', { method: 'POST', body: form })
+    const contentType = response.headers.get('content-type') || ''
     const text = await response.text()
     let data = null
-    try { data = text ? JSON.parse(text) : {} } catch { data = { error: text } }
+    const htmlError = /html/i.test(contentType) || /<!doctype html|<html[\s>]/i.test(text)
+
+    if (htmlError) {
+      data = { error: cleanErrorText(text) || `Transcription failed: ${response.status}` }
+    } else {
+      try { data = text ? JSON.parse(text) : {} } catch { data = { error: cleanErrorText(text) } }
+    }
 
     if (response.ok && data?.ok) return data.transcript || {}
 
-    const message = data?.error || `Transcription failed: ${response.status}`
+    const message = cleanErrorText(data?.error || `Transcription failed: ${response.status}`)
     lastError = new Error(`${label}: ${message}`)
     lastError.status = response.status
     lastError.body = data
@@ -165,6 +193,12 @@ function writeAscii(view, offset, value) {
   for (let index = 0; index < value.length; index += 1) view.setUint8(offset + index, value.charCodeAt(index))
 }
 
+function readAscii(view, offset, length) {
+  let value = ''
+  for (let index = 0; index < length; index += 1) value += String.fromCharCode(view.getUint8(offset + index))
+  return value
+}
+
 function encodeMonoWav({ samples, sampleRate }) {
   const bitDepth = 16
   const bytesPerSample = bitDepth / 8
@@ -227,6 +261,78 @@ async function prepareFastTranscriptionBlob(shell, audio) {
   return next
 }
 
+function parseWav(arrayBuffer) {
+  const view = new DataView(arrayBuffer)
+  if (arrayBuffer.byteLength < 44) throw new Error('Prepared WAV file is too small to split.')
+  if (readAscii(view, 0, 4) !== 'RIFF' || readAscii(view, 8, 4) !== 'WAVE') throw new Error('Prepared audio is not a standard WAV file.')
+
+  let offset = 12
+  let fmt = null
+  let data = null
+  while (offset + 8 <= arrayBuffer.byteLength) {
+    const id = readAscii(view, offset, 4)
+    const size = view.getUint32(offset + 4, true)
+    const dataOffset = offset + 8
+    if (dataOffset + size > arrayBuffer.byteLength) break
+    if (id === 'fmt ') fmt = { offset: dataOffset, size }
+    if (id === 'data') {
+      data = { offset: dataOffset, size }
+      break
+    }
+    offset = dataOffset + size + (size % 2)
+  }
+  if (!fmt || !data) throw new Error('Prepared WAV is missing fmt or data chunks.')
+  const byteRate = view.getUint32(fmt.offset + 8, true)
+  const blockAlign = view.getUint16(fmt.offset + 12, true)
+  if (!byteRate || !blockAlign) throw new Error('Prepared WAV has invalid timing metadata.')
+  return { arrayBuffer, fmt, data, byteRate, blockAlign }
+}
+
+function buildWavChunk(source, dataStart, dataLength) {
+  const fmtBytes = new Uint8Array(source.arrayBuffer, source.fmt.offset, source.fmt.size)
+  const dataBytes = new Uint8Array(source.arrayBuffer, dataStart, dataLength)
+  const totalSize = 12 + 8 + fmtBytes.byteLength + 8 + dataBytes.byteLength
+  const out = new ArrayBuffer(totalSize)
+  const bytes = new Uint8Array(out)
+  const view = new DataView(out)
+
+  writeAscii(view, 0, 'RIFF')
+  view.setUint32(4, totalSize - 8, true)
+  writeAscii(view, 8, 'WAVE')
+  writeAscii(view, 12, 'fmt ')
+  view.setUint32(16, fmtBytes.byteLength, true)
+  bytes.set(fmtBytes, 20)
+  const dataHeader = 20 + fmtBytes.byteLength
+  writeAscii(view, dataHeader, 'data')
+  view.setUint32(dataHeader + 4, dataBytes.byteLength, true)
+  bytes.set(dataBytes, dataHeader + 8)
+
+  return new Blob([out], { type: 'audio/wav' })
+}
+
+async function splitPreparedWav(blob, maxDataBytes = PREPARED_CHUNK_DATA_BYTES) {
+  const source = parseWav(await blob.arrayBuffer())
+  const alignedMax = Math.max(source.blockAlign, Math.floor(maxDataBytes / source.blockAlign) * source.blockAlign)
+  const chunks = []
+  let consumed = 0
+
+  while (consumed < source.data.size) {
+    const remaining = source.data.size - consumed
+    const size = Math.min(remaining, alignedMax)
+    const alignedSize = remaining <= alignedMax ? remaining : Math.floor(size / source.blockAlign) * source.blockAlign
+    const dataStart = source.data.offset + consumed
+    const dataLength = Math.max(source.blockAlign, alignedSize)
+    chunks.push({
+      blob: buildWavChunk(source, dataStart, dataLength),
+      offset: consumed / source.byteRate,
+      duration: dataLength / source.byteRate,
+    })
+    consumed += dataLength
+  }
+
+  return chunks
+}
+
 async function resolveSourceBlob(project, source) {
   if (source.type === 'asset') {
     const stored = await getAudioLabAsset(source.id)
@@ -284,6 +390,67 @@ function normalizeTranscriptForSave(transcript = {}) {
   }
 }
 
+function mergeTranscriptParts(parts = []) {
+  const text = parts.map((part) => String(part.text || '').trim()).filter(Boolean).join('\n\n')
+  const cues = []
+  for (const part of parts) {
+    const offset = Number(part.offset || 0)
+    for (const cue of Array.isArray(part.cues) ? part.cues : []) {
+      cues.push({
+        id: makeAudioLabId('cue'),
+        start: Math.max(0, Number(cue.start || 0) + offset),
+        end: Math.max(0, Number(cue.end || cue.start || 0) + offset),
+        speaker: String(cue.speaker || ''),
+        text: String(cue.text || ''),
+      })
+    }
+  }
+  return {
+    mode: cues.length ? 'timestamped' : 'plain',
+    text,
+    cues,
+    language: parts.find((part) => part.language)?.language || '',
+    provider: parts.find((part) => part.provider)?.provider || 'cloudflare-workers-ai',
+    engine: parts.find((part) => part.engine)?.engine || 'prepared-chunked-transcription',
+    generatedAt: new Date().toISOString(),
+  }
+}
+
+async function transcribePreparedAudio({ shell, project, audio, language }) {
+  if (!audio.prepared || audio.blob.size <= PREPARED_CHUNK_DATA_BYTES + 44) {
+    setStatus(shell, `${audio.prepared ? 'Sending prepared mono transcript copy' : 'Sending original audio'} (${formatBytes(audio.blob.size)}) to transcription provider…`)
+    return transcribeBlob({
+      project,
+      blob: audio.blob,
+      filename: audio.filename,
+      mimeType: audio.mimeType,
+      language,
+      label: audio.prepared ? 'Prepared transcription audio' : 'Audio',
+    })
+  }
+
+  setStatus(shell, `Prepared audio is ${formatBytes(audio.blob.size)}. Splitting into smaller transcription chunks…`)
+  const chunks = await splitPreparedWav(audio.blob)
+  const parts = []
+
+  for (let index = 0; index < chunks.length; index += 1) {
+    const chunk = chunks[index]
+    const label = `Prepared chunk ${index + 1}/${chunks.length}`
+    setStatus(shell, `${label}: sending ${formatBytes(chunk.blob.size)} covering ${Math.round(chunk.duration)}s from ${Math.round(chunk.offset)}s…`)
+    const transcript = await transcribeBlob({
+      project,
+      blob: chunk.blob,
+      filename: `${String(audio.filename || 'audiolab-transcript').replace(/\.wav$/i, '')}-part-${String(index + 1).padStart(3, '0')}.wav`,
+      mimeType: 'audio/wav',
+      language,
+      label,
+    })
+    parts.push({ ...transcript, offset: chunk.offset })
+  }
+
+  return mergeTranscriptParts(parts)
+}
+
 async function runFastTranscription(shell, button, textarea) {
   const language = shell.querySelector('#audio-lab-transcript-language')?.value || ''
   const project = await getActiveProject()
@@ -299,15 +466,7 @@ async function runFastTranscription(shell, button, textarea) {
   const audio = await prepareFastTranscriptionBlob(shell, rawAudio)
 
   button.textContent = 'Transcribing…'
-  setStatus(shell, `${audio.prepared ? 'Sending prepared mono transcript copy' : 'Sending original audio'} (${formatBytes(audio.blob.size)}) to transcription provider…`)
-  const transcript = await transcribeBlob({
-    project,
-    blob: audio.blob,
-    filename: audio.filename,
-    mimeType: audio.mimeType,
-    language,
-    label: audio.prepared ? 'Prepared transcription audio' : 'Audio',
-  })
+  const transcript = await transcribePreparedAudio({ shell, project, audio, language })
 
   const nextTranscript = normalizeTranscriptForSave(transcript || {})
   const saved = await saveAudioLabProject({ ...project, transcript: nextTranscript })
