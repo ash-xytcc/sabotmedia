@@ -158,10 +158,10 @@ function getProviderDiagnostics(context) {
   }
 }
 
-async function transcribeWithWorkersAi(context, { bytes, language, prompt }, workersAi = getWorkersAiBinding(context)) {
+async function transcribeWithWorkersAi(context, { bytes, mimeType, language, prompt }, workersAi = getWorkersAiBinding(context)) {
   const model = String(context.env?.SABOT_TRANSCRIPTION_MODEL || '@cf/openai/whisper-large-v3-turbo')
   const common = makeWorkersAiCommonInput({ language, prompt })
-  const attempts = makeWorkersAiAudioPayloads(bytes)
+  const attempts = makeWorkersAiAudioPayloads(bytes, mimeType)
   const errors = []
 
   for (const attempt of attempts) {
@@ -184,28 +184,49 @@ async function transcribeWithWorkersAi(context, { bytes, language, prompt }, wor
     }
   }
 
-  throw new Error(`Cloudflare Workers AI transcription failed for safe binary payload formats. ${errors.join(' | ')}`)
+  throw new Error(`Cloudflare Workers AI transcription failed for documented audio payload formats. ${errors.join(' | ')}`)
 }
 
 function makeWorkersAiCommonInput({ language = '', prompt = '' } = {}) {
-  const input = { task: 'transcribe' }
+  const input = {
+    task: 'transcribe',
+    vad_filter: true,
+    condition_on_previous_text: false,
+  }
   if (language) input.language = language
   if (prompt) input.initial_prompt = prompt
   return input
 }
 
-function makeWorkersAiAudioPayloads(bytes) {
+function makeWorkersAiAudioPayloads(bytes, mimeType = 'audio/wav') {
   const buffer = bytes instanceof ArrayBuffer ? bytes : bytes?.buffer
+  const normalizedMime = normalizeAudioMimeType(mimeType || 'audio/wav')
+  const uint8 = () => new Uint8Array(buffer)
   return [
     {
-      label: 'arraybuffer-binary',
-      audio: () => buffer,
+      label: 'base64-string-documented',
+      audio: () => arrayBufferToBase64(buffer),
     },
     {
-      label: 'uint8array-binary',
-      audio: () => new Uint8Array(buffer),
+      label: 'object-body-uint8array',
+      audio: () => ({ body: uint8(), contentType: normalizedMime }),
+    },
+    {
+      label: 'object-body-arraybuffer',
+      audio: () => ({ body: buffer, contentType: normalizedMime }),
     },
   ]
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  const chunkSize = 0x8000
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const chunk = bytes.subarray(index, index + chunkSize)
+    binary += String.fromCharCode(...chunk)
+  }
+  return btoa(binary)
 }
 
 async function transcribeWithOpenAi(context, { bytes, mimeType, filename, language, prompt }) {
@@ -296,8 +317,8 @@ function extensionForMime(mimeType = '') {
   return 'wav'
 }
 
-function formatBytes(size = 0) {
-  const bytes = Math.max(0, Number(size) || 0)
+function formatBytes(value = 0) {
+  const bytes = Math.max(0, Number(value) || 0)
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
   if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${bytes} B`
