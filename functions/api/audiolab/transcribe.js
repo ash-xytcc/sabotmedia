@@ -1,6 +1,6 @@
 import { resolvePublicSitePermission } from '../_lib/publicSiteAuth.js'
 
-const MAX_TRANSCRIBE_BYTES = 1024 * 1024 * 120
+const MAX_TRANSCRIBE_BYTES = 1024 * 1024 * 16
 const ALLOWED_AUDIO_TYPES = new Set([
   'audio/wav',
   'audio/wave',
@@ -50,7 +50,12 @@ export async function onRequestPost(context) {
     const form = await context.request.formData()
     const source = await resolveAudioSource(context, form)
     if (!source.bytes?.byteLength) return json({ ok: false, error: 'missing audio file or public audio URL' }, 400)
-    if (source.bytes.byteLength > MAX_TRANSCRIBE_BYTES) return json({ ok: false, error: 'audio file is too large for this transcription endpoint' }, 413)
+    if (source.bytes.byteLength > MAX_TRANSCRIBE_BYTES) {
+      return json({
+        ok: false,
+        error: `audio file is too large for a single transcription request (${formatBytes(source.bytes.byteLength)}). Use the browser chunked transcript path.`,
+      }, 413)
+    }
 
     const mimeType = normalizeAudioMimeType(form.get('mimeType') || source.mimeType || 'audio/wav')
     if (!ALLOWED_AUDIO_TYPES.has(mimeType)) return json({ ok: false, error: `unsupported audio MIME type: ${mimeType}` }, 415)
@@ -139,6 +144,7 @@ function getProviderDiagnostics(context) {
       hasRun: typeof aiBinding?.run === 'function',
       bindingType: aiBinding ? Object.prototype.toString.call(aiBinding) : '',
       configuredModel: String(env.SABOT_TRANSCRIPTION_MODEL || '@cf/openai/whisper-large-v3-turbo'),
+      maxSingleRequest: formatBytes(MAX_TRANSCRIBE_BYTES),
     },
     openAi: {
       hasKey: Boolean(env.OPENAI_API_KEY),
@@ -174,11 +180,11 @@ async function transcribeWithWorkersAi(context, { bytes, language, prompt }, wor
         vtt: result?.vtt || '',
       }
     } catch (error) {
-      errors.push(`${attempt.label}: ${String(error?.message || error).slice(0, 500)}`)
+      errors.push(`${attempt.label}: ${String(error?.message || error).slice(0, 260)}`)
     }
   }
 
-  throw new Error(`Cloudflare Workers AI transcription failed for all supported audio payload formats. ${errors.join(' | ')}`)
+  throw new Error(`Cloudflare Workers AI transcription failed for safe binary payload formats. ${errors.join(' | ')}`)
 }
 
 function makeWorkersAiCommonInput({ language = '', prompt = '' } = {}) {
@@ -199,26 +205,7 @@ function makeWorkersAiAudioPayloads(bytes) {
       label: 'uint8array-binary',
       audio: () => new Uint8Array(buffer),
     },
-    {
-      label: 'number-array',
-      audio: () => Array.from(new Uint8Array(buffer)),
-    },
-    {
-      label: 'base64-string',
-      audio: () => arrayBufferToBase64(buffer),
-    },
   ]
-}
-
-function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer)
-  let binary = ''
-  const chunkSize = 0x8000
-  for (let index = 0; index < bytes.length; index += chunkSize) {
-    const chunk = bytes.subarray(index, index + chunkSize)
-    binary += String.fromCharCode(...chunk)
-  }
-  return btoa(binary)
 }
 
 async function transcribeWithOpenAi(context, { bytes, mimeType, filename, language, prompt }) {
@@ -307,6 +294,13 @@ function extensionForMime(mimeType = '') {
   if (lower.includes('mp4') || lower.includes('aac')) return 'm4a'
   if (lower.includes('flac')) return 'flac'
   return 'wav'
+}
+
+function formatBytes(size = 0) {
+  const bytes = Math.max(0, Number(size) || 0)
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${bytes} B`
 }
 
 function json(data, status = 200) {
