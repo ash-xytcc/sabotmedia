@@ -7,11 +7,56 @@ import {
 } from './lib/audioLabStore'
 
 const TRANSFORMERS_MODULE_URL = 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'
-const DEFAULT_EN_MODEL = 'Xenova/whisper-tiny.en'
-const DEFAULT_MULTI_MODEL = 'Xenova/whisper-tiny'
 const TARGET_SAMPLE_RATE = 16000
-const LOCAL_CHUNK_SECONDS = 20
+const LOCAL_CHUNK_SECONDS = 24
+const LOCAL_CHUNK_OVERLAP_SECONDS = 3
 const PARTIAL_SAVE_EVERY_CHUNKS = 2
+const TRANSCRIPT_MODEL_OPTIONS = {
+  fast: {
+    label: 'Fast draft',
+    english: 'Xenova/whisper-tiny.en',
+    multilingual: 'Xenova/whisper-tiny',
+    chunkSeconds: 20,
+    note: 'Fastest and roughest.',
+  },
+  better: {
+    label: 'Better local',
+    english: 'Xenova/whisper-base.en',
+    multilingual: 'Xenova/whisper-base',
+    chunkSeconds: 24,
+    note: 'Slower, better names and phrases.',
+  },
+  best: {
+    label: 'Best local',
+    english: 'Xenova/whisper-small.en',
+    multilingual: 'Xenova/whisper-small',
+    chunkSeconds: 30,
+    note: 'Slow and heavy, but closest local quality.',
+  },
+}
+const DEFAULT_GLOSSARY_TERMS = [
+  'The Child and Its Enemies',
+  'Propaganda by the Seed',
+  'Aaron',
+  'M.K.A.',
+  'anarchist',
+  'anarchism',
+  'anarchy',
+  'youth liberation',
+  'queer',
+  'neurodivergent',
+  'iNaturalist',
+  'Go Botany',
+  'Channel Zero Podcast Network',
+  'Edgewood Nursery',
+  'Mount Joy Orchard',
+  'Portland, Maine',
+  'foraging',
+  'native plants',
+  'climate grief',
+  'political prisoners',
+  'Victory Gardens Project',
+]
 
 let transformersPromise = null
 const pipelineCache = new Map()
@@ -85,7 +130,7 @@ function toast(shell, message) {
   toast.timer = window.setTimeout(() => note.classList.remove('is-visible'), 2200)
 }
 
-function sleep(ms = 0) {
+function sleep(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
 
@@ -96,17 +141,39 @@ function formatBytes(value = 0) {
   return `${bytes} B`
 }
 
-function formatDuration(seconds = 0) {
-  const safe = Math.max(0, Number(seconds) || 0)
-  const mins = Math.floor(safe / 60)
-  const secs = Math.floor(safe % 60)
+function formatDuration(value = 0) {
+  const seconds = Math.max(0, Number(value) || 0)
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
   return `${mins}:${String(secs).padStart(2, '0')}`
 }
 
-function pickModel(language = '') {
-  const normalized = String(language || '').trim().toLowerCase()
-  if (!normalized || normalized === 'en' || normalized === 'en-us' || normalized === 'english') return DEFAULT_EN_MODEL
-  return DEFAULT_MULTI_MODEL
+function escapeHtml(value = '') {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function normalizeLanguage(value = '') {
+  return String(value || '').trim().toLowerCase()
+}
+
+function isEnglishLanguage(language = '') {
+  const normalized = normalizeLanguage(language)
+  return !normalized || normalized === 'en' || normalized === 'en-us' || normalized === 'english'
+}
+
+function getSelectedQuality(shell) {
+  const value = shell?.querySelector?.('#audio-lab-local-model-quality')?.value || localStorage.getItem('audioLab.localTranscriptionQuality') || 'fast'
+  return TRANSCRIPT_MODEL_OPTIONS[value] ? value : 'fast'
+}
+
+function pickModel(language = '', quality = 'fast') {
+  const option = TRANSCRIPT_MODEL_OPTIONS[quality] || TRANSCRIPT_MODEL_OPTIONS.fast
+  return isEnglishLanguage(language) ? option.english : option.multilingual
 }
 
 async function loadTransformers(shell) {
@@ -119,12 +186,12 @@ async function loadTransformers(shell) {
       return mod
     })
   }
-  setStatus(shell, 'Loading local transcription engine. First run downloads the tiny Whisper model into browser cache. Free, but not magic, because apparently we still live here.')
+  setStatus(shell, 'Loading local transcription engine in this browser. First run downloads the model, because freedom apparently ships as a giant math brick.')
   return transformersPromise
 }
 
-async function getTranscriber(shell, language = '') {
-  const model = pickModel(language)
+async function getTranscriber(shell, language = '', quality = 'fast') {
+  const model = pickModel(language, quality)
   if (pipelineCache.has(model)) return pipelineCache.get(model)
   const { pipeline } = await loadTransformers(shell)
   const promise = pipeline('automatic-speech-recognition', model, {
@@ -208,35 +275,123 @@ function downmixAndResample(buffer, targetRate = TARGET_SAMPLE_RATE) {
   return { samples, sampleRate: targetRate, duration }
 }
 
-function makeLocalChunks({ samples, sampleRate, duration }) {
-  const chunkFrames = Math.max(1, Math.floor(LOCAL_CHUNK_SECONDS * sampleRate))
+function makeLocalChunks({ samples, sampleRate, duration }, quality = 'fast') {
+  const option = TRANSCRIPT_MODEL_OPTIONS[quality] || TRANSCRIPT_MODEL_OPTIONS.fast
+  const chunkSeconds = option.chunkSeconds || LOCAL_CHUNK_SECONDS
+  const overlapSeconds = Math.min(LOCAL_CHUNK_OVERLAP_SECONDS, Math.max(0, chunkSeconds / 4))
+  const chunkFrames = Math.max(1, Math.floor(chunkSeconds * sampleRate))
+  const overlapFrames = Math.max(0, Math.floor(overlapSeconds * sampleRate))
+  const stepFrames = Math.max(1, chunkFrames - overlapFrames)
   const chunks = []
-  for (let startFrame = 0; startFrame < samples.length; startFrame += chunkFrames) {
+
+  for (let startFrame = 0; startFrame < samples.length; startFrame += stepFrames) {
     const endFrame = Math.min(samples.length, startFrame + chunkFrames)
     const offset = startFrame / sampleRate
     chunks.push({
       index: chunks.length,
       offset,
+      overlap: chunks.length ? overlapSeconds : 0,
       duration: (endFrame - startFrame) / sampleRate,
       samples: samples.slice(startFrame, endFrame),
       totalDuration: duration,
     })
+    if (endFrame >= samples.length) break
   }
+
   return chunks
 }
 
-function normalizeChunks(result = {}, offset = 0) {
+function parseGlossary(value = '') {
+  return String(value || '')
+    .split(/\n|,/)
+    .map((term) => term.trim())
+    .filter(Boolean)
+    .filter((term, index, all) => all.findIndex((item) => item.toLowerCase() === term.toLowerCase()) === index)
+}
+
+function getGlossaryTerms(shell, project = {}) {
+  const controlValue = shell?.querySelector?.('#audio-lab-transcript-glossary')?.value || ''
+  const projectTerms = Array.isArray(project.transcriptGlossary) ? project.transcriptGlossary : []
+  const terms = parseGlossary(controlValue || projectTerms.join('\n') || DEFAULT_GLOSSARY_TERMS.join('\n'))
+  return terms.length ? terms : DEFAULT_GLOSSARY_TERMS
+}
+
+function normalizeLoose(value = '') {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
+function phraseRegexFromTerm(term = '') {
+  const words = normalizeLoose(term).split(/\s+/).filter(Boolean)
+  if (!words.length) return null
+  const body = words.map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\-_.]+')
+  return new RegExp(`\\b${body}\\b`, 'gi')
+}
+
+function applyCommonRepairs(text = '') {
+  const replacements = [
+    [/\binner guests?\b/gi, 'anarchist'],
+    [/\binner guest communities\b/gi, 'anarchist communities'],
+    [/\binner guest work\b/gi, 'anarchist work'],
+    [/\binner guest spaces\b/gi, 'anarchist spaces'],
+    [/\bwork inism\b/gi, 'anarchism'],
+    [/\bwork inist\b/gi, 'anarchist'],
+    [/\benergy issue\b/gi, 'anarchy issue'],
+    [/\bself[\s-]*(?:exertating|actually tating|exertated|educateding)\b/gi, 'self-educating'],
+    [/\bpropaganda by(?: the)? seed\b/gi, 'Propaganda by the Seed'],
+    [/\bi\s*naturalist\b/gi, 'iNaturalist'],
+    [/\bgo\s*botany\b/gi, 'Go Botany'],
+    [/\bchannel zero\b/gi, 'Channel Zero'],
+    [/\bedgewood nursery\b/gi, 'Edgewood Nursery'],
+    [/\bmount\s+(?:jewai|joy)\s+orchard\b/gi, 'Mount Joy Orchard'],
+    [/\bclimate resistant agriculture\b/gi, 'climate-resilient agriculture'],
+    [/\byou than teams\b/gi, 'youth and teens'],
+    [/\bNew Year's Old\b/gi, 'years old'],
+  ]
+  let next = String(text || '')
+  for (const [pattern, replacement] of replacements) next = next.replace(pattern, replacement)
+  return next
+}
+
+function applyGlossaryRepairs(text = '', glossary = []) {
+  let next = String(text || '')
+  for (const term of glossary) {
+    if (term.length < 3) continue
+    const exact = phraseRegexFromTerm(term)
+    if (exact) next = next.replace(exact, term)
+  }
+  return next
+}
+
+function cleanupTranscriptText(text = '', glossary = []) {
+  let next = applyCommonRepairs(text)
+  next = applyGlossaryRepairs(next, glossary)
+  next = next
+    .replace(/\b(\w+)(\s+\1\b){1,}/gi, '$1')
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .replace(/([.!?])\s*([a-z])/g, (_, punct, char) => `${punct} ${char.toUpperCase()}`)
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+  return next
+}
+
+function cueText(cue = {}) {
+  return cleanupTranscriptText(cue.text || '')
+}
+
+function normalizeChunks(result = {}, offset = 0, overlap = 0, glossary = []) {
   const chunks = Array.isArray(result.chunks) ? result.chunks : []
   return chunks.map((chunk, index) => {
     const timestamp = Array.isArray(chunk.timestamp) ? chunk.timestamp : []
-    const start = Number(timestamp[0] ?? chunk.start ?? 0)
-    const end = Number(timestamp[1] ?? chunk.end ?? start)
-    const text = String(chunk.text || chunk.chunk || '').trim()
+    const rawStart = Number(timestamp[0] ?? chunk.start ?? 0)
+    const rawEnd = Number(timestamp[1] ?? chunk.end ?? rawStart)
+    if (overlap && rawEnd <= overlap) return null
+    const text = cleanupTranscriptText(String(chunk.text || chunk.chunk || '').trim(), glossary)
     if (!text) return null
     return {
       id: makeAudioLabId('cue'),
-      start: Math.max(0, (Number.isFinite(start) ? start : 0) + offset),
-      end: Math.max(0, (Number.isFinite(end) ? end : start) + offset),
+      start: Math.max(0, (Number.isFinite(rawStart) ? rawStart : 0) + offset),
+      end: Math.max(0, (Number.isFinite(rawEnd) ? rawEnd : rawStart) + offset),
       speaker: '',
       text,
       order: index,
@@ -244,39 +399,72 @@ function normalizeChunks(result = {}, offset = 0) {
   }).filter(Boolean)
 }
 
-function normalizeTranscriptForSave({ textParts = [], cues = [], language = '', partial = false } = {}) {
-  const cleanTextParts = textParts.map((part) => String(part || '').trim()).filter(Boolean)
-  const cleanCues = cues.filter((cue) => String(cue.text || '').trim())
+function dedupeAdjacentCues(cues = []) {
+  const deduped = []
+  for (const cue of cues) {
+    const previous = deduped[deduped.length - 1]
+    const currentText = normalizeLoose(cue.text)
+    const previousText = normalizeLoose(previous?.text || '')
+    if (previous && currentText && previousText && currentText === previousText) continue
+    if (previous && previousText && currentText && previousText.endsWith(currentText)) continue
+    deduped.push(cue)
+  }
+  return deduped
+}
+
+function normalizeTranscriptForSave({ textParts = [], cues = [], language = '', glossary = [], quality = 'fast', partial = false } = {}) {
+  const cleanTextParts = textParts.map((part) => cleanupTranscriptText(part, glossary)).filter(Boolean)
+  const cleanCues = dedupeAdjacentCues(cues.map((cue) => ({ ...cue, text: cleanupTranscriptText(cue.text, glossary) })).filter((cue) => String(cue.text || '').trim()))
+  const text = cleanTextParts.length ? cleanTextParts.join('\n\n') : cleanCues.map((cue) => cue.text).join('\n\n')
   return {
     mode: cleanCues.length ? 'timestamped' : 'plain',
-    text: cleanTextParts.join('\n\n'),
+    text: cleanupTranscriptText(text, glossary),
     cues: cleanCues,
     language: String(language || ''),
     provider: 'browser-local',
-    engine: partial ? 'transformers.js-whisper-tiny-local-chunked-partial' : 'transformers.js-whisper-tiny-local-chunked',
+    engine: `${TRANSCRIPT_MODEL_OPTIONS[quality]?.label || 'Local Whisper'}${partial ? ' partial' : ''}`,
+    quality,
     updatedAt: new Date().toISOString(),
     generatedAt: new Date().toISOString(),
   }
 }
 
-async function savePartialTranscript(project, transcript, textarea, shell, chunkIndex, totalChunks) {
-  await saveAudioLabProject({ ...project, transcript })
+async function savePartialTranscript(project, transcript, textarea, shell, chunkIndex, totalChunks, glossary = []) {
+  await saveAudioLabProject({ ...project, transcript, transcriptGlossary: glossary })
   if (textarea) textarea.value = transcript.text || ''
   setStatus(shell, `Saved local partial transcript after chunk ${chunkIndex}/${totalChunks}. Keep the tab open, because naturally browsers hate responsibility.`)
 }
 
+function appendTextPartFromResult(textParts, result = {}, chunkCues = [], glossary = []) {
+  if (chunkCues.length) {
+    const fromCues = chunkCues.map(cueText).filter(Boolean).join(' ')
+    if (fromCues) textParts.push(cleanupTranscriptText(fromCues, glossary))
+    return
+  }
+  const text = cleanupTranscriptText(result?.text || '', glossary)
+  if (!text) return
+  const previous = normalizeLoose(textParts[textParts.length - 1] || '')
+  const current = normalizeLoose(text)
+  if (previous && current && previous.endsWith(current)) return
+  textParts.push(text)
+}
+
 async function runLocalTranscription(shell, button, textarea) {
+  ensureTranscriptQualityControls(shell, await getActiveProject())
   const runId = makeAudioLabId('local-transcribe')
   activeRunId = runId
   const language = shell.querySelector('#audio-lab-transcript-language')?.value || ''
+  const quality = getSelectedQuality(shell)
   const project = await getActiveProject()
   if (!project) throw new Error('No AudioLab project is open.')
   const source = chooseTranscriptionSource(project)
   if (!source) throw new Error('No rendered or source audio available to transcribe.')
+  const glossary = getGlossaryTerms(shell, project)
+  localStorage.setItem('audioLab.localTranscriptionQuality', quality)
 
   button.disabled = true
   button.textContent = 'Preparing local…'
-  setStatus(shell, 'Loading audio for local browser transcription. No OpenAI. No Cloudflare AI. Your browser is doing the job, which is both noble and annoying.')
+  setStatus(shell, `Loading audio for local ${TRANSCRIPT_MODEL_OPTIONS[quality].label}. No OpenAI. No Cloudflare AI. Just your browser doing unpaid speech labor.`)
 
   const rawAudio = await resolveSourceBlob(project, source)
   setStatus(shell, `Decoding ${rawAudio.label || rawAudio.filename} (${formatBytes(rawAudio.blob.size)}) locally…`)
@@ -286,50 +474,205 @@ async function runLocalTranscription(shell, button, textarea) {
   setStatus(shell, `Preparing ${formatDuration(decoded.duration || 0)} of mono 16 kHz audio for local Whisper…`)
   await sleep(20)
   const prepared = downmixAndResample(decoded, TARGET_SAMPLE_RATE)
-  const chunks = makeLocalChunks(prepared)
+  const chunks = makeLocalChunks(prepared, quality)
 
   button.textContent = 'Loading model…'
-  const transcriber = await getTranscriber(shell, language)
+  const transcriber = await getTranscriber(shell, language, quality)
 
   const textParts = []
   const cues = []
   button.textContent = `Local 0/${chunks.length}`
-  setStatus(shell, `Running local Whisper in ${chunks.length} browser chunks of about ${LOCAL_CHUNK_SECONDS}s. Slow, but no provider bill and no 230-request clown ritual.`)
+  setStatus(shell, `Running ${TRANSCRIPT_MODEL_OPTIONS[quality].label} in ${chunks.length} browser chunks with ${LOCAL_CHUNK_OVERLAP_SECONDS}s overlap and glossary repair.`)
   await sleep(50)
 
   for (let index = 0; index < chunks.length; index += 1) {
     if (activeRunId !== runId) throw new Error('Local transcription was interrupted by a newer run.')
     const chunk = chunks[index]
     button.textContent = `Local ${index + 1}/${chunks.length}`
-    setStatus(shell, `Local chunk ${index + 1}/${chunks.length}: ${formatDuration(chunk.offset)}–${formatDuration(chunk.offset + chunk.duration)}. Keep this tab awake.`)
+    setStatus(shell, `Local chunk ${index + 1}/${chunks.length}: ${formatDuration(chunk.offset)}–${formatDuration(chunk.offset + chunk.duration)}. Model: ${TRANSCRIPT_MODEL_OPTIONS[quality].label}.`)
     await sleep(20)
 
     const result = await transcriber(chunk.samples, {
       sampling_rate: prepared.sampleRate,
-      chunk_length_s: Math.min(LOCAL_CHUNK_SECONDS, Math.max(5, chunk.duration)),
+      chunk_length_s: Math.min(TRANSCRIPT_MODEL_OPTIONS[quality].chunkSeconds, Math.max(5, chunk.duration)),
       stride_length_s: 0,
       return_timestamps: true,
       task: 'transcribe',
       language: language || undefined,
     })
 
-    const chunkText = String(result?.text || '').trim()
-    if (chunkText) textParts.push(chunkText)
-    cues.push(...normalizeChunks(result || {}, chunk.offset))
+    const chunkCues = normalizeChunks(result || {}, chunk.offset, chunk.overlap, glossary)
+    cues.push(...chunkCues)
+    appendTextPartFromResult(textParts, result || {}, chunkCues, glossary)
 
     const isSavePoint = (index + 1) % PARTIAL_SAVE_EVERY_CHUNKS === 0 || index === chunks.length - 1
     if (isSavePoint) {
-      const partialTranscript = normalizeTranscriptForSave({ textParts, cues, language, partial: index !== chunks.length - 1 })
-      await savePartialTranscript(project, partialTranscript, textarea, shell, index + 1, chunks.length)
+      const partialTranscript = normalizeTranscriptForSave({ textParts, cues, language, glossary, quality, partial: index !== chunks.length - 1 })
+      await savePartialTranscript(project, partialTranscript, textarea, shell, index + 1, chunks.length, glossary)
     }
   }
 
-  const nextTranscript = normalizeTranscriptForSave({ textParts, cues, language, partial: false })
-  const saved = await saveAudioLabProject({ ...project, transcript: nextTranscript })
+  const nextTranscript = normalizeTranscriptForSave({ textParts, cues, language, glossary, quality, partial: false })
+  const saved = await saveAudioLabProject({ ...project, transcript: nextTranscript, transcriptGlossary: glossary })
   if (textarea) textarea.value = nextTranscript.text || ''
-  setStatus(shell, `Local transcript saved with ${nextTranscript.cues.length} timestamped cues. Engine: browser-local Whisper tiny, chunked.`)
+  setStatus(shell, `Local transcript saved with ${nextTranscript.cues.length} timestamped cues. Engine: ${TRANSCRIPT_MODEL_OPTIONS[quality].label}.`)
   toast(shell, `Local transcript saved for ${saved.title || 'AudioLab project'}.`)
   window.dispatchEvent(new Event('audiolab-task-navigation'))
+}
+
+function transcriptFromTextarea(project = {}, textarea = null, shell = null) {
+  const glossary = getGlossaryTerms(shell, project)
+  const current = project.transcript || {}
+  const text = textarea?.value ?? current.text ?? ''
+  const cues = Array.isArray(current.cues) ? current.cues.map((cue) => ({ ...cue, text: cleanupTranscriptText(cue.text, glossary) })) : []
+  return {
+    ...current,
+    text: cleanupTranscriptText(text, glossary),
+    cues,
+    glossary,
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+function srtTime(seconds = 0) {
+  const value = Math.max(0, Number(seconds) || 0)
+  const hours = Math.floor(value / 3600)
+  const minutes = Math.floor((value % 3600) / 60)
+  const wholeSeconds = Math.floor(value % 60)
+  const millis = Math.floor((value - Math.floor(value)) * 1000)
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(wholeSeconds).padStart(2, '0')},${String(millis).padStart(3, '0')}`
+}
+
+function vttTime(seconds = 0) {
+  return srtTime(seconds).replace(',', '.')
+}
+
+function transcriptToSrt(transcript = {}) {
+  const cues = Array.isArray(transcript.cues) ? transcript.cues : []
+  return cues.map((cue, index) => [
+    String(index + 1),
+    `${srtTime(cue.start)} --> ${srtTime(cue.end || cue.start + 3)}`,
+    cue.text,
+  ].join('\n')).join('\n\n')
+}
+
+function transcriptToVtt(transcript = {}) {
+  const cues = Array.isArray(transcript.cues) ? transcript.cues : []
+  return `WEBVTT\n\n${cues.map((cue) => [
+    `${vttTime(cue.start)} --> ${vttTime(cue.end || cue.start + 3)}`,
+    cue.text,
+  ].join('\n')).join('\n\n')}`
+}
+
+function transcriptToMarkdown(project = {}, transcript = {}) {
+  const title = project.episode?.title || project.title || 'AudioLab transcript'
+  const cues = Array.isArray(transcript.cues) ? transcript.cues : []
+  const body = cues.length
+    ? cues.map((cue) => `**${formatDuration(cue.start)}** ${cue.text}`).join('\n\n')
+    : transcript.text || ''
+  return `# ${title}\n\n${body}\n`
+}
+
+function downloadText(filename, content, type = 'text/plain') {
+  const blob = new Blob([content], { type })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(url), 1200)
+}
+
+async function cleanupAndSaveCurrentTranscript(shell, textarea) {
+  const project = await getActiveProject()
+  if (!project) throw new Error('No AudioLab project is open.')
+  const glossary = getGlossaryTerms(shell, project)
+  const current = transcriptFromTextarea(project, textarea, shell)
+  const nextTranscript = {
+    ...project.transcript,
+    ...current,
+    text: cleanupTranscriptText(current.text, glossary),
+    cues: Array.isArray(current.cues) ? current.cues.map((cue) => ({ ...cue, text: cleanupTranscriptText(cue.text, glossary) })) : [],
+    provider: current.provider || 'browser-local',
+    engine: `${current.engine || 'local transcript'} + glossary cleanup`,
+  }
+  await saveAudioLabProject({ ...project, transcript: nextTranscript, transcriptGlossary: glossary })
+  if (textarea) textarea.value = nextTranscript.text || ''
+  setStatus(shell, `Cleaned transcript text and saved ${glossary.length} glossary terms.`)
+  toast(shell, 'Transcript cleanup saved.')
+}
+
+async function exportTranscript(shell, textarea, format) {
+  const project = await getActiveProject()
+  if (!project) throw new Error('No AudioLab project is open.')
+  const transcript = transcriptFromTextarea(project, textarea, shell)
+  const slug = String(project.episode?.slug || project.title || 'audiolab-transcript').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'audiolab-transcript'
+  if (format === 'srt') return downloadText(`${slug}.srt`, transcriptToSrt(transcript), 'application/x-subrip')
+  if (format === 'vtt') return downloadText(`${slug}.vtt`, transcriptToVtt(transcript), 'text/vtt')
+  if (format === 'md') return downloadText(`${slug}.md`, transcriptToMarkdown(project, transcript), 'text/markdown')
+  return downloadText(`${slug}.txt`, transcript.text || '', 'text/plain')
+}
+
+function ensureTranscriptQualityControls(shell, project = {}) {
+  if (!shell || shell.dataset.localTranscriptionEnhanced === 'true') return
+  const button = shell.querySelector('#audio-lab-transcribe-run')
+  const status = shell.querySelector('#audio-lab-transcript-status')
+  const textarea = shell.querySelector('#audio-lab-transcript-text')
+  const card = shell.querySelector('.audio-lab-auto-transcribe-card')
+  if (!button || !status || !card) return
+  shell.dataset.localTranscriptionEnhanced = 'true'
+
+  const savedQuality = localStorage.getItem('audioLab.localTranscriptionQuality') || project.transcript?.quality || 'fast'
+  const glossaryValue = (Array.isArray(project.transcriptGlossary) && project.transcriptGlossary.length ? project.transcriptGlossary : DEFAULT_GLOSSARY_TERMS).join('\n')
+  const panel = document.createElement('div')
+  panel.className = 'audio-lab-local-transcript-quality'
+  panel.innerHTML = `
+    <label class="audio-lab-task-field">
+      <span>Local model quality</span>
+      <select id="audio-lab-local-model-quality">
+        ${Object.entries(TRANSCRIPT_MODEL_OPTIONS).map(([value, option]) => `<option value="${escapeHtml(value)}"${value === savedQuality ? ' selected' : ''}>${escapeHtml(option.label)} — ${escapeHtml(option.note)}</option>`).join('')}
+      </select>
+    </label>
+    <label class="audio-lab-task-field">
+      <span>Transcript glossary / expected words</span>
+      <textarea id="audio-lab-transcript-glossary" rows="7" placeholder="One expected name, title, URL, place, or phrase per line.">${escapeHtml(glossaryValue)}</textarea>
+    </label>
+    <div class="audio-lab-task-inline-actions audio-lab-local-transcript-actions">
+      <button type="button" class="button" id="audio-lab-transcript-clean-local">Clean up transcript</button>
+      <button type="button" class="button" data-audio-lab-export="txt">Export TXT</button>
+      <button type="button" class="button" data-audio-lab-export="md">Export MD</button>
+      <button type="button" class="button" data-audio-lab-export="srt">Export SRT</button>
+      <button type="button" class="button" data-audio-lab-export="vtt">Export VTT</button>
+    </div>
+    <p class="description">Glossary terms are used after each local Whisper chunk to repair names, project titles, podcast names, and common machine-hearing garbage. Because apparently "anarchist" and "inner guest" are now enemies.</p>
+  `
+  card.insertBefore(panel, button)
+
+  const modelSelect = panel.querySelector('#audio-lab-local-model-quality')
+  modelSelect?.addEventListener('change', () => localStorage.setItem('audioLab.localTranscriptionQuality', modelSelect.value))
+  panel.querySelector('#audio-lab-transcript-clean-local')?.addEventListener('click', () => {
+    cleanupAndSaveCurrentTranscript(shell, textarea).catch((error) => {
+      setStatus(shell, error.message || 'Transcript cleanup failed.')
+      toast(shell, error.message || 'Transcript cleanup failed.')
+    })
+  })
+  panel.querySelectorAll('[data-audio-lab-export]').forEach((exportButton) => {
+    exportButton.addEventListener('click', () => {
+      exportTranscript(shell, textarea, exportButton.dataset.audioLabExport).catch((error) => {
+        setStatus(shell, error.message || 'Transcript export failed.')
+        toast(shell, error.message || 'Transcript export failed.')
+      })
+    })
+  })
+}
+
+async function enhanceOpenTranscriptShell() {
+  if (!isAudioLabRoute()) return
+  const shell = document.querySelector('.audio-lab-task-shell')
+  if (!shell || !shell.querySelector('#audio-lab-transcribe-run')) return
+  ensureTranscriptQualityControls(shell, await getActiveProject())
 }
 
 function handleTranscribeClick(event) {
@@ -354,3 +697,8 @@ function handleTranscribeClick(event) {
 }
 
 window.addEventListener('click', handleTranscribeClick, true)
+window.addEventListener('load', () => window.setTimeout(enhanceOpenTranscriptShell, 80))
+window.addEventListener('popstate', () => window.setTimeout(enhanceOpenTranscriptShell, 80))
+window.addEventListener('audiolab:navigation', () => window.setTimeout(enhanceOpenTranscriptShell, 80))
+window.addEventListener('audiolab-task-navigation', () => window.setTimeout(enhanceOpenTranscriptShell, 80))
+window.setTimeout(enhanceOpenTranscriptShell, 250)
