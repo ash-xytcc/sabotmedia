@@ -27,10 +27,8 @@ import './audioLabKeyboardShortcuts.js'
 import './audioLabWorkspaceControls.js'
 import './audioLabTaskPages.js'
 import './audioLabTaskNavigationFix.js'
-import './audioLabTranscriptionResponsiveness.js'
 import './audioLabBestTranscriptionResume.js'
 import './audioLabLocalTranscription.js'
-import './audioLabTranscriptFormatting.js'
 import './audioLabDirectManipulation.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
