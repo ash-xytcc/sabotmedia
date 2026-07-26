@@ -25,7 +25,7 @@ function normalizeNativeItem(item) {
     title: item.title || item.slug || 'Untitled',
     excerpt: item.excerpt || '',
     target: item.target || 'general',
-    contentType: item.contentType || 'article',
+    contentType: item.contentType || item.type || 'article',
     publishedAt: item.publishedAt || item.updatedAt || '',
     updatedAt: item.updatedAt || item.publishedAt || '',
     href: `/post/${item.slug}`,
@@ -52,7 +52,7 @@ function normalizeArchivePiece(piece) {
   const subtitle = display?.subtitle || piece?.subtitle || ''
   const excerpt = piece?.excerpt || subtitle || ''
   const slug = piece?.slug || ''
-  const type = piece?.type || 'article'
+  const type = piece?.type || piece?.contentType || 'article'
   const target = inferTargetFromPiece(piece)
   const publishedAt =
     piece?.publishedAt || piece?.date || piece?.createdAt || piece?.updatedAt || ''
@@ -81,7 +81,7 @@ function normalizeArchivePiece(piece) {
     updatedAt: piece?.updatedAt || publishedAt || '',
     href: slug ? `/post/${slug}` : '/archive',
     imageUrl,
-    sourceKind: 'archive',
+    sourceKind: piece?.sourceKind || 'archive',
   }
 }
 
@@ -109,7 +109,6 @@ function pickArchiveFeed({ pieces = [], featured = null, latest = [] }) {
     recent,
   }
 }
-
 
 function getHomepageDisplaySettings() {
   const homepage = loadCustomizerSettings().homepage || {}
@@ -197,7 +196,7 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
         const visible = await loadPublishedNativePieces()
         if (cancelled) return
 
-        setNativeItems(visible.filter((item) => ['general', 'home', 'press', 'projects'].includes(item.target)))
+        setNativeItems((visible || []).filter((item) => item?.slug).map(normalizeNativeItem))
         setState(visible.length ? 'loaded' : 'archive-fallback')
       } catch (err) {
         if (cancelled) return
@@ -233,6 +232,8 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
     ].filter(Boolean)
 
     return mergeNativeAndImportedPieces(archiveItems, nativeItems)
+      .map((item) => item?.sourceKind === 'native' ? normalizeNativeItem(item) : item)
+      .filter((item) => item?.slug)
   }, [nativeItems, archiveFeed])
 
   const featuredItem = mergedFeed[0] || archiveFeed.featured || null
