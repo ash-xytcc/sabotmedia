@@ -1,0 +1,73 @@
+.publication-topbar--masthead,
+.publication-topbar--masthead .publication-topbar__inner,
+.publication-topbar--masthead .publication-topbar__brand,
+.publication-topbar--masthead .publication-topbar__brand-link {
+  overflow: visible !important;
+}
+
+.publication-topbar--masthead {
+  min-height: unset !important;
+}
+
+.publication-topbar--inner.publication-topbar--masthead {
+  padding-top: clamp(10px, 2vw, 20px) !important;
+  padding-bottom: clamp(8px, 1.5vw, 14px) !important;
+}
+
+.publication-topbar--masthead .publication-topbar__inner {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.publication-topbar--masthead .publication-topbar__brand {
+  width: 100% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-items: center !important;
+  gap: clamp(4px, 1vw, 10px) !important;
+}
+
+.publication-topbar--masthead .publication-topbar__brand-link {
+  width: min(100%, 380px) !important;
+  max-width: min(70vw, 380px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+}
+
+.publication-topbar--masthead .publication-topbar__brand-image {
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: clamp(74px, 12vw, 118px) !important;
+  display: block !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  transform: none !important;
+  clip-path: none !important;
+}
+
+.publication-topbar--home .publication-topbar__brand-image {
+  max-height: clamp(90px, 15vw, 150px) !important;
+}
+
+.publication-topbar--masthead .publication-topbar__nav {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 720px) {
+  .publication-topbar--masthead .publication-topbar__brand-link {
+    max-width: min(78vw, 300px) !important;
+  }
+
+  .publication-topbar--masthead .publication-topbar__brand-image {
+    max-height: clamp(58px, 18vw, 92px) !important;
+  }
+}
