@@ -9,17 +9,17 @@
   min-height: unset !important;
 }
 
-.publication-topbar--inner.publication-topbar--masthead {
+.publication-topbar--home.publication-topbar--masthead {
   padding-top: clamp(10px, 2vw, 20px) !important;
   padding-bottom: clamp(8px, 1.5vw, 14px) !important;
 }
 
-.publication-topbar--masthead .publication-topbar__inner {
+.publication-topbar--home .publication-topbar__inner {
   height: auto !important;
   min-height: 0 !important;
 }
 
-.publication-topbar--masthead .publication-topbar__brand {
+.publication-topbar--home .publication-topbar__brand {
   width: 100% !important;
   min-height: 0 !important;
   height: auto !important;
@@ -29,9 +29,9 @@
   gap: clamp(4px, 1vw, 10px) !important;
 }
 
-.publication-topbar--masthead .publication-topbar__brand-link {
-  width: min(100%, 380px) !important;
-  max-width: min(70vw, 380px) !important;
+.publication-topbar--home .publication-topbar__brand-link {
+  width: min(100%, 420px) !important;
+  max-width: min(76vw, 420px) !important;
   height: auto !important;
   min-height: 0 !important;
   display: flex !important;
@@ -39,14 +39,15 @@
   align-items: center !important;
   padding: 0 !important;
   line-height: 0 !important;
+  background: transparent !important;
 }
 
-.publication-topbar--masthead .publication-topbar__brand-image {
+.publication-topbar--home .publication-topbar__brand-image {
   width: auto !important;
   max-width: 100% !important;
   height: auto !important;
   min-height: 0 !important;
-  max-height: clamp(74px, 12vw, 118px) !important;
+  max-height: clamp(90px, 15vw, 150px) !important;
   display: block !important;
   object-fit: contain !important;
   object-position: center center !important;
@@ -54,20 +55,74 @@
   clip-path: none !important;
 }
 
-.publication-topbar--home .publication-topbar__brand-image {
-  max-height: clamp(90px, 15vw, 150px) !important;
+.publication-topbar--inner.publication-topbar--masthead {
+  position: relative !important;
+  z-index: 20 !important;
+  min-height: 48px !important;
+  padding: 10px 0 12px !important;
+  overflow: hidden !important;
+  background: #050505 !important;
+  border-bottom: 1px solid rgba(244, 220, 160, 0.16) !important;
 }
 
-.publication-topbar--masthead .publication-topbar__nav {
-  margin-top: 0 !important;
+.publication-topbar--inner .publication-topbar__inner {
+  width: min(100% - 24px, var(--content-width, 74rem)) !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.publication-topbar--inner .publication-topbar__brand {
+  width: auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: clamp(16px, 3vw, 28px) !important;
+}
+
+.publication-topbar--inner .publication-topbar__brand-link,
+.publication-topbar--inner .publication-topbar__brand-image {
+  display: none !important;
+}
+
+.publication-topbar--inner .publication-topbar__nav {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: clamp(18px, 3vw, 34px) !important;
+  width: auto !important;
+  max-width: 100% !important;
+  line-height: 1.1 !important;
+}
+
+.publication-topbar--inner .publication-topbar__nav a {
+  white-space: nowrap !important;
 }
 
 @media (max-width: 720px) {
-  .publication-topbar--masthead .publication-topbar__brand-link {
-    max-width: min(78vw, 300px) !important;
+  .publication-topbar--home .publication-topbar__brand-link {
+    max-width: min(82vw, 320px) !important;
   }
 
-  .publication-topbar--masthead .publication-topbar__brand-image {
+  .publication-topbar--home .publication-topbar__brand-image {
     max-height: clamp(58px, 18vw, 92px) !important;
+  }
+
+  .publication-topbar--inner.publication-topbar--masthead {
+    min-height: 42px !important;
+    padding: 9px 0 10px !important;
+  }
+
+  .publication-topbar--inner .publication-topbar__nav {
+    gap: 18px !important;
   }
 }
