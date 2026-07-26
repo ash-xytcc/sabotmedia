@@ -8,7 +8,7 @@ export function normalizeFeaturedTitleDisplay(value) {
 export function getDefaultFeaturedTitleDisplayForContentType(value) {
   const type = String(value || '').trim().toLowerCase()
   if (['print', 'zine', 'comic', 'podcast', 'poster'].some((term) => type.includes(term))) return 'hidden'
-  return 'overlay'
+  return 'below'
 }
 
 export function resolveFeaturedTitleDisplay(piece = {}) {
@@ -33,10 +33,11 @@ export function resolveFeaturedTitleDisplay(piece = {}) {
     .map((item) => String(item || '').toLowerCase())
     .join(' ')
 
-  if (/\b(zine|comic|podcast|poster)\b/.test(haystack)) return 'hidden'
+  if (/\b(zine|comic|podcast|poster|reader|manifesto)\b/.test(haystack)) return 'hidden'
+  if (haystack.includes('grays harbor sos')) return 'hidden'
   if (haystack.includes('the saboteurs')) return 'hidden'
   if (haystack.includes('molotov now')) return 'hidden'
   if (haystack.includes('the communique') || haystack.includes('communique')) return 'hidden'
 
-  return 'overlay'
+  return 'below'
 }
