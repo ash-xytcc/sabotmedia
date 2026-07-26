@@ -87,7 +87,8 @@ function normalizeBodyNodes(nodes = []) {
     const tag = node.nodeType === 1 ? String(node.tagName || '').toLowerCase() : 'text'
     const text = (node.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase()
     const imgSrc = node.nodeType === 1 ? (node.getAttribute('src') || node.querySelector?.('img')?.getAttribute('src') || '') : ''
-    const signature = `${tag}|${imgSrc}|${text}`
+    const href = node.nodeType === 1 ? (node.getAttribute('href') || node.querySelector?.('a[href]')?.getAttribute('href') || '') : ''
+    const signature = `${tag}|${imgSrc}|${href}|${text}`
     if (signature && signature === previousSignature) continue
     previousSignature = signature
     normalized.push(node)
@@ -121,6 +122,23 @@ function renderNode(node, mode, key) {
         )
       }
       return renderInlineHTML('p', 'post-body__paragraph', html, key)
+
+    case 'a': {
+      const href = normalizeHref(node.getAttribute('href'))
+      if (isBlockedPublicHref(href)) return <Fragment key={key}>{renderChildren(Array.from(node.childNodes || []), mode, key)}</Fragment>
+      const external = /^https?:\/\//i.test(href)
+      return (
+        <a
+          key={key}
+          className="post-body__link"
+          href={href}
+          target={external ? '_blank' : undefined}
+          rel={external ? 'noopener noreferrer' : undefined}
+        >
+          {renderChildren(Array.from(node.childNodes || []), mode, key)}
+        </a>
+      )
+    }
 
     case 'h1':
       return renderHeading('h1', 'post-body__heading post-body__heading--1', node, key)
