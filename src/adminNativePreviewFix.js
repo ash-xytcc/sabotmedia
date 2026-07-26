@@ -127,11 +127,27 @@ function openPreview(snapshot) {
     return
   }
 
-  const previewPath = `/post/${encodeURIComponent(snapshot.slug || snapshot.id)}?preview=${encodeURIComponent(snapshot.id)}&mode=read&t=${Date.now()}`
-  const previewWindow = window.open(previewPath, '_blank')
+  const previewSearch = new URLSearchParams({
+    sabotPreviewPost: snapshot.id,
+    previewSlug: snapshot.slug || snapshot.id,
+    mode: 'read',
+    t: String(Date.now()),
+  })
+  const previewWindow = window.open(`/?${previewSearch.toString()}`, '_blank')
   if (!previewWindow) {
     window.alert('Preview was blocked by your browser. Allow popups for this site and click Preview again.')
   }
+}
+
+function routePreviewEntrypoint() {
+  if (typeof window === 'undefined') return
+  const params = new URLSearchParams(window.location.search || '')
+  const previewId = params.get('sabotPreviewPost')
+  if (!previewId) return
+  const previewSlug = slugify(params.get('previewSlug') || previewId)
+  if (!previewSlug) return
+  const nextPath = `/post/${encodeURIComponent(previewSlug)}?preview=${encodeURIComponent(previewId)}&mode=${encodeURIComponent(params.get('mode') || 'read')}&t=${encodeURIComponent(params.get('t') || String(Date.now()))}`
+  window.history.replaceState(window.history.state, '', nextPath)
 }
 
 function handlePreviewClick(event) {
@@ -149,5 +165,6 @@ function handlePreviewClick(event) {
 }
 
 if (typeof window !== 'undefined') {
+  routePreviewEntrypoint()
   window.addEventListener('click', handlePreviewClick, true)
 }
