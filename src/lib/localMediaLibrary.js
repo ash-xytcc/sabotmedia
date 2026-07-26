@@ -15,50 +15,89 @@ function safeJson(value, fallback) {
   }
 }
 
+function extensionFromFilename(filename = '') {
+  return String(filename || '').split('.').pop()?.toLowerCase() || ''
+}
+
+function inferMediaType({ mimeType = '', extension = '', mediaType = '' } = {}) {
+  const explicit = String(mediaType || '').toLowerCase()
+  if (explicit && explicit !== 'media') return explicit
+  const type = String(mimeType || '').toLowerCase()
+  const ext = String(extension || '').toLowerCase()
+  if (type.startsWith('image/')) return type.includes('svg') ? 'svg' : 'image'
+  if (type === 'application/pdf' || ext === 'pdf') return 'pdf'
+  if (type.startsWith('audio/')) return 'audio'
+  if (type.startsWith('video/')) return 'video'
+  if (type.includes('zip') || ['zip', 'epub'].includes(ext)) return ext === 'epub' ? 'epub' : 'archive'
+  if (type.startsWith('text/') || ['txt', 'md', 'markdown', 'csv'].includes(ext)) return 'text'
+  if (['doc', 'docx', 'odt', 'rtf'].includes(ext)) return 'document'
+  return 'file'
+}
+
+function labelForMediaType(mediaType = '', extension = '') {
+  const type = String(mediaType || '').toLowerCase()
+  if (type === 'pdf') return 'PDF'
+  if (type === 'epub') return 'EPUB'
+  if (type === 'archive') return 'ZIP'
+  if (type === 'text') return 'TEXT'
+  if (type === 'document') return 'DOC'
+  if (type === 'audio') return 'AUDIO'
+  if (type === 'video') return 'VIDEO'
+  if (type === 'svg') return 'SVG'
+  if (type === 'image') return 'IMAGE'
+  return String(extension || 'FILE').toUpperCase()
+}
+
 function normalizeMediaItem(item) {
   if (!item || !item.id) return null
-  const url = String(item.url || item.dataUrl || '').trim()
+  const url = String(item.url || item.dataUrl || item.downloadUrl || '').trim()
   if (!url) return null
   const filename = String(item.filename || '')
+  const extension = String(item.extension || extensionFromFilename(filename) || '').toLowerCase()
+  const mimeType = String(item.mimeType || '')
+  const mediaType = inferMediaType({ mimeType, extension, mediaType: item.mediaType })
   const title = String(item.title || filename.replace(/\.[^.]+$/, '') || 'Uploaded media')
+  const isImage = mediaType === 'image' || mediaType === 'svg'
   return {
     id: String(item.id),
     url,
-    dataUrl: url,
+    dataUrl: String(item.dataUrl || url),
     filename,
     title,
     alt: String(item.alt || ''),
     caption: String(item.caption || ''),
     description: String(item.description || ''),
-    folder: String(item.folder || 'Unfiled'),
+    folder: String(item.folder || (mediaType === 'pdf' ? 'Zines / PDFs' : mediaType === 'file' ? 'Files' : 'Unfiled')),
     tags: Array.isArray(item.tags) ? item.tags.map((tag) => String(tag || '').trim()).filter(Boolean) : String(item.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean),
     uploadedAt: String(item.uploadedAt || item.createdAt || new Date().toISOString()),
     source: String(item.source || 'local-upload'),
-    mimeType: String(item.mimeType || ''),
-    extension: String(item.extension || ''),
-    thumbnailUrl: String(item.thumbnailUrl || item.thumbUrl || url),
+    mimeType,
+    extension,
+    thumbnailUrl: isImage ? String(item.thumbnailUrl || item.thumbUrl || url) : String(item.thumbnailUrl || item.thumbUrl || ''),
     fullUrl: String(item.fullUrl || url),
-    previewUrl: String(item.previewUrl || item.thumbnailUrl || url),
+    previewUrl: isImage ? String(item.previewUrl || item.thumbnailUrl || url) : String(item.previewUrl || ''),
     downloadUrl: String(item.downloadUrl || item.fullUrl || url),
     creator: String(item.creator || ''),
     license: String(item.license || ''),
     licenseUrl: String(item.licenseUrl || ''),
     attribution: String(item.attribution || ''),
     attributionText: String(item.attributionText || item.attribution || ''),
-    mediaType: String(item.mediaType || (String(item.mimeType || '').includes('svg') ? 'svg' : 'image')),
+    mediaType,
+    mediaTypeLabel: String(item.mediaTypeLabel || labelForMediaType(mediaType, extension)),
     category: String(item.category || ''),
     landingUrl: String(item.landingUrl || item.landingPageUrl || ''),
     landingPageUrl: String(item.landingPageUrl || item.landingUrl || ''),
     sourceLabel: String(item.sourceLabel || item.source || ''),
     originalProvider: String(item.originalProvider || item.source || ''),
     originalId: String(item.originalId || item.id || ''),
+    size: Number(item.size || item.sizeBytes || 0) || 0,
   }
 }
 
 function toMediaMetadataKey(input) {
   if (!input) return ''
   if (typeof input === 'string') return input.trim()
-  const url = String(input.url || input.dataUrl || '').trim()
+  const url = String(input.url || input.dataUrl || input.downloadUrl || '').trim()
   if (url) return url
   return String(input.id || '').trim()
 }
@@ -115,8 +154,9 @@ export function saveLocalMediaItems(items) {
     // Data URLs are absurdly expensive in localStorage. Keep the newest upload
     // rather than failing the whole media picker like a sulky appliance.
     const localFirst = normalized.filter((item) => item.source === 'local-upload')
-    const imported = normalized.filter((item) => item.source !== 'local-upload')
-    const fallback = [...localFirst.slice(0, 1), ...imported.slice(0, 30)]
+    const serverFirst = normalized.filter((item) => item.source === 'server-upload')
+    const imported = normalized.filter((item) => item.source !== 'local-upload' && item.source !== 'server-upload')
+    const fallback = [...serverFirst.slice(0, 80), ...localFirst.slice(0, 1), ...imported.slice(0, 30)]
     try {
       return trySaveLocalMediaItems(fallback)
     } catch {
@@ -247,16 +287,23 @@ export async function fileToDataUrl(file) {
   }
 }
 
+export function mediaTypeFromFile(file) {
+  const filename = String(file?.name || 'upload')
+  const extension = extensionFromFilename(filename) || 'file'
+  return inferMediaType({ mimeType: file?.type || '', extension })
+}
+
 export function makeLocalMediaFromFile(file) {
   const filename = String(file?.name || 'upload')
   const name = filename.replace(/\.[^.]+$/, '')
-  const ext = filename.split('.').pop()?.toLowerCase() || 'image'
+  const ext = extensionFromFilename(filename) || 'file'
+  const mediaType = mediaTypeFromFile(file)
   return {
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     url: '',
     dataUrl: '',
     filename,
-    title: name || 'Uploaded image',
+    title: name || 'Uploaded file',
     alt: '',
     caption: '',
     description: '',
@@ -264,5 +311,9 @@ export function makeLocalMediaFromFile(file) {
     extension: ext,
     source: 'local-upload',
     uploadedAt: new Date().toISOString(),
+    mediaType,
+    mediaTypeLabel: labelForMediaType(mediaType, ext),
+    folder: mediaType === 'pdf' ? 'Zines / PDFs' : mediaType === 'image' || mediaType === 'svg' ? 'Unfiled' : 'Files',
+    size: Number(file?.size || 0) || 0,
   }
 }
