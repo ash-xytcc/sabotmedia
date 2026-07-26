@@ -2,6 +2,8 @@ import { getImportedImage } from './getImportedImage'
 import { loadNativeCollection, slugify } from './nativePublicContent'
 import { classicEditorBodyToHtml } from './classicEditorBody'
 
+const PREVIEW_STORAGE_PREFIX = 'sabot-native-preview-v1:'
+
 export function isPublishedNativeEntry(item) {
   if (!item) return false
   const status = String(item.status || '')
@@ -76,10 +78,18 @@ export function normalizeNativePublicPiece(item) {
 
 export async function loadPublishedNativePieces() {
   const items = await loadNativeCollection({ includeFuture: 1 })
-  return items
+  const previewPiece = loadPreviewSnapshotForCurrentRoute()
+  const publishedPieces = items
     .filter(isPublishedNativeEntry)
     .map(normalizeNativePublicPiece)
-    .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+  const visiblePieces = previewPiece
+    ? [
+        previewPiece,
+        ...publishedPieces.filter((item) => getPublicPieceMergeKey(item) !== getPublicPieceMergeKey(previewPiece)),
+      ]
+    : publishedPieces
+
+  return visiblePieces.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
 }
 
 export function mergeNativeAndImportedPieces(importedPieces = [], nativePieces = []) {
@@ -102,7 +112,42 @@ function getPublicPieceMergeKey(item) {
   return String(item?.slug || item?.sourcePostId || item?.id || '').trim().toLowerCase()
 }
 
+function loadPreviewSnapshotForCurrentRoute() {
+  if (typeof window === 'undefined') return null
+  const params = new URLSearchParams(window.location.search || '')
+  const previewId = params.get('preview')
+  if (!previewId) return null
+
+  try {
+    const raw = window.localStorage.getItem(`${PREVIEW_STORAGE_PREFIX}${previewId}`)
+    const parsed = JSON.parse(raw || 'null')
+    if (!parsed || typeof parsed !== 'object') return null
+    const routeSlug = decodeURIComponent(window.location.pathname.replace(/^\/post\//, '').replace(/\/+$/, ''))
+    const snapshotSlug = slugify(parsed.slug || parsed.title || previewId) || previewId
+    const next = {
+      ...parsed,
+      id: String(parsed.id || previewId),
+      slug: routeSlug || snapshotSlug,
+      title: String(parsed.title || 'Untitled draft'),
+      status: 'published',
+      workflowState: 'published',
+      hidden: false,
+      body: String(parsed.body || parsed.bodyHtml || ''),
+      bodyHtml: String(parsed.bodyHtml || parsed.body || ''),
+      contentType: String(parsed.contentType || 'dispatch'),
+      updatedAt: String(parsed.updatedAt || new Date().toISOString()),
+      publishedAt: String(parsed.publishedAt || parsed.updatedAt || new Date().toISOString()),
+      isPreviewSnapshot: true,
+    }
+    return normalizeNativePublicPiece(next)
+  } catch {
+    return null
+  }
+}
+
 export function resolveNativeBodyHtml(item) {
+  if (item?.bodyHtml) return String(item.bodyHtml || '')
+
   const blocks = Array.isArray(item.richBody) ? item.richBody : []
   if (!blocks.length) {
     return classicEditorBodyToHtml(item?.body || '')
