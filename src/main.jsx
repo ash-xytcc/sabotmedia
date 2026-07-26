@@ -36,6 +36,7 @@ import './audioLabBestTranscriptionResume.js'
 import './audioLabLocalTranscription.js'
 import './adminFileMediaInsert.js'
 import './adminEditorLinkTools.js'
+import './adminNativePreviewFix.js'
 import './audioLabDirectManipulation.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
