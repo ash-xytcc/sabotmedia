@@ -193,17 +193,27 @@ function countOverlap(set, values = []) {
 }
 
 function isDownloadUrl(value = '') {
-  return /\.(pdf|zip|epub|mp3|wav|m4a|webm|docx?|png|jpe?g)$/i.test(String(value || '').split('?')[0])
+  const raw = String(value || '').trim()
+  if (!raw) return false
+  const decoded = safeDecode(raw)
+  const pathOnly = decoded.split('#')[0]
+  if (/\.(pdf|zip|epub|mp3|wav|m4a|webm|docx?|odt|rtf|txt|md|csv|png|jpe?g)(?:[?#]|$)/i.test(pathOnly)) return true
+  if (/\/api\/media\/files\b/i.test(decoded)) return true
+  if (/\b(file|key|filename|name)=.*\.(pdf|zip|epub|docx?|odt|rtf|txt|md|csv|png|jpe?g)\b/i.test(decoded)) return true
+  return false
 }
 
 function inferDownloadType(value = '') {
-  const match = String(value || '').match(/\.([a-z0-9]+)(?:[?#]|$)/i)
+  const decoded = safeDecode(value)
+  const match = decoded.match(/\.([a-z0-9]+)(?:[?#&]|$)/i)
   return match ? match[1].toUpperCase() : 'Download'
 }
 
 function filenameFromUrl(value = '') {
   try {
     const url = new URL(value, window.location.origin)
+    const key = url.searchParams.get('key') || url.searchParams.get('file') || url.searchParams.get('filename') || ''
+    if (key) return decodeURIComponent(key.split('/').filter(Boolean).pop() || key)
     return decodeURIComponent(url.pathname.split('/').filter(Boolean).pop() || 'Download')
   } catch {
     return 'Download'
@@ -227,4 +237,12 @@ function slugifyHeading(value = '') {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 80) || 'section'
+}
+
+function safeDecode(value = '') {
+  try {
+    return decodeURIComponent(String(value || ''))
+  } catch {
+    return String(value || '')
+  }
 }
