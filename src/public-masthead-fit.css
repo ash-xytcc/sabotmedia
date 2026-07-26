@@ -1,15 +1,17 @@
-/* Emergency live masthead guard.
-   The current masthead image asset has a black rectangular background, so never let it float over live public content. */
+/* Public masthead guard.
+   The current masthead image asset has a black rectangular background, so it may only live inside a black masthead band.
+   It must never float over article heroes or homepage cards. */
 .publication-topbar--masthead,
 .publication-topbar--masthead .publication-topbar__inner,
-.publication-topbar--masthead .publication-topbar__brand {
+.publication-topbar--masthead .publication-topbar__brand,
+.publication-topbar--masthead .publication-topbar__brand-link {
   overflow: visible !important;
 }
 
 .publication-topbar--masthead {
+  position: relative !important;
+  z-index: 20 !important;
   min-height: 0 !important;
-  padding-top: clamp(10px, 1.6vw, 18px) !important;
-  padding-bottom: clamp(8px, 1.2vw, 14px) !important;
   background: #050505 !important;
   border-bottom: 1px solid rgba(244, 220, 160, 0.18) !important;
 }
@@ -23,13 +25,63 @@
   width: 100% !important;
   min-height: 0 !important;
   height: auto !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-items: center !important;
+  position: relative !important;
+  z-index: 21 !important;
+}
+
+/* Homepage: restore the image logo, but only inside the safe black masthead band. */
+.publication-topbar--home.publication-topbar--masthead {
+  padding-top: clamp(14px, 2vw, 26px) !important;
+  padding-bottom: clamp(10px, 1.5vw, 18px) !important;
+}
+
+.publication-topbar--home.publication-topbar--masthead .publication-topbar__brand {
+  gap: clamp(6px, 1.4vw, 14px) !important;
+}
+
+.publication-topbar--home.publication-topbar--masthead .publication-topbar__brand-link {
+  width: min(72vw, 360px) !important;
+  max-width: min(72vw, 360px) !important;
+  height: auto !important;
+  min-height: 0 !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  line-height: 0 !important;
+  background: #050505 !important;
+  position: static !important;
+  transform: none !important;
 }
 
-.publication-topbar--masthead .publication-topbar__brand-link,
-.publication-topbar--masthead .publication-topbar__brand-image {
+.publication-topbar--home.publication-topbar--masthead .publication-topbar__brand-image {
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: clamp(82px, 11vw, 138px) !important;
+  display: block !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  background: #050505 !important;
+  position: static !important;
+  transform: none !important;
+  clip-path: none !important;
+}
+
+/* Inner pages: nav-only until the logo asset has a transparent background. */
+.publication-topbar--inner.publication-topbar--masthead {
+  padding-top: clamp(10px, 1.6vw, 18px) !important;
+  padding-bottom: clamp(8px, 1.2vw, 14px) !important;
+}
+
+.publication-topbar--inner.publication-topbar--masthead .publication-topbar__brand-link,
+.publication-topbar--inner.publication-topbar--masthead .publication-topbar__brand-image {
   display: none !important;
 }
 
@@ -42,7 +94,7 @@
   gap: clamp(18px, 3vw, 34px) !important;
   position: static !important;
   transform: none !important;
-  z-index: 3 !important;
+  z-index: 22 !important;
 }
 
 .publication-topbar--masthead .publication-topbar__nav a {
@@ -58,9 +110,17 @@
 }
 
 @media (max-width: 720px) {
-  .publication-topbar--masthead {
-    padding-top: 10px !important;
+  .publication-topbar--home.publication-topbar--masthead {
+    padding-top: 12px !important;
     padding-bottom: 10px !important;
+  }
+
+  .publication-topbar--home.publication-topbar--masthead .publication-topbar__brand-link {
+    max-width: min(80vw, 300px) !important;
+  }
+
+  .publication-topbar--home.publication-topbar--masthead .publication-topbar__brand-image {
+    max-height: clamp(64px, 18vw, 96px) !important;
   }
 
   .publication-topbar--masthead .publication-topbar__nav {
