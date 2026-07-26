@@ -1,0 +1,99 @@
+/* Final media-library grid guard.
+ * Keeps media cards from stretching into poster towers and contains the modal layout.
+ */
+
+.wp-media-library-page .wp-media-grid,
+.wp-media-modal .wp-media-modal__library {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 170px)) !important;
+  justify-content: start !important;
+  align-items: start !important;
+  align-content: start !important;
+  grid-auto-rows: auto !important;
+}
+
+.wp-media-library-page .wp-media-item,
+.wp-media-modal .wp-media-item {
+  width: 100% !important;
+  max-width: 170px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  align-self: start !important;
+  grid-template-rows: 150px auto !important;
+  overflow: hidden !important;
+}
+
+.wp-media-library-page .wp-media-item__thumb-wrap,
+.wp-media-modal .wp-media-item__thumb-wrap {
+  width: 100% !important;
+  height: 150px !important;
+  max-height: 150px !important;
+  aspect-ratio: auto !important;
+  overflow: hidden !important;
+}
+
+.wp-media-library-page .wp-media-item__thumb-wrap img,
+.wp-media-modal .wp-media-item__thumb-wrap img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+}
+
+.wp-media-library-page .wp-media-item__meta,
+.wp-media-modal .wp-media-item__meta {
+  min-height: 38px !important;
+  max-height: 42px !important;
+  overflow: hidden !important;
+}
+
+.wp-media-library-page .wp-media-layout,
+.wp-media-modal .wp-media-modal__body {
+  min-height: 0 !important;
+}
+
+.wp-media-library-page .wp-media-details,
+.wp-media-modal .wp-media-modal__details {
+  min-width: 280px !important;
+}
+
+.wp-media-layout--list .wp-media-grid,
+.wp-media-modal__body--list .wp-media-modal__library {
+  grid-template-columns: 1fr !important;
+}
+
+.wp-media-layout--list .wp-media-item,
+.wp-media-modal__body--list .wp-media-item {
+  max-width: 100% !important;
+  grid-template-rows: auto !important;
+}
+
+.wp-media-layout--list .wp-media-item__thumb-wrap,
+.wp-media-modal__body--list .wp-media-item__thumb-wrap {
+  height: 72px !important;
+  max-height: 72px !important;
+}
+
+@media (max-width: 960px) {
+  .wp-media-library-page .wp-media-grid,
+  .wp-media-modal .wp-media-modal__library {
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)) !important;
+  }
+
+  .wp-media-library-page .wp-media-item,
+  .wp-media-modal .wp-media-item {
+    max-width: none !important;
+    grid-template-rows: 128px auto !important;
+  }
+
+  .wp-media-library-page .wp-media-item__thumb-wrap,
+  .wp-media-modal .wp-media-item__thumb-wrap {
+    height: 128px !important;
+    max-height: 128px !important;
+  }
+
+  .wp-media-library-page .wp-media-details,
+  .wp-media-modal .wp-media-modal__details {
+    min-width: 0 !important;
+  }
+}
