@@ -16,8 +16,6 @@ function isPostRoute() {
 
 function shouldUseMediaLayout() {
   if (!isPostRoute()) return false
-  const params = new URLSearchParams(window.location.search || '')
-  if (params.has('preview')) return true
   const slug = decodeURIComponent((window.location.pathname || '').replace(/^\/post\//, '').replace(/\/.*$/, ''))
   const title = document.querySelector('.piece-article-lead h1, .piece-article-lead__title-below h1, .screen-reader-only')?.textContent || ''
   const meta = Array.from(document.querySelectorAll('.piece-article-lead__meta span')).map((node) => node.textContent || '').join(' ')
