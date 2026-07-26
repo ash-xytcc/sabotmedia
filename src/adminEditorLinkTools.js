@@ -18,8 +18,31 @@ function escapeHtmlText(value = '') {
     .replaceAll('>', '&gt;')
 }
 
+function cleanPastedHref(value = '') {
+  let raw = String(value || '')
+    .replace(/&amp;/g, '&')
+    .trim()
+
+  raw = raw.replace(/^\s*(url|href|link)\s*:\s*/i, '').trim()
+  raw = raw.replace(/^\s*(url|href|link)\s*=\s*/i, '').trim()
+  raw = raw.replace(/^['"“”‘’<]+|['"“”‘’>]+$/g, '').trim()
+
+  const markdownMatch = raw.match(/^\[[^\]]*\]\(([^)]+)\)$/)
+  if (markdownMatch?.[1]) raw = markdownMatch[1].trim()
+
+  const hrefMatch = raw.match(/href\s*=\s*['"]([^'"]+)['"]/i)
+  if (hrefMatch?.[1]) raw = hrefMatch[1].trim()
+
+  const urlMatch = raw.match(/(https?:\/\/[^\s<>'"]+|mailto:[^\s<>'"]+|tel:[^\s<>'"]+|\/[^\s<>'"]+|#[^\s<>'"]+)/i)
+  if (urlMatch?.[1]) raw = urlMatch[1].trim()
+
+  raw = raw.replace(/^\s*(url|href|link)\s*:\s*/i, '').trim()
+  raw = raw.replace(/^['"“”‘’<]+|['"“”‘’>]+$/g, '').trim()
+  return raw
+}
+
 function normalizeHref(value = '') {
-  const raw = String(value || '').trim()
+  const raw = cleanPastedHref(value)
   if (!raw) return ''
   if (/^(https?:|mailto:|tel:|#|\/)/i.test(raw)) return raw
   return `https://${raw}`
