@@ -89,14 +89,16 @@ body.is-sabot-preview-media .piece-body-wrap--public-post {
 }
 
 body.is-sabot-preview-media .piece-body__content {
-  width: 100% !important;
-  max-width: 100% !important;
+  width: min(100%, 980px) !important;
+  max-width: min(100%, 980px) !important;
   margin: 0 auto !important;
+  color: #f5efe0 !important;
+  text-align: left !important;
 }
 
 body.is-sabot-preview-media .piece-body__content figure,
 body.is-sabot-preview-media .piece-body__content p {
-  max-width: 100% !important;
+  max-width: 72ch !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
@@ -111,10 +113,52 @@ body.is-sabot-preview-media .piece-body__content img {
   object-fit: contain !important;
 }
 
+body.is-sabot-preview-media .piece-body__content .post-body__paragraph,
+body.is-sabot-preview-media .piece-body__content .post-body__block,
+body.is-sabot-preview-media .piece-body__content .post-body__list,
+body.is-sabot-preview-media .piece-body__content .post-body__list-item {
+  font-size: clamp(1rem, 2vw, 1.35rem) !important;
+  line-height: 1.45 !important;
+  letter-spacing: 0 !important;
+  overflow-wrap: anywhere !important;
+}
+
+body.is-sabot-preview-media .piece-body__content .post-body__heading,
+body.is-sabot-preview-media .piece-body__content h1,
+body.is-sabot-preview-media .piece-body__content h2,
+body.is-sabot-preview-media .piece-body__content h3 {
+  max-width: 72ch !important;
+  margin: 1.4rem auto 0.8rem !important;
+  font-size: clamp(1.35rem, 4vw, 2.7rem) !important;
+  line-height: 1.05 !important;
+}
+
+body.is-sabot-preview-media .piece-body__content a,
+body.is-sabot-preview-media .piece-body__content .post-body__link,
+body.is-sabot-preview-media .sabot-visible-download-link {
+  color: #ffd84d !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 0.18em !important;
+  overflow-wrap: anywhere !important;
+}
+
+body.is-sabot-preview-media .piece-body__content a:hover,
+body.is-sabot-preview-media .sabot-visible-download-link:hover {
+  color: #fff3ad !important;
+}
+
+body.is-sabot-preview-media .public-experience-sections {
+  width: min(100vw - 32px, 980px) !important;
+  max-width: min(100vw - 32px, 980px) !important;
+  margin: 28px auto !important;
+}
+
 @media (max-width: 720px) {
   body.is-sabot-preview-media .piece-article-lead,
   body.is-sabot-preview-media .piece-layout,
-  body.is-sabot-preview-media .piece-article-lead__below {
+  body.is-sabot-preview-media .piece-article-lead__below,
+  body.is-sabot-preview-media .public-experience-sections {
     width: calc(100vw - 18px) !important;
     max-width: calc(100vw - 18px) !important;
   }
