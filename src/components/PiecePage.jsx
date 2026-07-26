@@ -26,6 +26,7 @@ import {
 } from '../lib/publicExperience'
 
 const MODE_STORAGE_KEY = 'sabot.postMode'
+const PREVIEW_STORAGE_PREFIX = 'sabot-native-preview-v1:'
 
 function getPreferredMode(searchParams) {
   const explicit = searchParams.get('mode')
@@ -51,12 +52,82 @@ function getOrderedPieces(pieces) {
 
 function isPublicPiece(piece) {
   if (!piece) return false
+  if (piece.isPreviewSnapshot === true) return true
   const status = String(piece.status || '').toLowerCase()
   if (['draft', 'pending', 'private', 'trash', 'auto-draft'].includes(status)) return false
   if (piece.hidden === true) return false
   return true
 }
 
+function loadPreviewPiece(previewId = '', routeSlug = '') {
+  if (typeof window === 'undefined') return null
+  const id = String(previewId || '').trim()
+  if (!id) return null
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(`${PREVIEW_STORAGE_PREFIX}${id}`) || 'null')
+    if (!parsed || typeof parsed !== 'object') return null
+
+    const slug = String(routeSlug || parsed.slug || parsed.id || id).trim()
+    const type =
+      parsed.contentType === 'podcast'
+        ? 'podcast'
+        : parsed.contentType === 'print'
+          ? 'print'
+          : 'article'
+    const primaryProject =
+      (Array.isArray(parsed.categories) && parsed.categories[0]) ||
+      (Array.isArray(parsed.projects) && parsed.projects[0]) ||
+      parsed.primaryProject ||
+      'Preview'
+    const bodyHtml = String(parsed.bodyHtml || parsed.body || '')
+    const publishedAt = parsed.publishedAt || parsed.updatedAt || new Date().toISOString()
+
+    return {
+      ...parsed,
+      id: parsed.id || id,
+      sourcePostId: parsed.id || id,
+      slug,
+      title: parsed.title || 'Untitled draft',
+      excerpt: parsed.excerpt || '',
+      subtitle: '',
+      author: parsed.author || 'Sabot Media',
+      status: parsed.status || 'draft',
+      workflowState: parsed.workflowState || 'draft',
+      type,
+      contentType: type,
+      target: parsed.target || 'general',
+      primaryProject,
+      primaryProjectSlug: String(primaryProject || 'preview').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'preview',
+      collections: Array.isArray(parsed.collections) ? parsed.collections : [],
+      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+      projects: Array.isArray(parsed.projects) ? parsed.projects : Array.isArray(parsed.categories) ? parsed.categories : [],
+      categories: Array.isArray(parsed.categories) ? parsed.categories : Array.isArray(parsed.projects) ? parsed.projects : [],
+      bodyHtml,
+      body: bodyHtml,
+      richBody: [],
+      sourceKind: 'preview',
+      sourcePostType: 'preview',
+      featuredImage: parsed.featuredImage || parsed.heroImage || parsed.imageUrl || '',
+      heroImage: parsed.heroImage || parsed.featuredImage || parsed.imageUrl || '',
+      imageUrl: parsed.imageUrl || parsed.featuredImage || parsed.heroImage || '',
+      featuredImageAlt: parsed.featuredImageAlt || parsed.title || '',
+      featuredTitleDisplay: parsed.featuredTitleDisplay || '',
+      href: `/post/${slug}?preview=${encodeURIComponent(id)}&mode=read`,
+      relatedAssets: Array.isArray(parsed.relatedAssets) ? parsed.relatedAssets : [],
+      relatedPrintLinks: Array.isArray(parsed.relatedPrintLinks) ? parsed.relatedPrintLinks : [],
+      hasPrintAssets: Boolean(parsed.hasPrintAssets || type === 'print'),
+      publishedAt,
+      updatedAt: parsed.updatedAt || publishedAt,
+      publishedDateLabel: 'Preview',
+      hidden: false,
+      reviewFlags: [],
+      isPreviewSnapshot: true,
+    }
+  } catch {
+    return null
+  }
+}
 
 function stripHtmlForPreview(value) {
   return String(value || '')
@@ -125,10 +196,20 @@ export function PiecePage({ pieces = [] }) {
 
   const wordpressFeed = useWordPressPieces(pieces)
   const livePieces = wordpressFeed.pieces || pieces
+  const previewPiece = useMemo(
+    () => loadPreviewPiece(searchParams.get('preview'), slug),
+    [searchParams, slug]
+  )
 
   const mergedPieces = useMemo(
-    () => mergeNativeAndImportedPieces(Array.isArray(livePieces) ? livePieces : [], Array.isArray(nativePieces) ? nativePieces : []),
-    [livePieces, nativePieces]
+    () => mergeNativeAndImportedPieces(
+      Array.isArray(livePieces) ? livePieces : [],
+      [
+        ...(Array.isArray(nativePieces) ? nativePieces : []),
+        ...(previewPiece ? [previewPiece] : []),
+      ]
+    ),
+    [livePieces, nativePieces, previewPiece]
   )
 
   const orderedPieces = useMemo(() => getOrderedPieces(mergedPieces), [mergedPieces])
@@ -186,13 +267,13 @@ export function PiecePage({ pieces = [] }) {
   const readingTime = useMemo(() => estimateReadingTimeFromHtml(articleHtml, piece?.excerpt || ''), [articleHtml, piece?.excerpt])
   const enhancements = useMemo(() => extractArticleEnhancements(articleHtml), [articleHtml])
   const podcastAudioUrl = useMemo(() => getPodcastAudioUrl(piece || {}), [piece])
-  const relatedArticles = useMemo(() => getRelatedArticles(piece || {}, orderedPieces, 4), [piece, orderedPieces])
-  const relatedCollections = useMemo(() => getRelatedCollections(piece || {}, collections, orderedPieces, 3), [piece, collections, orderedPieces])
+  const relatedArticles = useMemo(() => getRelatedArticles(piece || {}, orderedPieces.filter((item) => !item.isPreviewSnapshot), 4), [piece, orderedPieces])
+  const relatedCollections = useMemo(() => getRelatedCollections(piece || {}, collections, orderedPieces.filter((item) => !item.isPreviewSnapshot), 3), [piece, collections, orderedPieces])
   const relatedPublications = useMemo(() => getRelatedPublications(piece || {}, publications, 3), [piece, publications])
   const categoryLabel = renderData?.eyebrow || piece?.primaryProject || piece?.type || 'general'
   const headerMetaItems = useMemo(() => {
     if (!piece) return []
-    return [categoryLabel, 'Sabot Media', formatMetaType(piece.type), piece.publishedDateLabel]
+    return [piece.isPreviewSnapshot ? 'Preview' : categoryLabel, 'Sabot Media', formatMetaType(piece.type), piece.publishedDateLabel]
       .map((item) => String(item || '').trim())
       .filter(Boolean)
   }, [piece, categoryLabel])
@@ -227,7 +308,7 @@ export function PiecePage({ pieces = [] }) {
     }
   }, [piece?.slug])
 
-  if (!piece && nativePieces === null) {
+  if (!piece && nativePieces === null && !previewPiece) {
     return (
       <main className="page piece-page piece-page--loading">
         <PublicationTopbar />
@@ -259,7 +340,7 @@ export function PiecePage({ pieces = [] }) {
   }
 
   return (
-    <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}`}>
+    <main className={`page piece-page${mode === 'experience' ? ' piece-page--experience' : ' piece-page--reading'}${piece.isPreviewSnapshot ? ' piece-page--preview' : ''}`}>
       <div className="reading-progress" aria-hidden="true">
         <span style={{ width: `${readingProgress}%` }} />
       </div>
@@ -345,14 +426,14 @@ export function PiecePage({ pieces = [] }) {
 
       <section className="piece-nav">
         <div className="piece-nav-grid">
-          {previous ? (
+          {previous && !previous.isPreviewSnapshot ? (
             <Link className="piece-nav-card publication-piece-nav-card" to={`/post/${previous.slug}`}>
               <div className="piece-nav-card__eyebrow">Previous</div>
               <strong>{splitDisplayTitle(previous).title || previous.title}</strong>
             </Link>
           ) : null}
 
-          {next ? (
+          {next && !next.isPreviewSnapshot ? (
             <Link className="piece-nav-card piece-nav-card--next publication-piece-nav-card" to={`/post/${next.slug}`}>
               <div className="piece-nav-card__eyebrow">Next</div>
               <strong>{splitDisplayTitle(next).title || next.title}</strong>
