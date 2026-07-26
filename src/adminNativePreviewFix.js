@@ -85,11 +85,33 @@ function sanitizePreviewHtml(value = '') {
   return doc.body.innerHTML
 }
 
+function parsePreviewBody(html = '') {
+  const raw = String(html || '')
+  if (!raw.trim() || typeof DOMParser === 'undefined') {
+    return { firstImage: '', imageOnly: false }
+  }
+
+  try {
+    const doc = new DOMParser().parseFromString(raw, 'text/html')
+    doc.querySelectorAll('script, style').forEach((node) => node.remove())
+    const firstImage = String(doc.querySelector('img')?.getAttribute('src') || '').trim()
+    const text = String(doc.body?.textContent || '').replace(/\u00a0/g, ' ').trim()
+    const hasVisualMedia = Boolean(doc.querySelector('img, picture, figure, video, iframe'))
+    return {
+      firstImage,
+      imageOnly: hasVisualMedia && !text,
+    }
+  } catch {
+    return { firstImage: '', imageOnly: false }
+  }
+}
+
 function collectPreviewSnapshot() {
   const title = editorTitle()
   const slug = editorSlug(title)
   const id = editorId(slug)
   const body = sanitizePreviewHtml(editorBody())
+  const bodyInfo = parsePreviewBody(body)
   const status = fieldValue('Publication status') || 'draft'
   const workflowState = fieldValue('Editorial workflow') || status || 'draft'
   const contentType = fieldValue('Content type') || 'dispatch'
@@ -97,6 +119,11 @@ function collectPreviewSnapshot() {
   const excerpt = String(document.querySelector('[name="excerpt"], .native-content-editor__excerpt textarea')?.value || '').trim()
   const categories = checkedTerms('Categories')
   const collections = checkedTerms('Collections')
+  const selectedFeaturedImage = fieldValue('Image URL')
+  const featuredImage = selectedFeaturedImage || (bodyInfo.imageOnly ? bodyInfo.firstImage : '')
+  const featuredTitleDisplay = fieldValue('Featured image title') || (bodyInfo.imageOnly ? 'hidden' : '')
+  const defaultMode = fieldValue('Default display') || 'read'
+  const previewLayout = bodyInfo.imageOnly || ['print', 'comic'].includes(String(contentType).toLowerCase()) ? 'media' : 'article'
 
   return {
     id,
@@ -112,6 +139,15 @@ function collectPreviewSnapshot() {
     categories,
     projects: categories,
     collections,
+    featuredImage,
+    heroImage: featuredImage,
+    imageUrl: featuredImage,
+    featuredImageTitle: fieldValue('Featured image title') || title || '',
+    featuredTitleDisplay,
+    featuredImageAlt: fieldValue('Featured image alt') || title || '',
+    featuredImageCaption: fieldValue('Featured image caption') || '',
+    defaultMode,
+    previewLayout,
     updatedAt: new Date().toISOString(),
     publishedAt: new Date().toISOString(),
     isPreviewSnapshot: true,
