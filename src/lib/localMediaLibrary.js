@@ -1,5 +1,7 @@
 const STORAGE_KEY = 'sabot.wpClone.localMedia.v1'
 const METADATA_STORAGE_KEY = 'sabot.wpClone.localMedia.meta.v1'
+const MAX_LOCAL_IMAGE_EDGE = 1800
+const JPEG_QUALITY = 0.84
 
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
@@ -99,10 +101,29 @@ function saveLocalMediaMetadata(metadata) {
   window.localStorage.setItem(METADATA_STORAGE_KEY, JSON.stringify(normalized))
 }
 
-export function saveLocalMediaItems(items) {
-  if (!canUseStorage()) return
-  const normalized = Array.isArray(items) ? items.map(normalizeMediaItem).filter(Boolean) : []
+function trySaveLocalMediaItems(normalized) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized))
+  return normalized
+}
+
+export function saveLocalMediaItems(items) {
+  if (!canUseStorage()) return []
+  const normalized = Array.isArray(items) ? items.map(normalizeMediaItem).filter(Boolean) : []
+  try {
+    return trySaveLocalMediaItems(normalized)
+  } catch (error) {
+    // Data URLs are absurdly expensive in localStorage. Keep the newest upload
+    // rather than failing the whole media picker like a sulky appliance.
+    const localFirst = normalized.filter((item) => item.source === 'local-upload')
+    const imported = normalized.filter((item) => item.source !== 'local-upload')
+    const fallback = [...localFirst.slice(0, 1), ...imported.slice(0, 30)]
+    try {
+      return trySaveLocalMediaItems(fallback)
+    } catch {
+      console.warn('Unable to persist local media library item.', error)
+      return loadLocalMediaItems()
+    }
+  }
 }
 
 export function addLocalMediaItem(item) {
@@ -110,8 +131,7 @@ export function addLocalMediaItem(item) {
   if (!normalized) return loadLocalMediaItems()
   const existing = loadLocalMediaItems()
   const next = [normalized, ...existing.filter((entry) => entry.id !== normalized.id)]
-  saveLocalMediaItems(next)
-  return next
+  return saveLocalMediaItems(next)
 }
 
 export function updateLocalMediaItem(id, fields) {
@@ -121,8 +141,7 @@ export function updateLocalMediaItem(id, fields) {
     if (item.id !== id) return item
     return normalizeMediaItem({ ...item, ...fields, id: item.id, source: item.source || 'local-upload' })
   }).filter(Boolean)
-  saveLocalMediaItems(next)
-  return next
+  return saveLocalMediaItems(next)
 }
 
 export function updateLocalMediaMetadata(itemOrKey, fields) {
@@ -159,13 +178,73 @@ export function applyLocalMediaMetadata(item) {
   }
 }
 
-export function fileToDataUrl(file) {
+function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(String(reader.result || ''))
     reader.onerror = () => reject(new Error('Unable to read file'))
     reader.readAsDataURL(file)
   })
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Unable to process resized image'))
+    reader.readAsDataURL(blob)
+  })
+}
+
+function loadImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('Unable to decode image'))
+    image.src = dataUrl
+  })
+}
+
+async function canvasToDataUrl(canvas, mimeType = 'image/jpeg', quality = JPEG_QUALITY) {
+  if (typeof canvas.toBlob === 'function') {
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, mimeType, quality))
+    if (blob) return blobToDataUrl(blob)
+  }
+  return canvas.toDataURL(mimeType, quality)
+}
+
+async function resizeRasterImage(file) {
+  const original = await readFileAsDataUrl(file)
+  if (typeof document === 'undefined') return original
+  const image = await loadImage(original)
+  const width = Number(image.naturalWidth || image.width || 0)
+  const height = Number(image.naturalHeight || image.height || 0)
+  if (!width || !height) return original
+
+  const scale = Math.min(1, MAX_LOCAL_IMAGE_EDGE / Math.max(width, height))
+  const nextWidth = Math.max(1, Math.round(width * scale))
+  const nextHeight = Math.max(1, Math.round(height * scale))
+  const canvas = document.createElement('canvas')
+  canvas.width = nextWidth
+  canvas.height = nextHeight
+  const context = canvas.getContext('2d')
+  if (!context) return original
+  context.drawImage(image, 0, 0, nextWidth, nextHeight)
+
+  const preferredMime = /image\/(?:jpeg|jpg|webp)/i.test(file.type || '') ? file.type : 'image/jpeg'
+  const resized = await canvasToDataUrl(canvas, preferredMime, JPEG_QUALITY)
+  return resized.length < original.length ? resized : original
+}
+
+export async function fileToDataUrl(file) {
+  const type = String(file?.type || '').toLowerCase()
+  if (!type.startsWith('image/')) return readFileAsDataUrl(file)
+  if (type.includes('svg') || type.includes('gif')) return readFileAsDataUrl(file)
+  try {
+    return await resizeRasterImage(file)
+  } catch {
+    return readFileAsDataUrl(file)
+  }
 }
 
 export function makeLocalMediaFromFile(file) {
