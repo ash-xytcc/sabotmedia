@@ -1,5 +1,16 @@
 /* Final public typography guard. Imported last on purpose. */
 
+/* Compact body copy across every public surface. */
+.public-route-shell main p,
+.public-route-shell main li,
+.public-route-shell main blockquote,
+.public-route-shell main figcaption,
+.public-route-shell main dd {
+  font-size: 12.5px !important;
+  line-height: 1.46 !important;
+  letter-spacing: 0 !important;
+}
+
 /* Article and zine body copy: make it visibly smaller. */
 .piece-page .piece-body__content,
 .piece-page .piece-body__content *,
@@ -89,6 +100,15 @@ body.is-sabot-preview-media .piece-article-lead__meta span {
 }
 
 @media (max-width: 720px) {
+  .public-route-shell main p,
+  .public-route-shell main li,
+  .public-route-shell main blockquote,
+  .public-route-shell main figcaption,
+  .public-route-shell main dd {
+    font-size: 12px !important;
+    line-height: 1.44 !important;
+  }
+
   .piece-page .piece-body__content,
   .piece-page .piece-body__content *,
   .piece-page .piece-body__content p,
