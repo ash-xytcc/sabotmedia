@@ -81,26 +81,39 @@ body.is-sabot-preview-media .piece-body-wrap[hidden] {
 }
 
 body.is-sabot-preview-media .piece-body-wrap--public-post {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 auto !important;
-  padding: 0 !important;
-  background: transparent !important;
+  width: min(calc(100vw - 32px), 760px) !important;
+  max-width: 760px !important;
+  margin: clamp(20px, 4vw, 44px) auto !important;
+  padding: clamp(18px, 3vw, 34px) !important;
+  background: rgba(5, 5, 5, 0.52) !important;
+  border: 1px solid rgba(244, 220, 160, 0.16) !important;
+  box-sizing: border-box !important;
 }
 
 body.is-sabot-preview-media .piece-body__content {
-  width: min(100%, 980px) !important;
-  max-width: min(100%, 980px) !important;
+  width: 100% !important;
+  max-width: 68ch !important;
   margin: 0 auto !important;
-  color: #f5efe0 !important;
+  color: #f1e6c8 !important;
   text-align: left !important;
+  font-size: clamp(1rem, 0.94rem + 0.22vw, 1.14rem) !important;
+  line-height: 1.52 !important;
+  letter-spacing: 0.005em !important;
+  overflow-wrap: break-word !important;
 }
 
 body.is-sabot-preview-media .piece-body__content figure,
-body.is-sabot-preview-media .piece-body__content p {
-  max-width: 72ch !important;
+body.is-sabot-preview-media .piece-body__content p,
+body.is-sabot-preview-media .piece-body__content ul,
+body.is-sabot-preview-media .piece-body__content ol,
+body.is-sabot-preview-media .piece-body__content blockquote {
+  max-width: 68ch !important;
   margin-left: auto !important;
   margin-right: auto !important;
+}
+
+body.is-sabot-preview-media .piece-body__content p {
+  margin-bottom: 1em !important;
 }
 
 body.is-sabot-preview-media .piece-body__content img {
@@ -117,20 +130,36 @@ body.is-sabot-preview-media .piece-body__content .post-body__paragraph,
 body.is-sabot-preview-media .piece-body__content .post-body__block,
 body.is-sabot-preview-media .piece-body__content .post-body__list,
 body.is-sabot-preview-media .piece-body__content .post-body__list-item {
-  font-size: clamp(1rem, 2vw, 1.35rem) !important;
-  line-height: 1.45 !important;
-  letter-spacing: 0 !important;
-  overflow-wrap: anywhere !important;
+  font-size: clamp(1rem, 0.94rem + 0.22vw, 1.14rem) !important;
+  line-height: 1.52 !important;
+  letter-spacing: 0.005em !important;
+  overflow-wrap: break-word !important;
 }
 
 body.is-sabot-preview-media .piece-body__content .post-body__heading,
 body.is-sabot-preview-media .piece-body__content h1,
 body.is-sabot-preview-media .piece-body__content h2,
 body.is-sabot-preview-media .piece-body__content h3 {
-  max-width: 72ch !important;
-  margin: 1.4rem auto 0.8rem !important;
-  font-size: clamp(1.35rem, 4vw, 2.7rem) !important;
-  line-height: 1.05 !important;
+  max-width: 21em !important;
+  margin: 1.35rem auto 0.85em !important;
+  color: #fff7de !important;
+  line-height: 1.08 !important;
+  letter-spacing: 0.01em !important;
+}
+
+body.is-sabot-preview-media .piece-body__content h1,
+body.is-sabot-preview-media .piece-body__content .post-body__heading--1 {
+  font-size: clamp(1.85rem, 1.35rem + 2vw, 3rem) !important;
+}
+
+body.is-sabot-preview-media .piece-body__content h2,
+body.is-sabot-preview-media .piece-body__content .post-body__heading--2 {
+  font-size: clamp(1.35rem, 1.08rem + 1vw, 1.95rem) !important;
+}
+
+body.is-sabot-preview-media .piece-body__content h3,
+body.is-sabot-preview-media .piece-body__content .post-body__heading--3 {
+  font-size: clamp(1.18rem, 1rem + 0.7vw, 1.55rem) !important;
 }
 
 body.is-sabot-preview-media .piece-body__content a,
@@ -143,9 +172,29 @@ body.is-sabot-preview-media .sabot-visible-download-link {
   overflow-wrap: anywhere !important;
 }
 
+body.is-sabot-preview-media .piece-body__content a.sabot-visible-download-link {
+  display: inline-flex !important;
+  max-width: 100% !important;
+  align-items: center !important;
+  gap: 0.35em !important;
+  margin: 0.35em 0.45em 0.35em 0 !important;
+  padding: 0.5em 0.7em !important;
+  border: 1px solid rgba(244, 220, 160, 0.34) !important;
+  background: rgba(244, 220, 160, 0.08) !important;
+  color: #ffe08a !important;
+  font-size: 0.95em !important;
+  line-height: 1.15 !important;
+  text-decoration: none !important;
+  overflow-wrap: anywhere !important;
+}
+
 body.is-sabot-preview-media .piece-body__content a:hover,
-body.is-sabot-preview-media .sabot-visible-download-link:hover {
+body.is-sabot-preview-media .sabot-visible-download-link:hover,
+body.is-sabot-preview-media .piece-body__content a.sabot-visible-download-link:hover,
+body.is-sabot-preview-media .piece-body__content a.sabot-visible-download-link:focus {
   color: #fff3ad !important;
+  background: rgba(244, 220, 160, 0.15) !important;
+  text-decoration: underline !important;
 }
 
 body.is-sabot-preview-media .public-experience-sections {
@@ -165,5 +214,20 @@ body.is-sabot-preview-media .public-experience-sections {
 
   body.is-sabot-preview-media .piece-article-lead__figure {
     padding: 6px !important;
+  }
+
+  body.is-sabot-preview-media .piece-body-wrap--public-post {
+    width: calc(100vw - 18px) !important;
+    max-width: calc(100vw - 18px) !important;
+    padding: 16px !important;
+  }
+
+  body.is-sabot-preview-media .piece-body__content,
+  body.is-sabot-preview-media .piece-body__content .post-body__paragraph,
+  body.is-sabot-preview-media .piece-body__content .post-body__block,
+  body.is-sabot-preview-media .piece-body__content .post-body__list,
+  body.is-sabot-preview-media .piece-body__content .post-body__list-item {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
   }
 }
