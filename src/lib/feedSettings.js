@@ -1,5 +1,3 @@
-const STORAGE_KEY = 'sabot.feedSettings.v1'
-
 export const DEFAULT_FEED_SETTINGS = {
   feedsIntroTitle: 'Follow the Sabot Media archive',
   feedsIntroBody: `Sabot Media is built as a public archive, not just a front page that disappears into yesterday. Feeds let readers, researchers, RSS apps, podcast apps, librarians, mirror sites, and other tools follow new work without waiting for an algorithm to notice us.
@@ -46,58 +44,79 @@ function cloneDefaults() {
   return JSON.parse(JSON.stringify(DEFAULT_FEED_SETTINGS))
 }
 
-function mergeSettings(value = {}) {
+export function mergeFeedSettings(value = {}) {
   const defaults = cloneDefaults()
+  const input = value && typeof value === 'object' ? value : {}
   return {
     ...defaults,
-    ...value,
+    ...input,
     aliases: {
       ...defaults.aliases,
-      ...(value.aliases || {}),
-      author: { ...defaults.aliases.author, ...(value.aliases?.author || {}) },
-      format: { ...defaults.aliases.format, ...(value.aliases?.format || {}) },
-      project: { ...defaults.aliases.project, ...(value.aliases?.project || {}) },
-      collection: { ...defaults.aliases.collection, ...(value.aliases?.collection || {}) },
-      topic: { ...defaults.aliases.topic, ...(value.aliases?.topic || {}) },
-      series: { ...defaults.aliases.series, ...(value.aliases?.series || {}) },
+      ...(input.aliases || {}),
+      author: { ...defaults.aliases.author, ...(input.aliases?.author || {}) },
+      format: { ...defaults.aliases.format, ...(input.aliases?.format || {}) },
+      project: { ...defaults.aliases.project, ...(input.aliases?.project || {}) },
+      collection: { ...defaults.aliases.collection, ...(input.aliases?.collection || {}) },
+      topic: { ...defaults.aliases.topic, ...(input.aliases?.topic || {}) },
+      series: { ...defaults.aliases.series, ...(input.aliases?.series || {}) },
     },
     hiddenTerms: {
       ...defaults.hiddenTerms,
-      ...(value.hiddenTerms || {}),
-      author: Array.isArray(value.hiddenTerms?.author) ? value.hiddenTerms.author : defaults.hiddenTerms.author,
-      format: Array.isArray(value.hiddenTerms?.format) ? value.hiddenTerms.format : defaults.hiddenTerms.format,
-      project: Array.isArray(value.hiddenTerms?.project) ? value.hiddenTerms.project : defaults.hiddenTerms.project,
-      collection: Array.isArray(value.hiddenTerms?.collection) ? value.hiddenTerms.collection : defaults.hiddenTerms.collection,
-      topic: Array.isArray(value.hiddenTerms?.topic) ? value.hiddenTerms.topic : defaults.hiddenTerms.topic,
-      series: Array.isArray(value.hiddenTerms?.series) ? value.hiddenTerms.series : defaults.hiddenTerms.series,
+      ...(input.hiddenTerms || {}),
+      author: Array.isArray(input.hiddenTerms?.author) ? input.hiddenTerms.author : defaults.hiddenTerms.author,
+      format: Array.isArray(input.hiddenTerms?.format) ? input.hiddenTerms.format : defaults.hiddenTerms.format,
+      project: Array.isArray(input.hiddenTerms?.project) ? input.hiddenTerms.project : defaults.hiddenTerms.project,
+      collection: Array.isArray(input.hiddenTerms?.collection) ? input.hiddenTerms.collection : defaults.hiddenTerms.collection,
+      topic: Array.isArray(input.hiddenTerms?.topic) ? input.hiddenTerms.topic : defaults.hiddenTerms.topic,
+      series: Array.isArray(input.hiddenTerms?.series) ? input.hiddenTerms.series : defaults.hiddenTerms.series,
     },
   }
 }
 
+// Synchronous consumers receive deterministic defaults. Persisted production
+// settings are loaded explicitly through loadFeedSettingsAsync before rendering.
 export function loadFeedSettings() {
-  if (typeof window === 'undefined') return cloneDefaults()
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    return mergeSettings(raw ? JSON.parse(raw) : {})
-  } catch {
-    return cloneDefaults()
-  }
+  return cloneDefaults()
 }
 
-export function saveFeedSettings(settings) {
-  const next = mergeSettings(settings)
-  if (typeof window !== 'undefined') {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next, null, 2))
+export async function loadFeedSettingsAsync() {
+  const response = await fetch('/api/feed-settings', {
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok || !data?.ok || data.mode !== 'd1') {
+    throw new Error(data?.error || `feed settings request failed: ${response.status}`)
   }
-  return next
+  return mergeFeedSettings(data.settings || {})
 }
 
-export function resetFeedSettings() {
-  const defaults = cloneDefaults()
-  if (typeof window !== 'undefined') {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults, null, 2))
+export async function saveFeedSettings(settings) {
+  const next = mergeFeedSettings(settings)
+  const response = await fetch('/api/feed-settings', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ settings: next }),
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok || !data?.ok || data.mode !== 'd1') {
+    throw new Error(data?.error || `feed settings save failed: ${response.status}`)
   }
-  return defaults
+  return mergeFeedSettings(data.settings || next)
+}
+
+export async function resetFeedSettings() {
+  const response = await fetch('/api/feed-settings', {
+    method: 'DELETE',
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok || !data?.ok || data.mode !== 'd1') {
+    throw new Error(data?.error || `feed settings reset failed: ${response.status}`)
+  }
+  return cloneDefaults()
 }
 
 export function normalizeFeedTerm(kind, value, settings = loadFeedSettings()) {
