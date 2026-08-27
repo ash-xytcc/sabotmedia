@@ -706,7 +706,7 @@ export function NativeContentBridgePage() {
       <main className="page wp-admin-screen wp-edit-screen">
         <div className="wp-screen-header">
           <h1>{searchParams.get('edit') || searchParams.get('import') ? 'Edit Post' : 'Add New Post'}</h1>
-          <Link className="button" to={adminRoutes.addNew}>Add New</Link>
+          {searchParams.get('edit') || searchParams.get('import') ? <Link className="button" to={adminRoutes.addNew}>Add New</Link> : null}
         </div>
         <WpAdminNotices />
 
