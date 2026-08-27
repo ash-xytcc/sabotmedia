@@ -11,6 +11,50 @@
   letter-spacing: 0 !important;
 }
 
+/* Homepage cards honor each post's featured-title display setting. */
+.publication-homepage .publication-hero-card--title-hidden::after,
+.publication-homepage .publication-hero-card--title-below::after,
+.publication-homepage .publication-post-card--title-hidden::after,
+.publication-homepage .publication-post-card--title-below::after {
+  display: none !important;
+}
+
+.publication-homepage .publication-hero-card--title-below,
+.publication-homepage .publication-post-card--title-below {
+  display: grid !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.publication-homepage .publication-hero-card--title-below .publication-hero-card__image-wrap {
+  min-height: clamp(340px, 50vw, 620px) !important;
+}
+
+.publication-homepage .publication-post-card--title-below .publication-post-card__link {
+  min-height: 240px !important;
+}
+
+.publication-homepage .publication-hero-card__title-below,
+.publication-homepage .publication-post-card__title-below {
+  position: relative;
+  z-index: 3;
+  padding: clamp(14px, 2vw, 24px);
+  background: var(--sabot-panel, #15110f);
+  color: var(--sabot-ink, #f1e7d5);
+}
+
+.publication-homepage .publication-hero-card__title-below h1,
+.publication-homepage .publication-post-card__title-below h2 {
+  margin: 0.45rem 0 0;
+  line-height: 1.08;
+}
+
+.publication-homepage .publication-hero-card__title-below a,
+.publication-homepage .publication-post-card__title-below a {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* Article and zine body copy: make it visibly smaller. */
 .piece-page .piece-body__content,
 .piece-page .piece-body__content *,
