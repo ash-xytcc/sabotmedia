@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom'
-import mastheadLogo from '../assets/sabot-masthead-logo.png'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
 import { EditableLink } from './EditableLink'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
@@ -26,10 +25,11 @@ export function PublicationTopbar() {
             aria-label={`${siteTitle} home`}
             title={siteTitle}
           >
-            <span
-              className="publication-topbar__brand-mark"
+            <img
+              className="publication-topbar__brand-image publication-topbar__brand-image--isolated"
+              src="/sabot-logo.png"
+              alt=""
               aria-hidden="true"
-              style={{ backgroundImage: `url(${mastheadLogo})` }}
             />
           </Link>
 
