@@ -12,7 +12,7 @@ const TABLES = [
   'analytics_events',
   'collections',
   'publications',
-  'public_site_config',
+  'public_site_configs',
 ]
 
 export async function onRequestGet(context) {
