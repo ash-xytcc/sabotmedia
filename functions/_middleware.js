@@ -1,10 +1,11 @@
 import { resolvePublicSitePermission } from './api/_lib/publicSiteAuth.js'
 import { getNativeEntry } from './api/_lib/nativePublicContent.js'
 
-const ADMIN_PREFIXES = [
+export const ADMIN_PREFIXES = [
   '/admin',
   '/wp-admin',
   '/printlab',
+  '/audiolab',
   '/content',
   '/posts',
   '/add-new',
@@ -29,11 +30,23 @@ const ADMIN_PREFIXES = [
   '/review',
   '/qa',
   '/overrides',
+  '/system-backup',
+  '/audit-log',
+  '/analytics',
+  '/site-health',
+  '/taxonomy',
+  '/roles',
+  '/design-system',
+  '/platform-map',
 ]
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 const PAGE_METHODS = new Set(['GET', 'HEAD'])
 const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/analytics/collect'])
+
+export function isAdminRoutePath(pathname = '') {
+  return ADMIN_PREFIXES.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+}
 
 export async function onRequest(context) {
   const url = new URL(context.request.url)
@@ -45,7 +58,7 @@ export async function onRequest(context) {
 
   const pathname = url.pathname
   const method = String(context.request.method || 'GET').toUpperCase()
-  const isAdminRoute = ADMIN_PREFIXES.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+  const isAdminRoute = isAdminRoutePath(pathname)
   const isApiWrite = pathname.startsWith('/api/') && WRITE_METHODS.has(method)
 
   if (PUBLIC_AUTH_API_PATHS.has(pathname)) {

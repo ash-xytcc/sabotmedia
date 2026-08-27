@@ -10,6 +10,7 @@ import {
 } from './_lib/nativePublicContent.js'
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
+import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
 export async function onRequestOptions(context) {
   const permission = await resolvePublicSitePermission(context)
@@ -19,7 +20,7 @@ export async function onRequestOptions(context) {
     canEdit: permission.canEdit,
     authMode: permission.mode,
     authReason: permission.reason,
-    mode: hasDb(context) ? 'd1' : 'scaffold',
+    mode: getBoundDb(context) ? 'd1' : 'unavailable',
   })
 }
 
@@ -33,20 +34,15 @@ export async function onRequestGet(context) {
     const target = url.searchParams.get('target') || ''
     const workflowState = url.searchParams.get('workflowState') || ''
     const includeFuture = permission.canEdit && url.searchParams.get('includeFuture') === '1'
+    const db = getBoundDb(context)
 
-    if (!hasDb(context)) {
-      return json({
-        ok: true,
-        mode: 'scaffold',
-        items: [],
-      })
-    }
+    if (!db) return databaseUnavailable('native content reads')
 
-    await ensureNativePublicContentTable(context.env.BF_DB)
-    await ensureNativeRevisionTable(context.env.BF_DB)
+    await ensureNativePublicContentTable(db)
+    await ensureNativeRevisionTable(db)
 
     if (id || slug) {
-      const item = await getNativeEntry(context.env.BF_DB, id || slug, { includeFuture })
+      const item = await getNativeEntry(db, id || slug, { includeFuture })
       return json({
         ok: true,
         mode: 'd1',
@@ -54,7 +50,7 @@ export async function onRequestGet(context) {
       })
     }
 
-    const items = await listNativeEntries(context.env.BF_DB, {
+    const items = await listNativeEntries(db, {
       status: status || undefined,
       target: target || undefined,
       workflowState: workflowState || undefined,
@@ -104,21 +100,16 @@ export async function onRequestDelete(context) {
       }, 400)
     }
 
-    if (!hasDb(context)) {
-      return json({
-        ok: true,
-        mode: 'scaffold',
-        deleted: id,
-      })
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('native content deletion')
 
-    const existing = await getExistingNativeEntry(context.env.BF_DB, id)
+    const existing = await getExistingNativeEntry(db, id)
     if (existing) {
-      await saveRevisionSnapshot(context.env.BF_DB, existing, 'delete:before')
+      await saveRevisionSnapshot(db, existing, 'delete:before')
     }
 
-    const result = await deleteNativeEntry(context.env.BF_DB, id)
-    await writeAuditLog(context.env.BF_DB, {
+    const result = await deleteNativeEntry(db, id)
+    await writeAuditLog(db, {
       action: 'native_content.delete',
       entityType: 'native_content',
       entityId: id,
@@ -154,29 +145,24 @@ async function handleWrite(context) {
     const body = await context.request.json()
     const item = { ...(body?.item || body || {}) }
     const revisionNote = String(body?.revisionNote || item?.revisionNote || 'save')
+    const db = getBoundDb(context)
 
-    if (!hasDb(context)) {
-      return json({
-        ok: true,
-        mode: 'scaffold',
-        item,
-      })
-    }
+    if (!db) return databaseUnavailable('native content writes')
 
-    await ensureNativePublicContentTable(context.env.BF_DB)
-    await ensureNativeRevisionTable(context.env.BF_DB)
+    await ensureNativePublicContentTable(db)
+    await ensureNativeRevisionTable(db)
 
-    const existing = item?.id ? await getExistingNativeEntry(context.env.BF_DB, item.id) : null
+    const existing = item?.id ? await getExistingNativeEntry(db, item.id) : null
     if (existing && !String(item.slug || '').trim()) {
       item.slug = existing.slug
     }
     if (existing) {
-      await saveRevisionSnapshot(context.env.BF_DB, existing, `before:${revisionNote}`)
+      await saveRevisionSnapshot(db, existing, `before:${revisionNote}`)
     }
 
-    const saved = await upsertNativeEntry(context.env.BF_DB, item)
-    await saveRevisionSnapshot(context.env.BF_DB, saved, revisionNote)
-    await writeAuditLog(context.env.BF_DB, {
+    const saved = await upsertNativeEntry(db, item)
+    await saveRevisionSnapshot(db, saved, revisionNote)
+    await writeAuditLog(db, {
       action: 'native_content.upsert',
       entityType: 'native_content',
       entityId: saved.id,
@@ -201,10 +187,6 @@ async function handleWrite(context) {
       error: String(error?.message || error),
     }, 400)
   }
-}
-
-function hasDb(context) {
-  return Boolean(context?.env?.BF_DB)
 }
 
 function json(data, status = 200) {

@@ -1,6 +1,7 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { ensureEditorRolesTable, listEditorRoles, upsertEditorRole, deleteEditorRole } from './_lib/editorRoles.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
+import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
 export async function onRequestOptions(context) {
   const permission = await resolvePublicSitePermission(context)
@@ -10,7 +11,7 @@ export async function onRequestOptions(context) {
     canEdit: permission.canEdit,
     authMode: permission.mode,
     authReason: permission.reason,
-    mode: hasDb(context) ? 'd1' : 'scaffold',
+    mode: getBoundDb(context) ? 'd1' : 'unavailable',
   })
 }
 
@@ -21,12 +22,11 @@ export async function onRequestGet(context) {
       return json({ ok: false, error: permission.reason, canEdit: false }, 403)
     }
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', items: [] })
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('editor role reads')
 
-    await ensureEditorRolesTable(context.env.BF_DB)
-    const items = await listEditorRoles(context.env.BF_DB)
+    await ensureEditorRolesTable(db)
+    const items = await listEditorRoles(db)
     return json({ ok: true, mode: 'd1', items })
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
@@ -42,14 +42,13 @@ export async function onRequestPost(context) {
 
     const body = await context.request.json()
     const record = body?.record || body || {}
+    const db = getBoundDb(context)
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', record })
-    }
+    if (!db) return databaseUnavailable('editor role writes')
 
-    const saved = await upsertEditorRole(context.env.BF_DB, record)
+    const saved = await upsertEditorRole(db, record)
 
-    await writeAuditLog(context.env.BF_DB, {
+    await writeAuditLog(db, {
       action: 'editor_role.upsert',
       entityType: 'editor_role',
       entityId: saved.id,
@@ -77,13 +76,12 @@ export async function onRequestDelete(context) {
       return json({ ok: false, error: 'missing id' }, 400)
     }
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', deleted: id })
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('editor role deletion')
 
-    const result = await deleteEditorRole(context.env.BF_DB, id)
+    const result = await deleteEditorRole(db, id)
 
-    await writeAuditLog(context.env.BF_DB, {
+    await writeAuditLog(db, {
       action: 'editor_role.delete',
       entityType: 'editor_role',
       entityId: id,
@@ -95,10 +93,6 @@ export async function onRequestDelete(context) {
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
   }
-}
-
-function hasDb(context) {
-  return Boolean(context?.env?.BF_DB)
 }
 
 function json(data, status = 200) {

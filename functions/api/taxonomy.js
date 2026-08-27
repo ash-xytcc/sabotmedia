@@ -6,6 +6,7 @@ import {
   deleteTaxonomyTerm,
 } from './_lib/taxonomy.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
+import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
 export async function onRequestOptions(context) {
   const permission = await resolvePublicSitePermission(context)
@@ -15,7 +16,7 @@ export async function onRequestOptions(context) {
     canEdit: permission.canEdit,
     authMode: permission.mode,
     authReason: permission.reason,
-    mode: hasDb(context) ? 'd1' : 'scaffold',
+    mode: getBoundDb(context) ? 'd1' : 'unavailable',
   })
 }
 
@@ -23,13 +24,12 @@ export async function onRequestGet(context) {
   try {
     const url = new URL(context.request.url)
     const taxonomy = url.searchParams.get('taxonomy') || ''
+    const db = getBoundDb(context)
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', items: [] })
-    }
+    if (!db) return databaseUnavailable('taxonomy reads')
 
-    await ensureTaxonomyTables(context.env.BF_DB)
-    const items = await listTaxonomyTerms(context.env.BF_DB, { taxonomy: taxonomy || undefined })
+    await ensureTaxonomyTables(db)
+    const items = await listTaxonomyTerms(db, { taxonomy: taxonomy || undefined })
 
     return json({ ok: true, mode: 'd1', items })
   } catch (error) {
@@ -47,13 +47,12 @@ export async function onRequestPost(context) {
 
     const body = await context.request.json()
     const term = body?.term || body || {}
+    const db = getBoundDb(context)
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', term })
-    }
+    if (!db) return databaseUnavailable('taxonomy writes')
 
-    const saved = await upsertTaxonomyTerm(context.env.BF_DB, term)
-    await writeAuditLog(context.env.BF_DB, {
+    const saved = await upsertTaxonomyTerm(db, term)
+    await writeAuditLog(db, {
       action: 'taxonomy.upsert',
       entityType: 'taxonomy_term',
       entityId: saved.id,
@@ -81,12 +80,11 @@ export async function onRequestDelete(context) {
       return json({ ok: false, error: 'missing id' }, 400)
     }
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', deleted: id })
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('taxonomy deletion')
 
-    const result = await deleteTaxonomyTerm(context.env.BF_DB, id)
-    await writeAuditLog(context.env.BF_DB, {
+    const result = await deleteTaxonomyTerm(db, id)
+    await writeAuditLog(db, {
       action: 'taxonomy.delete',
       entityType: 'taxonomy_term',
       entityId: id,
@@ -97,10 +95,6 @@ export async function onRequestDelete(context) {
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
   }
-}
-
-function hasDb(context) {
-  return Boolean(context?.env?.BF_DB)
 }
 
 function json(data, status = 200) {
