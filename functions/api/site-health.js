@@ -1,6 +1,7 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
+const CANONICAL_MEDIA_BINDING = 'SABOT_MEDIA_BUCKET'
 const TABLES = [
   'native_public_content',
   'native_public_content_revisions',
@@ -13,6 +14,8 @@ const TABLES = [
   'collections',
   'publications',
   'public_site_configs',
+  'sites',
+  'site_settings',
 ]
 
 export async function onRequestGet(context) {
@@ -46,6 +49,7 @@ export async function onRequestGet(context) {
     const mediaBinding = detectMediaBinding(context.env)
     const missingTables = tables.filter((table) => !table.exists).map((table) => table.name)
     const tableErrors = tables.filter((table) => table.error)
+    const mediaBindingCanonical = mediaBinding === CANONICAL_MEDIA_BINDING
 
     return json({
       ok: true,
@@ -64,12 +68,16 @@ export async function onRequestGet(context) {
         ASSETS: Boolean(context.env?.ASSETS?.fetch),
         mediaStorage: Boolean(mediaBinding),
         mediaBinding: mediaBinding || '',
+        mediaBindingRequired: CANONICAL_MEDIA_BINDING,
+        mediaBindingCanonical,
       },
       tables,
       summary: {
-        healthy: missingTables.length === 0 && tableErrors.length === 0,
+        healthy: missingTables.length === 0 && tableErrors.length === 0 && Boolean(mediaBinding),
         missingTables,
         tableErrorCount: tableErrors.length,
+        mediaStorageMissing: !mediaBinding,
+        mediaBindingLegacyAlias: Boolean(mediaBinding && !mediaBindingCanonical),
       },
     })
   } catch (error) {
@@ -78,7 +86,7 @@ export async function onRequestGet(context) {
 }
 
 function detectMediaBinding(env = {}) {
-  for (const name of ['SABOT_MEDIA_BUCKET', 'MEDIA_BUCKET', 'ASSETS_BUCKET', 'SABOT_AUDIO_BUCKET', 'AUDIO_MEDIA_BUCKET']) {
+  for (const name of [CANONICAL_MEDIA_BINDING, 'MEDIA_BUCKET', 'ASSETS_BUCKET', 'SABOT_AUDIO_BUCKET', 'AUDIO_MEDIA_BUCKET']) {
     if (env?.[name]) return name
   }
   return ''
