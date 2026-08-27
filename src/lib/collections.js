@@ -33,6 +33,13 @@ function normalizeRows(value, fields = []) {
     .filter((row) => fields.some((field) => row[field].trim()))
 }
 
+function createPersistenceError(action, response, payload) {
+  const detail = String(payload?.error || payload?.message || '').trim()
+  const status = Number(response?.status || 0)
+  const suffix = detail || (status ? `HTTP ${status}` : 'No confirmed server response')
+  return new Error(`Collection ${action} failed: ${suffix}`)
+}
+
 export function createEmptyCollection() {
   const now = new Date().toISOString()
   return {
@@ -93,6 +100,8 @@ export function normalizeCollection(input = {}) {
   }
 }
 
+// Legacy browser data is retained only so migration/export tooling can surface it.
+// Production reads and writes below never silently fall back to this store.
 export function loadCollections() {
   if (typeof window === 'undefined') return []
   try {
@@ -108,25 +117,30 @@ export function loadCollections() {
 
 export async function loadCollectionsAsync(params = {}) {
   if (typeof window === 'undefined') return []
+  const url = new URL('/api/collections', window.location.origin)
+  for (const [key, value] of Object.entries(params)) {
+    if (value != null && value !== '') url.searchParams.set(key, String(value))
+  }
+
+  let res
   try {
-    const url = new URL('/api/collections', window.location.origin)
-    for (const [key, value] of Object.entries(params)) {
-      if (value != null && value !== '') url.searchParams.set(key, String(value))
-    }
-    const res = await fetch(url.pathname + url.search, {
+    res = await fetch(url.pathname + url.search, {
       credentials: 'same-origin',
       headers: { accept: 'application/json' },
     })
-    const data = await res.json().catch(() => null)
-    if (res.ok && data?.ok && Array.isArray(data.items) && data.mode !== 'scaffold') {
-      return saveCollections(data.items)
-    }
-  } catch {
-    // Local fallback keeps the admin usable in static/dev environments.
+  } catch (error) {
+    throw new Error(`Collection load failed: ${error?.message || 'Network request failed'}`)
   }
-  return loadCollections()
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok || !data?.ok || !Array.isArray(data.items) || data.mode === 'scaffold') {
+    throw createPersistenceError('load', res, data)
+  }
+  return data.items.map(normalizeCollection).sort(sortCollections)
 }
 
+// Synchronous local mutation helpers are intentionally legacy-only. They remain
+// available for explicit migration tooling, not as production persistence.
 export function saveCollections(collections = []) {
   const normalized = (Array.isArray(collections) ? collections : []).map(normalizeCollection).sort(sortCollections)
   if (typeof window !== 'undefined') {
@@ -150,25 +164,30 @@ export async function upsertCollectionAsync(collections = [], collection = {}) {
     ...collection,
     updatedAt: new Date().toISOString(),
   })
-  if (typeof window !== 'undefined') {
-    try {
-      const res = await fetch('/api/collections', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ item: normalized }),
-      })
-      const data = await res.json().catch(() => null)
-      if (res.ok && data?.ok && data.item) {
-        const next = upsertCollection(collections, data.item)
-        return { items: next, item: normalizeCollection(data.item), mode: data.mode || 'api' }
-      }
-    } catch {
-      // Fall through to local persistence.
-    }
+  if (typeof window === 'undefined') throw new Error('Collection save failed: browser session unavailable')
+
+  let res
+  try {
+    res = await fetch('/api/collections', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ item: normalized }),
+    })
+  } catch (error) {
+    throw new Error(`Collection save failed: ${error?.message || 'Network request failed'}`)
   }
-  const next = upsertCollection(collections, normalized)
-  return { items: next, item: normalized, mode: 'local' }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok || !data?.ok || !data.item || data.mode === 'scaffold') {
+    throw createPersistenceError('save', res, data)
+  }
+
+  const saved = normalizeCollection(data.item)
+  const next = (Array.isArray(collections) ? collections : []).some((item) => item.id === saved.id)
+    ? collections.map((item) => (item.id === saved.id ? saved : normalizeCollection(item))).sort(sortCollections)
+    : [saved, ...(Array.isArray(collections) ? collections.map(normalizeCollection) : [])].sort(sortCollections)
+  return { items: next, item: saved, mode: data.mode || 'api' }
 }
 
 export function deleteCollection(collections = [], collectionId = '') {
@@ -176,21 +195,27 @@ export function deleteCollection(collections = [], collectionId = '') {
 }
 
 export async function deleteCollectionAsync(collections = [], collectionId = '') {
-  if (typeof window !== 'undefined' && collectionId) {
-    try {
-      const url = new URL('/api/collections', window.location.origin)
-      url.searchParams.set('id', collectionId)
-      const res = await fetch(url.pathname + url.search, {
-        method: 'DELETE',
-        credentials: 'same-origin',
-        headers: { accept: 'application/json' },
-      })
-      if (res.ok) return deleteCollection(collections, collectionId)
-    } catch {
-      // Fall through to local persistence.
-    }
+  if (typeof window === 'undefined' || !collectionId) throw new Error('Collection delete failed: missing collection id')
+  const url = new URL('/api/collections', window.location.origin)
+  url.searchParams.set('id', collectionId)
+
+  let res
+  try {
+    res = await fetch(url.pathname + url.search, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: { accept: 'application/json' },
+    })
+  } catch (error) {
+    throw new Error(`Collection delete failed: ${error?.message || 'Network request failed'}`)
   }
-  return deleteCollection(collections, collectionId)
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok || (data && data.ok === false)) throw createPersistenceError('delete', res, data)
+  return (Array.isArray(collections) ? collections : [])
+    .filter((item) => item.id !== collectionId)
+    .map(normalizeCollection)
+    .sort(sortCollections)
 }
 
 export function findCollection(collections = [], slugOrId = '') {
