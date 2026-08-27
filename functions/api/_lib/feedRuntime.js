@@ -11,7 +11,9 @@ export async function buildLiveFeedBundle(db) {
   await ensureFeedSettingsTable(db)
 
   const [entries, row] = await Promise.all([
-    listNativeEntries(db, { status: 'published' }),
+    // No status filter here: listNativeEntries applies the native public-visibility
+    // contract, including scheduled entries whose release time has arrived.
+    listNativeEntries(db, {}),
     db.prepare('SELECT value_json, updated_at FROM site_settings WHERE setting_key = ? LIMIT 1').bind(SETTING_KEY).first(),
   ])
 
