@@ -1,44 +1,34 @@
-import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
-import { DEFAULT_SETTINGS, loadWpSettings, saveWpSettings } from '../lib/wpAdminLocal'
+import { AdminPublicConfigCard } from './AdminPublicConfigCard'
 import { getPieces } from '../lib/pieces'
 import { adminRoutes } from '../routing/routes'
-
-const USER_ROLE_SETTINGS_KEY = 'sabot-wp-clone-user-role-settings-v1'
-
-function loadJson(key, fallback) {
-  try {
-    const raw = window.localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch {
-    return fallback
-  }
-}
-
-function saveJson(key, value) {
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // local  only
-  }
-}
 
 export function PagesAdminPage() {
   const samplePost = getPieces().find((piece) => piece?.slug)
   const samplePostPath = samplePost?.slug ? `/post/${samplePost.slug}` : '/archive'
   const pages = [
-    { title: 'Home', slug: 'home', path: '/', type: 'Public page', customizeSection: 'homepage' },
-    { title: 'Archive', slug: 'archive', path: '/archive', type: 'Public index', customizeSection: 'navigation' },
-    { title: 'Post template', slug: 'post-template', path: samplePostPath, type: 'Template', customizeSection: 'colors' },
-    { title: 'Printlab', slug: 'printlab', path: adminRoutes.printlab, type: 'Admin tool', customizeSection: 'masthead' },
+    { title: 'Home', slug: 'home', path: '/', type: 'Public route', editPath: adminRoutes.liveEditor },
+    { title: 'Archive', slug: 'archive', path: '/archive', type: 'Public route', editPath: adminRoutes.customize },
+    { title: 'Collections', slug: 'collections', path: '/collections', type: 'Public index', editPath: adminRoutes.collections },
+    { title: 'Publications', slug: 'publications', path: '/publications', type: 'Public index', editPath: adminRoutes.publications },
+    { title: 'Feeds', slug: 'feeds', path: '/feeds', type: 'Public index', editPath: adminRoutes.feeds },
+    { title: 'About', slug: 'about', path: '/about', type: 'Public route', editPath: adminRoutes.liveEditor },
+    { title: 'Contact', slug: 'contact', path: '/contact', type: 'Public route', editPath: adminRoutes.liveEditor },
+    { title: 'Submit', slug: 'submit', path: '/submit', type: 'Public route', editPath: adminRoutes.liveEditor },
+    { title: 'Support', slug: 'support', path: '/support', type: 'Public route', editPath: adminRoutes.liveEditor },
+    { title: 'Security', slug: 'security', path: '/security', type: 'Public route', editPath: adminRoutes.liveEditor },
+    { title: 'Post template', slug: 'post-template', path: samplePostPath, type: 'Template', editPath: adminRoutes.customize },
   ]
 
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
-          <h1>Pages</h1>
+          <div>
+            <h1>Pages</h1>
+            <p className="description">Route inventory for public surfaces. SabotPress does not currently store these as WordPress-style page records, so this screen deliberately provides navigation and the correct editor instead of pretending the rows are database objects.</p>
+          </div>
         </div>
 
         <section className="wp-meta-box">
@@ -58,13 +48,12 @@ export function PagesAdminPage() {
                     <strong className="content-table__title">{page.title}</strong>
                     <div className="wp-row-actions">
                       <Link to={page.path}>View</Link>
-                      <Link to={`${adminRoutes.liveEditor}?page=${page.slug}`}>Edit Live</Link>
-                      <Link to={`${adminRoutes.customize}?section=${page.customizeSection}`}>Customize</Link>
+                      <Link to={`${page.editPath}?page=${encodeURIComponent(page.slug)}`}>Edit</Link>
                     </div>
                   </td>
                   <td>{page.slug}</td>
                   <td>{page.type}</td>
-                  <td>{page.path}</td>
+                  <td><code>{page.path}</code></td>
                 </tr>
               ))}
             </tbody>
@@ -76,56 +65,28 @@ export function PagesAdminPage() {
 }
 
 export function SettingsAdminPage() {
-  const [settings, setSettings] = useState(() => loadWpSettings())
-  const [saved, setSaved] = useState('')
-
-  function update(field, value) {
-    setSettings((current) => ({ ...current, [field]: value }))
-  }
-
-  function saveSettings() {
-    const savedSettings = saveWpSettings({
-      ...settings,
-      postsPerPage: Math.max(1, Number(settings.postsPerPage) || DEFAULT_SETTINGS.postsPerPage),
-    })
-    setSettings(savedSettings)
-    setSaved('Settings saved.')
-  }
-
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
-          <h1>Settings</h1>
-          <button className="button button--primary" type="button" onClick={saveSettings}>Save Changes</button>
+          <div>
+            <h1>Settings</h1>
+            <p className="description">Production-backed site configuration. Saved changes use the authenticated public-site-config API and D1 rather than browser storage.</p>
+          </div>
         </div>
 
+        <AdminPublicConfigCard />
+
         <section className="wp-meta-box">
-          <h2>General</h2>
-          <div className="wp-settings-form">
-            <label>
-              <span>Site title</span>
-              <input value={settings.siteTitle || ''} onChange={(event) => update('siteTitle', event.target.value)} />
-            </label>
-            <label>
-              <span>Tagline</span>
-              <input value={settings.tagline || ''} onChange={(event) => update('tagline', event.target.value)} />
-            </label>
-            <label>
-              <span>Posts per page</span>
-              <input type="number" min="1" max="100" value={settings.postsPerPage || 10} onChange={(event) => update('postsPerPage', Number(event.target.value) || 10)} />
-            </label>
-            <label>
-              <span>Default post type</span>
-              <select value={settings.defaultPostType || 'dispatch'} onChange={(event) => update('defaultPostType', event.target.value)}>
-                <option value="dispatch">Dispatch</option>
-                <option value="article">Article</option>
-                <option value="podcast">Podcast</option>
-                <option value="print">Print</option>
-              </select>
-            </label>
+          <h2>Operational settings</h2>
+          <p className="description">Settings with their own data models live on the relevant operational screen instead of being duplicated here.</p>
+          <div className="review-card__actions">
+            <Link className="button" to={adminRoutes.feeds}>Feeds / RSS</Link>
+            <Link className="button" to={adminRoutes.podcasts}>Podcasts</Link>
+            <Link className="button" to={adminRoutes.siteHealth}>Site Health</Link>
+            <Link className="button" to={adminRoutes.backup}>Backups</Link>
+            <Link className="button" to={adminRoutes.sites}>Sites / Domains</Link>
           </div>
-          {saved ? <p className="description" role="status">{saved}</p> : null}
         </section>
       </main>
     </AdminFrame>
@@ -133,150 +94,34 @@ export function SettingsAdminPage() {
 }
 
 export function UsersAdminPage() {
-  const [settings, setSettings] = useState(() => loadJson(USER_ROLE_SETTINGS_KEY, {
-    users: [{
-      id: 'local-admin',
-      username: 'sabotmedia',
-      email: 'local@sabotmedia',
-      displayName: 'sabotmedia',
-      role: 'Administrator',
-    }],
-    roles: ['Administrator', 'Editor', 'Author', 'Contributor', 'Subscriber'],
-  }))
-  const [isAddingUser, setIsAddingUser] = useState(false)
-  const [newUser, setNewUser] = useState({
-    username: '',
-    email: '',
-    displayName: '',
-    role: 'Subscriber',
-  })
-
-  const normalizedUsers = useMemo(() => settings.users.map((user) => ({
-    ...user,
-    username: user.username || user.name || '',
-    displayName: user.displayName || user.name || user.username || '',
-  })), [settings.users])
-
-  useEffect(() => {
-    saveJson(USER_ROLE_SETTINGS_KEY, settings)
-  }, [settings])
-
-  function updateRole(id, role) {
-    setSettings((current) => ({
-      ...current,
-      users: current.users.map((user) => user.id === id ? { ...user, role } : user),
-    }))
-  }
-
-  function saveUsers() {
-    saveJson(USER_ROLE_SETTINGS_KEY, settings)
-  }
-
-  function updateNewUser(field, value) {
-    setNewUser((current) => ({ ...current, [field]: value }))
-  }
-
-  function addUser(event) {
-    event.preventDefault()
-    const username = newUser.username.trim()
-    const email = newUser.email.trim()
-    const displayName = newUser.displayName.trim()
-
-    if (!username || !email || !displayName) return
-
-    setSettings((current) => ({
-      ...current,
-      users: [...current.users, {
-        id: `local-${Date.now()}`,
-        username,
-        email,
-        displayName,
-        role: newUser.role,
-      }],
-    }))
-    setNewUser({ username: '', email: '', displayName: '', role: 'Subscriber' })
-    setIsAddingUser(false)
-  }
-
-  function deleteUser(id) {
-    setSettings((current) => ({
-      ...current,
-      users: current.users.filter((user) => user.id !== id),
-    }))
-  }
-
-  const hasRequiredNewUserFields = newUser.username.trim() && newUser.email.trim() && newUser.displayName.trim()
-
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
-          <h1>Users</h1>
           <div>
-            <button className="button" type="button" onClick={() => setIsAddingUser((current) => !current)}>Add New</button>{' '}
-            <button className="button button--primary" type="button" onClick={saveUsers}>Save Users</button>
+            <h1>Users</h1>
+            <p className="description">Authentication status and collaboration model.</p>
           </div>
         </div>
 
-        {isAddingUser && (
-          <section className="wp-meta-box">
-            <h2>Add New User</h2>
-            <form className="wp-settings-form" onSubmit={addUser}>
-              <label><span>Username</span><input value={newUser.username} onChange={(e) => updateNewUser('username', e.target.value)} /></label>
-              <label><span>Email</span><input type="email" value={newUser.email} onChange={(e) => updateNewUser('email', e.target.value)} /></label>
-              <label><span>Display name</span><input value={newUser.displayName} onChange={(e) => updateNewUser('displayName', e.target.value)} /></label>
-              <label>
-                <span>Role</span>
-                <select value={newUser.role} onChange={(e) => updateNewUser('role', e.target.value)}>
-                  {settings.roles.map((role) => <option key={role} value={role}>{role}</option>)}
-                </select>
-              </label>
-              <p>
-                <button className="button button--primary" type="submit" disabled={!hasRequiredNewUserFields}>Create User</button>{' '}
-                <button className="button" type="button" onClick={() => setIsAddingUser(false)}>Cancel</button>
-              </p>
-            </form>
-          </section>
-        )}
-
         <section className="wp-meta-box">
-          <h2>Users</h2>
-          <table className="content-table wp-posts-table">
-            <thead><tr><th>Username</th><th>Email</th><th>Display name</th><th>Role</th><th>Actions</th></tr></thead>
-            <tbody>
-              {normalizedUsers.map((user) => {
-                const isProtectedUser = user.id === 'local-admin' || (user.username === 'sabotmedia' && user.role === 'Administrator')
-                return (
-                <tr key={user.id}>
-                  <td>{user.username}</td>
-                  <td>{user.email}</td>
-                  <td>{user.displayName}</td>
-                  <td>
-                    <select value={user.role} onChange={(e) => updateRole(user.id, e.target.value)}>
-                      {settings.roles.map((role) => <option key={role} value={role}>{role}</option>)}
-                    </select>
-                  </td>
-                  <td>
-                    {!isProtectedUser && (
-                      <button className="button button-link-delete" type="button" onClick={() => deleteUser(user.id)}>Delete</button>
-                    )}
-                  </td>
-                </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <h2>Current production model</h2>
+          <p>SabotPress currently authenticates the administrative session through the server login/session flow. There is not yet a production user-account table with enforceable per-user roles.</p>
+          <p className="notice notice-warning" role="status">The previous controls on this screen created browser-only users that could not actually log in and whose roles were not enforced. Those fake account controls have been removed.</p>
         </section>
 
         <section className="wp-meta-box">
-          <h2>Role reference</h2>
-          <ul>
-            <li><strong>Administrator:</strong> full local clone control</li>
-            <li><strong>Editor:</strong> publish and manage posts</li>
-            <li><strong>Author:</strong> write and publish own posts</li>
-            <li><strong>Contributor:</strong> write drafts</li>
-            <li><strong>Subscriber:</strong> read-only account</li>
-          </ul>
+          <h2>Roles and permissions</h2>
+          <p className="description">Editor-role records exist separately, but they are not an authorization boundary until the authenticated session is linked to a persisted user identity and permission checks are enforced in Functions.</p>
+          <p><strong>Production blocker:</strong> add a D1 user identity/membership schema, invitation or provisioning flow, and server-side RBAC enforcement before exposing user creation or role-changing controls here.</p>
+        </section>
+
+        <section className="wp-meta-box">
+          <h2>Security</h2>
+          <div className="review-card__actions">
+            <Link className="button button--primary" to={adminRoutes.siteHealth}>Check Site Health</Link>
+            <Link className="button" to={adminRoutes.auditLog}>View Audit Log</Link>
+          </div>
         </section>
       </main>
     </AdminFrame>
