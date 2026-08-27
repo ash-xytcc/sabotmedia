@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchEditorRoles, saveEditorRole, removeEditorRole } from '../lib/editorRolesApi'
+import { AdminFrame } from './AdminRail'
 
 function emptyRole() {
   return {
@@ -10,12 +11,18 @@ function emptyRole() {
   }
 }
 
+function roleLabel(value) {
+  return String(value || 'viewer').replace(/^./, (char) => char.toUpperCase())
+}
+
 export function EditorRolesPage() {
   const [items, setItems] = useState([])
   const [form, setForm] = useState(emptyRole())
   const [state, setState] = useState('loading')
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState('')
 
   async function reload() {
     try {
@@ -44,97 +51,166 @@ export function EditorRolesPage() {
   }, [items, query])
 
   async function handleSave() {
+    if (!String(form.principal || '').trim()) {
+      setError('A principal is required before a role record can be saved.')
+      return
+    }
     try {
+      setSaving(true)
       setError('')
       await saveEditorRole(form)
       setForm(emptyRole())
       await reload()
     } catch (err) {
       setError(String(err?.message || err))
+    } finally {
+      setSaving(false)
     }
   }
 
   async function handleDelete(id) {
     try {
+      setDeletingId(id)
       setError('')
       await removeEditorRole(id)
+      if (form.id === id) setForm(emptyRole())
       await reload()
     } catch (err) {
       setError(String(err?.message || err))
+    } finally {
+      setDeletingId('')
     }
   }
 
   return (
-    <main className="page editor-roles-page">
-      <section className="project-hero">
-        <div className="project-hero__eyebrow">roles / collaboration / access</div>
-        <h1>Editor Roles</h1>
-        <p className="project-hero__description">
-          Manage the first pragmatic collaboration layer for Sabot. It is not a full permission universe yet, but it stops “who can do what” from living entirely inside your skull.
-        </p>
-        <div className="project-hero__meta">
-          <span>{visible.length} visible roles</span>
-          <span>status: {state}</span>
-        </div>
-        {error ? <p className="review-card__excerpt">{error}</p> : null}
-      </section>
-
-      <section className="archive-controls">
-        <label className="archive-control">
-          <span>search</span>
-          <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </label>
-      </section>
-
-      <section className="review-summary-card">
-        <div className="review-summary-card__eyebrow">edit role</div>
-
-        <div className="native-content-editor__grid">
-          <label className="archive-control">
-            <span>principal</span>
-            <input type="text" value={form.principal} onChange={(e) => setForm((p) => ({ ...p, principal: e.target.value }))} />
-          </label>
-
-          <label className="archive-control">
-            <span>role</span>
-            <select value={form.role} onChange={(e) => setForm((p) => ({ ...p, role: e.target.value }))}>
-              <option value="admin">admin</option>
-              <option value="editor">editor</option>
-              <option value="contributor">contributor</option>
-              <option value="reviewer">reviewer</option>
-              <option value="viewer">viewer</option>
-            </select>
-          </label>
+    <AdminFrame>
+      <main className="page wp-admin-screen editor-roles-page">
+        <div className="wp-screen-header">
+          <div>
+            <h1>Editor Roles</h1>
+            <p className="description">Maintain the D1-backed collaboration-role registry without pretending it is a complete account or authorization system.</p>
+          </div>
+          <button className="button" type="button" onClick={reload} disabled={state === 'loading'}>
+            {state === 'loading' ? 'Refreshing…' : 'Refresh'}
+          </button>
         </div>
 
-        <label className="archive-control">
-          <span>notes</span>
-          <textarea className="native-content-editor__textarea native-content-editor__textarea--sm" value={form.notes} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))} />
-        </label>
-
-        <div className="review-card__actions">
-          <button className="button button--primary" type="button" onClick={handleSave}>save role</button>
-          <button className="button" type="button" onClick={() => setForm(emptyRole())}>clear</button>
-          <button className="button" type="button" onClick={reload}>reload</button>
+        <div className="notice notice-warning" role="status">
+          <p><strong>Role records are advisory today.</strong> Authentication still uses the current server session model, and these records do not independently grant or revoke access. Server-enforced membership/RBAC remains a separate backend task.</p>
         </div>
-      </section>
 
-      <section className="review-queue">
-        {visible.map((item) => (
-          <article className="review-card" key={item.id}>
-            <div className="review-card__meta">
-              <span>{item.role}</span>
-              <span>{item.principal}</span>
+        {error ? (
+          <div className="notice notice-error" role="alert">
+            <p><strong>Role operation failed:</strong> {error}</p>
+          </div>
+        ) : null}
+
+        <section className="newsroom-grid">
+          <article className="wp-meta-box newsroom-panel">
+            <h2>{form.id ? 'Edit role record' : 'Add role record'}</h2>
+            <p className="description">These records persist through the authenticated Editor Roles API and D1.</p>
+
+            <div className="native-content-editor__grid">
+              <label className="native-content-editor__field">
+                <span>Principal</span>
+                <input
+                  type="text"
+                  value={form.principal}
+                  onChange={(event) => setForm((current) => ({ ...current, principal: event.target.value }))}
+                  placeholder="name, email, handle, or identity label"
+                />
+              </label>
+
+              <label className="native-content-editor__field">
+                <span>Role</span>
+                <select value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}>
+                  <option value="admin">Admin</option>
+                  <option value="editor">Editor</option>
+                  <option value="contributor">Contributor</option>
+                  <option value="reviewer">Reviewer</option>
+                  <option value="viewer">Viewer</option>
+                </select>
+              </label>
             </div>
-            <h2>{item.principal}</h2>
-            {item.notes ? <p className="review-card__excerpt">{item.notes}</p> : null}
+
+            <label className="native-content-editor__field native-content-editor__field--plain">
+              <span>Notes</span>
+              <textarea
+                rows="5"
+                value={form.notes}
+                onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
+                placeholder="Editorial responsibility, context, or intended permissions."
+              />
+            </label>
+
             <div className="review-card__actions">
-              <button className="button" type="button" onClick={() => setForm(item)}>edit</button>
-              <button className="button" type="button" onClick={() => handleDelete(item.id)}>delete</button>
+              <button className="button button--primary" type="button" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving…' : form.id ? 'Update role record' : 'Add role record'}
+              </button>
+              <button className="button" type="button" onClick={() => setForm(emptyRole())} disabled={saving}>Clear</button>
             </div>
           </article>
-        ))}
-      </section>
-    </main>
+
+          <article className="wp-meta-box newsroom-panel">
+            <div className="wp-screen-header wp-screen-header--compact">
+              <div>
+                <h2>Role registry</h2>
+                <p className="description">{visible.length} of {items.length} records shown</p>
+              </div>
+            </div>
+
+            <label className="native-content-editor__field">
+              <span>Search records</span>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search principal, role, or notes"
+              />
+            </label>
+
+            <div className="content-table-wrap">
+              <table className="content-table wp-posts-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Principal</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Notes</th>
+                    <th scope="col">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map((item) => (
+                    <tr key={item.id}>
+                      <td><strong>{item.principal || 'Unnamed principal'}</strong></td>
+                      <td>{roleLabel(item.role)}</td>
+                      <td>{item.notes || <span className="description">No notes</span>}</td>
+                      <td>
+                        <div className="review-card__actions">
+                          <button className="button" type="button" onClick={() => setForm(item)}>Edit</button>
+                          <button
+                            className="button button-link-delete"
+                            type="button"
+                            disabled={deletingId === item.id}
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            {deletingId === item.id ? 'Deleting…' : 'Delete'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {!visible.length ? (
+                    <tr>
+                      <td colSpan="4">{state === 'loading' ? 'Loading role records…' : 'No role records match this view.'}</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </AdminFrame>
   )
 }
