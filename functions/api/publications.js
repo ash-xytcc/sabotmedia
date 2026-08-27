@@ -1,11 +1,12 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
+import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
 export async function onRequestOptions(context) {
   const permission = await resolvePublicSitePermission(context)
   return json({
     ok: true,
     canEdit: permission.canEdit,
-    mode: hasDb(context) ? 'd1' : 'scaffold',
+    mode: getBoundDb(context) ? 'd1' : 'unavailable',
   })
 }
 
@@ -17,15 +18,14 @@ export async function onRequestGet(context) {
     const status = url.searchParams.get('status') || ''
     const permission = await resolvePublicSitePermission(context)
     const includeDrafts = permission.canEdit && url.searchParams.get('includeDrafts') === '1'
+    const db = getBoundDb(context)
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', items: [] })
-    }
+    if (!db) return databaseUnavailable('publication reads')
 
-    await ensureTables(context.env.BF_DB)
+    await ensureTables(db)
 
     if (id || slug) {
-      const item = await getPublication(context.env.BF_DB, id || slug)
+      const item = await getPublication(db, id || slug)
       if (item && !includeDrafts && !isPublicPublication(item)) {
         return json({ ok: true, mode: 'd1', item: null })
       }
@@ -42,7 +42,7 @@ export async function onRequestGet(context) {
     }
     query += ' ORDER BY updated_at DESC'
 
-    const result = await context.env.BF_DB.prepare(query).bind(...params).all()
+    const result = await db.prepare(query).bind(...params).all()
     return json({
       ok: true,
       mode: 'd1',
@@ -64,12 +64,11 @@ export async function onRequestDelete(context) {
     const id = url.searchParams.get('id') || url.searchParams.get('slug') || ''
     if (!id) return json({ ok: false, error: 'missing id or slug' }, 400)
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', deleted: id })
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('publication deletion')
 
-    await ensureTables(context.env.BF_DB)
-    await context.env.BF_DB.prepare('DELETE FROM publications WHERE id = ? OR slug = ?').bind(id, id).run()
+    await ensureTables(db)
+    await db.prepare('DELETE FROM publications WHERE id = ? OR slug = ?').bind(id, id).run()
     return json({ ok: true, mode: 'd1', deleted: id })
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
@@ -97,12 +96,11 @@ async function handleWrite(context) {
       return json({ ok: false, error: 'publication id, slug, and title are required' }, 400)
     }
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', item: publication })
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('publication writes')
 
-    await ensureTables(context.env.BF_DB)
-    await upsertPublication(context.env.BF_DB, publication)
+    await ensureTables(db)
+    await upsertPublication(db, publication)
 
     return json({ ok: true, mode: 'd1', item: publication })
   } catch (error) {
@@ -161,10 +159,6 @@ function safeParse(value) {
 
 function isPublicPublication(item = {}) {
   return item.status === 'published' || item.visibility === 'public' || item.visibility === 'unlisted'
-}
-
-function hasDb(context) {
-  return Boolean(context?.env?.BF_DB)
 }
 
 function json(data, status = 200) {
