@@ -49,6 +49,7 @@ import './adminClassicEditorPolish.js'
 import './adminNativePreviewFix.js'
 import './publicPreviewMediaLayout.js'
 import './publicArchiveCleanup.js'
+import './publicTypeRuntimeFix.js'
 import './audioLabDirectManipulation.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
