@@ -10,6 +10,11 @@ const BODY_COPY_SELECTORS = [
 ].join(',')
 
 const DESCRIPTION_SELECTORS = [
+  '.public-route-shell main p',
+  '.public-route-shell main li',
+  '.public-route-shell main blockquote',
+  '.public-route-shell main figcaption',
+  '.public-route-shell main dd',
   '.archive-card__excerpt',
   '.archive-card__excerpt p',
   '.project-hero__description',
@@ -50,7 +55,7 @@ function setBodyCopy() {
   })
 
   document.querySelectorAll(DESCRIPTION_SELECTORS).forEach((node) => {
-    important(node, 'font-size', mobile ? '11px' : '11.5px')
+    important(node, 'font-size', mobile ? '12px' : '12.5px')
     important(node, 'line-height', '1.4')
     important(node, 'letter-spacing', '0')
   })

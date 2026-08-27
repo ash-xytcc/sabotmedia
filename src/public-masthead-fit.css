@@ -59,7 +59,7 @@
   line-height: 0 !important;
 }
 
-.publication-topbar--masthead .publication-topbar__brand-mark {
+.publication-topbar--masthead .publication-topbar__brand-image--isolated {
   width: 100% !important;
   height: 100% !important;
   min-width: 1px !important;
@@ -67,16 +67,20 @@
   margin: 0 !important;
   padding: 0 !important;
   display: block !important;
-  position: static !important;
+  position: absolute !important;
+  inset: 0 !important;
   transform: none !important;
   opacity: 1 !important;
   visibility: visible !important;
-  background-color: transparent !important;
-  background-repeat: no-repeat !important;
-  background-position: center center !important;
-  background-size: contain !important;
+  object-fit: cover !important;
+  object-position: center center !important;
   filter: none !important;
-  mix-blend-mode: normal !important;
+  mix-blend-mode: screen !important;
+}
+
+.publication-topbar--masthead .publication-topbar__brand-link--isolated {
+  position: relative !important;
+  overflow: hidden !important;
 }
 
 .publication-topbar--home .publication-topbar__brand-link--isolated {
