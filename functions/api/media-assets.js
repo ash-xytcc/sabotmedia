@@ -5,6 +5,7 @@ import {
   upsertMediaAsset,
   deleteMediaAsset,
 } from './_lib/mediaAssets.js'
+import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
 export async function onRequestOptions(context) {
@@ -55,6 +56,19 @@ export async function onRequestPost(context) {
     if (!db) return databaseUnavailable('media asset writes')
 
     const saved = await upsertMediaAsset(db, asset)
+    await writeAuditLog(db, {
+      action: 'media.asset.upsert',
+      entityType: 'media_asset',
+      entityId: saved.id,
+      actor: inferActorFromRequest(context.request),
+      detail: {
+        title: saved.title,
+        url: saved.url,
+        mediaType: saved.mediaType,
+        filename: saved.filename,
+        source: saved.source,
+      },
+    })
 
     return json({
       ok: true,
@@ -84,7 +98,20 @@ export async function onRequestDelete(context) {
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('media asset deletion')
 
+    const items = await listMediaAssets(db)
+    const existing = items.find((item) => item.id === id) || null
     const result = await deleteMediaAsset(db, id)
+    await writeAuditLog(db, {
+      action: 'media.asset.delete',
+      entityType: 'media_asset',
+      entityId: id,
+      actor: inferActorFromRequest(context.request),
+      detail: existing ? {
+        title: existing.title,
+        url: existing.url,
+        storageKey: existing.storageKey,
+      } : { id },
+    })
 
     return json({
       ok: true,

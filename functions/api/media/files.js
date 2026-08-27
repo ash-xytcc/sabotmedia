@@ -1,6 +1,11 @@
 import { resolvePublicSitePermission } from '../_lib/publicSiteAuth.js'
+import { databaseUnavailable, getBoundDb } from '../_lib/database.js'
+import { upsertMediaAsset } from '../_lib/mediaAssets.js'
+import { writeAuditLog, inferActorFromRequest } from '../_lib/auditLog.js'
 
 const MAX_FILE_UPLOAD_BYTES = 1024 * 1024 * 250
+const CANONICAL_MEDIA_BINDING = 'SABOT_MEDIA_BUCKET'
+const MEDIA_BINDING_NAMES = [CANONICAL_MEDIA_BINDING, 'MEDIA_BUCKET', 'ASSETS_BUCKET', 'SABOT_AUDIO_BUCKET', 'AUDIO_MEDIA_BUCKET']
 const ALLOWED_FILE_TYPES = new Set([
   'application/pdf',
   'application/zip',
@@ -18,6 +23,16 @@ const ALLOWED_FILE_TYPES = new Set([
   'image/webp',
   'image/gif',
   'image/svg+xml',
+  'audio/mpeg',
+  'audio/mp4',
+  'audio/x-m4a',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/ogg',
+  'audio/flac',
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
 ])
 
 export async function onRequestOptions() {
@@ -38,10 +53,17 @@ export async function onRequestPost(context) {
       return json({ ok: false, error: permission.reason || 'valid session required', canEdit: false }, 403)
     }
 
-    const bucket = getMediaBucket(context)
-    if (!bucket) {
-      return json({ ok: false, error: 'Media storage binding missing. Configure SABOT_MEDIA_BUCKET, MEDIA_BUCKET, ASSETS_BUCKET, or SABOT_AUDIO_BUCKET as an R2 binding.' }, 503)
+    const storage = getMediaBucket(context)
+    if (!storage?.bucket) {
+      return json({
+        ok: false,
+        error: `Media storage binding missing. Configure the R2 binding ${CANONICAL_MEDIA_BINDING}.`,
+        requiredBinding: CANONICAL_MEDIA_BINDING,
+      }, 503)
     }
+
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('media upload registration')
 
     const form = await context.request.formData()
     const file = form.get('file') || form.get('media')
@@ -60,13 +82,13 @@ export async function onRequestPost(context) {
     const mediaId = createId('media')
     const filename = sanitizeFilename(form.get('filename') || file.name || `${mediaId}.${extensionForMime(mimeType)}`)
     const title = String(form.get('title') || filename.replace(/\.[^.]+$/, '') || filename).slice(0, 240)
-    const folder = sanitizeSegment(form.get('folder') || mediaTypeForMime(mimeType))
+    const mediaType = mediaTypeForMime(mimeType)
+    const folder = sanitizeSegment(form.get('folder') || mediaType)
     const storageKey = `media/uploads/${folder}/${mediaId}-${filename}`
     const bytes = await file.arrayBuffer()
     const createdAt = new Date().toISOString()
-    const mediaType = mediaTypeForMime(mimeType)
 
-    await bucket.put(storageKey, bytes, {
+    await storage.bucket.put(storageKey, bytes, {
       httpMetadata: {
         contentType: mimeType,
         cacheControl: 'public, max-age=31536000, immutable',
@@ -83,23 +105,48 @@ export async function onRequestPost(context) {
     })
 
     const publicUrl = makePublicMediaUrl(context.request.url, storageKey, filename)
-    return json({
-      ok: true,
-      media: {
+    let saved
+    try {
+      saved = await upsertMediaAsset(db, {
         id: mediaId,
-        mediaId,
-        filename,
         title,
+        url: publicUrl,
+        downloadUrl: publicUrl,
         mimeType,
         size,
         mediaType,
         extension: extensionForMime(mimeType, filename),
-        publicUrl,
-        url: publicUrl,
-        downloadUrl: publicUrl,
+        filename,
+        folder: folderLabel(mediaType),
         storageKey,
         source: 'server-upload',
         createdAt,
+      })
+      await writeAuditLog(db, {
+        action: 'media.upload',
+        entityType: 'media_asset',
+        entityId: saved.id,
+        actor: inferActorFromRequest(context.request),
+        detail: {
+          filename: saved.filename,
+          mediaType: saved.mediaType,
+          mimeType: saved.mimeType,
+          size: saved.size,
+          storageKey: saved.storageKey,
+          storageBinding: storage.name,
+        },
+      })
+    } catch (registrationError) {
+      try { await storage.bucket.delete(storageKey) } catch { /* best-effort orphan cleanup */ }
+      throw new Error(`Media registry write failed; uploaded object was rolled back. ${String(registrationError?.message || registrationError)}`)
+    }
+
+    return json({
+      ok: true,
+      media: {
+        ...saved,
+        publicUrl: saved.url,
+        storageBinding: storage.name,
       },
     })
   } catch (error) {
@@ -109,8 +156,8 @@ export async function onRequestPost(context) {
 
 export async function onRequestGet(context) {
   try {
-    const bucket = getMediaBucket(context)
-    if (!bucket) return text('Media storage binding missing', 503)
+    const storage = getMediaBucket(context)
+    if (!storage?.bucket) return text(`Media storage binding ${CANONICAL_MEDIA_BINDING} missing`, 503)
 
     const url = new URL(context.request.url)
     const storageKey = String(url.searchParams.get('key') || '').trim()
@@ -118,21 +165,23 @@ export async function onRequestGet(context) {
       return text('missing or invalid media key', 400)
     }
 
-    const head = await bucket.head(storageKey)
+    const head = await storage.bucket.head(storageKey)
     if (!head) return text('media not found', 404)
 
     const contentType = head.httpMetadata?.contentType || head.customMetadata?.contentType || guessContentType(storageKey)
     const size = Number(head.size || 0)
     const rangeHeader = context.request.headers.get('range') || ''
     const range = parseRange(rangeHeader, size)
-    const object = range ? await bucket.get(storageKey, { range: { offset: range.start, length: range.end - range.start + 1 } }) : await bucket.get(storageKey)
+    const object = range
+      ? await storage.bucket.get(storageKey, { range: { offset: range.start, length: range.end - range.start + 1 } })
+      : await storage.bucket.get(storageKey)
     if (!object?.body) return text('media not found', 404)
 
     const headers = new Headers()
     headers.set('content-type', contentType)
     headers.set('accept-ranges', 'bytes')
     headers.set('cache-control', 'public, max-age=31536000, immutable')
-    headers.set('content-disposition', `${contentType === 'application/pdf' || contentType.startsWith('image/') ? 'inline' : 'attachment'}; filename="${sanitizeFilename(url.searchParams.get('filename') || storageKey.split('/').pop() || 'download')}"`)
+    headers.set('content-disposition', `${shouldRenderInline(contentType) ? 'inline' : 'attachment'}; filename="${sanitizeFilename(url.searchParams.get('filename') || storageKey.split('/').pop() || 'download')}"`)
 
     if (range) {
       headers.set('content-range', `bytes ${range.start}-${range.end}/${size}`)
@@ -147,8 +196,16 @@ export async function onRequestGet(context) {
   }
 }
 
+export function detectMediaStorageBinding(env = {}) {
+  for (const name of MEDIA_BINDING_NAMES) {
+    if (env?.[name]) return name
+  }
+  return ''
+}
+
 function getMediaBucket(context) {
-  return context?.env?.SABOT_MEDIA_BUCKET || context?.env?.MEDIA_BUCKET || context?.env?.ASSETS_BUCKET || context?.env?.SABOT_AUDIO_BUCKET || context?.env?.AUDIO_MEDIA_BUCKET || null
+  const name = detectMediaStorageBinding(context?.env || {})
+  return name ? { name, bucket: context.env[name] } : null
 }
 
 function makePublicMediaUrl(requestUrl, storageKey, filename) {
@@ -192,6 +249,8 @@ function isAllowedFileType(mimeType) {
 function mediaTypeForMime(mimeType = '') {
   const type = String(mimeType).toLowerCase()
   if (type.startsWith('image/')) return type.includes('svg') ? 'svg' : 'image'
+  if (type.startsWith('audio/')) return 'audio'
+  if (type.startsWith('video/')) return 'video'
   if (type === 'application/pdf') return 'pdf'
   if (type.includes('epub')) return 'epub'
   if (type.includes('zip')) return 'archive'
@@ -200,9 +259,18 @@ function mediaTypeForMime(mimeType = '') {
   return 'file'
 }
 
+function folderLabel(mediaType) {
+  if (['image', 'svg'].includes(mediaType)) return 'Images'
+  if (mediaType === 'pdf') return 'Zines / PDFs'
+  if (mediaType === 'audio') return 'Audio'
+  if (mediaType === 'video') return 'Video'
+  return 'Files'
+}
+
 function extensionForMime(mimeType = '', filename = '') {
-  const existing = String(filename || '').split('.').pop()?.toLowerCase()
-  if (existing && existing !== filename) return existing
+  const parts = String(filename || '').split('.')
+  const existing = parts.length > 1 ? String(parts.pop() || '').toLowerCase() : ''
+  if (existing) return existing
   const lower = String(mimeType).toLowerCase()
   if (lower === 'application/pdf') return 'pdf'
   if (lower.includes('epub')) return 'epub'
@@ -215,6 +283,12 @@ function extensionForMime(mimeType = '', filename = '') {
   if (lower.includes('gif')) return 'gif'
   if (lower.includes('svg')) return 'svg'
   if (lower.includes('jpeg')) return 'jpg'
+  if (lower.includes('mpeg')) return 'mp3'
+  if (lower.includes('wav')) return 'wav'
+  if (lower.includes('flac')) return 'flac'
+  if (lower.includes('ogg')) return 'ogg'
+  if (lower.includes('mp4')) return lower.startsWith('audio/') ? 'm4a' : 'mp4'
+  if (lower.includes('webm')) return 'webm'
   if (lower.includes('wordprocessingml')) return 'docx'
   if (lower.includes('msword')) return 'doc'
   if (lower.includes('opendocument')) return 'odt'
@@ -237,7 +311,18 @@ function guessContentType(key = '') {
   if (lower.endsWith('.gif')) return 'image/gif'
   if (lower.endsWith('.svg')) return 'image/svg+xml'
   if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg'
+  if (lower.endsWith('.mp3')) return 'audio/mpeg'
+  if (lower.endsWith('.m4a')) return 'audio/mp4'
+  if (lower.endsWith('.wav')) return 'audio/wav'
+  if (lower.endsWith('.flac')) return 'audio/flac'
+  if (lower.endsWith('.ogg') || lower.endsWith('.oga')) return 'audio/ogg'
+  if (lower.endsWith('.mp4')) return 'video/mp4'
+  if (lower.endsWith('.webm')) return 'video/webm'
   return 'application/octet-stream'
+}
+
+function shouldRenderInline(contentType = '') {
+  return contentType === 'application/pdf' || contentType.startsWith('image/') || contentType.startsWith('audio/') || contentType.startsWith('video/') || contentType.startsWith('text/')
 }
 
 function parseRange(header = '', size = 0) {
