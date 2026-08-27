@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
+import { sabotMastheadTransparent } from '../lib/sabotMastheadTransparent'
 import { EditableLink } from './EditableLink'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 
@@ -27,7 +28,7 @@ export function PublicationTopbar() {
           >
             <img
               className="publication-topbar__brand-image publication-topbar__brand-image--isolated"
-              src="/sabot-logo.png"
+              src={sabotMastheadTransparent}
               alt=""
               aria-hidden="true"
             />
