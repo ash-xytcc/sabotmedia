@@ -14,8 +14,21 @@ export async function collectSystemSnapshot(loaders = {}) {
   const loadPublicConfig = loaders.loadPublicConfigPayload || loadPublicConfigPayload
   const loadCollections = loaders.fetchCollections || fetchCollectionsForBackup
   const loadPublications = loaders.fetchPublications || fetchPublicationsForBackup
+  const loadSites = loaders.fetchSites || fetchSitesForBackup
+  const loadFeedSettings = loaders.fetchFeedSettings || fetchFeedSettingsForBackup
 
-  const [nativeData, taxonomyData, rolesData, auditData, mediaData, collectionsData, publicationsData, publicConfigData] = await Promise.all([
+  const [
+    nativeData,
+    taxonomyData,
+    rolesData,
+    auditData,
+    mediaData,
+    collectionsData,
+    publicationsData,
+    publicConfigData,
+    sitesData,
+    feedSettingsData,
+  ] = await Promise.all([
     loadNative({ includeFuture: 1 }),
     loadTaxonomy(),
     loadRoles(),
@@ -24,6 +37,8 @@ export async function collectSystemSnapshot(loaders = {}) {
     loadCollections(),
     loadPublications(),
     loadPublicConfig(),
+    loadSites(),
+    loadFeedSettings(),
   ])
 
   const nativeItems = requireItems(nativeData, 'native content')
@@ -33,6 +48,12 @@ export async function collectSystemSnapshot(loaders = {}) {
   const mediaAssets = requireItems(mediaData, 'media assets')
   const collections = requireItems(collectionsData, 'collections')
   const publications = requireItems(publicationsData, 'publications')
+  const sites = requireItems(sitesData, 'sites')
+  const feedSettings = requireObject(feedSettingsData?.settings, 'feed settings')
+  const publicSiteConfig = requireObject(
+    publicConfigData?.config || publicConfigData?.settings || publicConfigData?.payload || publicConfigData,
+    'public site config',
+  )
   const revisionsByNativeId = {}
 
   for (const item of nativeItems) {
@@ -42,7 +63,7 @@ export async function collectSystemSnapshot(loaders = {}) {
 
   const snapshot = {
     exportedAt: new Date().toISOString(),
-    schemaVersion: 2,
+    schemaVersion: 3,
     backupType: 'server-system',
     source: 'BF_DB-backed APIs',
     manifest: {
@@ -56,6 +77,8 @@ export async function collectSystemSnapshot(loaders = {}) {
         'mediaAssets',
         'collections',
         'publications',
+        'sites',
+        'feedSettings',
         'publicSiteConfig',
       ],
     },
@@ -67,7 +90,9 @@ export async function collectSystemSnapshot(loaders = {}) {
     mediaAssets,
     collections,
     publications,
-    publicSiteConfig: publicConfigData?.config || publicConfigData?.settings || publicConfigData?.payload || publicConfigData || {},
+    sites,
+    feedSettings,
+    publicSiteConfig,
   }
 
   return snapshot
@@ -88,6 +113,9 @@ export function summarizeSnapshot(snapshot) {
     mediaCount: Array.isArray(data.mediaAssets) ? data.mediaAssets.length : 0,
     collectionCount: Array.isArray(data.collections) ? data.collections.length : 0,
     publicationCount: Array.isArray(data.publications) ? data.publications.length : 0,
+    siteCount: Array.isArray(data.sites) ? data.sites.length : 0,
+    feedSettingsIncluded: Boolean(data.feedSettings && typeof data.feedSettings === 'object'),
+    publicConfigIncluded: Boolean(data.publicSiteConfig && typeof data.publicSiteConfig === 'object'),
     complete: data?.manifest?.complete === true,
   }
 }
@@ -114,10 +142,17 @@ export function downloadSnapshot(snapshot) {
 }
 
 function requireItems(data, label) {
-  if (!data?.ok || !Array.isArray(data.items)) {
+  if (!data?.ok || data.mode === 'scaffold' || data.mode === 'unavailable' || !Array.isArray(data.items)) {
     throw new Error(`${label} backup response was incomplete`)
   }
   return data.items
+}
+
+function requireObject(value, label) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`${label} backup response was incomplete`)
+  }
+  return value
 }
 
 async function fetchCollectionsForBackup() {
@@ -128,13 +163,29 @@ async function fetchPublicationsForBackup() {
   return fetchRequiredList('/api/publications?includeDrafts=1', 'publications')
 }
 
+async function fetchSitesForBackup() {
+  return fetchRequiredList('/api/sites', 'sites')
+}
+
+async function fetchFeedSettingsForBackup() {
+  const response = await fetch('/api/feed-settings', {
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok || !data?.ok || data.mode !== 'd1' || !data.settings || typeof data.settings !== 'object') {
+    throw new Error(data?.error || `feed settings backup fetch failed: ${response.status}`)
+  }
+  return data
+}
+
 async function fetchRequiredList(url, label) {
   const response = await fetch(url, {
     credentials: 'same-origin',
     headers: { accept: 'application/json' },
   })
   const data = await response.json().catch(() => null)
-  if (!response.ok || !data?.ok || !Array.isArray(data.items)) {
+  if (!response.ok || !data?.ok || data.mode === 'scaffold' || data.mode === 'unavailable' || !Array.isArray(data.items)) {
     throw new Error(data?.error || `${label} backup fetch failed: ${response.status}`)
   }
   return data
