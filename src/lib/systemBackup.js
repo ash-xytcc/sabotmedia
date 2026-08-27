@@ -1,8 +1,8 @@
-import { fetchNativeEntries, fetchNativeRevisions } from './nativePublicContentApi'
-import { fetchTaxonomyTerms } from './taxonomyApi'
-import { fetchEditorRoles, fetchAuditLog } from './editorRolesApi'
-import { fetchMediaAssets } from './mediaAssetsApi'
-import { loadPublicConfigPayload } from './publicConfigApi'
+import { fetchNativeEntries, fetchNativeRevisions } from './nativePublicContentApi.js'
+import { fetchTaxonomyTerms } from './taxonomyApi.js'
+import { fetchEditorRoles, fetchAuditLog } from './editorRolesApi.js'
+import { fetchMediaAssets } from './mediaAssetsApi.js'
+import { loadPublicConfigPayload } from './publicConfigApi.js'
 
 export async function collectSystemSnapshot(loaders = {}) {
   const loadNative = loaders.fetchNativeEntries || fetchNativeEntries
