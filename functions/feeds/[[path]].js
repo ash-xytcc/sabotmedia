@@ -1,5 +1,6 @@
 import { getBoundDb } from '../api/_lib/database.js'
 import { buildLiveFeedBundle, normalizeFeedRequestPath } from '../api/_lib/feedRuntime.js'
+import { buildPodcastFeedXml, getPodcastFeedItems, podcastXmlResponse } from '../rss/podcast.xml.js'
 
 export async function onRequestGet(context) {
   const requestedPath = normalizeFeedRequestPath(context.params?.path)
@@ -18,6 +19,15 @@ export async function onRequestGet(context) {
     const body = runtime.bundle?.[requestedPath]
     if (typeof body !== 'string') {
       return text('Feed not found.', 404)
+    }
+
+    if (requestedPath === 'podcasts/all.xml') {
+      const items = await getPodcastFeedItems(db)
+      return podcastXmlResponse(buildPodcastFeedXml({
+        requestUrl: context.request.url,
+        items,
+        selfPath: '/feeds/podcasts/all.xml',
+      }))
     }
 
     return new Response(body, {
