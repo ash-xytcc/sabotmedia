@@ -72,10 +72,10 @@
   transform: none !important;
   opacity: 1 !important;
   visibility: visible !important;
-  object-fit: cover !important;
+  object-fit: contain !important;
   object-position: center center !important;
   filter: none !important;
-  mix-blend-mode: screen !important;
+  mix-blend-mode: normal !important;
 }
 
 .publication-topbar--masthead .publication-topbar__brand-link--isolated {
