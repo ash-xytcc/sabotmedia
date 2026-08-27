@@ -33,7 +33,7 @@ const ADMIN_PREFIXES = [
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 const PAGE_METHODS = new Set(['GET', 'HEAD'])
-const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/session'])
+const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/analytics/collect'])
 
 export async function onRequest(context) {
   const url = new URL(context.request.url)
