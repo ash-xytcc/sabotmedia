@@ -22,6 +22,10 @@ export async function onRequestPost(context) {
     const country = cleanText(context.request.cf?.country || '', 3).toUpperCase()
 
     await ensureAnalyticsTable(context.env.BF_DB)
+    if (path === '/deployment-check') {
+      await context.env.BF_DB.prepare("DELETE FROM analytics_events WHERE path = '/deployment-check'").run()
+      return json({ ok: true, ignored: 'health-check' }, 202)
+    }
     await context.env.BF_DB.prepare(`
       INSERT INTO analytics_events (
         id, occurred_at, day, path, page_title, session_hash,
