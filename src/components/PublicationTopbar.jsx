@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
-import { sabotTransparentLogo } from '../lib/sabotTransparentLogo'
+import { sabotTransparentLogoFixed } from '../lib/sabotTransparentLogoFixed'
 import { EditableLink } from './EditableLink'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 
@@ -9,7 +9,7 @@ export function PublicationTopbar() {
   const customizer = loadCustomizerSettings()
 
   const siteTitle = String(customizer.siteIdentity?.siteTitle || 'Sabot Media').trim() || 'Sabot Media'
-  const logoUrl = sabotTransparentLogo
+  const logoUrl = sabotTransparentLogoFixed
   const mastheadSize = ['compact', 'medium', 'large'].includes(customizer.masthead?.mastheadSize)
     ? customizer.masthead.mastheadSize
     : 'medium'
