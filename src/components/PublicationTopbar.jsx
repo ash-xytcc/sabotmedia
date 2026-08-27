@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
-import mastheadLogo from '../assets/sabot-masthead-logo.png'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
+import { sabotLogoVerified } from '../lib/sabotLogoVerified'
 import { EditableLink } from './EditableLink'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 
@@ -9,7 +9,6 @@ export function PublicationTopbar() {
   const customizer = loadCustomizerSettings()
 
   const siteTitle = String(customizer.siteIdentity?.siteTitle || 'Sabot Media').trim() || 'Sabot Media'
-  const logoUrl = mastheadLogo
   const mastheadSize = ['compact', 'medium', 'large'].includes(customizer.masthead?.mastheadSize)
     ? customizer.masthead.mastheadSize
     : 'medium'
@@ -21,11 +20,20 @@ export function PublicationTopbar() {
     <header className={`publication-topbar publication-topbar--masthead publication-topbar--${resolvedMastheadSize}${isHome ? ' publication-topbar--home' : ' publication-topbar--inner'}`}>
       <div className="publication-topbar__inner">
         <div className="publication-topbar__brand">
-          <Link to="/" className="publication-topbar__brand-link" aria-label={`${siteTitle} home`} title={siteTitle}>
+          <Link
+            to="/"
+            className="publication-topbar__brand-link"
+            aria-label={`${siteTitle} home`}
+            title={siteTitle}
+            style={{ background: 'transparent', opacity: 1, visibility: 'visible' }}
+          >
             <img
-              src={logoUrl}
+              src={sabotLogoVerified}
               alt={siteTitle}
               className="publication-topbar__brand-image"
+              width="280"
+              height="88"
+              style={{ display: 'block', opacity: 1, visibility: 'visible', filter: 'none', mixBlendMode: 'normal' }}
             />
           </Link>
 
