@@ -8,20 +8,24 @@ import { AdminCommandPalette } from './AdminCommandPalette'
 const MENU = [
   { to: adminRoutes.dashboard, label: 'Dashboard' },
   { to: adminRoutes.posts, label: 'Posts' },
-  { to: adminRoutes.printlab, label: 'Printlab' },
-  { to: adminRoutes.audiolab, label: 'AudioLab' },
   { to: adminRoutes.addNew, label: 'Add New' },
   { to: adminRoutes.media, label: 'Media' },
   { to: adminRoutes.pages, label: 'Pages' },
   { to: adminRoutes.collections, label: 'Collections' },
   { to: adminRoutes.publications, label: 'Publications' },
   { to: adminRoutes.feeds, label: 'Feeds' },
+  { to: adminRoutes.printlab, label: 'Printlab' },
+  { to: adminRoutes.audiolab, label: 'AudioLab' },
   { to: adminRoutes.customize, label: 'Customize' },
-  { to: adminRoutes.tools, label: 'Tools' },
+  { to: adminRoutes.analytics, label: 'Analytics' },
+  { to: adminRoutes.taxonomy, label: 'Taxonomy' },
+  { to: adminRoutes.roles, label: 'Editor Roles' },
+  { to: adminRoutes.qa, label: 'Editorial QA' },
   { to: adminRoutes.siteHealth, label: 'Site Health' },
   { to: adminRoutes.backup, label: 'Backups' },
   { to: adminRoutes.auditLog, label: 'Audit Log' },
-  { to: adminRoutes.qa, label: 'QA' },
+  { to: adminRoutes.sites, label: 'Sites & Domains' },
+  { to: adminRoutes.tools, label: 'Tools' },
   { to: adminRoutes.settings, label: 'Settings' },
   { to: adminRoutes.users, label: 'Users' },
 ]
@@ -32,15 +36,10 @@ function AdminBarMenu({ label, children, className = '' }) {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
+      if (menuRef.current && !menuRef.current.contains(event.target)) setIsOpen(false)
     }
-
     document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   return (
@@ -63,20 +62,29 @@ function AdminBarMenu({ label, children, className = '' }) {
 
 export function AdminRail() {
   const location = useLocation()
-  const [sites, setSites] = useState(() => loadSites())
+  const [primarySiteName, setPrimarySiteName] = useState('Sabot Media')
   const [paletteOpenTick, setPaletteOpenTick] = useState(0)
 
   useEffect(() => {
-    setSites(loadSites())
+    let cancelled = false
+    async function refreshSites() {
+      try {
+        const sites = await loadSites()
+        if (cancelled) return
+        const primarySite = Array.isArray(sites) ? sites[0] : null
+        setPrimarySiteName(String(primarySite?.name || 'Sabot Media').trim() || 'Sabot Media')
+      } catch {
+        if (!cancelled) setPrimarySiteName('Sabot Media')
+      }
+    }
+    refreshSites()
+    return () => { cancelled = true }
   }, [location.pathname])
 
   useEffect(() => {
     if (!paletteOpenTick) return
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))
   }, [paletteOpenTick])
-
-  const primarySite = sites[0]
-  const primarySiteName = String(primarySite?.name || 'Sabot Media').trim() || 'Sabot Media'
 
   return (
     <>
@@ -100,20 +108,25 @@ export function AdminRail() {
           <AdminBarMenu label="+ New">
             <Link to={adminRoutes.addNew} className="wp-admin-topbar__dropdown-link">Post</Link>
             <Link to={adminRoutes.media} className="wp-admin-topbar__dropdown-link">Media</Link>
-            <Link to={adminRoutes.pages} className="wp-admin-topbar__dropdown-link">Page</Link>
             <Link to={adminRoutes.collections} className="wp-admin-topbar__dropdown-link">Collection</Link>
             <Link to={adminRoutes.publications} className="wp-admin-topbar__dropdown-link">Publication</Link>
             <Link to={adminRoutes.audiolab} className="wp-admin-topbar__dropdown-link">AudioLab Project</Link>
-            <Link to={adminRoutes.users} className="wp-admin-topbar__dropdown-link">User</Link>
           </AdminBarMenu>
 
           <Link to={adminRoutes.customize} className="wp-admin-topbar__link">Customize</Link>
-          <button type="button" className="wp-admin-topbar__button wp-admin-topbar__command" onClick={() => setPaletteOpenTick((tick) => tick + 1)}>⌘K</button>
+          <button
+            type="button"
+            className="wp-admin-topbar__button wp-admin-topbar__command"
+            aria-label="Open command palette"
+            onClick={() => setPaletteOpenTick((tick) => tick + 1)}
+          >
+            ⌘K
+          </button>
         </div>
 
         <div className="wp-admin-topbar__right">
-          <AdminBarMenu label="Howdy sabotmedia" className="wp-admin-topbar__menu--right">
-            <Link to={adminRoutes.users} className="wp-admin-topbar__dropdown-link">Profile</Link>
+          <AdminBarMenu label="Account" className="wp-admin-topbar__menu--right">
+            <Link to={adminRoutes.users} className="wp-admin-topbar__dropdown-link">User model</Link>
             <Link to="/logout" className="wp-admin-topbar__dropdown-link">Log Out</Link>
           </AdminBarMenu>
         </div>
