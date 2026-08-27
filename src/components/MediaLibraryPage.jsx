@@ -1,20 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { getPieces } from '../lib/pieces'
 import { loadNativeCollection } from '../lib/nativePublicContent'
-import {
-  applyLocalMediaMetadata,
-  addLocalMediaItem,
-  fileToDataUrl,
-  loadLocalMediaItems,
-  makeLocalMediaFromFile,
-  updateLocalMediaMetadata,
-  updateLocalMediaItem,
-} from '../lib/localMediaLibrary'
+import { loadLocalMediaItems } from '../lib/localMediaLibrary'
+import { fetchMediaAssets, saveMediaAsset } from '../lib/mediaAssetsApi'
 import { AdminFrame } from './AdminRail'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 
 const MEDIA_ACCEPT = [
   'image/*',
+  'audio/*',
+  'video/mp4',
+  'video/webm',
   'application/pdf',
   'application/zip',
   'application/x-zip-compressed',
@@ -34,20 +30,17 @@ function collectMediaFromPieces(pieces) {
     const pushUrl = (url, extra = {}) => {
       const clean = String(url || '').trim()
       if (!clean) return
-      list.push({
+      list.push(normalizeMediaItem({
         id: `imported-${clean}`,
         url: clean,
-        dataUrl: clean,
-        filename: extra.filename || '',
         title: piece.title || extra.title || 'Imported media',
         alt: extra.alt || '',
         caption: extra.caption || '',
         description: extra.description || '',
-        uploadedAt: '',
         source: 'imported',
         mediaType: extra.mediaType || 'image',
         mimeType: extra.mimeType || '',
-      })
+      }))
     }
 
     pushUrl(piece.featuredImage, { title: piece.title, mediaType: 'image' })
@@ -55,18 +48,17 @@ function collectMediaFromPieces(pieces) {
     pushUrl(piece.imageUrl, { title: piece.title, mediaType: 'image' })
 
     for (const asset of piece.relatedAssets || []) {
-      if (asset?.kind === 'image') pushUrl(asset?.url, { title: asset?.title || piece.title, mediaType: 'image' })
-      if (asset?.kind === 'download' || asset?.kind === 'pdf' || asset?.kind === 'file') {
-        pushUrl(asset?.url || asset?.href, {
-          title: asset?.title || piece.title,
-          filename: asset?.filename || '',
-          mediaType: asset?.kind === 'pdf' ? 'pdf' : 'file',
-          mimeType: asset?.mimeType || '',
-        })
-      }
+      pushUrl(asset?.url || asset?.href, {
+        title: asset?.title || piece.title,
+        alt: asset?.alt || '',
+        caption: asset?.caption || '',
+        description: asset?.description || '',
+        mediaType: asset?.kind === 'image' ? 'image' : asset?.kind === 'pdf' ? 'pdf' : asset?.kind || 'file',
+        mimeType: asset?.mimeType || '',
+      })
     }
   }
-  return list
+  return list.filter(Boolean)
 }
 
 function collectMediaFromNative(items) {
@@ -74,71 +66,198 @@ function collectMediaFromNative(items) {
   for (const entry of items || []) {
     const imageUrl = String(entry.featuredImage || entry.heroImage || '').trim()
     if (imageUrl) {
-      list.push({
+      list.push(normalizeMediaItem({
         id: `native-${entry.id}-${imageUrl}`,
         url: imageUrl,
-        dataUrl: imageUrl,
-        filename: '',
         title: entry.featuredImageTitle || entry.title || 'Native image',
         alt: entry.featuredImageAlt || '',
         caption: entry.featuredImageCaption || '',
         description: String(entry.excerpt || ''),
-        uploadedAt: '',
         source: 'native',
         mediaType: 'image',
-      })
+      }))
     }
 
     const body = String(entry.body || entry.bodyHtml || '')
-    const linkMatches = body.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)
-    for (const match of linkMatches) {
+    for (const match of body.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
       const url = String(match[1] || '').trim()
-      if (!url) continue
+      if (!url || !looksLikeFileUrl(url)) continue
       const text = String(match[2] || '').replace(/<[^>]+>/g, '').trim()
-      const looksLikeFile = /\.(pdf|zip|epub|docx?|odt|rtf|txt|md|csv)(?:[?#].*)?$/i.test(url) || url.includes('/api/media/files')
-      if (!looksLikeFile) continue
-      const extension = url.split(/[?#]/)[0].split('.').pop()?.toLowerCase() || ''
-      list.push({
+      list.push(normalizeMediaItem({
         id: `native-file-${entry.id}-${url}`,
         url,
-        dataUrl: url,
-        downloadUrl: url,
-        filename: '',
         title: text || entry.title || 'Native file',
         description: String(entry.excerpt || ''),
-        uploadedAt: '',
         source: 'native',
-        mediaType: extension === 'pdf' ? 'pdf' : 'file',
-        extension,
-      })
+        mediaType: inferMediaType('', url),
+      }))
+    }
+
+    const audioUrl = String(entry.podcastAudioUrl || entry.audioSourceUrl || '').trim()
+    if (audioUrl) {
+      list.push(normalizeMediaItem({
+        id: `native-audio-${entry.id}-${audioUrl}`,
+        url: audioUrl,
+        title: entry.title || 'Native audio',
+        description: String(entry.podcastSummary || entry.excerpt || ''),
+        source: 'native',
+        mediaType: 'audio',
+      }))
     }
   }
-  return list
+  return list.filter(Boolean)
+}
+
+function normalizeMediaItem(raw = {}) {
+  const url = String(raw.url || raw.publicUrl || raw.downloadUrl || raw.dataUrl || '').trim()
+  if (!url) return null
+  const filename = String(raw.filename || filenameFromUrl(url) || '')
+  const mediaType = normalizeMediaType(raw.mediaType || inferMediaType(raw.mimeType, filename || url))
+  const alt = String(raw.alt ?? raw.altText ?? raw.alt_text ?? '')
+  return {
+    id: String(raw.id || `media-${Math.random().toString(36).slice(2, 10)}`),
+    url,
+    downloadUrl: String(raw.downloadUrl || url),
+    filename,
+    title: String(raw.title || filename.replace(/\.[^.]+$/, '') || 'Media'),
+    alt,
+    altText: alt,
+    caption: String(raw.caption || ''),
+    description: String(raw.description || ''),
+    credit: String(raw.credit || ''),
+    attribution: String(raw.attribution || raw.attributionText || raw.credit || ''),
+    creator: String(raw.creator || ''),
+    license: String(raw.license || ''),
+    licenseUrl: String(raw.licenseUrl || ''),
+    sourceUrl: String(raw.sourceUrl || raw.landingUrl || raw.landingPageUrl || ''),
+    folder: String(raw.folder || defaultFolder(mediaType)),
+    tags: normalizeTags(raw.tags),
+    mimeType: String(raw.mimeType || ''),
+    extension: String(raw.extension || extensionFromFilename(filename) || ''),
+    mediaType,
+    source: String(raw.source || 'registry'),
+    storageKey: String(raw.storageKey || ''),
+    size: Number(raw.size || 0) || 0,
+    uploadedAt: String(raw.uploadedAt || raw.createdAt || ''),
+    createdAt: String(raw.createdAt || raw.uploadedAt || ''),
+    updatedAt: String(raw.updatedAt || ''),
+  }
+}
+
+function normalizeMediaType(value) {
+  const type = String(value || '').toLowerCase()
+  if (type === 'svg') return 'svg'
+  if (type === 'image') return 'image'
+  if (type === 'audio') return 'audio'
+  if (type === 'video') return 'video'
+  if (type === 'pdf') return 'pdf'
+  if (['document', 'archive', 'epub', 'text', 'file'].includes(type)) return type
+  return 'file'
 }
 
 function dedupeMedia(items) {
   const byUrl = new Map()
-  for (const item of items) {
-    const key = item.url || item.downloadUrl
-    if (!byUrl.has(key)) byUrl.set(key, item)
+  for (const item of items.filter(Boolean)) {
+    const key = String(item.url || item.downloadUrl || '').trim()
+    if (!key) continue
+    const current = byUrl.get(key)
+    if (!current || mediaSourceRank(item) > mediaSourceRank(current)) byUrl.set(key, item)
   }
   return [...byUrl.values()]
 }
 
-function isImageMedia(item = {}) {
-  const type = String(item.mediaType || '').toLowerCase()
-  const mime = String(item.mimeType || '').toLowerCase()
-  return type === 'image' || type === 'svg' || mime.startsWith('image/')
+function mediaSourceRank(item) {
+  if (['server-upload', 'registry', 'media-registry'].includes(item?.source)) return 5
+  if (item?.storageKey) return 5
+  if (item?.source === 'native') return 3
+  if (item?.source === 'imported') return 2
+  return 1
 }
 
-function isPdfMedia(item = {}) {
-  return String(item.mediaType || '').toLowerCase() === 'pdf' || String(item.mimeType || '').toLowerCase() === 'application/pdf'
+export function loadMediaLibraryItems(nativeItems = [], registryItems = []) {
+  const registry = (registryItems || []).map(normalizeMediaItem).filter(Boolean)
+  return dedupeMedia([
+    ...registry,
+    ...collectMediaFromNative(nativeItems || []),
+    ...collectMediaFromPieces(getPieces()),
+  ])
+}
+
+async function loadMediaLibraryState() {
+  const [registryResult, nativeResult] = await Promise.allSettled([
+    fetchMediaAssets(),
+    loadNativeCollection({ includeFuture: 1 }),
+  ])
+
+  const registryItems = registryResult.status === 'fulfilled' && Array.isArray(registryResult.value?.items)
+    ? registryResult.value.items
+    : []
+  const nativeItems = nativeResult.status === 'fulfilled' && Array.isArray(nativeResult.value)
+    ? nativeResult.value
+    : []
+  const items = loadMediaLibraryItems(nativeItems, registryItems)
+  const persistentUrls = new Set(registryItems.map((item) => String(item?.url || '').trim()).filter(Boolean))
+  const legacyItems = loadLocalMediaItems()
+    .map(normalizeMediaItem)
+    .filter(Boolean)
+    .filter((item) => !persistentUrls.has(item.url))
+
+  const errors = []
+  if (registryResult.status === 'rejected') errors.push(`Media registry: ${String(registryResult.reason?.message || registryResult.reason)}`)
+  if (nativeResult.status === 'rejected') errors.push(`Native media references: ${String(nativeResult.reason?.message || nativeResult.reason)}`)
+
+  return { items, legacyItems, error: errors.join(' ') }
+}
+
+async function uploadMediaFileToServer(file) {
+  const form = new FormData()
+  form.append('file', file, file.name || 'upload')
+  form.append('filename', file.name || 'upload')
+  form.append('mimeType', file.type || '')
+  form.append('title', String(file.name || 'upload').replace(/\.[^.]+$/, ''))
+
+  const response = await fetch('/api/media/files', {
+    method: 'POST',
+    credentials: 'same-origin',
+    body: form,
+  })
+  const contentType = response.headers.get('content-type') || ''
+  const payload = contentType.includes('application/json')
+    ? await response.json().catch(() => null)
+    : { ok: false, error: await response.text() }
+
+  if (!response.ok || !payload?.ok || !payload?.media?.url) {
+    throw new Error(payload?.error || `Upload failed with status ${response.status}`)
+  }
+
+  return normalizeMediaItem(payload.media)
+}
+
+async function uploadMediaFiles(files = []) {
+  const created = []
+  const rejected = []
+  for (const file of files) {
+    try {
+      created.push(await uploadMediaFileToServer(file))
+    } catch (error) {
+      rejected.push({ name: file?.name || 'file', error: String(error?.message || error) })
+    }
+  }
+  return { created, rejected }
+}
+
+function mergeUploadedMedia(created, items) {
+  return dedupeMedia([...(created || []), ...(items || [])])
 }
 
 function mediaKindLabel(item = {}) {
-  if (isPdfMedia(item)) return 'PDF'
-  if (isImageMedia(item)) return String(item.mediaTypeLabel || 'IMAGE').toUpperCase()
-  return String(item.mediaTypeLabel || item.extension || item.mediaType || 'FILE').toUpperCase()
+  const type = String(item.mediaType || 'file').toUpperCase()
+  if (type === 'IMAGE') return 'IMAGE'
+  if (type === 'SVG') return 'SVG'
+  if (type === 'PDF') return 'PDF'
+  if (type === 'AUDIO') return 'AUDIO'
+  if (type === 'VIDEO') return 'VIDEO'
+  return type
 }
 
 function formatBytes(value = 0) {
@@ -149,424 +268,511 @@ function formatBytes(value = 0) {
   return `${bytes} B`
 }
 
-function persistSelectedMediaEdits(selected, fields, setItems, setSelected) {
-  if (!selected?.id) return
-  const updates = {
-    title: String(fields?.title ?? selected.title ?? ''),
-    alt: String(fields?.alt ?? selected.alt ?? ''),
-    caption: String(fields?.caption ?? selected.caption ?? ''),
-    description: String(fields?.description ?? selected.description ?? ''),
-    folder: String(fields?.folder ?? selected.folder ?? 'Unfiled'),
-    tags: Array.isArray(fields?.tags)
-      ? fields.tags
-      : String(fields?.tags ?? (selected.tags || []).join(', '))
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
+function MediaPreview({ item, compact = false }) {
+  if (!item) return null
+  const type = item.mediaType
+  if (type === 'image' || type === 'svg') {
+    return <img src={item.url} alt={item.alt || item.title || ''} loading="lazy" />
   }
-  const updated = { ...selected, ...updates }
-  setItems((current) => current.map((item) => (item.id === selected.id ? updated : item)))
-  setSelected(updated)
-  updateLocalMediaMetadata(selected, updates)
-  if (selected.source === 'local-upload' || selected.source === 'server-upload') updateLocalMediaItem(selected.id, updates)
-}
-
-async function replaceSelectedMediaFile(selected, file, setItems, setSelected) {
-  if (!selected?.id || !file) return null
-  const uploaded = await makeMediaItemFromFile(file)
-  const updates = {
-    ...uploaded,
-    id: selected.id,
-    title: uploaded.title || selected.title || '',
+  if (type === 'audio') {
+    return compact ? <span className="media-file-icon" aria-hidden="true">AUDIO</span> : <audio controls src={item.url} preload="metadata" />
   }
-  const updated = { ...selected, ...updates }
-  setItems((current) => current.map((item) => (item.id === selected.id ? updated : item)))
-  setSelected(updated)
-  updateLocalMediaItem(selected.id, updated)
-  return updated
-}
-
-export function loadMediaLibraryItems(nativeItems = null) {
-  const importedMedia = collectMediaFromPieces(getPieces())
-  const nativeMedia = collectMediaFromNative(nativeItems || [])
-  const localMedia = loadLocalMediaItems()
-  return dedupeMedia([...localMedia, ...nativeMedia, ...importedMedia]).map(applyLocalMediaMetadata)
-}
-
-async function uploadMediaFileToServer(file) {
-  const form = new FormData()
-  form.append('file', file, file.name || 'upload')
-  form.append('filename', file.name || 'upload')
-  form.append('mimeType', file.type || '')
-  form.append('title', String(file.name || 'upload').replace(/\.[^.]+$/, ''))
-  const response = await fetch('/api/media/files', { method: 'POST', body: form })
-  const contentType = response.headers.get('content-type') || ''
-  const payload = contentType.includes('application/json') ? await response.json() : { ok: false, error: await response.text() }
-  if (!response.ok || !payload?.ok || !payload?.media) {
-    throw new Error(payload?.error || `Upload failed with status ${response.status}`)
+  if (type === 'video') {
+    return compact ? <span className="media-file-icon" aria-hidden="true">VIDEO</span> : <video controls src={item.url} preload="metadata" />
   }
-  const media = payload.media
-  return {
-    id: media.id || media.mediaId || `server-${Date.now()}`,
-    url: media.publicUrl || media.url || media.downloadUrl || '',
-    dataUrl: media.publicUrl || media.url || media.downloadUrl || '',
-    downloadUrl: media.downloadUrl || media.publicUrl || media.url || '',
-    filename: media.filename || file.name || '',
-    title: media.title || String(file.name || 'upload').replace(/\.[^.]+$/, ''),
-    alt: '',
-    caption: '',
-    description: '',
-    mimeType: media.mimeType || file.type || '',
-    extension: media.extension || file.name?.split('.').pop()?.toLowerCase() || '',
-    source: 'server-upload',
-    uploadedAt: media.createdAt || new Date().toISOString(),
-    mediaType: media.mediaType || '',
-    size: media.size || file.size || 0,
-  }
+  if (type === 'pdf') return <span className="media-file-icon" aria-hidden="true">PDF</span>
+  return <span className="media-file-icon" aria-hidden="true">{mediaKindLabel(item)}</span>
 }
 
-async function makeMediaItemFromFile(file) {
-  try {
-    const serverItem = await uploadMediaFileToServer(file)
-    addLocalMediaItem(serverItem)
-    return serverItem
-  } catch {
-    const next = makeLocalMediaFromFile(file)
-    next.url = await fileToDataUrl(file)
-    next.dataUrl = next.url
-    next.downloadUrl = next.url
-    addLocalMediaItem(next)
-    return next
-  }
-}
-
-async function makeMediaItemsFromFiles(files = []) {
-  const created = []
-  const rejected = []
-  for (const file of files) {
-    try {
-      const next = await makeMediaItemFromFile(file)
-      created.push(next)
-    } catch {
-      if (file?.name) rejected.push(file.name)
-    }
-  }
-  return { created, rejected }
-}
-
-function mergeUploadedMedia(created, items, setItems, setSelected) {
-  if (!created.length) return
-  const merged = dedupeMedia([...created, ...items])
-  setItems(merged)
-  setSelected(created[0])
-}
-
-function sourceLabel(item = {}) {
-  if (item.source === 'server-upload') return 'Uploaded to site'
-  if (item.source === 'local-upload') return 'Uploaded here'
-  if (item.source === 'native') return 'Used by post'
-  if (item.source === 'imported') return 'Imported'
-  return item.source || 'Media'
-}
-
-function MediaItemButton({ item, selected, setSelected }) {
-  const isImage = isImageMedia(item)
+function MediaTile({ item, selected, onSelect }) {
   return (
     <button
-      key={item.id}
       type="button"
-      className={`wp-media-item${selected?.id === item.id ? ' is-selected' : ''}${isImage ? '' : ' wp-media-item--file'}`}
-      data-media-url={item.downloadUrl || item.url || ''}
-      data-media-title={item.title || item.filename || 'Download file'}
-      data-media-type={item.mediaType || ''}
-      data-media-mime={item.mimeType || ''}
-      onClick={() => setSelected(item)}
+      className={`media-library-tile${selected ? ' is-selected' : ''}`}
+      onClick={() => onSelect(item)}
+      aria-pressed={selected}
     >
-      <span className={`wp-media-item__thumb-wrap${isImage ? '' : ' wp-media-item__thumb-wrap--file'}`}>
-        {isImage ? <img src={item.thumbnailUrl || item.url} alt={item.alt || ''} loading="lazy" /> : <span className="wp-media-file-icon">{mediaKindLabel(item)}</span>}
-      </span>
-      <span className="wp-media-item__meta">
+      <span className="media-library-tile__preview"><MediaPreview item={item} compact /></span>
+      <span className="media-library-tile__meta">
         <strong>{item.title || item.filename || 'Untitled'}</strong>
-        <small>{mediaKindLabel(item)} · {sourceLabel(item)}</small>
+        <small>{mediaKindLabel(item)}{item.size ? ` · ${formatBytes(item.size)}` : ''}</small>
       </span>
     </button>
   )
 }
 
-function AttachmentDetails({ selected, items, setItems, setSelected, onConfirm }) {
-  const replaceInputRef = useRef(null)
-  const usageCount = selected ? items.filter((item) => item.url === selected.url).length : 0
+function UploadPanel({ onUploaded, compact = false }) {
+  const inputRef = useRef(null)
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState('')
+  const [error, setError] = useState('')
+
+  async function handleFiles(fileList) {
+    const files = Array.from(fileList || [])
+    if (!files.length) return
+    setBusy(true)
+    setStatus('')
+    setError('')
+    const { created, rejected } = await uploadMediaFiles(files)
+    if (created.length) {
+      setStatus(`${created.length} file${created.length === 1 ? '' : 's'} uploaded and registered.`)
+      onUploaded?.(created)
+    }
+    if (rejected.length) {
+      setError(rejected.map((item) => `${item.name}: ${item.error}`).join(' · '))
+    }
+    setBusy(false)
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  return (
+    <section
+      className={`media-upload-panel${compact ? ' media-upload-panel--compact' : ''}`}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault()
+        handleFiles(event.dataTransfer?.files)
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept={MEDIA_ACCEPT}
+        className="media-upload-panel__input"
+        onChange={(event) => handleFiles(event.target.files)}
+      />
+      <div>
+        <strong>{busy ? 'Uploading…' : 'Upload media'}</strong>
+        <p>Files are saved to site media storage and registered in D1. Server failure is a failure; there is no browser-local pretend upload.</p>
+      </div>
+      <button className="button button--primary" type="button" disabled={busy} onClick={() => inputRef.current?.click()}>
+        Select Files
+      </button>
+      {status ? <p className="description" role="status">{status}</p> : null}
+      {error ? <p className="notice notice-error" role="alert">{error}</p> : null}
+    </section>
+  )
+}
+
+function LegacyRecoveryNotice({ items = [], onRegistered }) {
+  const [busyId, setBusyId] = useState('')
+  const [error, setError] = useState('')
+  if (!items.length) return null
+
+  async function registerExisting(item) {
+    if (!item?.url || item.url.startsWith('data:')) return
+    try {
+      setBusyId(item.id)
+      setError('')
+      const result = await saveMediaAsset(toPersistentAsset(item))
+      onRegistered?.(normalizeMediaItem(result?.asset || item))
+    } catch (nextError) {
+      setError(String(nextError?.message || nextError))
+    } finally {
+      setBusyId('')
+    }
+  }
+
+  return (
+    <section className="wp-meta-box media-legacy-recovery">
+      <h2>Legacy browser media recovery</h2>
+      <p className="description">
+        {items.length} media record{items.length === 1 ? '' : 's'} exist only in this browser's old cache and are not treated as published Media Library assets.
+        Existing server URLs can be registered in D1 below. Data-URL uploads require the original file to be uploaded again.
+      </p>
+      {error ? <p className="notice notice-error" role="alert">{error}</p> : null}
+      <div className="media-legacy-recovery__list">
+        {items.slice(0, 24).map((item) => {
+          const dataOnly = item.url.startsWith('data:')
+          return (
+            <article key={item.id} className="media-legacy-recovery__item">
+              <strong>{item.title || item.filename || 'Legacy media'}</strong>
+              <span>{dataOnly ? 'Browser data only — re-upload original file' : 'Existing URL can be registered'}</span>
+              {!dataOnly ? (
+                <button className="button" type="button" disabled={busyId === item.id} onClick={() => registerExisting(item)}>
+                  {busyId === item.id ? 'Registering…' : 'Register in D1'}
+                </button>
+              ) : null}
+            </article>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function AttachmentDetails({ selected, onSaved }) {
+  const [fields, setFields] = useState(() => fieldsFromItem(selected))
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [status, setStatus] = useState('')
+
+  useEffect(() => {
+    setFields(fieldsFromItem(selected))
+    setError('')
+    setStatus('')
+  }, [selected?.id, selected?.url])
 
   if (!selected) {
     return (
-      <aside className="wp-media-details wp-media-modal__details">
+      <aside className="media-attachment-details media-attachment-details--empty">
         <h2>Attachment details</h2>
-        <p className="description">Select an image, PDF, zine file, or download to edit its title, caption, folder, and tags.</p>
+        <p>Select an item to inspect or edit persistent metadata.</p>
       </aside>
     )
   }
 
-  const isImage = isImageMedia(selected)
-  const downloadUrl = selected.downloadUrl || selected.url || ''
+  function update(field, value) {
+    setFields((current) => ({ ...current, [field]: value }))
+    setStatus('')
+  }
+
+  async function save() {
+    try {
+      setSaving(true)
+      setError('')
+      setStatus('')
+      const result = await saveMediaAsset(toPersistentAsset({ ...selected, ...fields }))
+      const saved = normalizeMediaItem(result?.asset || { ...selected, ...fields })
+      onSaved?.(saved)
+      setFields(fieldsFromItem(saved))
+      setStatus('Metadata saved to D1.')
+    } catch (nextError) {
+      setError(String(nextError?.message || nextError))
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
-    <aside className="wp-media-details wp-media-modal__details">
+    <aside className="media-attachment-details">
       <h2>Attachment details</h2>
-      {isImage ? (
-        <img className="wp-media-details__preview" src={selected.url} alt={selected.alt || ''} />
-      ) : (
-        <div className="wp-media-details__file-preview">
-          <span>{mediaKindLabel(selected)}</span>
-          <strong>{selected.title || selected.filename || 'Download file'}</strong>
-        </div>
-      )}
-      <div className="wp-media-details__facts">
-        <p><strong>Source:</strong> {sourceLabel(selected)}</p>
-        <p><strong>Type:</strong> {mediaKindLabel(selected)}{selected.mimeType ? ` · ${selected.mimeType}` : ''}</p>
-        <p><strong>Usage:</strong> {usageCount} reference{usageCount === 1 ? '' : 's'}</p>
-        {selected.filename ? <p><strong>File:</strong> {selected.filename}</p> : null}
-        {selected.size ? <p><strong>Size:</strong> {formatBytes(selected.size)}</p> : null}
-        {selected.uploadedAt ? <p><strong>Uploaded:</strong> {new Date(selected.uploadedAt).toLocaleString()}</p> : null}
+      <div className="media-attachment-details__preview"><MediaPreview item={selected} /></div>
+      <div className="media-attachment-details__facts">
+        <strong>{selected.filename || selected.title}</strong>
+        <span>{mediaKindLabel(selected)}{selected.mimeType ? ` · ${selected.mimeType}` : ''}</span>
+        {selected.size ? <span>{formatBytes(selected.size)}</span> : null}
+        <span>{selected.source === 'imported' || selected.source === 'native' ? 'Derived asset; saving metadata registers it in D1.' : 'Persistent media record'}</span>
       </div>
-      <label>
-        <span>Title</span>
-        <input value={selected.title || ''} onChange={(e) => persistSelectedMediaEdits(selected, { title: e.target.value }, setItems, setSelected)} />
-      </label>
-      {isImage ? (
-        <label>
-          <span>Alt text</span>
-          <input value={selected.alt || ''} onChange={(e) => persistSelectedMediaEdits(selected, { alt: e.target.value }, setItems, setSelected)} />
-        </label>
-      ) : null}
-      <label>
-        <span>Folder</span>
-        <input value={selected.folder || 'Unfiled'} onChange={(e) => persistSelectedMediaEdits(selected, { folder: e.target.value }, setItems, setSelected)} />
-      </label>
-      <label>
-        <span>Tags</span>
-        <input value={(selected.tags || []).join(', ')} onChange={(e) => persistSelectedMediaEdits(selected, { tags: e.target.value }, setItems, setSelected)} />
-      </label>
-      <label>
-        <span>Caption / link text</span>
-        <textarea value={selected.caption || ''} onChange={(e) => persistSelectedMediaEdits(selected, { caption: e.target.value }, setItems, setSelected)} />
-      </label>
-      <label>
-        <span>Description</span>
-        <textarea value={selected.description || ''} onChange={(e) => persistSelectedMediaEdits(selected, { description: e.target.value }, setItems, setSelected)} />
-      </label>
-      <p className="wp-media-details__url"><strong>URL:</strong> {downloadUrl}</p>
-      <div className="review-card__actions wp-media-details__actions">
-        {downloadUrl ? <a className="button" href={downloadUrl} target="_blank" rel="noreferrer">Open file</a> : null}
-        <button className="button" type="button" onClick={() => replaceInputRef.current?.click()}>Replace file</button>
-        {onConfirm ? <button type="button" className="button button--primary" onClick={() => onConfirm(selected)}>Select</button> : null}
+
+      <label><span>Title</span><input value={fields.title} onChange={(event) => update('title', event.target.value)} /></label>
+      <label><span>Alt text</span><input value={fields.alt} onChange={(event) => update('alt', event.target.value)} /></label>
+      <label><span>Caption / link text</span><textarea value={fields.caption} onChange={(event) => update('caption', event.target.value)} /></label>
+      <label><span>Description</span><textarea value={fields.description} onChange={(event) => update('description', event.target.value)} /></label>
+      <label><span>Folder</span><input value={fields.folder} onChange={(event) => update('folder', event.target.value)} /></label>
+      <label><span>Tags</span><input value={fields.tags} onChange={(event) => update('tags', event.target.value)} placeholder="press, protest, portrait" /></label>
+      <label><span>Creator</span><input value={fields.creator} onChange={(event) => update('creator', event.target.value)} /></label>
+      <label><span>Credit</span><input value={fields.credit} onChange={(event) => update('credit', event.target.value)} /></label>
+      <label><span>Attribution</span><textarea value={fields.attribution} onChange={(event) => update('attribution', event.target.value)} /></label>
+      <label><span>License</span><input value={fields.license} onChange={(event) => update('license', event.target.value)} /></label>
+      <label><span>License URL</span><input value={fields.licenseUrl} onChange={(event) => update('licenseUrl', event.target.value)} /></label>
+      <label><span>Source / landing page</span><input value={fields.sourceUrl} onChange={(event) => update('sourceUrl', event.target.value)} /></label>
+      <label><span>Public URL</span><input value={selected.url} readOnly /></label>
+
+      <div className="review-card__actions">
+        <button className="button button--primary" type="button" disabled={saving} onClick={save}>{saving ? 'Saving…' : 'Save Metadata'}</button>
+        <a className="button" href={selected.url} target="_blank" rel="noreferrer">Open File</a>
+        <button className="button" type="button" disabled title="Upload a new file instead; binary replacement is not yet a supported server operation.">Replace File</button>
       </div>
-      <input
-        ref={replaceInputRef}
-        type="file"
-        accept={MEDIA_ACCEPT}
-        hidden
-        onChange={async (event) => {
-          const file = event.target.files?.[0]
-          if (file) await replaceSelectedMediaFile(selected, file, setItems, setSelected)
-          event.target.value = ''
-        }}
-      />
+      <p className="description">Replace File is intentionally disabled until binary replacement can update R2 and D1 as one server operation.</p>
+      {status ? <p className="description" role="status">{status}</p> : null}
+      {error ? <p className="notice notice-error" role="alert">{error}</p> : null}
     </aside>
   )
 }
 
-function MediaLibrarySurface({ mode, setMode, query, setQuery, selected, setSelected, items, setItems, onUploadClick, onConfirm }) {
-  const [folderFilter, setFolderFilter] = useState('all')
-  const folders = [...new Set(items.map((item) => item.folder || 'Unfiled'))].sort((a, b) => a.localeCompare(b))
-  const visible = items.filter((item) => {
-    if (folderFilter !== 'all' && (item.folder || 'Unfiled') !== folderFilter) return false
-    return [item.title, item.url, item.downloadUrl, item.caption, item.alt, item.folder, item.filename, item.mediaType, ...(item.tags || [])].join(' ').toLowerCase().includes(query.toLowerCase())
-  })
-
-  return (
-    <div className="wp-media-surface">
-      <div className="wp-media-toolbar">
-        <div className="wp-media-toolbar__views">
-          <button type="button" className={`button${mode === 'grid' ? ' button--primary' : ''}`} onClick={() => setMode('grid')}>Grid</button>
-          <button type="button" className={`button${mode === 'list' ? ' button--primary' : ''}`} onClick={() => setMode('list')}>List</button>
-        </div>
-        <select value={folderFilter} onChange={(event) => setFolderFilter(event.target.value)} aria-label="Filter by folder">
-          <option value="all">All folders</option>
-          {folders.map((folder) => <option key={folder} value={folder}>{folder}</option>)}
-        </select>
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search media and files" />
-        <button type="button" className="button button--primary" onClick={onUploadClick}>Upload files</button>
-      </div>
-      <div className={`wp-media-modal__body wp-media-modal__body--${mode}`}>
-        <div className="wp-media-modal__library">
-          {visible.length ? visible.map((item) => (
-            <MediaItemButton key={item.id} item={item} selected={selected} setSelected={setSelected} />
-          )) : (
-            <div className="wp-media-empty-state">
-              <strong>No media found.</strong>
-              <span>Upload images, PDFs, zines, or clear the search/filter.</span>
-            </div>
-          )}
-        </div>
-        <AttachmentDetails selected={selected} items={items} setItems={setItems} setSelected={setSelected} onConfirm={onConfirm} />
-      </div>
-    </div>
-  )
-}
-
-export function MediaPickerModal({ open, onClose, onPick }) {
-  const [mode, setMode] = useState('grid')
-  const [query, setQuery] = useState('')
-  const [selected, setSelected] = useState(null)
-  const [items, setItems] = useState([])
-  const [uploadStatus, setUploadStatus] = useState('')
-  const fileInputRef = useRef(null)
-  const { pushNotice } = useAdminNotices()
-
-  useEffect(() => {
-    if (!open) return
-    let cancelled = false
-    loadNativeCollection({ includeFuture: 1 }).then((nativeItems) => {
-      if (!cancelled) setItems(loadMediaLibraryItems(nativeItems))
-    }).catch(() => {
-      if (!cancelled) setItems(loadMediaLibraryItems([]))
-    })
-    return () => { cancelled = true }
-  }, [open])
-
-  async function handleUpload(event) {
-    const files = Array.from(event.target.files || [])
-    if (!files.length) return
-    setUploadStatus('Processing upload…')
-    const { created, rejected } = await makeMediaItemsFromFiles(files)
-    mergeUploadedMedia(created, items, setItems, setSelected)
-    if (created.length) {
-      setUploadStatus(`Uploaded ${created.length} file${created.length === 1 ? '' : 's'}.`)
-      pushNotice('Media uploaded.', 'success')
-    } else {
-      setUploadStatus(rejected.length ? 'No supported files were selected.' : '')
-    }
-    event.target.value = ''
-  }
-
-  if (!open) return null
-
-  return (
-    <div className="wp-media-modal" role="dialog" aria-modal="true" aria-label="Media Picker">
-      <div className="wp-media-modal__panel">
-        <div className="wp-media-modal__header">
-          <div>
-            <h2>Media Library</h2>
-            <p>Upload, search, select, and describe images, PDFs, zines, and download files.</p>
-          </div>
-          <button type="button" className="button" onClick={onClose}>Close</button>
-        </div>
-        <div className="wp-media-upload-strip">
-          <strong>Upload media files</strong>
-          <span>Images, PDFs, zines, text files, EPUBs, and ZIPs can be used in posts as media or download links.</span>
-          <button type="button" className="button button--primary" onClick={() => fileInputRef.current?.click()}>Choose files</button>
-        </div>
-        {uploadStatus ? <p className="wp-media-upload-status" role="status">{uploadStatus}</p> : null}
-        <MediaLibrarySurface
-          mode={mode}
-          setMode={setMode}
-          query={query}
-          setQuery={setQuery}
-          selected={selected}
-          setSelected={setSelected}
-          items={items}
-          setItems={setItems}
-          onUploadClick={() => fileInputRef.current?.click()}
-          onConfirm={onPick}
-        />
-        <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT} multiple hidden onChange={handleUpload} />
-      </div>
-    </div>
-  )
-}
-
 export function MediaLibraryPage() {
-  const [mode, setMode] = useState('grid')
-  const [query, setQuery] = useState('')
   const [items, setItems] = useState([])
+  const [legacyItems, setLegacyItems] = useState([])
   const [selected, setSelected] = useState(null)
-  const [uploadStatus, setUploadStatus] = useState('')
-  const fileInputRef = useRef(null)
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState('all')
+  const [state, setState] = useState('loading')
+  const [loadError, setLoadError] = useState('')
   const { pushNotice } = useAdminNotices()
 
-  useEffect(() => {
-    let cancelled = false
-    async function boot() {
-      try {
-        const nativeItems = await loadNativeCollection({ includeFuture: 1 })
-        if (!cancelled) setItems(loadMediaLibraryItems(nativeItems))
-      } catch {
-        if (!cancelled) setItems(loadMediaLibraryItems([]))
-      }
-    }
-    boot()
-    return () => { cancelled = true }
-  }, [])
-
-  const visible = useMemo(() => items.filter((item) => [item.title, item.url, item.downloadUrl, item.caption, item.alt, item.filename, item.mediaType].join(' ').toLowerCase().includes(query.toLowerCase())), [items, query])
-
-  async function handleUpload(event) {
-    const files = Array.from(event.target.files || [])
-    if (!files.length) return
-    setUploadStatus('Processing upload…')
-    const { created, rejected } = await makeMediaItemsFromFiles(files)
-    mergeUploadedMedia(created, items, setItems, setSelected)
-    if (created.length) {
-      setUploadStatus(`Uploaded ${created.length} file${created.length === 1 ? '' : 's'}.`)
-      pushNotice('Media uploaded.', 'success')
-    } else {
-      setUploadStatus(rejected.length ? 'No supported files were selected.' : '')
-      if (rejected.length) pushNotice('No supported files were selected.', 'warning')
-    }
-    event.target.value = ''
+  async function reload() {
+    setState('loading')
+    const loaded = await loadMediaLibraryState()
+    setItems(loaded.items)
+    setLegacyItems(loaded.legacyItems)
+    setLoadError(loaded.error)
+    setSelected((current) => current ? loaded.items.find((item) => item.url === current.url || item.id === current.id) || null : null)
+    setState(loaded.error ? 'partial' : 'loaded')
   }
 
-  async function handleDrop(event) {
-    event.preventDefault()
-    const files = Array.from(event.dataTransfer?.files || [])
-    if (!files.length) return
-    await handleUpload({ target: { files, value: '' } })
+  useEffect(() => { reload() }, [])
+
+  const visibleItems = useMemo(() => filterMedia(items, query, filter), [items, query, filter])
+
+  function handleUploaded(created) {
+    setItems((current) => mergeUploadedMedia(created, current))
+    if (created[0]) setSelected(created[0])
+    pushNotice(`${created.length} media item${created.length === 1 ? '' : 's'} uploaded and registered.`, 'success')
+  }
+
+  function handleSaved(saved) {
+    setItems((current) => dedupeMedia([saved, ...current.filter((item) => item.url !== saved.url && item.id !== saved.id)]))
+    setSelected(saved)
+  }
+
+  function handleLegacyRegistered(saved) {
+    handleSaved(saved)
+    setLegacyItems((current) => current.filter((item) => item.url !== saved.url))
+    pushNotice('Legacy server asset registered in D1.', 'success')
   }
 
   return (
     <AdminFrame>
-      <main className="page wp-admin-screen wp-media-library-page">
-        <div className="wp-screen-header wp-media-screen-header">
+      <main className="page wp-admin-screen media-library-page">
+        <div className="wp-screen-header">
           <div>
             <h1>Media Library</h1>
-            <p className="description">Manage images, PDFs, zines, download files, featured art, and article body media.</p>
+            <p className="description">Persistent site media backed by R2 binary storage and the BF_DB media registry.</p>
           </div>
-          <button type="button" className="button button--primary" onClick={() => fileInputRef.current?.click()}>Add New</button>
+          <button className="button" type="button" onClick={reload}>Reload</button>
         </div>
         <WpAdminNotices />
-        <section className="wp-media-upload-dropzone" onDragOver={(event) => event.preventDefault()} onDrop={handleDrop}>
-          <div>
-            <strong>Drop images, PDFs, zines, or files here</strong>
-            <span>Files upload to site media storage when configured, with browser-local fallback for drafts.</span>
-          </div>
-          <button type="button" className="button button--primary" onClick={() => fileInputRef.current?.click()}>Upload files</button>
+
+        <UploadPanel onUploaded={handleUploaded} />
+        {loadError ? <div className="notice notice-error"><p>{loadError}</p></div> : null}
+        <LegacyRecoveryNotice items={legacyItems} onRegistered={handleLegacyRegistered} />
+
+        <section className="media-library-toolbar" aria-label="Media filters">
+          <label>
+            <span className="screen-reader-text">Search media</span>
+            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search media" />
+          </label>
+          <label>
+            <span className="screen-reader-text">Filter media type</span>
+            <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+              <option value="all">All media</option>
+              <option value="image">Images</option>
+              <option value="audio">Audio</option>
+              <option value="video">Video</option>
+              <option value="pdf">PDFs</option>
+              <option value="document">Documents</option>
+            </select>
+          </label>
+          <span className="description">{state} · {visibleItems.length} visible</span>
         </section>
-        {uploadStatus ? <p className="wp-media-upload-status" role="status">{uploadStatus}</p> : null}
-        <section className="wp-meta-box wp-media-library-card">
-          <MediaLibrarySurface
-            mode={mode}
-            setMode={setMode}
-            query={query}
-            setQuery={setQuery}
-            selected={selected}
-            setSelected={setSelected}
-            items={visible}
-            setItems={setItems}
-            onUploadClick={() => fileInputRef.current?.click()}
-          />
-          <input ref={fileInputRef} type="file" accept={MEDIA_ACCEPT} multiple hidden onChange={handleUpload} />
-        </section>
+
+        <div className="media-library-layout">
+          <section className="media-library-grid" aria-label="Media items">
+            {visibleItems.length ? visibleItems.map((item) => (
+              <MediaTile key={`${item.id}-${item.url}`} item={item} selected={selected?.url === item.url} onSelect={setSelected} />
+            )) : (
+              <div className="missing-state"><h2>No media found</h2><p>Upload a file or change the current filters.</p></div>
+            )}
+          </section>
+          <AttachmentDetails selected={selected} onSaved={handleSaved} />
+        </div>
       </main>
     </AdminFrame>
   )
+}
+
+export function MediaPickerModal({ open, onClose, onPick, title = 'Choose Media' }) {
+  const [items, setItems] = useState([])
+  const [legacyItems, setLegacyItems] = useState([])
+  const [selected, setSelected] = useState(null)
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState('all')
+  const [loadError, setLoadError] = useState('')
+
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    loadMediaLibraryState().then((loaded) => {
+      if (cancelled) return
+      setItems(loaded.items)
+      setLegacyItems(loaded.legacyItems)
+      setLoadError(loaded.error)
+      setSelected(null)
+    })
+    return () => { cancelled = true }
+  }, [open])
+
+  const visibleItems = useMemo(() => filterMedia(items, query, filter), [items, query, filter])
+  if (!open) return null
+
+  function handleUploaded(created) {
+    setItems((current) => mergeUploadedMedia(created, current))
+    if (created[0]) setSelected(created[0])
+  }
+
+  function handleSaved(saved) {
+    setItems((current) => dedupeMedia([saved, ...current.filter((item) => item.url !== saved.url && item.id !== saved.id)]))
+    setSelected(saved)
+  }
+
+  return (
+    <div className="media-picker-modal" role="dialog" aria-modal="true" aria-label={title} onMouseDown={(event) => {
+      if (event.target === event.currentTarget) onClose?.()
+    }}>
+      <div className="media-picker-modal__panel">
+        <header className="media-picker-modal__header">
+          <h2>{title}</h2>
+          <button className="button" type="button" onClick={onClose}>Close</button>
+        </header>
+
+        <UploadPanel compact onUploaded={handleUploaded} />
+        {loadError ? <div className="notice notice-error"><p>{loadError}</p></div> : null}
+        {legacyItems.length ? <p className="description">{legacyItems.length} legacy browser-only media record{legacyItems.length === 1 ? '' : 's'} are excluded from selection until migrated or re-uploaded.</p> : null}
+
+        <div className="media-library-toolbar">
+          <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search media" aria-label="Search media" />
+          <select value={filter} onChange={(event) => setFilter(event.target.value)} aria-label="Filter media type">
+            <option value="all">All media</option>
+            <option value="image">Images</option>
+            <option value="audio">Audio</option>
+            <option value="video">Video</option>
+            <option value="pdf">PDFs</option>
+            <option value="document">Documents</option>
+          </select>
+        </div>
+
+        <div className="media-picker-modal__body">
+          <section className="media-library-grid">
+            {visibleItems.map((item) => (
+              <MediaTile key={`${item.id}-${item.url}`} item={item} selected={selected?.url === item.url} onSelect={setSelected} />
+            ))}
+          </section>
+          <AttachmentDetails selected={selected} onSaved={handleSaved} />
+        </div>
+
+        <footer className="media-picker-modal__footer">
+          <button className="button" type="button" onClick={onClose}>Cancel</button>
+          <button className="button button--primary" type="button" disabled={!selected} onClick={() => selected && onPick?.(selected)}>
+            Use Selected Media
+          </button>
+        </footer>
+      </div>
+    </div>
+  )
+}
+
+function filterMedia(items, query, filter) {
+  const q = String(query || '').trim().toLowerCase()
+  return (items || []).filter((item) => {
+    const typeMatches = filter === 'all'
+      || item.mediaType === filter
+      || (filter === 'image' && item.mediaType === 'svg')
+      || (filter === 'document' && ['document', 'text', 'archive', 'epub', 'file'].includes(item.mediaType))
+    if (!typeMatches) return false
+    if (!q) return true
+    return [
+      item.title,
+      item.filename,
+      item.caption,
+      item.description,
+      item.creator,
+      item.credit,
+      item.attribution,
+      item.license,
+      item.folder,
+      ...(item.tags || []),
+    ].join(' ').toLowerCase().includes(q)
+  })
+}
+
+function fieldsFromItem(item = {}) {
+  return {
+    title: String(item?.title || ''),
+    alt: String(item?.alt || item?.altText || ''),
+    caption: String(item?.caption || ''),
+    description: String(item?.description || ''),
+    folder: String(item?.folder || defaultFolder(item?.mediaType)),
+    tags: normalizeTags(item?.tags).join(', '),
+    creator: String(item?.creator || ''),
+    credit: String(item?.credit || ''),
+    attribution: String(item?.attribution || ''),
+    license: String(item?.license || ''),
+    licenseUrl: String(item?.licenseUrl || ''),
+    sourceUrl: String(item?.sourceUrl || ''),
+  }
+}
+
+function toPersistentAsset(item = {}) {
+  return {
+    id: String(item.id || `media-${Math.random().toString(36).slice(2, 10)}`),
+    title: String(item.title || item.filename || 'Media'),
+    url: String(item.url || ''),
+    downloadUrl: String(item.downloadUrl || item.url || ''),
+    altText: String(item.alt || item.altText || ''),
+    caption: String(item.caption || ''),
+    description: String(item.description || ''),
+    credit: String(item.credit || ''),
+    attribution: String(item.attribution || ''),
+    creator: String(item.creator || ''),
+    license: String(item.license || ''),
+    licenseUrl: String(item.licenseUrl || ''),
+    sourceUrl: String(item.sourceUrl || ''),
+    folder: String(item.folder || defaultFolder(item.mediaType)),
+    tags: normalizeTags(item.tags),
+    mediaType: normalizeMediaType(item.mediaType),
+    mimeType: String(item.mimeType || ''),
+    filename: String(item.filename || filenameFromUrl(item.url) || ''),
+    size: Number(item.size || 0) || 0,
+    extension: String(item.extension || extensionFromFilename(item.filename || filenameFromUrl(item.url)) || ''),
+    storageKey: String(item.storageKey || storageKeyFromUrl(item.url) || ''),
+    source: ['native', 'imported'].includes(item.source) ? 'registry' : String(item.source || 'registry'),
+    createdAt: String(item.createdAt || item.uploadedAt || new Date().toISOString()),
+  }
+}
+
+function normalizeTags(value) {
+  if (Array.isArray(value)) return [...new Set(value.map((tag) => String(tag || '').trim()).filter(Boolean))]
+  return [...new Set(String(value || '').split(',').map((tag) => tag.trim()).filter(Boolean))]
+}
+
+function inferMediaType(mimeType = '', filename = '') {
+  const mime = String(mimeType || '').toLowerCase()
+  const ext = extensionFromFilename(filename)
+  if (mime.startsWith('image/')) return mime.includes('svg') ? 'svg' : 'image'
+  if (mime.startsWith('audio/') || ['mp3', 'm4a', 'wav', 'ogg', 'oga', 'flac'].includes(ext)) return 'audio'
+  if (mime.startsWith('video/') || ['mp4', 'webm'].includes(ext)) return 'video'
+  if (mime === 'application/pdf' || ext === 'pdf') return 'pdf'
+  if (mime.includes('epub') || ext === 'epub') return 'epub'
+  if (mime.includes('zip') || ext === 'zip') return 'archive'
+  if (mime.startsWith('text/') || ['txt', 'md', 'markdown', 'csv'].includes(ext)) return 'text'
+  if (['doc', 'docx', 'odt', 'rtf'].includes(ext)) return 'document'
+  return 'file'
+}
+
+function defaultFolder(mediaType) {
+  if (['image', 'svg'].includes(mediaType)) return 'Images'
+  if (mediaType === 'audio') return 'Audio'
+  if (mediaType === 'video') return 'Video'
+  if (mediaType === 'pdf') return 'Zines / PDFs'
+  return 'Files'
+}
+
+function looksLikeFileUrl(url) {
+  return /\.(pdf|zip|epub|docx?|odt|rtf|txt|md|markdown|csv|mp3|m4a|wav|ogg|oga|flac|mp4|webm)(?:[?#].*)?$/i.test(url)
+    || String(url).includes('/api/media/files')
+}
+
+function filenameFromUrl(url = '') {
+  try {
+    const parsed = new URL(String(url), 'https://sabot.media')
+    return parsed.searchParams.get('filename') || parsed.pathname.split('/').filter(Boolean).pop() || ''
+  } catch {
+    return ''
+  }
+}
+
+function storageKeyFromUrl(url = '') {
+  try {
+    const parsed = new URL(String(url), 'https://sabot.media')
+    return parsed.searchParams.get('key') || ''
+  } catch {
+    return ''
+  }
+}
+
+function extensionFromFilename(filename = '') {
+  const parts = String(filename || '').split(/[?#]/)[0].split('.')
+  return parts.length > 1 ? String(parts.pop() || '').toLowerCase() : ''
 }
