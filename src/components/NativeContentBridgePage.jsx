@@ -6,9 +6,9 @@ import {
   createNativeEntryFromImportedPiece,
   loadNativeCollection,
   slugify,
-  upsertNativeEntryLocal,
   upsertNativeEntryWithMeta,
 } from '../lib/nativePublicContent'
+import { fetchNativeRevisions, restoreNativeRevision } from '../lib/nativePublicContentApi'
 import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
@@ -170,63 +170,27 @@ function getLocalRevisionsStorageKey(id) {
   return `${LOCAL_REVISIONS_KEY_PREFIX}:${String(id || '')}`
 }
 
-function loadLocalRevisions(postId) {
+function loadLegacyLocalRevisions(postId) {
   if (!postId) return []
   try {
     const raw = window.localStorage.getItem(getLocalRevisionsStorageKey(postId))
     const parsed = JSON.parse(raw || '[]')
     if (!Array.isArray(parsed)) return []
-    return parsed.filter(Boolean).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    return parsed
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
   } catch {
     return []
   }
 }
 
-function saveLocalRevision(postId, draft, note) {
-  if (!postId) return { ok: false, revisions: [] }
-  const snapshot = {
-    id: `revision-${Math.random().toString(36).slice(2, 10)}`,
-    createdAt: new Date().toISOString(),
-    editor: 'local editor',
-    note: String(note || 'manual save'),
-    draft: {
-      title: String(draft?.title || ''),
-      slug: String(draft?.slug || ''),
-      contentType: String(draft?.contentType || 'dispatch'),
-      body: String(draft?.body || ''),
-      excerpt: String(draft?.excerpt || ''),
-      tags: Array.isArray(draft?.tags) ? draft.tags : [],
-      categories: Array.isArray(draft?.categories) ? draft.categories : [],
-      collections: Array.isArray(draft?.collections) ? draft.collections : [],
-      featuredImage: String(draft?.featuredImage || ''),
-      heroImage: String(draft?.heroImage || ''),
-      featuredTitleDisplay: String(draft?.featuredTitleDisplay || ''),
-      enableReadMode: Boolean(draft?.enableReadMode ?? true),
-      enableExperienceMode: Boolean(draft?.enableExperienceMode ?? true),
-      enablePrintMode: Boolean(draft?.enablePrintMode ?? true),
-      defaultMode: String(draft?.defaultMode || 'read'),
-      heroStyle: String(draft?.heroStyle || 'default'),
-      status: String(draft?.status || 'draft'),
-      workflowState: String(draft?.workflowState || 'draft'),
-      publishedAt: String(draft?.publishedAt || ''),
-      author: String(draft?.author || ''),
-      podcastAudioUrl: String(draft?.podcastAudioUrl || ''),
-      podcastRssEnclosureUrl: String(draft?.podcastRssEnclosureUrl || ''),
-      podcastDuration: String(draft?.podcastDuration || ''),
-      podcastEpisodeNumber: String(draft?.podcastEpisodeNumber || ''),
-      podcastSeason: String(draft?.podcastSeason || ''),
-      podcastTranscript: String(draft?.podcastTranscript || ''),
-      podcastSummary: String(draft?.podcastSummary || ''),
-      podcastCoverImage: String(draft?.podcastCoverImage || ''),
-    },
-  }
-
-  const nextRevisions = [snapshot, ...loadLocalRevisions(postId)].slice(0, 25)
-  try {
-    window.localStorage.setItem(getLocalRevisionsStorageKey(postId), JSON.stringify(nextRevisions))
-    return { ok: true, revisions: nextRevisions }
-  } catch {
-    return { ok: false, revisions: loadLocalRevisions(postId) }
+function normalizeServerRevision(revision) {
+  return {
+    id: String(revision?.id || ''),
+    createdAt: String(revision?.createdAt || ''),
+    editor: 'server',
+    note: String(revision?.revisionNote || 'save'),
+    draft: revision?.snapshot && typeof revision.snapshot === 'object' ? revision.snapshot : {},
   }
 }
 
@@ -265,6 +229,11 @@ function toAutosaveFingerprint(draft, allowComments) {
     featuredImage: draft?.featuredImage || '',
     heroImage: draft?.heroImage || '',
     featuredTitleDisplay: draft?.featuredTitleDisplay || '',
+    enableReadMode: display.enableReadMode,
+    enableExperienceMode: display.enableExperienceMode,
+    enablePrintMode: display.enablePrintMode,
+    defaultMode: display.defaultMode,
+    heroStyle: display.heroStyle,
     podcastAudioUrl: draft?.podcastAudioUrl || '',
     podcastRssEnclosureUrl: draft?.podcastRssEnclosureUrl || '',
     podcastDuration: draft?.podcastDuration || '',
@@ -318,7 +287,12 @@ export function NativeContentBridgePage() {
   const visualSyncLockRef = useRef(false)
   const [visualEditorEmpty, setVisualEditorEmpty] = useState(true)
   const [revisions, setRevisions] = useState([])
+  const [legacyRevisions, setLegacyRevisions] = useState([])
+  const [revisionState, setRevisionState] = useState('idle')
+  const [revisionError, setRevisionError] = useState('')
   const [compareRevisionId, setCompareRevisionId] = useState('')
+  const [restoringRevisionId, setRestoringRevisionId] = useState('')
+  const [recoverySnapshotLoaded, setRecoverySnapshotLoaded] = useState(false)
   const [autosaveState, setAutosaveState] = useState({ status: 'idle', at: '' })
   const [publishSuccess, setPublishSuccess] = useState(null)
   const { pushNotice } = useAdminNotices()
@@ -343,47 +317,93 @@ export function NativeContentBridgePage() {
     return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name)
   }, [items])
 
-  useEffect(() => {
-    async function boot() {
-      const loaded = await loadNativeCollection({ includeFuture: 1 })
-      setItems(Array.isArray(loaded) ? loaded : [])
-      const editId = searchParams.get('edit')
-      const importSlug = searchParams.get('import')
-      const mode = searchParams.get('new') || 'article'
-      const importedPiece = importSlug
-        ? getPieces().find((piece) => piece.slug === importSlug || String(piece.id || '') === importSlug || String(piece.sourcePostId || '') === importSlug)
-        : null
-      const found = importSlug
-        ? (loaded || []).find((item) => item.slug === importedPiece?.slug || item.sourcePostId === String(importedPiece?.sourcePostId || importedPiece?.id || ''))
-        : (loaded || []).find((item) => item.id === editId)
-      if (found) {
-        setActiveId(found.id)
-        setDraft({ ...found, tags: found.tags || [], categories: found.categories || found.projects || [], collections: found.collections || [], slugManuallyEdited: true })
-        setPermalinkDraft(found.slug || '')
-        setAllowComments(found.allowComments ?? true)
-        setRevisions(loadLocalRevisions(found.id))
-        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(found, found.allowComments ?? true)
-      } else if (importedPiece) {
-        const importedDraft = createNativeEntryFromImportedPiece(importedPiece)
-        setActiveId(importedDraft.id)
-        setDraft({ ...importedDraft, tags: importedDraft.tags || [], categories: importedDraft.categories || importedDraft.projects || [], collections: importedDraft.collections || [], slugManuallyEdited: true })
-        setPermalinkDraft(importedDraft.slug || '')
-        setAllowComments(importedDraft.allowComments ?? true)
-        setRevisions(loadLocalRevisions(importedDraft.id))
-        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(importedDraft, importedDraft.allowComments ?? true)
-      } else {
-        const fresh = createTypedEntry(mode)
-        setActiveId(fresh.id)
-        setDraft(fresh)
-        setPermalinkDraft(fresh.slug || '')
-        setAllowComments(true)
-        setRevisions(loadLocalRevisions(fresh.id))
-        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(fresh, true)
+  async function reloadServerRevisions(postId = activeId, { quiet = false } = {}) {
+    if (!postId) {
+      setRevisions([])
+      setRevisionState('idle')
+      return []
+    }
+    try {
+      if (!quiet) setRevisionState('loading')
+      setRevisionError('')
+      const data = await fetchNativeRevisions({ nativeId: postId })
+      if (!data?.ok || data.mode !== 'd1' || !Array.isArray(data.items)) {
+        throw new Error(data?.error || 'Revision history did not return confirmed D1 data')
       }
-      setPublishSuccess(null)
-      setAutosaveState({ status: 'idle', at: '' })
+      const next = data.items.map(normalizeServerRevision).filter((item) => item.id)
+      setRevisions(next)
+      setRevisionState('loaded')
+      return next
+    } catch (error) {
+      const message = String(error?.message || error)
+      setRevisionError(message)
+      setRevisionState('error')
+      if (!quiet) pushNotice(`Revision history failed to load: ${message}`, 'error')
+      return []
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    async function boot() {
+      try {
+        const loaded = await loadNativeCollection({ includeFuture: 1 })
+        if (cancelled) return
+        setItems(Array.isArray(loaded) ? loaded : [])
+        const editId = searchParams.get('edit')
+        const importSlug = searchParams.get('import')
+        const mode = searchParams.get('new') || 'article'
+        const importedPiece = importSlug
+          ? getPieces().find((piece) => piece.slug === importSlug || String(piece.id || '') === importSlug || String(piece.sourcePostId || '') === importSlug)
+          : null
+        const found = importSlug
+          ? (loaded || []).find((item) => item.slug === importedPiece?.slug || item.sourcePostId === String(importedPiece?.sourcePostId || importedPiece?.id || ''))
+          : (loaded || []).find((item) => item.id === editId)
+
+        let nextDraft
+        let shouldLoadServerHistory = false
+        if (found) {
+          nextDraft = { ...found, tags: found.tags || [], categories: found.categories || found.projects || [], collections: found.collections || [], slugManuallyEdited: true }
+          shouldLoadServerHistory = true
+        } else if (importedPiece) {
+          const importedDraft = createNativeEntryFromImportedPiece(importedPiece)
+          nextDraft = { ...importedDraft, tags: importedDraft.tags || [], categories: importedDraft.categories || importedDraft.projects || [], collections: importedDraft.collections || [], slugManuallyEdited: true }
+        } else {
+          nextDraft = createTypedEntry(mode)
+        }
+
+        if (cancelled) return
+        setActiveId(nextDraft.id)
+        setDraft(nextDraft)
+        setPermalinkDraft(nextDraft.slug || '')
+        setAllowComments(nextDraft.allowComments ?? true)
+        setLegacyRevisions(loadLegacyLocalRevisions(nextDraft.id))
+        setRecoverySnapshotLoaded(false)
+        setCompareRevisionId('')
+        lastAutosaveFingerprintRef.current = toAutosaveFingerprint(nextDraft, nextDraft.allowComments ?? true)
+        setPublishSuccess(null)
+        setAutosaveState({ status: 'idle', at: '' })
+
+        if (shouldLoadServerHistory) await reloadServerRevisions(nextDraft.id)
+        else {
+          setRevisions([])
+          setRevisionState('idle')
+          setRevisionError('')
+        }
+      } catch (error) {
+        if (cancelled) return
+        const message = String(error?.message || error)
+        setItems([])
+        setRevisions([])
+        setRevisionState('error')
+        setRevisionError(message)
+        pushNotice(`Post editor failed to load production content: ${message}`, 'error')
+      }
     }
     boot()
+    return () => {
+      cancelled = true
+    }
   }, [searchParams])
 
   useEffect(() => {
@@ -397,7 +417,43 @@ export function NativeContentBridgePage() {
     loadDraftBodyIntoVisualEditor()
   }, [editorTab, draft.body, activeId])
 
-  function restoreRevision(revision) {
+  async function handleRestoreRevision(revision) {
+    if (!revision?.id) return
+    try {
+      setRestoringRevisionId(revision.id)
+      const data = await restoreNativeRevision(revision.id)
+      if (!data?.ok || data.mode !== 'd1' || !data.item) {
+        throw new Error(data?.error || 'Revision restore did not return confirmed D1 data')
+      }
+      const restored = {
+        ...data.item,
+        tags: Array.isArray(data.item.tags) ? data.item.tags : [],
+        categories: Array.isArray(data.item.categories || data.item.projects) ? (data.item.categories || data.item.projects) : [],
+        collections: Array.isArray(data.item.collections) ? data.item.collections : [],
+        slugManuallyEdited: true,
+      }
+      suppressAutosaveRef.current = true
+      setDraft(restored)
+      setActiveId(restored.id)
+      setItems((current) => current.some((item) => item.id === restored.id)
+        ? current.map((item) => (item.id === restored.id ? restored : item))
+        : [restored, ...current])
+      setPermalinkDraft(restored.slug || '')
+      setAllowComments(restored.allowComments ?? true)
+      setRecoverySnapshotLoaded(false)
+      setPublishSuccess(null)
+      lastAutosaveFingerprintRef.current = toAutosaveFingerprint(restored, restored.allowComments ?? true)
+      await reloadServerRevisions(restored.id, { quiet: true })
+      pushNotice('Revision restored in D1 and loaded into the editor.', 'success')
+    } catch (error) {
+      pushNotice(`Revision restore failed: ${String(error?.message || error)}`, 'error')
+    } finally {
+      suppressAutosaveRef.current = false
+      setRestoringRevisionId('')
+    }
+  }
+
+  function loadLegacyRecoveryRevision(revision) {
     if (!revision?.draft) return
     const restored = {
       ...draft,
@@ -406,42 +462,42 @@ export function NativeContentBridgePage() {
       categories: Array.isArray(revision.draft.categories) ? revision.draft.categories : [],
       collections: Array.isArray(revision.draft.collections) ? revision.draft.collections : [],
     }
+    suppressAutosaveRef.current = true
     setDraft(restored)
     setPublishSuccess(null)
     setPermalinkDraft(restored.slug || '')
-    pushNotice('Revision restored into the editor. Save to publish the restored snapshot.', 'info')
+    setRecoverySnapshotLoaded(true)
+    lastAutosaveFingerprintRef.current = toAutosaveFingerprint(restored, allowComments)
+    window.setTimeout(() => { suppressAutosaveRef.current = false }, 0)
+    pushNotice('Legacy browser recovery snapshot loaded. It has not been saved to D1; use Save Draft or Publish to persist it.', 'warning')
   }
 
   const compareRevision = revisions.find((revision) => revision.id === compareRevisionId)
 
   useEffect(() => {
-    if (!activeId) return
+    if (!activeId || recoverySnapshotLoaded) return
     const fingerprint = toAutosaveFingerprint(draft, allowComments)
     if (!fingerprint || fingerprint === lastAutosaveFingerprintRef.current || suppressAutosaveRef.current) return
     if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current)
     autosaveTimerRef.current = window.setTimeout(async () => {
       try {
         setAutosaveState({ status: 'saving', at: '' })
-        await upsertNativeEntryLocal(items, {
-          ...draft,
-          slug: slugify(draft.slug || draft.title),
-          categories: normalizeTermList(draft.categories || draft.projects),
-          projects: normalizeTermList(draft.categories || draft.projects),
-          collections: normalizeTermList(draft.collections),
-          allowComments,
-        }, 'autosave')
+        const normalized = buildNormalizedDraft(draft)
+        const result = await upsertNativeEntryWithMeta(items, normalized, 'autosave')
+        setItems(result.items)
         lastAutosaveFingerprintRef.current = fingerprint
         setAutosaveState({ status: 'saved', at: new Date().toISOString() })
-      } catch {
+        await reloadServerRevisions(normalized.id, { quiet: true })
+      } catch (error) {
         setAutosaveState({ status: 'error', at: '' })
-        pushNotice('Autosave failed.', 'error')
+        pushNotice(`Autosave failed: ${String(error?.message || error)}`, 'error')
       }
     }, AUTOSAVE_DEBOUNCE_MS)
 
     return () => {
       if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current)
     }
-  }, [activeId, draft, allowComments, items, pushNotice])
+  }, [activeId, draft, allowComments, items, pushNotice, recoverySnapshotLoaded])
 
   function addTagsFromInput(rawInput = tagInput) {
     const nextTags = normalizeTermList(rawInput)
@@ -534,15 +590,20 @@ export function NativeContentBridgePage() {
   }
 
   async function handleSave(note = 'save', patch = {}, options = {}) {
-    const liveBody = editorTab === 'visual' ? syncVisualBodyIntoDraft() : draft.body
-    const normalized = buildNormalizedDraft(draft, { ...patch, body: liveBody })
-    const result = await upsertNativeEntryWithMeta(items, normalized, note)
-    setItems(result.items)
-    const saved = result.items.find((item) => item.id === normalized.id)
-    if (saved) {
+    try {
+      const liveBody = editorTab === 'visual' ? syncVisualBodyIntoDraft() : draft.body
+      const normalized = buildNormalizedDraft(draft, { ...patch, body: liveBody })
+      const result = await upsertNativeEntryWithMeta(items, normalized, note)
+      setItems(result.items)
+      const saved = result.items.find((item) => item.id === normalized.id)
+      if (!saved) throw new Error(options.failureNotice || 'Save did not return the persisted post.')
+
       setActiveId(saved.id)
       setDraft({ ...saved, slugManuallyEdited: true })
       setPermalinkDraft(saved.slug || '')
+      setAllowComments(saved.allowComments ?? true)
+      setRecoverySnapshotLoaded(false)
+      lastAutosaveFingerprintRef.current = toAutosaveFingerprint(saved, saved.allowComments ?? true)
       if (saved.status === 'published' || saved.status === 'scheduled') {
         setPublishSuccess({
           id: saved.id,
@@ -553,19 +614,15 @@ export function NativeContentBridgePage() {
       } else {
         setPublishSuccess(null)
       }
-      const snapshot = saveLocalRevision(saved.id, saved, note)
-      setRevisions(snapshot.revisions)
-      if (!result.synced) {
-        pushNotice('Changes were saved locally, but syncing to the server failed.', 'warning')
-      }
+      await reloadServerRevisions(saved.id, { quiet: true })
       if (options.successNotice !== false) {
-        pushNotice(options.successNotice || 'Post saved.', 'success')
+        pushNotice(options.successNotice || 'Post saved to D1.', 'success')
       }
+      return { saved, synced: true }
+    } catch (error) {
+      pushNotice(options.failureNotice || `Save failed: ${String(error?.message || error)}`, 'error')
+      return { saved: null, synced: false }
     }
-    if (!saved) {
-      pushNotice(options.failureNotice || 'Save failed.', 'error')
-    }
-    return { saved: saved || null, synced: result.synced }
   }
 
   async function handleMoveToTrash() {
@@ -845,7 +902,10 @@ export function NativeContentBridgePage() {
                 <button className="button button--primary" type="button" onClick={() => handleSave('publish', { status: 'published', workflowState: 'published' })}>Publish</button>
                 {searchParams.get('edit') || searchParams.get('import') ? <button className="button button-link-delete" type="button" onClick={handleMoveToTrash}>Trash</button> : null}
               </div>
-              {autosaveState.status === 'saved' ? <p className="description">Autosaved {formatAutosaveTime(autosaveState.at)}</p> : null}
+              {autosaveState.status === 'saving' ? <p className="description" role="status">Autosaving to D1…</p> : null}
+              {autosaveState.status === 'saved' ? <p className="description" role="status">Autosaved to D1 {formatAutosaveTime(autosaveState.at)}</p> : null}
+              {autosaveState.status === 'error' ? <p className="description" role="alert">Autosave failed. Unsaved editor changes remain in this browser until the next successful save.</p> : null}
+              {recoverySnapshotLoaded ? <p className="description" role="status">Legacy recovery snapshot loaded. Autosave is paused until you explicitly save it.</p> : null}
               {publishSuccess ? <p className="description" role="status">Saved: <Link to={publishSuccess.slug ? `/post/${publishSuccess.slug}` : `/native-preview/${publishSuccess.id}`}>{publishSuccess.title}</Link></p> : null}
             </section>
 
@@ -981,42 +1041,84 @@ export function NativeContentBridgePage() {
               </label>
             </section>
 
-            {revisions.length ? (
-              <section className="wp-meta-box">
-                <h2>Revision History</h2>
+            <section className="wp-meta-box">
+              <div className="wp-screen-header wp-screen-header--compact">
+                <div>
+                  <h2>Revision History</h2>
+                  <p className="description">Authoritative server revisions stored in D1.</p>
+                </div>
+                <button className="button" type="button" onClick={() => reloadServerRevisions(activeId)} disabled={!activeId || revisionState === 'loading'}>
+                  {revisionState === 'loading' ? 'Loading…' : 'Reload'}
+                </button>
+              </div>
+
+              {revisionError ? (
+                <div className="notice notice-error" role="alert"><p>{revisionError}</p></div>
+              ) : null}
+
+              {revisionState === 'loading' ? <p className="description">Loading D1 revision history…</p> : null}
+              {revisionState !== 'loading' && !revisions.length ? <p className="description">No server revisions yet. The first successful save or autosave will create one.</p> : null}
+
+              {revisions.length ? (
                 <div className="native-content-editor__revision-list">
                   {revisions.slice(0, 8).map((revision, index) => {
                     const previous = revisions[index + 1]?.draft || {}
                     return (
                       <article className="native-content-editor__revision" key={revision.id}>
                         <strong>{new Date(revision.createdAt).toLocaleString()}</strong>
-                        <span>{revision.editor || 'local editor'} / {revision.note || 'save'}</span>
+                        <span>{revision.editor} / {revision.note || 'save'}</span>
                         <span>Changed: {summarizeRevisionChanges(revision.draft, previous)}</span>
                         <div className="review-card__actions">
                           <button className="button" type="button" onClick={() => setCompareRevisionId(revision.id)}>Compare</button>
-                          <button className="button" type="button" onClick={() => restoreRevision(revision)}>Restore</button>
+                          <button
+                            className="button"
+                            type="button"
+                            disabled={restoringRevisionId === revision.id}
+                            onClick={() => handleRestoreRevision(revision)}
+                          >
+                            {restoringRevisionId === revision.id ? 'Restoring…' : 'Restore in D1'}
+                          </button>
                         </div>
                       </article>
                     )
                   })}
                 </div>
-                {compareRevision ? (
-                  <div className="native-content-editor__revision-compare">
-                    <h3>Compare Revision</h3>
-                    <dl>
-                      <dt>Title</dt>
-                      <dd><del>{compareRevision.draft?.title || 'Untitled'}</del><ins>{draft.title || 'Untitled'}</ins></dd>
-                      <dt>Status</dt>
-                      <dd><del>{compareRevision.draft?.status || 'draft'}</del><ins>{draft.status || 'draft'}</ins></dd>
-                      <dt>Excerpt length</dt>
-                      <dd><del>{String(compareRevision.draft?.excerpt || '').length}</del><ins>{String(draft.excerpt || '').length}</ins></dd>
-                      <dt>Body length</dt>
-                      <dd><del>{String(compareRevision.draft?.body || '').length}</del><ins>{String(draft.body || '').length}</ins></dd>
-                    </dl>
+              ) : null}
+
+              {compareRevision ? (
+                <div className="native-content-editor__revision-compare">
+                  <h3>Compare Revision</h3>
+                  <dl>
+                    <dt>Title</dt>
+                    <dd><del>{compareRevision.draft?.title || 'Untitled'}</del><ins>{draft.title || 'Untitled'}</ins></dd>
+                    <dt>Status</dt>
+                    <dd><del>{compareRevision.draft?.status || 'draft'}</del><ins>{draft.status || 'draft'}</ins></dd>
+                    <dt>Excerpt length</dt>
+                    <dd><del>{String(compareRevision.draft?.excerpt || '').length}</del><ins>{String(draft.excerpt || '').length}</ins></dd>
+                    <dt>Body length</dt>
+                    <dd><del>{String(compareRevision.draft?.body || '').length}</del><ins>{String(draft.body || '').length}</ins></dd>
+                  </dl>
+                </div>
+              ) : null}
+
+              {legacyRevisions.length ? (
+                <details className="native-content-editor__legacy-revisions">
+                  <summary>Legacy browser recovery snapshots ({legacyRevisions.length})</summary>
+                  <p className="description">These snapshots were created by the old browser-only revision system. They are recovery data only and are never merged into D1 automatically.</p>
+                  <div className="native-content-editor__revision-list">
+                    {legacyRevisions.slice(0, 8).map((revision) => (
+                      <article className="native-content-editor__revision" key={revision.id || revision.createdAt}>
+                        <strong>{new Date(revision.createdAt || 0).toLocaleString()}</strong>
+                        <span>{revision.note || 'legacy local snapshot'}</span>
+                        <div className="review-card__actions">
+                          <button className="button" type="button" onClick={() => loadLegacyRecoveryRevision(revision)}>Load recovery snapshot</button>
+                        </div>
+                      </article>
+                    ))}
                   </div>
-                ) : null}
-              </section>
-            ) : null}
+                </details>
+              ) : null}
+            </section>
           </aside>
         </section>
 
