@@ -10,7 +10,7 @@ export function AnalyticsPage({ pieces = [] }) {
         </div>
 
         <p className="wp-screen-description">
-          WordPress-style dashboard widgets using local demo analytics generated from current content data.
+          Live, first-party traffic data for the public Sabot Media site.
         </p>
 
         <WpAnalyticsWidgets pieces={pieces} />
