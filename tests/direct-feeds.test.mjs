@@ -1,0 +1,63 @@
+import fs from 'node:fs'
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { normalizeFeedRequestPath } from '../functions/api/_lib/feedRuntime.js'
+import { buildPodcastFeedXml } from '../functions/rss/podcast.xml.js'
+
+const directRoute = fs.readFileSync(new URL('../functions/feeds/[[path]].js', import.meta.url), 'utf8')
+const runtime = fs.readFileSync(new URL('../functions/api/_lib/feedRuntime.js', import.meta.url), 'utf8')
+const manifest = fs.readFileSync(new URL('../functions/api/feed-manifest.js', import.meta.url), 'utf8')
+const publicPage = fs.readFileSync(new URL('../src/components/PublicFeedsPage.jsx', import.meta.url), 'utf8')
+
+test('feed catch-all path normalization preserves grouped XML paths', () => {
+  assert.equal(normalizeFeedRequestPath(['projects', 'grays-harbor.xml']), 'projects/grays-harbor.xml')
+  assert.equal(normalizeFeedRequestPath('all-content.xml'), 'all-content.xml')
+  assert.equal(normalizeFeedRequestPath([]), '')
+})
+
+test('direct feed route preserves the human feeds page and fails without D1', () => {
+  assert.match(directRoute, /if \(!requestedPath\) return context\.next\(\)/)
+  assert.match(directRoute, /BF_DB binding is required/)
+  assert.match(directRoute, /application\/rss\+xml/)
+  assert.match(directRoute, /x-sabot-feed-source/)
+})
+
+test('live feed runtime uses native public visibility and persisted feed settings', () => {
+  assert.match(runtime, /listNativeEntries\(db, \{\}\)/)
+  assert.doesNotMatch(runtime, /status: 'published'/)
+  assert.match(runtime, /SELECT value_json, updated_at FROM site_settings/)
+  assert.match(runtime, /mergeFeedSettings/)
+  assert.match(runtime, /buildRssBundle/)
+})
+
+test('public feeds page links only to server manifest endpoints', () => {
+  assert.match(publicPage, /fetch\('\/api\/feed-manifest'/)
+  assert.match(publicPage, /href=\{`\/feeds\/\$\{file\}`\}/)
+  assert.doesNotMatch(publicPage, /buildRssBundle\(getPieces\(\)/)
+  assert.match(publicPage, /Nothing is being presented as a working subscription URL until it does/)
+  assert.match(manifest, /mode: 'd1'/)
+})
+
+test('podcast feed output includes playable enclosure metadata', () => {
+  const xml = buildPodcastFeedXml({
+    requestUrl: 'https://sabot.media/feeds/podcasts/all.xml',
+    selfPath: '/feeds/podcasts/all.xml',
+    items: [{
+      id: 'episode-1',
+      slug: 'episode-one',
+      title: 'Episode One',
+      podcastAudioUrl: 'https://media.sabot.media/episode-one.mp3',
+      podcastMimeType: 'audio/mpeg',
+      podcastFileSize: '12345',
+      publishedAt: '2026-08-27T12:00:00Z',
+    }],
+  })
+  assert.match(xml, /<enclosure url="https:\/\/media\.sabot\.media\/episode-one\.mp3" type="audio\/mpeg" length="12345" \/>/)
+  assert.match(xml, /<atom:link href="https:\/\/sabot\.media\/feeds\/podcasts\/all\.xml"/)
+})
+
+test('direct podcasts endpoint uses proper podcast feed generator', () => {
+  assert.match(directRoute, /requestedPath === 'podcasts\/all\.xml'/)
+  assert.match(directRoute, /getPodcastFeedItems\(db\)/)
+  assert.match(directRoute, /buildPodcastFeedXml/)
+})
