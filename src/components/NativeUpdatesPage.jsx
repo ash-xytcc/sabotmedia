@@ -11,6 +11,7 @@ import { EditableText } from './EditableText'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 import { getConfiguredText } from '../lib/publicConfig'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
+import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
 
 function formatDate(value) {
   const d = new Date(value || '')
@@ -36,6 +37,7 @@ function normalizeNativeItem(item) {
       item.featuredImage ||
       getImportedImage(item) ||
       '',
+    featuredTitleDisplay: item.featuredTitleDisplay || '',
     sourceKind: 'native',
   }
 }
@@ -81,6 +83,7 @@ function normalizeArchivePiece(piece) {
     updatedAt: piece?.updatedAt || publishedAt || '',
     href: slug ? `/post/${slug}` : '/archive',
     imageUrl,
+    featuredTitleDisplay: piece?.featuredTitleDisplay || '',
     sourceKind: piece?.sourceKind || 'archive',
   }
 }
@@ -126,53 +129,84 @@ function getHomepageDisplaySettings() {
 
 function HeroFeature({ item }) {
   const hasImage = Boolean(item.imageUrl)
+  const titleDisplay = hasImage ? resolveFeaturedTitleDisplay(item) : 'below'
 
   return (
-    <article className={`publication-hero-card${hasImage ? '' : ' publication-hero-card--no-image'}`}>
+    <article className={`publication-hero-card publication-hero-card--title-${titleDisplay}${hasImage ? '' : ' publication-hero-card--no-image'}`}>
       <Link className="publication-hero-card__image-wrap" to={item.href}>
         <div
           className="publication-hero-card__image publication-hero-card__image-fill"
           style={hasImage ? {
-            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.62)), url("${item.imageUrl}")`,
+            backgroundImage: titleDisplay === 'overlay'
+              ? `linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.62)), url("${item.imageUrl}")`
+              : `url("${item.imageUrl}")`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           } : undefined}
         />
-        <div className="publication-hero-card__content publication-hero-card__overlay">
+        {titleDisplay === 'overlay' ? (
+          <div className="publication-hero-card__content publication-hero-card__overlay">
+            <div className="publication-hero-card__meta">
+              <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
+              <span>{item.target}</span>
+              <span>{item.contentType}</span>
+            </div>
+            <h1>{item.title}</h1>
+          </div>
+        ) : null}
+        {titleDisplay === 'hidden' ? <h1 className="screen-reader-only">{item.title}</h1> : null}
+      </Link>
+      {titleDisplay === 'below' ? (
+        <div className="publication-hero-card__title-below">
           <div className="publication-hero-card__meta">
             <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
             <span>{item.target}</span>
             <span>{item.contentType}</span>
           </div>
-          <h1>{item.title}</h1>
+          <h1><Link to={item.href}>{item.title}</Link></h1>
         </div>
-      </Link>
+      ) : null}
     </article>
   )
 }
 
 function RecentCard({ item }) {
   const hasImage = Boolean(item.imageUrl)
+  const titleDisplay = hasImage ? resolveFeaturedTitleDisplay(item) : 'below'
 
   return (
-    <article className={`publication-post-card${hasImage ? '' : ' publication-post-card--no-image'}`}>
+    <article className={`publication-post-card publication-post-card--title-${titleDisplay}${hasImage ? '' : ' publication-post-card--no-image'}`}>
       <Link className="publication-post-card__link" to={item.href}>
         <div
           className="publication-post-card__image-fill"
           style={hasImage ? {
-            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.68)), url("${item.imageUrl}")`,
+            backgroundImage: titleDisplay === 'overlay'
+              ? `linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.68)), url("${item.imageUrl}")`
+              : `url("${item.imageUrl}")`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           } : undefined}
         />
-        <div className="publication-post-card__overlay">
+        {titleDisplay === 'overlay' ? (
+          <div className="publication-post-card__overlay">
+            <div className="publication-post-card__meta">
+              <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
+              <span>{item.target}</span>
+            </div>
+            <h2>{item.title}</h2>
+          </div>
+        ) : null}
+        {titleDisplay === 'hidden' ? <h2 className="screen-reader-only">{item.title}</h2> : null}
+      </Link>
+      {titleDisplay === 'below' ? (
+        <div className="publication-post-card__title-below">
           <div className="publication-post-card__meta">
             <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
             <span>{item.target}</span>
           </div>
-          <h2>{item.title}</h2>
+          <h2><Link to={item.href}>{item.title}</Link></h2>
         </div>
-      </Link>
+      ) : null}
     </article>
   )
 }
