@@ -1,5 +1,6 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
+import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
 const COLLECTIONS_SCHEMA_VERSION = 1
 
@@ -9,7 +10,7 @@ export async function onRequestOptions(context) {
     ok: true,
     canEdit: permission.canEdit,
     authMode: permission.mode,
-    mode: hasDb(context) ? 'd1' : 'scaffold',
+    mode: getBoundDb(context) ? 'd1' : 'unavailable',
   })
 }
 
@@ -20,22 +21,21 @@ export async function onRequestGet(context) {
     const id = url.searchParams.get('id') || ''
     const slug = url.searchParams.get('slug') || ''
     const includeDrafts = permission.canEdit && url.searchParams.get('includeDrafts') === '1'
+    const db = getBoundDb(context)
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', items: [] })
-    }
+    if (!db) return databaseUnavailable('collection reads')
 
-    await ensureCollectionsTable(context.env.BF_DB)
+    await ensureCollectionsTable(db)
 
     if (id || slug) {
-      const item = await getCollection(context.env.BF_DB, id || slug)
+      const item = await getCollection(db, id || slug)
       if (!item || (!includeDrafts && item.status !== 'published')) {
         return json({ ok: true, mode: 'd1', item: null })
       }
       return json({ ok: true, mode: 'd1', item })
     }
 
-    const items = await listCollections(context.env.BF_DB, { includeDrafts })
+    const items = await listCollections(db, { includeDrafts })
     return json({ ok: true, mode: 'd1', items })
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
@@ -61,14 +61,13 @@ export async function onRequestDelete(context) {
     const id = url.searchParams.get('id') || url.searchParams.get('slug') || ''
     if (!id) return json({ ok: false, error: 'missing id or slug' }, 400)
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', deleted: id })
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('collection deletion')
 
-    await ensureCollectionsTable(context.env.BF_DB)
-    const existing = await getCollection(context.env.BF_DB, id)
-    await context.env.BF_DB.prepare('DELETE FROM collections WHERE id = ? OR slug = ?').bind(id, id).run()
-    await writeAuditLog(context.env.BF_DB, {
+    await ensureCollectionsTable(db)
+    const existing = await getCollection(db, id)
+    await db.prepare('DELETE FROM collections WHERE id = ? OR slug = ?').bind(id, id).run()
+    await writeAuditLog(db, {
       action: 'collections.delete',
       entityType: 'collection',
       entityId: id,
@@ -96,13 +95,12 @@ async function handleWrite(context) {
       return json({ ok: false, error: 'missing title or slug' }, 400)
     }
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', item })
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('collection writes')
 
-    await ensureCollectionsTable(context.env.BF_DB)
-    const saved = await upsertCollection(context.env.BF_DB, item)
-    await writeAuditLog(context.env.BF_DB, {
+    await ensureCollectionsTable(db)
+    const saved = await upsertCollection(db, item)
+    await writeAuditLog(db, {
       action: 'collections.upsert',
       entityType: 'collection',
       entityId: saved.id,
@@ -260,10 +258,6 @@ function slugify(value) {
     .replace(/&/g, ' and ')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-}
-
-function hasDb(context) {
-  return Boolean(context?.env?.BF_DB)
 }
 
 function json(data, status = 200) {
