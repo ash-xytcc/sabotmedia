@@ -418,3 +418,122 @@ export async function listRevisionSnapshots(db, nativeId) {
     .prepare(`
       SELECT id, native_content_id, revision_json, revision_note, created_at
       FROM native_public_content_revisions
+      WHERE native_content_id = ?
+      ORDER BY datetime(created_at) DESC
+    `)
+    .bind(nativeId)
+    .all()
+
+  const rows = Array.isArray(result?.results) ? result.results : []
+
+  return rows.map((row) => {
+    let parsed = {}
+    try {
+      parsed = JSON.parse(row.revision_json || '{}')
+    } catch {
+      parsed = {}
+    }
+
+    return {
+      id: row.id,
+      nativeContentId: row.native_content_id,
+      revisionNote: row.revision_note,
+      createdAt: row.created_at,
+      snapshot: normalizeNativeEntry(parsed),
+    }
+  })
+}
+
+export async function restoreRevisionSnapshot(db, revisionId) {
+  await ensureNativeRevisionTable(db)
+
+  const row = await db
+    .prepare(`
+      SELECT id, native_content_id, revision_json, revision_note, created_at
+      FROM native_public_content_revisions
+      WHERE id = ?
+      LIMIT 1
+    `)
+    .bind(revisionId)
+    .first()
+
+  if (!row) {
+    throw new Error('revision not found')
+  }
+
+  let parsed = {}
+  try {
+    parsed = JSON.parse(row.revision_json || '{}')
+  } catch {
+    parsed = {}
+  }
+
+  const restored = await upsertNativeEntry(db, {
+    ...parsed,
+    updatedAt: new Date().toISOString(),
+  })
+
+  await saveRevisionSnapshot(db, restored, `restore:${revisionId}`)
+
+  return restored
+}
+
+export function isPubliclyVisible(item) {
+  if (!item) return false
+  const status = String(item.status || '')
+  if (!['published', 'scheduled'].includes(status)) return false
+  if (item.workflowState === 'archived') return false
+  if (item.workflowState === 'trash') return false
+  if (item.workflowState && !['published', 'scheduled', 'ready'].includes(item.workflowState)) return false
+
+  const now = Date.now()
+  const scheduled = item.scheduledFor ? new Date(item.scheduledFor).getTime() : 0
+  if (scheduled && Number.isFinite(scheduled) && scheduled > now) return false
+
+  return true
+}
+
+function computePublishedAt(entry) {
+  const status = String(entry?.status || '')
+  const existing = String(entry?.publishedAt || '')
+  if (status !== 'published') return ''
+  return existing || new Date().toISOString()
+}
+
+function inferWorkflowState(raw, status, requestedWorkflowState = '') {
+  if (status === 'trash') return 'trash'
+  if (status === 'archived') return 'archived'
+  if (requestedWorkflowState) return requestedWorkflowState
+  if (status === 'published' || status === 'scheduled') {
+    const scheduled = normalizeDateString(raw?.scheduledFor || raw?.scheduled_for || '')
+    if (scheduled && new Date(scheduled).getTime() > Date.now()) return 'scheduled'
+    return 'published'
+  }
+  return 'draft'
+}
+
+function normalizeDateString(value) {
+  const str = String(value || '').trim()
+  if (!str) return ''
+  const ms = new Date(str).getTime()
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : ''
+}
+
+function normalizeEnum(value, allowed) {
+  const str = String(value || '').trim()
+  return allowed.includes(str) ? str : ''
+}
+
+function normalizeFeaturedTitleDisplay(value) {
+  return normalizeEnum(value, ['overlay', 'below', 'hidden'])
+}
+
+function normalizeTags(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean)
+  }
+  if (typeof value === 'string') {
+    return value.split(',').map((item) => item.trim()).filter(Boolean)
+  }
+  return []
+}
