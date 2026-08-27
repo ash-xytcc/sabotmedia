@@ -4,7 +4,8 @@ import { AdminFrame } from './AdminRail'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import { getPieces } from '../lib/pieces'
 import { loadMediaLibraryItems } from './MediaLibraryPage'
-import { buildMediaAuditSummary, buildLocalStorageInventory } from '../lib/localSiteBackup'
+import { buildMediaAuditSummary } from '../lib/localSiteBackup'
+import { fetchSiteHealth } from '../lib/siteHealthApi'
 import { adminRoutes } from '../routing/routes'
 
 function extractUrls(value = '') {
@@ -24,22 +25,37 @@ function titleFor(item) {
   return item.title || item.slug || item.id || 'Untitled'
 }
 
+function statusWord(value) {
+  return value ? 'ready' : 'missing'
+}
+
 export function SiteHealthPage({ pieces = [] }) {
   const [nativeItems, setNativeItems] = useState([])
+  const [health, setHealth] = useState(null)
   const [state, setState] = useState('loading')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     let cancelled = false
-    loadNativeCollection({ includeFuture: 1 })
-      .then((items) => {
-        if (!cancelled) setNativeItems(Array.isArray(items) ? items : [])
-      })
-      .catch(() => {
-        if (!cancelled) setNativeItems([])
-      })
-      .finally(() => {
-        if (!cancelled) setState('ready')
-      })
+    async function boot() {
+      try {
+        setState('loading')
+        setError('')
+        const [items, diagnostics] = await Promise.all([
+          loadNativeCollection({ includeFuture: 1 }),
+          fetchSiteHealth(),
+        ])
+        if (cancelled) return
+        setNativeItems(Array.isArray(items) ? items : [])
+        setHealth(diagnostics)
+        setState('ready')
+      } catch (nextError) {
+        if (cancelled) return
+        setError(String(nextError?.message || nextError))
+        setState('error')
+      }
+    }
+    boot()
     return () => {
       cancelled = true
     }
@@ -48,7 +64,6 @@ export function SiteHealthPage({ pieces = [] }) {
   const allItems = useMemo(() => [...nativeItems, ...(pieces.length ? pieces : getPieces())], [nativeItems, pieces])
   const mediaItems = useMemo(() => loadMediaLibraryItems(nativeItems), [nativeItems])
   const mediaAudit = useMemo(() => buildMediaAuditSummary({ nativeItems }), [nativeItems])
-  const storage = useMemo(() => buildLocalStorageInventory(), [nativeItems])
 
   const missingFeatured = allItems.filter((item) => !String(item.featuredImage || item.heroImage || '').trim()).slice(0, 25)
   const missingAlt = mediaItems.filter((item) => !String(item.alt || '').trim()).slice(0, 25)
@@ -61,34 +76,74 @@ export function SiteHealthPage({ pieces = [] }) {
     status: linkStatus(url),
   }))).filter((row) => row.status !== 'internal ok').slice(0, 80)
 
+  const missingTables = health?.summary?.missingTables || []
+  const mediaStorageReady = Boolean(health?.bindings?.mediaStorage)
+  const dbRecordCount = (health?.tables || []).reduce((sum, table) => sum + (Number.isFinite(Number(table.count)) ? Number(table.count) : 0), 0)
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <div>
             <h1>Site Health</h1>
-            <p className="description">Editorial QA for links, media, search, RSS, storage, build, and deployment readiness.</p>
+            <p className="description">Production diagnostics plus editorial QA for content, links, media, storage, and deployment readiness.</p>
           </div>
           <Link className="button" to={adminRoutes.dashboard}>Back to newsroom</Link>
         </div>
 
+        {error ? (
+          <div className="notice notice-error" role="alert">
+            <p><strong>Health check failed:</strong> {error}</p>
+          </div>
+        ) : null}
+
         <section className="newsroom-stat-grid">
-          <article className="review-summary-card"><div className="review-summary-card__eyebrow">broken link scan</div><strong>{linkRows.length}</strong><span>queued/review references</span></article>
-          <article className="review-summary-card"><div className="review-summary-card__eyebrow">missing featured</div><strong>{missingFeatured.length}</strong><span>sampled content records</span></article>
-          <article className="review-summary-card"><div className="review-summary-card__eyebrow">missing alt</div><strong>{missingAlt.length}</strong><span>media records</span></article>
-          <article className="review-summary-card"><div className="review-summary-card__eyebrow">storage</div><strong>{Math.round(storage.totalBytes / 1024)} KB</strong><span>{storage.keyCount} local keys</span></article>
+          <article className="review-summary-card"><div className="review-summary-card__eyebrow">database</div><strong>{health?.bindings?.BF_DB ? 'D1 ready' : 'unavailable'}</strong><span>{dbRecordCount} records across checked tables</span></article>
+          <article className="review-summary-card"><div className="review-summary-card__eyebrow">schema</div><strong>{missingTables.length}</strong><span>missing expected tables</span></article>
+          <article className="review-summary-card"><div className="review-summary-card__eyebrow">media storage</div><strong>{mediaStorageReady ? 'ready' : 'missing'}</strong><span>{health?.bindings?.mediaBinding || 'R2 binding required for uploads'}</span></article>
+          <article className="review-summary-card"><div className="review-summary-card__eyebrow">content QA</div><strong>{linkRows.length}</strong><span>links queued for review</span></article>
         </section>
 
         <section className="newsroom-grid">
           <article className="wp-meta-box newsroom-panel">
-            <h2>Status</h2>
+            <h2>Production bindings</h2>
             <ul className="wp-checklist">
-              <li>Search index: {allItems.length} searchable records</li>
-              <li>RSS status: {allItems.filter((item) => item.publishedAt || item.status === 'published').length} feed-ready records</li>
-              <li>Build status: run `npm run build` before deploy</li>
-              <li>Last deployment: verify in Cloudflare Pages</li>
-              <li>Media audit: {mediaAudit.totalMedia} media references</li>
-              <li>Scan state: {state}</li>
+              <li>BF_DB: {statusWord(health?.bindings?.BF_DB)}</li>
+              <li>Static ASSETS binding: {statusWord(health?.bindings?.ASSETS)}</li>
+              <li>Media/R2 binding: {mediaStorageReady ? `ready (${health.bindings.mediaBinding})` : 'missing'}</li>
+              <li>Session secret: {statusWord(health?.auth?.sessionSecretConfigured)}</li>
+              <li>Admin token: {statusWord(health?.auth?.adminTokenConfigured)}</li>
+              <li>Canonical request host: {health?.canonicalHost ? 'sabot.media' : health?.requestHost || 'unknown'}</li>
+              <li>Health generated: {health?.generatedAt ? new Date(health.generatedAt).toLocaleString() : state}</li>
+            </ul>
+          </article>
+
+          <article className="wp-meta-box newsroom-panel">
+            <h2>D1 schema and counts</h2>
+            <table className="content-table wp-posts-table">
+              <thead><tr><th>Table</th><th>Status</th><th>Records</th></tr></thead>
+              <tbody>
+                {(health?.tables || []).map((table) => (
+                  <tr key={table.name}>
+                    <td><code>{table.name}</code></td>
+                    <td>{table.error ? `error: ${table.error}` : table.exists ? 'ready' : 'missing'}</td>
+                    <td>{table.count == null ? '—' : Number(table.count).toLocaleString()}</td>
+                  </tr>
+                ))}
+                {!health?.tables?.length ? <tr><td colSpan={3}>{state === 'loading' ? 'Loading diagnostics…' : 'No diagnostics available.'}</td></tr> : null}
+              </tbody>
+            </table>
+          </article>
+
+          <article className="wp-meta-box newsroom-panel">
+            <h2>Editorial content checks</h2>
+            <ul className="wp-checklist">
+              <li>Searchable records: {allItems.length}</li>
+              <li>Feed-ready records: {allItems.filter((item) => item.publishedAt || item.status === 'published').length}</li>
+              <li>Media references: {mediaAudit.totalMedia}</li>
+              <li>Missing featured images: {missingFeatured.length}</li>
+              <li>Missing alt text: {missingAlt.length}</li>
+              <li>Possible orphaned media: {orphanedMedia.length}</li>
             </ul>
           </article>
 
