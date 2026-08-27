@@ -48,6 +48,7 @@ import { SystemBackupPage } from './components/SystemBackupPage'
 import { AuditLogPage } from './components/AuditLogPage'
 import { adminRoutes, publicRoutes } from './routing/routes'
 import { buildPostMeta, setDocumentMeta } from './lib/documentMeta'
+import { trackPageView } from './lib/analyticsApi'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -115,6 +116,23 @@ function ScrollToTop() {
     if (hash) return
     window.scrollTo(0, 0)
   }, [pathname, search, hash])
+
+  return null
+}
+
+function AnalyticsTracker() {
+  const location = useLocation()
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      trackPageView({
+        path: location.pathname,
+        title: document.title,
+        referrer: document.referrer,
+      })
+    }, 500)
+    return () => window.clearTimeout(timer)
+  }, [location.pathname])
 
   return null
 }
@@ -317,6 +335,7 @@ export default function App() {
         <AdminNoticeProvider>
           <ScrollToTop />
           <RouteMeta pieces={pieces} />
+          <AnalyticsTracker />
           <Layout>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
