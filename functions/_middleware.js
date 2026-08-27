@@ -37,6 +37,12 @@ const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/sessio
 
 export async function onRequest(context) {
   const url = new URL(context.request.url)
+
+  if (url.hostname.toLowerCase() === 'www.sabot.media') {
+    url.hostname = 'sabot.media'
+    return Response.redirect(url.toString(), 308)
+  }
+
   const pathname = url.pathname
   const method = String(context.request.method || 'GET').toUpperCase()
   const isAdminRoute = ADMIN_PREFIXES.some((path) => pathname === path || pathname.startsWith(`${path}/`))
