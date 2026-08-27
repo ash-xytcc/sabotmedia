@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
+import mastheadLogo from '../assets/sabot-masthead-logo.png'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
-import { sabotLogoVerified } from '../lib/sabotLogoVerified'
 import { EditableLink } from './EditableLink'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 
@@ -22,18 +22,14 @@ export function PublicationTopbar() {
         <div className="publication-topbar__brand">
           <Link
             to="/"
-            className="publication-topbar__brand-link"
+            className="publication-topbar__brand-link publication-topbar__brand-link--isolated"
             aria-label={`${siteTitle} home`}
             title={siteTitle}
-            style={{ background: 'transparent', opacity: 1, visibility: 'visible' }}
           >
-            <img
-              src={sabotLogoVerified}
-              alt={siteTitle}
-              className="publication-topbar__brand-image"
-              width="280"
-              height="88"
-              style={{ display: 'block', opacity: 1, visibility: 'visible', filter: 'none', mixBlendMode: 'normal' }}
+            <span
+              className="publication-topbar__brand-mark"
+              aria-hidden="true"
+              style={{ backgroundImage: `url(${mastheadLogo})` }}
             />
           </Link>
 
