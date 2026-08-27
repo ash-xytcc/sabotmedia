@@ -35,6 +35,10 @@ export const adminRoutes = Object.freeze({
   siteHealth: '/wp-admin/site-health',
   backup: '/wp-admin/system-backup',
   auditLog: '/wp-admin/audit-log',
+  analytics: '/wp-admin/analytics',
+  taxonomy: '/wp-admin/taxonomy',
+  roles: '/wp-admin/roles',
+  platformMap: '/wp-admin/platform-map',
   qa: '/wp-admin/qa',
   settings: '/wp-admin/settings',
   users: '/wp-admin/users',
@@ -60,6 +64,10 @@ export const routeRedirects = Object.freeze([
   { from: '/settings', to: adminRoutes.settings },
   { from: '/users', to: adminRoutes.users },
   { from: '/sites', to: adminRoutes.sites },
+  { from: '/analytics', to: adminRoutes.analytics },
+  { from: '/taxonomy', to: adminRoutes.taxonomy },
+  { from: '/roles', to: adminRoutes.roles },
+  { from: '/platform-map', to: adminRoutes.platformMap },
 ])
 
 export function postPath(slug) {
