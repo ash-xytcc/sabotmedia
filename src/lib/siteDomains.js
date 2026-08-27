@@ -1,63 +1,88 @@
-const SITES_STORAGE_KEY = 'sabot-wp-clone-sites-v1'
-
-export const SITE_STATUS_OPTIONS = ['connected', 'scaffold', 'needs DNS']
+export const SITE_STATUS_OPTIONS = ['connected', 'planned', 'needs DNS', 'disabled']
 
 export const DEFAULT_SITE = {
   id: 'sabot-media-default',
   name: 'Sabot Media',
-  domain: 'sabotmedia.pages.dev',
+  domain: 'sabot.media',
   basePath: '/',
   status: 'connected',
+  notes: 'Canonical production hostname.',
 }
 
 function normalizeBasePath(value) {
-  const trimmed = (value || '').trim()
+  const trimmed = String(value || '').trim()
   if (!trimmed || trimmed === '/') return '/'
   const withoutSlashes = trimmed.replace(/^\/+|\/+$/g, '')
   return `/${withoutSlashes}`
 }
 
-function normalizeSite(site) {
-  const status = SITE_STATUS_OPTIONS.includes(site?.status) ? site.status : 'scaffold'
+function normalizeDomain(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/\/$/, '')
+}
+
+export function normalizeSite(site = {}) {
+  const status = SITE_STATUS_OPTIONS.includes(site.status) ? site.status : 'planned'
   return {
-    id: site?.id || `site-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    name: site?.name?.trim() || 'Untitled site',
-    domain: site?.domain?.trim() || 'example.com',
-    basePath: normalizeBasePath(site?.basePath),
+    id: String(site.id || `site-${crypto.randomUUID?.() || Math.random().toString(36).slice(2, 10)}`),
+    name: String(site.name || '').trim() || 'Untitled site',
+    domain: normalizeDomain(site.domain),
+    basePath: normalizeBasePath(site.basePath),
     status,
+    notes: String(site.notes || '').trim(),
+    createdAt: String(site.createdAt || ''),
+    updatedAt: String(site.updatedAt || ''),
   }
 }
 
-export function loadSites() {
-  if (typeof window === 'undefined') return [DEFAULT_SITE]
-
-  try {
-    const raw = window.localStorage.getItem(SITES_STORAGE_KEY)
-    if (!raw) return [DEFAULT_SITE]
-
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed) || parsed.length === 0) return [DEFAULT_SITE]
-
-    return parsed.map(normalizeSite)
-  } catch {
-    return [DEFAULT_SITE]
-  }
-}
-
-export function saveSites(sites) {
-  if (typeof window === 'undefined') return
-
-  try {
-    const normalized = (Array.isArray(sites) && sites.length ? sites : [DEFAULT_SITE]).map(normalizeSite)
-    window.localStorage.setItem(SITES_STORAGE_KEY, JSON.stringify(normalized))
-  } catch {
-    // local scaffold only
-  }
-}
-
-export function createSiteDraft(fields) {
+export function createSiteDraft(fields = {}) {
   return normalizeSite({
     ...fields,
-    id: `site-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `site-${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`}`,
   })
+}
+
+export async function loadSites() {
+  const response = await fetch('/api/sites', {
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok || !data?.ok || data.mode !== 'd1' || !Array.isArray(data.items)) {
+    throw new Error(data?.error || `site registry request failed: ${response.status}`)
+  }
+  return data.items.map(normalizeSite)
+}
+
+export async function saveSite(site) {
+  const item = normalizeSite(site)
+  const response = await fetch('/api/sites', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ item }),
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok || !data?.ok || data.mode !== 'd1' || !data.item) {
+    throw new Error(data?.error || `site save failed: ${response.status}`)
+  }
+  return normalizeSite(data.item)
+}
+
+export async function deleteSite(id) {
+  const url = new URL('/api/sites', window.location.origin)
+  url.searchParams.set('id', String(id || ''))
+  const response = await fetch(url.pathname + url.search, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+  })
+  const data = await response.json().catch(() => null)
+  if (!response.ok || !data?.ok || data.mode !== 'd1') {
+    throw new Error(data?.error || `site delete failed: ${response.status}`)
+  }
+  return true
 }
