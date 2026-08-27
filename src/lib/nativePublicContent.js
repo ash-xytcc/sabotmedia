@@ -235,6 +235,10 @@ function loadLocalNativeCollection() {
   }
 }
 
+export function loadLegacyNativeCollection() {
+  return loadLocalNativeCollection()
+}
+
 function mergeNativeCollections(primary = [], secondary = []) {
   const byId = new Map()
   for (const item of normalizeNativeCollection(secondary)) byId.set(item.id, item)
@@ -243,21 +247,18 @@ function mergeNativeCollections(primary = [], secondary = []) {
 }
 
 export async function loadNativeCollection(params = {}) {
-  const localItems = loadLocalNativeCollection()
-  try {
-    const data = await fetchNativeEntries(params)
-    const remoteItems = normalizeNativeCollection(data?.items || [])
-    const merged = mergeNativeCollections(remoteItems, localItems)
-    try { window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(merged)) } catch { /* ignore */ }
-    return merged
-  } catch {
-    return localItems
+  const data = await fetchNativeEntries(params)
+  if (!data?.ok || !Array.isArray(data.items) || data.mode === 'scaffold') {
+    throw new Error(data?.error || 'Native content load did not return confirmed D1 data')
   }
+  return normalizeNativeCollection(data.items)
 }
 
+// Legacy browser helpers are retained only for explicit recovery/migration.
+// Production read/write paths above and below never use them as persistence.
 export function saveNativeCollection(items) {
   const normalized = normalizeNativeCollection(items)
-  try { window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(normalized)) } catch { /* ignore */ }
+  try { window.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(normalized)) } catch { /* recovery store only */ }
   return normalized
 }
 
@@ -288,26 +289,22 @@ export async function upsertNativeEntryWithMeta(items, entry, revisionNote = 'sa
     updatedAt: new Date().toISOString(),
     publishedAt: ['published', 'scheduled'].includes(String(entry?.status || '')) ? String(entry.publishedAt || new Date().toISOString()) : String(entry?.publishedAt || ''),
   })
-  const localBase = mergeNativeCollections(items || [], loadLocalNativeCollection())
-  const locallySaved = saveNativeCollection(localBase.some((item) => item.id === normalizedEntry.id) ? localBase.map((item) => (item.id === normalizedEntry.id ? normalizedEntry : item)) : [normalizedEntry, ...localBase])
-
-  try {
-    const data = await saveNativeEntry(normalizedEntry, revisionNote)
-    const saved = normalizeNativeEntry(data?.item || normalizedEntry)
-    const merged = saveNativeCollection(locallySaved.some((item) => item.id === saved.id) ? locallySaved.map((item) => (item.id === saved.id ? saved : item)) : [saved, ...locallySaved])
-    return { items: merged, item: saved, synced: true }
-  } catch {
-    return { items: locallySaved, item: normalizedEntry, synced: false }
+  const data = await saveNativeEntry(normalizedEntry, revisionNote)
+  if (!data?.ok || !data?.item || data.mode === 'scaffold') {
+    throw new Error(data?.error || 'Native content save did not receive confirmed D1 persistence')
   }
+  const saved = normalizeNativeEntry(data.item)
+  const current = normalizeNativeCollection(items || [])
+  const next = current.some((item) => item.id === saved.id)
+    ? current.map((item) => (item.id === saved.id ? saved : item))
+    : [saved, ...current]
+  return { items: normalizeNativeCollection(next), item: saved, synced: true }
 }
 
 export async function deleteNativeEntry(items, id) {
-  try {
-    await removeNativeEntry(id)
-    return normalizeNativeCollection((items || []).filter((item) => item.id !== id && item.slug !== id))
-  } catch {
-    return saveNativeCollection((items || []).filter((item) => item.id !== id))
-  }
+  const data = await removeNativeEntry(id)
+  if (data && data.ok === false) throw new Error(data.error || 'Native content delete failed')
+  return normalizeNativeCollection((items || []).filter((item) => item.id !== id && item.slug !== id))
 }
 
 export function exportNativeCollection(items) {
