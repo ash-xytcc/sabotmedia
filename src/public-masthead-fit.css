@@ -1,17 +1,13 @@
-/* Transparent public masthead.
-   The masthead logo is now a transparent bundled asset, so it can be shown safely on every public page. */
-.publication-topbar--masthead,
-.publication-topbar--masthead .publication-topbar__inner,
-.publication-topbar--masthead .publication-topbar__brand,
-.publication-topbar--masthead .publication-topbar__brand-link {
-  overflow: visible !important;
-}
+/* Public masthead isolation.
+   The legacy stylesheet contains many generations of masthead rules. This file is loaded later and deliberately gives the live mark its own class so those rules cannot touch it. */
 
 .publication-topbar--masthead {
   position: relative !important;
   z-index: 20 !important;
   min-height: 0 !important;
-  padding: clamp(10px, 1.8vw, 24px) 0 clamp(8px, 1.4vw, 18px) !important;
+  height: auto !important;
+  padding: 12px 0 10px !important;
+  overflow: visible !important;
   background: transparent !important;
   border-bottom: 1px solid rgba(244, 220, 160, 0.14) !important;
 }
@@ -19,90 +15,95 @@
 .publication-topbar--masthead .publication-topbar__inner {
   width: min(calc(100% - 24px), 1120px) !important;
   max-width: 1120px !important;
-  height: auto !important;
   min-height: 0 !important;
+  height: auto !important;
   margin: 0 auto !important;
+  overflow: visible !important;
 }
 
 .publication-topbar--masthead .publication-topbar__brand {
   width: 100% !important;
   min-height: 0 !important;
   height: auto !important;
-  display: grid !important;
-  justify-items: center !important;
-  align-items: center !important;
-  gap: clamp(4px, 0.9vw, 10px) !important;
-  position: relative !important;
-  z-index: 21 !important;
-}
-
-.publication-topbar--masthead .publication-topbar__brand-link {
-  width: fit-content !important;
-  max-width: min(76vw, 330px) !important;
-  height: auto !important;
-  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   display: flex !important;
+  flex-direction: column !important;
   justify-content: center !important;
   align-items: center !important;
+  gap: 7px !important;
+  position: static !important;
+  transform: none !important;
+  overflow: visible !important;
+}
+
+.publication-topbar--masthead .publication-topbar__brand-link--isolated {
+  width: 280px !important;
+  max-width: min(72vw, 280px) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: 280 / 88 !important;
   margin: 0 auto !important;
   padding: 0 !important;
-  line-height: 0 !important;
+  display: block !important;
+  flex: 0 0 auto !important;
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  visibility: visible !important;
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
-  position: relative !important;
-  z-index: 22 !important;
-  transform: none !important;
+  line-height: 0 !important;
 }
 
-.publication-topbar--masthead .publication-topbar__brand-image {
-  width: auto !important;
-  max-width: 100% !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: clamp(46px, 7vw, 94px) !important;
-  display: block !important;
-  object-fit: contain !important;
-  object-position: center center !important;
-  margin: 0 auto !important;
+.publication-topbar--masthead .publication-topbar__brand-mark {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 1px !important;
+  min-height: 1px !important;
+  margin: 0 !important;
   padding: 0 !important;
-  background: transparent !important;
+  display: block !important;
   position: static !important;
   transform: none !important;
-  clip-path: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  background-color: transparent !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: contain !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
 }
 
-.publication-topbar--home .publication-topbar__brand-link {
-  max-width: min(78vw, 380px) !important;
+.publication-topbar--home .publication-topbar__brand-link--isolated {
+  width: 280px !important;
+  max-width: min(76vw, 280px) !important;
 }
 
-.publication-topbar--home .publication-topbar__brand-image {
-  max-height: clamp(68px, 10vw, 118px) !important;
-}
-
-.publication-topbar--inner.publication-topbar--masthead {
-  padding-top: clamp(8px, 1.4vw, 16px) !important;
-  padding-bottom: clamp(8px, 1.2vw, 14px) !important;
-}
-
-.publication-topbar--inner .publication-topbar__brand-link {
-  max-width: min(58vw, 250px) !important;
-}
-
-.publication-topbar--inner .publication-topbar__brand-image {
-  max-height: clamp(44px, 5.5vw, 72px) !important;
+.publication-topbar--inner .publication-topbar__brand-link--isolated {
+  width: 220px !important;
+  max-width: min(62vw, 220px) !important;
 }
 
 .publication-topbar--masthead .publication-topbar__nav {
   width: auto !important;
+  min-height: 0 !important;
+  height: auto !important;
   margin: 0 auto !important;
+  padding: 0 !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
+  flex-wrap: wrap !important;
   gap: clamp(18px, 3vw, 34px) !important;
   position: static !important;
+  inset: auto !important;
   transform: none !important;
-  z-index: 23 !important;
+  overflow: visible !important;
   background: transparent !important;
 }
 
@@ -120,20 +121,20 @@
 
 @media (max-width: 720px) {
   .publication-topbar--masthead {
-    padding-top: 9px !important;
-    padding-bottom: 9px !important;
+    padding: 9px 0 8px !important;
   }
 
-  .publication-topbar--masthead .publication-topbar__brand-link {
-    max-width: min(72vw, 250px) !important;
+  .publication-topbar--masthead .publication-topbar__brand {
+    gap: 5px !important;
   }
 
-  .publication-topbar--masthead .publication-topbar__brand-image {
-    max-height: clamp(42px, 14vw, 74px) !important;
+  .publication-topbar--home .publication-topbar__brand-link--isolated,
+  .publication-topbar--inner .publication-topbar__brand-link--isolated {
+    width: 210px !important;
+    max-width: 68vw !important;
   }
 
   .publication-topbar--masthead .publication-topbar__nav {
     gap: 18px !important;
-    flex-wrap: wrap !important;
   }
 }
