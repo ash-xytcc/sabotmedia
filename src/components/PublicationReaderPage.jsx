@@ -1,34 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { PAGE_SIZES, findPublication, loadPublications, loadPublicationsAsync } from '../lib/publications'
+import { PAGE_SIZES, loadPublicationsAsync } from '../lib/publications'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import '../publicationReader.css'
 
 function RenderPage({ page, zoom = 1 }) {
   const size = PAGE_SIZES[page.orientation] || PAGE_SIZES.portrait
-
   return (
-    <article
-      className={`reader-page reader-page--${page.orientation}`}
-      style={{
-        '--page-width': `${size.width}px`,
-        '--page-height': `${size.height}px`,
-        '--reader-zoom': zoom,
-      }}
-    >
+    <article className={`reader-page reader-page--${page.orientation}`} style={{ '--page-width': `${size.width}px`, '--page-height': `${size.height}px`, '--reader-zoom': zoom }}>
       {(page.blocks || []).map((block) => (
-        <div
-          className="reader-block reader-block--text"
-          key={block.id}
-          style={{
-            left: `${block.x}px`,
-            top: `${block.y}px`,
-            width: `${block.width}px`,
-            minHeight: `${block.height}px`,
-            fontSize: `${block.fontSize || 24}px`,
-          }}
-        >
+        <div className="reader-block reader-block--text" key={block.id} style={{ left: `${block.x}px`, top: `${block.y}px`, width: `${block.width}px`, minHeight: `${block.height}px`, fontSize: `${block.fontSize || 24}px` }}>
           {block.text}
         </div>
       ))}
@@ -38,26 +20,53 @@ function RenderPage({ page, zoom = 1 }) {
 
 function useSwipe(onPrevious, onNext) {
   const [startX, setStartX] = useState(null)
-
   return {
     onTouchStart: (event) => setStartX(event.touches?.[0]?.clientX ?? null),
     onTouchEnd: (event) => {
       if (startX == null) return
       const endX = event.changedTouches?.[0]?.clientX ?? startX
       const delta = endX - startX
-      if (Math.abs(delta) > 42) {
-        if (delta > 0) onPrevious()
-        else onNext()
-      }
+      if (Math.abs(delta) > 42) delta > 0 ? onPrevious() : onNext()
       setStartX(null)
     },
   }
 }
 
+function usePublications() {
+  const [publications, setPublications] = useState([])
+  const [state, setState] = useState('loading')
+  const [error, setError] = useState('')
+  useEffect(() => {
+    let cancelled = false
+    loadPublicationsAsync()
+      .then((loaded) => {
+        if (!cancelled) {
+          setPublications(loaded)
+          setState('loaded')
+          setError('')
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setState('error')
+          setError(String(err?.message || err))
+        }
+      })
+    return () => { cancelled = true }
+  }, [])
+  return { publications, state, error }
+}
+
+function PublicPublicationStatus({ state, error }) {
+  if (state === 'loading') return <section className="missing-state" role="status"><h2>Loading publication</h2><p>Reading the publication registry…</p></section>
+  if (state === 'error') return <section className="missing-state" role="alert"><h2>Publication unavailable</h2><p>{error || 'The publication registry could not be loaded.'}</p></section>
+  return null
+}
+
 export function PublicationReaderPage() {
   const { slug = '' } = useParams()
-  const [publications, setPublications] = useState(() => loadPublications())
-  const publication = useMemo(() => publications.find((item) => item.id === slug || item.slug === slug) || findPublication(slug), [publications, slug])
+  const { publications, state, error } = usePublications()
+  const publication = useMemo(() => publications.find((item) => item.id === slug || item.slug === slug) || null, [publications, slug])
   const [pageIndex, setPageIndex] = useState(0)
   const [zoom, setZoom] = useState(1)
   const [showThumbnails, setShowThumbnails] = useState(true)
@@ -65,18 +74,14 @@ export function PublicationReaderPage() {
 
   const pages = publication?.pages || []
   const currentPage = pages[pageIndex] || pages[0]
-
   const goPrevious = () => setPageIndex((index) => Math.max(0, index - 1))
   const goNext = () => setPageIndex((index) => Math.min(pages.length - 1, index + 1))
   const swipeHandlers = useSwipe(goPrevious, goNext)
 
   useEffect(() => {
-    let cancelled = false
-    loadPublicationsAsync().then((loaded) => {
-      if (!cancelled) setPublications(loaded)
-    })
-    return () => { cancelled = true }
-  }, [])
+    setBookmarks(loadBookmarks(slug))
+    setPageIndex(0)
+  }, [slug])
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -87,14 +92,12 @@ export function PublicationReaderPage() {
       if (event.key.toLowerCase() === 'f') document.documentElement.requestFullscreen?.()
       if (event.key.toLowerCase() === 'b') toggleBookmark()
     }
-
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [pages.length])
+  }, [pages.length, pageIndex])
 
-  if (!publication) {
-    return <Navigate to="/publications" replace />
-  }
+  if (state !== 'loaded') return <main className="page publication-reader"><PublicPublicationStatus state={state} error={error} /></main>
+  if (!publication) return <Navigate to="/publications" replace />
 
   function toggleBookmark() {
     setBookmarks((current) => {
@@ -111,85 +114,54 @@ export function PublicationReaderPage() {
         <div className="publication-reader__controls">
           <button type="button" onClick={() => setShowThumbnails((value) => !value)}>Thumbnails</button>
           <button type="button" onClick={toggleBookmark}>{bookmarks.includes(pageIndex) ? 'Bookmarked' : 'Bookmark'}</button>
-          <button type="button" onClick={() => setZoom((value) => Math.max(0.6, Number((value - 0.1).toFixed(2))))}>-</button>
+          <button type="button" onClick={() => setZoom((value) => Math.max(0.6, Number((value - 0.1).toFixed(2))))} aria-label="Zoom out">-</button>
           <span>{Math.round(zoom * 100)}%</span>
-          <button type="button" onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))}>+</button>
+          <button type="button" onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Zoom in">+</button>
           <button type="button" onClick={() => document.documentElement.requestFullscreen?.()}>Fullscreen</button>
         </div>
       </header>
-
       <section className="publication-reader__body">
         {showThumbnails ? (
           <aside className="publication-reader__thumbs" aria-label="Page thumbnails">
             {pages.map((page, index) => (
-              <button
-                key={page.id}
-                className={index === pageIndex ? 'is-active' : ''}
-                type="button"
-                onClick={() => setPageIndex(index)}
-              >
-                <span>{index + 1}</span>
-                <strong>{page.title}</strong>
-                {bookmarks.includes(index) ? <em>Bookmark</em> : null}
+              <button key={page.id} className={index === pageIndex ? 'is-active' : ''} type="button" onClick={() => setPageIndex(index)}>
+                <span>{index + 1}</span><strong>{page.title}</strong>{bookmarks.includes(index) ? <em>Bookmark</em> : null}
               </button>
             ))}
           </aside>
         ) : null}
-
         <div className="publication-reader__stage">
           <button type="button" className="publication-reader__nav publication-reader__nav--prev" onClick={goPrevious} disabled={pageIndex === 0}>Prev</button>
           {currentPage ? <RenderPage page={currentPage} zoom={zoom} /> : null}
           <button type="button" className="publication-reader__nav publication-reader__nav--next" onClick={goNext} disabled={pageIndex >= pages.length - 1}>Next</button>
         </div>
       </section>
-
-      <footer className="publication-reader__footer">
-        <span>Page {pageIndex + 1} of {pages.length}</span>
-      </footer>
+      <footer className="publication-reader__footer"><span>Page {pageIndex + 1} of {pages.length}</span></footer>
     </main>
   )
 }
 
 export function PublicationsIndexPage() {
-  const [publications, setPublications] = useState(() => loadPublications())
-
-  useEffect(() => {
-    let cancelled = false
-    loadPublicationsAsync().then((loaded) => {
-      if (!cancelled) setPublications(loaded)
-    })
-    return () => { cancelled = true }
-  }, [])
-
+  const { publications, state, error } = usePublications()
+  if (state !== 'loaded') {
+    return <main className="page publications-index-page"><PublicationTopbar /><PublicPublicationStatus state={state} error={error} /><PublicationFooter /></main>
+  }
+  const visible = publications.filter((publication) => ['public', 'unlisted'].includes(publication.visibility) || publication.status === 'published')
   return (
     <main className="page publications-index-page">
       <PublicationTopbar />
-      <section className="project-hero">
-        <div className="project-hero__eyebrow">Publications</div>
-        <h1>Publications</h1>
-        <p className="project-hero__description">Books, magazines, zines, readers, pamphlets, poster packs, campaign kits, and booklets.</p>
-      </section>
-
-      {publications.length ? (
+      <section className="project-hero"><div className="project-hero__eyebrow">Publications</div><h1>Publications</h1><p className="project-hero__description">Books, magazines, zines, readers, pamphlets, poster packs, campaign kits, and booklets.</p></section>
+      {visible.length ? (
         <section className="piece-grid">
-          {publications.filter((publication) => ['public', 'unlisted'].includes(publication.visibility) || publication.status === 'published').map((publication) => (
+          {visible.map((publication) => (
             <article className="piece-card" key={publication.id}>
-              <div className="piece-card__meta">
-                <span>{publication.publicationType}</span>
-                <span>{publication.pages.length} pages</span>
-                <span>{publication.issueNumber ? `Issue ${publication.issueNumber}` : publication.visibility}</span>
-              </div>
+              <div className="piece-card__meta"><span>{publication.publicationType}</span><span>{publication.pages.length} pages</span><span>{publication.issueNumber ? `Issue ${publication.issueNumber}` : publication.visibility}</span></div>
               <h3><Link to={`/publications/${publication.slug}`}>{publication.title}</Link></h3>
               <p>{publication.description || publication.pages.map((page) => page.title).slice(0, 4).join(', ')}</p>
             </article>
           ))}
         </section>
-      ) : (
-        <section className="missing-state">
-          <h2>No publications</h2>
-          <p>No zine publications have been prepared yet.</p>
-        </section>
-      )}
+      ) : <section className="missing-state"><h2>No publications</h2><p>No public publications have been prepared yet.</p></section>}
       <PublicationFooter />
     </main>
   )
@@ -197,25 +169,14 @@ export function PublicationsIndexPage() {
 
 export function PublicationLandingPage() {
   const { slug = '' } = useParams()
-  const [publications, setPublications] = useState(() => loadPublications())
-  const publication = publications.find((item) => item.id === slug || item.slug === slug) || findPublication(slug)
-
-  useEffect(() => {
-    let cancelled = false
-    loadPublicationsAsync().then((loaded) => {
-      if (!cancelled) setPublications(loaded)
-    })
-    return () => { cancelled = true }
-  }, [])
-
-  if (!publication) {
-    return <Navigate to="/publications" replace />
-  }
+  const { publications, state, error } = usePublications()
+  const publication = publications.find((item) => item.id === slug || item.slug === slug) || null
+  if (state !== 'loaded') return <main className="page publication-landing-page"><PublicationTopbar /><PublicPublicationStatus state={state} error={error} /><PublicationFooter /></main>
+  if (!publication) return <Navigate to="/publications" replace />
 
   const readerPdf = publication.assets?.readerPdf || publication.digitalEditions?.[0]?.readerPdf || ''
   const printPdf = publication.assets?.printPdf || publication.printEditions?.[0]?.printPdf || ''
   const imposedPdf = publication.assets?.imposedPdf || publication.printEditions?.[0]?.imposedPdf || ''
-
   return (
     <main className="page publication-landing-page">
       <PublicationTopbar />
@@ -232,54 +193,19 @@ export function PublicationLandingPage() {
         </div>
       </section>
       <section className="publication-page-strip" aria-label="Publication pages">
-        {(publication.tableOfContents || []).length ? (
-          <article className="publication-page-card publication-page-card--toc">
-            <span>TOC</span>
-            <h2>Table of contents</h2>
-            <p>{publication.tableOfContents.map((item) => item.title).join(', ')}</p>
-          </article>
-        ) : null}
-        {publication.pages.map((page, index) => (
-          <article className="publication-page-card" key={page.id}>
-            <span>{index + 1}</span>
-            <h2>{page.title}</h2>
-            <p>{page.kind} / {page.orientation}</p>
-          </article>
-        ))}
+        {(publication.tableOfContents || []).length ? <article className="publication-page-card publication-page-card--toc"><span>TOC</span><h2>Table of contents</h2><p>{publication.tableOfContents.map((item) => item.title).join(', ')}</p></article> : null}
+        {publication.pages.map((page, index) => <article className="publication-page-card" key={page.id}><span>{index + 1}</span><h2>{page.title}</h2><p>{page.kind} / {page.orientation}</p></article>)}
       </section>
-      {(publication.downloadAssets || []).length ? (
-        <section className="publication-page-strip" aria-label="Publication downloads">
-          {publication.downloadAssets.map((asset) => (
-            <article className="publication-page-card" key={asset.id}>
-              <span>{asset.type || 'download'}</span>
-              <h2>{asset.title || 'Download'}</h2>
-              {asset.url ? <a className="button" href={asset.url}>Download</a> : null}
-            </article>
-          ))}
-        </section>
-      ) : null}
+      {(publication.downloadAssets || []).length ? <section className="publication-page-strip" aria-label="Publication downloads">{publication.downloadAssets.map((asset) => <article className="publication-page-card" key={asset.id}><span>{asset.type || 'download'}</span><h2>{asset.title || 'Download'}</h2>{asset.url ? <a className="button" href={asset.url}>Download</a> : null}</article>)}</section> : null}
       <PublicationFooter />
     </main>
   )
 }
 
-function bookmarkKey(slug) {
-  return `sabot-publication-bookmarks:${slug}`
-}
-
+function bookmarkKey(slug) { return `sabot-publication-bookmarks:${slug}` }
 function loadBookmarks(slug) {
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(bookmarkKey(slug)) || '[]')
-    return Array.isArray(parsed) ? parsed.filter((item) => Number.isFinite(item)) : []
-  } catch {
-    return []
-  }
+  try { const parsed = JSON.parse(window.localStorage.getItem(bookmarkKey(slug)) || '[]'); return Array.isArray(parsed) ? parsed.filter((item) => Number.isFinite(item)) : [] } catch { return [] }
 }
-
 function saveBookmarks(slug, bookmarks) {
-  try {
-    window.localStorage.setItem(bookmarkKey(slug), JSON.stringify(bookmarks))
-  } catch {
-    // Non-essential reader affordance.
-  }
+  try { window.localStorage.setItem(bookmarkKey(slug), JSON.stringify(bookmarks)) } catch { /* Non-essential reader preference. */ }
 }
