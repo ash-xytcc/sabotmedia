@@ -10,6 +10,7 @@ const TABLES = [
   'editor_roles',
   'audit_log',
   'analytics_events',
+  'collections',
   'publications',
   'public_site_config',
 ]
