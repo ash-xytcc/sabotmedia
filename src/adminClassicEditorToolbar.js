@@ -253,26 +253,26 @@ function createToolbar() {
       </select>
       ${button('<strong>B</strong>', 'bold', 'Bold')}
       ${button('<em>I</em>', 'italic', 'Italic')}
-      ${button('•', 'ul', 'Bulleted list')}
-      ${button('1.', 'ol', 'Numbered list')}
-      ${button('❝', 'quote', 'Blockquote')}
-      ${button('☰', 'left', 'Align left')}
-      ${button('☷', 'center', 'Align center')}
-      ${button('☱', 'right', 'Align right')}
-      ${button('🔗', 'link', 'Insert/edit link', 'wp-classic-toolbar__link-toggle')}
-      ${button('═', 'hr', 'Horizontal line')}
-      ${button('⌨', 'toggle', 'Toolbar toggle')}
-      <button class="wp-classic-toolbar__fullscreen" type="button" title="Distraction-free writing" aria-label="Distraction-free writing">⛶</button>
+      ${button('Bullets', 'ul', 'Bulleted list')}
+      ${button('Numbered', 'ol', 'Numbered list')}
+      ${button('Quote', 'quote', 'Blockquote')}
+      ${button('Left', 'left', 'Align left')}
+      ${button('Center', 'center', 'Align center')}
+      ${button('Right', 'right', 'Align right')}
+      ${button('Link', 'link', 'Insert/edit link', 'wp-classic-toolbar__link-toggle')}
+      ${button('Rule', 'hr', 'Horizontal line')}
+      ${button('More', 'toggle', 'Show more tools')}
+      <button class="wp-classic-toolbar__fullscreen" type="button" title="Distraction-free writing" aria-label="Distraction-free writing">Focus</button>
     </div>
     <div class="wp-classic-toolbar__row wp-classic-toolbar__row--extra">
-      ${button('<span class="wp-classic-toolbar__strike">ABC</span>', 'strike', 'Strikethrough')}
-      ${button('Tx', 'remove', 'Clear formatting')}
-      ${button('Ω', 'special', 'Special character')}
-      ${button('⇤', 'outdent', 'Decrease indent')}
-      ${button('⇥', 'indent', 'Increase indent')}
-      ${button('↶', 'undo', 'Undo')}
-      ${button('↷', 'redo', 'Redo')}
-      ${button('?', 'help', 'Keyboard shortcuts')}
+      ${button('Strike', 'strike', 'Strikethrough')}
+      ${button('Clear', 'remove', 'Clear formatting')}
+      ${button('Symbol', 'special', 'Special character')}
+      ${button('Outdent', 'outdent', 'Decrease indent')}
+      ${button('Indent', 'indent', 'Increase indent')}
+      ${button('Undo', 'undo', 'Undo')}
+      ${button('Redo', 'redo', 'Redo')}
+      ${button('Help', 'help', 'Keyboard shortcuts')}
     </div>
     <div class="wp-classic-toolbar__link-panel" hidden>
       <label><span>URL</span><input class="wp-classic-toolbar__url" type="url" placeholder="https://example.org/zine.pdf" /></label>
