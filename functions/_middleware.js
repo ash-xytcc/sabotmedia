@@ -107,7 +107,10 @@ async function renderPublicPost(context, url) {
   const canonical = `${url.origin}/post/${encodeURIComponent(slug)}`
   const indexUrl = new URL('/', url.origin)
   const response = context.env?.ASSETS?.fetch
-    ? await context.env.ASSETS.fetch(new Request(indexUrl, context.request))
+    ? await context.env.ASSETS.fetch(new Request(indexUrl, {
+        method: 'GET',
+        headers: { accept: 'text/html' },
+      }))
     : await context.next()
 
   if (!response.ok || !String(response.headers.get('content-type') || '').includes('text/html')) {
