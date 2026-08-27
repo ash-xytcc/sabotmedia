@@ -5,6 +5,7 @@ import {
   upsertMediaAsset,
   deleteMediaAsset,
 } from './_lib/mediaAssets.js'
+import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
 export async function onRequestOptions(context) {
   const permission = await resolvePublicSitePermission(context)
@@ -14,7 +15,7 @@ export async function onRequestOptions(context) {
     canEdit: permission.canEdit,
     authMode: permission.mode,
     authReason: permission.reason,
-    mode: hasDb(context) ? 'd1' : 'scaffold',
+    mode: getBoundDb(context) ? 'd1' : 'unavailable',
   })
 }
 
@@ -22,13 +23,12 @@ export async function onRequestGet(context) {
   try {
     const url = new URL(context.request.url)
     const mediaType = url.searchParams.get('mediaType') || ''
+    const db = getBoundDb(context)
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', items: [] })
-    }
+    if (!db) return databaseUnavailable('media asset reads')
 
-    await ensureMediaAssetsTable(context.env.BF_DB)
-    const items = await listMediaAssets(context.env.BF_DB, { mediaType: mediaType || undefined })
+    await ensureMediaAssetsTable(db)
+    const items = await listMediaAssets(db, { mediaType: mediaType || undefined })
 
     return json({
       ok: true,
@@ -50,12 +50,11 @@ export async function onRequestPost(context) {
 
     const body = await context.request.json()
     const asset = body?.asset || body || {}
+    const db = getBoundDb(context)
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', asset })
-    }
+    if (!db) return databaseUnavailable('media asset writes')
 
-    const saved = await upsertMediaAsset(context.env.BF_DB, asset)
+    const saved = await upsertMediaAsset(db, asset)
 
     return json({
       ok: true,
@@ -82,11 +81,10 @@ export async function onRequestDelete(context) {
       return json({ ok: false, error: 'missing id' }, 400)
     }
 
-    if (!hasDb(context)) {
-      return json({ ok: true, mode: 'scaffold', deleted: id })
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('media asset deletion')
 
-    const result = await deleteMediaAsset(context.env.BF_DB, id)
+    const result = await deleteMediaAsset(db, id)
 
     return json({
       ok: true,
@@ -96,10 +94,6 @@ export async function onRequestDelete(context) {
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
   }
-}
-
-function hasDb(context) {
-  return Boolean(context?.env?.BF_DB)
 }
 
 function json(data, status = 200) {
