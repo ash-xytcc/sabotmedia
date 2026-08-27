@@ -1,18 +1,13 @@
 import { ensureNativePublicContentTable, listNativeEntries } from '../api/_lib/nativePublicContent.js'
+import { databaseUnavailable, getBoundDb } from '../api/_lib/database.js'
 
 export async function onRequestGet(context) {
   try {
-    if (!context?.env?.BF_DB) {
-      return xml(feedXml({ requestUrl: context.request.url, items: [], note: 'No database binding is configured yet.' }))
-    }
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('podcast RSS')
 
-    await ensureNativePublicContentTable(context.env.BF_DB)
-    const entries = await listNativeEntries(context.env.BF_DB, { status: 'published' })
-    const items = entries
-      .filter((entry) => entry?.contentType === 'podcast')
-      .filter((entry) => isPublicAudioUrl(getAudioUrl(entry)))
-
-    return xml(feedXml({ requestUrl: context.request.url, items }))
+    const items = await getPodcastFeedItems(db)
+    return podcastXmlResponse(buildPodcastFeedXml({ requestUrl: context.request.url, items }))
   } catch (error) {
     return new Response(`RSS feed error: ${String(error?.message || error)}`, {
       status: 500,
@@ -21,11 +16,20 @@ export async function onRequestGet(context) {
   }
 }
 
-function feedXml({ requestUrl, items = [], note = '' }) {
+export async function getPodcastFeedItems(db) {
+  if (!db) throw new Error('BF_DB binding is required for podcast RSS')
+  await ensureNativePublicContentTable(db)
+  const entries = await listNativeEntries(db, {})
+  return entries
+    .filter((entry) => entry?.contentType === 'podcast')
+    .filter((entry) => isPublicAudioUrl(getAudioUrl(entry)))
+}
+
+export function buildPodcastFeedXml({ requestUrl, items = [], selfPath = '/rss/podcast.xml' }) {
   const url = new URL(requestUrl)
   const origin = url.origin
-  const selfUrl = `${origin}/rss/podcast.xml`
-  const channelDescription = note || 'Sabot Media podcast and AudioLab episodes.'
+  const selfUrl = `${origin}${selfPath}`
+  const channelDescription = 'Sabot Media podcast and AudioLab episodes.'
   const body = items.map((item) => itemXml(item, origin)).join('\n')
   const lastBuildDate = new Date().toUTCString()
 
@@ -39,10 +43,20 @@ function feedXml({ requestUrl, items = [], note = '' }) {
     <language>en-us</language>
     <lastBuildDate>${escapeXml(lastBuildDate)}</lastBuildDate>
     <generator>SabotPress AudioLab</generator>
-    <!-- TODO: add channel artwork, owner, and contact email once podcast settings exist. -->
 ${body}
   </channel>
 </rss>`
+}
+
+export function podcastXmlResponse(body) {
+  return new Response(body, {
+    status: 200,
+    headers: {
+      'content-type': 'application/rss+xml; charset=utf-8',
+      'cache-control': 'public, max-age=300',
+      'x-sabot-feed-source': 'native-d1',
+    },
+  })
 }
 
 function itemXml(item, origin) {
@@ -136,14 +150,4 @@ function escapeXml(value = '') {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;')
-}
-
-function xml(body) {
-  return new Response(body, {
-    status: 200,
-    headers: {
-      'content-type': 'application/rss+xml; charset=utf-8',
-      'cache-control': 'public, max-age=300',
-    },
-  })
 }
