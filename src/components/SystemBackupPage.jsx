@@ -15,6 +15,9 @@ export function SystemBackupPage() {
       const snapshot = await exportSystemSnapshot()
       const nextSummary = summarizeSnapshot(snapshot)
       if (!nextSummary.complete) throw new Error('Backup manifest is incomplete')
+      if (!nextSummary.feedSettingsIncluded || !nextSummary.publicConfigIncluded) {
+        throw new Error('Backup manifest is missing required settings datasets')
+      }
       setSummary(nextSummary)
       downloadSnapshot(snapshot)
       setState('done')
@@ -44,9 +47,10 @@ export function SystemBackupPage() {
           </div>
         ) : null}
 
-        <section className="review-summary-card">
-          <div className="review-summary-card__eyebrow">verified export</div>
-          <p>Includes native content and revisions, taxonomy, editor-role records, audit events, media metadata, collections, publications, and public-site configuration.</p>
+        <section className="wp-meta-box">
+          <h2>Verified server export</h2>
+          <p className="description">Includes native content and D1 revision history, taxonomy, editor-role records, audit events, media metadata, collections, publications, Sites &amp; Domains, persisted feed settings, and public-site configuration.</p>
+          <p className="description">The snapshot contains media metadata and public asset URLs, not duplicate copies of R2 binary objects. R2 remains the binary store.</p>
           <div className="review-card__actions">
             <button className="button button--primary" type="button" onClick={handleExport} disabled={state === 'loading'}>
               {state === 'loading' ? 'Building verified snapshot…' : 'Export server snapshot'}
@@ -55,18 +59,22 @@ export function SystemBackupPage() {
         </section>
 
         {summary ? (
-          <section className="review-summary-grid">
+          <section className="newsroom-stat-grid">
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">native content</div><strong>{summary.nativeCount}</strong><span>records</span></article>
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">revisions</div><strong>{summary.revisionCount}</strong><span>D1 snapshots</span></article>
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">media</div><strong>{summary.mediaCount}</strong><span>metadata records</span></article>
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">sites</div><strong>{summary.siteCount}</strong><span>domain records</span></article>
+
             <article className="review-summary-card">
-              <div className="review-summary-card__eyebrow">snapshot summary</div>
+              <div className="review-summary-card__eyebrow">remaining datasets</div>
               <ul>
-                <li><span>native content</span><strong>{summary.nativeCount}</strong></li>
-                <li><span>revisions</span><strong>{summary.revisionCount}</strong></li>
                 <li><span>taxonomy terms</span><strong>{summary.taxonomyCount}</strong></li>
                 <li><span>editor roles</span><strong>{summary.roleCount}</strong></li>
                 <li><span>audit events</span><strong>{summary.auditCount}</strong></li>
-                <li><span>media assets</span><strong>{summary.mediaCount}</strong></li>
                 <li><span>collections</span><strong>{summary.collectionCount}</strong></li>
                 <li><span>publications</span><strong>{summary.publicationCount}</strong></li>
+                <li><span>feed settings</span><strong>{summary.feedSettingsIncluded ? 'included' : 'missing'}</strong></li>
+                <li><span>public config</span><strong>{summary.publicConfigIncluded ? 'included' : 'missing'}</strong></li>
                 <li><span>manifest</span><strong>{summary.complete ? 'complete' : 'incomplete'}</strong></li>
               </ul>
             </article>
