@@ -3,6 +3,10 @@ import { cleanPath, cleanText, ensureAnalyticsTable, hashSession, json, parseDev
 export async function onRequestPost(context) {
   if (!context.env?.BF_DB) return json({ ok: false, error: 'analytics storage unavailable' }, 503)
 
+  if (respectsPrivacySignal(context.request)) {
+    return json({ ok: true, ignored: 'privacy-signal' }, 202)
+  }
+
   try {
     const body = await context.request.json()
     const sessionId = cleanText(body?.sessionId, 120)
@@ -60,4 +64,10 @@ export async function onRequestPost(context) {
 
 export function onRequestGet() {
   return json({ ok: false, error: 'method not allowed' }, 405)
+}
+
+export function respectsPrivacySignal(request) {
+  const dnt = String(request?.headers?.get?.('dnt') || '').trim()
+  const gpc = String(request?.headers?.get?.('sec-gpc') || '').trim()
+  return dnt === '1' || gpc === '1'
 }
