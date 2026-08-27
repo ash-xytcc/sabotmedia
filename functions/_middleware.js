@@ -105,7 +105,7 @@ async function renderPublicPost(context, url) {
     url.origin,
   )
   const canonical = `${url.origin}/post/${encodeURIComponent(slug)}`
-  const indexUrl = new URL('/index.html', url.origin)
+  const indexUrl = new URL('/', url.origin)
   const response = context.env?.ASSETS?.fetch
     ? await context.env.ASSETS.fetch(new Request(indexUrl, context.request))
     : await context.next()
