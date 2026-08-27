@@ -134,16 +134,20 @@ function HeroFeature({ item }) {
   return (
     <article className={`publication-hero-card publication-hero-card--title-${titleDisplay}${hasImage ? '' : ' publication-hero-card--no-image'}`}>
       <Link className="publication-hero-card__image-wrap" to={item.href}>
-        <div
-          className="publication-hero-card__image publication-hero-card__image-fill"
-          style={hasImage ? {
-            backgroundImage: titleDisplay === 'overlay'
-              ? `linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.62)), url("${item.imageUrl}")`
-              : `url("${item.imageUrl}")`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          } : undefined}
-        />
+        {hasImage && titleDisplay === 'hidden' ? (
+          <img className="publication-hero-card__image-actual" src={item.imageUrl} alt="" />
+        ) : (
+          <div
+            className="publication-hero-card__image publication-hero-card__image-fill"
+            style={hasImage ? {
+              backgroundImage: titleDisplay === 'overlay'
+                ? `linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.62)), url("${item.imageUrl}")`
+                : `url("${item.imageUrl}")`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            } : undefined}
+          />
+        )}
         {titleDisplay === 'overlay' ? (
           <div className="publication-hero-card__content publication-hero-card__overlay">
             <div className="publication-hero-card__meta">
@@ -177,16 +181,20 @@ function RecentCard({ item }) {
   return (
     <article className={`publication-post-card publication-post-card--title-${titleDisplay}${hasImage ? '' : ' publication-post-card--no-image'}`}>
       <Link className="publication-post-card__link" to={item.href}>
-        <div
-          className="publication-post-card__image-fill"
-          style={hasImage ? {
-            backgroundImage: titleDisplay === 'overlay'
-              ? `linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.68)), url("${item.imageUrl}")`
-              : `url("${item.imageUrl}")`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          } : undefined}
-        />
+        {hasImage && titleDisplay === 'hidden' ? (
+          <img className="publication-post-card__image-actual" src={item.imageUrl} alt="" />
+        ) : (
+          <div
+            className="publication-post-card__image-fill"
+            style={hasImage ? {
+              backgroundImage: titleDisplay === 'overlay'
+                ? `linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.68)), url("${item.imageUrl}")`
+                : `url("${item.imageUrl}")`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            } : undefined}
+          />
+        )}
         {titleDisplay === 'overlay' ? (
           <div className="publication-post-card__overlay">
             <div className="publication-post-card__meta">
