@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { DEFAULT_FEED_SETTINGS, loadFeedSettingsAsync } from '../lib/feedSettings.js'
+import { loadFeedManifest } from '../lib/feedManifestApi.js'
 
 function renderParagraphs(text = '') {
   return String(text || '').split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean).map((paragraph, index) => (
@@ -40,18 +41,6 @@ function groupDescription(group) {
     podcasts: 'Follow audio and podcast material.',
   }
   return descriptions[group] || 'A live RSS feed generated from published server metadata.'
-}
-
-async function loadFeedManifest() {
-  const response = await fetch('/api/feed-manifest', {
-    credentials: 'same-origin',
-    headers: { accept: 'application/json' },
-  })
-  const data = await response.json().catch(() => null)
-  if (!response.ok || !data?.ok || data.mode !== 'd1' || !Array.isArray(data.files)) {
-    throw new Error(data?.error || `live feed manifest request failed: ${response.status}`)
-  }
-  return data
 }
 
 export function PublicFeedsPage() {
