@@ -11,8 +11,16 @@ test('overlay title cards size from visible content instead of a fixed aspect ra
   assert.match(css, /publication-post-card--title-overlay/)
   assert.match(css, /publication-hero-card--title-overlay/)
   assert.match(css, /aspect-ratio:\s*auto\s*!important/)
+  assert.match(css, /grid-auto-rows:\s*auto\s*!important/)
   assert.match(css, /publication-post-card--title-overlay[\s\S]*publication-post-card__overlay[\s\S]*position:\s*relative\s*!important/)
   assert.match(css, /publication-hero-card--title-overlay[\s\S]*publication-hero-card__overlay[\s\S]*position:\s*relative\s*!important/)
+})
+
+test('overlay content creates real image space and cannot be vertically clipped', () => {
+  assert.match(css, /publication-post-card--title-overlay[\s\S]*publication-post-card__link[\s\S]*overflow:\s*visible\s*!important/)
+  assert.match(css, /publication-post-card--title-overlay[\s\S]*publication-post-card__overlay[\s\S]*padding-top:\s*clamp/)
+  assert.match(css, /publication-hero-card--title-overlay[\s\S]*publication-hero-card__overlay[\s\S]*padding-top:\s*clamp/)
+  assert.match(css, /max-height:\s*none\s*!important/)
 })
 
 test('visible overlay headlines are never line-clamped', () => {
@@ -21,13 +29,16 @@ test('visible overlay headlines are never line-clamped', () => {
   assert.match(css, /overflow:\s*visible\s*!important/)
 })
 
-test('runtime applies inline-important sizing after render so later legacy CSS cannot clip titles', () => {
+test('runtime applies inline-important flow geometry after render so later legacy CSS cannot clip titles', () => {
   assert.match(runtime, /function setHomepageOverlayTitles\(\)/)
   assert.match(runtime, /publication-post-card--title-overlay/)
   assert.match(runtime, /publication-hero-card--title-overlay/)
+  assert.match(runtime, /important\(grid, 'grid-auto-rows', 'auto'\)/)
   assert.match(runtime, /important\(card, 'aspect-ratio', 'auto'\)/)
   assert.match(runtime, /important\(card, 'min-height', '0'\)/)
+  assert.match(runtime, /important\(link, 'overflow', 'visible'\)/)
   assert.match(runtime, /important\(overlay, 'height', 'auto'\)/)
+  assert.match(runtime, /important\(overlay, 'padding-top', config\.topPad\)/)
   assert.match(runtime, /important\(title, '-webkit-line-clamp', 'unset'\)/)
   assert.match(runtime, /important\(title, 'max-width', '100%'\)/)
   assert.match(runtime, /setHomepageOverlayTitles\(\)/)
