@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { buildPublicConfigPayload } from '../lib/publicDraftExport'
 import { getStoredPublicConfig } from '../lib/publicConfig'
 import { savePublicConfigPayload } from '../lib/publicConfigApi'
 import { usePublicEdit } from './PublicEditContext'
@@ -52,8 +51,7 @@ export function LegacyInfoPageRecovery() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const found = getStoredPublicConfig()
-    setLegacy(found)
+    setLegacy(getStoredPublicConfig())
   }, [])
 
   const groups = useMemo(() => PAGE_GROUPS.map((group) => {
@@ -95,7 +93,7 @@ export function LegacyInfoPageRecovery() {
       setMessage('')
       let next = savedConfig || { text: {}, styles: {}, blocks: {} }
       for (const group of selectedGroups) next = copyPrefix(next, legacy, group.prefix)
-      const result = await savePublicConfigPayload(buildPublicConfigPayload(next))
+      const result = await savePublicConfigPayload({ publicSite: next })
       if (!result?.saved) throw new Error('D1 did not confirm the recovered public-site config')
       await reloadFromBackend()
       setStatus('saved')
@@ -110,7 +108,7 @@ export function LegacyInfoPageRecovery() {
     return (
       <section className="review-card legacy-public-config-recovery">
         <h2>Legacy public page recovery</h2>
-        <p className="description">This browser does not contain the old saved public-site cache. Open this Site Editor on the desktop/browser where the newer info pages were previously visible.</p>
+        <p className="description">This browser does not contain the old saved public-site cache. Open Customize in the desktop/browser where the newer info pages were previously visible.</p>
       </section>
     )
   }
