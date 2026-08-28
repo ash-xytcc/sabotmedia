@@ -4,6 +4,7 @@ import assert from 'node:assert/strict'
 
 const taxonomy = fs.readFileSync(new URL('../src/components/TaxonomyAdminPage.jsx', import.meta.url), 'utf8')
 const roles = fs.readFileSync(new URL('../src/components/EditorRolesPage.jsx', import.meta.url), 'utf8')
+const users = fs.readFileSync(new URL('../src/components/AdminUsersPage.jsx', import.meta.url), 'utf8')
 
 test('taxonomy uses the current admin shell instead of legacy project-page chrome', () => {
   assert.match(taxonomy, /<AdminFrame>/)
@@ -15,13 +16,13 @@ test('taxonomy uses the current admin shell instead of legacy project-page chrom
   assert.doesNotMatch(taxonomy, /archive-controls/)
 })
 
-test('editor roles uses the current admin shell and states its authorization boundary', () => {
-  assert.match(roles, /<AdminFrame>/)
-  assert.match(roles, /wp-admin-screen/)
-  assert.match(roles, /wp-screen-header/)
-  assert.match(roles, /wp-meta-box/)
-  assert.match(roles, /wp-posts-table/)
-  assert.match(roles, /do not independently grant or revoke access/)
-  assert.doesNotMatch(roles, /project-hero/)
-  assert.doesNotMatch(roles, /archive-controls/)
+test('legacy editor roles route redirects to the real Users and Access surface', () => {
+  assert.match(roles, /Navigate to=\{adminRoutes\.users\}/)
+  assert.doesNotMatch(roles, /Add role record|advisory today|do not independently grant or revoke access/)
+  assert.match(users, /<AdminFrame>/)
+  assert.match(users, /wp-admin-screen/)
+  assert.match(users, /Users & Access/)
+  assert.match(users, /Create account/)
+  assert.match(users, /Role boundaries/)
+  assert.doesNotMatch(users, /project-hero|archive-controls/)
 })
