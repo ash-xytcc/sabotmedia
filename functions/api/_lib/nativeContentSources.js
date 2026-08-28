@@ -20,41 +20,29 @@ export function normalizeSourceRecord(input) {
 }
 
 export async function ensureNativeContentSourcesTable(db) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS native_content_sources (
-      id TEXT PRIMARY KEY,
-      native_content_id TEXT NOT NULL,
-      source_type TEXT NOT NULL DEFAULT 'manual',
-      source_label TEXT NOT NULL DEFAULT '',
-      source_url TEXT NOT NULL DEFAULT '',
-      source_external_id TEXT NOT NULL DEFAULT '',
-      notes TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `)
-
-  await db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_native_content_sources_native_id
-    ON native_content_sources(native_content_id);
-  `)
-
-  await db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_native_content_sources_source_type
-    ON native_content_sources(source_type);
-  `)
+  await db.prepare(`CREATE TABLE IF NOT EXISTS native_content_sources (
+    id TEXT PRIMARY KEY,
+    native_content_id TEXT NOT NULL,
+    source_type TEXT NOT NULL DEFAULT 'manual',
+    source_label TEXT NOT NULL DEFAULT '',
+    source_url TEXT NOT NULL DEFAULT '',
+    source_external_id TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`).run()
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_native_content_sources_native_id ON native_content_sources(native_content_id)').run()
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_native_content_sources_source_type ON native_content_sources(source_type)').run()
 }
 
 export async function listSourcesForNativeContent(db, nativeContentId) {
   await ensureNativeContentSourcesTable(db)
 
   const result = await db
-    .prepare(`
-      SELECT id, native_content_id, source_type, source_label, source_url, source_external_id, notes, created_at, updated_at
+    .prepare(`SELECT id, native_content_id, source_type, source_label, source_url, source_external_id, notes, created_at, updated_at
       FROM native_content_sources
       WHERE native_content_id = ?
-      ORDER BY datetime(updated_at) DESC
-    `)
+      ORDER BY datetime(updated_at) DESC`)
     .bind(nativeContentId)
     .all()
 
@@ -64,17 +52,12 @@ export async function listSourcesForNativeContent(db, nativeContentId) {
 
 export async function upsertSourceRecord(db, record) {
   await ensureNativeContentSourcesTable(db)
-  const normalized = normalizeSourceRecord({
-    ...record,
-    updatedAt: new Date().toISOString(),
-  })
+  const normalized = normalizeSourceRecord({ ...record, updatedAt: new Date().toISOString() })
 
   await db
-    .prepare(`
-      INSERT INTO native_content_sources (
+    .prepare(`INSERT INTO native_content_sources (
         id, native_content_id, source_type, source_label, source_url, source_external_id, notes, created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         native_content_id = excluded.native_content_id,
         source_type = excluded.source_type,
@@ -82,8 +65,7 @@ export async function upsertSourceRecord(db, record) {
         source_url = excluded.source_url,
         source_external_id = excluded.source_external_id,
         notes = excluded.notes,
-        updated_at = excluded.updated_at
-    `)
+        updated_at = excluded.updated_at`)
     .bind(
       normalized.id,
       normalized.nativeContentId,
@@ -102,7 +84,7 @@ export async function upsertSourceRecord(db, record) {
 
 export async function deleteSourceRecord(db, id) {
   await ensureNativeContentSourcesTable(db)
-  await db.prepare(`DELETE FROM native_content_sources WHERE id = ?`).bind(id).run()
+  await db.prepare('DELETE FROM native_content_sources WHERE id = ?').bind(id).run()
   return { ok: true, deleted: id }
 }
 
