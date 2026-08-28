@@ -1,4 +1,4 @@
-import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
+import { permissionHasCapability, resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
 const CANONICAL_MEDIA_BINDING = 'SABOT_MEDIA_BUCKET'
@@ -8,19 +8,20 @@ const TABLES = [
   'media_assets',
   'taxonomy_terms',
   'native_content_taxonomy',
+  'admin_users',
   'editor_roles',
   'audit_log',
   'analytics_events',
   'collections',
   'publications',
   'public_site_configs',
-  'sites',
+  'site_domains',
   'site_settings',
 ]
 
 export async function onRequestGet(context) {
   const permission = await resolvePublicSitePermission(context)
-  if (!permission.canEdit) return json({ ok: false, error: 'authentication required' }, 403)
+  if (!permissionHasCapability(permission, 'system:view')) return json({ ok: false, error: 'system-view permission required' }, 403)
 
   const db = getBoundDb(context)
   if (!db) return databaseUnavailable('site health checks')
@@ -59,6 +60,8 @@ export async function onRequestGet(context) {
       auth: {
         mode: permission.mode,
         actor: permission.actor || '',
+        role: permission.role || '',
+        bootstrap: permission.bootstrap === true,
         adminTokenConfigured: Boolean(context.env?.SABOT_ADMIN_TOKEN),
         sessionSecretConfigured: Boolean(context.env?.SABOT_SESSION_SECRET),
         cloudflareAccessTrusted: String(context.env?.SABOT_TRUST_CF_ACCESS || '').toLowerCase() === 'true',
@@ -93,11 +96,5 @@ function detectMediaBinding(env = {}) {
 }
 
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data, null, 2), {
-    status,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
-    },
-  })
+  return new Response(JSON.stringify(data, null, 2), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } })
 }
