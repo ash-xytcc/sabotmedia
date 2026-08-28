@@ -3,6 +3,9 @@ import { mergePublicConfig as mergeSchemaConfigs, normalizePublicConfig } from '
 
 const STORAGE_KEY = 'sabot-public-site-config-v1'
 
+// Legacy browser cache helpers are retained only so old editor cleanup/import code
+// can remove or inspect the cache. Published public rendering must never resolve
+// from this storage because it makes site content differ by device.
 export function getStoredPublicConfig() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
@@ -16,7 +19,7 @@ export function setStoredPublicConfig(config) {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizePublicConfig(config)))
   } catch {
-    // ignore
+    // Legacy editor cache only. D1 remains authoritative.
   }
 }
 
@@ -32,8 +35,8 @@ export function mergePublicConfig(base, patch) {
   return mergeSchemaConfigs(base, patch)
 }
 
-export function resolvePublicConfig(runtimeConfig) {
-  return mergeSchemaConfigs(publicSiteDefaults, runtimeConfig || getStoredPublicConfig() || {})
+export function resolvePublicConfig(runtimeConfig = {}) {
+  return mergeSchemaConfigs(publicSiteDefaults, runtimeConfig || {})
 }
 
 export function getConfiguredText(config, field, fallback = '') {
