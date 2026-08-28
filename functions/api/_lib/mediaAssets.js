@@ -48,57 +48,40 @@ export function normalizeMediaAsset(input) {
 }
 
 export async function ensureMediaAssetsTable(db) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS media_assets (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL DEFAULT '',
-      url TEXT NOT NULL,
-      alt_text TEXT NOT NULL DEFAULT '',
-      caption TEXT NOT NULL DEFAULT '',
-      credit TEXT NOT NULL DEFAULT '',
-      media_type TEXT NOT NULL DEFAULT 'image',
-      metadata_json TEXT NOT NULL DEFAULT '{}',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `)
+  await db.prepare(`CREATE TABLE IF NOT EXISTS media_assets (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL DEFAULT '',
+    url TEXT NOT NULL,
+    alt_text TEXT NOT NULL DEFAULT '',
+    caption TEXT NOT NULL DEFAULT '',
+    credit TEXT NOT NULL DEFAULT '',
+    media_type TEXT NOT NULL DEFAULT 'image',
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`).run()
 
   const columns = await db.prepare('PRAGMA table_info(media_assets)').all()
   const names = new Set((columns?.results || []).map((row) => String(row.name || '')))
   if (!names.has('metadata_json')) {
-    await db.exec("ALTER TABLE media_assets ADD COLUMN metadata_json TEXT NOT NULL DEFAULT '{}';")
+    await db.prepare("ALTER TABLE media_assets ADD COLUMN metadata_json TEXT NOT NULL DEFAULT '{}'").run()
   }
 
-  await db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_media_assets_updated_at
-    ON media_assets(updated_at DESC);
-  `)
-
-  await db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_media_assets_media_type
-    ON media_assets(media_type);
-  `)
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_media_assets_updated_at ON media_assets(updated_at DESC)').run()
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_media_assets_media_type ON media_assets(media_type)').run()
 }
 
 export async function listMediaAssets(db, options = {}) {
   await ensureMediaAssetsTable(db)
-
   const clauses = []
   const binds = []
-
   if (options.mediaType) {
     clauses.push('media_type = ?')
     binds.push(options.mediaType)
   }
-
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
-  const stmt = db.prepare(`
-    SELECT id, title, url, alt_text, caption, credit, media_type, metadata_json, created_at, updated_at
-    FROM media_assets
-    ${where}
-    ORDER BY datetime(updated_at) DESC
-  `)
-
+  const stmt = db.prepare(`SELECT id, title, url, alt_text, caption, credit, media_type, metadata_json, created_at, updated_at
+    FROM media_assets ${where} ORDER BY datetime(updated_at) DESC`)
   const result = binds.length ? await stmt.bind(...binds).all() : await stmt.all()
   const rows = Array.isArray(result?.results) ? result.results : []
   return rows.map(rowToMediaAsset)
@@ -106,30 +89,19 @@ export async function listMediaAssets(db, options = {}) {
 
 export async function upsertMediaAsset(db, asset) {
   await ensureMediaAssetsTable(db)
-
-  const normalized = normalizeMediaAsset({
-    ...asset,
-    updatedAt: new Date().toISOString(),
-  })
-
+  const normalized = normalizeMediaAsset({ ...asset, updatedAt: new Date().toISOString() })
   if (!normalized.url) throw new Error('media asset URL is required')
-
-  await db
-    .prepare(`
-      INSERT INTO media_assets (
-        id, title, url, alt_text, caption, credit, media_type, metadata_json, created_at, updated_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        title = excluded.title,
-        url = excluded.url,
-        alt_text = excluded.alt_text,
-        caption = excluded.caption,
-        credit = excluded.credit,
-        media_type = excluded.media_type,
-        metadata_json = excluded.metadata_json,
-        updated_at = excluded.updated_at
-    `)
+  await db.prepare(`INSERT INTO media_assets (id, title, url, alt_text, caption, credit, media_type, metadata_json, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      url = excluded.url,
+      alt_text = excluded.alt_text,
+      caption = excluded.caption,
+      credit = excluded.credit,
+      media_type = excluded.media_type,
+      metadata_json = excluded.metadata_json,
+      updated_at = excluded.updated_at`)
     .bind(
       normalized.id,
       normalized.title,
@@ -143,7 +115,6 @@ export async function upsertMediaAsset(db, asset) {
       normalized.updatedAt
     )
     .run()
-
   return normalized
 }
 
