@@ -8,6 +8,7 @@ import { buildRssBundle } from '../src/lib/rssFeeds.js'
 const directRoute = fs.readFileSync(new URL('../functions/feeds/[[path]].js', import.meta.url), 'utf8')
 const runtime = fs.readFileSync(new URL('../functions/api/_lib/feedRuntime.js', import.meta.url), 'utf8')
 const manifest = fs.readFileSync(new URL('../functions/api/feed-manifest.js', import.meta.url), 'utf8')
+const manifestClient = fs.readFileSync(new URL('../src/lib/feedManifestApi.js', import.meta.url), 'utf8')
 const publicPage = fs.readFileSync(new URL('../src/components/PublicFeedsPage.jsx', import.meta.url), 'utf8')
 
 test('feed catch-all path normalization preserves grouped XML paths', () => {
@@ -53,7 +54,8 @@ test('released scheduled work is included but future scheduled work is not', () 
 })
 
 test('public feeds page links only to server manifest endpoints', () => {
-  assert.match(publicPage, /fetch\('\/api\/feed-manifest'/)
+  assert.match(publicPage, /loadFeedManifest/)
+  assert.match(manifestClient, /fetch\('\/api\/feed-manifest'/)
   assert.match(publicPage, /href=\{`\/feeds\/\$\{file\}`\}/)
   assert.doesNotMatch(publicPage, /buildRssBundle\(getPieces\(\)/)
   assert.match(publicPage, /Nothing is being presented as a working subscription URL until it does/)
