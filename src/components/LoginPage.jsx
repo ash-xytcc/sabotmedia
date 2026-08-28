@@ -2,9 +2,6 @@ import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from './AdminAuthContext'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
-import { editableContentRegistry } from '../lib/editableContentRegistry'
-import { getConfiguredText } from '../lib/publicConfig'
-import { useResolvedConfig } from '../lib/useResolvedConfig'
 
 function getReturnTo(search = '') {
   const params = new URLSearchParams(search)
@@ -14,42 +11,40 @@ function getReturnTo(search = '') {
 }
 
 export function LoginPage() {
-  const loginCopy = editableContentRegistry.login
-  const resolvedConfig = useResolvedConfig()
   const location = useLocation()
   const navigate = useNavigate()
-  const { isAuthenticated, isChecking, login, authError } = useAdminAuth()
+  const { isAuthenticated, isChecking, login, authError, session } = useAdminAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [token, setToken] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const returnTo = useMemo(() => getReturnTo(location.search), [location.search])
-  const title = getConfiguredText(resolvedConfig, loginCopy.title.field, loginCopy.title.defaultText)
-  const body = getConfiguredText(resolvedConfig, loginCopy.body.field, loginCopy.body.defaultText)
-  const tokenLabel = getConfiguredText(resolvedConfig, loginCopy.tokenLabel.field, loginCopy.tokenLabel.defaultText)
-  const emptyError = getConfiguredText(resolvedConfig, loginCopy.emptyError.field, loginCopy.emptyError.defaultText)
-  const rejectedError = getConfiguredText(resolvedConfig, loginCopy.rejectedError.field, loginCopy.rejectedError.defaultText)
-  const submitLabel = getConfiguredText(resolvedConfig, loginCopy.submitLabel.field, loginCopy.submitLabel.defaultText)
-  const checkingLabel = getConfiguredText(resolvedConfig, loginCopy.checkingLabel.field, loginCopy.checkingLabel.defaultText)
 
-  async function handleSubmit(event) {
+  async function submitUser(event) {
     event.preventDefault()
     setSubmitError('')
-
-    if (!token.trim()) {
-      setSubmitError(emptyError)
+    if (!email.trim() || !password) {
+      setSubmitError('Email and password are required.')
       return
     }
-
     setIsSubmitting(true)
-    const ok = await login(token)
+    const ok = await login({ email, password })
     setIsSubmitting(false)
+    if (ok) navigate(returnTo, { replace: true })
+  }
 
-    if (ok) {
-      navigate(returnTo, { replace: true })
+  async function submitBootstrap(event) {
+    event.preventDefault()
+    setSubmitError('')
+    if (!token.trim()) {
+      setSubmitError('Emergency admin token is required.')
       return
     }
-
-    setSubmitError(rejectedError)
+    setIsSubmitting(true)
+    const ok = await login({ token })
+    setIsSubmitting(false)
+    if (ok) navigate(returnTo, { replace: true })
   }
 
   return (
@@ -59,7 +54,7 @@ export function LoginPage() {
         {isAuthenticated ? (
           <>
             <h1 id="admin-login-title">You are logged in</h1>
-            <p>Your editor session is active.</p>
+            <p>{session?.user?.email ? `${session.user.email} · ${session.role}` : `Emergency owner session · ${session?.role || 'owner'}`}</p>
             <div className="admin-login-panel__actions">
               <Link className="button button--primary" to={returnTo}>Continue</Link>
               <Link className="button" to="/wp-admin">Dashboard</Link>
@@ -68,24 +63,32 @@ export function LoginPage() {
           </>
         ) : (
           <>
-            <h1 id="admin-login-title">{title}</h1>
-            <p>{body}</p>
-            <form onSubmit={handleSubmit}>
+            <h1 id="admin-login-title">SabotPress sign in</h1>
+            <p>Use your individual account. Access is tied to your user identity and enforced role.</p>
+            <form onSubmit={submitUser} className="admin-login-account-form">
               <label>
-                <span>{tokenLabel}</span>
-                <input
-                  autoComplete="current-password"
-                  autoFocus
-                  type="password"
-                  value={token}
-                  onChange={(event) => setToken(event.target.value)}
-                />
+                <span>Email</span>
+                <input autoComplete="username" autoFocus type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+              </label>
+              <label>
+                <span>Password</span>
+                <input autoComplete="current-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
               </label>
               {submitError || authError ? <p className="admin-login-panel__error">{submitError || authError}</p> : null}
-              <button className="button button--primary" type="submit" disabled={isSubmitting || isChecking}>
-                {isSubmitting || isChecking ? checkingLabel : submitLabel}
-              </button>
+              <button className="button button--primary" type="submit" disabled={isSubmitting || isChecking}>{isSubmitting || isChecking ? 'Checking…' : 'Sign in'}</button>
             </form>
+
+            <details className="admin-login-bootstrap">
+              <summary>Emergency / bootstrap admin token</summary>
+              <p className="description">Use this only to recover access or provision the first Owner account. It remains an Owner-level escape hatch and should not be shared for everyday login.</p>
+              <form onSubmit={submitBootstrap}>
+                <label>
+                  <span>Admin token</span>
+                  <input autoComplete="off" type="password" value={token} onChange={(event) => setToken(event.target.value)} />
+                </label>
+                <button className="button" type="submit" disabled={isSubmitting || isChecking}>Use emergency token</button>
+              </form>
+            </details>
           </>
         )}
       </section>
