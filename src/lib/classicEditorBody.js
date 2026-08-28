@@ -166,7 +166,10 @@ function sanitizeNode(node) {
     const style = String(node.getAttribute('style') || '').toLowerCase()
     const align = style.match(/text-align\s*:\s*(left|center|right)/)
     if (align) return `<div style="text-align:${align[1]};">${children}</div>`
-    return children
+    // Browsers commonly create plain DIV blocks when Enter is pressed inside
+    // contentEditable. Dropping the wrapper destroys paragraph/line boundaries
+    // the next time the visual editor reloads the saved HTML.
+    return `<div>${children}</div>`
   }
 
   const allowed = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'blockquote', 'figure', 'figcaption', 'br', 'hr'])
