@@ -10,6 +10,7 @@ test('verified backup accepts D1 feed defaults when no custom row exists', async
     fetchNativeEntries: list,
     fetchNativeRevisions: list,
     fetchTaxonomyTerms: list,
+    fetchAdminUsers: list,
     fetchEditorRoles: list,
     fetchAuditLog: list,
     fetchMediaAssets: list,
