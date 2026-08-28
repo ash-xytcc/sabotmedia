@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AdminFrame } from './AdminRail'
-import { getPieces } from '../lib/pieces'
 import { DEFAULT_FEED_SETTINGS, loadFeedSettingsAsync, resetFeedSettings, saveFeedSettings } from '../lib/feedSettings'
-import { buildRssBundle, downloadRssBundle } from '../lib/rssFeeds'
+import { downloadFeedManifest, loadFeedManifest } from '../lib/feedManifestApi'
 
 const KINDS = [
   ['format', 'Formats', 'Formats are broad reading lanes like article, podcast, comic, newsletter, zine, print, or audio.'],
@@ -38,44 +37,33 @@ function textToAliases(value = '') {
   return next
 }
 
-function collectTerms(items = [], kind) {
-  const terms = new Set()
-  for (const item of items) {
-    if (kind === 'format') terms.add(item.contentType || item.type || 'article')
-    if (kind === 'author') terms.add(item.author || item.byline || 'Sabot Media Collective')
-    if (kind === 'project') [item.primaryProject, ...(item.projects || []), ...(item.categories || [])].forEach((value) => value && terms.add(value))
-    if (kind === 'collection') [item.collection, ...(item.collections || [])].forEach((value) => value && terms.add(value))
-    if (kind === 'topic') [...(item.topics || []), ...(item.tags || [])].forEach((value) => value && terms.add(value))
-    if (kind === 'series') [item.series, item.seriesSlug].forEach((value) => value && terms.add(value))
-  }
-  return [...terms].sort((a, b) => String(a).localeCompare(String(b)))
-}
-
 export function FeedSettingsAdminPage() {
   const [settings, setSettings] = useState(DEFAULT_FEED_SETTINGS)
+  const [manifest, setManifest] = useState(null)
   const [state, setState] = useState('loading')
   const [status, setStatus] = useState('')
   const [error, setError] = useState('')
-  const pieces = useMemo(() => getPieces(), [])
-  const bundle = useMemo(() => buildRssBundle(pieces, { settings }), [pieces, settings])
+  const [manifestError, setManifestError] = useState('')
 
   useEffect(() => {
     let cancelled = false
     async function boot() {
-      try {
-        setState('loading')
-        setError('')
-        const loaded = await loadFeedSettingsAsync()
-        if (!cancelled) {
-          setSettings(loaded)
-          setState('loaded')
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setState('error')
-          setError(String(err?.message || err))
-        }
-      }
+      setState('loading')
+      setError('')
+      setManifestError('')
+      const [settingsResult, manifestResult] = await Promise.allSettled([
+        loadFeedSettingsAsync(),
+        loadFeedManifest(),
+      ])
+      if (cancelled) return
+
+      if (settingsResult.status === 'fulfilled') setSettings(settingsResult.value)
+      else setError(String(settingsResult.reason?.message || settingsResult.reason))
+
+      if (manifestResult.status === 'fulfilled') setManifest(manifestResult.value)
+      else setManifestError(String(manifestResult.reason?.message || manifestResult.reason))
+
+      setState(settingsResult.status === 'fulfilled' ? 'loaded' : 'error')
     }
     boot()
     return () => { cancelled = true }
@@ -99,14 +87,28 @@ export function FeedSettingsAdminPage() {
     }))
   }
 
+  async function refreshManifest() {
+    try {
+      setManifestError('')
+      const next = await loadFeedManifest()
+      setManifest(next)
+      return next
+    } catch (err) {
+      setManifestError(String(err?.message || err))
+      return null
+    }
+  }
+
   async function save() {
     try {
       setState('saving')
       setError('')
+      setStatus('')
       const next = await saveFeedSettings(settings)
       setSettings(next)
+      await refreshManifest()
       setState('loaded')
-      setStatus('Feed settings saved to the production database.')
+      setStatus('Feed settings saved to the production database. The live server manifest has been refreshed.')
     } catch (err) {
       setState('error')
       setError(String(err?.message || err))
@@ -117,10 +119,12 @@ export function FeedSettingsAdminPage() {
     try {
       setState('saving')
       setError('')
+      setStatus('')
       const next = await resetFeedSettings()
       setSettings(next)
+      await refreshManifest()
       setState('loaded')
-      setStatus('Feed settings reset to defaults in the production database.')
+      setStatus('Feed settings reset to defaults in the production database. The live server manifest has been refreshed.')
     } catch (err) {
       setState('error')
       setError(String(err?.message || err))
@@ -128,6 +132,7 @@ export function FeedSettingsAdminPage() {
   }
 
   const disabled = state === 'loading' || state === 'saving'
+  const liveFiles = Array.isArray(manifest?.files) ? manifest.files : []
 
   return (
     <AdminFrame>
@@ -135,26 +140,42 @@ export function FeedSettingsAdminPage() {
         <div className="wp-screen-header">
           <div>
             <h1>Feeds & Syndication</h1>
-            <p className="description">Control public RSS taxonomy, aliases, hidden labels, public explanation copy, and privacy-safe byline behavior.</p>
+            <p className="description">Control the live server-backed RSS taxonomy, aliases, hidden labels, public explanation copy, and privacy-safe byline behavior.</p>
           </div>
           <div className="review-card__actions">
-            <button className="button" type="button" onClick={() => downloadRssBundle(pieces, { settings })} disabled={disabled}>Download RSS Bundle</button>
+            <a className="button" href="/feeds" target="_blank" rel="noreferrer">Open Public Feeds</a>
             <button className="button" type="button" onClick={reset} disabled={disabled}>Reset</button>
             <button className="button button--primary" type="button" onClick={save} disabled={disabled}>Save Feed Settings</button>
           </div>
         </div>
 
-        {state === 'loading' ? <div className="notice notice-info" role="status"><p>Loading feed settings…</p></div> : null}
+        {state === 'loading' ? <div className="notice notice-info" role="status"><p>Loading feed settings and live feed manifest…</p></div> : null}
         {error ? <div className="notice notice-error" role="alert"><p><strong>Feed settings error:</strong> {error}</p></div> : null}
+        {manifestError ? <div className="notice notice-error" role="alert"><p><strong>Live feed manifest error:</strong> {manifestError}</p></div> : null}
         {status ? <div className="notice notice-success" role="status"><p>{status}</p></div> : null}
 
         <section className="wp-meta-box">
           <h2>What this controls</h2>
-          <p className="description">Every published piece can appear in multiple feeds at once: the main feed, a format feed, a project feed, a collection feed, a topic feed, a series feed, and a public byline feed. Change the labels here to clean up imported categories without touching every article by hand.</p>
+          <p className="description">Every published piece can appear in multiple live feeds at once: the main feed, a format feed, a project feed, a collection feed, a topic feed, a series feed, and a public byline feed. The counts and detected terms below come from the same D1-backed server manifest used by the public <code>/feeds</code> page.</p>
+        </section>
+
+        <section className="wp-meta-box">
+          <h2>Live feed status</h2>
+          <div className="newsroom-stat-grid">
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">published records</div><strong>{Number(manifest?.itemCount || 0)}</strong><span>eligible for feed generation</span></article>
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">live endpoints</div><strong>{liveFiles.length}</strong><span>server-confirmed RSS URLs</span></article>
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">podcast episodes</div><strong>{Number(manifest?.podcastItemCount || 0)}</strong><span>with public audio enclosures</span></article>
+          </div>
+          <div className="review-card__actions">
+            <button className="button" type="button" onClick={refreshManifest}>Refresh live manifest</button>
+            <a className="button" href="/feeds/all-content.xml" target="_blank" rel="noreferrer">Open main RSS</a>
+            <a className="button" href="/feeds/podcasts/all.xml" target="_blank" rel="noreferrer">Open podcast RSS</a>
+          </div>
         </section>
 
         <section className="wp-meta-box">
           <h2>Public feeds page</h2>
+          <p className="description">These fields change the human-readable explanation at <code>/feeds</code>. They do not change the podcast title or podcast-directory metadata.</p>
           <div className="wp-settings-form">
             <label><span>Page title</span><input value={settings.feedsIntroTitle || ''} onChange={(event) => updateField('feedsIntroTitle', event.target.value)} /></label>
             <label><span>Intro copy</span><textarea rows={11} value={settings.feedsIntroBody || ''} onChange={(event) => updateField('feedsIntroBody', event.target.value)} /></label>
@@ -175,7 +196,7 @@ export function FeedSettingsAdminPage() {
               </label>
             ))}
           </div>
-          <p className="description">Generated now: {Object.keys(bundle).length} feed files. The download is a JSON bundle containing XML files for syndication software.</p>
+          <p className="description">Save these settings before expecting the live endpoint list to change. The manifest above is authoritative; unsaved form edits are not.</p>
         </section>
 
         {KINDS.map(([kind, label, help]) => (
@@ -187,12 +208,22 @@ export function FeedSettingsAdminPage() {
               <label><span>Aliases</span><textarea rows={6} value={aliasesToText(settings.aliases?.[kind])} onChange={(event) => updateAlias(kind, event.target.value)} /></label>
               <label><span>Hidden terms</span><textarea rows={6} value={listToText(settings.hiddenTerms?.[kind])} onChange={(event) => updateHidden(kind, event.target.value)} /></label>
               <div className="feed-term-preview">
-                <strong>Detected terms</strong>
-                <div>{collectTerms(pieces, kind).slice(0, 80).map((term) => <span key={term}>{term}</span>)}</div>
+                <strong>Server-detected terms</strong>
+                <div>{(manifest?.terms?.[kind] || []).slice(0, 80).map((term) => <span key={term}>{term}</span>)}</div>
+                {!(manifest?.terms?.[kind] || []).length ? <p className="description">No live terms detected.</p> : null}
               </div>
             </div>
           </section>
         ))}
+
+        <section className="wp-meta-box">
+          <h2>Diagnostics & export</h2>
+          <p className="description">Podcast directories and RSS readers use the live URLs above. This optional JSON export is only a snapshot of the server manifest for debugging, archiving, or external tooling; it is not the feed you submit to Spotify or Apple Podcasts.</p>
+          <div className="review-card__actions">
+            <button className="button" type="button" onClick={() => downloadFeedManifest(manifest)} disabled={!manifest}>Download feed manifest (JSON)</button>
+          </div>
+          {liveFiles.length ? <details><summary>Show live endpoint paths</summary><ul>{liveFiles.slice(0, 150).map((file) => <li key={file}><a href={`/feeds/${file}`} target="_blank" rel="noreferrer"><code>/feeds/{file}</code></a></li>)}</ul></details> : null}
+        </section>
       </main>
     </AdminFrame>
   )

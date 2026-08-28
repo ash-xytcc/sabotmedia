@@ -1,6 +1,6 @@
 import { ensureNativePublicContentTable, listNativeEntries } from './nativePublicContent.js'
 import { buildRssBundle } from '../../../src/lib/rssFeeds.js'
-import { mergeFeedSettings } from '../../../src/lib/feedSettings.js'
+import { mergeFeedSettings, normalizeFeedTerm } from '../../../src/lib/feedSettings.js'
 
 const SETTING_KEY = 'feed-settings-v1'
 
@@ -18,13 +18,15 @@ export async function buildLiveFeedBundle(db) {
   ])
 
   const settings = mergeFeedSettings(parseSettings(row?.value_json) || {})
-  const bundle = buildRssBundle(Array.isArray(entries) ? entries : [], { settings })
+  const items = Array.isArray(entries) ? entries : []
+  const bundle = buildRssBundle(items, { settings })
 
   return {
     settings,
     bundle,
+    terms: buildDetectedTerms(items, settings),
     updatedAt: row?.updated_at || '',
-    itemCount: Array.isArray(entries) ? entries.length : 0,
+    itemCount: items.length,
   }
 }
 
@@ -37,6 +39,28 @@ export function normalizeFeedRequestPath(value) {
     .replace(/^\/+|\/+$/g, '')
 }
 
+export function buildDetectedTerms(items = [], settings = {}) {
+  const kinds = {
+    format: new Set(),
+    project: new Set(),
+    collection: new Set(),
+    author: new Set(),
+    topic: new Set(),
+    series: new Set(),
+  }
+
+  for (const item of items) {
+    addTerm(kinds.format, 'format', item?.contentType || item?.type || 'article', settings)
+    addTerm(kinds.author, 'author', item?.author || item?.byline || 'Sabot Media Collective', settings)
+    addTerms(kinds.project, 'project', [item?.primaryProject, ...(item?.projects || []), ...(item?.categories || [])], settings)
+    addTerms(kinds.collection, 'collection', [item?.collection, ...(item?.collections || [])], settings)
+    addTerms(kinds.topic, 'topic', [...(item?.topics || []), ...(item?.tags || [])], settings)
+    addTerms(kinds.series, 'series', [item?.series, item?.seriesSlug], settings)
+  }
+
+  return Object.fromEntries(Object.entries(kinds).map(([kind, terms]) => [kind, [...terms].sort((a, b) => a.localeCompare(b))]))
+}
+
 async function ensureFeedSettingsTable(db) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS site_settings (
     setting_key TEXT PRIMARY KEY,
@@ -44,6 +68,15 @@ async function ensureFeedSettingsTable(db) {
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`).run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_site_settings_updated_at ON site_settings(updated_at DESC)').run()
+}
+
+function addTerms(set, kind, values, settings) {
+  for (const value of values || []) addTerm(set, kind, value, settings)
+}
+
+function addTerm(set, kind, value, settings) {
+  const normalized = normalizeFeedTerm(kind, value, settings)
+  if (normalized) set.add(normalized)
 }
 
 function parseSettings(value) {

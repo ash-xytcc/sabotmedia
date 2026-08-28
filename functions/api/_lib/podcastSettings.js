@@ -13,6 +13,9 @@ export const PODCAST_SETTINGS_DEFAULTS = Object.freeze({
   explicit: false,
   ownerName: '',
   ownerEmail: '',
+  sourceFeedUrl: '',
+  sourceFeedResolvedUrl: '',
+  sourceFeedLastSyncedAt: '',
 })
 
 export async function ensureSiteSettingsTable(db) {
@@ -41,6 +44,9 @@ export function normalizePodcastSettings(input = {}) {
     explicit: Boolean(value.explicit),
     ownerName: clean(value.ownerName, 200),
     ownerEmail: clean(value.ownerEmail, 254).toLowerCase(),
+    sourceFeedUrl: cleanUrl(value.sourceFeedUrl),
+    sourceFeedResolvedUrl: cleanUrl(value.sourceFeedResolvedUrl),
+    sourceFeedLastSyncedAt: cleanDate(value.sourceFeedLastSyncedAt),
   }
 }
 
@@ -87,4 +93,11 @@ function cleanUrl(value) {
   if (!raw) return ''
   if (/^https?:\/\//i.test(raw)) return raw.slice(0, 2000)
   return ''
+}
+
+function cleanDate(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  const time = new Date(raw).getTime()
+  return Number.isFinite(time) ? new Date(time).toISOString() : ''
 }
