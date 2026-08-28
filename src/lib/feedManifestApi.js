@@ -1,6 +1,7 @@
 export async function loadFeedManifest() {
   const response = await fetch('/api/feed-manifest', {
     credentials: 'same-origin',
+    cache: 'no-store',
     headers: { accept: 'application/json' },
   })
   const data = await response.json().catch(() => null)
