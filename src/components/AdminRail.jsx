@@ -23,6 +23,8 @@ const NAV_GROUPS = [
     id: 'publishing', label: 'Publishing', icon: '↗',
     items: [
       { to: adminRoutes.publications, label: 'Publications' },
+      { to: adminRoutes.podcasts, label: 'Podcasts' },
+      { to: adminRoutes.podcastSettings, label: 'Podcast Settings / Import RSS', capability: 'publishing:write' },
       { to: adminRoutes.feeds, label: 'Feeds & Syndication' },
       { to: adminRoutes.qa, label: 'Editorial QA' },
     ],
@@ -141,6 +143,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
           {canCreate ? (
             <AdminBarMenu label="+ New">
               {hasCapability('content:write') ? <Link to={adminRoutes.addNew} className="wp-admin-topbar__dropdown-link">Post</Link> : null}
+              {hasCapability('content:write') ? <Link to={`${adminRoutes.nativeBridge}?new=podcast`} className="wp-admin-topbar__dropdown-link">Podcast Episode</Link> : null}
               {hasCapability('media:write') ? <Link to={adminRoutes.media} className="wp-admin-topbar__dropdown-link">Media</Link> : null}
               {hasCapability('publishing:write') ? <Link to={adminRoutes.collections} className="wp-admin-topbar__dropdown-link">Collection</Link> : null}
               {hasCapability('publishing:write') ? <Link to={adminRoutes.publications} className="wp-admin-topbar__dropdown-link">Publication</Link> : null}
