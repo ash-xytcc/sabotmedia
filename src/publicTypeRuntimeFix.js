@@ -98,10 +98,88 @@ function setLeadTitles() {
   }
 }
 
+function setHomepageOverlayTitles() {
+  if (!document.querySelector('.publication-homepage')) return
+
+  const mobile = window.matchMedia('(max-width: 900px)').matches
+  const heroMinHeight = mobile ? '420px' : '480px'
+  const cardMinHeight = mobile ? '340px' : '320px'
+
+  const configs = [
+    {
+      cardSelector: '.publication-homepage .publication-hero-card--title-overlay',
+      linkSelector: '.publication-hero-card__image-wrap',
+      overlaySelector: '.publication-hero-card__overlay',
+      titleSelector: 'h1',
+      minHeight: heroMinHeight,
+      mobileSize: 'clamp(2rem, 8.5vw, 3.6rem)',
+    },
+    {
+      cardSelector: '.publication-homepage .publication-post-card--title-overlay',
+      linkSelector: '.publication-post-card__link',
+      overlaySelector: '.publication-post-card__overlay',
+      titleSelector: 'h2',
+      minHeight: cardMinHeight,
+      mobileSize: 'clamp(1.45rem, 6vw, 2.2rem)',
+    },
+  ]
+
+  configs.forEach((config) => {
+    document.querySelectorAll(config.cardSelector).forEach((card) => {
+      const link = card.querySelector(config.linkSelector)
+      const overlay = card.querySelector(config.overlaySelector)
+      const title = card.querySelector(config.titleSelector)
+
+      important(card, 'aspect-ratio', 'auto')
+      important(card, 'height', 'auto')
+      important(card, 'min-height', '0')
+      important(card, 'overflow', 'visible')
+
+      if (link) {
+        important(link, 'display', 'block')
+        important(link, 'height', 'auto')
+        important(link, 'min-height', '0')
+        important(link, 'aspect-ratio', 'auto')
+        important(link, 'overflow', 'hidden')
+      }
+
+      if (overlay) {
+        important(overlay, 'position', 'relative')
+        important(overlay, 'inset', 'auto')
+        important(overlay, 'height', 'auto')
+        important(overlay, 'min-height', config.minHeight)
+        important(overlay, 'box-sizing', 'border-box')
+        important(overlay, 'display', 'flex')
+        important(overlay, 'flex-direction', 'column')
+        important(overlay, 'justify-content', 'flex-end')
+        important(overlay, 'overflow', 'visible')
+      }
+
+      if (title) {
+        important(title, 'display', 'block')
+        important(title, 'max-width', '100%')
+        important(title, 'max-height', 'none')
+        important(title, '-webkit-line-clamp', 'unset')
+        important(title, '-webkit-box-orient', 'initial')
+        important(title, 'overflow', 'visible')
+        important(title, 'text-overflow', 'clip')
+        important(title, 'white-space', 'normal')
+        important(title, 'overflow-wrap', 'break-word')
+        important(title, 'word-break', 'normal')
+        if (mobile) {
+          important(title, 'font-size', config.mobileSize)
+          important(title, 'line-height', '1')
+        }
+      }
+    })
+  })
+}
+
 function applyPublicTypeFix() {
   if (/^\/(wp-admin|admin|login|wp-login)/.test(window.location.pathname)) return
   setBodyCopy()
   setLeadTitles()
+  setHomepageOverlayTitles()
 }
 
 if (typeof window !== 'undefined') {
