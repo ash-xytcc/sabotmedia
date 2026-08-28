@@ -52,16 +52,16 @@ export function GalleryArchivePage() {
   }, [activeItem, items.length])
 
   return (
-    <main className="page publication-gallery-page">
+    <main className="page public-search-page archive-page publication-gallery-page">
       <PublicationTopbar />
 
-      <section className="publication-gallery-hero">
-        <p className="publication-gallery-hero__eyebrow">archive / photography / Aberdeen Local 1312</p>
+      <section className="project-hero archive-page__hero publication-gallery-hero">
+        <p className="project-hero__eyebrow">archive / photography / Aberdeen Local 1312</p>
         <h1>{gallery?.title || 'Aberdeen Local 1312 Gallery'}</h1>
-        <p className="publication-gallery-hero__body">
+        <p className="project-hero__description">
           {gallery?.description || 'Historical image archive from Aberdeen Local 1312, preserved from the original Sabot Media Noblogs site.'}
         </p>
-        <div className="publication-gallery-hero__meta">
+        <div className="project-hero__meta publication-gallery-hero__meta">
           <span>{items.length} image{items.length === 1 ? '' : 's'}</span>
           {gallery?.expectedItemCount ? <span>{gallery.complete ? 'migration complete' : `${gallery.expectedItemCount - items.length} still migrating`}</span> : null}
           <Link to="/archive">Browse full archive</Link>
@@ -69,32 +69,40 @@ export function GalleryArchivePage() {
       </section>
 
       {state === 'loading' ? (
-        <section className="publication-gallery-state"><h2>Loading gallery</h2><p>Reading the preserved gallery from Sabot Media storage.</p></section>
+        <section className="archive-results publication-gallery-state"><h2>Loading gallery</h2><p>Reading the preserved gallery from Sabot Media storage.</p></section>
       ) : null}
 
       {state === 'error' ? (
-        <section className="publication-gallery-state"><h2>Gallery unavailable</h2><p>{error}</p><Link to="/archive">Return to archive</Link></section>
+        <section className="archive-results publication-gallery-state"><h2>Gallery unavailable</h2><p>{error}</p><Link to="/archive">Return to archive</Link></section>
       ) : null}
 
       {state === 'loaded' && !items.length ? (
-        <section className="publication-gallery-state"><h2>No images available yet</h2><p>The gallery record exists, but its media migration has not finished.</p></section>
+        <section className="archive-results publication-gallery-state"><h2>No images available yet</h2><p>The gallery record exists, but its media migration has not finished.</p></section>
       ) : null}
 
       {items.length ? (
-        <section className="publication-gallery-grid" aria-label={gallery?.title || 'Aberdeen Local 1312 Gallery'}>
-          {items.map((item, index) => (
-            <figure className="publication-gallery-card" key={`${item.mediaId || item.sourceAttachmentId || index}-${index}`}>
-              <button
-                className="publication-gallery-card__button"
-                type="button"
-                onClick={() => setActiveIndex(index)}
-                aria-label={`Open ${item.altText || item.title || `image ${index + 1}`}`}
-              >
-                <img loading="lazy" src={item.url} alt={item.altText || item.title || ''} />
-              </button>
-              {item.caption ? <figcaption>{item.caption}</figcaption> : null}
-            </figure>
-          ))}
+        <section className="archive-results publication-gallery-results" aria-label={gallery?.title || 'Aberdeen Local 1312 Gallery'}>
+          <div className="archive-results__header publication-gallery-results__header">
+            <div>
+              <div className="archive-results__eyebrow">photography archive</div>
+              <div className="archive-results__summary">Select any image to open the full-size viewer.</div>
+            </div>
+          </div>
+          <div className="publication-gallery-grid">
+            {items.map((item, index) => (
+              <figure className="publication-gallery-card" key={`${item.mediaId || item.sourceAttachmentId || index}-${index}`}>
+                <button
+                  className="publication-gallery-card__button"
+                  type="button"
+                  onClick={() => setActiveIndex(index)}
+                  aria-label={`Open ${item.altText || item.title || `image ${index + 1}`}`}
+                >
+                  <img loading="lazy" src={item.url} alt={item.altText || item.title || ''} />
+                </button>
+                {item.caption ? <figcaption>{item.caption}</figcaption> : null}
+              </figure>
+            ))}
+          </div>
         </section>
       ) : null}
 
