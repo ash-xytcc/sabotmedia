@@ -38,6 +38,7 @@ export function PublicationFooter() {
                   labelField={link.labelField}
                 />
               ))}
+              {section.id === 'site' ? <Link to="/aberdeen-local-1312-gallery">Gallery</Link> : null}
             </nav>
           </div>
         ))}
