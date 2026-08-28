@@ -7,6 +7,7 @@ import { extractLegacyGalleryImageUrls } from '../functions/api/gallery-migratio
 const migrationSource = fs.readFileSync(new URL('../functions/api/gallery-migration.js', import.meta.url), 'utf8')
 const galleryApi = fs.readFileSync(new URL('../functions/api/galleries/[slug].js', import.meta.url), 'utf8')
 const galleryPage = fs.readFileSync(new URL('../src/components/GalleryArchivePage.jsx', import.meta.url), 'utf8')
+const galleryCss = fs.readFileSync(new URL('../src/components/GalleryArchivePage.css', import.meta.url), 'utf8')
 const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
 const topbar = fs.readFileSync(new URL('../src/components/PublicationTopbar.jsx', import.meta.url), 'utf8')
 const footer = fs.readFileSync(new URL('../src/components/PublicationFooter.jsx', import.meta.url), 'utf8')
@@ -57,6 +58,15 @@ test('old gallery URL is owned by the React public site shell, not standalone HT
   assert.match(galleryPage, /api\/galleries/)
   assert.match(galleryPage, /ArrowLeft/)
   assert.match(galleryPage, /ArrowRight/)
+})
+
+test('gallery reuses the archive public layout instead of a separate paper microsite', () => {
+  assert.match(galleryPage, /public-search-page archive-page publication-gallery-page/)
+  assert.match(galleryPage, /project-hero archive-page__hero publication-gallery-hero/)
+  assert.match(galleryPage, /archive-results publication-gallery-results/)
+  assert.match(galleryCss, /background:transparent/)
+  assert.match(galleryCss, /var\(--archive-surface-strong\)/)
+  assert.doesNotMatch(galleryCss, /publication-paper/)
 })
 
 test('gallery is linked from the site-wide masthead and footer', () => {
