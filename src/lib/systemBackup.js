@@ -49,7 +49,7 @@ export async function collectSystemSnapshot(loaders = {}) {
   const collections = requireItems(collectionsData, 'collections')
   const publications = requireItems(publicationsData, 'publications')
   const sites = requireItems(sitesData, 'sites')
-  const feedSettings = requireObject(feedSettingsData?.settings, 'feed settings')
+  const feedSettings = requireObject(feedSettingsData?.settings ?? {}, 'feed settings')
   const publicSiteConfig = requireObject(
     publicConfigData?.config || publicConfigData?.settings || publicConfigData?.payload || publicConfigData,
     'public site config',
@@ -61,7 +61,7 @@ export async function collectSystemSnapshot(loaders = {}) {
     revisionsByNativeId[item.id] = requireItems(revData, `revisions for ${item.id}`)
   }
 
-  const snapshot = {
+  return {
     exportedAt: new Date().toISOString(),
     schemaVersion: 3,
     backupType: 'server-system',
@@ -94,8 +94,6 @@ export async function collectSystemSnapshot(loaders = {}) {
     feedSettings,
     publicSiteConfig,
   }
-
-  return snapshot
 }
 
 export async function exportSystemSnapshot() {
@@ -173,10 +171,13 @@ async function fetchFeedSettingsForBackup() {
     headers: { accept: 'application/json' },
   })
   const data = await response.json().catch(() => null)
-  if (!response.ok || !data?.ok || data.mode !== 'd1' || !data.settings || typeof data.settings !== 'object') {
-    throw new Error(data?.error || `feed settings backup fetch failed: ${response.status}`)
+  if (!response.ok || !data?.ok || data.mode !== 'd1') {
+    throw new Error(data?.error || `feed settings backup request failed: ${response.status}`)
   }
-  return data
+  if (data.settings != null && (typeof data.settings !== 'object' || Array.isArray(data.settings))) {
+    throw new Error('feed settings backup response contained invalid settings data')
+  }
+  return { ...data, settings: data.settings || {} }
 }
 
 async function fetchRequiredList(url, label) {
