@@ -2,9 +2,15 @@ import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { EditableText } from './EditableText'
 import { getEditablePage } from '../lib/editableContentRegistry'
+import { getPublicInfoCopy, getPublicInfoField } from '../content/publicInfoCopy'
 
 export function PublicInfoPage({ page = 'about' }) {
   const editablePage = getEditablePage(page)
+  const currentCopy = getPublicInfoCopy(page)
+
+  const eyebrowField = getPublicInfoField(page, 'eyebrow', editablePage.eyebrow.field)
+  const titleField = getPublicInfoField(page, 'title', editablePage.title.field)
+  const bodyField = getPublicInfoField(page, 'body', editablePage.body.field)
 
   return (
     <main className="page public-info-page">
@@ -13,20 +19,20 @@ export function PublicInfoPage({ page = 'about' }) {
         <EditableText
           as="div"
           className="project-hero__eyebrow"
-          field={editablePage.eyebrow.field}
+          field={eyebrowField}
         >
-          {editablePage.eyebrow.defaultText}
+          {currentCopy?.eyebrow || editablePage.eyebrow.defaultText}
         </EditableText>
-        <EditableText as="h1" field={editablePage.title.field}>
-          {editablePage.title.defaultText}
+        <EditableText as="h1" field={titleField}>
+          {currentCopy?.title || editablePage.title.defaultText}
         </EditableText>
         <EditableText
           as="div"
           className="project-hero__description"
-          field={editablePage.body.field}
+          field={bodyField}
           multiline
         >
-          {editablePage.body.defaultText}
+          {currentCopy?.body || editablePage.body.defaultText}
         </EditableText>
       </section>
       <PublicationFooter />
