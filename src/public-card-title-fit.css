@@ -1,0 +1,93 @@
+/*
+ * Homepage cards with visible overlay titles must size to their text.
+ * The image remains an absolute backdrop, while the overlay participates
+ * in layout so long titles can increase the card height instead of being clipped.
+ * Hidden/image-only and below-title modes are intentionally untouched.
+ */
+
+.publication-homepage .publication-hero-card--title-overlay,
+.publication-homepage .publication-post-card--title-overlay {
+  aspect-ratio: auto !important;
+  overflow: hidden;
+}
+
+.publication-homepage .publication-hero-card--title-overlay {
+  min-height: clamp(30rem, 58vw, 46rem) !important;
+}
+
+.publication-homepage .publication-post-card--title-overlay {
+  min-height: clamp(20rem, 34vw, 30rem) !important;
+}
+
+.publication-homepage .publication-hero-card--title-overlay .publication-hero-card__image-wrap,
+.publication-homepage .publication-post-card--title-overlay .publication-post-card__link {
+  position: relative;
+  display: grid !important;
+  width: 100%;
+  height: auto !important;
+  min-height: inherit !important;
+  aspect-ratio: auto !important;
+  overflow: hidden;
+}
+
+.publication-homepage .publication-hero-card--title-overlay .publication-hero-card__image-fill,
+.publication-homepage .publication-post-card--title-overlay .publication-post-card__image-fill {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100%;
+  height: 100%;
+  min-height: 0 !important;
+  z-index: 0;
+}
+
+.publication-homepage .publication-hero-card--title-overlay .publication-hero-card__overlay,
+.publication-homepage .publication-post-card--title-overlay .publication-post-card__overlay {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 1;
+  align-self: stretch;
+  width: 100%;
+  height: auto !important;
+  min-height: inherit !important;
+  box-sizing: border-box;
+  overflow: visible !important;
+}
+
+.publication-homepage .publication-hero-card--title-overlay h1,
+.publication-homepage .publication-post-card--title-overlay h2 {
+  display: block !important;
+  max-height: none !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: initial !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 900px) {
+  .publication-homepage .publication-hero-card--title-overlay {
+    min-height: max(25rem, 66vw) !important;
+  }
+
+  .publication-homepage .publication-post-card--title-overlay {
+    min-height: max(21rem, 62vw) !important;
+  }
+
+  .publication-homepage .publication-hero-card--title-overlay h1 {
+    max-width: 13ch !important;
+    font-size: clamp(2rem, 9vw, 3.8rem) !important;
+    line-height: 0.96 !important;
+  }
+
+  .publication-homepage .publication-post-card--title-overlay h2 {
+    max-width: 16ch !important;
+    font-size: clamp(1.55rem, 6.6vw, 2.35rem) !important;
+    line-height: 1 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .publication-homepage .publication-post-card--title-overlay {
+    min-height: max(20rem, 78vw) !important;
+  }
+}
