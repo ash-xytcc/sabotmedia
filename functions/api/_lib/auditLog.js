@@ -3,27 +3,18 @@ export function createAuditId() {
 }
 
 export async function ensureAuditLogTable(db) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS audit_log (
-      id TEXT PRIMARY KEY,
-      action TEXT NOT NULL,
-      entity_type TEXT NOT NULL,
-      entity_id TEXT NOT NULL DEFAULT '',
-      actor TEXT NOT NULL DEFAULT 'unknown',
-      detail_json TEXT NOT NULL DEFAULT '{}',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `)
+  await db.prepare(`CREATE TABLE IF NOT EXISTS audit_log (
+    id TEXT PRIMARY KEY,
+    action TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL DEFAULT '',
+    actor TEXT NOT NULL DEFAULT 'unknown',
+    detail_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`).run()
 
-  await db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_audit_log_created_at
-    ON audit_log(created_at DESC);
-  `)
-
-  await db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_audit_log_entity
-    ON audit_log(entity_type, entity_id);
-  `)
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log(created_at DESC)').run()
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type, entity_id)').run()
 }
 
 export async function writeAuditLog(db, entry) {
@@ -44,12 +35,7 @@ export async function writeAuditLog(db, entry) {
   }
 
   await db
-    .prepare(`
-      INSERT INTO audit_log (
-        id, action, entity_type, entity_id, actor, detail_json, created_at
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `)
+    .prepare('INSERT INTO audit_log (id, action, entity_type, entity_id, actor, detail_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
     .bind(id, action, entityType, entityId, actor, detailJson, createdAt)
     .run()
 
@@ -73,14 +59,10 @@ export async function listAuditLog(db, options = {}) {
   }
 
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
-
-  const stmt = db.prepare(`
-    SELECT id, action, entity_type, entity_id, actor, detail_json, created_at
-    FROM audit_log
-    ${where}
+  const stmt = db.prepare(`SELECT id, action, entity_type, entity_id, actor, detail_json, created_at
+    FROM audit_log ${where}
     ORDER BY datetime(created_at) DESC
-    LIMIT 200
-  `)
+    LIMIT 200`)
 
   const result = binds.length ? await stmt.bind(...binds).all() : await stmt.all()
   const rows = Array.isArray(result?.results) ? result.results : []

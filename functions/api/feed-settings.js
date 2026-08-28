@@ -25,11 +25,11 @@ export async function onRequestPost(context) {
     if (!settings) return json({ ok: false, error: 'missing feed settings' }, 400)
     await ensureTable(context.env.BF_DB)
     const now = new Date().toISOString()
-    await context.env.BF_DB.prepare(`
-      INSERT INTO site_settings (setting_key, value_json, updated_at)
+    await context.env.BF_DB.prepare(`INSERT INTO site_settings (setting_key, value_json, updated_at)
       VALUES (?, ?, ?)
-      ON CONFLICT(setting_key) DO UPDATE SET value_json = excluded.value_json, updated_at = excluded.updated_at
-    `).bind(SETTING_KEY, JSON.stringify(settings), now).run()
+      ON CONFLICT(setting_key) DO UPDATE SET value_json = excluded.value_json, updated_at = excluded.updated_at`)
+      .bind(SETTING_KEY, JSON.stringify(settings), now)
+      .run()
     await writeAuditLog(context.env.BF_DB, {
       action: 'feeds.settings.update',
       entityType: 'site_setting',
@@ -64,14 +64,12 @@ export async function onRequestDelete(context) {
 }
 
 async function ensureTable(db) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS site_settings (
-      setting_key TEXT PRIMARY KEY,
-      value_json TEXT NOT NULL,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE INDEX IF NOT EXISTS idx_site_settings_updated_at ON site_settings(updated_at DESC);
-  `)
+  await db.prepare(`CREATE TABLE IF NOT EXISTS site_settings (
+    setting_key TEXT PRIMARY KEY,
+    value_json TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`).run()
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_site_settings_updated_at ON site_settings(updated_at DESC)').run()
 }
 
 function parseSettings(value) {

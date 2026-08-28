@@ -1,25 +1,17 @@
 import { normalizePublicConfig, PUBLIC_CONFIG_SCHEMA_VERSION } from './publicConfigSchema.js'
 
 export async function ensurePublicSiteConfigTable(db) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS public_site_configs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      scope TEXT NOT NULL UNIQUE,
-      config_json TEXT NOT NULL DEFAULT '{}',
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `)
+  await db.prepare(`CREATE TABLE IF NOT EXISTS public_site_configs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scope TEXT NOT NULL UNIQUE,
+    config_json TEXT NOT NULL DEFAULT '{}',
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`).run()
 
-  await db.exec(`
-    CREATE INDEX IF NOT EXISTS idx_public_site_configs_scope
-    ON public_site_configs(scope);
-  `)
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_public_site_configs_scope ON public_site_configs(scope)').run()
 
   await db
-    .prepare(`
-      INSERT OR IGNORE INTO public_site_configs (scope, config_json, updated_at)
-      VALUES (?, ?, CURRENT_TIMESTAMP)
-    `)
+    .prepare('INSERT OR IGNORE INTO public_site_configs (scope, config_json, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)')
     .bind('global', '{}')
     .run()
 }
@@ -28,12 +20,7 @@ export async function readPublicSiteConfig(db, scope = 'global') {
   await ensurePublicSiteConfigTable(db)
 
   const row = await db
-    .prepare(`
-      SELECT id, scope, config_json, updated_at
-      FROM public_site_configs
-      WHERE scope = ?
-      LIMIT 1
-    `)
+    .prepare('SELECT id, scope, config_json, updated_at FROM public_site_configs WHERE scope = ? LIMIT 1')
     .bind(scope)
     .first()
 
@@ -65,18 +52,13 @@ export async function readPublicSiteConfig(db, scope = 'global') {
 
 export async function writePublicSiteConfig(db, config, scope = 'global') {
   await ensurePublicSiteConfigTable(db)
-
   const normalized = normalizePublicConfig(config)
   const json = JSON.stringify(normalized)
 
   await db
-    .prepare(`
-      INSERT INTO public_site_configs (scope, config_json, updated_at)
+    .prepare(`INSERT INTO public_site_configs (scope, config_json, updated_at)
       VALUES (?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(scope) DO UPDATE SET
-        config_json = excluded.config_json,
-        updated_at = CURRENT_TIMESTAMP
-    `)
+      ON CONFLICT(scope) DO UPDATE SET config_json = excluded.config_json, updated_at = CURRENT_TIMESTAMP`)
     .bind(scope, json)
     .run()
 
