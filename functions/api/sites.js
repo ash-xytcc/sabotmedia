@@ -96,20 +96,18 @@ export async function onRequestDelete(context) {
 }
 
 async function ensureSitesTable(db) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS site_domains (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      domain TEXT NOT NULL UNIQUE,
-      base_path TEXT NOT NULL DEFAULT '/',
-      status TEXT NOT NULL DEFAULT 'planned',
-      notes TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE INDEX IF NOT EXISTS idx_site_domains_status ON site_domains(status);
-    CREATE INDEX IF NOT EXISTS idx_site_domains_updated_at ON site_domains(updated_at DESC);
-  `)
+  await db.prepare(`CREATE TABLE IF NOT EXISTS site_domains (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    domain TEXT NOT NULL UNIQUE,
+    base_path TEXT NOT NULL DEFAULT '/',
+    status TEXT NOT NULL DEFAULT 'planned',
+    notes TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`).run()
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_site_domains_status ON site_domains(status)').run()
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_site_domains_updated_at ON site_domains(updated_at DESC)').run()
 }
 
 function normalizeSite(input = {}) {
@@ -120,7 +118,7 @@ function normalizeSite(input = {}) {
     id: String(input.id || `site-${crypto.randomUUID()}`),
     name: String(input.name || '').trim(),
     domain,
-    basePath: normalizeBasePath(input.basePath),
+    basePath: normalizeBasePath(input.basePath || input.base_path),
     status,
     notes: String(input.notes || '').trim(),
     createdAt: String(input.createdAt || input.created_at || now),
@@ -128,25 +126,21 @@ function normalizeSite(input = {}) {
   }
 }
 
-function rowToSite(row) {
-  return normalizeSite({
-    id: row.id,
-    name: row.name,
-    domain: row.domain,
-    basePath: row.base_path,
-    status: row.status,
-    notes: row.notes,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  })
+function rowToSite(row = {}) {
+  return {
+    id: String(row.id || ''),
+    name: String(row.name || ''),
+    domain: String(row.domain || ''),
+    basePath: String(row.base_path || '/'),
+    status: String(row.status || 'planned'),
+    notes: String(row.notes || ''),
+    createdAt: String(row.created_at || ''),
+    updatedAt: String(row.updated_at || ''),
+  }
 }
 
 function normalizeDomain(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, '')
-    .replace(/\/$/, '')
+  return String(value || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
 }
 
 function normalizeBasePath(value) {
@@ -158,9 +152,6 @@ function normalizeBasePath(value) {
 function json(payload, status = 200) {
   return new Response(JSON.stringify(payload, null, 2), {
     status,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
-    },
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
   })
 }
