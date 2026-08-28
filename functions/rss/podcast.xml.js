@@ -80,6 +80,7 @@ export function podcastXmlResponse(body) {
 }
 
 function itemXml(item, origin, channel = {}) {
+  const delivery = getDeliveryAsset(item)
   const audioUrl = absolutize(getAudioUrl(item), origin)
   const slug = String(item.slug || item.id || '').trim()
   const link = `${origin}/post/${encodeURIComponent(slug)}`
@@ -88,21 +89,24 @@ function itemXml(item, origin, channel = {}) {
   const pubDate = safeDate(item.publishedAt || item.scheduledFor || item.updatedAt || item.createdAt)
   const description = item.podcastSummary || item.excerpt || stripHtml(item.bodyHtml || item.body || '')
   const duration = String(item.podcastDuration || '').trim()
-  const explicit = item.podcastExplicit == null ? channel.explicit : item.podcastExplicit ? 'yes' : 'no'
+  const storedExplicit = item.podcastExplicit == null ? delivery?.podcastExplicit : item.podcastExplicit
+  const explicit = storedExplicit == null ? channel.explicit : storedExplicit ? 'yes' : 'no'
   const author = String(item.author || item.byline || channel.author || 'Sabot Media').trim()
   const episode = String(item.podcastEpisodeNumber || '').trim()
   const season = String(item.podcastSeason || '').trim()
+  const episodeType = String(item.podcastEpisodeType || delivery?.podcastEpisodeType || '').trim()
   const coverArt = safeAbsoluteUrl(item.podcastCoverImage || item.featuredImage || item.heroImage || channel.coverArt, origin)
+  const guid = String(item.sourceExternalId || delivery?.podcastGuid || item.id || link).trim()
 
   return `    <item>
       <title>${escapeXml(item.title || 'Untitled episode')}</title>
       <description>${escapeXml(description)}</description>
       <link>${escapeXml(link)}</link>
-      <guid isPermaLink="false">${escapeXml(item.id || link)}</guid>
+      <guid isPermaLink="false">${escapeXml(guid)}</guid>
       <pubDate>${escapeXml(pubDate)}</pubDate>
       <enclosure url="${escapeXml(audioUrl)}" type="${escapeXml(mimeType)}" length="${escapeXml(String(size || 0))}" />
       <itunes:author>${escapeXml(author)}</itunes:author>
-${duration ? `      <itunes:duration>${escapeXml(duration)}</itunes:duration>\n` : ''}${episode ? `      <itunes:episode>${escapeXml(episode)}</itunes:episode>\n` : ''}${season ? `      <itunes:season>${escapeXml(season)}</itunes:season>\n` : ''}${coverArt ? `      <itunes:image href="${escapeXml(coverArt)}" />\n` : ''}      <itunes:explicit>${escapeXml(explicit || 'no')}</itunes:explicit>
+${duration ? `      <itunes:duration>${escapeXml(duration)}</itunes:duration>\n` : ''}${episode ? `      <itunes:episode>${escapeXml(episode)}</itunes:episode>\n` : ''}${season ? `      <itunes:season>${escapeXml(season)}</itunes:season>\n` : ''}${episodeType ? `      <itunes:episodeType>${escapeXml(episodeType)}</itunes:episodeType>\n` : ''}${coverArt ? `      <itunes:image href="${escapeXml(coverArt)}" />\n` : ''}      <itunes:explicit>${escapeXml(explicit || 'no')}</itunes:explicit>
     </item>`
 }
 
@@ -119,7 +123,7 @@ function getAudioUrl(item = {}) {
 
 function getMimeType(item = {}) {
   const delivery = getDeliveryAsset(item)
-  if (delivery?.mimeType || delivery?.type) return String(delivery.mimeType || delivery.type)
+  if (delivery?.mimeType || delivery?.rssEnclosure?.type) return String(delivery.mimeType || delivery.rssEnclosure.type)
   if (item.podcastMimeType) return String(item.podcastMimeType)
   const asset = getAudioAsset(item)
   return String(asset?.mimeType || asset?.type || 'audio/mpeg')
@@ -127,7 +131,7 @@ function getMimeType(item = {}) {
 
 function getFileSize(item = {}) {
   const delivery = getDeliveryAsset(item)
-  if (delivery?.size || delivery?.length) return Number(delivery.size || delivery.length || 0)
+  if (delivery?.size || delivery?.length || delivery?.rssEnclosure?.length) return Number(delivery.size || delivery.length || delivery.rssEnclosure.length || 0)
   if (item.podcastFileSize) return Number(item.podcastFileSize || 0)
   const asset = getAudioAsset(item)
   return Number(asset?.size || asset?.length || 0)
