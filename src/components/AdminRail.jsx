@@ -5,29 +5,66 @@ import { adminRoutes } from '../routing/routes'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
 import { AdminCommandPalette } from './AdminCommandPalette'
 
-const MENU = [
-  { to: adminRoutes.dashboard, label: 'Dashboard' },
-  { to: adminRoutes.posts, label: 'Posts' },
-  { to: adminRoutes.addNew, label: 'Add New' },
-  { to: adminRoutes.media, label: 'Media' },
-  { to: adminRoutes.pages, label: 'Pages' },
-  { to: adminRoutes.collections, label: 'Collections' },
-  { to: adminRoutes.publications, label: 'Publications' },
-  { to: adminRoutes.feeds, label: 'Feeds' },
-  { to: adminRoutes.printlab, label: 'Printlab' },
-  { to: adminRoutes.audiolab, label: 'AudioLab' },
-  { to: adminRoutes.customize, label: 'Customize' },
-  { to: adminRoutes.analytics, label: 'Analytics' },
-  { to: adminRoutes.taxonomy, label: 'Taxonomy' },
-  { to: adminRoutes.roles, label: 'Editor Roles' },
-  { to: adminRoutes.qa, label: 'Editorial QA' },
-  { to: adminRoutes.siteHealth, label: 'Site Health' },
-  { to: adminRoutes.backup, label: 'Backups' },
-  { to: adminRoutes.auditLog, label: 'Audit Log' },
-  { to: adminRoutes.sites, label: 'Sites & Domains' },
-  { to: adminRoutes.tools, label: 'Tools' },
-  { to: adminRoutes.settings, label: 'Settings' },
-  { to: adminRoutes.users, label: 'Users' },
+const RAIL_STATE_KEY = 'sabot-admin-rail-collapsed-v1'
+
+const NAV_GROUPS = [
+  {
+    id: 'content',
+    label: 'Content',
+    icon: '✎',
+    items: [
+      { to: adminRoutes.posts, label: 'Posts' },
+      { to: adminRoutes.addNew, label: 'Add New' },
+      { to: adminRoutes.pages, label: 'Pages' },
+      { to: adminRoutes.collections, label: 'Collections' },
+      { to: adminRoutes.taxonomy, label: 'Taxonomy' },
+    ],
+  },
+  {
+    id: 'publishing',
+    label: 'Publishing',
+    icon: '↗',
+    items: [
+      { to: adminRoutes.publications, label: 'Publications' },
+      { to: adminRoutes.feeds, label: 'Feeds & Syndication' },
+      { to: adminRoutes.qa, label: 'Editorial QA' },
+    ],
+  },
+  {
+    id: 'media',
+    label: 'Media & Labs',
+    icon: '▣',
+    items: [
+      { to: adminRoutes.media, label: 'Media Library' },
+      { to: adminRoutes.printlab, label: 'Printlab' },
+      { to: adminRoutes.audiolab, label: 'AudioLab' },
+    ],
+  },
+  {
+    id: 'site',
+    label: 'Site',
+    icon: '⌂',
+    items: [
+      { to: adminRoutes.customize, label: 'Customize' },
+      { to: adminRoutes.analytics, label: 'Analytics' },
+      { to: adminRoutes.sites, label: 'Sites & Domains' },
+      { to: adminRoutes.platformMap, label: 'Platform Map' },
+    ],
+  },
+  {
+    id: 'system',
+    label: 'System',
+    icon: '⚙',
+    items: [
+      { to: adminRoutes.siteHealth, label: 'Site Health' },
+      { to: adminRoutes.backup, label: 'Backups' },
+      { to: adminRoutes.auditLog, label: 'Audit Log' },
+      { to: adminRoutes.roles, label: 'Editor Roles' },
+      { to: adminRoutes.settings, label: 'Settings' },
+      { to: adminRoutes.users, label: 'Users' },
+      { to: adminRoutes.tools, label: 'Tools' },
+    ],
+  },
 ]
 
 function AdminBarMenu({ label, children, className = '' }) {
@@ -60,10 +97,28 @@ function AdminBarMenu({ label, children, className = '' }) {
   )
 }
 
-export function AdminRail() {
+function pathMatches(pathname, target) {
+  if (!target) return false
+  if (pathname === target) return true
+  return pathname.startsWith(`${target}/`)
+}
+
+export function AdminRail({ collapsed, onToggleCollapsed }) {
   const location = useLocation()
   const [primarySiteName, setPrimarySiteName] = useState('Sabot Media')
   const [paletteOpenTick, setPaletteOpenTick] = useState(0)
+  const activeGroup = NAV_GROUPS.find((group) => group.items.some((item) => pathMatches(location.pathname, item.to)))?.id || ''
+  const [openGroups, setOpenGroups] = useState(() => new Set(activeGroup ? [activeGroup] : ['content']))
+
+  useEffect(() => {
+    if (!activeGroup) return
+    setOpenGroups((current) => {
+      if (current.has(activeGroup)) return current
+      const next = new Set(current)
+      next.add(activeGroup)
+      return next
+    })
+  }, [activeGroup])
 
   useEffect(() => {
     let cancelled = false
@@ -85,6 +140,20 @@ export function AdminRail() {
     if (!paletteOpenTick) return
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))
   }, [paletteOpenTick])
+
+  function toggleGroup(groupId) {
+    if (collapsed) {
+      onToggleCollapsed(false)
+      setOpenGroups((current) => new Set(current).add(groupId))
+      return
+    }
+    setOpenGroups((current) => {
+      const next = new Set(current)
+      if (next.has(groupId)) next.delete(groupId)
+      else next.add(groupId)
+      return next
+    })
+  }
 
   return (
     <>
@@ -113,7 +182,6 @@ export function AdminRail() {
             <Link to={adminRoutes.audiolab} className="wp-admin-topbar__dropdown-link">AudioLab Project</Link>
           </AdminBarMenu>
 
-          <Link to={adminRoutes.customize} className="wp-admin-topbar__link">Customize</Link>
           <button
             type="button"
             className="wp-admin-topbar__button wp-admin-topbar__command"
@@ -132,18 +200,62 @@ export function AdminRail() {
         </div>
       </div>
 
-      <aside className="admin-rail" aria-label="Admin navigation">
-        <div className="admin-rail__label">wp-admin</div>
+      <aside className={`admin-rail${collapsed ? ' is-collapsed' : ''}`} aria-label="Admin navigation">
+        <div className="admin-rail__controls">
+          <button
+            type="button"
+            className="admin-rail__toggle"
+            onClick={() => onToggleCollapsed(!collapsed)}
+            aria-label={collapsed ? 'Expand admin navigation' : 'Collapse admin navigation'}
+            aria-expanded={!collapsed}
+            title={collapsed ? 'Expand navigation' : 'Collapse navigation'}
+          >
+            <span aria-hidden="true">☰</span>
+            <span className="admin-rail__toggle-label">Menu</span>
+          </button>
+        </div>
+
         <nav className="admin-rail__nav">
-          {MENU.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) => `admin-rail__link${isActive ? ' is-active' : ''}`}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+          <NavLink
+            to={adminRoutes.dashboard}
+            className={({ isActive }) => `admin-rail__link admin-rail__link--primary${isActive ? ' is-active' : ''}`}
+            title={collapsed ? 'Dashboard' : undefined}
+          >
+            <span className="admin-rail__icon" aria-hidden="true">●</span>
+            <span className="admin-rail__text">Dashboard</span>
+          </NavLink>
+
+          {NAV_GROUPS.map((group) => {
+            const isOpen = openGroups.has(group.id)
+            const isGroupActive = activeGroup === group.id
+            return (
+              <div key={group.id} className={`admin-rail__group${isOpen ? ' is-open' : ''}${isGroupActive ? ' is-active' : ''}`}>
+                <button
+                  type="button"
+                  className="admin-rail__group-toggle"
+                  onClick={() => toggleGroup(group.id)}
+                  aria-expanded={isOpen && !collapsed}
+                  aria-controls={`admin-rail-group-${group.id}`}
+                  title={collapsed ? group.label : undefined}
+                >
+                  <span className="admin-rail__icon" aria-hidden="true">{group.icon}</span>
+                  <span className="admin-rail__text">{group.label}</span>
+                  <span className="admin-rail__chevron" aria-hidden="true">›</span>
+                </button>
+                <div id={`admin-rail-group-${group.id}`} className="admin-rail__subnav" hidden={collapsed || !isOpen}>
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) => `admin-rail__sublink${isActive ? ' is-active' : ''}`}
+                    >
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </nav>
       </aside>
     </>
@@ -151,9 +263,24 @@ export function AdminRail() {
 }
 
 export function AdminFrame({ children }) {
+  const [railCollapsed, setRailCollapsed] = useState(() => {
+    try {
+      const stored = window.localStorage.getItem(RAIL_STATE_KEY)
+      return stored === null ? true : stored === '1'
+    } catch {
+      return true
+    }
+  })
+
+  function setCollapsed(next) {
+    const value = Boolean(next)
+    setRailCollapsed(value)
+    try { window.localStorage.setItem(RAIL_STATE_KEY, value ? '1' : '0') } catch { /* UI preference only */ }
+  }
+
   return (
-    <div className="admin-frame">
-      <AdminRail />
+    <div className={`admin-frame${railCollapsed ? ' admin-frame--rail-collapsed' : ''}`}>
+      <AdminRail collapsed={railCollapsed} onToggleCollapsed={setCollapsed} />
       <div className="admin-frame__main">{children}</div>
     </div>
   )
