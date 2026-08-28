@@ -16,29 +16,10 @@ export async function collectSystemSnapshot(loaders = {}) {
   const loadPublications = loaders.fetchPublications || fetchPublicationsForBackup
   const loadSites = loaders.fetchSites || fetchSitesForBackup
   const loadFeedSettings = loaders.fetchFeedSettings || fetchFeedSettingsForBackup
+  const loadAdminUsers = loaders.fetchAdminUsers || fetchAdminUsersForBackup
 
-  const [
-    nativeData,
-    taxonomyData,
-    rolesData,
-    auditData,
-    mediaData,
-    collectionsData,
-    publicationsData,
-    publicConfigData,
-    sitesData,
-    feedSettingsData,
-  ] = await Promise.all([
-    loadNative({ includeFuture: 1 }),
-    loadTaxonomy(),
-    loadRoles(),
-    loadAudit(),
-    loadMedia(),
-    loadCollections(),
-    loadPublications(),
-    loadPublicConfig(),
-    loadSites(),
-    loadFeedSettings(),
+  const [nativeData, taxonomyData, rolesData, auditData, mediaData, collectionsData, publicationsData, publicConfigData, sitesData, feedSettingsData, adminUsersData] = await Promise.all([
+    loadNative({ includeFuture: 1 }), loadTaxonomy(), loadRoles(), loadAudit(), loadMedia(), loadCollections(), loadPublications(), loadPublicConfig(), loadSites(), loadFeedSettings(), loadAdminUsers(),
   ])
 
   const nativeItems = requireItems(nativeData, 'native content')
@@ -49,11 +30,9 @@ export async function collectSystemSnapshot(loaders = {}) {
   const collections = requireItems(collectionsData, 'collections')
   const publications = requireItems(publicationsData, 'publications')
   const sites = requireItems(sitesData, 'sites')
+  const adminUsers = requireItems(adminUsersData, 'admin users').map(sanitizeUserForBackup)
   const feedSettings = requireFeedSettings(feedSettingsData)
-  const publicSiteConfig = requireObject(
-    publicConfigData?.config || publicConfigData?.settings || publicConfigData?.payload || publicConfigData,
-    'public site config',
-  )
+  const publicSiteConfig = requireObject(publicConfigData?.config || publicConfigData?.settings || publicConfigData?.payload || publicConfigData, 'public site config')
   const revisionsByNativeId = {}
 
   for (const item of nativeItems) {
@@ -63,28 +42,18 @@ export async function collectSystemSnapshot(loaders = {}) {
 
   return {
     exportedAt: new Date().toISOString(),
-    schemaVersion: 3,
+    schemaVersion: 4,
     backupType: 'server-system',
     source: 'BF_DB-backed APIs',
     manifest: {
       complete: true,
-      datasets: [
-        'nativeContent',
-        'revisionsByNativeId',
-        'taxonomyTerms',
-        'editorRoles',
-        'auditLog',
-        'mediaAssets',
-        'collections',
-        'publications',
-        'sites',
-        'feedSettings',
-        'publicSiteConfig',
-      ],
+      credentialMaterialExcluded: true,
+      datasets: ['nativeContent', 'revisionsByNativeId', 'taxonomyTerms', 'adminUsers', 'editorRoles', 'auditLog', 'mediaAssets', 'collections', 'publications', 'sites', 'feedSettings', 'publicSiteConfig'],
     },
     nativeContent: nativeItems,
     revisionsByNativeId,
     taxonomyTerms,
+    adminUsers,
     editorRoles,
     auditLog,
     mediaAssets,
@@ -96,9 +65,7 @@ export async function collectSystemSnapshot(loaders = {}) {
   }
 }
 
-export async function exportSystemSnapshot() {
-  return collectSystemSnapshot()
-}
+export async function exportSystemSnapshot() { return collectSystemSnapshot() }
 
 export function summarizeSnapshot(snapshot) {
   const data = snapshot || {}
@@ -106,6 +73,7 @@ export function summarizeSnapshot(snapshot) {
     nativeCount: Array.isArray(data.nativeContent) ? data.nativeContent.length : 0,
     revisionCount: Object.values(data.revisionsByNativeId || {}).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0),
     taxonomyCount: Array.isArray(data.taxonomyTerms) ? data.taxonomyTerms.length : 0,
+    userCount: Array.isArray(data.adminUsers) ? data.adminUsers.length : 0,
     roleCount: Array.isArray(data.editorRoles) ? data.editorRoles.length : 0,
     auditCount: Array.isArray(data.auditLog) ? data.auditLog.length : 0,
     mediaCount: Array.isArray(data.mediaAssets) ? data.mediaAssets.length : 0,
@@ -119,16 +87,10 @@ export function summarizeSnapshot(snapshot) {
 }
 
 export function downloadSnapshot(snapshot) {
-  if (snapshot?.manifest?.complete !== true) {
-    throw new Error('Refusing to download an incomplete system snapshot')
-  }
-
+  if (snapshot?.manifest?.complete !== true) throw new Error('Refusing to download an incomplete system snapshot')
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
   const filename = `sabot-system-snapshot-${stamp}.json`
-  const blob = new Blob([JSON.stringify(snapshot, null, 2)], {
-    type: 'application/json',
-  })
-
+  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -139,63 +101,46 @@ export function downloadSnapshot(snapshot) {
   URL.revokeObjectURL(url)
 }
 
-function requireItems(data, label) {
-  if (!data?.ok || data.mode === 'scaffold' || data.mode === 'unavailable' || !Array.isArray(data.items)) {
-    throw new Error(`${label} backup response was incomplete`)
+function sanitizeUserForBackup(user = {}) {
+  return {
+    id: String(user.id || ''),
+    email: String(user.email || ''),
+    displayName: String(user.displayName || ''),
+    role: String(user.role || ''),
+    status: String(user.status || ''),
+    createdAt: String(user.createdAt || ''),
+    updatedAt: String(user.updatedAt || ''),
+    lastLoginAt: String(user.lastLoginAt || ''),
   }
+}
+
+function requireItems(data, label) {
+  if (!data?.ok || data.mode === 'scaffold' || data.mode === 'unavailable' || !Array.isArray(data.items)) throw new Error(`${label} backup response was incomplete`)
   return data.items
 }
-
 function requireObject(value, label) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new Error(`${label} backup response was incomplete`)
-  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${label} backup response was incomplete`)
   return value
 }
-
 function requireFeedSettings(data) {
-  if (!data?.ok || data.mode !== 'd1' || !Object.prototype.hasOwnProperty.call(data, 'settings')) {
-    throw new Error('feed settings backup response was incomplete')
-  }
+  if (!data?.ok || data.mode !== 'd1' || !Object.prototype.hasOwnProperty.call(data, 'settings')) throw new Error('feed settings backup response was incomplete')
   if (data.settings == null) return {}
   return requireObject(data.settings, 'feed settings')
 }
-
-async function fetchCollectionsForBackup() {
-  return fetchRequiredList('/api/collections?includeDrafts=1', 'collections')
-}
-
-async function fetchPublicationsForBackup() {
-  return fetchRequiredList('/api/publications?includeDrafts=1', 'publications')
-}
-
-async function fetchSitesForBackup() {
-  return fetchRequiredList('/api/sites', 'sites')
-}
-
+async function fetchCollectionsForBackup() { return fetchRequiredList('/api/collections?includeDrafts=1', 'collections') }
+async function fetchPublicationsForBackup() { return fetchRequiredList('/api/publications?includeDrafts=1', 'publications') }
+async function fetchSitesForBackup() { return fetchRequiredList('/api/sites', 'sites') }
+async function fetchAdminUsersForBackup() { return fetchRequiredList('/api/users', 'admin users') }
 async function fetchFeedSettingsForBackup() {
-  const response = await fetch('/api/feed-settings', {
-    credentials: 'same-origin',
-    headers: { accept: 'application/json' },
-  })
+  const response = await fetch('/api/feed-settings', { credentials: 'same-origin', headers: { accept: 'application/json' } })
   const data = await response.json().catch(() => null)
-  if (!response.ok || !data?.ok || data.mode !== 'd1' || !Object.prototype.hasOwnProperty.call(data, 'settings')) {
-    throw new Error(data?.error || `feed settings backup request failed: ${response.status}`)
-  }
-  if (data.settings != null && (typeof data.settings !== 'object' || Array.isArray(data.settings))) {
-    throw new Error('feed settings backup response contained invalid settings data')
-  }
+  if (!response.ok || !data?.ok || data.mode !== 'd1' || !Object.prototype.hasOwnProperty.call(data, 'settings')) throw new Error(data?.error || `feed settings backup request failed: ${response.status}`)
+  if (data.settings != null && (typeof data.settings !== 'object' || Array.isArray(data.settings))) throw new Error('feed settings backup response contained invalid settings data')
   return data
 }
-
 async function fetchRequiredList(url, label) {
-  const response = await fetch(url, {
-    credentials: 'same-origin',
-    headers: { accept: 'application/json' },
-  })
+  const response = await fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' } })
   const data = await response.json().catch(() => null)
-  if (!response.ok || !data?.ok || data.mode === 'scaffold' || data.mode === 'unavailable' || !Array.isArray(data.items)) {
-    throw new Error(data?.error || `${label} backup fetch failed: ${response.status}`)
-  }
+  if (!response.ok || !data?.ok || data.mode === 'scaffold' || data.mode === 'unavailable' || !Array.isArray(data.items)) throw new Error(data?.error || `${label} backup fetch failed: ${response.status}`)
   return data
 }

@@ -3,12 +3,16 @@ import fs from 'node:fs'
 import test from 'node:test'
 
 const scaffold = fs.readFileSync(new URL('../src/components/WpAdminScaffoldPages.jsx', import.meta.url), 'utf8')
+const users = fs.readFileSync(new URL('../src/components/AdminUsersPage.jsx', import.meta.url), 'utf8')
+const usersApi = fs.readFileSync(new URL('../src/lib/adminUsersApi.js', import.meta.url), 'utf8')
 const pages = fs.readFileSync(new URL('../src/components/WpAdminPages.jsx', import.meta.url), 'utf8')
 
-test('users admin does not create browser-only user accounts', () => {
-  assert.doesNotMatch(scaffold, /USER_ROLE_SETTINGS_KEY|local-admin|Create User|Save Users/)
-  assert.doesNotMatch(scaffold, /localStorage/)
-  assert.match(scaffold, /not yet a production user-account table/)
+test('users admin uses D1-backed account APIs and no browser account persistence', () => {
+  assert.match(scaffold, /AdminUsersPage as UsersAdminPage/)
+  assert.match(usersApi, /\/api\/users/)
+  assert.match(users, /Create account/)
+  assert.match(users, /Users & Access/)
+  assert.doesNotMatch(users, /localStorage|USER_ROLE_SETTINGS_KEY|local-admin/)
 })
 
 test('settings and customize use the production public config surface', () => {

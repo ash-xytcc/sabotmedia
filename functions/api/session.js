@@ -4,11 +4,16 @@ export async function onRequestGet(context) {
   const permission = await resolvePublicSitePermission(context)
   return json({
     ok: true,
-    authenticated: permission.canEdit,
-    canEdit: permission.canEdit,
+    authenticated: permission.canAccessAdmin === true,
+    canAccessAdmin: permission.canAccessAdmin === true,
+    canEdit: permission.canEdit === true,
     authMode: permission.mode,
     authReason: permission.reason,
     actor: permission.actor,
+    role: permission.role || '',
+    capabilities: permission.capabilities || [],
+    user: permission.user || null,
+    bootstrap: permission.bootstrap === true,
     sessionExpiresAt: permission.sessionExpiresAt || '',
   })
 }

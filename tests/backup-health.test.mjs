@@ -3,15 +3,14 @@ import assert from 'node:assert/strict'
 import { collectSystemSnapshot, summarizeSnapshot } from '../src/lib/systemBackup.js'
 import { onRequestGet as getSiteHealth } from '../functions/api/site-health.js'
 
-function okItems(items = []) {
-  return Promise.resolve({ ok: true, mode: 'd1', items })
-}
+function okItems(items = []) { return Promise.resolve({ ok: true, mode: 'd1', items }) }
 
 function backupLoaders(overrides = {}) {
   return {
     fetchNativeEntries: () => okItems([{ id: 'post-1', title: 'One' }]),
     fetchNativeRevisions: () => okItems([{ id: 'rev-1' }]),
     fetchTaxonomyTerms: () => okItems([{ id: 'tag-1' }]),
+    fetchAdminUsers: () => okItems([{ id: 'user-1', email: 'editor@example.org', displayName: 'Editor', role: 'editor', status: 'active', password_hash: 'must-not-export' }]),
     fetchEditorRoles: () => okItems([{ id: 'role-1' }]),
     fetchAuditLog: () => okItems([{ id: 'audit-1' }]),
     fetchMediaAssets: () => okItems([{ id: 'media-1' }]),
@@ -24,15 +23,17 @@ function backupLoaders(overrides = {}) {
   }
 }
 
-test('verified system backup includes every required dataset', async () => {
+test('verified system backup includes every required dataset without credential material', async () => {
   const snapshot = await collectSystemSnapshot(backupLoaders())
   const summary = summarizeSnapshot(snapshot)
   assert.equal(snapshot.manifest.complete, true)
-  assert.equal(snapshot.schemaVersion, 3)
+  assert.equal(snapshot.manifest.credentialMaterialExcluded, true)
+  assert.equal(snapshot.schemaVersion, 4)
   assert.equal(summary.complete, true)
   assert.equal(summary.nativeCount, 1)
   assert.equal(summary.revisionCount, 1)
   assert.equal(summary.taxonomyCount, 1)
+  assert.equal(summary.userCount, 1)
   assert.equal(summary.roleCount, 1)
   assert.equal(summary.auditCount, 1)
   assert.equal(summary.mediaCount, 1)
@@ -42,64 +43,34 @@ test('verified system backup includes every required dataset', async () => {
   assert.equal(summary.feedSettingsIncluded, true)
   assert.equal(summary.publicConfigIncluded, true)
   assert.equal(snapshot.sites[0].domain, 'sabot.media')
+  assert.equal(snapshot.adminUsers[0].email, 'editor@example.org')
+  assert.equal('password_hash' in snapshot.adminUsers[0], false)
   assert.equal(snapshot.feedSettings.exposeMainFeed, true)
   assert.equal(snapshot.publicSiteConfig.siteTitle, 'Sabot Media')
   assert.deepEqual(snapshot.manifest.datasets, [
-    'nativeContent',
-    'revisionsByNativeId',
-    'taxonomyTerms',
-    'editorRoles',
-    'auditLog',
-    'mediaAssets',
-    'collections',
-    'publications',
-    'sites',
-    'feedSettings',
-    'publicSiteConfig',
+    'nativeContent', 'revisionsByNativeId', 'taxonomyTerms', 'adminUsers', 'editorRoles', 'auditLog', 'mediaAssets', 'collections', 'publications', 'sites', 'feedSettings', 'publicSiteConfig',
   ])
 })
 
 test('verified system backup aborts when a required dataset fails', async () => {
-  await assert.rejects(
-    collectSystemSnapshot(backupLoaders({
-      fetchMediaAssets: async () => { throw new Error('media storage unavailable') },
-    })),
-    /media storage unavailable/,
-  )
+  await assert.rejects(collectSystemSnapshot(backupLoaders({ fetchMediaAssets: async () => { throw new Error('media storage unavailable') } })), /media storage unavailable/)
 })
 
 test('verified system backup rejects malformed successful-looking list data', async () => {
-  await assert.rejects(
-    collectSystemSnapshot(backupLoaders({
-      fetchTaxonomyTerms: async () => ({ ok: true, mode: 'd1' }),
-    })),
-    /taxonomy backup response was incomplete/,
-  )
+  await assert.rejects(collectSystemSnapshot(backupLoaders({ fetchTaxonomyTerms: async () => ({ ok: true, mode: 'd1' }) })), /taxonomy backup response was incomplete/)
 })
 
 test('verified system backup rejects scaffold list data', async () => {
-  await assert.rejects(
-    collectSystemSnapshot(backupLoaders({
-      fetchSites: async () => ({ ok: true, mode: 'scaffold', items: [] }),
-    })),
-    /sites backup response was incomplete/,
-  )
+  await assert.rejects(collectSystemSnapshot(backupLoaders({ fetchSites: async () => ({ ok: true, mode: 'scaffold', items: [] }) })), /sites backup response was incomplete/)
 })
 
 test('verified system backup rejects missing feed settings', async () => {
-  await assert.rejects(
-    collectSystemSnapshot(backupLoaders({
-      fetchFeedSettings: async () => ({ ok: true, mode: 'd1' }),
-    })),
-    /feed settings backup response was incomplete/,
-  )
+  await assert.rejects(collectSystemSnapshot(backupLoaders({ fetchFeedSettings: async () => ({ ok: true, mode: 'd1' }) })), /feed settings backup response was incomplete/)
 })
 
 test('site health fails explicitly without BF_DB', async () => {
   const response = await getSiteHealth({
-    request: new Request('https://sabot.media/api/site-health', {
-      headers: { 'cf-access-authenticated-user-email': 'editor@example.org' },
-    }),
+    request: new Request('https://sabot.media/api/site-health', { headers: { 'cf-access-authenticated-user-email': 'editor@example.org' } }),
     env: { SABOT_TRUST_CF_ACCESS: 'true' },
   })
   assert.equal(response.status, 503)

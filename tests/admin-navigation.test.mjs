@@ -5,8 +5,8 @@ import test from 'node:test'
 const rail = fs.readFileSync(new URL('../src/components/AdminRail.jsx', import.meta.url), 'utf8')
 const palette = fs.readFileSync(new URL('../src/components/AdminCommandPalette.jsx', import.meta.url), 'utf8')
 
-for (const route of ['analytics', 'taxonomy', 'roles', 'qa', 'siteHealth', 'backup', 'auditLog', 'sites']) {
-  test(`admin rail exposes ${route}`, () => {
+for (const route of ['analytics', 'taxonomy', 'qa', 'siteHealth', 'backup', 'auditLog', 'sites', 'users']) {
+  test(`admin rail exposes ${route} when capability permits it`, () => {
     assert.match(rail, new RegExp(`adminRoutes\\.${route}`))
   })
 }
@@ -16,12 +16,14 @@ test('admin rail awaits the asynchronous site registry', () => {
   assert.doesNotMatch(rail, /useState\(\(\) => loadSites\(\)\)/)
 })
 
-test('new menu does not advertise fake user creation', () => {
-  assert.doesNotMatch(rail, />User<\/Link>/)
+test('navigation uses real Users and Access instead of advisory Editor Roles', () => {
+  assert.match(rail, /Users & Access/)
+  assert.doesNotMatch(rail, /Editor Roles|adminRoutes\.roles/)
+  assert.doesNotMatch(palette, /Editor Roles|adminRoutes\.roles/)
 })
 
-test('command palette exposes operational backend routes without obsolete Platform Map', () => {
-  for (const route of ['analytics', 'taxonomy', 'roles', 'sites']) {
+test('command palette exposes operational backend routes without obsolete architecture screens', () => {
+  for (const route of ['analytics', 'taxonomy', 'sites', 'users']) {
     assert.match(palette, new RegExp(`adminRoutes\\.${route}`))
   }
   assert.doesNotMatch(palette, /adminRoutes\.platformMap|Platform Map/)

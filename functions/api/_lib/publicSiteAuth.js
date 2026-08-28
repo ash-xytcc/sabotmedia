@@ -1,36 +1,63 @@
+import {
+  canAccessAdmin,
+  capabilitiesForRole,
+  countAdminUsers,
+  getAdminUserByEmail,
+  getAdminUserById,
+  hasCapability,
+  publicUser,
+} from './adminUsers.js'
+
 const SESSION_COOKIE_NAME = 'sabot_session'
 const DEFAULT_SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
 
 export async function resolvePublicSitePermission(context) {
   const trustAccessHeaders = String(context?.env?.SABOT_TRUST_CF_ACCESS || '').toLowerCase() === 'true'
   const accessEmail = getCloudflareAccessEmail(context?.request)
+  const db = context?.env?.BF_DB || null
 
   if (trustAccessHeaders && accessEmail) {
-    return {
-      canEdit: true,
-      mode: 'cloudflare-access',
-      reason: 'Cloudflare Access identity present',
-      actor: accessEmail,
+    if (db) {
+      const user = await getAdminUserByEmail(db, accessEmail)
+      if (user && canAccessAdmin(user)) return permissionFromUser(publicUser(user), 'cloudflare-access', 'Cloudflare Access identity mapped to active SabotPress user')
+      const userCount = await countAdminUsers(db)
+      if (userCount === 0) {
+        return bootstrapPermission(accessEmail, 'cloudflare-access-bootstrap', 'Cloudflare Access bootstrap identity; provision the first owner account')
+      }
+      return deniedPermission('cloudflare-access', 'Cloudflare Access identity is not provisioned as an active SabotPress user')
     }
+    return bootstrapPermission(accessEmail, 'cloudflare-access-bootstrap', 'Cloudflare Access identity present; BF_DB unavailable for user mapping')
   }
 
   const session = await verifyAdminSession(context)
   if (session.valid) {
+    const payload = session.payload || {}
+    if (payload.userId) {
+      if (!db) return deniedPermission('session', 'BF_DB is required to validate this user session')
+      const row = await getAdminUserById(db, payload.userId)
+      const user = row ? publicUser(row) : null
+      if (!user || !canAccessAdmin(user)) return deniedPermission('session', 'user account is missing or disabled')
+      return {
+        ...permissionFromUser(user, 'session', 'valid signed user session'),
+        sessionExpiresAt: payload.exp ? new Date(payload.exp * 1000).toISOString() : '',
+      }
+    }
+
     return {
-      canEdit: true,
-      mode: 'session',
-      reason: 'valid signed session',
-      actor: session.payload?.sub || 'admin-session',
-      sessionExpiresAt: session.payload?.exp ? new Date(session.payload.exp * 1000).toISOString() : '',
+      ...bootstrapPermission(payload.sub || 'admin', 'bootstrap-session', 'valid emergency/bootstrap admin session'),
+      sessionExpiresAt: payload.exp ? new Date(payload.exp * 1000).toISOString() : '',
     }
   }
 
-  return {
-    canEdit: false,
-    mode: missingSessionSecret(context) ? 'locked' : 'session',
-    reason: session.reason || (missingSessionSecret(context) ? 'editing locked; set SABOT_SESSION_SECRET' : 'valid session required'),
-    actor: 'anonymous',
-  }
+  return deniedPermission(
+    missingSessionSecret(context) ? 'locked' : 'session',
+    session.reason || (missingSessionSecret(context) ? 'editing locked; set SABOT_SESSION_SECRET' : 'valid session required'),
+  )
+}
+
+export function permissionHasCapability(permission, capability) {
+  if (!permission?.canAccessAdmin) return false
+  return hasCapability(permission, capability)
 }
 
 export function validateAdminLoginToken(context, token) {
@@ -50,17 +77,20 @@ export function validateAdminLoginToken(context, token) {
   }
 }
 
-export async function createAdminSessionCookie(context, actor = 'admin') {
+export async function createAdminSessionCookie(context, identity = 'admin') {
   const secret = getSessionSecret(context)
-  if (!secret) {
-    throw new Error('SABOT_SESSION_SECRET is required to create admin sessions')
-  }
+  if (!secret) throw new Error('SABOT_SESSION_SECRET is required to create admin sessions')
 
   const now = Math.floor(Date.now() / 1000)
   const ttl = getSessionTtlSeconds(context)
+  const isIdentityObject = identity && typeof identity === 'object'
+  const role = isIdentityObject ? String(identity.role || 'viewer') : 'owner'
   const payload = {
-    v: 1,
-    sub: String(actor || 'admin').slice(0, 160),
+    v: 2,
+    sub: String(isIdentityObject ? (identity.email || identity.displayName || identity.id || 'user') : (identity || 'admin')).slice(0, 254),
+    userId: isIdentityObject ? String(identity.id || '').slice(0, 180) : '',
+    email: isIdentityObject ? String(identity.email || '').slice(0, 254) : '',
+    role,
     iat: now,
     exp: now + ttl,
     sid: createSessionId(),
@@ -117,7 +147,48 @@ export async function verifyAdminSession(context) {
 }
 
 export function getCloudflareAccessEmail(request) {
-  return String(request?.headers?.get('cf-access-authenticated-user-email') || '').trim()
+  return String(request?.headers?.get('cf-access-authenticated-user-email') || '').trim().toLowerCase()
+}
+
+function permissionFromUser(user, mode, reason) {
+  const capabilities = capabilitiesForRole(user?.role)
+  return {
+    canAccessAdmin: true,
+    canEdit: user?.role !== 'viewer',
+    mode,
+    reason,
+    actor: user?.email || user?.id || 'user',
+    role: user?.role || 'viewer',
+    capabilities,
+    user,
+  }
+}
+
+function bootstrapPermission(actor, mode, reason) {
+  return {
+    canAccessAdmin: true,
+    canEdit: true,
+    mode,
+    reason,
+    actor: String(actor || 'admin').slice(0, 254),
+    role: 'owner',
+    capabilities: ['*'],
+    user: null,
+    bootstrap: true,
+  }
+}
+
+function deniedPermission(mode, reason) {
+  return {
+    canAccessAdmin: false,
+    canEdit: false,
+    mode,
+    reason,
+    actor: 'anonymous',
+    role: '',
+    capabilities: [],
+    user: null,
+  }
 }
 
 function getSessionSecret(context) {
@@ -147,9 +218,7 @@ function getCookie(request, name) {
   const prefix = `${name}=`
   for (const part of header.split(';')) {
     const trimmed = part.trim()
-    if (trimmed.startsWith(prefix)) {
-      return decodeURIComponent(trimmed.slice(prefix.length))
-    }
+    if (trimmed.startsWith(prefix)) return decodeURIComponent(trimmed.slice(prefix.length))
   }
   return ''
 }
@@ -160,7 +229,7 @@ async function signSession(secret, value) {
     new TextEncoder().encode(secret),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign']
+    ['sign'],
   )
   const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value))
   return base64UrlEncode(new Uint8Array(signature))
@@ -185,9 +254,7 @@ function base64UrlDecodeToString(value) {
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
   const binary = atob(padded)
   const bytes = new Uint8Array(binary.length)
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index)
-  }
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
   return new TextDecoder().decode(bytes)
 }
 
@@ -207,10 +274,6 @@ function timingSafeEqual(left, right) {
   const b = new TextEncoder().encode(String(right || ''))
   let diff = a.length ^ b.length
   const length = Math.max(a.length, b.length)
-
-  for (let index = 0; index < length; index += 1) {
-    diff |= (a[index] || 0) ^ (b[index] || 0)
-  }
-
+  for (let index = 0; index < length; index += 1) diff |= (a[index] || 0) ^ (b[index] || 0)
   return diff === 0
 }

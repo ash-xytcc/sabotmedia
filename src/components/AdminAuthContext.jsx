@@ -14,23 +14,14 @@ export function AdminAuthProvider({ children }) {
     try {
       setIsChecking(true)
       setAuthError('')
-      const sessionRes = await fetch('/api/session', {
-        method: 'GET',
-        credentials: 'same-origin',
-        headers: {
-          accept: 'application/json',
-        },
-      })
+      const sessionRes = await fetch('/api/session', { method: 'GET', credentials: 'same-origin', headers: { accept: 'application/json' } })
       const sessionData = await safeJson(sessionRes)
       const allowed = Boolean(sessionRes.ok && sessionData?.authenticated)
       setSession(sessionData || null)
-
       const snapshot = allowed ? await getEditorPermissionsSnapshot() : null
       setPermissions(snapshot || null)
       setIsAuthenticated(allowed)
-      if (!allowed) {
-        setAuthError('')
-      }
+      if (!allowed) setAuthError('')
       return allowed
     } catch (error) {
       setSession(null)
@@ -43,29 +34,31 @@ export function AdminAuthProvider({ children }) {
     }
   }, [])
 
-  useEffect(() => {
-    refreshAuth()
-  }, [refreshAuth])
+  useEffect(() => { refreshAuth() }, [refreshAuth])
 
-  const login = useCallback(async (nextToken) => {
+  const login = useCallback(async (credentials) => {
     try {
       setIsChecking(true)
       setAuthError('')
+      const body = typeof credentials === 'string'
+        ? { token: credentials.trim() }
+        : {
+            ...(credentials?.email ? { email: String(credentials.email).trim() } : {}),
+            ...(credentials?.password ? { password: String(credentials.password) } : {}),
+            ...(credentials?.token ? { token: String(credentials.token).trim() } : {}),
+          }
       const res = await fetch('/api/login', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: {
-          'content-type': 'application/json',
-          accept: 'application/json',
-        },
-        body: JSON.stringify({ token: String(nextToken || '').trim() }),
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify(body),
       })
       const data = await safeJson(res)
       if (!res.ok || !data?.authenticated) {
         setSession(null)
         setPermissions(null)
         setIsAuthenticated(false)
-        setAuthError(data?.error || 'Valid admin token required.')
+        setAuthError(data?.error || 'Login failed.')
         return false
       }
       return refreshAuth()
@@ -82,13 +75,7 @@ export function AdminAuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try {
-      await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          accept: 'application/json',
-        },
-      })
+      await fetch('/api/logout', { method: 'POST', credentials: 'same-origin', headers: { accept: 'application/json' } })
     } catch {
       // Clear local state even if the network fails; the next session check will reconcile.
     }
@@ -105,6 +92,8 @@ export function AdminAuthProvider({ children }) {
     authError,
     permissions,
     session,
+    role: session?.role || '',
+    capabilities: Array.isArray(session?.capabilities) ? session.capabilities : [],
     login,
     logout,
     refreshAuth,
@@ -120,9 +109,5 @@ export function useAdminAuth() {
 }
 
 async function safeJson(res) {
-  try {
-    return await res.json()
-  } catch {
-    return null
-  }
+  try { return await res.json() } catch { return null }
 }
