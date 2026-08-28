@@ -48,12 +48,8 @@ export function PodcastAdminPage({ pieces }) {
 
   const episodes = useMemo(() => {
     const bySlug = new Map()
-    for (const item of importedPodcastPieces) {
-      bySlug.set(item.slug || item.id, item)
-    }
-    for (const item of nativePodcastEntries) {
-      bySlug.set(item.slug || item.id, item)
-    }
+    for (const item of importedPodcastPieces) bySlug.set(item.slug || item.id, item)
+    for (const item of nativePodcastEntries) bySlug.set(item.slug || item.id, item)
     return [...bySlug.values()].sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
   }, [importedPodcastPieces, nativePodcastEntries])
 
@@ -63,14 +59,16 @@ export function PodcastAdminPage({ pieces }) {
     <AdminFrame>
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
-          <h1>Podcast Episodes</h1>
+          <div>
+            <h1>Podcast Episodes</h1>
+            <p className="description">Manage episodes, migrate an existing RSS archive, and publish the canonical Sabot podcast feed.</p>
+          </div>
           <div className="review-card__actions">
-            <Link className="button" to={`${adminRoutes.podcasts}/settings`}>Podcast Settings</Link>
+            <Link className="button" to={adminRoutes.podcastSettings}>Podcast Settings / Import RSS</Link>
+            <a className="button" href="/feeds/podcasts/all.xml" target="_blank" rel="noreferrer">Open RSS Feed</a>
             <Link className="button button--primary" to={`${adminRoutes.nativeBridge}?new=podcast`}>Add Episode</Link>
           </div>
         </div>
-
-        <p className="description">Podcast is now a first-class content type. Manage episodes in a list table and edit each episode in Native Bridge.</p>
 
         <section className="wp-meta-box">
           <h2>Current Feed Configuration</h2>
@@ -78,10 +76,11 @@ export function PodcastAdminPage({ pieces }) {
             <tbody>
               <tr><th>Podcast title</th><td>{podcastSettings.podcastTitle || '—'}</td></tr>
               <tr><th>Author</th><td>{podcastSettings.author || '—'}</td></tr>
-              <tr><th>RSS feed URL</th><td>{podcastSettings.rssFeedUrl || '—'}</td></tr>
+              <tr><th>RSS feed URL</th><td><a href={podcastSettings.rssFeedUrl || '/feeds/podcasts/all.xml'} target="_blank" rel="noreferrer">{podcastSettings.rssFeedUrl || '/feeds/podcasts/all.xml'}</a></td></tr>
               <tr><th>Audio host base URL</th><td>{podcastSettings.audioHostBaseUrl || '—'}</td></tr>
             </tbody>
           </table>
+          <p><Link className="button button--primary" to={adminRoutes.podcastSettings}>Import or resync an existing podcast RSS feed</Link></p>
         </section>
 
         <section className="wp-meta-box">
@@ -115,9 +114,7 @@ export function PodcastAdminPage({ pieces }) {
                   </td>
                 </tr>
               )) : (
-                <tr>
-                  <td colSpan={7}>No podcast episodes yet. Use Add Episode to create one.</td>
-                </tr>
+                <tr><td colSpan={7}>No podcast episodes yet. Use Import RSS or Add Episode to get started.</td></tr>
               )}
             </tbody>
           </table>
