@@ -20,8 +20,9 @@ test('new menu does not advertise fake user creation', () => {
   assert.doesNotMatch(rail, />User<\/Link>/)
 })
 
-test('command palette exposes operational backend routes', () => {
-  for (const route of ['analytics', 'taxonomy', 'roles', 'sites', 'platformMap']) {
+test('command palette exposes operational backend routes without obsolete Platform Map', () => {
+  for (const route of ['analytics', 'taxonomy', 'roles', 'sites']) {
     assert.match(palette, new RegExp(`adminRoutes\\.${route}`))
   }
+  assert.doesNotMatch(palette, /adminRoutes\.platformMap|Platform Map/)
 })
