@@ -2,52 +2,45 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
 
-const css = fs.readFileSync(new URL('../src/public-card-title-fit.css', import.meta.url), 'utf8')
+const legacyCss = fs.readFileSync(new URL('../src/public-card-title-fit.css', import.meta.url), 'utf8')
+const overlayCss = fs.readFileSync(new URL('../src/public-card-overlay-v2.css', import.meta.url), 'utf8')
 const runtime = fs.readFileSync(new URL('../src/publicTypeRuntimeFix.js', import.meta.url), 'utf8')
 const main = fs.readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8')
 const homepage = fs.readFileSync(new URL('../src/components/NativeUpdatesPage.jsx', import.meta.url), 'utf8')
+const overlayComponent = fs.readFileSync(new URL('../src/components/HomeOverlayCard.jsx', import.meta.url), 'utf8')
 
-test('overlay title cards size from visible content instead of a fixed aspect ratio', () => {
-  assert.match(css, /publication-post-card--title-overlay/)
-  assert.match(css, /publication-hero-card--title-overlay/)
-  assert.match(css, /aspect-ratio:\s*auto\s*!important/)
-  assert.match(css, /grid-auto-rows:\s*auto\s*!important/)
-  assert.match(css, /publication-post-card--title-overlay[\s\S]*publication-post-card__overlay[\s\S]*position:\s*relative\s*!important/)
-  assert.match(css, /publication-hero-card--title-overlay[\s\S]*publication-hero-card__overlay[\s\S]*position:\s*relative\s*!important/)
+test('overlay mode leaves the legacy publication card DOM entirely', () => {
+  assert.match(homepage, /if \(hasImage && titleDisplay === 'overlay'\)/)
+  assert.match(homepage, /HomeOverlayCard item=\{item\} variant="hero"/)
+  assert.match(homepage, /HomeOverlayCard item=\{item\} variant="recent"/)
+  assert.match(overlayComponent, /home-overlay-card__content/)
+  assert.match(overlayComponent, /home-overlay-card__title/)
+  assert.doesNotMatch(overlayComponent, /publication-post-card__overlay/)
+  assert.doesNotMatch(overlayComponent, /publication-hero-card__overlay/)
 })
 
-test('overlay content creates real image space and cannot be vertically clipped', () => {
-  assert.match(css, /publication-post-card--title-overlay[\s\S]*publication-post-card__link[\s\S]*overflow:\s*visible\s*!important/)
-  assert.match(css, /publication-post-card--title-overlay[\s\S]*publication-post-card__overlay[\s\S]*padding-top:\s*clamp/)
-  assert.match(css, /publication-hero-card--title-overlay[\s\S]*publication-hero-card__overlay[\s\S]*padding-top:\s*clamp/)
-  assert.match(css, /max-height:\s*none\s*!important/)
+test('isolated overlay cards are content-height and never line-clamped', () => {
+  assert.match(overlayCss, /\.home-overlay-card\s*\{[\s\S]*height:\s*auto/)
+  assert.match(overlayCss, /\.home-overlay-card__link\s*\{[\s\S]*overflow:\s*visible/)
+  assert.match(overlayCss, /\.home-overlay-card__content\s*\{[\s\S]*height:\s*auto[\s\S]*overflow:\s*visible/)
+  assert.match(overlayCss, /\.home-overlay-card__title\s*\{[\s\S]*max-height:\s*none[\s\S]*-webkit-line-clamp:\s*unset/)
+  assert.match(overlayCss, /home-overlay-card--recent \.home-overlay-card__content[\s\S]*padding:\s*clamp/)
 })
 
-test('visible overlay headlines are never line-clamped', () => {
-  assert.match(css, /publication-post-card--title-overlay h2[\s\S]*-webkit-line-clamp:\s*unset\s*!important/)
-  assert.match(css, /publication-hero-card--title-overlay h1[\s\S]*-webkit-line-clamp:\s*unset\s*!important/)
-  assert.match(css, /overflow:\s*visible\s*!important/)
+test('new isolated overlay stylesheet loads after all legacy homepage card rules', () => {
+  assert.ok(main.indexOf("./public-card-overlay-v2.css") > main.indexOf("./public-card-title-fit.css"))
+  assert.ok(main.indexOf("./public-card-overlay-v2.css") > main.indexOf("./sitewide-mobile-polish.css"))
 })
 
-test('runtime applies inline-important flow geometry after render so later legacy CSS cannot clip titles', () => {
+test('hidden and below modes retain the established publication card paths', () => {
+  assert.match(homepage, /publication-post-card publication-post-card--title-\$\{titleDisplay\}/)
+  assert.match(homepage, /publication-hero-card publication-hero-card--title-\$\{titleDisplay\}/)
+  assert.match(homepage, /titleDisplay === 'hidden'/)
+  assert.match(homepage, /titleDisplay === 'below'/)
+})
+
+test('legacy fallback remains scoped and runtime cannot accidentally target the new v2 classes', () => {
+  assert.match(legacyCss, /publication-post-card--title-overlay/)
   assert.match(runtime, /function setHomepageOverlayTitles\(\)/)
-  assert.match(runtime, /publication-post-card--title-overlay/)
-  assert.match(runtime, /publication-hero-card--title-overlay/)
-  assert.match(runtime, /important\(grid, 'grid-auto-rows', 'auto'\)/)
-  assert.match(runtime, /important\(card, 'aspect-ratio', 'auto'\)/)
-  assert.match(runtime, /important\(card, 'min-height', '0'\)/)
-  assert.match(runtime, /important\(link, 'overflow', 'visible'\)/)
-  assert.match(runtime, /important\(overlay, 'height', 'auto'\)/)
-  assert.match(runtime, /important\(overlay, 'padding-top', config\.topPad\)/)
-  assert.match(runtime, /important\(title, '-webkit-line-clamp', 'unset'\)/)
-  assert.match(runtime, /important\(title, 'max-width', '100%'\)/)
-  assert.match(runtime, /setHomepageOverlayTitles\(\)/)
-})
-
-test('title-fit rules load after the final mobile authority and remain scoped to overlay mode', () => {
-  assert.ok(main.indexOf("./public-card-title-fit.css") > main.indexOf("./sitewide-mobile-polish.css"))
-  assert.ok(main.indexOf("./publicTypeRuntimeFix.js") > main.indexOf("./public-card-title-fit.css"))
-  assert.match(homepage, /publication-post-card--title-\$\{titleDisplay\}/)
-  assert.match(homepage, /publication-hero-card--title-\$\{titleDisplay\}/)
-  assert.doesNotMatch(css, /publication-post-card--title-hidden[\s\S]*aspect-ratio:\s*auto/)
+  assert.doesNotMatch(runtime, /home-overlay-card/)
 })

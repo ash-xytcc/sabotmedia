@@ -8,6 +8,7 @@ import { splitDisplayTitle } from '../lib/content'
 import { PublicationTopbar } from './PublicationTopbar'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
 import { EditableText } from './EditableText'
+import { HomeOverlayCard } from './HomeOverlayCard'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 import { getConfiguredText } from '../lib/publicConfig'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
@@ -131,6 +132,10 @@ function HeroFeature({ item }) {
   const hasImage = Boolean(item.imageUrl)
   const titleDisplay = hasImage ? resolveFeaturedTitleDisplay(item) : 'below'
 
+  if (hasImage && titleDisplay === 'overlay') {
+    return <HomeOverlayCard item={item} variant="hero" formatDate={formatDate} />
+  }
+
   return (
     <article className={`publication-hero-card publication-hero-card--title-${titleDisplay}${hasImage ? '' : ' publication-hero-card--no-image'}`}>
       <Link className="publication-hero-card__image-wrap" to={item.href}>
@@ -140,24 +145,12 @@ function HeroFeature({ item }) {
           <div
             className="publication-hero-card__image publication-hero-card__image-fill"
             style={hasImage ? {
-              backgroundImage: titleDisplay === 'overlay'
-                ? `linear-gradient(to bottom, rgba(0,0,0,0.12), rgba(0,0,0,0.62)), url("${item.imageUrl}")`
-                : `url("${item.imageUrl}")`,
+              backgroundImage: `url("${item.imageUrl}")`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             } : undefined}
           />
         )}
-        {titleDisplay === 'overlay' ? (
-          <div className="publication-hero-card__content publication-hero-card__overlay">
-            <div className="publication-hero-card__meta">
-              <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
-              <span>{item.target}</span>
-              <span>{item.contentType}</span>
-            </div>
-            <h1>{item.title}</h1>
-          </div>
-        ) : null}
         {titleDisplay === 'hidden' ? <h1 className="screen-reader-only">{item.title}</h1> : null}
       </Link>
       {titleDisplay === 'below' ? (
@@ -178,6 +171,10 @@ function RecentCard({ item }) {
   const hasImage = Boolean(item.imageUrl)
   const titleDisplay = hasImage ? resolveFeaturedTitleDisplay(item) : 'below'
 
+  if (hasImage && titleDisplay === 'overlay') {
+    return <HomeOverlayCard item={item} variant="recent" formatDate={formatDate} />
+  }
+
   return (
     <article className={`publication-post-card publication-post-card--title-${titleDisplay}${hasImage ? '' : ' publication-post-card--no-image'}`}>
       <Link className="publication-post-card__link" to={item.href}>
@@ -187,23 +184,12 @@ function RecentCard({ item }) {
           <div
             className="publication-post-card__image-fill"
             style={hasImage ? {
-              backgroundImage: titleDisplay === 'overlay'
-                ? `linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.68)), url("${item.imageUrl}")`
-                : `url("${item.imageUrl}")`,
+              backgroundImage: `url("${item.imageUrl}")`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             } : undefined}
           />
         )}
-        {titleDisplay === 'overlay' ? (
-          <div className="publication-post-card__overlay">
-            <div className="publication-post-card__meta">
-              <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
-              <span>{item.target}</span>
-            </div>
-            <h2>{item.title}</h2>
-          </div>
-        ) : null}
         {titleDisplay === 'hidden' ? <h2 className="screen-reader-only">{item.title}</h2> : null}
       </Link>
       {titleDisplay === 'below' ? (
@@ -255,7 +241,6 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
   }, [])
 
   const wordpressFeed = useWordPressPieces(pieces)
-
   const livePieces = wordpressFeed.pieces || pieces
 
   const archiveFeed = useMemo(
