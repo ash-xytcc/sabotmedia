@@ -5,7 +5,11 @@ import { ABERDEEN_1312_GALLERY, legacyMediaId, legacyStorageKey } from '../funct
 import { extractLegacyGalleryImageUrls } from '../functions/api/gallery-migration.js'
 
 const migrationSource = fs.readFileSync(new URL('../functions/api/gallery-migration.js', import.meta.url), 'utf8')
-const publicRoute = fs.readFileSync(new URL('../functions/aberdeen-local-1312-gallery.js', import.meta.url), 'utf8')
+const galleryApi = fs.readFileSync(new URL('../functions/api/galleries/[slug].js', import.meta.url), 'utf8')
+const galleryPage = fs.readFileSync(new URL('../src/components/GalleryArchivePage.jsx', import.meta.url), 'utf8')
+const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
+const topbar = fs.readFileSync(new URL('../src/components/PublicationTopbar.jsx', import.meta.url), 'utf8')
+const footer = fs.readFileSync(new URL('../src/components/PublicationFooter.jsx', import.meta.url), 'utf8')
 
 test('Aberdeen 1312 manifest preserves the exact WXR gallery order and count', () => {
   assert.equal(ABERDEEN_1312_GALLERY.attachmentIds.length, 76)
@@ -37,10 +41,27 @@ test('migration is server authoritative, resumable, and copies binaries into R2 
   assert.match(migrationSource, /legacy-noblogs-gallery/)
 })
 
-test('old Noblogs gallery path is now a real D1-backed public gallery with lightbox navigation', () => {
-  assert.match(publicRoute, /getGallery/)
-  assert.match(publicRoute, /gallery-grid/)
-  assert.match(publicRoute, /lightbox/)
-  assert.match(publicRoute, /ArrowLeft/)
-  assert.match(publicRoute, /ArrowRight/)
+test('gallery data is exposed through a public D1-backed JSON endpoint', () => {
+  assert.match(galleryApi, /getBoundDb/)
+  assert.match(galleryApi, /getGallery/)
+  assert.match(galleryApi, /mode: 'd1'/)
+  assert.match(galleryApi, /public gallery read/)
+})
+
+test('old gallery URL is owned by the React public site shell, not standalone HTML', () => {
+  assert.equal(fs.existsSync(new URL('../functions/aberdeen-local-1312-gallery.js', import.meta.url)), false)
+  assert.match(app, /GalleryArchivePage/)
+  assert.match(app, /path=\{publicRoutes\.gallery\}/)
+  assert.match(galleryPage, /PublicationTopbar/)
+  assert.match(galleryPage, /PublicationFooter/)
+  assert.match(galleryPage, /api\/galleries/)
+  assert.match(galleryPage, /ArrowLeft/)
+  assert.match(galleryPage, /ArrowRight/)
+})
+
+test('gallery is linked from the site-wide masthead and footer', () => {
+  assert.match(topbar, /aberdeen-local-1312-gallery/)
+  assert.match(topbar, />Gallery<\/Link>/)
+  assert.match(footer, /aberdeen-local-1312-gallery/)
+  assert.match(footer, />Gallery<\/Link>/)
 })
