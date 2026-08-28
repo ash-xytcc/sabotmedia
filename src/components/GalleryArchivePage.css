@@ -1,0 +1,23 @@
+.publication-gallery-page{background:var(--publication-paper,#f2f0e9);color:var(--publication-ink,#111)}
+.publication-gallery-hero{max-width:1180px;margin:0 auto;padding:56px 24px 30px;border-bottom:1px solid rgba(17,17,17,.18)}
+.publication-gallery-hero__eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.75rem;margin:0 0 12px}
+.publication-gallery-hero h1{font-size:clamp(2.4rem,6vw,5.8rem);line-height:.92;margin:0 0 20px;max-width:980px}
+.publication-gallery-hero__body{max-width:760px;font-size:1.05rem;line-height:1.55;margin:0}
+.publication-gallery-hero__meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:18px;font-size:.85rem;text-transform:uppercase;letter-spacing:.06em}
+.publication-gallery-hero__meta a{color:inherit;text-underline-offset:3px}
+.publication-gallery-state{max-width:1180px;margin:0 auto;padding:48px 24px 72px}
+.publication-gallery-state h2{font-size:2rem;margin:0 0 10px}
+.publication-gallery-grid{max-width:1500px;margin:0 auto;padding:22px 16px 72px;columns:4 260px;column-gap:14px}
+.publication-gallery-card{break-inside:avoid;margin:0 0 14px;background:#fff;border:1px solid rgba(17,17,17,.18)}
+.publication-gallery-card__button{display:block;width:100%;border:0;padding:0;background:transparent;cursor:zoom-in}
+.publication-gallery-card img{display:block;width:100%;height:auto}
+.publication-gallery-card figcaption{padding:10px 12px;font-size:.86rem;line-height:1.35;border-top:1px solid rgba(17,17,17,.12)}
+.publication-gallery-lightbox{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.92);display:grid;place-items:center;color:#fff;padding:28px 72px}
+.publication-gallery-lightbox figure{margin:0;display:grid;grid-template-rows:minmax(0,1fr) auto;place-items:center;max-width:min(1400px,94vw);max-height:94vh}
+.publication-gallery-lightbox img{display:block;max-width:100%;max-height:calc(94vh - 74px);object-fit:contain}
+.publication-gallery-lightbox figcaption{padding:12px 8px 0;text-align:center;max-width:900px}
+.publication-gallery-lightbox button{position:absolute;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.55);color:#fff;cursor:pointer}
+.publication-gallery-lightbox__close{top:18px;right:18px;width:48px;height:48px;font-size:2rem}
+.publication-gallery-lightbox__prev,.publication-gallery-lightbox__next{top:50%;transform:translateY(-50%);width:54px;height:84px;font-size:2.3rem}
+.publication-gallery-lightbox__prev{left:12px}.publication-gallery-lightbox__next{right:12px}
+@media(max-width:760px){.publication-gallery-hero{padding:34px 16px 22px}.publication-gallery-grid{columns:2 145px;padding:10px 8px 48px;column-gap:8px}.publication-gallery-card{margin-bottom:8px}.publication-gallery-lightbox{padding:58px 10px 72px}.publication-gallery-lightbox__prev,.publication-gallery-lightbox__next{top:auto;bottom:10px;transform:none;height:48px}}

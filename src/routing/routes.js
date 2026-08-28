@@ -4,6 +4,7 @@ export const publicRoutes = Object.freeze({
   collections: '/collections',
   collection: '/collections/:slug',
   feeds: '/feeds',
+  gallery: '/aberdeen-local-1312-gallery',
   project: '/project/:slug',
   projectsLegacy: '/projects/:slug',
   about: '/about',

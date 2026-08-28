@@ -24,6 +24,7 @@ import { CollectionPage } from './components/CollectionPage'
 import { CollectionsAdminPage } from './components/CollectionsAdminPage'
 import { FeedSettingsAdminPage } from './components/FeedSettingsAdminPage'
 import { PublicFeedsPage } from './components/PublicFeedsPage'
+import { GalleryArchivePage } from './components/GalleryArchivePage'
 import { AdminQaPage } from './components/AdminQaPage'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { NotFoundPage } from './components/NotFoundPage'
@@ -118,6 +119,7 @@ function RouteMeta({ pieces = [] }) {
       '/archive': ['Archive', 'Browse the Sabot Media archive by search, project, format, and date.'],
       '/collections': ['Collections', 'Browse Sabot Media bodies of work by timeline, downloads, gallery, and related pieces.'],
       '/feeds': ['Feeds', 'Subscribe to Sabot Media feeds for the whole archive, formats, projects, collections, and author labels.'],
+      '/aberdeen-local-1312-gallery': ['Aberdeen Local 1312 Gallery', 'Historical image archive from Aberdeen Local 1312, preserved by Sabot Media.'],
       '/search': ['Search', 'Search the Sabot Media archive.'],
       '/about': ['About', 'About Sabot Media and its public-interest media work.'],
       '/contact': ['Contact', 'Contact Sabot Media.'],
@@ -249,6 +251,7 @@ export default function App() {
               <Route path={publicRoutes.collections} element={<CollectionsIndexPage pieces={pieces} />} />
               <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
               <Route path={publicRoutes.feeds} element={<PublicFeedsPage />} />
+              <Route path={publicRoutes.gallery} element={<GalleryArchivePage />} />
 
               <Route path="/review" element={protect(<Navigate to={adminRoutes.qa} replace />)} />
               <Route path="/qa" element={protect(<Navigate to={adminRoutes.qa} replace />)} />
