@@ -21,6 +21,7 @@ export async function onRequestGet(context) {
       mode: 'd1',
       basePath: '/feeds',
       files,
+      terms: runtime.terms || {},
       itemCount: runtime.itemCount,
       podcastItemCount: podcastItems.length,
       settingsUpdatedAt: runtime.updatedAt,
