@@ -8,17 +8,10 @@ import { splitDisplayTitle } from '../lib/content'
 import { PublicationTopbar } from './PublicationTopbar'
 import { loadCustomizerSettings } from '../lib/customizerLocal'
 import { EditableText } from './EditableText'
-import { HomeOverlayCard } from './HomeOverlayCard'
+import { HomeFeedCard } from './HomeFeedCard'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 import { getConfiguredText } from '../lib/publicConfig'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
-import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
-
-function formatDate(value) {
-  const d = new Date(value || '')
-  if (!Number.isFinite(d.getTime())) return ''
-  return d.toISOString().slice(0, 10)
-}
 
 function normalizeNativeItem(item) {
   return {
@@ -128,83 +121,6 @@ function getHomepageDisplaySettings() {
   return { featuredLayout, postsPerPage }
 }
 
-function HeroFeature({ item }) {
-  const hasImage = Boolean(item.imageUrl)
-  const titleDisplay = hasImage ? resolveFeaturedTitleDisplay(item) : 'below'
-
-  if (hasImage && titleDisplay === 'overlay') {
-    return <HomeOverlayCard item={item} variant="hero" formatDate={formatDate} />
-  }
-
-  return (
-    <article className={`publication-hero-card publication-hero-card--title-${titleDisplay}${hasImage ? '' : ' publication-hero-card--no-image'}`}>
-      <Link className="publication-hero-card__image-wrap" to={item.href}>
-        {hasImage && titleDisplay === 'hidden' ? (
-          <img className="publication-hero-card__image-actual" src={item.imageUrl} alt="" />
-        ) : (
-          <div
-            className="publication-hero-card__image publication-hero-card__image-fill"
-            style={hasImage ? {
-              backgroundImage: `url("${item.imageUrl}")`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            } : undefined}
-          />
-        )}
-        {titleDisplay === 'hidden' ? <h1 className="screen-reader-only">{item.title}</h1> : null}
-      </Link>
-      {titleDisplay === 'below' ? (
-        <div className="publication-hero-card__title-below">
-          <div className="publication-hero-card__meta">
-            <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
-            <span>{item.target}</span>
-            <span>{item.contentType}</span>
-          </div>
-          <h1><Link to={item.href}>{item.title}</Link></h1>
-        </div>
-      ) : null}
-    </article>
-  )
-}
-
-function RecentCard({ item }) {
-  const hasImage = Boolean(item.imageUrl)
-  const titleDisplay = hasImage ? resolveFeaturedTitleDisplay(item) : 'below'
-
-  if (hasImage && titleDisplay === 'overlay') {
-    return <HomeOverlayCard item={item} variant="recent" formatDate={formatDate} />
-  }
-
-  return (
-    <article className={`publication-post-card publication-post-card--title-${titleDisplay}${hasImage ? '' : ' publication-post-card--no-image'}`}>
-      <Link className="publication-post-card__link" to={item.href}>
-        {hasImage && titleDisplay === 'hidden' ? (
-          <img className="publication-post-card__image-actual" src={item.imageUrl} alt="" />
-        ) : (
-          <div
-            className="publication-post-card__image-fill"
-            style={hasImage ? {
-              backgroundImage: `url("${item.imageUrl}")`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            } : undefined}
-          />
-        )}
-        {titleDisplay === 'hidden' ? <h2 className="screen-reader-only">{item.title}</h2> : null}
-      </Link>
-      {titleDisplay === 'below' ? (
-        <div className="publication-post-card__title-below">
-          <div className="publication-post-card__meta">
-            <span>{formatDate(item.publishedAt || item.updatedAt)}</span>
-            <span>{item.target}</span>
-          </div>
-          <h2><Link to={item.href}>{item.title}</Link></h2>
-        </div>
-      ) : null}
-    </article>
-  )
-}
-
 export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] }) {
   const homeCopy = editableContentRegistry.home
   const resolvedConfig = useResolvedConfig()
@@ -270,7 +186,7 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
   const nextLabel = getConfiguredText(resolvedConfig, homeCopy.nextLabel.field, homeCopy.nextLabel.defaultText)
 
   return (
-    <main className="page publication-homepage">
+    <main className="page publication-homepage home-feed-v3" data-home-renderer="v3">
       <PublicationTopbar />
 
       {usingArchiveFallback ? null : null}
@@ -286,13 +202,13 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
 
       {featuredItem ? (
         <>
-          <HeroFeature item={featuredItem} />
+          <HomeFeedCard item={featuredItem} variant="hero" />
 
           {recentItems.length ? (
             <>
-              <section className={`publication-recent-grid publication-recent-grid--${homepageSettings.featuredLayout}`}>
+              <section className={`home-feed-grid home-feed-grid--${homepageSettings.featuredLayout}`} data-home-grid="v3">
                 {recentItems.map((item) => (
-                  <RecentCard key={item.id} item={item} />
+                  <HomeFeedCard key={item.id} item={item} variant="recent" />
                 ))}
               </section>
 
