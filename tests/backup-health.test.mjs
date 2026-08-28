@@ -18,6 +18,7 @@ function backupLoaders(overrides = {}) {
     fetchPublications: () => okItems([{ id: 'publication-1' }]),
     fetchSites: () => okItems([{ id: 'site-1', domain: 'sabot.media' }]),
     fetchFeedSettings: () => Promise.resolve({ ok: true, mode: 'd1', settings: { exposeMainFeed: true } }),
+    fetchPodcastSettings: () => Promise.resolve({ ok: true, mode: 'd1', settings: { podcastTitle: 'Sabot Media Podcast', rssFeedUrl: 'https://sabot.media/feeds/podcasts/all.xml' } }),
     loadPublicConfigPayload: () => Promise.resolve({ ok: true, config: { siteTitle: 'Sabot Media' } }),
     ...overrides,
   }
@@ -28,7 +29,7 @@ test('verified system backup includes every required dataset without credential 
   const summary = summarizeSnapshot(snapshot)
   assert.equal(snapshot.manifest.complete, true)
   assert.equal(snapshot.manifest.credentialMaterialExcluded, true)
-  assert.equal(snapshot.schemaVersion, 4)
+  assert.equal(snapshot.schemaVersion, 5)
   assert.equal(summary.complete, true)
   assert.equal(summary.nativeCount, 1)
   assert.equal(summary.revisionCount, 1)
@@ -41,14 +42,16 @@ test('verified system backup includes every required dataset without credential 
   assert.equal(summary.publicationCount, 1)
   assert.equal(summary.siteCount, 1)
   assert.equal(summary.feedSettingsIncluded, true)
+  assert.equal(summary.podcastSettingsIncluded, true)
   assert.equal(summary.publicConfigIncluded, true)
   assert.equal(snapshot.sites[0].domain, 'sabot.media')
   assert.equal(snapshot.adminUsers[0].email, 'editor@example.org')
   assert.equal('password_hash' in snapshot.adminUsers[0], false)
   assert.equal(snapshot.feedSettings.exposeMainFeed, true)
+  assert.equal(snapshot.podcastSettings.podcastTitle, 'Sabot Media Podcast')
   assert.equal(snapshot.publicSiteConfig.siteTitle, 'Sabot Media')
   assert.deepEqual(snapshot.manifest.datasets, [
-    'nativeContent', 'revisionsByNativeId', 'taxonomyTerms', 'adminUsers', 'editorRoles', 'auditLog', 'mediaAssets', 'collections', 'publications', 'sites', 'feedSettings', 'publicSiteConfig',
+    'nativeContent', 'revisionsByNativeId', 'taxonomyTerms', 'adminUsers', 'editorRoles', 'auditLog', 'mediaAssets', 'collections', 'publications', 'sites', 'feedSettings', 'podcastSettings', 'publicSiteConfig',
   ])
 })
 
@@ -66,6 +69,10 @@ test('verified system backup rejects scaffold list data', async () => {
 
 test('verified system backup rejects missing feed settings', async () => {
   await assert.rejects(collectSystemSnapshot(backupLoaders({ fetchFeedSettings: async () => ({ ok: true, mode: 'd1' }) })), /feed settings backup response was incomplete/)
+})
+
+test('verified system backup rejects missing podcast settings', async () => {
+  await assert.rejects(collectSystemSnapshot(backupLoaders({ fetchPodcastSettings: async () => ({ ok: true, mode: 'd1' }) })), /podcast settings backup response was incomplete/)
 })
 
 test('site health fails explicitly without BF_DB', async () => {

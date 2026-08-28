@@ -18,11 +18,14 @@ test('verified backup accepts D1 feed defaults when no custom row exists', async
     fetchPublications: list,
     fetchSites: list,
     fetchFeedSettings: async () => ({ ok: true, mode: 'd1', settings: null }),
+    fetchPodcastSettings: async () => ({ ok: true, mode: 'd1', settings: null }),
     loadPublicConfigPayload: async () => ({ ok: true, mode: 'd1', config: {} }),
   })
   assert.deepEqual(snapshot.feedSettings, {})
+  assert.deepEqual(snapshot.podcastSettings, {})
   assert.equal(summarizeSnapshot(snapshot).complete, true)
   assert.equal(summarizeSnapshot(snapshot).feedSettingsIncluded, true)
+  assert.equal(summarizeSnapshot(snapshot).podcastSettingsIncluded, true)
 })
 
 test('obsolete Platform Map is removed from normal navigation', () => {

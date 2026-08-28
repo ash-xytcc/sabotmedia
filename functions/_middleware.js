@@ -39,6 +39,7 @@ const API_WRITE_CAPABILITIES = [
   ['/api/editor-roles', 'users:manage'],
   ['/api/public-site-config', 'site:manage'],
   ['/api/feed-settings', 'site:manage'],
+  ['/api/podcast-settings', 'publishing:write'],
   ['/api/sites', 'site:manage'],
   ['/api/native-content', 'content:write'],
   ['/api/taxonomy', 'content:write'],
@@ -182,20 +183,9 @@ async function renderPublicPost(context, url) {
 function titleFromSlug(slug) {
   return String(slug || '').split('-').filter(Boolean).map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
 }
-
 function cleanText(value) {
   return String(value || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#(?:39|x27);/gi, "'").replace(/\s+/g, ' ').trim()
 }
-
-function truncate(value, length) {
-  const text = String(value || '')
-  return text.length <= length ? text : `${text.slice(0, length - 1).trimEnd()}…`
-}
-
-function absoluteUrl(value, origin) {
-  try { return new URL(String(value || ''), origin).toString() } catch { return `${origin}/sabot-logo.png` }
-}
-
-function escapeHtml(value) {
-  return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
+function truncate(value, length) { const text = String(value || ''); return text.length <= length ? text : `${text.slice(0, length - 1).trimEnd()}…` }
+function absoluteUrl(value, origin) { try { return new URL(String(value || ''), origin).toString() } catch { return `${origin}/sabot-logo.png` } }
+function escapeHtml(value) { return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
