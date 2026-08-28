@@ -1,4 +1,4 @@
-import { loadFeedSettings, normalizeFeedTerm, slugifyFeedTerm } from './feedSettings'
+import { loadFeedSettings, normalizeFeedTerm, slugifyFeedTerm } from './feedSettings.js'
 
 function escapeXml(value = '') {
   return String(value || '')
@@ -9,7 +9,7 @@ function escapeXml(value = '') {
 }
 
 function itemDate(item) {
-  const d = new Date(String(item.publishedAt || item.updatedAt || item.createdAt || ''))
+  const d = new Date(String(item.publishedAt || item.scheduledFor || item.updatedAt || item.createdAt || ''))
   return Number.isFinite(d.getTime()) ? d.toUTCString() : new Date().toUTCString()
 }
 
@@ -17,7 +17,6 @@ function normalizeFeedItem(item, settings) {
   const slug = item.slug || item.id || ''
   const author = normalizeFeedTerm('author', item.author || item.byline || 'Sabot Media Collective', settings) || 'Sabot Media Collective'
   const category = normalizeFeedTerm('format', item.contentType || item.type || 'article', settings) || 'article'
-
   return {
     title: item.title || slug || 'Untitled',
     link: slug ? `https://sabot.media/post/${slug}` : 'https://sabot.media/archive',
@@ -82,78 +81,50 @@ function addGroupedFeeds(bundle, { prefix, titlePrefix, descriptionPrefix, group
   }
 }
 
+function isFeedVisible(item, now = Date.now()) {
+  if (item?.status === 'published' || item?.workflowState === 'published') return true
+  if (item?.status === 'scheduled' || item?.workflowState === 'scheduled') {
+    const scheduled = new Date(String(item?.scheduledFor || '')).getTime()
+    return Number.isFinite(scheduled) && scheduled <= now
+  }
+  return false
+}
+
 export function buildRssBundle(items = [], options = {}) {
   const settings = options.settings || loadFeedSettings()
-  const visible = items.filter((item) => item.status === 'published' || item.workflowState === 'published' || item.publishedAt)
+  const now = Number(options.now || Date.now())
+  const visible = items.filter((item) => isFeedVisible(item, now))
   const bundle = {}
 
-  if (settings.exposeMainFeed !== false) {
-    bundle['all-content.xml'] = buildRssXml('Sabot Media', 'All published Sabot Media content.', visible, { settings })
-  }
+  if (settings.exposeMainFeed !== false) bundle['all-content.xml'] = buildRssXml('Sabot Media', 'All published Sabot Media content.', visible, { settings })
 
-  if (settings.exposeProjectFeeds !== false) {
-    addGroupedFeeds(bundle, {
-      prefix: 'projects',
-      titlePrefix: 'Sabot Media',
-      descriptionPrefix: 'Published content for',
-      groups: groupBy(visible, 'project', (item) => getValues(item, ['projects', 'primaryProject', 'categories']), settings),
-      settings,
-    })
-  }
-
-  if (settings.exposeCollectionFeeds !== false) {
-    addGroupedFeeds(bundle, {
-      prefix: 'collections',
-      titlePrefix: 'Sabot Media',
-      descriptionPrefix: 'Published content in',
-      groups: groupBy(visible, 'collection', (item) => getValues(item, ['collections', 'collection']), settings),
-      settings,
-    })
-  }
-
-  if (settings.exposeFormatFeeds !== false) {
-    addGroupedFeeds(bundle, {
-      prefix: 'formats',
-      titlePrefix: 'Sabot Media',
-      descriptionPrefix: 'Published',
-      groups: groupBy(visible, 'format', (item) => item.contentType || item.type || 'article', settings),
-      settings,
-    })
-  }
-
-  if (settings.exposeAuthorFeeds !== false) {
-    addGroupedFeeds(bundle, {
-      prefix: 'bylines',
-      titlePrefix: 'Sabot Media',
-      descriptionPrefix: 'Published under the public byline label',
-      groups: groupBy(visible, 'author', (item) => item.author || item.byline || 'Sabot Media Collective', settings),
-      settings,
-    })
-  }
-
-  if (settings.exposeTopicFeeds !== false) {
-    addGroupedFeeds(bundle, {
-      prefix: 'topics',
-      titlePrefix: 'Sabot Media',
-      descriptionPrefix: 'Published content tagged',
-      groups: groupBy(visible, 'topic', (item) => getValues(item, ['topics', 'tags']), settings),
-      settings,
-    })
-  }
-
-  if (settings.exposeSeriesFeeds !== false) {
-    addGroupedFeeds(bundle, {
-      prefix: 'series',
-      titlePrefix: 'Sabot Media',
-      descriptionPrefix: 'Published content in',
-      groups: groupBy(visible, 'series', (item) => getValues(item, ['series', 'seriesSlug']), settings),
-      settings,
-    })
-  }
+  if (settings.exposeProjectFeeds !== false) addGroupedFeeds(bundle, {
+    prefix: 'projects', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published content for',
+    groups: groupBy(visible, 'project', (item) => getValues(item, ['projects', 'primaryProject', 'categories']), settings), settings,
+  })
+  if (settings.exposeCollectionFeeds !== false) addGroupedFeeds(bundle, {
+    prefix: 'collections', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published content in',
+    groups: groupBy(visible, 'collection', (item) => getValues(item, ['collections', 'collection']), settings), settings,
+  })
+  if (settings.exposeFormatFeeds !== false) addGroupedFeeds(bundle, {
+    prefix: 'formats', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published',
+    groups: groupBy(visible, 'format', (item) => item.contentType || item.type || 'article', settings), settings,
+  })
+  if (settings.exposeAuthorFeeds !== false) addGroupedFeeds(bundle, {
+    prefix: 'bylines', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published under the public byline label',
+    groups: groupBy(visible, 'author', (item) => item.author || item.byline || 'Sabot Media Collective', settings), settings,
+  })
+  if (settings.exposeTopicFeeds !== false) addGroupedFeeds(bundle, {
+    prefix: 'topics', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published content tagged',
+    groups: groupBy(visible, 'topic', (item) => getValues(item, ['topics', 'tags']), settings), settings,
+  })
+  if (settings.exposeSeriesFeeds !== false) addGroupedFeeds(bundle, {
+    prefix: 'series', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published content in',
+    groups: groupBy(visible, 'series', (item) => getValues(item, ['series', 'seriesSlug']), settings), settings,
+  })
 
   const podcasts = visible.filter((item) => String(normalizeFeedTerm('format', item.contentType || item.type || '', settings)).toLowerCase().includes('podcast'))
   if (podcasts.length) bundle['podcasts/all.xml'] = buildRssXml('Sabot Media Podcasts', 'Published podcast episodes from Sabot Media.', podcasts, { settings })
-
   return bundle
 }
 
