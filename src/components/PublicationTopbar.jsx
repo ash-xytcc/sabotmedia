@@ -44,6 +44,7 @@ export function PublicationTopbar() {
                 labelField={item.labelField}
               />
             ))}
+            <Link to="/aberdeen-local-1312-gallery">Gallery</Link>
           </nav>
         </div>
       </div>
