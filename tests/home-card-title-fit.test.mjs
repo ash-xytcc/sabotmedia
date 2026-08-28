@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import test from 'node:test'
+
+const css = fs.readFileSync(new URL('../src/public-card-title-fit.css', import.meta.url), 'utf8')
+const main = fs.readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8')
+const homepage = fs.readFileSync(new URL('../src/components/NativeUpdatesPage.jsx', import.meta.url), 'utf8')
+
+test('overlay title cards size from visible content instead of a fixed aspect ratio', () => {
+  assert.match(css, /publication-post-card--title-overlay/)
+  assert.match(css, /publication-hero-card--title-overlay/)
+  assert.match(css, /aspect-ratio:\s*auto\s*!important/)
+  assert.match(css, /publication-post-card--title-overlay[\s\S]*publication-post-card__overlay[\s\S]*position:\s*relative\s*!important/)
+  assert.match(css, /publication-hero-card--title-overlay[\s\S]*publication-hero-card__overlay[\s\S]*position:\s*relative\s*!important/)
+})
+
+test('visible overlay headlines are never line-clamped', () => {
+  assert.match(css, /publication-post-card--title-overlay h2[\s\S]*-webkit-line-clamp:\s*unset\s*!important/)
+  assert.match(css, /publication-hero-card--title-overlay h1[\s\S]*-webkit-line-clamp:\s*unset\s*!important/)
+  assert.match(css, /overflow:\s*visible\s*!important/)
+})
+
+test('title-fit rules load after the final mobile authority and remain scoped to overlay mode', () => {
+  assert.ok(main.indexOf("./public-card-title-fit.css") > main.indexOf("./sitewide-mobile-polish.css"))
+  assert.match(homepage, /publication-post-card--title-\$\{titleDisplay\}/)
+  assert.match(homepage, /publication-hero-card--title-\$\{titleDisplay\}/)
+  assert.doesNotMatch(css, /publication-post-card--title-hidden[\s\S]*aspect-ratio:\s*auto/)
+})
