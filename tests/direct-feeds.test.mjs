@@ -58,24 +58,47 @@ test('public feeds page links only to server manifest endpoints', () => {
   assert.doesNotMatch(publicPage, /buildRssBundle\(getPieces\(\)/)
   assert.match(publicPage, /Nothing is being presented as a working subscription URL until it does/)
   assert.match(manifest, /mode: 'd1'/)
+  assert.match(manifest, /'podcasts\/all\.xml'/)
 })
 
-test('podcast feed output includes playable enclosure metadata', () => {
+test('podcast feed output includes enclosure and directory metadata', () => {
   const xml = buildPodcastFeedXml({
     requestUrl: 'https://sabot.media/feeds/podcasts/all.xml',
     selfPath: '/feeds/podcasts/all.xml',
+    settings: {
+      podcastTitle: 'Molotov Now!',
+      author: 'Sabot Media',
+      description: 'A test show description.',
+      defaultCoverArt: 'https://media.sabot.media/podcast-cover.jpg',
+      websiteUrl: 'https://sabot.media',
+      language: 'en-us',
+      category: 'News',
+      ownerName: 'Sabot Media',
+      ownerEmail: 'podcast@sabot.media',
+      explicit: false,
+    },
     items: [{
       id: 'episode-1', slug: 'episode-one', title: 'Episode One',
       podcastAudioUrl: 'https://media.sabot.media/episode-one.mp3',
       podcastMimeType: 'audio/mpeg', podcastFileSize: '12345', publishedAt: '2026-08-27T12:00:00Z',
+      podcastDuration: '00:42:00', podcastEpisodeNumber: '7', podcastSeason: '2',
     }],
   })
+  assert.match(xml, /<title>Molotov Now!<\/title>/)
+  assert.match(xml, /<itunes:author>Sabot Media<\/itunes:author>/)
+  assert.match(xml, /<itunes:category text="News" \/>/)
+  assert.match(xml, /<itunes:image href="https:\/\/media\.sabot\.media\/podcast-cover\.jpg" \/>/)
+  assert.match(xml, /<itunes:owner>/)
   assert.match(xml, /<enclosure url="https:\/\/media\.sabot\.media\/episode-one\.mp3" type="audio\/mpeg" length="12345" \/>/)
+  assert.match(xml, /<itunes:duration>00:42:00<\/itunes:duration>/)
+  assert.match(xml, /<itunes:episode>7<\/itunes:episode>/)
+  assert.match(xml, /<itunes:season>2<\/itunes:season>/)
   assert.match(xml, /<atom:link href="https:\/\/sabot\.media\/feeds\/podcasts\/all\.xml"/)
 })
 
-test('direct podcasts endpoint uses proper podcast feed generator', () => {
+test('direct podcasts endpoint uses D1 settings and proper podcast feed generator', () => {
   assert.match(directRoute, /requestedPath === 'podcasts\/all\.xml'/)
   assert.match(directRoute, /getPodcastFeedItems\(db\)/)
+  assert.match(directRoute, /readPodcastSettings\(db\)/)
   assert.match(directRoute, /buildPodcastFeedXml/)
 })
