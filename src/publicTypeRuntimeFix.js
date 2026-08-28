@@ -99,33 +99,38 @@ function setLeadTitles() {
 }
 
 function setHomepageOverlayTitles() {
-  if (!document.querySelector('.publication-homepage')) return
+  const homepage = document.querySelector('.publication-homepage')
+  if (!homepage) return
 
   const mobile = window.matchMedia('(max-width: 900px)').matches
-  const heroMinHeight = mobile ? '420px' : '480px'
-  const cardMinHeight = mobile ? '340px' : '320px'
+  const grid = homepage.querySelector('.publication-recent-grid')
+
+  if (grid) {
+    important(grid, 'grid-auto-rows', 'auto')
+    important(grid, 'overflow', 'visible')
+  }
 
   const configs = [
     {
-      cardSelector: '.publication-homepage .publication-hero-card--title-overlay',
+      cardSelector: '.publication-hero-card--title-overlay',
       linkSelector: '.publication-hero-card__image-wrap',
       overlaySelector: '.publication-hero-card__overlay',
       titleSelector: 'h1',
-      minHeight: heroMinHeight,
+      topPad: mobile ? 'clamp(15rem, 56vw, 25rem)' : 'clamp(18rem, 42vw, 34rem)',
       mobileSize: 'clamp(2rem, 8.5vw, 3.6rem)',
     },
     {
-      cardSelector: '.publication-homepage .publication-post-card--title-overlay',
+      cardSelector: '.publication-post-card--title-overlay',
       linkSelector: '.publication-post-card__link',
       overlaySelector: '.publication-post-card__overlay',
       titleSelector: 'h2',
-      minHeight: cardMinHeight,
-      mobileSize: 'clamp(1.45rem, 6vw, 2.2rem)',
+      topPad: mobile ? 'clamp(10rem, 48vw, 17rem)' : 'clamp(12rem, 24vw, 18rem)',
+      mobileSize: 'clamp(1.5rem, 6.2vw, 2.2rem)',
     },
   ]
 
   configs.forEach((config) => {
-    document.querySelectorAll(config.cardSelector).forEach((card) => {
+    homepage.querySelectorAll(config.cardSelector).forEach((card) => {
       const link = card.querySelector(config.linkSelector)
       const overlay = card.querySelector(config.overlaySelector)
       const title = card.querySelector(config.titleSelector)
@@ -136,35 +141,40 @@ function setHomepageOverlayTitles() {
       important(card, 'overflow', 'visible')
 
       if (link) {
+        important(link, 'position', 'relative')
         important(link, 'display', 'block')
         important(link, 'height', 'auto')
         important(link, 'min-height', '0')
         important(link, 'aspect-ratio', 'auto')
-        important(link, 'overflow', 'hidden')
+        important(link, 'overflow', 'visible')
       }
 
       if (overlay) {
         important(overlay, 'position', 'relative')
         important(overlay, 'inset', 'auto')
+        important(overlay, 'width', '100%')
         important(overlay, 'height', 'auto')
-        important(overlay, 'min-height', config.minHeight)
+        important(overlay, 'min-height', '0')
+        important(overlay, 'max-height', 'none')
         important(overlay, 'box-sizing', 'border-box')
-        important(overlay, 'display', 'flex')
-        important(overlay, 'flex-direction', 'column')
-        important(overlay, 'justify-content', 'flex-end')
+        important(overlay, 'display', 'block')
+        important(overlay, 'padding-top', config.topPad)
         important(overlay, 'overflow', 'visible')
       }
 
       if (title) {
         important(title, 'display', 'block')
+        important(title, 'width', '100%')
         important(title, 'max-width', '100%')
+        important(title, 'height', 'auto')
+        important(title, 'min-height', '0')
         important(title, 'max-height', 'none')
         important(title, '-webkit-line-clamp', 'unset')
         important(title, '-webkit-box-orient', 'initial')
         important(title, 'overflow', 'visible')
         important(title, 'text-overflow', 'clip')
         important(title, 'white-space', 'normal')
-        important(title, 'overflow-wrap', 'break-word')
+        important(title, 'overflow-wrap', 'normal')
         important(title, 'word-break', 'normal')
         if (mobile) {
           important(title, 'font-size', config.mobileSize)
