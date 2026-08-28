@@ -1,47 +1,30 @@
 import {
   readPublicSiteConfig,
   writePublicSiteConfig,
-  normalizePublicConfig,
   PUBLIC_CONFIG_SCHEMA_VERSION,
 } from './_lib/publicSiteConfig.js'
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
+import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 
 export async function onRequestOptions(context) {
   const permission = await resolvePublicSitePermission(context)
-
   return json({
     ok: true,
     canEdit: permission.canEdit,
     authMode: permission.mode,
     authReason: permission.reason,
-    mode: hasDb(context) ? 'd1' : 'scaffold',
+    mode: getBoundDb(context) ? 'd1' : 'unavailable',
     schemaVersion: PUBLIC_CONFIG_SCHEMA_VERSION,
-    note: hasDb(context)
-      ? 'D1-backed public site config route available.'
-      : 'No BF_DB binding detected. Using scaffold mode.',
   })
 }
 
 export async function onRequestGet(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('public site config reads')
 
-    if (!hasDb(context)) {
-      return json({
-        ok: true,
-        mode: 'scaffold',
-        canEdit: permission.canEdit,
-        authMode: permission.mode,
-        authReason: permission.reason,
-        scope: 'global',
-        updatedAt: null,
-        version: PUBLIC_CONFIG_SCHEMA_VERSION,
-        config: normalizePublicConfig({}),
-      })
-    }
-
-    const result = await readPublicSiteConfig(context.env.BF_DB, 'global')
-
+    const result = await readPublicSiteConfig(db, 'global')
     return json({
       ok: true,
       mode: 'd1',
@@ -55,17 +38,13 @@ export async function onRequestGet(context) {
       config: result.config,
     })
   } catch (error) {
-    return json({
-      ok: false,
-      error: String(error?.message || error),
-    }, 500)
+    return json({ ok: false, error: String(error?.message || error) }, 500)
   }
 }
 
 export async function onRequestPut(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
-
     if (!permission.canEdit) {
       return json({
         ok: false,
@@ -75,28 +54,12 @@ export async function onRequestPut(context) {
       }, 403)
     }
 
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('public site config writes')
+
     const body = await context.request.json()
     const incoming = body?.publicSite || body?.config || body || {}
-
-    if (!hasDb(context)) {
-      return json({
-        ok: true,
-        mode: 'scaffold',
-        saved: true,
-        received: {
-          publicSite: normalizePublicConfig(incoming),
-        },
-        canEdit: true,
-        authMode: permission.mode,
-        authReason: permission.reason,
-        updatedAt: new Date().toISOString(),
-        version: PUBLIC_CONFIG_SCHEMA_VERSION,
-        schemaVersion: PUBLIC_CONFIG_SCHEMA_VERSION,
-        note: 'BF_DB binding missing. Save accepted in scaffold mode only.',
-      })
-    }
-
-    const saved = await writePublicSiteConfig(context.env.BF_DB, incoming, 'global')
+    const saved = await writePublicSiteConfig(db, incoming, 'global')
 
     return json({
       ok: true,
@@ -105,24 +68,15 @@ export async function onRequestPut(context) {
       canEdit: true,
       authMode: permission.mode,
       authReason: permission.reason,
-      received: {
-        publicSite: saved.config,
-      },
+      received: { publicSite: saved.config },
       updatedAt: saved.updatedAt,
       scope: saved.scope,
       version: saved.version,
       schemaVersion: PUBLIC_CONFIG_SCHEMA_VERSION,
     })
   } catch (error) {
-    return json({
-      ok: false,
-      error: String(error?.message || error),
-    }, 400)
+    return json({ ok: false, error: String(error?.message || error) }, 400)
   }
-}
-
-function hasDb(context) {
-  return Boolean(context?.env?.BF_DB)
 }
 
 function json(data, status = 200) {
