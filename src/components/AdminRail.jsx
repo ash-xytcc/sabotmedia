@@ -48,7 +48,6 @@ const NAV_GROUPS = [
       { to: adminRoutes.customize, label: 'Customize' },
       { to: adminRoutes.analytics, label: 'Analytics' },
       { to: adminRoutes.sites, label: 'Sites & Domains' },
-      { to: adminRoutes.platformMap, label: 'Platform Map' },
     ],
   },
   {
@@ -81,18 +80,8 @@ function AdminBarMenu({ label, children, className = '' }) {
 
   return (
     <div ref={menuRef} className={`wp-admin-topbar__menu ${isOpen ? 'is-open' : ''} ${className}`.trim()}>
-      <button
-        type="button"
-        className="wp-admin-topbar__button"
-        aria-haspopup="true"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
-      >
-        {label}
-      </button>
-      <div className="wp-admin-topbar__dropdown" role="menu" aria-label={typeof label === 'string' ? label : 'menu'} onClick={() => setIsOpen(false)}>
-        {children}
-      </div>
+      <button type="button" className="wp-admin-topbar__button" aria-haspopup="true" aria-expanded={isOpen} onClick={() => setIsOpen((open) => !open)}>{label}</button>
+      <div className="wp-admin-topbar__dropdown" role="menu" aria-label={typeof label === 'string' ? label : 'menu'} onClick={() => setIsOpen(false)}>{children}</div>
     </div>
   )
 }
@@ -160,20 +149,13 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
       <AdminCommandPalette />
       <div className="wp-admin-topbar" role="navigation" aria-label="SabotPress admin bar">
         <div className="wp-admin-topbar__left">
-          <Link to={adminRoutes.dashboard} className="wp-admin-topbar__link wp-admin-topbar__link--icon" aria-label="SabotPress" title="SabotPress">
-            <span className="wp-admin-topbar__wpicon" aria-hidden="true">S</span>
-          </Link>
-
+          <Link to={adminRoutes.dashboard} className="wp-admin-topbar__link wp-admin-topbar__link--icon" aria-label="SabotPress" title="SabotPress"><span className="wp-admin-topbar__wpicon" aria-hidden="true">S</span></Link>
           <AdminBarMenu label="My Sites">
             <Link to="/" className="wp-admin-topbar__dropdown-link">{primarySiteName}</Link>
             <Link to={adminRoutes.sites} className="wp-admin-topbar__dropdown-link">Manage Sites</Link>
             <Link to={`${adminRoutes.settings}/sites`} className="wp-admin-topbar__dropdown-link">Connect Domain</Link>
           </AdminBarMenu>
-
-          <Link to="/" className="wp-admin-topbar__link wp-admin-topbar__brand-logo-link" aria-label="Sabot Media home">
-            <img src={mastheadLogo} alt="Sabot Media" className="wp-admin-topbar__brand-logo" />
-          </Link>
-
+          <Link to="/" className="wp-admin-topbar__link wp-admin-topbar__brand-logo-link" aria-label="Sabot Media home"><img src={mastheadLogo} alt="Sabot Media" className="wp-admin-topbar__brand-logo" /></Link>
           <AdminBarMenu label="+ New">
             <Link to={adminRoutes.addNew} className="wp-admin-topbar__dropdown-link">Post</Link>
             <Link to={adminRoutes.media} className="wp-admin-topbar__dropdown-link">Media</Link>
@@ -181,20 +163,11 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
             <Link to={adminRoutes.publications} className="wp-admin-topbar__dropdown-link">Publication</Link>
             <Link to={adminRoutes.audiolab} className="wp-admin-topbar__dropdown-link">AudioLab Project</Link>
           </AdminBarMenu>
-
-          <button
-            type="button"
-            className="wp-admin-topbar__button wp-admin-topbar__command"
-            aria-label="Open command palette"
-            onClick={() => setPaletteOpenTick((tick) => tick + 1)}
-          >
-            ⌘K
-          </button>
+          <button type="button" className="wp-admin-topbar__button wp-admin-topbar__command" aria-label="Open command palette" onClick={() => setPaletteOpenTick((tick) => tick + 1)}>⌘K</button>
         </div>
-
         <div className="wp-admin-topbar__right">
           <AdminBarMenu label="Account" className="wp-admin-topbar__menu--right">
-            <Link to={adminRoutes.users} className="wp-admin-topbar__dropdown-link">User model</Link>
+            <Link to={adminRoutes.users} className="wp-admin-topbar__dropdown-link">Users & Access</Link>
             <Link to="/logout" className="wp-admin-topbar__dropdown-link">Log Out</Link>
           </AdminBarMenu>
         </div>
@@ -202,56 +175,24 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
 
       <aside className={`admin-rail${collapsed ? ' is-collapsed' : ''}`} aria-label="Admin navigation">
         <div className="admin-rail__controls">
-          <button
-            type="button"
-            className="admin-rail__toggle"
-            onClick={() => onToggleCollapsed(!collapsed)}
-            aria-label={collapsed ? 'Expand admin navigation' : 'Collapse admin navigation'}
-            aria-expanded={!collapsed}
-            title={collapsed ? 'Expand navigation' : 'Collapse navigation'}
-          >
-            <span aria-hidden="true">☰</span>
-            <span className="admin-rail__toggle-label">Menu</span>
+          <button type="button" className="admin-rail__toggle" onClick={() => onToggleCollapsed(!collapsed)} aria-label={collapsed ? 'Expand admin navigation' : 'Collapse admin navigation'} aria-expanded={!collapsed} title={collapsed ? 'Expand navigation' : 'Collapse navigation'}>
+            <span aria-hidden="true">☰</span><span className="admin-rail__toggle-label">Menu</span>
           </button>
         </div>
-
         <nav className="admin-rail__nav">
-          <NavLink
-            to={adminRoutes.dashboard}
-            className={({ isActive }) => `admin-rail__link admin-rail__link--primary${isActive ? ' is-active' : ''}`}
-            title={collapsed ? 'Dashboard' : undefined}
-          >
-            <span className="admin-rail__icon" aria-hidden="true">●</span>
-            <span className="admin-rail__text">Dashboard</span>
+          <NavLink to={adminRoutes.dashboard} className={({ isActive }) => `admin-rail__link admin-rail__link--primary${isActive ? ' is-active' : ''}`} title={collapsed ? 'Dashboard' : undefined}>
+            <span className="admin-rail__icon" aria-hidden="true">●</span><span className="admin-rail__text">Dashboard</span>
           </NavLink>
-
           {NAV_GROUPS.map((group) => {
             const isOpen = openGroups.has(group.id)
             const isGroupActive = activeGroup === group.id
             return (
               <div key={group.id} className={`admin-rail__group${isOpen ? ' is-open' : ''}${isGroupActive ? ' is-active' : ''}`}>
-                <button
-                  type="button"
-                  className="admin-rail__group-toggle"
-                  onClick={() => toggleGroup(group.id)}
-                  aria-expanded={isOpen && !collapsed}
-                  aria-controls={`admin-rail-group-${group.id}`}
-                  title={collapsed ? group.label : undefined}
-                >
-                  <span className="admin-rail__icon" aria-hidden="true">{group.icon}</span>
-                  <span className="admin-rail__text">{group.label}</span>
-                  <span className="admin-rail__chevron" aria-hidden="true">›</span>
+                <button type="button" className="admin-rail__group-toggle" onClick={() => toggleGroup(group.id)} aria-expanded={isOpen && !collapsed} aria-controls={`admin-rail-group-${group.id}`} title={collapsed ? group.label : undefined}>
+                  <span className="admin-rail__icon" aria-hidden="true">{group.icon}</span><span className="admin-rail__text">{group.label}</span><span className="admin-rail__chevron" aria-hidden="true">›</span>
                 </button>
                 <div id={`admin-rail-group-${group.id}`} className="admin-rail__subnav" hidden={collapsed || !isOpen}>
-                  {group.items.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      className={({ isActive }) => `admin-rail__sublink${isActive ? ' is-active' : ''}`}
-                    >
-                      {item.label}
-                    </NavLink>
-                  ))}
+                  {group.items.map((item) => <NavLink key={item.to} to={item.to} className={({ isActive }) => `admin-rail__sublink${isActive ? ' is-active' : ''}`}>{item.label}</NavLink>)}
                 </div>
               </div>
             )
@@ -278,10 +219,5 @@ export function AdminFrame({ children }) {
     try { window.localStorage.setItem(RAIL_STATE_KEY, value ? '1' : '0') } catch { /* UI preference only */ }
   }
 
-  return (
-    <div className={`admin-frame${railCollapsed ? ' admin-frame--rail-collapsed' : ''}`}>
-      <AdminRail collapsed={railCollapsed} onToggleCollapsed={setCollapsed} />
-      <div className="admin-frame__main">{children}</div>
-    </div>
-  )
+  return <div className={`admin-frame${railCollapsed ? ' admin-frame--rail-collapsed' : ''}`}><AdminRail collapsed={railCollapsed} onToggleCollapsed={setCollapsed} /><div className="admin-frame__main">{children}</div></div>
 }

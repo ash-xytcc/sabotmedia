@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
-import { createSiteDraft, deleteSite, loadSites, saveSite, SITE_STATUS_OPTIONS } from '../lib/siteDomains'
+import { createSiteDraft, deleteSite, loadSites, saveSite, SITE_STATUS_OPTIONS, DEFAULT_SITE } from '../lib/siteDomains'
 import { adminRoutes } from '../routing/routes'
 
 const EMPTY_FORM = {
@@ -38,6 +38,9 @@ export function SitesAdminPage() {
   }, [])
 
   const sortedSites = useMemo(() => [...sites].sort((a, b) => a.name.localeCompare(b.name)), [sites])
+  const connectedCount = sites.filter((site) => site.status === 'connected').length
+  const needsDnsCount = sites.filter((site) => site.status === 'needs DNS').length
+  const canonicalSite = sites.find((site) => site.domain === DEFAULT_SITE.domain)
 
   function updateForm(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -54,6 +57,19 @@ export function SitesAdminPage() {
       const saved = await saveSite(draft)
       setSites((current) => [...current.filter((site) => site.id !== saved.id), saved])
       setForm(EMPTY_FORM)
+    } catch (err) {
+      setError(String(err?.message || err))
+    } finally {
+      setSavingId('')
+    }
+  }
+
+  async function registerCanonicalSite() {
+    try {
+      setError('')
+      setSavingId(DEFAULT_SITE.id)
+      const saved = await saveSite(DEFAULT_SITE)
+      setSites((current) => [...current.filter((site) => site.domain !== saved.domain && site.id !== saved.id), saved])
     } catch (err) {
       setError(String(err?.message || err))
     } finally {
@@ -79,6 +95,10 @@ export function SitesAdminPage() {
   }
 
   async function removeSite(site) {
+    if (site.domain === DEFAULT_SITE.domain) {
+      setError('The canonical sabot.media registry record cannot be removed from this screen. Change hosting first, then update the canonical-domain model deliberately.')
+      return
+    }
     try {
       setError('')
       setSavingId(site.id)
@@ -97,7 +117,7 @@ export function SitesAdminPage() {
         <div className="wp-screen-header">
           <div>
             <h1>Sites & Domains</h1>
-            <p className="description">Persistent D1 registry for canonical and planned hostnames. DNS attachment remains an explicit Cloudflare deployment action because SabotPress does not hold Cloudflare account credentials.</p>
+            <p className="description">Track which hostnames belong to SabotPress and whether Cloudflare has actually attached them. This registry does not change DNS by itself.</p>
           </div>
           <Link className="button" to={adminRoutes.settings}>Back to Settings</Link>
         </div>
@@ -105,87 +125,68 @@ export function SitesAdminPage() {
         {error ? <div className="notice notice-error" role="alert"><p><strong>Sites error:</strong> {error}</p></div> : null}
         {state === 'loading' ? <div className="notice notice-info" role="status"><p>Loading site registry…</p></div> : null}
 
+        <section className="newsroom-stat-grid" aria-label="Domain status summary">
+          <article className="review-summary-card"><div className="review-summary-card__eyebrow">canonical</div><strong>{canonicalSite ? 'OK' : '!'}</strong><span>{canonicalSite ? 'sabot.media registered' : 'registry record missing'}</span></article>
+          <article className="review-summary-card"><div className="review-summary-card__eyebrow">connected</div><strong>{connectedCount}</strong><span>hostnames marked live</span></article>
+          <article className="review-summary-card"><div className="review-summary-card__eyebrow">needs DNS</div><strong>{needsDnsCount}</strong><span>require Cloudflare action</span></article>
+          <article className="review-summary-card"><div className="review-summary-card__eyebrow">www</div><strong>308</strong><span>redirects to sabot.media</span></article>
+        </section>
+
+        {!canonicalSite && state === 'loaded' ? (
+          <section className="wp-meta-box">
+            <h2>Register the canonical site</h2>
+            <p className="description">The live hostname is already <code>sabot.media</code>, but the D1 registry has no matching record. Registering it here records that truth without changing DNS.</p>
+            <button className="button button--primary" type="button" onClick={registerCanonicalSite} disabled={Boolean(savingId)}>
+              {savingId === DEFAULT_SITE.id ? 'Registering…' : 'Register sabot.media'}
+            </button>
+          </section>
+        ) : null}
+
         <section className="wp-meta-box">
-          <h2>Connect another domain</h2>
+          <h2>Add another hostname</h2>
+          <p className="description">Use this only for a hostname you actually intend to attach, such as <code>mag.sabot.media</code>. Start it as <strong>planned</strong> or <strong>needs DNS</strong>; mark it connected only after Cloudflare confirms the custom domain.</p>
           <form className="wp-settings-form wp-sites-form" onSubmit={addSite}>
-            <label>
-              <span>Site name</span>
-              <input value={form.name} onChange={(e) => updateForm('name', e.target.value)} placeholder="Sabot Magazine" required />
-            </label>
-            <label>
-              <span>Domain</span>
-              <input value={form.domain} onChange={(e) => updateForm('domain', e.target.value)} placeholder="mag.sabot.media" required />
-            </label>
-            <label>
-              <span>Slug / base path</span>
-              <input value={form.basePath} onChange={(e) => updateForm('basePath', e.target.value)} placeholder="/" />
-            </label>
-            <label>
-              <span>Status</span>
-              <select value={form.status} onChange={(e) => updateForm('status', e.target.value)}>
-                {SITE_STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Notes</span>
-              <textarea value={form.notes} onChange={(e) => updateForm('notes', e.target.value)} placeholder="DNS owner, redirect purpose, launch note…" />
-            </label>
-            <p><button className="button button--primary" type="submit" disabled={Boolean(savingId)}>Add site</button></p>
+            <label><span>Display name</span><input value={form.name} onChange={(e) => updateForm('name', e.target.value)} placeholder="Sabot Magazine" required /></label>
+            <label><span>Hostname</span><input value={form.domain} onChange={(e) => updateForm('domain', e.target.value)} placeholder="mag.sabot.media" required /></label>
+            <label><span>Base path</span><input value={form.basePath} onChange={(e) => updateForm('basePath', e.target.value)} placeholder="/" /></label>
+            <label><span>Connection state</span><select value={form.status} onChange={(e) => updateForm('status', e.target.value)}>{SITE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
+            <label><span>Notes</span><textarea value={form.notes} onChange={(e) => updateForm('notes', e.target.value)} placeholder="Why this hostname exists, who controls DNS, launch note…" /></label>
+            <p><button className="button button--primary" type="submit" disabled={Boolean(savingId)}>Add hostname</button></p>
           </form>
         </section>
 
         <section className="wp-meta-box">
-          <h2>Managed sites</h2>
-          {state === 'loaded' && sortedSites.length === 0 ? <p className="description">No domains are registered yet.</p> : null}
+          <h2>Registered hostnames</h2>
+          {state === 'loaded' && sortedSites.length === 0 ? <p className="description">No domains are registered in D1 yet.</p> : null}
           {sortedSites.length ? (
-            <table className="content-table wp-posts-table">
-              <thead>
-                <tr>
-                  <th>Site</th>
-                  <th>Domain</th>
-                  <th>Base route</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedSites.map((site) => (
-                  <tr key={site.id}>
-                    <td><strong>{site.name}</strong></td>
-                    <td>{site.domain}</td>
-                    <td>
-                      <input
-                        value={site.basePath}
-                        onChange={(e) => updateSiteLocal(site.id, 'basePath', e.target.value)}
-                        aria-label={`Base path for ${site.name}`}
-                      />
-                    </td>
-                    <td>
-                      <select value={site.status} onChange={(e) => updateSiteLocal(site.id, 'status', e.target.value)} aria-label={`Status for ${site.name}`}>
-                        {SITE_STATUS_OPTIONS.map((status) => (
-                          <option key={status} value={status}>{status}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <div className="wp-row-actions">
-                        <button className="button" type="button" onClick={() => persistSite(site)} disabled={savingId === site.id}>Save</button>
-                        <button className="button button-link-delete" type="button" onClick={() => removeSite(site)} disabled={savingId === site.id}>Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="content-table-wrap">
+              <table className="content-table wp-posts-table">
+                <thead><tr><th>Site</th><th>Hostname</th><th>Base route</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {sortedSites.map((site) => (
+                    <tr key={site.id}>
+                      <td><strong>{site.name}</strong>{site.domain === DEFAULT_SITE.domain ? <div className="description">canonical production site</div> : null}</td>
+                      <td><code>{site.domain}</code></td>
+                      <td><input value={site.basePath} onChange={(e) => updateSiteLocal(site.id, 'basePath', e.target.value)} aria-label={`Base path for ${site.name}`} /></td>
+                      <td><select value={site.status} onChange={(e) => updateSiteLocal(site.id, 'status', e.target.value)} aria-label={`Status for ${site.name}`}>{SITE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}</select></td>
+                      <td><div className="wp-row-actions"><button className="button" type="button" onClick={() => persistSite(site)} disabled={savingId === site.id}>{savingId === site.id ? 'Saving…' : 'Save'}</button>{site.domain !== DEFAULT_SITE.domain ? <button className="button button-link-delete" type="button" onClick={() => removeSite(site)} disabled={savingId === site.id}>Delete</button> : null}</div></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : null}
         </section>
 
         <section className="wp-meta-box">
-          <h2>Cloudflare attachment</h2>
-          <p className="description">Registering a hostname here records SabotPress intent; it does not mutate Cloudflare DNS or Pages configuration. To attach a new production hostname: Cloudflare Dashboard → Workers &amp; Pages → <strong>sabotmedia</strong> → Custom domains → Set up a custom domain. Enter the exact hostname from this registry, complete the DNS record Cloudflare requests, then return here and set its status to <strong>connected</strong>.</p>
-          <p className="description">The canonical hostname remains <code>sabot.media</code>. <code>www.sabot.media</code> is handled by edge middleware as a permanent 308 redirect with path and query preservation.</p>
+          <h2>How a hostname becomes live</h2>
+          <ol className="wp-checklist">
+            <li>Add the hostname here and leave it <strong>planned</strong> or <strong>needs DNS</strong>.</li>
+            <li>Open Cloudflare Dashboard → Workers &amp; Pages → <strong>sabotmedia</strong> → Custom domains → <strong>Set up a custom domain</strong>.</li>
+            <li>Enter the exact hostname, complete any DNS change Cloudflare requests, and wait until Cloudflare reports it active.</li>
+            <li>Return here and change the registry status to <strong>connected</strong>.</li>
+          </ol>
+          <p className="description"><code>sabot.media</code> remains canonical. <code>www.sabot.media</code> is not a second site; edge middleware uses a permanent <strong>308 redirect</strong> to the canonical hostname while preserving path and query.</p>
         </section>
       </main>
     </AdminFrame>
