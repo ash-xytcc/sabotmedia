@@ -146,28 +146,11 @@ export function SitesAdminPage() {
           <h2>Add another hostname</h2>
           <p className="description">Use this only for a hostname you actually intend to attach, such as <code>mag.sabot.media</code>. Start it as <strong>planned</strong> or <strong>needs DNS</strong>; mark it connected only after Cloudflare confirms the custom domain.</p>
           <form className="wp-settings-form wp-sites-form" onSubmit={addSite}>
-            <label>
-              <span>Display name</span>
-              <input value={form.name} onChange={(e) => updateForm('name', e.target.value)} placeholder="Sabot Magazine" required />
-            </label>
-            <label>
-              <span>Hostname</span>
-              <input value={form.domain} onChange={(e) => updateForm('domain', e.target.value)} placeholder="mag.sabot.media" required />
-            </label>
-            <label>
-              <span>Base path</span>
-              <input value={form.basePath} onChange={(e) => updateForm('basePath', e.target.value)} placeholder="/" />
-            </label>
-            <label>
-              <span>Connection state</span>
-              <select value={form.status} onChange={(e) => updateForm('status', e.target.value)}>
-                {SITE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
-              </select>
-            </label>
-            <label>
-              <span>Notes</span>
-              <textarea value={form.notes} onChange={(e) => updateForm('notes', e.target.value)} placeholder="Why this hostname exists, who controls DNS, launch note…" />
-            </label>
+            <label><span>Display name</span><input value={form.name} onChange={(e) => updateForm('name', e.target.value)} placeholder="Sabot Magazine" required /></label>
+            <label><span>Hostname</span><input value={form.domain} onChange={(e) => updateForm('domain', e.target.value)} placeholder="mag.sabot.media" required /></label>
+            <label><span>Base path</span><input value={form.basePath} onChange={(e) => updateForm('basePath', e.target.value)} placeholder="/" /></label>
+            <label><span>Connection state</span><select value={form.status} onChange={(e) => updateForm('status', e.target.value)}>{SITE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
+            <label><span>Notes</span><textarea value={form.notes} onChange={(e) => updateForm('notes', e.target.value)} placeholder="Why this hostname exists, who controls DNS, launch note…" /></label>
             <p><button className="button button--primary" type="submit" disabled={Boolean(savingId)}>Add hostname</button></p>
           </form>
         </section>
@@ -185,17 +168,8 @@ export function SitesAdminPage() {
                       <td><strong>{site.name}</strong>{site.domain === DEFAULT_SITE.domain ? <div className="description">canonical production site</div> : null}</td>
                       <td><code>{site.domain}</code></td>
                       <td><input value={site.basePath} onChange={(e) => updateSiteLocal(site.id, 'basePath', e.target.value)} aria-label={`Base path for ${site.name}`} /></td>
-                      <td>
-                        <select value={site.status} onChange={(e) => updateSiteLocal(site.id, 'status', e.target.value)} aria-label={`Status for ${site.name}`}>
-                          {SITE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}
-                        </select>
-                      </td>
-                      <td>
-                        <div className="wp-row-actions">
-                          <button className="button" type="button" onClick={() => persistSite(site)} disabled={savingId === site.id}>{savingId === site.id ? 'Saving…' : 'Save'}</button>
-                          {site.domain !== DEFAULT_SITE.domain ? <button className="button button-link-delete" type="button" onClick={() => removeSite(site)} disabled={savingId === site.id}>Delete</button> : null}
-                        </div>
-                      </td>
+                      <td><select value={site.status} onChange={(e) => updateSiteLocal(site.id, 'status', e.target.value)} aria-label={`Status for ${site.name}`}>{SITE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}</select></td>
+                      <td><div className="wp-row-actions"><button className="button" type="button" onClick={() => persistSite(site)} disabled={savingId === site.id}>{savingId === site.id ? 'Saving…' : 'Save'}</button>{site.domain !== DEFAULT_SITE.domain ? <button className="button button-link-delete" type="button" onClick={() => removeSite(site)} disabled={savingId === site.id}>Delete</button> : null}</div></td>
                     </tr>
                   ))}
                 </tbody>
@@ -212,7 +186,7 @@ export function SitesAdminPage() {
             <li>Enter the exact hostname, complete any DNS change Cloudflare requests, and wait until Cloudflare reports it active.</li>
             <li>Return here and change the registry status to <strong>connected</strong>.</li>
           </ol>
-          <p className="description"><code>sabot.media</code> remains canonical. <code>www.sabot.media</code> is not a second site; edge middleware permanently redirects it to the canonical hostname while preserving path and query.</p>
+          <p className="description"><code>sabot.media</code> remains canonical. <code>www.sabot.media</code> is not a second site; edge middleware uses a permanent <strong>308 redirect</strong> to the canonical hostname while preserving path and query.</p>
         </section>
       </main>
     </AdminFrame>
