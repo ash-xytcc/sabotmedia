@@ -1,48 +1,46 @@
 import { ensureNativePublicContentTable, listNativeEntries } from '../api/_lib/nativePublicContent.js'
+import { databaseUnavailable, getBoundDb } from '../api/_lib/database.js'
 
 export async function onRequestGet(context) {
   try {
-    if (!context?.env?.BF_DB) {
-      return xml(feedXml({ requestUrl: context.request.url, items: [], note: 'No database binding is configured yet.' }))
-    }
-
-    await ensureNativePublicContentTable(context.env.BF_DB)
-    const entries = await listNativeEntries(context.env.BF_DB, { status: 'published' })
-    const items = entries
-      .filter((entry) => entry?.contentType === 'podcast')
-      .filter((entry) => isPublicAudioUrl(getAudioUrl(entry)))
-
-    return xml(feedXml({ requestUrl: context.request.url, items }))
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('podcast RSS')
+    const items = await getPodcastFeedItems(db)
+    return podcastXmlResponse(buildPodcastFeedXml({ requestUrl: context.request.url, items }))
   } catch (error) {
-    return new Response(`RSS feed error: ${String(error?.message || error)}`, {
-      status: 500,
-      headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
-    })
+    return new Response(`RSS feed error: ${String(error?.message || error)}`, { status: 500, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } })
   }
 }
 
-function feedXml({ requestUrl, items = [], note = '' }) {
+export async function getPodcastFeedItems(db) {
+  if (!db) throw new Error('BF_DB binding is required for podcast RSS')
+  await ensureNativePublicContentTable(db)
+  const entries = await listNativeEntries(db, {})
+  return entries.filter((entry) => entry?.contentType === 'podcast').filter((entry) => isPublicAudioUrl(getAudioUrl(entry)))
+}
+
+export function buildPodcastFeedXml({ requestUrl, items = [], selfPath = '/rss/podcast.xml' }) {
   const url = new URL(requestUrl)
   const origin = url.origin
-  const selfUrl = `${origin}/rss/podcast.xml`
-  const channelDescription = note || 'Sabot Media podcast and AudioLab episodes.'
+  const selfUrl = `${origin}${selfPath}`
   const body = items.map((item) => itemXml(item, origin)).join('\n')
-  const lastBuildDate = new Date().toUTCString()
-
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
   <channel>
     <title>${escapeXml('Sabot Media Podcast')}</title>
-    <description>${escapeXml(channelDescription)}</description>
+    <description>${escapeXml('Sabot Media podcast and AudioLab episodes.')}</description>
     <link>${escapeXml(origin)}</link>
     <atom:link href="${escapeXml(selfUrl)}" rel="self" type="application/rss+xml" />
     <language>en-us</language>
-    <lastBuildDate>${escapeXml(lastBuildDate)}</lastBuildDate>
+    <lastBuildDate>${escapeXml(new Date().toUTCString())}</lastBuildDate>
     <generator>SabotPress AudioLab</generator>
-    <!-- TODO: add channel artwork, owner, and contact email once podcast settings exist. -->
 ${body}
   </channel>
 </rss>`
+}
+
+export function podcastXmlResponse(body) {
+  return new Response(body, { status: 200, headers: { 'content-type': 'application/rss+xml; charset=utf-8', 'cache-control': 'public, max-age=300', 'x-sabot-feed-source': 'native-d1' } })
 }
 
 function itemXml(item, origin) {
@@ -55,7 +53,6 @@ function itemXml(item, origin) {
   const description = item.podcastSummary || item.excerpt || stripHtml(item.bodyHtml || item.body || '')
   const duration = String(item.podcastDuration || '').trim()
   const explicit = item.podcastExplicit ? 'yes' : 'no'
-
   return `    <item>
       <title>${escapeXml(item.title || 'Untitled episode')}</title>
       <description>${escapeXml(description)}</description>
@@ -71,15 +68,12 @@ function getAudioUrl(item = {}) {
   const delivery = getDeliveryAsset(item)
   const deliveryUrl = delivery?.url || delivery?.publicUrl || delivery?.rssEnclosure?.url || item.podcastDeliveryAudioUrl || ''
   if (isPublicAudioUrl(deliveryUrl)) return String(deliveryUrl).trim()
-
   const direct = String(item.podcastRssEnclosureUrl || item.podcastAudioUrl || item.audioSourceUrl || '').trim()
   if (isPublicAudioUrl(direct)) return direct
-
   const asset = getAudioAsset(item)
   const assetUrl = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
   return isPublicAudioUrl(assetUrl) ? String(assetUrl).trim() : ''
 }
-
 function getMimeType(item = {}) {
   const delivery = getDeliveryAsset(item)
   if (delivery?.mimeType || delivery?.type) return String(delivery.mimeType || delivery.type)
@@ -87,7 +81,6 @@ function getMimeType(item = {}) {
   const asset = getAudioAsset(item)
   return String(asset?.mimeType || asset?.type || 'audio/wav')
 }
-
 function getFileSize(item = {}) {
   const delivery = getDeliveryAsset(item)
   if (delivery?.size || delivery?.length) return Number(delivery.size || delivery.length || 0)
@@ -95,55 +88,17 @@ function getFileSize(item = {}) {
   const asset = getAudioAsset(item)
   return Number(asset?.size || asset?.length || 0)
 }
-
 function getDeliveryAsset(item = {}) {
-  return (Array.isArray(item.relatedAssets) ? item.relatedAssets : []).find((asset) => {
-    const haystack = `${asset?.type || ''} ${asset?.role || ''} ${asset?.source || ''} ${asset?.mimeType || ''}`
-    const url = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
-    return /delivery|compressed|opus|mp3|m4a|webm/i.test(haystack) && isPublicAudioUrl(url)
-  }) || null
+  return (Array.isArray(item.relatedAssets) ? item.relatedAssets : []).find((asset) => /delivery|compressed|opus|mp3|m4a|webm/i.test(`${asset?.type || ''} ${asset?.role || ''} ${asset?.source || ''} ${asset?.mimeType || ''}`) && isPublicAudioUrl(asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || '')) || null
 }
-
 function getAudioAsset(item = {}) {
-  return (Array.isArray(item.relatedAssets) ? item.relatedAssets : []).find((asset) => {
-    const haystack = `${asset?.type || ''} ${asset?.source || ''} ${asset?.mimeType || ''}`
-    const url = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
-    return /audiolab|audio/i.test(haystack) && isPublicAudioUrl(url)
-  }) || null
+  return (Array.isArray(item.relatedAssets) ? item.relatedAssets : []).find((asset) => /audiolab|audio/i.test(`${asset?.type || ''} ${asset?.source || ''} ${asset?.mimeType || ''}`) && isPublicAudioUrl(asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || '')) || null
 }
-
 function isPublicAudioUrl(value = '') {
   const raw = String(value || '').trim()
   if (!raw || raw.startsWith('audiolab-local://')) return false
   return /^https?:\/\//i.test(raw) || raw.startsWith('/api/audiolab/media')
 }
-
-function absolutize(value = '', origin = '') {
-  const raw = String(value || '')
-  if (/^https?:\/\//i.test(raw)) return raw
-  if (raw.startsWith('/')) return `${origin}${raw}`
-  return raw
-}
-
-function stripHtml(value = '') {
-  return String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-}
-
-function escapeXml(value = '') {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-}
-
-function xml(body) {
-  return new Response(body, {
-    status: 200,
-    headers: {
-      'content-type': 'application/rss+xml; charset=utf-8',
-      'cache-control': 'public, max-age=300',
-    },
-  })
-}
+function absolutize(value = '', origin = '') { const raw = String(value || ''); if (/^https?:\/\//i.test(raw)) return raw; if (raw.startsWith('/')) return `${origin}${raw}`; return raw }
+function stripHtml(value = '') { return String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() }
+function escapeXml(value = '') { return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;') }
