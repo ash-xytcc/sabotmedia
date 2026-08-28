@@ -1,13 +1,20 @@
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 import { buildLiveFeedBundle } from './_lib/feedRuntime.js'
+import { getPodcastFeedItems } from '../rss/podcast.xml.js'
 
 export async function onRequestGet(context) {
   try {
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('live feed manifest')
 
-    const runtime = await buildLiveFeedBundle(db)
-    const files = Object.keys(runtime.bundle || {}).sort()
+    const [runtime, podcastItems] = await Promise.all([
+      buildLiveFeedBundle(db),
+      getPodcastFeedItems(db),
+    ])
+    const files = [...new Set([
+      ...Object.keys(runtime.bundle || {}),
+      'podcasts/all.xml',
+    ])].sort()
 
     return json({
       ok: true,
@@ -15,6 +22,7 @@ export async function onRequestGet(context) {
       basePath: '/feeds',
       files,
       itemCount: runtime.itemCount,
+      podcastItemCount: podcastItems.length,
       settingsUpdatedAt: runtime.updatedAt,
     })
   } catch (error) {
