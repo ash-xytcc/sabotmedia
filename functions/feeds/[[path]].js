@@ -1,5 +1,6 @@
 import { getBoundDb } from '../api/_lib/database.js'
 import { buildLiveFeedBundle, normalizeFeedRequestPath } from '../api/_lib/feedRuntime.js'
+import { readPodcastSettings } from '../api/_lib/podcastSettings.js'
 import { buildPodcastFeedXml, getPodcastFeedItems, podcastXmlResponse } from '../rss/podcast.xml.js'
 
 export async function onRequestGet(context) {
@@ -13,19 +14,22 @@ export async function onRequestGet(context) {
   if (!db) return text('Live feeds unavailable: BF_DB binding is required.', 503)
 
   try {
-    const runtime = await buildLiveFeedBundle(db)
-    const body = runtime.bundle?.[requestedPath]
-    if (typeof body !== 'string') return text('Feed not found.', 404)
-
-    // Podcast clients require enclosure metadata, not generic article RSS.
     if (requestedPath === 'podcasts/all.xml') {
-      const items = await getPodcastFeedItems(db)
+      const [items, metadata] = await Promise.all([
+        getPodcastFeedItems(db),
+        readPodcastSettings(db),
+      ])
       return podcastXmlResponse(buildPodcastFeedXml({
         requestUrl: context.request.url,
         items,
+        settings: metadata.settings,
         selfPath: '/feeds/podcasts/all.xml',
       }))
     }
+
+    const runtime = await buildLiveFeedBundle(db)
+    const body = runtime.bundle?.[requestedPath]
+    if (typeof body !== 'string') return text('Feed not found.', 404)
 
     return new Response(body, {
       status: 200,
