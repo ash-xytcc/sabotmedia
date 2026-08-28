@@ -11,6 +11,9 @@ export const PODCAST_SETTINGS_DEFAULTS = {
   explicit: false,
   ownerName: '',
   ownerEmail: '',
+  sourceFeedUrl: '',
+  sourceFeedResolvedUrl: '',
+  sourceFeedLastSyncedAt: '',
 }
 
 export function loadPodcastSettings() {
