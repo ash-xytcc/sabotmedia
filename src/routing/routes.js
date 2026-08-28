@@ -44,6 +44,7 @@ export const adminRoutes = Object.freeze({
   users: '/wp-admin/users',
   sites: '/wp-admin/sites',
   podcasts: '/wp-admin/podcasts',
+  podcastSettings: '/wp-admin/podcasts/settings',
   overrides: '/wp-admin/overrides',
 })
 
@@ -64,6 +65,8 @@ export const routeRedirects = Object.freeze([
   { from: '/settings', to: adminRoutes.settings },
   { from: '/users', to: adminRoutes.users },
   { from: '/sites', to: adminRoutes.sites },
+  { from: '/podcasts', to: adminRoutes.podcasts },
+  { from: '/podcasts/settings', to: adminRoutes.podcastSettings },
   { from: '/analytics', to: adminRoutes.analytics },
   { from: '/taxonomy', to: adminRoutes.taxonomy },
   { from: '/roles', to: adminRoutes.roles },
