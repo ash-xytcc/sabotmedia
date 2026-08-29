@@ -28,7 +28,7 @@ const rows = [
 export const AI_CAMPAIGN_GRAPHICS = rows.map(([slug, title, alt, caption], index) => ({
   id: `built-in-${index + 1}`,
   title,
-  imageUrl: `${BASE}/${slug}.webp`,
+  imageUrl: `${BASE}/${slug}.webp?v=20260829-2`,
   alt,
   caption,
   downloadUrl: `${BASE}/originals/${slug}.png`,

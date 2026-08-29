@@ -132,15 +132,6 @@ export function CampaignPage() {
             <p className="campaign-hero__partners">Independent campaign by {campaign.partners.join(' × ')}</p>
           </div>
 
-          <div className="campaign-hero__poster" aria-label={campaign.heroAlt || campaign.shortTitle}>
-            {campaign.heroImage ? <img src={campaign.heroImage} alt={campaign.heroAlt || ''} /> : (
-              <div className="campaign-hero__poster-fallback" aria-hidden="true">
-                <span>BEFORE SEPT 25TH</span>
-                <strong>COMMUNICATIONS<br />INFRASTRUCTURE<br />IS NOT<br />TERRORISM</strong>
-                <small>DEFEND AUTISTICI/INVENTATI</small>
-              </div>
-            )}
-          </div>
         </div>
       </section>
 
