@@ -145,16 +145,20 @@ test('monitor aggregate distinguishes partial from major outage and unavailable 
 })
 
 test('campaign follow-up keeps the hero contained and places social last', () => {
-  assert.match(polish, /\.campaign-hero__copy,[\s\S]*min-width:\s*0/)
-  assert.match(polish, /\.campaign-hero__poster img[\s\S]*object-fit:\s*contain/)
-  assert.match(polish, /\.campaign-hero__poster-fallback[\s\S]*overflow:\s*hidden/)
+  assert.match(polish, /\.campaign-hero__copy[\s\S]*min-width:\s*0/)
+  assert.doesNotMatch(page, /campaign-hero__poster/)
   assert.ok(page.indexOf('<SocialSection') > page.indexOf('id="translations"'))
   assert.ok(page.indexOf('href="#reporting">Read the reporting') < page.indexOf('href="#letters">Read the letters'))
 })
 
-test('individual letter PDF is bundled into letters and primary sources', () => {
+test('individual letter PDF remains bundled in letters but not primary sources', () => {
   assert.ok(fs.existsSync(new URL('../public/campaigns/autistici-inventati/resources/individual-letter-defend-autistici-inventati.pdf', import.meta.url)))
   assert.match(socialServer, /resource-individual-letter-pdf/)
-  assert.match(socialServer, /source-individual-letter-pdf/)
+  assert.doesNotMatch(socialServer, /id: 'source-individual-letter-pdf'/)
   assert.match(socialServer, /actionRank/)
+})
+
+test('receipts include authoritative sources, reporting and open letter without the letter PDF', () => {
+  for (const expected of ['sb0616', 'designation-of-autistici-inventati', 'who/manifesto', 'who/collective', 'who/rplan/index', 'cavallette.noblogs.org/2026/08/10076', 'MST%2Bresource_edit-2.pdf', '/post/the-server-called-paranoia', '/post/open-letter-ai']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  assert.match(socialServer, /sources: dedupeByUrl\(\[\.\.\.builtInSources/)
 })

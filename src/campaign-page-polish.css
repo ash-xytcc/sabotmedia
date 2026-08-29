@@ -13,28 +13,23 @@
 .campaign-page .campaign-hero__inner {
   min-height: auto;
   padding-block: clamp(48px, 6vw, 84px);
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+  grid-template-columns: minmax(0, 1fr);
   overflow: hidden;
 }
 
-.campaign-page .campaign-hero__copy,
-.campaign-page .campaign-hero__poster { min-width: 0; max-width: 100%; }
+.campaign-page .campaign-hero__copy { min-width: 0; width: 100%; max-width: 1060px; }
 
 .campaign-page .campaign-hero h1 {
   width: 100%;
-  max-width: 10ch;
-  font-size: clamp(2.75rem, 4.7vw, 4.9rem);
+  max-width: 16ch;
+  font-size: clamp(3.1rem, 5.5vw, 5.7rem);
   line-height: 0.9;
   letter-spacing: -0.055em;
   overflow-wrap: break-word;
   word-break: normal;
 }
 
-.campaign-page .campaign-hero__poster { transform: none; filter: drop-shadow(10px 12px 0 rgba(0,0,0,0.2)); }
-.campaign-page .campaign-hero__poster img { width: 100%; max-width: 100%; height: auto; object-fit: contain; box-sizing: border-box; }
-.campaign-page .campaign-hero__poster-fallback { min-height: 0; aspect-ratio: 4 / 5; overflow: hidden; }
-.campaign-page .campaign-hero__poster-fallback strong { max-width: 100%; font-size: clamp(1.65rem, 2.65vw, 3rem); line-height: .9; overflow-wrap: normal; word-break: normal; }
-.campaign-page .campaign-hero__poster-fallback small { max-width: 100%; overflow-wrap: break-word; }
+.campaign-page .campaign-hero__deck { max-width: 68ch; }
 
 .campaign-page .campaign-section-heading {
   align-items: start;
@@ -134,12 +129,9 @@
 .campaign-page .campaign-reader-note { max-width: 65ch; padding: 14px; border-left: 4px solid var(--campaign-red); }
 
 @media (max-width: 1050px) {
-  .campaign-page .campaign-hero__inner {
-    grid-template-columns: 1fr 0.72fr;
-    gap: 34px;
-  }
+  .campaign-page .campaign-hero__inner { grid-template-columns: 1fr; }
   .campaign-page .campaign-hero h1 {
-    font-size: clamp(2.7rem, 5.6vw, 4.5rem);
+    font-size: clamp(2.9rem, 6.4vw, 4.8rem);
   }
   .campaign-page .campaign-status-grid,
   .campaign-page .campaign-graphics-grid {
@@ -163,7 +155,6 @@
     font-size: clamp(2.55rem, 12vw, 4.2rem);
     line-height: 0.9;
   }
-  .campaign-page .campaign-hero__poster-fallback strong { font-size: clamp(1.9rem, 9vw, 3.2rem); }
   .campaign-page .campaign-section-heading h2 {
     max-width: 100%;
     font-size: clamp(2.05rem, 10vw, 3.35rem);
