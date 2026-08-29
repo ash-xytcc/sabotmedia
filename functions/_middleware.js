@@ -73,6 +73,7 @@ export async function onRequest(context) {
 
   if (PUBLIC_AUTH_API_PATHS.has(pathname)) return context.next()
   if (method === 'GET' && isPublicPostPath(pathname)) return renderPublicPost(context, url)
+  if (PAGE_METHODS.has(method) && isPublicCampaignPath(pathname)) return renderSpaShell(context, url)
   if (!isAdminRoute && !isApiWrite) return context.next()
 
   const permission = await resolvePublicSitePermission(context)
@@ -132,6 +133,23 @@ function redirectToLogin(url) {
 
 function isPublicPostPath(pathname) {
   return /^\/(?:post|piece)\/[^/]+\/?$/.test(pathname)
+}
+
+export function isPublicCampaignPath(pathname = '') {
+  return pathname === '/campaigns' || /^\/campaigns\/[a-z0-9-]+\/?$/i.test(pathname)
+}
+
+async function renderSpaShell(context, url) {
+  if (!context.env?.ASSETS?.fetch) return context.next()
+  const indexUrl = new URL('/index.html', url.origin)
+  const response = await context.env.ASSETS.fetch(new Request(indexUrl, {
+    method: context.request.method === 'HEAD' ? 'HEAD' : 'GET',
+    headers: { accept: 'text/html' },
+  }))
+  if (!response.ok) return response
+  const headers = new Headers(response.headers)
+  headers.set('cache-control', 'public, max-age=60, s-maxage=300')
+  return new Response(context.request.method === 'HEAD' ? null : response.body, { status: 200, headers })
 }
 
 async function renderPublicPost(context, url) {
