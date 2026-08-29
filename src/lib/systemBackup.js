@@ -13,14 +13,15 @@ export async function collectSystemSnapshot(loaders = {}) {
   const loadMedia = loaders.fetchMediaAssets || fetchMediaAssets
   const loadPublicConfig = loaders.loadPublicConfigPayload || loadPublicConfigPayload
   const loadCollections = loaders.fetchCollections || fetchCollectionsForBackup
+  const loadCampaigns = loaders.fetchCampaigns || fetchCampaignsForBackup
   const loadPublications = loaders.fetchPublications || fetchPublicationsForBackup
   const loadSites = loaders.fetchSites || fetchSitesForBackup
   const loadFeedSettings = loaders.fetchFeedSettings || fetchFeedSettingsForBackup
   const loadPodcastSettings = loaders.fetchPodcastSettings || fetchPodcastSettingsForBackup
   const loadAdminUsers = loaders.fetchAdminUsers || fetchAdminUsersForBackup
 
-  const [nativeData, taxonomyData, rolesData, auditData, mediaData, collectionsData, publicationsData, publicConfigData, sitesData, feedSettingsData, podcastSettingsData, adminUsersData] = await Promise.all([
-    loadNative({ includeFuture: 1 }), loadTaxonomy(), loadRoles(), loadAudit(), loadMedia(), loadCollections(), loadPublications(), loadPublicConfig(), loadSites(), loadFeedSettings(), loadPodcastSettings(), loadAdminUsers(),
+  const [nativeData, taxonomyData, rolesData, auditData, mediaData, collectionsData, campaignsData, publicationsData, publicConfigData, sitesData, feedSettingsData, podcastSettingsData, adminUsersData] = await Promise.all([
+    loadNative({ includeFuture: 1 }), loadTaxonomy(), loadRoles(), loadAudit(), loadMedia(), loadCollections(), loadCampaigns(), loadPublications(), loadPublicConfig(), loadSites(), loadFeedSettings(), loadPodcastSettings(), loadAdminUsers(),
   ])
 
   const nativeItems = requireItems(nativeData, 'native content')
@@ -29,6 +30,7 @@ export async function collectSystemSnapshot(loaders = {}) {
   const auditLog = requireItems(auditData, 'audit log')
   const mediaAssets = requireItems(mediaData, 'media assets')
   const collections = requireItems(collectionsData, 'collections')
+  const campaigns = requireItems(campaignsData, 'campaigns')
   const publications = requireItems(publicationsData, 'publications')
   const sites = requireItems(sitesData, 'sites')
   const adminUsers = requireItems(adminUsersData, 'admin users').map(sanitizeUserForBackup)
@@ -44,13 +46,13 @@ export async function collectSystemSnapshot(loaders = {}) {
 
   return {
     exportedAt: new Date().toISOString(),
-    schemaVersion: 5,
+    schemaVersion: 6,
     backupType: 'server-system',
     source: 'BF_DB-backed APIs',
     manifest: {
       complete: true,
       credentialMaterialExcluded: true,
-      datasets: ['nativeContent', 'revisionsByNativeId', 'taxonomyTerms', 'adminUsers', 'editorRoles', 'auditLog', 'mediaAssets', 'collections', 'publications', 'sites', 'feedSettings', 'podcastSettings', 'publicSiteConfig'],
+      datasets: ['nativeContent', 'revisionsByNativeId', 'taxonomyTerms', 'adminUsers', 'editorRoles', 'auditLog', 'mediaAssets', 'collections', 'campaigns', 'publications', 'sites', 'feedSettings', 'podcastSettings', 'publicSiteConfig'],
     },
     nativeContent: nativeItems,
     revisionsByNativeId,
@@ -60,6 +62,7 @@ export async function collectSystemSnapshot(loaders = {}) {
     auditLog,
     mediaAssets,
     collections,
+    campaigns,
     publications,
     sites,
     feedSettings,
@@ -81,6 +84,7 @@ export function summarizeSnapshot(snapshot) {
     auditCount: Array.isArray(data.auditLog) ? data.auditLog.length : 0,
     mediaCount: Array.isArray(data.mediaAssets) ? data.mediaAssets.length : 0,
     collectionCount: Array.isArray(data.collections) ? data.collections.length : 0,
+    campaignCount: Array.isArray(data.campaigns) ? data.campaigns.length : 0,
     publicationCount: Array.isArray(data.publications) ? data.publications.length : 0,
     siteCount: Array.isArray(data.sites) ? data.sites.length : 0,
     feedSettingsIncluded: Boolean(data.feedSettings && typeof data.feedSettings === 'object'),
@@ -132,6 +136,7 @@ function requireSettingsPayload(data, label) {
   return requireObject(data.settings, label)
 }
 async function fetchCollectionsForBackup() { return fetchRequiredList('/api/collections?includeDrafts=1', 'collections') }
+async function fetchCampaignsForBackup() { return fetchRequiredList('/api/campaigns?includeDrafts=1', 'campaigns') }
 async function fetchPublicationsForBackup() { return fetchRequiredList('/api/publications?includeDrafts=1', 'publications') }
 async function fetchSitesForBackup() { return fetchRequiredList('/api/sites', 'sites') }
 async function fetchAdminUsersForBackup() { return fetchRequiredList('/api/users', 'admin users') }
