@@ -18,7 +18,7 @@ export function defaultAiCampaign() {
     monitorUrl: 'https://kuma.accol.li/status/aimonitor',
     monitorLabel: 'A/I infrastructure monitor',
     partners: ['Sabot Media', 'We Will Free Us'],
-    campaignKeywords: ['autistici', 'inventati', 'noblogs', 'communications infrastructure', 'terrorism', 'sanctions'],
+    campaignKeywords: ['autistici', 'inventati', 'noblogs', 'communications infrastructure', 'a/i campaign'],
     disclaimer: 'Sabot Media and We Will Free Us are independent publishers. We are not affiliated with Autistici/Inventati and do not represent or speak on behalf of A/I. Campaign material is political advocacy and reporting, not legal advice.',
     actions: [
       { id: 'action-letter', title: 'Send a letter', body: 'Use the individual letter and recipient guide to contact public officials, civil-liberties groups, digital-rights organizations, and other institutions.', href: '#letters', label: 'Get the letter' },
@@ -91,7 +91,7 @@ export async function getCampaign(db, idOrSlug) {
 
 export async function upsertCampaign(db, campaign) {
   await ensureCampaignsTable(db)
-  const normalized = normalizeCampaign(campaign)
+  const normalized = normalizeCampaign({ ...campaign, updatedAt: new Date().toISOString() })
   await db.prepare(`INSERT INTO campaigns (id, slug, campaign_json, status, title, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
@@ -146,7 +146,7 @@ export function normalizeCampaign(input = {}) {
     faq: normalizeRows(input.faq, ['question', 'answer']),
     translations: normalizeRows(input.translations, ['language', 'title', 'url']),
     createdAt: String(input.createdAt || now),
-    updatedAt: now,
+    updatedAt: String(input.updatedAt || now),
   }
 }
 
