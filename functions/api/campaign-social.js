@@ -142,8 +142,9 @@ async function fetchText(url, accept) {
 }
 
 function readXmlTag(xml, tag) {
-  const escaped = tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  const match = xml.match(new RegExp(`<${escaped}\\b[^>]*>([\\s\\S]*?)<\\/${escaped}>`, 'i'))
+  const safeTag = String(tag || '').replace(/[^a-zA-Z0-9:_-]/g, '')
+  if (!safeTag) return ''
+  const match = xml.match(new RegExp(`<${safeTag}\\b[^>]*>([\\s\\S]*?)<\\/${safeTag}>`, 'i'))
   return decodeEntities(stripCdata(match?.[1] || '')).trim()
 }
 
@@ -176,7 +177,10 @@ function decodeEntities(value) {
     .replace(/&gt;/gi, '>')
     .replace(/&quot;/gi, '"')
     .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#(\d+);/g, (_, code) => {
+      const point = Number(code)
+      return Number.isInteger(point) && point >= 0 && point <= 0x10ffff ? String.fromCodePoint(point) : ''
+    })
 }
 
 function hashString(value) {
