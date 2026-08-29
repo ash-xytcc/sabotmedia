@@ -38,3 +38,15 @@ export async function loadCampaignMonitor() {
   if (!response.ok || !data.ok) return data
   return data
 }
+
+export async function loadCampaignSocial() {
+  const response = await fetch('/api/campaign-social', {
+    method: 'GET',
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+  })
+  const data = await safeJson(response)
+  if (!data) throw new Error(`campaign social feed failed: ${response.status}`)
+  if (!response.ok && !Array.isArray(data.items)) throw new Error(data?.error || `campaign social feed failed: ${response.status}`)
+  return data
+}
