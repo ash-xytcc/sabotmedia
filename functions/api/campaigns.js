@@ -1,6 +1,7 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
+import { decorateAiCampaignForPublic } from './_lib/aiCampaignPublic.js'
 import {
   AI_CAMPAIGN_SLUG,
   ensureAiCampaign,
@@ -36,7 +37,11 @@ export async function onRequestGet(context) {
     if (slug || id) {
       const item = await getCampaign(db, slug || id)
       if (!item || (!includeDrafts && item.status !== 'published')) return json({ ok: true, mode: 'd1', item: null })
-      return json({ ok: true, mode: 'd1', item })
+      // Public reads get live social + the bundled campaign art pack. Admin reads
+      // stay persistence-only so transient network content can never be saved back
+      // into D1 by accident.
+      const output = includeDrafts ? item : await decorateAiCampaignForPublic(item, context.request.url)
+      return json({ ok: true, mode: 'd1', item: output })
     }
 
     const items = await listCampaigns(db, { includeDrafts })
