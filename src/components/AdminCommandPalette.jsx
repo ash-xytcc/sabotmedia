@@ -13,6 +13,7 @@ const COMMANDS = [
   { label: 'Podcasts', description: 'Manage podcast episodes and the public feed', to: adminRoutes.podcasts, keywords: ['podcast', 'episodes', 'rss', 'audio'] },
   { label: 'Podcast Settings / Import RSS', description: 'Import or resync an existing podcast feed and edit channel metadata', to: adminRoutes.podcastSettings, keywords: ['podcast', 'rss', 'import', 'migrate', 'resync', 'feed settings'], capability: 'publishing:write' },
   { label: 'Collections', description: 'Organize bodies of work', to: adminRoutes.collections, keywords: ['projects', 'archive'] },
+  { label: 'Campaigns', description: 'Manage the A/I campaign hub, updates, social posts, graphics, sources, and coverage', to: adminRoutes.campaigns, keywords: ['campaign', 'autistici', 'inventati', 'noblogs', 'letters', 'september 25'], capability: 'publishing:write' },
   { label: 'Publications', description: 'Build zines, readers, and editions', to: adminRoutes.publications, keywords: ['zine', 'booklet', 'issue'] },
   { label: 'Feeds', description: 'View RSS and syndication', to: adminRoutes.feeds, keywords: ['rss', 'syndication', 'podcast feed'] },
   { label: 'Customize', description: 'Edit persisted public site configuration', to: adminRoutes.customize, keywords: ['theme', 'live edit', 'site config'], capability: 'site:manage' },
