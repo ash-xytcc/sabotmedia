@@ -3,6 +3,7 @@ import { EditableLink } from './EditableLink'
 import { EditableText } from './EditableText'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 import { useAdminAuth } from './AdminAuthContext'
+import { publicRoutes } from '../routing/routes'
 
 export function PublicationFooter() {
   const footer = editableContentRegistry.footer
@@ -38,6 +39,7 @@ export function PublicationFooter() {
                   labelField={link.labelField}
                 />
               ))}
+              {section.id === 'site' ? <Link className="publication-footer__campaign-link" to={publicRoutes.aiCampaign}>A/I Campaign</Link> : null}
               {section.id === 'site' ? <Link to="/aberdeen-local-1312-gallery">Gallery</Link> : null}
             </nav>
           </div>
