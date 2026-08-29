@@ -1,6 +1,7 @@
 import { getBoundDb } from '../api/_lib/database.js'
 import { buildLiveFeedBundle, normalizeFeedRequestPath } from '../api/_lib/feedRuntime.js'
 import { readPodcastSettings } from '../api/_lib/podcastSettings.js'
+import { AI_CAMPAIGN_SLUG, buildCampaignRssXml, ensureAiCampaign, getCampaign } from '../api/_lib/campaigns.js'
 import { buildPodcastFeedXml, getPodcastFeedItems, podcastXmlResponse } from '../rss/podcast.xml.js'
 
 export async function onRequestGet(context) {
@@ -25,6 +26,22 @@ export async function onRequestGet(context) {
         settings: metadata.settings,
         selfPath: '/feeds/podcasts/all.xml',
       }))
+    }
+
+    const campaignMatch = requestedPath.match(/^campaigns\/([a-z0-9-]+)\.xml$/i)
+    if (campaignMatch) {
+      const slug = campaignMatch[1].toLowerCase()
+      if (slug === AI_CAMPAIGN_SLUG) await ensureAiCampaign(db)
+      const campaign = await getCampaign(db, slug)
+      if (!campaign || campaign.status !== 'published') return text('Campaign feed not found.', 404)
+      return new Response(buildCampaignRssXml({ campaign, requestUrl: context.request.url }), {
+        status: 200,
+        headers: {
+          'content-type': 'application/rss+xml; charset=utf-8',
+          'cache-control': 'public, max-age=180',
+          'x-sabot-feed-source': 'campaign-d1',
+        },
+      })
     }
 
     const runtime = await buildLiveFeedBundle(db)

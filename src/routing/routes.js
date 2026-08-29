@@ -3,6 +3,9 @@ export const publicRoutes = Object.freeze({
   archive: '/archive',
   collections: '/collections',
   collection: '/collections/:slug',
+  campaigns: '/campaigns',
+  campaign: '/campaigns/:slug',
+  aiCampaign: '/campaigns/autistici-inventati',
   feeds: '/feeds',
   gallery: '/aberdeen-local-1312-gallery',
   project: '/project/:slug',
@@ -26,6 +29,7 @@ export const adminRoutes = Object.freeze({
   pages: '/wp-admin/pages',
   projects: '/wp-admin/projects',
   collections: '/wp-admin/collections',
+  campaigns: '/wp-admin/campaigns',
   publications: '/wp-admin/publications',
   feeds: '/wp-admin/feeds',
   printlab: '/wp-admin/printlab',
@@ -56,6 +60,7 @@ export const routeRedirects = Object.freeze([
   { from: '/media', to: adminRoutes.media },
   { from: '/pages', to: adminRoutes.pages },
   { from: '/collections-admin', to: adminRoutes.collections },
+  { from: '/campaigns-admin', to: adminRoutes.campaigns },
   { from: '/publications-admin', to: adminRoutes.publications },
   { from: '/feeds-admin', to: adminRoutes.feeds },
   { from: '/printlab', to: adminRoutes.printlab },
@@ -80,6 +85,10 @@ export function postPath(slug) {
 
 export function projectPath(slug) {
   return `/project/${slug}`
+}
+
+export function campaignPath(slug) {
+  return `/campaigns/${slug}`
 }
 
 export function printPath(slug) {

@@ -4,7 +4,7 @@ import { getNativeEntry } from './api/_lib/nativePublicContent.js'
 export const ADMIN_PREFIXES = [
   '/admin', '/wp-admin', '/printlab', '/audiolab', '/content', '/posts', '/add-new', '/post-new', '/native-bridge',
   '/native-preview', '/media', '/settings', '/customize', '/site-editor', '/advanced-draft-tools', '/tools', '/users',
-  '/pages', '/collections-admin', '/publications-admin', '/feeds-admin', '/menus', '/sites', '/podcasts', '/draft', '/review',
+  '/pages', '/collections-admin', '/campaigns-admin', '/publications-admin', '/feeds-admin', '/menus', '/sites', '/podcasts', '/draft', '/review',
   '/qa', '/overrides', '/system-backup', '/audit-log', '/analytics', '/site-health', '/taxonomy', '/roles', '/design-system',
   '/platform-map',
 ]
@@ -24,6 +24,8 @@ const ADMIN_PAGE_CAPABILITIES = [
   ['/customize', 'site:manage'],
   ['/wp-admin/sites', 'site:manage'],
   ['/sites', 'site:manage'],
+  ['/wp-admin/campaigns', 'publishing:write'],
+  ['/campaigns-admin', 'publishing:write'],
   ['/wp-admin/system-backup', 'system:view'],
   ['/system-backup', 'system:view'],
   ['/wp-admin/site-health', 'system:view'],
@@ -44,6 +46,7 @@ const API_WRITE_CAPABILITIES = [
   ['/api/native-content', 'content:write'],
   ['/api/taxonomy', 'content:write'],
   ['/api/collections', 'publishing:write'],
+  ['/api/campaigns', 'publishing:write'],
   ['/api/publications', 'publishing:write'],
   ['/api/media-assets', 'media:write'],
   ['/api/media/files', 'media:write'],

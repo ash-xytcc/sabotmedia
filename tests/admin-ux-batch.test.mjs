@@ -15,6 +15,7 @@ test('verified backup accepts D1 feed defaults when no custom row exists', async
     fetchAuditLog: list,
     fetchMediaAssets: list,
     fetchCollections: list,
+    fetchCampaigns: list,
     fetchPublications: list,
     fetchSites: list,
     fetchFeedSettings: async () => ({ ok: true, mode: 'd1', settings: null }),
@@ -23,6 +24,7 @@ test('verified backup accepts D1 feed defaults when no custom row exists', async
   })
   assert.deepEqual(snapshot.feedSettings, {})
   assert.deepEqual(snapshot.podcastSettings, {})
+  assert.deepEqual(snapshot.campaigns, [])
   assert.equal(summarizeSnapshot(snapshot).complete, true)
   assert.equal(summarizeSnapshot(snapshot).feedSettingsIncluded, true)
   assert.equal(summarizeSnapshot(snapshot).podcastSettingsIncluded, true)

@@ -3,6 +3,7 @@ import { loadCustomizerSettings } from '../lib/customizerLocal'
 import { sabotMastheadTransparent } from '../lib/sabotMastheadTransparent'
 import { EditableLink } from './EditableLink'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
+import { publicRoutes } from '../routing/routes'
 
 export function PublicationTopbar() {
   const location = useLocation()
@@ -44,6 +45,7 @@ export function PublicationTopbar() {
                 labelField={item.labelField}
               />
             ))}
+            <Link className="publication-topbar__campaign-link" to={publicRoutes.aiCampaign}>A/I Campaign</Link>
             <Link to="/aberdeen-local-1312-gallery">Gallery</Link>
           </nav>
         </div>
