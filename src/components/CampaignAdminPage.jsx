@@ -9,9 +9,10 @@ const CAMPAIGN_SLUG = 'autistici-inventati'
 const LIST_SECTIONS = [
   { key: 'updates', title: 'Live Updates', fields: [field('date', 'Date / time'), field('title', 'Title'), field('body', 'Update', 'textarea'), field('url', 'Source / more URL'), field('pinned', 'Pinned', 'checkbox')] },
   { key: 'resources', title: 'Letters + Resources', fields: [field('type', 'Type'), field('title', 'Title'), field('description', 'Description', 'textarea'), field('href', 'URL or internal path'), field('label', 'Button label'), field('imageUrl', 'Image URL')] },
-  { key: 'social', title: 'Social Feed', fields: [field('platform', 'Platform'), field('date', 'Date'), field('account', 'Account / author'), field('excerpt', 'Post text / excerpt', 'textarea'), field('url', 'Original post URL'), field('imageUrl', 'Optional image URL')] },
+  { key: 'social', title: 'Social Feed', fields: [field('platform', 'Platform'), field('date', 'Date'), field('account', 'Account / author'), field('language', 'Language label'), field('excerpt', 'Post text / excerpt', 'textarea'), field('url', 'Original post URL'), field('imageUrl', 'Optional image URL')] },
   { key: 'graphics', title: 'Campaign Graphics', fields: [field('title', 'Title'), field('imageUrl', 'Image URL'), field('alt', 'Alt text', 'textarea'), field('caption', 'Caption', 'textarea'), field('downloadUrl', 'Download URL (optional)')] },
-  { key: 'coverage', title: 'Press + Coverage', fields: [field('date', 'Date'), field('outlet', 'Outlet'), field('title', 'Title'), field('url', 'URL'), field('summary', 'Summary', 'textarea')] },
+  { key: 'coverage', title: 'Press + Coverage', fields: [field('date', 'Date'), field('outlet', 'Outlet'), field('language', 'Language'), field('title', 'Original title'), field('translatedTitle', 'English title'), field('url', 'URL'), field('summary', 'Summary', 'textarea')] },
+  { key: 'signatories', title: 'Open Letter Signatories', fields: [field('name', 'Name / organization'), field('location', 'Location'), field('url', 'Website (optional)'), field('statement', 'Public statement (optional)', 'textarea')] },
   { key: 'sources', title: 'Primary Sources', fields: [field('title', 'Title'), field('publisher', 'Publisher / source'), field('url', 'URL'), field('note', 'Why it matters', 'textarea')] },
   { key: 'timeline', title: 'Campaign Timeline', fields: [field('date', 'Date'), field('title', 'Title'), field('body', 'Description', 'textarea')] },
   { key: 'faq', title: 'FAQ', fields: [field('question', 'Question'), field('answer', 'Answer', 'textarea')] },

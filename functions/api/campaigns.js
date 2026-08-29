@@ -1,7 +1,8 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
-import { decorateAiCampaignForPublic } from './_lib/aiCampaignPublic.js'
+import { decorateAiCampaignForPublic, extractAiLetterSignatories } from './_lib/aiCampaignPublic.js'
+import { getNativeEntry } from './_lib/nativePublicContent.js'
 import {
   AI_CAMPAIGN_SLUG,
   ensureAiCampaign,
@@ -40,7 +41,14 @@ export async function onRequestGet(context) {
       // Public reads get live social + the bundled campaign art pack. Admin reads
       // stay persistence-only so transient network content can never be saved back
       // into D1 by accident.
-      const output = includeDrafts ? item : await decorateAiCampaignForPublic(item, context.request.url)
+      let signatories = []
+      if (!includeDrafts && item.slug === AI_CAMPAIGN_SLUG) {
+        try {
+          const letter = await getNativeEntry(db, 'open-letter-ai')
+          signatories = extractAiLetterSignatories(letter?.bodyHtml || letter?.body || '')
+        } catch { /* the bundled public snapshot remains available */ }
+      }
+      const output = includeDrafts ? item : await decorateAiCampaignForPublic(item, context.request.url, { signatories })
       return json({ ok: true, mode: 'd1', item: output })
     }
 

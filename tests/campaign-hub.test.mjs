@@ -91,7 +91,7 @@ test('campaign public design is isolated, responsive, and loaded after legacy pu
 })
 
 test('campaign editor can manage updates, resources, social, graphics, coverage, sources, timeline, FAQ and translations', () => {
-  for (const key of ['updates', 'resources', 'social', 'graphics', 'coverage', 'sources', 'timeline', 'faq', 'translations']) {
+  for (const key of ['updates', 'resources', 'social', 'graphics', 'coverage', 'signatories', 'sources', 'timeline', 'faq', 'translations']) {
     assert.match(admin, new RegExp(`key: '${key}'`))
   }
   assert.match(admin, /Campaign hub saved to D1/)
@@ -195,6 +195,34 @@ test('campaign ships external coverage and prioritizes the official A\/I Mastodo
   assert.match(socialServer, /sourcePriority/)
   assert.match(socialServer, /setTimeout\(\(\) => controller\.abort\(\), 12000\)/)
   assert.match(socialServer, /coverage: dedupeById\(\[\.\.\.builtInCoverage/)
+})
+
+test('signatory carousel is populated from the published letter and placed before social', async () => {
+  const { extractAiLetterSignatories } = await import('../functions/api/_lib/aiCampaignPublic.js')
+  const sample = '<div>Signed,</div><div><p>Sabot Media - USA<br />Example Collective - Italy says:</p><blockquote>Infrastructure is not terrorism.</blockquote><p>Another Signer, USA</p></div><div><br /></div><div><b>Sign on</b></div>'
+  assert.deepEqual(extractAiLetterSignatories(sample).map(({ name, location, statement }) => ({ name, location, statement })), [
+    { name: 'Sabot Media', location: 'USA', statement: undefined },
+    { name: 'Example Collective', location: 'Italy', statement: 'Infrastructure is not terrorism.' },
+    { name: 'Another Signer', location: 'USA', statement: undefined },
+  ])
+  for (const expected of ['Sabot Media', 'We Will Free Us', 'Grounded Futures Podcast', 'The Final Straw Radio', '#MilkTeaAlliance Calendar Team', 'Datenpunks e.V.', 'Jeremy Beausoleil Smith']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  assert.match(server, /getNativeEntry\(db, 'open-letter-ai'\)/)
+  assert.match(server, /extractAiLetterSignatories/)
+  assert.match(page, /function SignatoryCarousel/)
+  assert.match(page, /scrollBy/)
+  assert.ok(page.indexOf('<SignatoryCarousel') < page.indexOf('<SocialSection'))
+  assert.match(polish, /scroll-snap-type:\s*inline mandatory/)
+})
+
+test('coverage and live social disclose language and exact followed accounts', () => {
+  for (const expected of ['Italian', 'translatedTitle', 'mastodon.bida.im/@cavallette', 'Official Autistici/Inventati account', 'primarily Italian', 'Italian + English']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  assert.match(socialServer, /label: `@\$\{account\.acct\}@\$\{new URL\(account\.instance\)\.host\}`/)
+  assert.match(page, /ACCOUNTS IN THIS LIVE FEED/)
+  assert.match(page, /These are the exact public accounts queried by the server/)
+  assert.match(page, /A\/I is based in Italy/)
+  assert.match(page, /campaign-social-post__language/)
+  assert.match(page, /campaign-link-list__translation/)
+  assert.match(model, /signatories: normalizeRows/)
 })
 
 test('hero uses an asterisk and campaign chronology is fully populated', () => {

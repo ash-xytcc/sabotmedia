@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
@@ -64,6 +64,7 @@ export function CampaignPage() {
   const updates = useMemo(() => sortByDate(campaign?.updates || [], false), [campaign])
   const coverage = useMemo(() => sortByDate(campaign?.coverage || []), [campaign])
   const social = useMemo(() => sortByDate(campaign?.social || []), [campaign])
+  const signatories = campaign?.signatories || []
   const deadline = campaign?.deadline ? new Date(campaign.deadline).getTime() : NaN
   const countdown = Number.isFinite(deadline) ? formatCountdown(deadline - now) : null
 
@@ -146,6 +147,7 @@ export function CampaignPage() {
           <a href="#letters">Letters</a>
           <a href="#updates">Updates</a>
           <a href="#graphics">Graphics</a>
+          <a href="#signatories">Signers</a>
           <a href="#social">Social</a>
           <a href="#sources">Sources</a>
         </div>
@@ -259,8 +261,8 @@ export function CampaignPage() {
 
       <section className="campaign-section" id="coverage">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" />
-          {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.outlet, formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, body: item.summary, url: item.url }))} /> : <EmptyState>Press coverage, statements, interviews, and external analysis can be added here as they appear.</EmptyState>}
+          <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" description="A/I is based in Italy, so some of the earliest reporting is in Italian. Original headlines are preserved, clearly labeled by language, with an English rendering directly beneath them." />
+          {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>Press coverage, statements, interviews, and external analysis can be added here as they appear.</EmptyState>}
         </div>
       </section>
 
@@ -288,6 +290,8 @@ export function CampaignPage() {
         </section>
       ) : null}
 
+      {signatories.length ? <SignatoryCarousel signatories={signatories} /> : null}
+
       <SocialSection campaign={campaign} social={social} copyState={copyState} copyCampaignLink={copyCampaignLink} />
 
       <section className="campaign-disclaimer">
@@ -303,25 +307,62 @@ export function CampaignPage() {
   )
 }
 
+function SignatoryCarousel({ signatories }) {
+  const railRef = useRef(null)
+  const statementCount = signatories.filter((item) => item.statement).length
+  function move(direction) {
+    const rail = railRef.current
+    if (!rail) return
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    rail.scrollBy({ left: direction * Math.max(280, rail.clientWidth * 0.82), behavior: reducedMotion ? 'auto' : 'smooth' })
+  }
+  return (
+    <section className="campaign-section campaign-section--signatories" id="signatories">
+      <div className="campaign-shell">
+        <SectionHeading eyebrow="OPEN LETTER" title="Who has signed" description={`${signatories.length} current signatories${statementCount ? ` · ${statementCount} public statements` : ''}. The list is read from the published open letter and retains optional statements supplied for public display.`} />
+        <div className="campaign-carousel-controls">
+          <span>DRAG / SWIPE / USE CONTROLS</span>
+          <div><button type="button" onClick={() => move(-1)} aria-label="Previous signatories">←</button><button type="button" onClick={() => move(1)} aria-label="Next signatories">→</button></div>
+        </div>
+        <div className="campaign-signatory-carousel" ref={railRef} role="region" aria-label="Open letter signatories" tabIndex="0">
+          {signatories.map((item, index) => (
+            <article className="campaign-signatory" key={item.id || item.name}>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <div><p>{item.statement ? 'PUBLIC STATEMENT' : 'SIGNED THE LETTER'}</p><h3>{item.url ? <SmartLink href={item.url}>{item.name}</SmartLink> : item.name}</h3>{item.location ? <small>{item.location}</small> : null}</div>
+              {item.statement ? <blockquote><p>“{item.statement}”</p></blockquote> : <p className="campaign-signatory__plain">Supports the call to defend independent communications infrastructure.</p>}
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function SocialSection({ campaign, social, copyState, copyCampaignLink }) {
   return <section className="campaign-section campaign-section--social" id="social">
     <div className="campaign-shell">
-      <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description="Live campaign posts from Sabot's public Bluesky and Mastodon accounts, filtered and source-linked without third-party embed scripts." />
+      <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description="Live campaign posts from A/I and Sabot public accounts, filtered and source-linked without third-party embed scripts. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual." />
+      <SocialSources sources={campaign.socialSources || []} />
       <div className="campaign-share-row">
         <a className="campaign-button campaign-button--light" href={`https://bsky.app/intent/compose?text=${encodeURIComponent(`${campaign.shortTitle}\n\n${window.location.href.split('#')[0]}`)}`} target="_blank" rel="noreferrer">Post to Bluesky ↗</a>
         <button className="campaign-button campaign-button--ghost" type="button" onClick={copyCampaignLink}>{copyState || 'Copy campaign link'}</button>
       </div>
       {social.length ? <div className="campaign-social-feed">{social.map((item) => <article className="campaign-social-post" key={item.id}>
-        <div className="campaign-social-post__meta"><span>{item.platform || 'SOCIAL'}</span><span>{item.account}</span><span>{item.handle}</span><time dateTime={item.date}>{formatDate(item.date)}</time></div>
+        <div className="campaign-social-post__meta"><span>{item.platform || 'SOCIAL'}</span><span>{item.account}</span><span>{item.handle}</span>{item.language ? <span className="campaign-social-post__language">{item.language}</span> : null}<time dateTime={item.date}>{formatDate(item.date)}</time></div>
         {item.contentWarning ? <p className="campaign-social-post__warning">Content warning: {item.contentWarning}</p> : null}
         {(item.images?.length ? item.images : item.imageUrl ? [{ url: item.imageUrl, alt: '' }] : []).map((image) => <img key={image.url} src={image.url} alt={image.alt || ''} loading="lazy" />)}
-        <p>{item.text || item.excerpt}</p>
+        <p lang={item.languageCode || undefined}>{item.text || item.excerpt}</p>
         {item.external?.url ? <a className="campaign-social-post__external" href={item.external.url} target="_blank" rel="noreferrer"><strong>{item.external.title || item.external.url}</strong>{item.external.description ? <span>{item.external.description}</span> : null}</a> : null}
         {item.url ? <a href={item.url} target="_blank" rel="noreferrer">Open original post ↗</a> : null}
       </article>)}</div> : <EmptyState>No matching public campaign posts are available from the live sources right now.</EmptyState>}
       {campaign.socialErrors?.length ? <p className="campaign-source-error">Some public social sources could not be reached. The rest of the campaign remains available.</p> : null}
     </div>
   </section>
+}
+
+function SocialSources({ sources }) {
+  if (!sources.length) return null
+  return <div className="campaign-social-sources"><div><span>ACCOUNTS IN THIS LIVE FEED</span><p>These are the exact public accounts queried by the server.</p></div><ul>{sources.map((source) => <li key={`${source.platform}-${source.account}`}><span>{String(source.platform || 'social').toUpperCase()}</span><div><strong>{source.url ? <SmartLink href={source.url}>{source.account}</SmartLink> : source.account}</strong>{source.note ? <small>{source.note}</small> : null}</div><i className={source.ok ? 'is-live' : 'is-unavailable'}>{source.ok ? 'LIVE' : 'UNAVAILABLE'}</i></li>)}</ul></div>
 }
 
 function ItalyClock() {
@@ -386,7 +427,7 @@ function ResourceStrip({ resources = [] }) {
 }
 
 function LinkList({ items }) {
-  return <div className="campaign-link-list">{items.map((item) => <article key={item.id}><p>{item.eyebrow}</p><h3>{item.url ? <SmartLink href={item.url}>{item.title}</SmartLink> : item.title}</h3>{item.body ? <div>{item.body}</div> : null}</article>)}</div>
+  return <div className="campaign-link-list">{items.map((item) => <article key={item.id}><p>{item.eyebrow}</p><h3 lang={item.languageCode || undefined}>{item.url ? <SmartLink href={item.url}>{item.title}</SmartLink> : item.title}</h3>{item.translation ? <small className="campaign-link-list__translation">ENGLISH: {item.translation}</small> : null}{item.body ? <div>{item.body}</div> : null}</article>)}</div>
 }
 
 function EmptyState({ children }) {
