@@ -7,7 +7,7 @@
 }
 
 .campaign-page .campaign-section {
-  scroll-margin-top: calc(var(--masthead-height, 70px) + 16px);
+  scroll-margin-top: calc(var(--masthead-height, 70px) + var(--campaign-nav-height, 52px) + 20px);
 }
 
 .campaign-page .campaign-hero__inner {
@@ -34,7 +34,8 @@
   font-size: clamp(2.6rem, 4.8vw, 4.9rem);
   line-height: 0.92;
   letter-spacing: -0.045em;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .campaign-page .campaign-section-heading > div {
@@ -112,6 +113,15 @@
   background: #0b0b0b;
 }
 
+.campaign-page .campaign-graphic__actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.campaign-page .campaign-graphic__actions a,
+.campaign-page .campaign-graphic__actions button { min-height: 44px; padding: 10px 12px; border: 1px solid currentColor; background: transparent; color: inherit; font: inherit; font-weight: 800; cursor: pointer; }
+.campaign-page .campaign-social-post__warning { padding: 8px 10px; background: var(--campaign-red); color: #fff; font-weight: 800; }
+.campaign-page .campaign-social-post__external { display: grid; gap: 4px; margin-block: 10px; padding: 12px; border: 1px solid #555; }
+.campaign-page .campaign-social-post__external span { color: #bbb; font-size: .86rem; }
+.campaign-page .campaign-source-error,
+.campaign-page .campaign-reader-note { max-width: 65ch; padding: 14px; border-left: 4px solid var(--campaign-red); }
+
 @media (max-width: 1050px) {
   .campaign-page .campaign-hero__inner {
     grid-template-columns: 1fr 0.72fr;
@@ -130,6 +140,9 @@
 }
 
 @media (max-width: 760px) {
+  .campaign-page { --campaign-nav-height: 0px; }
+  .campaign-page .campaign-local-nav { position: relative; }
+  .campaign-page .campaign-section { scroll-margin-top: calc(var(--masthead-height, 62px) + 14px); }
   .campaign-page .campaign-hero__inner,
   .campaign-page .campaign-section-heading {
     grid-template-columns: 1fr;
@@ -141,7 +154,7 @@
   }
   .campaign-page .campaign-section-heading h2 {
     max-width: 100%;
-    font-size: clamp(2.35rem, 11.5vw, 4.25rem);
+    font-size: clamp(2.05rem, 10vw, 3.35rem);
   }
   .campaign-page .campaign-section-heading > div {
     grid-column: 1;

@@ -17,6 +17,10 @@ const css = fs.readFileSync(new URL('../src/campaign-page.css', import.meta.url)
 const main = fs.readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8')
 const topbar = fs.readFileSync(new URL('../src/components/PublicationTopbar.jsx', import.meta.url), 'utf8')
 const rail = fs.readFileSync(new URL('../src/components/AdminRail.jsx', import.meta.url), 'utf8')
+const polish = fs.readFileSync(new URL('../src/campaign-page-polish.css', import.meta.url), 'utf8')
+const socialServer = fs.readFileSync(new URL('../functions/api/_lib/aiCampaignPublic.js', import.meta.url), 'utf8')
+const socialEndpoint = fs.readFileSync(new URL('../functions/api/campaign-social.js', import.meta.url), 'utf8')
+const graphicsManifest = fs.readFileSync(new URL('../functions/api/_lib/aiCampaignGraphics.js', import.meta.url), 'utf8')
 
 test('A/I campaign is a first-class public and admin route', () => {
   assert.match(routes, /aiCampaign:\s*'\/campaigns\/autistici-inventati'/)
@@ -92,4 +96,50 @@ test('campaign editor can manage updates, resources, social, graphics, coverage,
   }
   assert.match(admin, /Campaign hub saved to D1/)
   assert.match(admin, /Nothing has been saved locally/)
+})
+
+test('campaign reporting excludes body-only false positives and keeps explicit A/I relationships', () => {
+  assert.doesNotMatch(page, /piece\.body|piece\.bodyHtml|podcastSummary/)
+  assert.match(page, /exactSlugs/)
+  assert.match(page, /piece\.tags/)
+  assert.match(page, /autistici/)
+  assert.doesNotMatch(page, /keywords\.some/)
+})
+
+test('campaign typography and navigation are bounded and anchor-safe', () => {
+  assert.match(polish, /font-size:\s*clamp\(/)
+  assert.match(polish, /--campaign-nav-height/)
+  assert.match(polish, /scroll-margin-top:/)
+  assert.match(polish, /@media \(max-width: 760px\)/)
+  assert.match(polish, /\.campaign-local-nav \{ position: relative;/)
+  assert.ok(main.indexOf("./campaign-page-polish.css") > main.indexOf("./campaign-page.css"))
+})
+
+test('live campaign social is server-side, filtered, normalized and graceful', () => {
+  assert.match(socialServer, /public\.api\.bsky\.app\/xrpc\/app\.bsky\.feed\.getAuthorFeed/)
+  assert.match(socialServer, /api\/v1\/accounts\/lookup/)
+  assert.match(socialServer, /Promise\.allSettled/)
+  assert.match(socialServer, /isCampaignSocialPost/)
+  assert.match(socialServer, /socialErrors/)
+  assert.match(socialEndpoint, /items:\s*\[\]/)
+  assert.doesNotMatch(socialServer, /localStorage|embed\.js|<script/)
+})
+
+test('bundled campaign graphics manifest resolves every accessible asset', () => {
+  const slugs = [...graphicsManifest.matchAll(/\['([a-z0-9-]+)',/g)].map((match) => match[1])
+  assert.equal(slugs.length, 22)
+  for (const slug of slugs) {
+    assert.ok(fs.existsSync(new URL(`../public/campaigns/autistici-inventati/graphics/${slug}.webp`, import.meta.url)), `${slug} web asset exists`)
+    assert.ok(fs.existsSync(new URL(`../public/campaigns/autistici-inventati/graphics/originals/${slug}.png`, import.meta.url)), `${slug} original exists`)
+  }
+  assert.match(graphicsManifest, /alt,/)
+  assert.match(page, /Copy alt text/)
+  assert.doesNotMatch(page, /Add Bluesky, Mastodon|attached from Campaigns admin|added in Campaigns admin|Source links can be attached/)
+})
+
+test('monitor aggregate distinguishes partial from major outage and unavailable data', () => {
+  assert.match(monitor, /return 'major-outage'/)
+  assert.match(monitor, /return 'partial-outage'/)
+  assert.match(page, /monitor unavailable/)
+  assert.doesNotMatch(page, /outage detected/)
 })

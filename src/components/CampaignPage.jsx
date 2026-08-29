@@ -215,8 +215,8 @@ export function CampaignPage() {
 
       <section className="campaign-section campaign-section--paper" id="letters">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="LETTERS" title="Read it. Sign it. Send it." description="The public campaign includes both collective advocacy and a version individuals can send directly. Published letter posts are detected automatically; additional PDFs and print resources can be attached from Campaigns admin." />
-          <PieceGrid pieces={letterPieces} empty="Published letter posts will appear here automatically once their titles or campaign metadata identify them as letters." />
+          <SectionHeading eyebrow="LETTERS" title="Read it. Sign it. Send it." description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
+          <PieceGrid pieces={letterPieces} empty="Letter downloads are temporarily unavailable. The reporting section remains available while they are restored." />
           <ResourceStrip resources={(campaign.resources || []).filter((item) => /letter|pdf|template/i.test(`${item.type} ${item.title}`))} />
         </div>
       </section>
@@ -237,17 +237,17 @@ export function CampaignPage() {
 
       <section className="campaign-section" id="graphics">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="CAMPAIGN KIT" title="Take the graphics" description="Download, repost, print, remix where appropriate, and keep the alt text attached. Campaign images from linked Sabot posts are collected here automatically alongside manually attached graphics." />
+          <SectionHeading eyebrow="CAMPAIGN KIT" title="Take the graphics" description="Download, repost, print and remix. Each card includes its full-resolution original, accessible alt text and a ready-to-use caption." />
           {graphics.length ? (
             <div className="campaign-graphics-grid">
               {graphics.map((graphic) => (
                 <figure className="campaign-graphic" key={graphic.id || graphic.imageUrl}>
                   <a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer"><img src={graphic.imageUrl} alt={graphic.alt || ''} loading="lazy" /></a>
-                  <figcaption><strong>{graphic.title || 'Campaign graphic'}</strong>{graphic.caption ? <p>{graphic.caption}</p> : null}<a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer">Open / download ↗</a></figcaption>
+                  <figcaption><strong>{graphic.title || 'Campaign graphic'}</strong>{graphic.caption ? <p>{graphic.caption}</p> : null}<div className="campaign-graphic__actions"><a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer" download>Open / download ↗</a><CopyButton value={graphic.alt} label="Copy alt text" /><CopyButton value={graphic.caption} label="Copy caption" /></div></figcaption>
                 </figure>
               ))}
             </div>
-          ) : <EmptyState>Campaign graphics will appear here as they are attached to campaign posts or added in Campaigns admin.</EmptyState>}
+          ) : null}
         </div>
       </section>
 
@@ -262,14 +262,17 @@ export function CampaignPage() {
             <div className="campaign-social-feed">
               {social.map((item) => (
                 <article className="campaign-social-post" key={item.id}>
-                  <div className="campaign-social-post__meta"><span>{item.platform || 'SOCIAL'}</span><span>{item.account}</span><time dateTime={item.date}>{formatDate(item.date)}</time></div>
-                  {item.imageUrl ? <img src={item.imageUrl} alt="" loading="lazy" /> : null}
-                  <p>{item.excerpt}</p>
+                  <div className="campaign-social-post__meta"><span>{item.platform || 'SOCIAL'}</span><span>{item.account}</span><span>{item.handle}</span><time dateTime={item.date}>{formatDate(item.date)}</time></div>
+                  {item.contentWarning ? <p className="campaign-social-post__warning">Content warning: {item.contentWarning}</p> : null}
+                  {(item.images?.length ? item.images : item.imageUrl ? [{ url: item.imageUrl, alt: '' }] : []).map((image) => <img key={image.url} src={image.url} alt={image.alt || ''} loading="lazy" />)}
+                  <p>{item.text || item.excerpt}</p>
+                  {item.external?.url ? <a className="campaign-social-post__external" href={item.external.url} target="_blank" rel="noreferrer"><strong>{item.external.title || item.external.url}</strong>{item.external.description ? <span>{item.external.description}</span> : null}</a> : null}
                   {item.url ? <a href={item.url} target="_blank" rel="noreferrer">Open original post ↗</a> : null}
                 </article>
               ))}
             </div>
-          ) : <EmptyState>The social wall is ready. Add Bluesky, Mastodon, Instagram, or other campaign post URLs from Campaigns admin as they go live.</EmptyState>}
+          ) : <EmptyState>No matching public campaign posts are available from the live sources right now.</EmptyState>}
+          {campaign.socialErrors?.length ? <p className="campaign-source-error">Some public social sources could not be reached. The rest of the campaign remains available.</p> : null}
         </div>
       </section>
 
@@ -294,7 +297,7 @@ export function CampaignPage() {
       <section className="campaign-section campaign-section--sources" id="sources">
         <div className="campaign-shell">
           <SectionHeading eyebrow="PRIMARY SOURCES" title="Check the receipts" description="Government material, A/I statements, legal analysis, historical documents, and other primary sources belong here so readers and journalists can verify the campaign without reverse-engineering footnotes." />
-          {campaign.sources?.length ? <LinkList items={campaign.sources.map((item) => ({ id: item.id, eyebrow: item.publisher, title: item.title, body: item.note, url: item.url }))} /> : <EmptyState>Source links can be attached from Campaigns admin. Reporting posts above retain their own article-level citations.</EmptyState>}
+          {campaign.sources?.length ? <LinkList items={campaign.sources.map((item) => ({ id: item.id, eyebrow: item.publisher, title: item.title, body: item.note, url: item.url }))} /> : <p className="campaign-reader-note">The reporting above retains its article-level citations and primary-source links.</p>}
         </div>
       </section>
 
@@ -382,18 +385,22 @@ function SmartLink({ href = '#', children }) {
   return <a href={value} target="_blank" rel="noreferrer">{children}</a>
 }
 
+function CopyButton({ value, label }) {
+  const [copied, setCopied] = useState(false)
+  if (!value) return null
+  return <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(value); setCopied(true); window.setTimeout(() => setCopied(false), 1600) } catch { setCopied(false) } }}>{copied ? 'Copied' : label}</button>
+}
+
 function findCampaignPieces(pieces, campaign) {
   if (!Array.isArray(pieces) || !campaign) return []
-  const required = ['autistici', 'inventati', 'noblogs', 'communications infrastructure']
-  const configured = (campaign.campaignKeywords || []).map((item) => String(item).toLowerCase()).filter(Boolean)
-  const keywords = [...new Set([...required, ...configured])]
+  const exactSlugs = new Set(['the-us-designated-a-25-year-old-volunteer-communications-collective-a-terrorist-organization', 'communications-infrastructure-is-not-terrorism', 'open-letter-defend-autistici-inventati', 'individual-letter-defend-autistici-inventati'])
   return pieces.filter((piece) => {
     const explicit = [...(piece.tags || []), ...(piece.collections || []), ...(piece.projects || []), piece.primaryProject]
       .map((item) => String(item || '').toLowerCase())
       .some((item) => item.includes('autistici') || item.includes('inventati') || item.includes('a/i campaign'))
-    if (explicit) return true
-    const haystack = [piece.title, piece.excerpt, piece.body, piece.bodyHtml, piece.podcastSummary].join(' ').toLowerCase()
-    return keywords.some((keyword) => keyword && haystack.includes(keyword))
+    if (explicit || exactSlugs.has(String(piece.slug || '').toLowerCase())) return true
+    const title = String(piece.title || '').toLowerCase()
+    return /autistici(?:\s*\/\s*|\s+)?inventati/.test(title) || (/communications infrastructure/.test(title) && /terrorism|sanction|designation/.test(title))
   }).sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0) - new Date(a.publishedAt || a.updatedAt || 0))
 }
 
@@ -434,10 +441,10 @@ function formatCountdown(ms) {
 
 function statusText(status) {
   if (status === 'operational') return 'A/I monitor: operational'
-  if (status === 'down') return 'A/I monitor: outage detected'
-  if (status === 'degraded') return 'A/I monitor: degraded / pending'
+  if (status === 'major-outage') return 'A/I monitor: major outage'
+  if (status === 'partial-outage') return 'A/I monitor: partial outage'
   if (status === 'maintenance') return 'A/I monitor: maintenance'
-  return 'A/I monitor: status unavailable'
+  return 'A/I monitor: monitor unavailable'
 }
 
 function formatDate(value) {
