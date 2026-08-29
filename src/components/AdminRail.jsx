@@ -23,6 +23,7 @@ const NAV_GROUPS = [
     id: 'publishing', label: 'Publishing', icon: '↗',
     items: [
       { to: adminRoutes.publications, label: 'Publications' },
+      { to: adminRoutes.campaigns, label: 'Campaigns', capability: 'publishing:write' },
       { to: adminRoutes.podcasts, label: 'Podcasts' },
       { to: adminRoutes.podcastSettings, label: 'Podcast Settings / Import RSS', capability: 'publishing:write' },
       { to: adminRoutes.feeds, label: 'Feeds & Syndication' },
@@ -146,6 +147,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
               {hasCapability('content:write') ? <Link to={`${adminRoutes.nativeBridge}?new=podcast`} className="wp-admin-topbar__dropdown-link">Podcast Episode</Link> : null}
               {hasCapability('media:write') ? <Link to={adminRoutes.media} className="wp-admin-topbar__dropdown-link">Media</Link> : null}
               {hasCapability('publishing:write') ? <Link to={adminRoutes.collections} className="wp-admin-topbar__dropdown-link">Collection</Link> : null}
+              {hasCapability('publishing:write') ? <Link to={adminRoutes.campaigns} className="wp-admin-topbar__dropdown-link">Campaign</Link> : null}
               {hasCapability('publishing:write') ? <Link to={adminRoutes.publications} className="wp-admin-topbar__dropdown-link">Publication</Link> : null}
               {hasCapability('media:write') ? <Link to={adminRoutes.audiolab} className="wp-admin-topbar__dropdown-link">AudioLab Project</Link> : null}
             </AdminBarMenu>
