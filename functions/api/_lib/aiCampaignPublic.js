@@ -3,16 +3,16 @@ import { AI_CAMPAIGN_GRAPHICS } from './aiCampaignGraphics.js'
 const CAMPAIGN_URL = 'https://sabot.media/campaigns/autistici-inventati'
 // Verified against the public profile endpoints. No We Will Free Us account is
 // bundled until one can be resolved from authoritative site data.
-const BLUESKY_ACTORS = ['sabotmedia.bsky.social']
+const BLUESKY_ACTORS = [{ actor: 'sabotmedia.bsky.social', priority: 1, url: 'https://bsky.app/profile/sabotmedia.bsky.social', note: 'Sabot Media · English-language campaign posts' }]
 const MASTODON_ACCOUNTS = [
-  { instance: 'https://mastodon.bida.im', acct: 'cavallette', priority: 0 },
-  { instance: 'https://kolektiva.social', acct: 'AberdeenLocal1312', priority: 2 },
+  { instance: 'https://mastodon.bida.im', acct: 'cavallette', priority: 0, url: 'https://mastodon.bida.im/@cavallette', note: 'Official Autistici/Inventati account · primarily Italian, with some bilingual posts' },
+  { instance: 'https://kolektiva.social', acct: 'AberdeenLocal1312', priority: 2, url: 'https://kolektiva.social/@AberdeenLocal1312', note: 'Sabot Media network account · English-language campaign posts' },
 ]
 const CAMPAIGN_START_MS = Date.parse('2026-08-26T00:00:00Z')
 const SIGNAL = /(?:autistici(?:\s*\/\s*|\s+)?inventati|\bnoblogs\b|communications infrastructure|infrastructure is not terrorism|defend autistici|#defendai)/i
 const CACHE_TTL_SECONDS = 300
 
-export async function decorateAiCampaignForPublic(campaign, requestUrl) {
+export async function decorateAiCampaignForPublic(campaign, requestUrl, options = {}) {
   if (!campaign || campaign.slug !== 'autistici-inventati') return campaign
   const origin = new URL(requestUrl).origin
   const graphics = AI_CAMPAIGN_GRAPHICS.map((item) => ({ ...item, imageUrl: new URL(item.imageUrl, origin).toString(), downloadUrl: new URL(item.downloadUrl, origin).toString() }))
@@ -34,10 +34,26 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl) {
     { id: 'source-open-letter', publisher: 'Sabot Media × We Will Free Us', title: 'Open Letter: Communications Infrastructure Is Not Terrorism', url: new URL('/post/open-letter-ai', origin).toString(), note: 'The organizational open letter.' },
   ]
   const builtInCoverage = [
-    { id: 'coverage-crimethinc', date: '2026-08-27', outlet: 'CrimethInc.', title: 'US Government Designates Host of NoBlogs.org a “Global Terrorist”', url: 'https://en.crimethinc.com/2026/08/27/us-government-designates-host-of-noblogsorg-a-global-terrorist', summary: 'A detailed response situating the designation within attacks on independent communications infrastructure and anti-fascist organizing.' },
-    { id: 'coverage-repubblica', date: '2026-08-26', outlet: 'la Repubblica', title: 'Rubio contro l’estrema sinistra, nella lista nera di Washington un gruppo di hacker italiani', url: 'https://www.repubblica.it/esteri/2026/08/26/news/usa_rubio_annuncia_sanzioni_a_network_estrema_sinistra_autistici_inventati_gruppo_hacker_italiani-425548615/amp/', summary: 'Italian national coverage of the designation, A/I’s services and the collective’s public response.' },
-    { id: 'coverage-effimera', date: '2026-08-28', outlet: 'Effimera', title: 'Il collettivo digitale Autistici/Inventati nella lista Usa dei terroristi globali', url: 'https://effimera.org/il-collettivo-digitale-autistici-inventati-nella-lista-usa-dei-terroristi-globali-di-effimera/', summary: 'Movement analysis connecting the sanctions to A/I’s history, autonomous technology and the projects that depend on its infrastructure.' },
-    { id: 'coverage-rainews', date: '2026-08-26', outlet: 'RaiNews', title: 'Gli USA sanzionano tre collettivi di sinistra, c’è anche un gruppo online italiano', url: 'https://www.rainews.it/articoli/2026/08/usa-rubio-annuncia-sanzioni-a-network-estrema-sinistra-tra-cui-gruppo-hacker-italiano-22f51a4e-e4dc-4888-b764-fab3527567e5.html', summary: 'Public-broadcaster coverage of the U.S. announcement and its accusations against Autistici/Inventati.' },
+    { id: 'coverage-crimethinc', date: '2026-08-27', outlet: 'CrimethInc.', language: 'English', languageCode: 'en', title: 'US Government Designates Host of NoBlogs.org a “Global Terrorist”', url: 'https://en.crimethinc.com/2026/08/27/us-government-designates-host-of-noblogsorg-a-global-terrorist', summary: 'A detailed response situating the designation within attacks on independent communications infrastructure and anti-fascist organizing.' },
+    { id: 'coverage-repubblica', date: '2026-08-26', outlet: 'la Repubblica', language: 'Italian', languageCode: 'it', title: 'Rubio contro l’estrema sinistra, nella lista nera di Washington un gruppo di hacker italiani', translatedTitle: 'Rubio targets the far left; an Italian hacker group is placed on Washington’s blacklist', url: 'https://www.repubblica.it/esteri/2026/08/26/news/usa_rubio_annuncia_sanzioni_a_network_estrema_sinistra_autistici_inventati_gruppo_hacker_italiani-425548615/amp/', summary: 'Italian national coverage of the designation, A/I’s services and the collective’s public response.' },
+    { id: 'coverage-effimera', date: '2026-08-28', outlet: 'Effimera', language: 'Italian', languageCode: 'it', title: 'Il collettivo digitale Autistici/Inventati nella lista Usa dei terroristi globali', translatedTitle: 'The digital collective Autistici/Inventati on the U.S. global-terrorist list', url: 'https://effimera.org/il-collettivo-digitale-autistici-inventati-nella-lista-usa-dei-terroristi-globali-di-effimera/', summary: 'Movement analysis connecting the sanctions to A/I’s history, autonomous technology and the projects that depend on its infrastructure.' },
+    { id: 'coverage-rainews', date: '2026-08-26', outlet: 'RaiNews', language: 'Italian', languageCode: 'it', title: 'Gli USA sanzionano tre collettivi di sinistra, c’è anche un gruppo online italiano', translatedTitle: 'U.S. sanctions three left-wing collectives, including an Italian online group', url: 'https://www.rainews.it/articoli/2026/08/usa-rubio-annuncia-sanzioni-a-network-estrema-sinistra-tra-cui-gruppo-hacker-italiano-22f51a4e-e4dc-4888-b764-fab3527567e5.html', summary: 'Public-broadcaster coverage of the U.S. announcement and its accusations against Autistici/Inventati.' },
+  ]
+  const builtInSignatories = [
+    { id: 'signer-sabot-media', name: 'Sabot Media', location: 'USA' },
+    { id: 'signer-we-will-free-us', name: 'We Will Free Us', location: 'USA' },
+    { id: 'signer-grounded-futures', name: 'Grounded Futures Podcast', location: 'USA' },
+    { id: 'signer-final-straw', name: 'The Final Straw Radio', location: 'USA' },
+    { id: 'signer-dirty-hands', name: 'Dirty Hands Collective', location: 'Colorado, USA' },
+    { id: 'signer-bash', name: 'BASH - Boise Autonomous Solidarity Hub', location: 'Idaho, USA' },
+    { id: 'signer-crman', name: 'Chehalis River Mutual Aid Network', location: 'Washington, USA' },
+    { id: 'signer-blackflower', name: 'The Blackflower Collective', location: 'Washington, USA' },
+    { id: 'signer-anarkism', name: 'Anarkism.info', location: 'Sweden' },
+    { id: 'signer-milk-tea-alliance', name: '#MilkTeaAlliance Calendar Team', location: 'Southeast Asia', statement: 'Many of our allies and friends in Southeast Asia use Autistici/Inventati services to protect themselves from state suppression of their speech. Other platforms often comply with takedown requests from authoritarian regimes, making A/I’s platform a lifeline. These U.S. sanctions threaten that speech and unjustly target an infrastructure provider.' },
+    { id: 'signer-datenpunks', name: 'Datenpunks e.V.', location: 'Germany', statement: 'Independent hosts and technology collectives like Autistici/Inventati show that privacy-preserving communication is possible. Volunteer-run collectives protect marginalized communities from surveillance capitalism and authoritarian governments. Everyone who cares about human rights should support them.' },
+    { id: 'signer-eric-gallager', name: 'Eric Gallager', location: 'New Hampshire, USA' },
+    { id: 'signer-jeremy-smith', name: 'Jeremy Beausoleil Smith', location: 'Oregon, USA', statement: 'This attack on freedom of speech must be undone. It sets a dangerous precedent for further censorship and erosion of civil rights. I oppose expansion of the surveillance state in Portland, across the United States and globally.' },
+    { id: 'signer-haymarket-customs', name: 'Haymarket Customs', location: 'USA' },
   ]
   const builtInTimeline = [
     { id: 'timeline-founded', date: '2001-03-01', title: 'Autistici/Inventati is formed', body: 'People and collectives working on technology, privacy, cyber-rights and political activism meet in Italy and begin building free, noncommercial communications tools. The first server is called Paranoia.' },
@@ -60,7 +76,8 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl) {
     { id: 'update-launch', date: '2026-08-28T21:30:00Z', title: 'Live campaign hub launched', body: 'Reporting, letters, primary sources, graphics, infrastructure status and public social updates are consolidated into one permanent campaign dashboard.', url: new URL('/campaigns/autistici-inventati', origin).toString(), pinned: true },
   ]
   const actions = [...(campaign.actions || [])].sort((a, b) => actionRank(a) - actionRank(b))
-  return { ...campaign, actions, campaignKeywords: ['autistici/inventati', 'a/i campaign'], updates: dedupeById([...builtInUpdates, ...(campaign.updates || [])]), timeline: dedupeById([...builtInTimeline, ...(campaign.timeline || [])]), resources: dedupeByUrl([articlePdfResource, pdfResource, ...(campaign.resources || [])], 'href'), coverage: dedupeById([...builtInCoverage, ...(campaign.coverage || [])]), sources: dedupeByUrl([...builtInSources, ...(campaign.sources || [])], 'url'), graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'), social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'), socialSources: feed.sources, socialErrors: feed.errors }
+  const signatories = dedupeSignatories([...(options.signatories || []), ...builtInSignatories, ...(campaign.signatories || [])])
+  return { ...campaign, actions, campaignKeywords: ['autistici/inventati', 'a/i campaign'], updates: dedupeById([...builtInUpdates, ...(campaign.updates || [])]), timeline: dedupeById([...builtInTimeline, ...(campaign.timeline || [])]), resources: dedupeByUrl([articlePdfResource, pdfResource, ...(campaign.resources || [])], 'href'), coverage: dedupeById([...builtInCoverage, ...(campaign.coverage || [])]), signatories, sources: dedupeByUrl([...builtInSources, ...(campaign.sources || [])], 'url'), graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'), social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'), socialSources: feed.sources, socialErrors: feed.errors }
 }
 
 function actionRank(action) {
@@ -72,16 +89,16 @@ function actionRank(action) {
 
 export async function loadLiveAiSocial(requestUrl, fetcher = fetch) {
   const origin = new URL(requestUrl).origin
-  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-social-v4`)
+  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-social-v5`)
   const cache = globalThis.caches?.default
   if (cache) { const cached = await cache.match(cacheKey); if (cached) return cached.json() }
   const jobs = [
-    ...MASTODON_ACCOUNTS.map((account) => ({ platform: 'mastodon', label: `${account.acct}@${new URL(account.instance).host}`, priority: account.priority, promise: fetchMastodonAccount(account, fetcher) })),
-    ...BLUESKY_ACTORS.map((actor) => ({ platform: 'bluesky', label: actor, priority: 1, promise: fetchBlueskyActor(actor, fetcher) })),
+    ...MASTODON_ACCOUNTS.map((account) => ({ platform: 'mastodon', label: `@${account.acct}@${new URL(account.instance).host}`, priority: account.priority, url: account.url, note: account.note, promise: fetchMastodonAccount(account, fetcher) })),
+    ...BLUESKY_ACTORS.map((account) => ({ platform: 'bluesky', label: `@${account.actor}`, priority: account.priority, url: account.url, note: account.note, promise: fetchBlueskyActor(account.actor, fetcher) })),
   ]
   const settled = await Promise.allSettled(jobs.map((job) => job.promise))
   const errors = [], sources = [], collected = []
-  settled.forEach((result, index) => { const job = jobs[index]; if (result.status === 'fulfilled') { sources.push({ platform: job.platform, account: job.label, ok: true }); collected.push(...result.value.map((item) => ({ ...item, sourcePriority: job.priority }))) } else { sources.push({ platform: job.platform, account: job.label, ok: false }); errors.push({ platform: job.platform, account: job.label, message: String(result.reason?.message || result.reason) }) } })
+  settled.forEach((result, index) => { const job = jobs[index]; if (result.status === 'fulfilled') { sources.push({ platform: job.platform, account: job.label, url: job.url, note: job.note, ok: true }); collected.push(...result.value.map((item) => ({ ...item, sourcePriority: job.priority }))) } else { sources.push({ platform: job.platform, account: job.label, url: job.url, note: job.note, ok: false }); errors.push({ platform: job.platform, account: job.label, message: String(result.reason?.message || result.reason) }) } })
   const items = dedupeByUrl(collected.filter(isCampaignSocialPost).sort((a, b) => (a.sourcePriority ?? 99) - (b.sourcePriority ?? 99) || new Date(b.date || 0) - new Date(a.date || 0)), 'url').slice(0, 16)
   const payload = { ok: errors.length < jobs.length, items, sources, errors, checkedAt: new Date().toISOString() }
   if (cache) await cache.put(cacheKey, new Response(JSON.stringify(payload), { headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${CACHE_TTL_SECONDS}` } })).catch(() => {})
@@ -106,7 +123,8 @@ function normalizeBluesky(post) {
   if (!handle || !rkey || !text) return null
   const images = (post?.embed?.images || []).map((image) => ({ url: String(image?.fullsize || image?.thumb || ''), alt: String(image?.alt || '') })).filter((image) => image.url)
   const externalView = post?.embed?.external || post?.embed?.media?.external
-  return { id: `bsky-${post?.cid || rkey}`, platform: 'BLUESKY', date: String(post?.record?.createdAt || post?.indexedAt || ''), account: String(post?.author?.displayName || handle), handle: `@${handle}`, text, excerpt: text, url: `https://bsky.app/profile/${encodeURIComponent(handle)}/post/${encodeURIComponent(rkey)}`, images, imageUrl: images[0]?.url || '', external: externalView?.uri ? { url: String(externalView.uri), title: String(externalView.title || ''), description: String(externalView.description || '') } : null }
+  const language = socialLanguage(text, post?.record?.langs)
+  return { id: `bsky-${post?.cid || rkey}`, platform: 'BLUESKY', date: String(post?.record?.createdAt || post?.indexedAt || ''), account: String(post?.author?.displayName || handle), handle: `@${handle}`, text, excerpt: text, url: `https://bsky.app/profile/${encodeURIComponent(handle)}/post/${encodeURIComponent(rkey)}`, images, imageUrl: images[0]?.url || '', language: language.label, languageCode: language.code, external: externalView?.uri ? { url: String(externalView.uri), title: String(externalView.title || ''), description: String(externalView.description || '') } : null }
 }
 
 async function fetchMastodonAccount({ instance, acct }, fetcher) {
@@ -114,10 +132,56 @@ async function fetchMastodonAccount({ instance, acct }, fetcher) {
   const accountResponse = await fetchWithTimeout(lookup, fetcher); if (!accountResponse.ok) throw new Error(`Mastodon account lookup returned ${accountResponse.status}`)
   const account = await accountResponse.json(), statusesUrl = new URL(`/api/v1/accounts/${encodeURIComponent(account.id)}/statuses`, instance); statusesUrl.searchParams.set('limit', '40'); statusesUrl.searchParams.set('exclude_replies', 'true')
   const response = await fetchWithTimeout(statusesUrl, fetcher); if (!response.ok) throw new Error(`Mastodon returned ${response.status}`)
-  return (await response.json()).map((status) => { const text = stripHtml(status?.content || ''); const images = (status?.media_attachments || []).map((media) => ({ url: String(media?.url || media?.preview_url || ''), alt: String(media?.description || '') })).filter((image) => image.url); return { id: `mastodon-${status.id}`, platform: 'MASTODON', date: String(status.created_at || ''), account: String(status?.account?.display_name || acct), handle: `@${status?.account?.acct || acct}`, text, excerpt: text, url: String(status?.url || status?.uri || ''), images, imageUrl: images[0]?.url || '', contentWarning: String(status?.spoiler_text || '') } })
+  return (await response.json()).map((status) => { const text = stripHtml(status?.content || ''); const images = (status?.media_attachments || []).map((media) => ({ url: String(media?.url || media?.preview_url || ''), alt: String(media?.description || '') })).filter((image) => image.url); const language = String(acct).toLowerCase() === 'cavallette' ? cavalletteLanguage(text) : socialLanguage(text, [status?.language]); return { id: `mastodon-${status.id}`, platform: 'MASTODON', date: String(status.created_at || ''), account: String(status?.account?.display_name || acct), handle: `@${status?.account?.acct || acct}`, text, excerpt: text, url: String(status?.url || status?.uri || ''), images, imageUrl: images[0]?.url || '', language: language.label, languageCode: language.code, contentWarning: String(status?.spoiler_text || '') } })
+}
+
+export function extractAiLetterSignatories(html) {
+  const source = String(html || '')
+  const section = source.match(/Signed,\s*<\/div>\s*<div>([\s\S]*?)<\/div>\s*<div>\s*<br\s*\/?>(?:\s*)<\/div>\s*<div>\s*<b>\s*Sign on/i)?.[1] || ''
+  if (!section) return []
+  const signatories = []
+  const tokens = section.matchAll(/<(p|blockquote)\b[^>]*>([\s\S]*?)<\/\1>/gi)
+  for (const token of tokens) {
+    if (token[1].toLowerCase() === 'blockquote') {
+      const last = signatories.at(-1)
+      if (last) last.statement = stripHtml(token[2])
+      continue
+    }
+    const lines = token[2].split(/<br\s*\/?>/i).map(stripHtml).filter(Boolean)
+    for (const rawLine of lines) {
+      const says = /\s+says:\s*$/i.test(rawLine)
+      const line = rawLine.replace(/\s+says:\s*$/i, '').trim()
+      const dashIndex = line.lastIndexOf(' - ')
+      const comma = dashIndex < 0 && line.match(/^(.*?),\s*(USA)$/i)
+      const name = String(dashIndex >= 0 ? line.slice(0, dashIndex) : comma?.[1] || line).trim()
+      const location = String(dashIndex >= 0 ? line.slice(dashIndex + 3) : comma?.[2] || '').trim()
+      if (name) signatories.push({ id: `signer-${slugify(name)}`, name, location, expectsStatement: says })
+    }
+  }
+  return signatories.map(({ expectsStatement, ...item }) => item)
+}
+
+function socialLanguage(text, declared = []) {
+  const value = String(text || '')
+  const codes = (Array.isArray(declared) ? declared : [declared]).map((item) => String(item || '').toLowerCase())
+  const markedItalian = /\[(?:ita|it|italiano)\]/i.test(value)
+  const markedEnglish = /\[(?:en|eng|english)\]|english version/i.test(value)
+  if (markedItalian && markedEnglish) return { code: '', label: 'Italian + English' }
+  if (codes.some((code) => code.startsWith('it'))) return { code: 'it', label: 'Italian' }
+  if (codes.some((code) => code.startsWith('en'))) return { code: 'en', label: 'English' }
+  return { code: '', label: '' }
+}
+
+function cavalletteLanguage(text) {
+  const value = String(text || '')
+  if (/\[(?:ita|it|italiano)\]/i.test(value) && /\[(?:en|eng|english)\]/i.test(value)) return { code: '', label: 'Italian + English' }
+  if (/english version|\*\s*\*\s*\*/i.test(value)) return { code: '', label: 'Italian + English' }
+  return { code: 'it', label: 'Italian' }
 }
 
 async function fetchWithTimeout(url, fetcher) { const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 12000); try { return await fetcher(url.toString(), { headers: { accept: 'application/json', 'user-agent': 'SabotMediaCampaign/1.0 (+https://sabot.media)' }, signal: controller.signal }) } finally { clearTimeout(timer) } }
 function dedupeByUrl(items, key) { const seen = new Set(); return items.filter((item) => { const value = String(item?.[key] || '').trim(); if (!value || seen.has(value)) return false; seen.add(value); return true }) }
 function dedupeById(items) { const seen = new Set(); return items.filter((item) => { const value = String(item?.id || '').trim(); if (!value || seen.has(value)) return false; seen.add(value); return true }) }
+function dedupeSignatories(items) { const seen = new Set(); return items.filter((item) => { const value = String(item?.name || '').trim().toLowerCase(); if (!value || seen.has(value)) return false; seen.add(value); return true }) }
+function slugify(value) { return String(value || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'signatory' }
 function stripHtml(value) { return String(value || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#(?:39|x27);/gi, "'").replace(/\s+/g, ' ').trim() }
