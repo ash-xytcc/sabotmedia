@@ -143,3 +143,18 @@ test('monitor aggregate distinguishes partial from major outage and unavailable 
   assert.match(page, /monitor unavailable/)
   assert.doesNotMatch(page, /outage detected/)
 })
+
+test('campaign follow-up keeps the hero contained and places social last', () => {
+  assert.match(polish, /\.campaign-hero__copy,[\s\S]*min-width:\s*0/)
+  assert.match(polish, /\.campaign-hero__poster img[\s\S]*object-fit:\s*contain/)
+  assert.match(polish, /\.campaign-hero__poster-fallback[\s\S]*overflow:\s*hidden/)
+  assert.ok(page.indexOf('<SocialSection') > page.indexOf('id="translations"'))
+  assert.ok(page.indexOf('href="#reporting">Read the reporting') < page.indexOf('href="#letters">Read the letters'))
+})
+
+test('individual letter PDF is bundled into letters and primary sources', () => {
+  assert.ok(fs.existsSync(new URL('../public/campaigns/autistici-inventati/resources/individual-letter-defend-autistici-inventati.pdf', import.meta.url)))
+  assert.match(socialServer, /resource-individual-letter-pdf/)
+  assert.match(socialServer, /source-individual-letter-pdf/)
+  assert.match(socialServer, /actionRank/)
+})

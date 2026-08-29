@@ -125,8 +125,8 @@ export function CampaignPage() {
             <p className="campaign-hero__short">{campaign.shortTitle}</p>
             <p className="campaign-hero__deck">{campaign.deck}</p>
             <div className="campaign-hero__actions">
-              <a className="campaign-button campaign-button--light" href="#letters">Read the letters</a>
-              <a className="campaign-button campaign-button--dark" href="#reporting">Read the reporting</a>
+              <a className="campaign-button campaign-button--light" href="#reporting">Read the reporting</a>
+              <a className="campaign-button campaign-button--dark" href="#letters">Read the letters</a>
               <button className="campaign-button campaign-button--ghost" type="button" onClick={shareCampaign}>Share campaign</button>
             </div>
             <p className="campaign-hero__partners">Independent campaign by {campaign.partners.join(' × ')}</p>
@@ -251,31 +251,6 @@ export function CampaignPage() {
         </div>
       </section>
 
-      <section className="campaign-section campaign-section--social" id="social">
-        <div className="campaign-shell">
-          <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description="A curated wall of campaign posts and useful circulation. This stays intentionally source-linked instead of depending on a third-party embed script to keep functioning." />
-          <div className="campaign-share-row">
-            <a className="campaign-button campaign-button--light" href={`https://bsky.app/intent/compose?text=${encodeURIComponent(`${campaign.shortTitle}\n\n${window.location.href.split('#')[0]}`)}`} target="_blank" rel="noreferrer">Post to Bluesky ↗</a>
-            <button className="campaign-button campaign-button--ghost" type="button" onClick={copyCampaignLink}>{copyState || 'Copy campaign link'}</button>
-          </div>
-          {social.length ? (
-            <div className="campaign-social-feed">
-              {social.map((item) => (
-                <article className="campaign-social-post" key={item.id}>
-                  <div className="campaign-social-post__meta"><span>{item.platform || 'SOCIAL'}</span><span>{item.account}</span><span>{item.handle}</span><time dateTime={item.date}>{formatDate(item.date)}</time></div>
-                  {item.contentWarning ? <p className="campaign-social-post__warning">Content warning: {item.contentWarning}</p> : null}
-                  {(item.images?.length ? item.images : item.imageUrl ? [{ url: item.imageUrl, alt: '' }] : []).map((image) => <img key={image.url} src={image.url} alt={image.alt || ''} loading="lazy" />)}
-                  <p>{item.text || item.excerpt}</p>
-                  {item.external?.url ? <a className="campaign-social-post__external" href={item.external.url} target="_blank" rel="noreferrer"><strong>{item.external.title || item.external.url}</strong>{item.external.description ? <span>{item.external.description}</span> : null}</a> : null}
-                  {item.url ? <a href={item.url} target="_blank" rel="noreferrer">Open original post ↗</a> : null}
-                </article>
-              ))}
-            </div>
-          ) : <EmptyState>No matching public campaign posts are available from the live sources right now.</EmptyState>}
-          {campaign.socialErrors?.length ? <p className="campaign-source-error">Some public social sources could not be reached. The rest of the campaign remains available.</p> : null}
-        </div>
-      </section>
-
       {campaign.timeline?.length ? (
         <section className="campaign-section campaign-section--timeline" id="timeline">
           <div className="campaign-shell">
@@ -318,6 +293,8 @@ export function CampaignPage() {
         </section>
       ) : null}
 
+      <SocialSection campaign={campaign} social={social} copyState={copyState} copyCampaignLink={copyCampaignLink} />
+
       <section className="campaign-disclaimer">
         <div className="campaign-shell">
           <strong>INDEPENDENT CAMPAIGN</strong>
@@ -329,6 +306,27 @@ export function CampaignPage() {
       <PublicationFooter />
     </main>
   )
+}
+
+function SocialSection({ campaign, social, copyState, copyCampaignLink }) {
+  return <section className="campaign-section campaign-section--social" id="social">
+    <div className="campaign-shell">
+      <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description="Live campaign posts from Sabot's public Bluesky and Mastodon accounts, filtered and source-linked without third-party embed scripts." />
+      <div className="campaign-share-row">
+        <a className="campaign-button campaign-button--light" href={`https://bsky.app/intent/compose?text=${encodeURIComponent(`${campaign.shortTitle}\n\n${window.location.href.split('#')[0]}`)}`} target="_blank" rel="noreferrer">Post to Bluesky ↗</a>
+        <button className="campaign-button campaign-button--ghost" type="button" onClick={copyCampaignLink}>{copyState || 'Copy campaign link'}</button>
+      </div>
+      {social.length ? <div className="campaign-social-feed">{social.map((item) => <article className="campaign-social-post" key={item.id}>
+        <div className="campaign-social-post__meta"><span>{item.platform || 'SOCIAL'}</span><span>{item.account}</span><span>{item.handle}</span><time dateTime={item.date}>{formatDate(item.date)}</time></div>
+        {item.contentWarning ? <p className="campaign-social-post__warning">Content warning: {item.contentWarning}</p> : null}
+        {(item.images?.length ? item.images : item.imageUrl ? [{ url: item.imageUrl, alt: '' }] : []).map((image) => <img key={image.url} src={image.url} alt={image.alt || ''} loading="lazy" />)}
+        <p>{item.text || item.excerpt}</p>
+        {item.external?.url ? <a className="campaign-social-post__external" href={item.external.url} target="_blank" rel="noreferrer"><strong>{item.external.title || item.external.url}</strong>{item.external.description ? <span>{item.external.description}</span> : null}</a> : null}
+        {item.url ? <a href={item.url} target="_blank" rel="noreferrer">Open original post ↗</a> : null}
+      </article>)}</div> : <EmptyState>No matching public campaign posts are available from the live sources right now.</EmptyState>}
+      {campaign.socialErrors?.length ? <p className="campaign-source-error">Some public social sources could not be reached. The rest of the campaign remains available.</p> : null}
+    </div>
+  </section>
 }
 
 function MonitorCard({ monitor, sourceUrl, label }) {
