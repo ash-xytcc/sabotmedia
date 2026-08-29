@@ -1,4 +1,16 @@
 /* A/I campaign visual authority. Loaded after campaign-page.css. */
+.campaign-page .campaign-hero::after {
+  content: "*";
+  inset: auto -4vw -22vw auto;
+  width: auto;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  color: rgba(0, 0, 0, 0.11);
+  font: 900 clamp(28rem, 66vw, 58rem)/0.65 var(--campaign-display);
+  transform: rotate(8deg);
+}
+
 .campaign-page .campaign-local-nav {
   position: relative;
   top: auto;
@@ -143,6 +155,7 @@
 }
 
 @media (max-width: 760px) {
+  .campaign-page .campaign-hero::after { inset: auto -12vw -30vw auto; font-size: clamp(22rem, 115vw, 38rem); }
   .campaign-page { --campaign-nav-height: 0px; }
   .campaign-page .campaign-local-nav { position: relative; }
   .campaign-page .campaign-section { scroll-margin-top: calc(var(--masthead-height, 62px) + 14px); }

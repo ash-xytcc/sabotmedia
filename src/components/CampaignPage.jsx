@@ -58,7 +58,7 @@ export function CampaignPage() {
   const letterPieces = campaignPieces.filter((piece) => /letter/i.test(String(piece.title || '')))
   const reportingPieces = campaignPieces.filter((piece) => !letterPieces.includes(piece))
   const graphics = useMemo(() => mergeGraphics(campaign?.graphics || [], campaignPieces), [campaign, campaignPieces])
-  const updates = useMemo(() => sortByDate(campaign?.updates || []), [campaign])
+  const updates = useMemo(() => sortByDate(campaign?.updates || [], false), [campaign])
   const coverage = useMemo(() => sortByDate(campaign?.coverage || []), [campaign])
   const social = useMemo(() => sortByDate(campaign?.social || []), [campaign])
   const deadline = campaign?.deadline ? new Date(campaign.deadline).getTime() : NaN

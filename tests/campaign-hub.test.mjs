@@ -162,3 +162,13 @@ test('receipts include authoritative sources, reporting and open letter without 
   for (const expected of ['sb0616', 'designation-of-autistici-inventati', 'who/manifesto', 'who/collective', 'who/rplan/index', 'cavallette.noblogs.org/2026/08/10076', 'MST%2Bresource_edit-2.pdf', '/post/the-server-called-paranoia', '/post/open-letter-ai']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   assert.match(socialServer, /sources: dedupeByUrl\(\[\.\.\.builtInSources/)
 })
+
+test('hero uses an asterisk and campaign chronology is fully populated', () => {
+  assert.match(polish, /\.campaign-page \.campaign-hero::after[\s\S]*content:\s*"\*"/)
+  assert.match(polish, /border-radius:\s*0/)
+  for (const expected of ['timeline-founded', 'timeline-first-request', 'timeline-trenitalia', 'timeline-aruba', 'timeline-aruba-discovery', 'timeline-plan-r', 'timeline-norway', 'timeline-designation', 'timeline-deadline']) assert.match(socialServer, new RegExp(expected))
+  for (const expected of ['update-designation', 'update-ai-response', 'update-investigation', 'update-open-letter', 'update-individual-letter', 'update-graphics', 'update-launch']) assert.match(socialServer, new RegExp(expected))
+  assert.match(page, /sortByDate\(campaign\?\.updates \|\| \[\], false\)/)
+  assert.match(socialServer, /timeline: dedupeById/)
+  assert.match(socialServer, /updates: dedupeById/)
+})
