@@ -78,13 +78,17 @@ async function fetchJson(url) {
   }
 }
 
-function aggregateStatus(monitors) {
+export function aggregateStatus(monitors) {
   if (!monitors.length) return 'unknown'
   const codes = monitors.map((monitor) => monitor.statusCode)
-  if (codes.some((code) => code === 0)) return 'down'
-  if (codes.some((code) => code === 2 || code == null)) return 'degraded'
-  if (codes.some((code) => code === 3)) return 'maintenance'
   if (codes.every((code) => code === 1)) return 'operational'
+  const maintenance = codes.filter((code) => code === 3).length
+  const down = codes.filter((code) => code === 0).length
+  const uncertain = codes.filter((code) => code === 2 || code == null).length
+  if (maintenance === codes.length) return 'maintenance'
+  const coreDown = monitors.some((monitor) => monitor.statusCode === 0 && /(?:noblogs|mail|smtp|imap|webmail|vpn|dns)/i.test(`${monitor.group} ${monitor.name}`))
+  if (coreDown || down > codes.length / 2) return 'major-outage'
+  if (down || uncertain || maintenance) return 'partial-outage'
   return 'unknown'
 }
 
