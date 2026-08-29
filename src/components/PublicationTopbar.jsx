@@ -4,6 +4,7 @@ import { sabotMastheadTransparent } from '../lib/sabotMastheadTransparent'
 import { EditableLink } from './EditableLink'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 import { publicRoutes } from '../routing/routes'
+import { SHOW_AI_CAMPAIGN_LINKS } from '../config/campaignVisibility'
 
 export function PublicationTopbar() {
   const location = useLocation()
@@ -45,7 +46,7 @@ export function PublicationTopbar() {
                 labelField={item.labelField}
               />
             ))}
-            <Link className="publication-topbar__campaign-link" to={publicRoutes.aiCampaign}>A/I Campaign</Link>
+            {SHOW_AI_CAMPAIGN_LINKS ? <Link className="publication-topbar__campaign-link" to={publicRoutes.aiCampaign}>A/I Campaign</Link> : null}
             <Link to="/aberdeen-local-1312-gallery">Gallery</Link>
           </nav>
         </div>
