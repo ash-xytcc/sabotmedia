@@ -81,7 +81,10 @@ async function fetchJson(url) {
 function aggregateStatus(monitors) {
   if (!monitors.length) return 'unknown'
   const codes = monitors.map((monitor) => monitor.statusCode)
-  if (codes.some((code) => code === 0)) return 'down'
+  const downCount = codes.filter((code) => code === 0).length
+  const knownCount = codes.filter((code) => code != null).length
+  if (knownCount > 0 && downCount === knownCount) return 'down'
+  if (downCount > 0) return 'degraded'
   if (codes.some((code) => code === 2 || code == null)) return 'degraded'
   if (codes.some((code) => code === 3)) return 'maintenance'
   if (codes.every((code) => code === 1)) return 'operational'
