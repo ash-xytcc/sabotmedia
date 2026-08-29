@@ -13,7 +13,18 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl) {
   const origin = new URL(requestUrl).origin
   const graphics = AI_CAMPAIGN_GRAPHICS.map((item) => ({ ...item, imageUrl: new URL(item.imageUrl, origin).toString(), downloadUrl: new URL(item.downloadUrl, origin).toString() }))
   const feed = await loadLiveAiSocial(requestUrl).catch((error) => ({ items: [], errors: [{ platform: 'social', message: String(error?.message || error) }], sources: [] }))
-  return { ...campaign, campaignKeywords: ['autistici/inventati', 'a/i campaign'], graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'), social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'), socialSources: feed.sources, socialErrors: feed.errors }
+  const letterPdf = new URL('/campaigns/autistici-inventati/resources/individual-letter-defend-autistici-inventati.pdf', origin).toString()
+  const pdfResource = { id: 'resource-individual-letter-pdf', type: 'PDF / LETTER TEMPLATE', title: 'Individual Letter: Defend Independent Communications Infrastructure', description: 'Printable three-page individual letter template with recipient guidance for the United States, European Union, Italy and other countries.', href: letterPdf, label: 'Open / download PDF' }
+  const pdfSource = { id: 'source-individual-letter-pdf', publisher: 'Sabot Media × We Will Free Us', title: 'Individual Letter: Defend Independent Communications Infrastructure', url: letterPdf, note: 'Campaign letter template and recipient guide, August 2026.' }
+  const actions = [...(campaign.actions || [])].sort((a, b) => actionRank(a) - actionRank(b))
+  return { ...campaign, actions, campaignKeywords: ['autistici/inventati', 'a/i campaign'], resources: dedupeByUrl([pdfResource, ...(campaign.resources || [])], 'href'), sources: dedupeByUrl([pdfSource, ...(campaign.sources || [])], 'url'), graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'), social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'), socialSources: feed.sources, socialErrors: feed.errors }
+}
+
+function actionRank(action) {
+  const value = `${action?.id || ''} ${action?.title || ''}`
+  if (/reporting/i.test(value)) return 0
+  if (/letter/i.test(value)) return 1
+  return 2
 }
 
 export async function loadLiveAiSocial(requestUrl, fetcher = fetch) {
