@@ -22,6 +22,8 @@ import { PublicationSystemPage } from './components/PublicationSystemPage'
 import { CollectionsIndexPage } from './components/CollectionsIndexPage'
 import { CollectionPage } from './components/CollectionPage'
 import { CollectionsAdminPage } from './components/CollectionsAdminPage'
+import { CampaignPage } from './components/CampaignPage'
+import { CampaignAdminPage } from './components/CampaignAdminPage'
 import { FeedSettingsAdminPage } from './components/FeedSettingsAdminPage'
 import { PublicFeedsPage } from './components/PublicFeedsPage'
 import { GalleryArchivePage } from './components/GalleryArchivePage'
@@ -60,7 +62,7 @@ const projectMap = buildProjectMap(pieces)
 const ADMIN_SHELL_PATHS = [
   '/admin', '/review', '/qa', '/content', '/posts', '/add-new', '/post-new', '/native-bridge', '/native-preview',
   '/podcasts', '/draft', '/overrides', '/system-backup', '/taxonomy', '/roles', '/audit-log', '/analytics',
-  '/design-system', '/platform-map', '/media', '/pages', '/collections-admin', '/publications-admin', '/feeds-admin',
+  '/design-system', '/platform-map', '/media', '/pages', '/collections-admin', '/campaigns-admin', '/publications-admin', '/feeds-admin',
   '/users', '/menus', '/customize', '/site-editor', '/advanced-draft-tools', '/tools', '/site-health', '/printlab',
   '/audiolab', '/settings', '/sites', '/wp-admin',
 ]
@@ -118,6 +120,7 @@ function RouteMeta({ pieces = [] }) {
       '/': ['Sabot Media', 'Independent reporting, essays, comics, podcasts, zines, and project-based archive work.'],
       '/archive': ['Archive', 'Browse the Sabot Media archive by search, project, format, and date.'],
       '/collections': ['Collections', 'Browse Sabot Media bodies of work by timeline, downloads, gallery, and related pieces.'],
+      '/campaigns/autistici-inventati': ['Communications Infrastructure Is Not Terrorism', 'Campaign hub for reporting, open letters, graphics, live updates, source material, and infrastructure status related to Autistici/Inventati.'],
       '/feeds': ['Feeds', 'Subscribe to Sabot Media feeds for the whole archive, formats, projects, collections, and author labels.'],
       '/aberdeen-local-1312-gallery': ['Aberdeen Local 1312 Gallery', 'Historical image archive from Aberdeen Local 1312, preserved by Sabot Media.'],
       '/search': ['Search', 'Search the Sabot Media archive.'],
@@ -250,6 +253,8 @@ export default function App() {
               <Route path="/piece/:slug/print" element={<LegacyPrintRedirect />} />
               <Route path={publicRoutes.collections} element={<CollectionsIndexPage pieces={pieces} />} />
               <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
+              <Route path="/campaigns" element={<Navigate to={publicRoutes.aiCampaign} replace />} />
+              <Route path={publicRoutes.aiCampaign} element={<CampaignPage />} />
               <Route path={publicRoutes.feeds} element={<PublicFeedsPage />} />
               <Route path={publicRoutes.gallery} element={<GalleryArchivePage />} />
 
@@ -271,6 +276,8 @@ export default function App() {
               <Route path={adminRoutes.projects} element={protect(<ProjectsIndexPage projectMap={projectMap} />)} />
               <Route path="/collections-admin" element={protect(<Navigate to={adminRoutes.collections} replace />)} />
               <Route path={adminRoutes.collections} element={protect(<CollectionsAdminPage />)} />
+              <Route path="/campaigns-admin" element={protect(<Navigate to={adminRoutes.campaigns} replace />)} />
+              <Route path={adminRoutes.campaigns} element={protect(<CampaignAdminPage />)} />
               <Route path="/publications-admin" element={protect(<Navigate to={adminRoutes.publications} replace />)} />
               <Route path={adminRoutes.publications} element={protect(<PublicationSystemPage />)} />
               <Route path="/feeds-admin" element={protect(<Navigate to={adminRoutes.feeds} replace />)} />
