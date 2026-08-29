@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
-import { loadCampaign, loadCampaignMonitor } from '../lib/campaignsApi'
+import { loadCampaign, loadCampaignMonitor, loadCampaignSocial } from '../lib/campaignsApi'
 import { loadPublishedNativePieces } from '../lib/nativePublicFeed'
+import { AI_CAMPAIGN_GRAPHICS, AI_CAMPAIGN_HERO_IMAGE } from '../data/aiCampaignGraphics'
 
 const CAMPAIGN_SLUG = 'autistici-inventati'
 
@@ -11,6 +12,7 @@ export function CampaignPage() {
   const [campaign, setCampaign] = useState(null)
   const [pieces, setPieces] = useState([])
   const [monitor, setMonitor] = useState({ state: 'loading', data: null })
+  const [liveSocial, setLiveSocial] = useState({ state: 'loading', items: [], sources: null, error: '' })
   const [error, setError] = useState('')
   const [now, setNow] = useState(() => Date.now())
   const [copyState, setCopyState] = useState('')
@@ -54,13 +56,33 @@ export function CampaignPage() {
     return () => { cancelled = true; window.clearInterval(timer) }
   }, [])
 
-  const campaignPieces = useMemo(() => findCampaignPieces(pieces, campaign), [pieces, campaign])
+  useEffect(() => {
+    let cancelled = false
+    async function refreshSocial() {
+      try {
+        const data = await loadCampaignSocial()
+        if (cancelled) return
+        setLiveSocial({
+          state: Array.isArray(data?.items) && data.items.length ? 'loaded' : 'empty',
+          items: Array.isArray(data?.items) ? data.items : [],
+          sources: data?.sources || null,
+          error: '',
+        })
+      } catch (err) {
+        if (!cancelled) setLiveSocial({ state: 'unavailable', items: [], sources: null, error: String(err?.message || err) })
+      }
+    }
+    refreshSocial()
+    const timer = window.setInterval(refreshSocial, 300000)
+    return () => { cancelled = true; window.clearInterval(timer) }
+  }, [])
+
+  const campaignPieces = useMemo(() => findCampaignPieces(pieces), [pieces])
   const letterPieces = campaignPieces.filter((piece) => /letter/i.test(String(piece.title || '')))
   const reportingPieces = campaignPieces.filter((piece) => !letterPieces.includes(piece))
-  const graphics = useMemo(() => mergeGraphics(campaign?.graphics || [], campaignPieces), [campaign, campaignPieces])
+  const graphics = AI_CAMPAIGN_GRAPHICS
   const updates = useMemo(() => sortByDate(campaign?.updates || []), [campaign])
   const coverage = useMemo(() => sortByDate(campaign?.coverage || []), [campaign])
-  const social = useMemo(() => sortByDate(campaign?.social || []), [campaign])
   const deadline = campaign?.deadline ? new Date(campaign.deadline).getTime() : NaN
   const countdown = Number.isFinite(deadline) ? formatCountdown(deadline - now) : null
 
@@ -108,6 +130,7 @@ export function CampaignPage() {
 
   const pinnedUpdate = updates.find((item) => item.pinned) || updates[0]
   const isPastDeadline = Number.isFinite(deadline) && deadline <= now
+  const heroImage = campaign.heroImage || AI_CAMPAIGN_HERO_IMAGE
 
   return (
     <main className="page campaign-page" data-campaign={campaign.slug}>
@@ -132,14 +155,8 @@ export function CampaignPage() {
             <p className="campaign-hero__partners">Independent campaign by {campaign.partners.join(' × ')}</p>
           </div>
 
-          <div className="campaign-hero__poster" aria-label={campaign.heroAlt || campaign.shortTitle}>
-            {campaign.heroImage ? <img src={campaign.heroImage} alt={campaign.heroAlt || ''} /> : (
-              <div className="campaign-hero__poster-fallback" aria-hidden="true">
-                <span>BEFORE SEPT 25TH</span>
-                <strong>COMMUNICATIONS<br />INFRASTRUCTURE<br />IS NOT<br />TERRORISM</strong>
-                <small>DEFEND AUTISTICI/INVENTATI</small>
-              </div>
-            )}
+          <div className="campaign-hero__poster">
+            <img src={heroImage} alt={campaign.heroImage ? (campaign.heroAlt || '') : 'The Server Called Paranoia campaign graphic for Autistici/Inventati.'} />
           </div>
         </div>
       </section>
@@ -207,16 +224,15 @@ export function CampaignPage() {
 
       <section className="campaign-section" id="reporting">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="REPORTING + CONTEXT" title="Read before you repeat" description="The campaign is anchored in reporting, not vibes. These are the Sabot pieces currently connected to the A/I campaign." />
-          <PieceGrid pieces={reportingPieces} empty="Campaign reporting will appear here as relevant published posts are detected." />
-          <ResourceStrip resources={(campaign.resources || []).filter((item) => !/letter/i.test(item.type || item.title))} />
+          <SectionHeading eyebrow="REPORTING + CONTEXT" title="Read before you repeat" description="The reporting section is intentionally narrow: only pieces directly about Autistici/Inventati, Noblogs, or this campaign appear here." />
+          <PieceGrid pieces={reportingPieces} empty="No directly related campaign reporting is published yet." />
         </div>
       </section>
 
       <section className="campaign-section campaign-section--paper" id="letters">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="LETTERS" title="Read it. Sign it. Send it." description="The public campaign includes both collective advocacy and a version individuals can send directly. Published letter posts are detected automatically; additional PDFs and print resources can be attached from Campaigns admin." />
-          <PieceGrid pieces={letterPieces} empty="Published letter posts will appear here automatically once their titles or campaign metadata identify them as letters." />
+          <SectionHeading eyebrow="LETTERS" title="Read it. Sign it. Send it." description="The public and individual letters are collected here with the reporting they respond to." />
+          <PieceGrid pieces={letterPieces} empty="No campaign letter is published yet." />
           <ResourceStrip resources={(campaign.resources || []).filter((item) => /letter|pdf|template/i.test(`${item.type} ${item.title}`))} />
         </div>
       </section>
@@ -237,31 +253,31 @@ export function CampaignPage() {
 
       <section className="campaign-section" id="graphics">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="CAMPAIGN KIT" title="Take the graphics" description="Download, repost, print, remix where appropriate, and keep the alt text attached. Campaign images from linked Sabot posts are collected here automatically alongside manually attached graphics." />
-          {graphics.length ? (
-            <div className="campaign-graphics-grid">
-              {graphics.map((graphic) => (
-                <figure className="campaign-graphic" key={graphic.id || graphic.imageUrl}>
-                  <a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer"><img src={graphic.imageUrl} alt={graphic.alt || ''} loading="lazy" /></a>
-                  <figcaption><strong>{graphic.title || 'Campaign graphic'}</strong>{graphic.caption ? <p>{graphic.caption}</p> : null}<a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer">Open / download ↗</a></figcaption>
-                </figure>
-              ))}
-            </div>
-          ) : <EmptyState>Campaign graphics will appear here as they are attached to campaign posts or added in Campaigns admin.</EmptyState>}
+          <SectionHeading eyebrow="CAMPAIGN KIT" title={`Take the graphics · ${graphics.length} files`} description="The complete campaign graphic set is built into this page. Open any image for the full-size version, repost it, print it, or circulate it with the supplied alt text." />
+          <div className="campaign-graphics-grid">
+            {graphics.map((graphic) => (
+              <figure className="campaign-graphic" key={graphic.id || graphic.imageUrl}>
+                <a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer"><img src={graphic.imageUrl} alt={graphic.alt || ''} loading="lazy" /></a>
+                <figcaption><strong>{graphic.title || 'Campaign graphic'}</strong>{graphic.caption ? <p>{graphic.caption}</p> : null}<a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer">Open full-size ↗</a></figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="campaign-section campaign-section--social" id="social">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description="A curated wall of campaign posts and useful circulation. This stays intentionally source-linked instead of depending on a third-party embed script to keep functioning." />
+          <SectionHeading eyebrow="LIVE SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description="This feed refreshes automatically from public Bluesky campaign search and Aberdeen Local 1312 on Kolektiva Mastodon. No manual campaign-post entry required." />
           <div className="campaign-share-row">
             <a className="campaign-button campaign-button--light" href={`https://bsky.app/intent/compose?text=${encodeURIComponent(`${campaign.shortTitle}\n\n${window.location.href.split('#')[0]}`)}`} target="_blank" rel="noreferrer">Post to Bluesky ↗</a>
+            <a className="campaign-button campaign-button--ghost" href="https://kolektiva.social/web/@AberdeenLocal1312" target="_blank" rel="noreferrer">Open Mastodon ↗</a>
             <button className="campaign-button campaign-button--ghost" type="button" onClick={copyCampaignLink}>{copyState || 'Copy campaign link'}</button>
           </div>
-          {social.length ? (
+          <SocialSourceStatus liveSocial={liveSocial} />
+          {liveSocial.items.length ? (
             <div className="campaign-social-feed">
-              {social.map((item) => (
-                <article className="campaign-social-post" key={item.id}>
+              {liveSocial.items.map((item) => (
+                <article className="campaign-social-post" key={item.id || item.url}>
                   <div className="campaign-social-post__meta"><span>{item.platform || 'SOCIAL'}</span><span>{item.account}</span><time dateTime={item.date}>{formatDate(item.date)}</time></div>
                   {item.imageUrl ? <img src={item.imageUrl} alt="" loading="lazy" /> : null}
                   <p>{item.excerpt}</p>
@@ -269,7 +285,7 @@ export function CampaignPage() {
                 </article>
               ))}
             </div>
-          ) : <EmptyState>The social wall is ready. Add Bluesky, Mastodon, Instagram, or other campaign post URLs from Campaigns admin as they go live.</EmptyState>}
+          ) : liveSocial.state === 'loading' ? <EmptyState>Loading the public social feeds…</EmptyState> : <EmptyState>No A/I campaign posts were found in the current public feed window. The page will check again automatically.</EmptyState>}
         </div>
       </section>
 
@@ -287,14 +303,14 @@ export function CampaignPage() {
       <section className="campaign-section" id="coverage">
         <div className="campaign-shell">
           <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" />
-          {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.outlet, formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, body: item.summary, url: item.url }))} /> : <EmptyState>Press coverage, statements, interviews, and external analysis can be added here as they appear.</EmptyState>}
+          {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.outlet, formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, body: item.summary, url: item.url }))} /> : <EmptyState>Press coverage and public statements will collect here as the campaign develops.</EmptyState>}
         </div>
       </section>
 
       <section className="campaign-section campaign-section--sources" id="sources">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRIMARY SOURCES" title="Check the receipts" description="Government material, A/I statements, legal analysis, historical documents, and other primary sources belong here so readers and journalists can verify the campaign without reverse-engineering footnotes." />
-          {campaign.sources?.length ? <LinkList items={campaign.sources.map((item) => ({ id: item.id, eyebrow: item.publisher, title: item.title, body: item.note, url: item.url }))} /> : <EmptyState>Source links can be attached from Campaigns admin. Reporting posts above retain their own article-level citations.</EmptyState>}
+          <SectionHeading eyebrow="PRIMARY SOURCES" title="Check the receipts" description="Government material, A/I statements, legal analysis, historical documents, and other primary sources sit beside the reporting so the factual record can be checked directly." />
+          {campaign.sources?.length ? <LinkList items={campaign.sources.map((item) => ({ id: item.id, eyebrow: item.publisher, title: item.title, body: item.note, url: item.url }))} /> : <EmptyState>The linked reporting above retains its article-level citations while the campaign source index is assembled.</EmptyState>}
         </div>
       </section>
 
@@ -344,6 +360,17 @@ function MonitorCard({ monitor, sourceUrl, label }) {
   )
 }
 
+function SocialSourceStatus({ liveSocial }) {
+  const sources = liveSocial.sources
+  if (!sources) return liveSocial.state === 'unavailable' ? <p className="campaign-social-status">Live social sources are temporarily unavailable. The campaign page itself remains fully functional.</p> : null
+  return (
+    <div className="campaign-social-status" aria-label="Live social source status">
+      <span className={sources.bluesky?.ok ? 'is-live' : 'is-offline'}>Bluesky {sources.bluesky?.ok ? 'live' : 'unavailable'}{Number.isFinite(sources.bluesky?.count) ? ` · ${sources.bluesky.count}` : ''}</span>
+      <span className={sources.mastodon?.ok ? 'is-live' : 'is-offline'}>Mastodon {sources.mastodon?.ok ? 'live' : 'unavailable'}{Number.isFinite(sources.mastodon?.count) ? ` · ${sources.mastodon.count}` : ''}</span>
+    </div>
+  )
+}
+
 function SectionHeading({ eyebrow, title, description = '' }) {
   return <header className="campaign-section-heading"><p>{eyebrow}</p><h2>{title}</h2>{description ? <div>{description}</div> : null}</header>
 }
@@ -352,7 +379,7 @@ function PieceGrid({ pieces, empty }) {
   if (!pieces.length) return <EmptyState>{empty}</EmptyState>
   return (
     <div className="campaign-piece-grid">
-      {pieces.slice(0, 12).map((piece) => (
+      {pieces.slice(0, 6).map((piece) => (
         <article className="campaign-piece-card" key={piece.id || piece.slug}>
           {piece.featuredImage || piece.heroImage || piece.imageUrl ? <Link className="campaign-piece-card__image" to={`/post/${piece.slug}`}><img src={piece.featuredImage || piece.heroImage || piece.imageUrl} alt={piece.featuredImageAlt || ''} loading="lazy" /></Link> : null}
           <div className="campaign-piece-card__body"><p>{formatDate(piece.publishedAt || piece.updatedAt)} / {String(piece.contentType || piece.type || 'article').toUpperCase()}</p><h3><Link to={`/post/${piece.slug}`}>{piece.title}</Link></h3>{piece.excerpt ? <div>{stripHtml(piece.excerpt).slice(0, 220)}</div> : null}<Link to={`/post/${piece.slug}`}>Read ↗</Link></div>
@@ -372,7 +399,7 @@ function LinkList({ items }) {
 }
 
 function EmptyState({ children }) {
-  return <div className="campaign-empty-state"><span>OPEN SLOT</span><p>{children}</p></div>
+  return <div className="campaign-empty-state"><span>LIVE SLOT</span><p>{children}</p></div>
 }
 
 function SmartLink({ href = '#', children }) {
@@ -382,37 +409,17 @@ function SmartLink({ href = '#', children }) {
   return <a href={value} target="_blank" rel="noreferrer">{children}</a>
 }
 
-function findCampaignPieces(pieces, campaign) {
-  if (!Array.isArray(pieces) || !campaign) return []
-  const required = ['autistici', 'inventati', 'noblogs', 'communications infrastructure']
-  const configured = (campaign.campaignKeywords || []).map((item) => String(item).toLowerCase()).filter(Boolean)
-  const keywords = [...new Set([...required, ...configured])]
+function findCampaignPieces(pieces) {
+  if (!Array.isArray(pieces)) return []
+  const directTerms = ['autistici', 'inventati', 'noblogs', 'communications infrastructure is not terrorism', 'server called paranoia']
   return pieces.filter((piece) => {
     const explicit = [...(piece.tags || []), ...(piece.collections || []), ...(piece.projects || []), piece.primaryProject]
       .map((item) => String(item || '').toLowerCase())
-      .some((item) => item.includes('autistici') || item.includes('inventati') || item.includes('a/i campaign'))
+      .some((item) => item.includes('autistici') || item.includes('inventati') || item.includes('noblogs') || item.includes('a/i campaign'))
     if (explicit) return true
-    const haystack = [piece.title, piece.excerpt, piece.body, piece.bodyHtml, piece.podcastSummary].join(' ').toLowerCase()
-    return keywords.some((keyword) => keyword && haystack.includes(keyword))
+    const haystack = [piece.title, piece.excerpt, piece.body, piece.bodyHtml].join(' ').toLowerCase()
+    return directTerms.some((term) => haystack.includes(term))
   }).sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0) - new Date(a.publishedAt || a.updatedAt || 0))
-}
-
-function mergeGraphics(configured, pieces) {
-  const output = []
-  const seen = new Set()
-  for (const item of configured || []) {
-    const url = String(item.imageUrl || '').trim()
-    if (!url || seen.has(url)) continue
-    seen.add(url)
-    output.push(item)
-  }
-  for (const piece of pieces || []) {
-    const url = String(piece.featuredImage || piece.heroImage || piece.imageUrl || '').trim()
-    if (!url || seen.has(url)) continue
-    seen.add(url)
-    output.push({ id: `piece-${piece.id || piece.slug}`, title: piece.title, imageUrl: url, alt: piece.featuredImageAlt || '', caption: piece.featuredImageCaption || '', downloadUrl: url })
-  }
-  return output
 }
 
 function sortByDate(items, descending = true) {
@@ -434,8 +441,8 @@ function formatCountdown(ms) {
 
 function statusText(status) {
   if (status === 'operational') return 'A/I monitor: operational'
-  if (status === 'down') return 'A/I monitor: outage detected'
-  if (status === 'degraded') return 'A/I monitor: degraded / pending'
+  if (status === 'down') return 'A/I monitor: broad outage'
+  if (status === 'degraded') return 'A/I monitor: partial disruption'
   if (status === 'maintenance') return 'A/I monitor: maintenance'
   return 'A/I monitor: status unavailable'
 }
