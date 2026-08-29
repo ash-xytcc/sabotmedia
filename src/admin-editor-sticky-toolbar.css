@@ -3,9 +3,20 @@
   --sabot-editor-sticky-top: 32px;
 }
 
+/* `overflow-x: hidden` on either ancestor creates a scrolling box on both
+ * axes in Chromium. Sticky descendants then attach to that non-scrolling box
+ * instead of the viewport. `clip` contains horizontal paint without creating
+ * a scroll container, while the vertical axis remains owned by the page. */
+.admin-frame__main:has(.wp-edit-screen),
+.wp-edit-screen {
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+}
+
 .wp-edit-screen .native-bridge-layout,
 .wp-edit-screen .native-bridge-main {
-  overflow: visible !important;
+  overflow-x: clip !important;
+  overflow-y: visible !important;
 }
 
 .wp-edit-screen .native-bridge-layout {

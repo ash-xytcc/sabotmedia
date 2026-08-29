@@ -9,7 +9,14 @@ test('post editor chrome stays pinned below the fixed desktop admin bar', () => 
   assert.match(css, /\.native-content-editor__chrome\s*\{[\s\S]*?position:\s*sticky\s*!important/)
   assert.match(css, /--sabot-editor-sticky-top:\s*32px/)
   assert.match(css, /top:\s*var\(--sabot-editor-sticky-top\)\s*!important/)
-  assert.match(css, /\.native-bridge-main\s*\{[\s\S]*overflow:\s*visible\s*!important/)
+  assert.match(css, /\.native-bridge-main\s*\{[\s\S]*?overflow-x:\s*clip\s*!important[\s\S]*?overflow-y:\s*visible\s*!important/)
+})
+
+test('editor ancestors do not trap sticky controls in a non-scrolling overflow box', () => {
+  const shellRule = css.match(/\.admin-frame__main:has\(\.wp-edit-screen\),\s*\.wp-edit-screen\s*\{[^}]*\}/)?.[0] || ''
+  assert.match(shellRule, /overflow-x:\s*clip\s*!important/)
+  assert.match(shellRule, /overflow-y:\s*visible\s*!important/)
+  assert.doesNotMatch(shellRule, /overflow(?:-x)?:\s*hidden/)
 })
 
 test('sticky editor offsets account for mobile admin chrome without overlaying it', () => {
