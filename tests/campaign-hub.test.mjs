@@ -125,6 +125,13 @@ test('live campaign social is server-side, filtered, normalized and graceful', (
   assert.doesNotMatch(socialServer, /localStorage|embed\.js|<script/)
 })
 
+test('live social filtering excludes pre-campaign A\/I and NoBlogs posts', async () => {
+  const { isCampaignSocialPost } = await import('../functions/api/_lib/aiCampaignPublic.js')
+  assert.equal(isCampaignSocialPost({ date: '2026-05-30T09:56:31Z', text: 'Support A/I and NoBlogs' }), false)
+  assert.equal(isCampaignSocialPost({ date: '2026-08-27T11:17:20Z', text: 'Defend Autistici/Inventati before September 25' }), true)
+  assert.equal(isCampaignSocialPost({ date: '2026-08-27T11:17:20Z', text: 'Unrelated infrastructure update' }), false)
+})
+
 test('bundled campaign graphics manifest resolves every accessible asset', () => {
   const slugs = [...graphicsManifest.matchAll(/\['([a-z0-9-]+)',/g)].map((match) => match[1])
   assert.equal(slugs.length, 22)
@@ -159,8 +166,25 @@ test('individual letter PDF remains bundled in letters but not primary sources',
 })
 
 test('receipts include authoritative sources, reporting and open letter without the letter PDF', () => {
-  for (const expected of ['sb0616', 'designation-of-autistici-inventati', 'who/manifesto', 'who/collective', 'who/rplan/index', 'cavallette.noblogs.org/2026/08/10076', 'MST%2Bresource_edit-2.pdf', '/post/the-server-called-paranoia', '/post/open-letter-ai']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  for (const expected of ['sb0616', 'designation-of-autistici-inventati', 'www.inventati.org/who/manifesto', 'www.inventati.org/who/collective', 'www.inventati.org/who/rplan/index', 'ai-book-kaos.pdf', 'cavallette.noblogs.org/2026/08/10076', 'MST%2Bresource_edit-2.pdf', '/post/the-server-called-paranoia', '/post/open-letter-ai']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  assert.doesNotMatch(socialServer, /www\.autistici\.org\/who\//)
   assert.match(socialServer, /sources: dedupeByUrl\(\[\.\.\.builtInSources/)
+})
+
+test('article PDF is bundled with reporting and excluded from the letter resource strip', () => {
+  assert.ok(fs.existsSync(new URL('../public/campaigns/autistici-inventati/resources/the-server-called-paranoia-article.pdf', import.meta.url)))
+  assert.match(socialServer, /resource-server-called-paranoia-pdf/)
+  assert.match(socialServer, /Download article PDF/)
+  assert.match(page, /!\/letter\|template\/i/)
+  assert.match(page, /\/letter\|template\/i/)
+})
+
+test('campaign ships external coverage and prioritizes the official A\/I Mastodon feed', () => {
+  for (const expected of ['coverage-crimethinc', 'coverage-repubblica', 'coverage-effimera', 'coverage-rainews']) assert.match(socialServer, new RegExp(expected))
+  assert.match(socialServer, /mastodon\.bida\.im['"], acct: ['"]cavallette/)
+  assert.match(socialServer, /sourcePriority/)
+  assert.match(socialServer, /setTimeout\(\(\) => controller\.abort\(\), 12000\)/)
+  assert.match(socialServer, /coverage: dedupeById\(\[\.\.\.builtInCoverage/)
 })
 
 test('hero uses an asterisk and campaign chronology is fully populated', () => {
