@@ -6,6 +6,9 @@ import { loadCampaign, loadCampaignMonitor } from '../lib/campaignsApi'
 import { loadPublishedNativePieces } from '../lib/nativePublicFeed'
 
 const CAMPAIGN_SLUG = 'autistici-inventati'
+const ITALY_TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
+const ITALY_DATE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+const ITALY_ZONE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', timeZoneName: 'short' })
 
 export function CampaignPage() {
   const [campaign, setCampaign] = useState(null)
@@ -163,6 +166,7 @@ export function CampaignPage() {
       <section className="campaign-section campaign-section--status" id="status">
         <div className="campaign-shell">
           <SectionHeading eyebrow="LIVE CAMPAIGN DASHBOARD" title="What is happening now" />
+          <ItalyClock />
           <div className="campaign-status-grid">
             <article className="campaign-metric campaign-metric--deadline">
               <span className="campaign-metric__label">SEPT. 25</span>
@@ -318,6 +322,28 @@ function SocialSection({ campaign, social, copyState, copyCampaignLink }) {
       {campaign.socialErrors?.length ? <p className="campaign-source-error">Some public social sources could not be reached. The rest of the campaign remains available.</p> : null}
     </div>
   </section>
+}
+
+function ItalyClock() {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+  const instant = new Date(now)
+  const zone = ITALY_ZONE_FORMAT.formatToParts(instant).find((part) => part.type === 'timeZoneName')?.value || 'Europe/Rome'
+  return (
+    <aside className="campaign-italy-clock" aria-label="Current time in Italy">
+      <div>
+        <span>CURRENT TIME IN ITALY</span>
+        <p>ROME / EUROPE · {zone}</p>
+      </div>
+      <time dateTime={instant.toISOString()} title="Live local time in Rome" aria-live="off">
+        <strong>{ITALY_TIME_FORMAT.format(instant)}</strong>
+        <span>{ITALY_DATE_FORMAT.format(instant)}</span>
+      </time>
+    </aside>
+  )
 }
 
 function MonitorCard({ monitor, sourceUrl, label }) {
