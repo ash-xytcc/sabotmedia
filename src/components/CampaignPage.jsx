@@ -110,7 +110,7 @@ export function CampaignPage() {
     )
   }
 
-  const pinnedUpdate = updates.find((item) => item.pinned) || updates[0]
+  const pinnedUpdate = updates.filter((item) => item.pinned).at(-1) || updates.at(-1)
   const isPastDeadline = Number.isFinite(deadline) && deadline <= now
 
   return (

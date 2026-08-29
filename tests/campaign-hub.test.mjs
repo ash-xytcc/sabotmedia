@@ -234,3 +234,14 @@ test('hero uses an asterisk and campaign chronology is fully populated', () => {
   assert.match(socialServer, /timeline: dedupeById/)
   assert.match(socialServer, /updates: dedupeById/)
 })
+
+test('new A/I press release is promoted as a current update and primary source', () => {
+  assert.match(socialServer, /source-ai-press-release/)
+  assert.match(socialServer, /timeline-ai-press-release/)
+  assert.match(socialServer, /update-ai-press-release/)
+  assert.match(socialServer, /https:\/\/www\.inventati\.org\/campaign\/press/)
+  assert.match(socialServer, /English-language A\/I briefing/)
+  assert.match(socialServer, /serverHold/)
+  assert.match(socialServer, /update-ai-press-release[^\n]*pinned:\s*true/)
+  assert.match(page, /updates\.filter\(\(item\) => item\.pinned\)\.at\(-1\) \|\| updates\.at\(-1\)/)
+})
