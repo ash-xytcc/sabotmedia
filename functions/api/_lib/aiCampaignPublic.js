@@ -4,7 +4,11 @@ const CAMPAIGN_URL = 'https://sabot.media/campaigns/autistici-inventati'
 // Verified against the public profile endpoints. No We Will Free Us account is
 // bundled until one can be resolved from authoritative site data.
 const BLUESKY_ACTORS = ['sabotmedia.bsky.social']
-const MASTODON_ACCOUNTS = [{ instance: 'https://kolektiva.social', acct: 'AberdeenLocal1312' }]
+const MASTODON_ACCOUNTS = [
+  { instance: 'https://mastodon.bida.im', acct: 'cavallette', priority: 0 },
+  { instance: 'https://kolektiva.social', acct: 'AberdeenLocal1312', priority: 2 },
+]
+const CAMPAIGN_START_MS = Date.parse('2026-08-26T00:00:00Z')
 const SIGNAL = /(?:autistici(?:\s*\/\s*|\s+)?inventati|\bnoblogs\b|communications infrastructure|infrastructure is not terrorism|defend autistici|#defendai)/i
 const CACHE_TTL_SECONDS = 300
 
@@ -14,17 +18,26 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl) {
   const graphics = AI_CAMPAIGN_GRAPHICS.map((item) => ({ ...item, imageUrl: new URL(item.imageUrl, origin).toString(), downloadUrl: new URL(item.downloadUrl, origin).toString() }))
   const feed = await loadLiveAiSocial(requestUrl).catch((error) => ({ items: [], errors: [{ platform: 'social', message: String(error?.message || error) }], sources: [] }))
   const letterPdf = new URL('/campaigns/autistici-inventati/resources/individual-letter-defend-autistici-inventati.pdf', origin).toString()
+  const articlePdf = new URL('/campaigns/autistici-inventati/resources/the-server-called-paranoia-article.pdf', origin).toString()
   const pdfResource = { id: 'resource-individual-letter-pdf', type: 'PDF / LETTER TEMPLATE', title: 'Individual Letter: Defend Independent Communications Infrastructure', description: 'Printable three-page individual letter template with recipient guidance for the United States, European Union, Italy and other countries.', href: letterPdf, label: 'Open / download PDF' }
+  const articlePdfResource = { id: 'resource-server-called-paranoia-pdf', type: 'PDF / REPORTING', title: 'The Server Called Paranoia', description: 'Downloadable twelve-page edition of Sabot Media’s investigation and campaign reporting.', href: articlePdf, label: 'Download article PDF' }
   const builtInSources = [
     { id: 'source-treasury', publisher: 'U.S. Department of the Treasury', title: 'U.S. Treasury announcement', url: 'https://home.treasury.gov/news/press-releases/sb0616/', note: 'Official Treasury announcement of the designation and sanctions action.' },
     { id: 'source-state', publisher: 'U.S. Department of State', title: 'U.S. State Department designation', url: 'https://www.state.gov/releases/office-of-the-spokesperson/2026/08/designation-of-autistici-inventati-as-a-specially-designated-global-terrorist/', note: 'Official State Department designation statement.' },
-    { id: 'source-ai-manifesto', publisher: 'Autistici/Inventati', title: 'A/I manifesto', url: 'https://www.autistici.org/who/manifesto', note: 'A/I describes its political and technical principles in its own words.' },
-    { id: 'source-ai-history', publisher: 'Autistici/Inventati', title: 'A/I collective history', url: 'https://www.autistici.org/who/collective', note: 'History and background of the collective.' },
-    { id: 'source-ai-plan-r', publisher: 'Autistici/Inventati', title: 'A/I Plan R*', url: 'https://www.autistici.org/who/rplan/index', note: 'A/I documentation on resilience, repression and infrastructure continuity.' },
+    { id: 'source-ai-manifesto', publisher: 'Autistici/Inventati', title: 'A/I manifesto', url: 'https://www.inventati.org/who/manifesto', note: 'A/I describes its political and technical principles in its own words.' },
+    { id: 'source-ai-history', publisher: 'Autistici/Inventati', title: 'A/I collective history', url: 'https://www.inventati.org/who/collective', note: 'History and background of the collective.' },
+    { id: 'source-ai-plan-r', publisher: 'Autistici/Inventati', title: 'A/I Plan R*', url: 'https://www.inventati.org/who/rplan/index', note: 'A/I documentation on resilience, repression and infrastructure continuity.' },
+    { id: 'source-ai-kaos', publisher: 'Autistici/Inventati', title: '+KAOS: 10 Years of Hacking and Media Activism', url: 'https://www.inventati.org/static/img/book/ai-book-kaos.pdf', note: 'The collective’s book-length account of its first decade, technical practice, political context and legal cases.' },
     { id: 'source-ai-sanctions', publisher: 'Cavallette / Autistici/Inventati', title: 'A/I public statement on U.S. sanctions', url: 'https://cavallette.noblogs.org/2026/08/10076', note: 'The collective’s public response to the U.S. sanctions.' },
     { id: 'source-material-support', publisher: 'Material Support and OFAC primer', title: 'Material Support and OFAC primer', url: 'https://static1.squarespace.com/static/548748b1e4b083fc03ebf70e/t/67be35d745142c70ddc7430f/1740518871622/MST%2Bresource_edit-2.pdf', note: 'Background resource on material-support law and OFAC restrictions.' },
     { id: 'source-sabot-reporting', publisher: 'Sabot Media', title: 'The Server Called Paranoia: Defend Autistici/Inventati Before September 25', url: new URL('/post/the-server-called-paranoia', origin).toString(), note: 'Sabot Media’s investigation and campaign reporting.' },
     { id: 'source-open-letter', publisher: 'Sabot Media × We Will Free Us', title: 'Open Letter: Communications Infrastructure Is Not Terrorism', url: new URL('/post/open-letter-ai', origin).toString(), note: 'The organizational open letter.' },
+  ]
+  const builtInCoverage = [
+    { id: 'coverage-crimethinc', date: '2026-08-27', outlet: 'CrimethInc.', title: 'US Government Designates Host of NoBlogs.org a “Global Terrorist”', url: 'https://en.crimethinc.com/2026/08/27/us-government-designates-host-of-noblogsorg-a-global-terrorist', summary: 'A detailed response situating the designation within attacks on independent communications infrastructure and anti-fascist organizing.' },
+    { id: 'coverage-repubblica', date: '2026-08-26', outlet: 'la Repubblica', title: 'Rubio contro l’estrema sinistra, nella lista nera di Washington un gruppo di hacker italiani', url: 'https://www.repubblica.it/esteri/2026/08/26/news/usa_rubio_annuncia_sanzioni_a_network_estrema_sinistra_autistici_inventati_gruppo_hacker_italiani-425548615/amp/', summary: 'Italian national coverage of the designation, A/I’s services and the collective’s public response.' },
+    { id: 'coverage-effimera', date: '2026-08-28', outlet: 'Effimera', title: 'Il collettivo digitale Autistici/Inventati nella lista Usa dei terroristi globali', url: 'https://effimera.org/il-collettivo-digitale-autistici-inventati-nella-lista-usa-dei-terroristi-globali-di-effimera/', summary: 'Movement analysis connecting the sanctions to A/I’s history, autonomous technology and the projects that depend on its infrastructure.' },
+    { id: 'coverage-rainews', date: '2026-08-26', outlet: 'RaiNews', title: 'Gli USA sanzionano tre collettivi di sinistra, c’è anche un gruppo online italiano', url: 'https://www.rainews.it/articoli/2026/08/usa-rubio-annuncia-sanzioni-a-network-estrema-sinistra-tra-cui-gruppo-hacker-italiano-22f51a4e-e4dc-4888-b764-fab3527567e5.html', summary: 'Public-broadcaster coverage of the U.S. announcement and its accusations against Autistici/Inventati.' },
   ]
   const builtInTimeline = [
     { id: 'timeline-founded', date: '2001-03-01', title: 'Autistici/Inventati is formed', body: 'People and collectives working on technology, privacy, cyber-rights and political activism meet in Italy and begin building free, noncommercial communications tools. The first server is called Paranoia.' },
@@ -47,7 +60,7 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl) {
     { id: 'update-launch', date: '2026-08-28T21:30:00Z', title: 'Live campaign hub launched', body: 'Reporting, letters, primary sources, graphics, infrastructure status and public social updates are consolidated into one permanent campaign dashboard.', url: new URL('/campaigns/autistici-inventati', origin).toString(), pinned: true },
   ]
   const actions = [...(campaign.actions || [])].sort((a, b) => actionRank(a) - actionRank(b))
-  return { ...campaign, actions, campaignKeywords: ['autistici/inventati', 'a/i campaign'], updates: dedupeById([...builtInUpdates, ...(campaign.updates || [])]), timeline: dedupeById([...builtInTimeline, ...(campaign.timeline || [])]), resources: dedupeByUrl([pdfResource, ...(campaign.resources || [])], 'href'), sources: dedupeByUrl([...builtInSources, ...(campaign.sources || [])], 'url'), graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'), social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'), socialSources: feed.sources, socialErrors: feed.errors }
+  return { ...campaign, actions, campaignKeywords: ['autistici/inventati', 'a/i campaign'], updates: dedupeById([...builtInUpdates, ...(campaign.updates || [])]), timeline: dedupeById([...builtInTimeline, ...(campaign.timeline || [])]), resources: dedupeByUrl([articlePdfResource, pdfResource, ...(campaign.resources || [])], 'href'), coverage: dedupeById([...builtInCoverage, ...(campaign.coverage || [])]), sources: dedupeByUrl([...builtInSources, ...(campaign.sources || [])], 'url'), graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'), social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'), socialSources: feed.sources, socialErrors: feed.errors }
 }
 
 function actionRank(action) {
@@ -59,23 +72,25 @@ function actionRank(action) {
 
 export async function loadLiveAiSocial(requestUrl, fetcher = fetch) {
   const origin = new URL(requestUrl).origin
-  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-social-v3`)
+  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-social-v4`)
   const cache = globalThis.caches?.default
   if (cache) { const cached = await cache.match(cacheKey); if (cached) return cached.json() }
   const jobs = [
-    ...BLUESKY_ACTORS.map((actor) => ({ platform: 'bluesky', label: actor, promise: fetchBlueskyActor(actor, fetcher) })),
-    ...MASTODON_ACCOUNTS.map((account) => ({ platform: 'mastodon', label: `${account.acct}@${new URL(account.instance).host}`, promise: fetchMastodonAccount(account, fetcher) })),
+    ...MASTODON_ACCOUNTS.map((account) => ({ platform: 'mastodon', label: `${account.acct}@${new URL(account.instance).host}`, priority: account.priority, promise: fetchMastodonAccount(account, fetcher) })),
+    ...BLUESKY_ACTORS.map((actor) => ({ platform: 'bluesky', label: actor, priority: 1, promise: fetchBlueskyActor(actor, fetcher) })),
   ]
   const settled = await Promise.allSettled(jobs.map((job) => job.promise))
   const errors = [], sources = [], collected = []
-  settled.forEach((result, index) => { const job = jobs[index]; if (result.status === 'fulfilled') { sources.push({ platform: job.platform, account: job.label, ok: true }); collected.push(...result.value) } else { sources.push({ platform: job.platform, account: job.label, ok: false }); errors.push({ platform: job.platform, account: job.label, message: String(result.reason?.message || result.reason) }) } })
-  const items = dedupeByUrl(collected.filter(isCampaignSocialPost).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)), 'url').slice(0, 16)
+  settled.forEach((result, index) => { const job = jobs[index]; if (result.status === 'fulfilled') { sources.push({ platform: job.platform, account: job.label, ok: true }); collected.push(...result.value.map((item) => ({ ...item, sourcePriority: job.priority }))) } else { sources.push({ platform: job.platform, account: job.label, ok: false }); errors.push({ platform: job.platform, account: job.label, message: String(result.reason?.message || result.reason) }) } })
+  const items = dedupeByUrl(collected.filter(isCampaignSocialPost).sort((a, b) => (a.sourcePriority ?? 99) - (b.sourcePriority ?? 99) || new Date(b.date || 0) - new Date(a.date || 0)), 'url').slice(0, 16)
   const payload = { ok: errors.length < jobs.length, items, sources, errors, checkedAt: new Date().toISOString() }
   if (cache) await cache.put(cacheKey, new Response(JSON.stringify(payload), { headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${CACHE_TTL_SECONDS}` } })).catch(() => {})
   return payload
 }
 
 export function isCampaignSocialPost(item) {
+  const publishedAt = new Date(item?.date || 0).getTime()
+  if (!Number.isFinite(publishedAt) || publishedAt < CAMPAIGN_START_MS) return false
   const text = `${item?.text || item?.excerpt || ''} ${item?.external?.url || ''} ${item?.url || ''}`
   return text.includes(CAMPAIGN_URL) || SIGNAL.test(text)
 }
@@ -102,7 +117,7 @@ async function fetchMastodonAccount({ instance, acct }, fetcher) {
   return (await response.json()).map((status) => { const text = stripHtml(status?.content || ''); const images = (status?.media_attachments || []).map((media) => ({ url: String(media?.url || media?.preview_url || ''), alt: String(media?.description || '') })).filter((image) => image.url); return { id: `mastodon-${status.id}`, platform: 'MASTODON', date: String(status.created_at || ''), account: String(status?.account?.display_name || acct), handle: `@${status?.account?.acct || acct}`, text, excerpt: text, url: String(status?.url || status?.uri || ''), images, imageUrl: images[0]?.url || '', contentWarning: String(status?.spoiler_text || '') } })
 }
 
-async function fetchWithTimeout(url, fetcher) { const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 5000); try { return await fetcher(url.toString(), { headers: { accept: 'application/json', 'user-agent': 'SabotMediaCampaign/1.0 (+https://sabot.media)' }, signal: controller.signal }) } finally { clearTimeout(timer) } }
+async function fetchWithTimeout(url, fetcher) { const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 12000); try { return await fetcher(url.toString(), { headers: { accept: 'application/json', 'user-agent': 'SabotMediaCampaign/1.0 (+https://sabot.media)' }, signal: controller.signal }) } finally { clearTimeout(timer) } }
 function dedupeByUrl(items, key) { const seen = new Set(); return items.filter((item) => { const value = String(item?.[key] || '').trim(); if (!value || seen.has(value)) return false; seen.add(value); return true }) }
 function dedupeById(items) { const seen = new Set(); return items.filter((item) => { const value = String(item?.id || '').trim(); if (!value || seen.has(value)) return false; seen.add(value); return true }) }
 function stripHtml(value) { return String(value || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#(?:39|x27);/gi, "'").replace(/\s+/g, ' ').trim() }

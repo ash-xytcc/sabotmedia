@@ -200,7 +200,7 @@ export function CampaignPage() {
         <div className="campaign-shell">
           <SectionHeading eyebrow="REPORTING + CONTEXT" title="Read before you repeat" description="The campaign is anchored in reporting, not vibes. These are the Sabot pieces currently connected to the A/I campaign." />
           <PieceGrid pieces={reportingPieces} empty="Campaign reporting will appear here as relevant published posts are detected." />
-          <ResourceStrip resources={(campaign.resources || []).filter((item) => !/letter/i.test(item.type || item.title))} />
+          <ResourceStrip resources={(campaign.resources || []).filter((item) => !/letter|template/i.test(`${item.type} ${item.title}`))} />
         </div>
       </section>
 
@@ -208,7 +208,7 @@ export function CampaignPage() {
         <div className="campaign-shell">
           <SectionHeading eyebrow="LETTERS" title="Read it. Sign it. Send it." description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
           <PieceGrid pieces={letterPieces} empty="Letter downloads are temporarily unavailable. The reporting section remains available while they are restored." />
-          <ResourceStrip resources={(campaign.resources || []).filter((item) => /letter|pdf|template/i.test(`${item.type} ${item.title}`))} />
+          <ResourceStrip resources={(campaign.resources || []).filter((item) => /letter|template/i.test(`${item.type} ${item.title}`))} />
         </div>
       </section>
 
