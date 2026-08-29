@@ -33,6 +33,8 @@ test('campaign publishing is D1-backed and fail-closed rather than browser-local
   assert.match(model, /CREATE TABLE IF NOT EXISTS campaigns/)
   assert.match(model, /campaign_json TEXT NOT NULL/)
   assert.match(model, /await db\.prepare/)
+  assert.match(model, /updatedAt:\s*String\(input\.updatedAt \|\| now\)/)
+  assert.match(model, /normalizeCampaign\(\{ \.\.\.campaign, updatedAt: new Date\(\)\.toISOString\(\) \}\)/)
   assert.match(server, /databaseUnavailable\('campaign reads'\)/)
   assert.match(server, /databaseUnavailable\('campaign writes'\)/)
   assert.doesNotMatch(model, /localStorage/)
@@ -43,10 +45,13 @@ test('campaign publishing is D1-backed and fail-closed rather than browser-local
 test('campaign seeds the canonical A/I hub and exposes the requested sections', () => {
   assert.match(model, /Communications Infrastructure Is Not Terrorism/)
   assert.match(model, /https:\/\/kuma\.accol\.li\/status\/aimonitor/)
+  assert.doesNotMatch(model, /campaignKeywords: \[[^\]]*'terrorism'/)
+  assert.doesNotMatch(model, /campaignKeywords: \[[^\]]*'sanctions'/)
   for (const id of ['status', 'act', 'reporting', 'letters', 'updates', 'graphics', 'social', 'sources']) {
     assert.match(page, new RegExp(`id=\\"${id}\\"`))
   }
-  assert.match(page, /Press \+ Coverage/)
+  assert.match(page, /PRESS \+ RESPONSE/)
+  assert.match(page, /Coverage and statements/)
   assert.match(page, /PRIMARY SOURCES/)
   assert.match(page, /FAQ/)
   assert.match(page, /campaign\.disclaimer/)
