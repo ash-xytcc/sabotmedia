@@ -66,6 +66,50 @@
   align-items: stretch;
 }
 
+.campaign-page .campaign-italy-clock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: end;
+  margin: 0 0 14px;
+  padding: clamp(18px, 2.5vw, 28px);
+  border: 1px solid var(--campaign-red);
+  background: linear-gradient(110deg, var(--campaign-red) 0 42%, #101010 42% 100%);
+  color: #fff;
+}
+
+.campaign-page .campaign-italy-clock > div > span,
+.campaign-page .campaign-italy-clock time > span {
+  display: block;
+  font: 900 clamp(0.7rem, 1vw, 0.82rem)/1.15 var(--campaign-display);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.campaign-page .campaign-italy-clock p {
+  margin: 8px 0 0;
+  font: 900 clamp(1.05rem, 1.8vw, 1.45rem)/1 var(--campaign-display);
+  letter-spacing: -0.02em;
+}
+
+.campaign-page .campaign-italy-clock time {
+  display: grid;
+  justify-items: end;
+  min-width: 0;
+}
+
+.campaign-page .campaign-italy-clock time strong {
+  font: 900 clamp(2.5rem, 6vw, 5.4rem)/0.78 var(--campaign-display);
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+}
+
+.campaign-page .campaign-italy-clock time > span {
+  margin-top: 12px;
+  color: #bdbdbd;
+  text-align: right;
+}
+
 .campaign-page .campaign-metric {
   min-height: 330px;
 }
@@ -174,6 +218,22 @@
   }
   .campaign-page .campaign-section-heading > div {
     grid-column: 1;
+  }
+  .campaign-page .campaign-italy-clock {
+    grid-template-columns: 1fr;
+    align-items: start;
+    background: linear-gradient(165deg, var(--campaign-red) 0 39%, #101010 39% 100%);
+  }
+  .campaign-page .campaign-italy-clock time {
+    justify-items: start;
+    padding-top: 24px;
+  }
+  .campaign-page .campaign-italy-clock time strong {
+    max-width: 100%;
+    font-size: clamp(2.5rem, 16vw, 4.2rem);
+  }
+  .campaign-page .campaign-italy-clock time > span {
+    text-align: left;
   }
   .campaign-page .campaign-status-grid,
   .campaign-page .campaign-action-grid,
