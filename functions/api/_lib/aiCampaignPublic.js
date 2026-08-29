@@ -1,12 +1,12 @@
 const AI_GRAPHICS_BASE = '/campaigns/autistici-inventati/graphics'
 
 const AI_GRAPHICS = [
-  ['featured-image.png', 'Featured image', 'A/I campaign featured image'],
-  ['web-banner.png', 'Web banner', 'Wide A/I campaign web banner'],
-  ['book-download-card.png', 'Book download card', 'A/I campaign book and download card'],
-  ...Array.from({ length: 12 }, (_, index) => [`carousel-${String(index + 1).padStart(2, '0')}.png`, `Carousel ${index + 1}`, `A/I campaign carousel slide ${index + 1}`]),
-  ...Array.from({ length: 4 }, (_, index) => [`quote-${String(index + 1).padStart(2, '0')}.png`, `Quote ${index + 1}`, `A/I campaign quote graphic ${index + 1}`]),
-  ...Array.from({ length: 3 }, (_, index) => [`story-${String(index + 1).padStart(2, '0')}.png`, `Story ${index + 1}`, `A/I campaign vertical story graphic ${index + 1}`]),
+  ['featured-image.webp', 'Featured image', 'A/I campaign featured image'],
+  ['web-banner.webp', 'Web banner', 'Wide A/I campaign web banner'],
+  ['book-download-card.webp', 'Book download card', 'A/I campaign book and download card'],
+  ...Array.from({ length: 12 }, (_, index) => [`carousel-${String(index + 1).padStart(2, '0')}.webp`, `Carousel ${index + 1}`, `A/I campaign carousel slide ${index + 1}`]),
+  ...Array.from({ length: 4 }, (_, index) => [`quote-${String(index + 1).padStart(2, '0')}.webp`, `Quote ${index + 1}`, `A/I campaign quote graphic ${index + 1}`]),
+  ...Array.from({ length: 3 }, (_, index) => [`story-${String(index + 1).padStart(2, '0')}.webp`, `Story ${index + 1}`, `A/I campaign vertical story graphic ${index + 1}`]),
 ]
 
 const BSKY_QUERIES = ['autistici inventati', 'noblogs']
