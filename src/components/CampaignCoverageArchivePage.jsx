@@ -99,5 +99,5 @@ function CoverageCard({ item }) {
 function formatDate(value) {
   const date = new Date(value || 0)
   if (!Number.isFinite(date.getTime())) return ''
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(date)
 }

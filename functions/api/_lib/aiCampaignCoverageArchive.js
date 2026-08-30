@@ -290,7 +290,22 @@ function canonicalUrl(value) {
   } catch { return '' }
 }
 function safeHttpUrl(value) { return canonicalUrl(value) }
-function cleanText(value) { return String(value || '').replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, ' ').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#(?:39|x27);/gi, "'").replace(/\s+/g, ' ').trim() }
+function cleanText(value) {
+  return String(value || '')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => safeCodePoint(Number.parseInt(code, 16)))
+    .replace(/&#(\d+);/g, (_, code) => safeCodePoint(Number.parseInt(code, 10)))
+    .replace(/&(?:amp|#38);/gi, '&')
+    .replace(/&(?:quot|#34);/gi, '"')
+    .replace(/&(?:apos|#39);/gi, "'")
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+function safeCodePoint(value) { try { return value > 0 && value <= 0x10ffff ? String.fromCodePoint(value) : '' } catch { return '' } }
 function normalizeDate(value) { const compact = String(value || '').match(/^(\d{8})T(\d{6})Z$/); const normalized = compact ? `${compact[1].slice(0, 4)}-${compact[1].slice(4, 6)}-${compact[1].slice(6, 8)}T${compact[2].slice(0, 2)}:${compact[2].slice(2, 4)}:${compact[2].slice(4, 6)}Z` : value; const time = new Date(normalized || 0).getTime(); return Number.isFinite(time) ? new Date(time).toISOString() : '' }
 function normalizeLanguage(value) { const text = cleanText(value); if (/^it(?:alian|aliano)?$/i.test(text)) return 'Italian'; if (/^en(?:glish)?$/i.test(text)) return 'English'; return text }
 function languageCode(value) { const text = cleanText(value); if (/^it(?:alian|aliano)?$/i.test(text)) return 'it'; if (/^en(?:glish)?$/i.test(text)) return 'en'; return '' }
