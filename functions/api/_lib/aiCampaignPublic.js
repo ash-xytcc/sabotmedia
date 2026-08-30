@@ -99,7 +99,7 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     automated: true,
     source: 'A/I official Mastodon',
   }))
-  const updates = mergeCampaignUpdates(builtInUpdates, publicationUpdates, intelligence.updates, officialSocialUpdates, campaign.updates || [])
+  const updates = mergeCampaignUpdates(builtInUpdates, publicationUpdates, intelligence.updates, officialSocialUpdates, campaign.updates || []).map(sanitizeWithdrawnPartnerCopy)
   return {
     ...campaign,
     summary: 'Sabot Media is independently documenting and opposing the treatment of resistant communications infrastructure as terrorism. This page gathers the campaign in one place and will remain as a public archive after the deadline.',
@@ -124,6 +124,26 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     intelligenceErrors: intelligence.errors,
     intelligenceCheckedAt: intelligence.checkedAt,
   }
+}
+
+function sanitizeWithdrawnPartnerCopy(item = {}) {
+  return {
+    ...item,
+    title: removeWithdrawnPartnerName(item.title),
+    body: removeWithdrawnPartnerName(item.body),
+    source: removeWithdrawnPartnerName(item.source),
+  }
+}
+
+export function removeWithdrawnPartnerName(value) {
+  return String(value || '')
+    .replace(/Sabot Media\s+(?:and|&|×)\s+We\s+Will\s+Free\s+Us/gi, 'Sabot Media')
+    .replace(/We\s+Will\s+Free\s+Us\s+(?:and|&|×)\s+Sabot Media/gi, 'Sabot Media')
+    .replace(/\s+(?:from|with|by)\s+We\s+Will\s+Free\s+Us/gi, '')
+    .replace(/We\s+Will\s+Free\s+Us/gi, '')
+    .replace(/\s+([,.;:!?])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
 }
 
 function actionRank(action) {
