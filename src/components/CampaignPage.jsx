@@ -20,7 +20,8 @@ export function CampaignPage() {
 
   useEffect(() => {
     let cancelled = false
-    async function boot() {
+    let hasLoaded = false
+    async function refreshDashboard() {
       try {
         const [loadedCampaign, loadedPieces] = await Promise.all([
           loadCampaign(CAMPAIGN_SLUG),
@@ -29,12 +30,15 @@ export function CampaignPage() {
         if (cancelled) return
         setCampaign(loadedCampaign)
         setPieces(Array.isArray(loadedPieces) ? loadedPieces : [])
+        setError('')
+        hasLoaded = true
       } catch (err) {
-        if (!cancelled) setError(String(err?.message || err))
+        if (!cancelled && !hasLoaded) setError(String(err?.message || err))
       }
     }
-    boot()
-    return () => { cancelled = true }
+    refreshDashboard()
+    const timer = window.setInterval(refreshDashboard, 300000)
+    return () => { cancelled = true; window.clearInterval(timer) }
   }, [])
 
   useEffect(() => {
@@ -110,7 +114,9 @@ export function CampaignPage() {
     )
   }
 
-  const pinnedUpdate = updates.filter((item) => item.pinned).at(-1) || updates.at(-1)
+  const latestPinned = updates.filter((item) => item.pinned).at(-1)
+  const latestUpdate = updates.at(-1)
+  const pinnedUpdate = new Date(latestUpdate?.date || 0) > new Date(latestPinned?.date || 0) ? latestUpdate : (latestPinned || latestUpdate)
   const isPastDeadline = Number.isFinite(deadline) && deadline <= now
 
   return (
@@ -261,8 +267,9 @@ export function CampaignPage() {
 
       <section className="campaign-section" id="coverage">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" description="A/I is based in Italy, so some of the earliest reporting is in Italian. Original headlines are preserved, clearly labeled by language, with an English rendering directly beneath them." />
-          {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>Press coverage, statements, interviews, and external analysis can be added here as they appear.</EmptyState>}
+          <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" description="A/I is based in Italy, so this section checks its official dispatch feed and a global news index for exact campaign matches. Italian headlines remain clearly labeled, with an English rendering where one has been curated." />
+          <CampaignTrackerStatus campaign={campaign} />
+          {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.automated ? 'AUTO-DISCOVERED' : '', item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>No exact campaign coverage was found in the latest source check.</EmptyState>}
         </div>
       </section>
 
@@ -407,6 +414,18 @@ function SectionHeading({ eyebrow, title, description = '' }) {
   return <header className="campaign-section-heading"><p>{eyebrow}</p><h2>{title}</h2>{description ? <div>{description}</div> : null}</header>
 }
 
+function CampaignTrackerStatus({ campaign }) {
+  const sources = campaign.intelligenceSources || []
+  const errors = campaign.intelligenceErrors || []
+  return (
+    <aside className="campaign-tracker-status" aria-label="Campaign coverage tracker status">
+      <div><strong>AUTOMATIC CAMPAIGN WATCH</strong><span>{campaign.intelligenceCheckedAt ? `Last checked ${formatDateTime(campaign.intelligenceCheckedAt)}` : 'Waiting for the next source check'}</span></div>
+      {sources.length ? <ul>{sources.map((source) => <li key={source.id}><i className={source.ok ? 'is-live' : 'is-unavailable'} aria-hidden="true" /><SmartLink href={source.url}>{source.label}</SmartLink><small>{source.ok ? `${source.count || 0} exact matches` : 'temporarily unavailable'}</small></li>)}</ul> : null}
+      {errors.length && !sources.some((source) => source.ok) ? <p>Automatic discovery is temporarily unavailable. Curated reporting and sources remain accessible.</p> : null}
+    </aside>
+  )
+}
+
 function PieceGrid({ pieces, empty }) {
   if (!pieces.length) return <EmptyState>{empty}</EmptyState>
   return (
@@ -449,11 +468,11 @@ function CopyButton({ value, label }) {
 
 function findCampaignPieces(pieces, campaign) {
   if (!Array.isArray(pieces) || !campaign) return []
-  const exactSlugs = new Set(['the-us-designated-a-25-year-old-volunteer-communications-collective-a-terrorist-organization', 'communications-infrastructure-is-not-terrorism', 'open-letter-defend-autistici-inventati', 'individual-letter-defend-autistici-inventati'])
+  const exactSlugs = new Set(['the-us-designated-a-25-year-old-volunteer-communications-collective-a-terrorist-organization', 'communications-infrastructure-is-not-terrorism', 'open-letter-defend-autistici-inventati', 'open-letter-ai', 'individual-letter-defend-autistici-inventati', 'the-server-called-paranoia'])
   return pieces.filter((piece) => {
-    const explicit = [...(piece.tags || []), ...(piece.collections || []), ...(piece.projects || []), piece.primaryProject]
+    const explicit = [...(piece.campaigns || []), ...(piece.tags || []), ...(piece.collections || []), ...(piece.projects || []), piece.primaryProject]
       .map((item) => String(item || '').toLowerCase())
-      .some((item) => item.includes('autistici') || item.includes('inventati') || item.includes('a/i campaign'))
+      .some((item) => item === CAMPAIGN_SLUG || item.includes('autistici') || item.includes('inventati') || item.includes('a/i campaign'))
     if (explicit || exactSlugs.has(String(piece.slug || '').toLowerCase())) return true
     const title = String(piece.title || '').toLowerCase()
     return /autistici(?:\s*\/\s*|\s+)?inventati/.test(title) || (/communications infrastructure/.test(title) && /terrorism|sanction|designation/.test(title))

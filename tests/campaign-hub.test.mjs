@@ -21,6 +21,9 @@ const polish = fs.readFileSync(new URL('../src/campaign-page-polish.css', import
 const socialServer = fs.readFileSync(new URL('../functions/api/_lib/aiCampaignPublic.js', import.meta.url), 'utf8')
 const socialEndpoint = fs.readFileSync(new URL('../functions/api/campaign-social.js', import.meta.url), 'utf8')
 const graphicsManifest = fs.readFileSync(new URL('../functions/api/_lib/aiCampaignGraphics.js', import.meta.url), 'utf8')
+const intelligence = fs.readFileSync(new URL('../functions/api/_lib/aiCampaignIntelligence.js', import.meta.url), 'utf8')
+const nativeModel = fs.readFileSync(new URL('../functions/api/_lib/nativePublicContent.js', import.meta.url), 'utf8')
+const postEditor = fs.readFileSync(new URL('../src/components/NativeContentBridgePage.jsx', import.meta.url), 'utf8')
 
 test('A/I campaign is a first-class public and admin route', () => {
   assert.match(routes, /aiCampaign:\s*'\/campaigns\/autistici-inventati'/)
@@ -102,6 +105,7 @@ test('campaign reporting excludes body-only false positives and keeps explicit A
   assert.doesNotMatch(page, /piece\.body|piece\.bodyHtml|podcastSummary/)
   assert.match(page, /exactSlugs/)
   assert.match(page, /piece\.tags/)
+  assert.match(page, /piece\.campaigns/)
   assert.match(page, /autistici/)
   assert.doesNotMatch(page, /keywords\.some/)
 })
@@ -194,7 +198,31 @@ test('campaign ships external coverage and prioritizes the official A\/I Mastodo
   assert.match(socialServer, /mastodon\.bida\.im['"], acct: ['"]cavallette/)
   assert.match(socialServer, /sourcePriority/)
   assert.match(socialServer, /setTimeout\(\(\) => controller\.abort\(\), 12000\)/)
-  assert.match(socialServer, /coverage: dedupeById\(\[\.\.\.builtInCoverage/)
+  assert.match(socialServer, /coverage: dedupeCoverage\(\[\.\.\.\(campaign\.coverage \|\| \[\]\), \.\.\.builtInCoverage, \.\.\.intelligence\.coverage\]\)/)
+})
+
+test('campaign coverage and official statements refresh automatically with strict server-side sources', () => {
+  assert.match(intelligence, /cavallette\.noblogs\.org\/feed/)
+  assert.match(intelligence, /api\.gdeltproject\.org\/api\/v2\/doc\/doc/)
+  assert.match(intelligence, /news\.google\.com\/rss\/search/)
+  assert.match(intelligence, /Promise\.allSettled/)
+  assert.match(intelligence, /isCampaignCoverageCandidate/)
+  assert.match(intelligence, /CACHE_TTL_SECONDS = 600/)
+  assert.match(socialServer, /loadLiveAiIntelligence/)
+  assert.match(socialServer, /intelligenceCheckedAt/)
+  assert.match(page, /AUTOMATIC CAMPAIGN WATCH/)
+  assert.match(page, /setInterval\(refreshDashboard, 300000\)/)
+  assert.doesNotMatch(intelligence, /localStorage|embed\.js|<script/)
+})
+
+test('post editor provides an explicit persistent campaign relationship', () => {
+  assert.match(nativeModel, /campaigns: normalizeTags\(raw\.campaigns/)
+  assert.match(postEditor, /Campaign relationship/)
+  assert.match(postEditor, /value="autistici-inventati"/)
+  assert.match(postEditor, /campaigns: normalizeTermList\(merged\.campaigns\)/)
+  assert.match(intelligence, /deriveAiCampaignPublicationUpdates/)
+  assert.match(server, /listNativeEntries\(db, \{ status: 'published' \}\)/)
+  assert.match(feeds, /decorateAiCampaignForPublic/)
 })
 
 test('signatory carousel is populated from the published letter and placed before social', async () => {
@@ -232,7 +260,7 @@ test('hero uses an asterisk and campaign chronology is fully populated', () => {
   for (const expected of ['update-designation', 'update-ai-response', 'update-investigation', 'update-open-letter', 'update-individual-letter', 'update-graphics', 'update-launch']) assert.match(socialServer, new RegExp(expected))
   assert.match(page, /sortByDate\(campaign\?\.updates \|\| \[\], false\)/)
   assert.match(socialServer, /timeline: dedupeById/)
-  assert.match(socialServer, /updates: dedupeById/)
+  assert.match(socialServer, /mergeCampaignUpdates/)
 })
 
 test('new A/I press release is promoted as a current update and primary source', () => {
@@ -242,6 +270,8 @@ test('new A/I press release is promoted as a current update and primary source',
   assert.match(socialServer, /https:\/\/www\.inventati\.org\/campaign\/press/)
   assert.match(socialServer, /English-language A\/I briefing/)
   assert.match(socialServer, /serverHold/)
-  assert.match(socialServer, /update-ai-press-release[^\n]*pinned:\s*true/)
-  assert.match(page, /updates\.filter\(\(item\) => item\.pinned\)\.at\(-1\) \|\| updates\.at\(-1\)/)
+  assert.match(socialServer, /update-ai-communique-aug29[^\n]*pinned:\s*true/)
+  assert.match(socialServer, /cavallette\.noblogs\.org\/2026\/08\/10093/)
+  assert.match(page, /const latestPinned = updates\.filter\(\(item\) => item\.pinned\)\.at\(-1\)/)
+  assert.match(page, /latestUpdate.*latestPinned/)
 })

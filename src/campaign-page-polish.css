@@ -383,6 +383,28 @@
 .campaign-page .campaign-source-error,
 .campaign-page .campaign-reader-note { max-width: 65ch; padding: 14px; border-left: 4px solid var(--campaign-red); }
 
+.campaign-page .campaign-tracker-status {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.42fr) minmax(0, 1fr);
+  gap: 18px;
+  margin: 0 0 26px;
+  padding: 18px;
+  border: 2px solid var(--campaign-ink);
+  background: var(--campaign-paper);
+  color: var(--campaign-ink);
+}
+.campaign-page .campaign-tracker-status > div { display: grid; gap: 6px; align-content: start; }
+.campaign-page .campaign-tracker-status strong { font: 900 clamp(1.1rem, 2vw, 1.5rem)/.95 var(--campaign-display); }
+.campaign-page .campaign-tracker-status span,
+.campaign-page .campaign-tracker-status small { font-size: .78rem; font-weight: 800; }
+.campaign-page .campaign-tracker-status ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.campaign-page .campaign-tracker-status li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.campaign-page .campaign-tracker-status li i { width: 9px; height: 9px; background: #777; }
+.campaign-page .campaign-tracker-status li i.is-live { background: #188b45; }
+.campaign-page .campaign-tracker-status li i.is-unavailable { background: var(--campaign-red); }
+.campaign-page .campaign-tracker-status a { color: inherit; font-weight: 900; overflow-wrap: anywhere; }
+.campaign-page .campaign-tracker-status > p { grid-column: 1 / -1; margin: 0; }
+
 @media (max-width: 1050px) {
   .campaign-page .campaign-hero__inner { grid-template-columns: 1fr; }
   .campaign-page .campaign-hero h1 {
@@ -443,6 +465,9 @@
   .campaign-page .campaign-social-sources {
     grid-template-columns: 1fr;
   }
+  .campaign-page .campaign-tracker-status { grid-template-columns: 1fr; }
+  .campaign-page .campaign-tracker-status li { grid-template-columns: 10px minmax(0, 1fr); }
+  .campaign-page .campaign-tracker-status li small { grid-column: 2; }
   .campaign-page .campaign-social-sources li {
     grid-template-columns: minmax(0, 1fr) auto;
   }

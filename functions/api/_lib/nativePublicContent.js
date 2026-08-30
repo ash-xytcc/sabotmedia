@@ -177,6 +177,7 @@ export function normalizeNativeEntry(input) {
     categories: normalizeTags(raw.categories || raw.projects),
     projects: normalizeTags(raw.projects || raw.categories),
     collections: normalizeTags(raw.collections || raw.collection),
+    campaigns: normalizeTags(raw.campaigns || raw.campaignRelations),
     tags: normalizeTags(raw.tags),
     createdAt: String(raw.createdAt || raw.created_at || now),
     updatedAt: String(raw.updatedAt || raw.updated_at || now),

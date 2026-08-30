@@ -1,8 +1,8 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
-import { decorateAiCampaignForPublic, extractAiLetterSignatories } from './_lib/aiCampaignPublic.js'
-import { getNativeEntry } from './_lib/nativePublicContent.js'
+import { decorateAiCampaignForPublic, extractAiLetterSignatories, hasAiLetterSignatureSection } from './_lib/aiCampaignPublic.js'
+import { getNativeEntry, listNativeEntries } from './_lib/nativePublicContent.js'
 import {
   AI_CAMPAIGN_SLUG,
   ensureAiCampaign,
@@ -41,14 +41,20 @@ export async function onRequestGet(context) {
       // Public reads get live social + the bundled campaign art pack. Admin reads
       // stay persistence-only so transient network content can never be saved back
       // into D1 by accident.
-      let signatories = []
+      let signatories
+      let posts = []
       if (!includeDrafts && item.slug === AI_CAMPAIGN_SLUG) {
         try {
-          const letter = await getNativeEntry(db, 'open-letter-ai')
-          signatories = extractAiLetterSignatories(letter?.bodyHtml || letter?.body || '')
+          const [letter, publishedPosts] = await Promise.all([
+            getNativeEntry(db, 'open-letter-ai'),
+            listNativeEntries(db, { status: 'published' }),
+          ])
+          const letterBody = letter?.bodyHtml || letter?.body || ''
+          if (hasAiLetterSignatureSection(letterBody)) signatories = extractAiLetterSignatories(letterBody)
+          posts = publishedPosts
         } catch { /* the bundled public snapshot remains available */ }
       }
-      const output = includeDrafts ? item : await decorateAiCampaignForPublic(item, context.request.url, { signatories })
+      const output = includeDrafts ? item : await decorateAiCampaignForPublic(item, context.request.url, { signatories, posts })
       return json({ ok: true, mode: 'd1', item: output })
     }
 
