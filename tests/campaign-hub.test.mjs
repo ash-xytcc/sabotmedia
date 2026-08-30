@@ -180,9 +180,8 @@ test('campaign asks readers to understand the case before taking action', () => 
   assert.ok(lettersSection > reportingSection)
   assert.ok(actionSection > lettersSection)
 
-  const nav = page.slice(page.indexOf('aria-label="Campaign sections"'), page.indexOf('</nav>'))
-  assert.ok(nav.indexOf('href="#reporting"') < nav.indexOf('href="#letters"'))
-  assert.ok(nav.indexOf('href="#letters"') < nav.indexOf('href="#act"'))
+  assert.match(page, /visibleSections\.map\(\(key\) => <a href=\{`#\$\{key\}`\}/)
+  assert.match(page, /const CAMPAIGN_SECTION_ORDER = \['status', 'reporting', 'letters', 'act'/)
 })
 
 test('individual letter PDF remains bundled in letters but not primary sources', () => {
@@ -231,7 +230,9 @@ test('campaign coverage and official statements refresh automatically with stric
 test('post editor provides an explicit persistent campaign relationship', () => {
   assert.match(nativeModel, /campaigns: normalizeTags\(raw\.campaigns/)
   assert.match(postEditor, /Campaign relationship/)
-  assert.match(postEditor, /value="autistici-inventati"/)
+  assert.match(postEditor, /loadCampaigns\(\{ includeDrafts: true \}\)/)
+  assert.match(postEditor, /campaignOptions\.map/)
+  assert.doesNotMatch(postEditor, /<option value="autistici-inventati"/)
   assert.match(postEditor, /campaigns: normalizeTermList\(merged\.campaigns\)/)
   assert.match(intelligence, /deriveAiCampaignPublicationUpdates/)
   assert.match(server, /listNativeEntries\(db, \{ status: 'published' \}\)/)

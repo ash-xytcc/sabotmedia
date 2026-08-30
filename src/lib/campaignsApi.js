@@ -29,15 +29,36 @@ export async function loadCampaigns({ includeDrafts = false } = {}) {
   return data.items
 }
 
-export async function saveCampaign(item) {
+export async function saveCampaign(item, revisionNote = 'save') {
   const response = await fetch('/api/campaigns', {
     method: 'POST',
     credentials: 'same-origin',
     headers: { 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ item }),
+    body: JSON.stringify({ item, revisionNote }),
   })
   const data = await safeJson(response)
   if (!response.ok || !data?.ok || !data?.item) throw new Error(data?.error || `campaign save failed: ${response.status}`)
+  return data.item
+}
+
+export async function loadCampaignRevisions(campaignId, limit = 30) {
+  const params = new URLSearchParams({ campaignId, limit: String(limit) })
+  const response = await fetch(`/api/campaign-revisions?${params.toString()}`, {
+    method: 'GET', credentials: 'same-origin', headers: { accept: 'application/json' },
+  })
+  const data = await safeJson(response)
+  if (!response.ok || !data?.ok || !Array.isArray(data?.items)) throw new Error(data?.error || `campaign revisions failed: ${response.status}`)
+  return data.items
+}
+
+export async function restoreCampaignRevision(revisionId) {
+  const response = await fetch('/api/campaign-revisions', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ revisionId }),
+  })
+  const data = await safeJson(response)
+  if (!response.ok || !data?.ok || !data?.item) throw new Error(data?.error || `campaign revision restore failed: ${response.status}`)
   return data.item
 }
 

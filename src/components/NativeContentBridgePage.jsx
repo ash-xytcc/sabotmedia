@@ -16,6 +16,7 @@ import { normalizeNativeDisplaySettings } from '../lib/publicDisplayModes'
 import { classicEditorBodyToHtml } from '../lib/classicEditorBody'
 import { getDefaultFeaturedTitleDisplayForContentType } from '../lib/featuredTitleDisplay'
 import { adminRoutes } from '../routing/routes'
+import { loadCampaigns } from '../lib/campaignsApi'
 
 function normalizeTermList(value) {
   if (Array.isArray(value)) return [...new Set(value.map((item) => String(item || '').trim()).filter(Boolean))]
@@ -278,6 +279,8 @@ export function NativeContentBridgePage() {
   const [newCategory, setNewCategory] = useState('')
   const [categoryTab, setCategoryTab] = useState('all')
   const [openMediaFor, setOpenMediaFor] = useState('')
+  const [campaignOptions, setCampaignOptions] = useState([])
+  const [campaignOptionsState, setCampaignOptionsState] = useState('loading')
   const [allowComments, setAllowComments] = useState(true)
   const [isPermalinkEditing, setIsPermalinkEditing] = useState(false)
   const [permalinkDraft, setPermalinkDraft] = useState('')
@@ -298,6 +301,23 @@ export function NativeContentBridgePage() {
   const [autosaveState, setAutosaveState] = useState({ status: 'idle', at: '' })
   const [publishSuccess, setPublishSuccess] = useState(null)
   const { pushNotice } = useAdminNotices()
+
+  useEffect(() => {
+    let cancelled = false
+    loadCampaigns({ includeDrafts: true })
+      .then((items) => {
+        if (cancelled) return
+        setCampaignOptions(Array.isArray(items) ? items : [])
+        setCampaignOptionsState('loaded')
+      })
+      .catch((error) => {
+        if (cancelled) return
+        setCampaignOptions([])
+        setCampaignOptionsState('error')
+        pushNotice(`Campaign relationships failed to load: ${String(error?.message || error)}`, 'error')
+      })
+    return () => { cancelled = true }
+  }, [pushNotice])
 
   const categoryOptions = useMemo(() => [...new Set(getPieces().flatMap((piece) => piece.projects || [piece.primaryProject]).filter(Boolean))], [])
   const mostUsedCategories = useMemo(() => {
@@ -993,9 +1013,15 @@ export function NativeContentBridgePage() {
                   onChange={(event) => setDraft((current) => ({ ...current, campaigns: event.target.value ? [event.target.value] : [] }))}
                 >
                   <option value="">No campaign</option>
-                  <option value="autistici-inventati">A/I — Communications Infrastructure Is Not Terrorism</option>
+                  {campaignOptions.map((campaign) => (
+                    <option key={campaign.id || campaign.slug} value={campaign.slug}>
+                      {campaign.shortTitle || campaign.title} ({campaign.status})
+                    </option>
+                  ))}
                 </select>
               </label>
+              {campaignOptionsState === 'loading' ? <p className="description">Loading campaigns from D1…</p> : null}
+              {campaignOptionsState === 'error' ? <p className="description">Campaign selection is unavailable until the D1 connection recovers.</p> : null}
               <p className="description">Published posts connected here automatically appear in campaign reporting and the campaign log.</p>
             </section>
 

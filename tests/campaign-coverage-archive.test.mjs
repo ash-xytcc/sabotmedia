@@ -87,5 +87,5 @@ test('verified system backup includes the D1 campaign coverage archive', () => {
   const backup = read('../src/lib/systemBackup.js')
   assert.match(backup, /campaignCoverage/)
   assert.match(backup, /fetchCampaignCoverageForBackup/)
-  assert.match(backup, /schemaVersion:\s*7/)
+  assert.match(backup, /schemaVersion:\s*8/)
 })
