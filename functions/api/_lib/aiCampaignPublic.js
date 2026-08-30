@@ -2,8 +2,6 @@ import { AI_CAMPAIGN_GRAPHICS } from './aiCampaignGraphics.js'
 import { deriveAiCampaignPublicationUpdates, loadLiveAiIntelligence, mergeCampaignUpdates } from './aiCampaignIntelligence.js'
 
 const CAMPAIGN_URL = 'https://sabot.media/campaigns/autistici-inventati'
-// Verified against the public profile endpoints. No We Will Free Us account is
-// bundled until one can be resolved from authoritative site data.
 const BLUESKY_ACTORS = [{ actor: 'sabotmedia.bsky.social', priority: 1, url: 'https://bsky.app/profile/sabotmedia.bsky.social', note: 'Sabot Media · English-language campaign posts' }]
 const MASTODON_ACCOUNTS = [
   { instance: 'https://mastodon.bida.im', acct: 'cavallette', priority: 0, url: 'https://mastodon.bida.im/@cavallette', note: 'Official Autistici/Inventati account · primarily Italian, with some bilingual posts' },
@@ -39,7 +37,7 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     { id: 'source-ai-communique-aug29', publisher: 'Autistici/Inventati', title: 'A/I communiqué — August 29, 2026', url: 'https://cavallette.noblogs.org/2026/08/10093', note: 'Official follow-up reporting partial service restoration, continuing Noblogs publishing disruption, and financial-service consequences.' },
     { id: 'source-material-support', publisher: 'Material Support and OFAC primer', title: 'Material Support and OFAC primer', url: 'https://static1.squarespace.com/static/548748b1e4b083fc03ebf70e/t/67be35d745142c70ddc7430f/1740518871622/MST%2Bresource_edit-2.pdf', note: 'Background resource on material-support law and OFAC restrictions.' },
     { id: 'source-sabot-reporting', publisher: 'Sabot Media', title: 'The Server Called Paranoia: Defend Autistici/Inventati Before September 25', url: new URL('/post/the-server-called-paranoia', origin).toString(), note: 'Sabot Media’s investigation and campaign reporting.' },
-    { id: 'source-open-letter', publisher: 'Sabot Media × We Will Free Us', title: 'Open Letter: Communications Infrastructure Is Not Terrorism', url: new URL('/post/open-letter-ai', origin).toString(), note: 'The organizational open letter.' },
+    { id: 'source-open-letter', publisher: 'Sabot Media', title: 'Open Letter: Communications Infrastructure Is Not Terrorism', url: new URL('/post/open-letter-ai', origin).toString(), note: 'The organizational open letter.' },
   ]
   const builtInCoverage = [
     { id: 'coverage-ai-communique-aug29', date: '2026-08-29T17:00:51Z', outlet: 'Autistici/Inventati', language: 'Italian', languageCode: 'it', title: 'Comunicato stampa Autistici / Inventati 29.8.2026', translatedTitle: 'Autistici/Inventati press release — August 29, 2026', url: 'https://cavallette.noblogs.org/2026/08/10093', summary: 'A/I reports that mail access was restored for almost all users and Noblogs returned read-only, while also reporting actions affecting its banking and PayPal services.' },
@@ -50,7 +48,6 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
   ]
   const builtInSignatories = [
     { id: 'signer-sabot-media', name: 'Sabot Media', location: 'USA' },
-    { id: 'signer-we-will-free-us', name: 'We Will Free Us', location: 'USA' },
     { id: 'signer-grounded-futures', name: 'Grounded Futures Podcast', location: 'USA' },
     { id: 'signer-final-straw', name: 'The Final Straw Radio', location: 'USA' },
     { id: 'signer-dirty-hands', name: 'Dirty Hands Collective', location: 'Colorado, USA' },
@@ -81,7 +78,7 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     { id: 'update-designation', date: '2026-08-26T12:00:00Z', title: 'U.S. designation announced', body: 'The Treasury and State departments announce the designation of Autistici/Inventati, beginning the sanctions wind-down period.', url: 'https://home.treasury.gov/news/press-releases/sb0616/', pinned: false },
     { id: 'update-ai-response', date: '2026-08-26T18:00:00Z', title: 'A/I responds publicly', body: 'Autistici/Inventati rejects the allegations, defends antifascism and anticapitalism, and says the collective will continue providing digital self-defense infrastructure.', url: 'https://cavallette.noblogs.org/2026/08/10076', pinned: false },
     { id: 'update-investigation', date: '2026-08-27T10:25:23.863Z', title: 'The Server Called Paranoia published', body: 'Sabot Media publishes the core investigation, historical context and source record for the campaign.', url: new URL('/post/the-server-called-paranoia', origin).toString(), pinned: false },
-    { id: 'update-open-letter', date: '2026-08-28T19:41:30.548Z', title: 'Organizational open letter published', body: 'Sabot Media and We Will Free Us publish the open letter defending independent communications infrastructure.', url: new URL('/post/open-letter-ai', origin).toString(), pinned: false },
+    { id: 'update-open-letter', date: '2026-08-28T19:41:30.548Z', title: 'Organizational open letter published', body: 'Sabot Media publishes the open letter defending independent communications infrastructure.', url: new URL('/post/open-letter-ai', origin).toString(), pinned: false },
     { id: 'update-individual-letter', date: '2026-08-28T20:15:00Z', title: 'Individual action letter released', body: 'A printable letter template and recipient guide are released for direct advocacy in the United States, European Union, Italy and elsewhere.', url: letterPdf, pinned: false },
     { id: 'update-graphics', date: '2026-08-28T21:00:00Z', title: 'Campaign media kit released', body: 'Twenty-two campaign graphics, full-resolution downloads, alt text and captions are collected for public circulation.', url: new URL('/campaigns/autistici-inventati#graphics', origin).toString(), pinned: false },
     { id: 'update-launch', date: '2026-08-28T21:30:00Z', title: 'Live campaign hub launched', body: 'Reporting, letters, primary sources, graphics, infrastructure status and public social updates are consolidated into one permanent campaign dashboard.', url: new URL('/campaigns/autistici-inventati', origin).toString(), pinned: false },
@@ -90,7 +87,7 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
   ]
   const actions = [...(campaign.actions || [])].sort((a, b) => actionRank(a) - actionRank(b))
   const sourceSignatories = Array.isArray(options.signatories) ? options.signatories : builtInSignatories
-  const signatories = dedupeSignatories([...sourceSignatories, ...(campaign.signatories || [])])
+  const signatories = dedupeSignatories([...sourceSignatories, ...(campaign.signatories || [])]).filter((item) => !/we\s+will\s+free\s+us/i.test(String(item.name || '')))
   const publicationUpdates = deriveAiCampaignPublicationUpdates(options.posts || [], requestUrl)
   const officialSocialUpdates = (feed.items || []).filter((item) => /cavallette/i.test(`${item.account || ''} ${item.handle || ''}`)).map((item) => ({
     id: `official-social-${item.id}`,
@@ -105,6 +102,9 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
   const updates = mergeCampaignUpdates(builtInUpdates, publicationUpdates, intelligence.updates, officialSocialUpdates, campaign.updates || [])
   return {
     ...campaign,
+    summary: 'Sabot Media is independently documenting and opposing the treatment of resistant communications infrastructure as terrorism. This page gathers the campaign in one place and will remain as a public archive after the deadline.',
+    partners: ['Sabot Media'],
+    disclaimer: 'Sabot Media is an independent publisher. We are not affiliated with Autistici/Inventati and do not represent or speak on behalf of A/I. Campaign material is political advocacy and reporting, not legal advice.',
     actions,
     campaignKeywords: ['autistici/inventati', 'a/i campaign'],
     updates,
@@ -114,6 +114,7 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     signatories,
     signatoriesSource: Array.isArray(options.signatories) ? 'published-open-letter' : 'bundled-fallback',
     sources: dedupeByUrl([...builtInSources, ...(campaign.sources || [])], 'url'),
+    faq: (campaign.faq || []).map((item) => item.id === 'faq-affiliation' ? { ...item, answer: 'No. Sabot Media is an independent publisher and does not represent or speak for A/I.' } : item),
     graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'),
     social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'),
     socialSources: feed.sources,

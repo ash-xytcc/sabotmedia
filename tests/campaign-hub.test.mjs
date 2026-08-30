@@ -255,7 +255,7 @@ test('signatory carousel is populated from the published letter and placed befor
     { name: 'Anarkism.info', location: 'Sweden', statement: undefined },
     { name: 'Bonfire Networks', location: 'Belgium', statement: 'Sharing knowledge without establishing power.' },
   ])
-  for (const expected of ['Sabot Media', 'We Will Free Us', 'Grounded Futures Podcast', 'The Final Straw Radio', '#MilkTeaAlliance Calendar Team', 'Datenpunks e.V.', 'Jeremy Beausoleil Smith']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  for (const expected of ['Sabot Media', 'Grounded Futures Podcast', 'The Final Straw Radio', '#MilkTeaAlliance Calendar Team', 'Datenpunks e.V.', 'Jeremy Beausoleil Smith']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   assert.match(server, /getNativeEntry\(db, 'open-letter-ai'\)/)
   assert.match(server, /extractAiLetterSignatories/)
   assert.match(server, /if \(extracted\.length\) signatories = extracted/)
@@ -265,6 +265,16 @@ test('signatory carousel is populated from the published letter and placed befor
   assert.match(page, /scrollBy/)
   assert.ok(page.indexOf('<SignatoryCarousel') < page.indexOf('<SocialSection'))
   assert.match(polish, /scroll-snap-type:\s*inline mandatory/)
+})
+
+test('withdrawn campaign partner is omitted from every generated public-page surface', () => {
+  assert.doesNotMatch(model, /We Will Free Us/i)
+  assert.doesNotMatch(socialServer, /We Will Free Us/i)
+  assert.match(socialServer, /partners:\s*\['Sabot Media'\]/)
+  assert.match(socialServer, /publisher:\s*'Sabot Media', title:\s*'Open Letter/)
+  assert.match(socialServer, /Sabot Media publishes the open letter/)
+  assert.match(model, /Sabot Media consolidated reporting/)
+  assert.match(socialServer, /!\/we\\s\+will\\s\+free\\s\+us\/i/)
 })
 
 test('coverage and live social disclose language and exact followed accounts', () => {

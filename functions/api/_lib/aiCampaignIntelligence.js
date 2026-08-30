@@ -108,11 +108,14 @@ export function deriveAiCampaignPublicationUpdates(items = [], requestUrl) {
 }
 
 export function mergeCampaignUpdates(...groups) {
-  const seen = new Set()
+  const seenUrls = new Set()
+  const seenIds = new Set()
   return groups.flat().filter((item = {}) => {
-    const key = canonicalUrl(item.url) || String(item.id || '').trim().toLowerCase()
-    if (!key || seen.has(key)) return false
-    seen.add(key)
+    const url = canonicalUrl(item.url)
+    const id = String(item.id || '').trim().toLowerCase()
+    if ((!url && !id) || (url && seenUrls.has(url)) || (id && seenIds.has(id))) return false
+    if (url) seenUrls.add(url)
+    if (id) seenIds.add(id)
     return true
   })
 }
