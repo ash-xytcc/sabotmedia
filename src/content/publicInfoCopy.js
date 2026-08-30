@@ -1,4 +1,5 @@
 const CURRENT_INFO_COPY_VERSION = 'v2'
+const INFO_COPY_VERSIONS = { contact: 'v3' }
 
 export const publicInfoCopy = {
   about: {
@@ -24,27 +25,9 @@ Read it. Print it. Share it. Argue with it. Build on it. Send us what we are mis
     title: 'Contact Sabot',
     body: `Sabot Media is a small collective, not a customer-service department, so the best way to get a useful reply is to tell us what you are writing about and what you need.
 
-General correspondence, corrections, collaboration, and questions:
-info@sabot.media
-
-News tips, documents, leads, and story ideas:
-tips@sabot.media
-
-Submissions and pitches:
-submit@sabot.media
-
-Press and interview requests:
-press@sabot.media
-
-Security questions or sensitive contact:
-security@sabot.media
-
-Support and material help:
-support@sabot.media
-
 If you are contacting us about a particular project, article, podcast, zine, or contributor, name it in the subject or first line. If there is a deadline, tell us. If you are correcting something we published, include the URL and the specific claim you believe is wrong.
 
-For ordinary correspondence, ordinary email is fine. If what you are sending could expose you or someone else to legal, professional, personal, or political risk, do not casually dump it into a normal email. Read our Security page first:
+For ordinary correspondence, ordinary email is fine. The encrypted form below is available for general messages that should not travel as readable email. For more sensitive material, source protection, anonymity, or file-safety guidance, read our Security page before sending anything:
 https://sabot.media/security
 
 We would rather receive a careful message later than a dangerous one quickly.`,
@@ -107,5 +90,6 @@ export function getPublicInfoCopy(page) {
 
 export function getPublicInfoField(page, part, fallbackField = '') {
   if (!publicInfoCopy[page]) return fallbackField
-  return `info.${page}.${part}.${CURRENT_INFO_COPY_VERSION}`
+  const version = INFO_COPY_VERSIONS[page] || CURRENT_INFO_COPY_VERSION
+  return `info.${page}.${part}.${version}`
 }
