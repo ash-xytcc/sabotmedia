@@ -50,7 +50,10 @@ export async function onRequestGet(context) {
             listNativeEntries(db, { status: 'published' }),
           ])
           const letterBody = letter?.bodyHtml || letter?.body || ''
-          if (hasAiLetterSignatureSection(letterBody)) signatories = extractAiLetterSignatories(letterBody)
+          if (hasAiLetterSignatureSection(letterBody)) {
+            const extracted = extractAiLetterSignatories(letterBody)
+            if (extracted.length) signatories = extracted
+          }
           posts = publishedPosts
         } catch { /* the bundled public snapshot remains available */ }
       }

@@ -182,32 +182,36 @@ async function fetchMastodonAccount({ instance, acct }, fetcher) {
 
 export function extractAiLetterSignatories(html) {
   const source = String(html || '')
-  const section = source.match(/Signed,\s*<\/div>\s*<div>([\s\S]*?)<\/div>\s*<div>\s*<br\s*\/?>(?:\s*)<\/div>\s*<div>\s*<b>\s*Sign on/i)?.[1] || ''
+  const signed = source.match(/<div\b[^>]*>\s*Signed,\s*<\/div>/i)
+  if (!signed) return []
+  const afterSigned = source.slice((signed.index || 0) + signed[0].length)
+  const signOnIndex = afterSigned.search(/<b\b[^>]*>\s*(?:<strong\b[^>]*>\s*)?Sign on/i)
+  const section = signOnIndex >= 0 ? afterSigned.slice(0, signOnIndex) : ''
   if (!section) return []
   const signatories = []
-  const tokens = section.matchAll(/<(p|blockquote)\b[^>]*>([\s\S]*?)<\/\1>/gi)
-  for (const token of tokens) {
-    if (token[1].toLowerCase() === 'blockquote') {
+  const tokenized = section
+    .replace(/<blockquote\b[^>]*>([\s\S]*?)<\/blockquote>/gi, (_, statement) => `\n@@STATEMENT:${stripHtml(statement)}\n`)
+    .replace(/<br\s*\/?>|<\/?(?:div|p)\b[^>]*>/gi, '\n')
+  const lines = tokenized.split(/\n+/).map(stripHtml).filter(Boolean)
+  for (const rawLine of lines) {
+    if (rawLine.startsWith('@@STATEMENT:')) {
       const last = signatories.at(-1)
-      if (last) last.statement = stripHtml(token[2])
+      if (last) last.statement = rawLine.slice('@@STATEMENT:'.length).trim()
       continue
     }
-    const lines = token[2].split(/<br\s*\/?>/i).map(stripHtml).filter(Boolean)
-    for (const rawLine of lines) {
-      const says = /\s+says:\s*$/i.test(rawLine)
-      const line = rawLine.replace(/\s+says:\s*$/i, '').trim()
-      const dashIndex = line.lastIndexOf(' - ')
-      const comma = dashIndex < 0 && line.match(/^(.*?),\s*(USA)$/i)
-      const name = String(dashIndex >= 0 ? line.slice(0, dashIndex) : comma?.[1] || line).trim()
-      const location = String(dashIndex >= 0 ? line.slice(dashIndex + 3) : comma?.[2] || '').trim()
-      if (name) signatories.push({ id: `signer-${slugify(name)}`, name, location, expectsStatement: says })
-    }
+    const says = /\s+says:\s*$/i.test(rawLine)
+    const line = rawLine.replace(/\s+says:\s*$/i, '').trim()
+    const dashIndex = line.lastIndexOf(' - ')
+    const comma = dashIndex < 0 && line.match(/^(.*?),\s*([A-Z][A-Za-z /.-]{1,30})$/)
+    const name = String(dashIndex >= 0 ? line.slice(0, dashIndex) : comma?.[1] || line).trim()
+    const location = String(dashIndex >= 0 ? line.slice(dashIndex + 3) : comma?.[2] || '').trim()
+    if (name) signatories.push({ id: `signer-${slugify(name)}`, name, location, expectsStatement: says })
   }
   return signatories.map(({ expectsStatement, ...item }) => item)
 }
 
 export function hasAiLetterSignatureSection(html) {
-  return /Signed,\s*<\/div>[\s\S]*?<b>\s*Sign on/i.test(String(html || ''))
+  return /<div\b[^>]*>\s*Signed,\s*<\/div>[\s\S]*?<b\b[^>]*>\s*(?:<strong\b[^>]*>\s*)?Sign on/i.test(String(html || ''))
 }
 
 function socialLanguage(text, declared = []) {
@@ -234,4 +238,4 @@ function dedupeById(items) { const seen = new Set(); return items.filter((item) 
 function dedupeSignatories(items) { const seen = new Set(); return items.filter((item) => { const value = String(item?.name || '').trim().toLowerCase(); if (!value || seen.has(value)) return false; seen.add(value); return true }) }
 function dedupeCoverage(items) { const urls = new Set(), titles = new Set(); return items.filter((item) => { const url = String(item?.url || '').trim().replace(/\/$/, '').toLowerCase(), title = String(item?.title || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' '); if ((!url && !title) || urls.has(url) || titles.has(title)) return false; if (url) urls.add(url); if (title) titles.add(title); return true }) }
 function slugify(value) { return String(value || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'signatory' }
-function stripHtml(value) { return String(value || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#(?:39|x27);/gi, "'").replace(/\s+/g, ' ').trim() }
+function stripHtml(value) { return String(value || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, ' ').replace(/&nbsp;|&#160;/gi, ' ').replace(/\u00a0/g, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#(?:39|x27);/gi, "'").replace(/\s+/g, ' ').trim() }

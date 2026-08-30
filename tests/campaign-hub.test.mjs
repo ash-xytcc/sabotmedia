@@ -233,9 +233,19 @@ test('signatory carousel is populated from the published letter and placed befor
     { name: 'Example Collective', location: 'Italy', statement: 'Infrastructure is not terrorism.' },
     { name: 'Another Signer', location: 'USA', statement: undefined },
   ])
+  const nested = '<div>Signed,</div><div><br /></div><div>Sabot Media&nbsp;&nbsp;- USA<br />We Will Free Us - USA</div><div><div>Haymarket Customs, USA</div><div>Eric Gallager - NH</div>Anarkism.info - Sweden</div><div>Bonfire Networks - Belgium says:</div><blockquote>Sharing knowledge without establishing power.</blockquote><div><br /><b>Sign on<br /></b></div>'
+  assert.deepEqual(extractAiLetterSignatories(nested).map(({ name, location, statement }) => ({ name, location, statement })), [
+    { name: 'Sabot Media', location: 'USA', statement: undefined },
+    { name: 'We Will Free Us', location: 'USA', statement: undefined },
+    { name: 'Haymarket Customs', location: 'USA', statement: undefined },
+    { name: 'Eric Gallager', location: 'NH', statement: undefined },
+    { name: 'Anarkism.info', location: 'Sweden', statement: undefined },
+    { name: 'Bonfire Networks', location: 'Belgium', statement: 'Sharing knowledge without establishing power.' },
+  ])
   for (const expected of ['Sabot Media', 'We Will Free Us', 'Grounded Futures Podcast', 'The Final Straw Radio', '#MilkTeaAlliance Calendar Team', 'Datenpunks e.V.', 'Jeremy Beausoleil Smith']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   assert.match(server, /getNativeEntry\(db, 'open-letter-ai'\)/)
   assert.match(server, /extractAiLetterSignatories/)
+  assert.match(server, /if \(extracted\.length\) signatories = extracted/)
   assert.match(page, /function SignatoryCarousel/)
   assert.match(page, /scrollBy/)
   assert.ok(page.indexOf('<SignatoryCarousel') < page.indexOf('<SocialSection'))
