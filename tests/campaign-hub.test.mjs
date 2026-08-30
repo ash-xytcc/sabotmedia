@@ -261,6 +261,7 @@ test('signatory carousel is populated from the published letter and placed befor
   assert.match(server, /if \(extracted\.length\) signatories = extracted/)
   assert.match(page, /function SignatoryCarousel/)
   assert.match(page, /signatoryNameClass\(item\.name\)/)
+  assert.match(page, /longestWord >= 11/)
   assert.match(page, /scrollBy/)
   assert.ok(page.indexOf('<SignatoryCarousel') < page.indexOf('<SocialSection'))
   assert.match(polish, /scroll-snap-type:\s*inline mandatory/)

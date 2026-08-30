@@ -443,7 +443,7 @@ function PieceGrid({ pieces, empty }) {
 function signatoryNameClass(name) {
   const longestWord = String(name || '').split(/\s+/).reduce((length, word) => Math.max(length, word.length), 0)
   if (longestWord >= 22) return 'is-extra-long-token'
-  if (longestWord >= 15) return 'is-long-token'
+  if (longestWord >= 11) return 'is-long-token'
   return ''
 }
 
