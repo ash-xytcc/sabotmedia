@@ -162,7 +162,6 @@ export function CampaignAdminPage() {
             </section>
             <ArrayEditor title="Action Center" rows={draft.actions || []} fields={[field('title', 'Title'), field('body', 'Description', 'textarea'), field('href', 'URL / anchor'), field('label', 'Button label')]} onAdd={(fields) => addRow('actions', fields)} onPatch={(index, key, value) => patchRow('actions', index, key, value)} onRemove={(index) => removeRow('actions', index)} onMove={(index, direction) => moveRow('actions', index, direction)} />
             {LIST_SECTIONS.map((section) => <ArrayEditor key={section.key} title={section.title} rows={draft[section.key] || []} fields={section.fields} onAdd={(fields) => addRow(section.key, fields)} onPatch={(index, key, value) => patchRow(section.key, index, key, value)} onRemove={(index) => removeRow(section.key, index)} onMove={(index, direction) => moveRow(section.key, index, direction)} />)}
-            <section className="wp-meta-box"><h2>Campaign Endpoints</h2><p><strong>Public hub:</strong> <code>/campaigns/{draft.slug || 'campaign-slug'}</code></p><p><strong>Campaign RSS:</strong> <code>/feeds/campaigns/{draft.slug || 'campaign-slug'}.xml</code></p><p className="description">Connect Sabot articles through the Campaign field in the post editor. Use Resources and Primary Sources for external material and exact ordering.</p></section>
           </> : null}
         </div>
       </div> : null}
