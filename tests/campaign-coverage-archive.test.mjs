@@ -44,6 +44,9 @@ test('archive records use canonical URLs and distinguish editorial from automate
   assert.equal(editorial.isFeatured, true)
   assert.equal(automated.discoverySource, 'gdelt-doc-api')
   assert.equal(automated.isFeatured, false)
+  const decoded = normalizeArchiveItem({ title: 'L&#8217;uomo &#232; qui', summary: 'Finalit&#224;', url: 'https://example.org/entities', date: '2026-08-30' })
+  assert.equal(decoded.title, 'L’uomo è qui')
+  assert.equal(decoded.summary, 'Finalità')
 })
 
 test('coverage archive is D1-backed, searchable, scheduled and gracefully isolates source errors', () => {
@@ -71,6 +74,7 @@ test('coverage archive route receives the SPA shell and public UI exposes useful
   assert.match(page, /Search the archive/)
   assert.match(page, /All languages/)
   assert.match(page, /All outlets/)
+  assert.match(page, /timeZone:\s*'UTC'/)
   assert.match(campaign, /Browse the full coverage archive/)
   assert.match(selection, /slice\(0, limit\)/)
   assert.match(css, /overflow-x:\s*clip/)
