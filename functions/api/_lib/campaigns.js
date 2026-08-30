@@ -1,5 +1,6 @@
-const CAMPAIGN_SCHEMA_VERSION = 1
+const CAMPAIGN_SCHEMA_VERSION = 2
 export const AI_CAMPAIGN_SLUG = 'autistici-inventati'
+export const AI_CAMPAIGN_DEADLINE = '2026-09-25T04:01:00.000Z'
 
 export function defaultAiCampaign() {
   return normalizeCampaign({
@@ -12,7 +13,8 @@ export function defaultAiCampaign() {
     shortTitle: 'Defend Autistici/Inventati',
     deck: 'A living campaign hub for reporting, public letters, graphics, press coverage, social circulation, infrastructure status, and ways to act before September 25.',
     summary: 'Sabot Media is independently documenting and opposing the treatment of resistant communications infrastructure as terrorism. This page gathers the campaign in one place and will remain as a public archive after the deadline.',
-    deadline: '2026-09-25T23:59:59Z',
+    deadline: AI_CAMPAIGN_DEADLINE,
+    deadlineTimeZone: 'America/New_York',
     heroImage: '',
     heroAlt: '',
     monitorUrl: 'https://kuma.accol.li/status/aimonitor',
@@ -68,7 +70,11 @@ export async function ensureCampaignsTable(db) {
 export async function ensureAiCampaign(db) {
   await ensureCampaignsTable(db)
   const existing = await getCampaign(db, AI_CAMPAIGN_SLUG)
-  if (existing) return existing
+  if (existing) {
+    const legacyDeadline = existing.deadline === '2026-09-25T23:59:59.000Z' || existing.deadline === '2026-09-25T23:59:59Z'
+    if (legacyDeadline) return upsertCampaign(db, { ...existing, deadline: AI_CAMPAIGN_DEADLINE, deadlineTimeZone: 'America/New_York' })
+    return existing
+  }
   const seeded = defaultAiCampaign()
   await upsertCampaign(db, seeded)
   return seeded
@@ -129,6 +135,7 @@ export function normalizeCampaign(input = {}) {
     deck: String(input.deck || ''),
     summary: String(input.summary || ''),
     deadline: normalizeDate(input.deadline),
+    deadlineTimeZone: normalizeTimeZone(input.deadlineTimeZone),
     heroImage: String(input.heroImage || ''),
     heroAlt: String(input.heroAlt || ''),
     monitorUrl: String(input.monitorUrl || ''),
@@ -205,6 +212,16 @@ function normalizeDate(value) {
   if (!raw) return ''
   const time = new Date(raw).getTime()
   return Number.isFinite(time) ? new Date(time).toISOString() : raw
+}
+
+function normalizeTimeZone(value) {
+  const zone = String(value || 'UTC').trim()
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: zone }).format()
+    return zone
+  } catch {
+    return 'UTC'
+  }
 }
 
 function validRssDate(value) {

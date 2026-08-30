@@ -79,7 +79,7 @@ test('campaign updates have a direct D1 RSS feed and manifest entry', () => {
   assert.match(feeds, /campaigns\\\/\(\[a-z0-9-\]\+\)\\\.xml/)
   assert.match(feeds, /buildCampaignRssXml/)
   assert.match(feeds, /x-sabot-feed-source': 'campaign-d1'/)
-  assert.match(manifest, /campaigns\/\$\{AI_CAMPAIGN_SLUG\}\.xml/)
+  assert.match(manifest, /campaigns\.map\(\(campaign\) => `campaigns\/\$\{campaign\.slug\}\.xml`\)/)
   assert.match(model, /Campaign Updates/)
 })
 
@@ -97,8 +97,8 @@ test('campaign editor can manage updates, resources, social, graphics, coverage,
   for (const key of ['updates', 'resources', 'social', 'graphics', 'coverage', 'signatories', 'sources', 'timeline', 'faq', 'translations']) {
     assert.match(admin, new RegExp(`key: '${key}'`))
   }
-  assert.match(admin, /Campaign hub saved to D1/)
-  assert.match(admin, /Nothing has been saved locally/)
+  assert.match(admin, /Campaign saved to D1/)
+  assert.match(admin, /No campaigns yet\. Start with Add New Campaign/)
 })
 
 test('campaign reporting excludes body-only false positives and keeps explicit A/I relationships', () => {

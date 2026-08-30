@@ -58,7 +58,9 @@ export async function onRequestGet(context) {
           posts = publishedPosts
         } catch { /* the bundled public snapshot remains available */ }
       }
-      const output = includeDrafts ? item : await decorateAiCampaignForPublic(item, context.request.url, { signatories, posts })
+      const output = includeDrafts || item.slug !== AI_CAMPAIGN_SLUG
+        ? item
+        : await decorateAiCampaignForPublic(item, context.request.url, { signatories, posts })
       if (!includeDrafts && item.slug === AI_CAMPAIGN_SLUG) {
         await upsertAiCoverageItems(db, output.coverage || [])
         const archive = await getAiCoverageArchiveSummary(db, AI_CAMPAIGN_SLUG)
@@ -90,10 +92,8 @@ async function handleWrite(context) {
 
     const body = await context.request.json()
     const incoming = body?.item || body || {}
-    const item = normalizeCampaign({
-      ...incoming,
-      slug: incoming.slug || AI_CAMPAIGN_SLUG,
-    })
+    if (!String(incoming.title || '').trim()) return json({ ok: false, error: 'missing campaign title' }, 400)
+    const item = normalizeCampaign(incoming)
 
     if (!item.title || !item.slug) return json({ ok: false, error: 'missing campaign title or slug' }, 400)
 
