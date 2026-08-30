@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
-import { loadCampaignRevisions, loadCampaigns, restoreCampaignRevision, saveCampaign } from '../lib/campaignsApi'
-import { blankCampaign, campaignSlug, CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_LABELS, CAMPAIGN_TIME_ZONES, deadlineInputValue, deadlineIsoValue } from '../lib/campaignDeadline'
+import { deleteCampaign as deleteCampaignApi, loadCampaignRevisions, loadCampaigns, restoreCampaignRevision, saveCampaign } from '../lib/campaignsApi'
+import { blankCampaign, campaignSlug, CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_LABELS, CAMPAIGN_TIME_ZONES, deadlineInputValue, validateDeadlineWallTime } from '../lib/campaignDeadline'
+
+const AI_CAMPAIGN_ID = 'campaign-autistici-inventati'
 
 const LIST_SECTIONS = [
   { key: 'updates', title: 'Live Updates', fields: [field('date', 'Date / time'), field('title', 'Title'), field('body', 'Update', 'textarea'), field('url', 'Source / more URL'), field('pinned', 'Pinned', 'checkbox')] },
@@ -33,6 +35,8 @@ export function CampaignAdminPage() {
   const [revisions, setRevisions] = useState([])
   const [revisionState, setRevisionState] = useState('idle')
   const [restoringRevisionId, setRestoringRevisionId] = useState('')
+  const [deadlineWallTime, setDeadlineWallTime] = useState('')
+  const [deadlineError, setDeadlineError] = useState('')
   const savedFingerprintRef = useRef('')
   const { pushNotice } = useAdminNotices()
   const dirty = useMemo(() => Boolean(draft) && campaignFingerprint(draft) !== savedFingerprintRef.current, [draft])
@@ -45,6 +49,7 @@ export function CampaignAdminPage() {
         setCampaigns(items)
         const selected = items.find((item) => item.slug === 'autistici-inventati') || items[0] || null
         setDraft(selected)
+        setDeadlineWallTime(deadlineInputValue(selected?.deadline, selected?.deadlineTimeZone))
         savedFingerprintRef.current = campaignFingerprint(selected)
         if (selected) reloadRevisions(selected.id)
       })
@@ -83,6 +88,8 @@ export function CampaignAdminPage() {
   function selectCampaign(item) {
     if (!canDiscardChanges()) return
     setDraft(item)
+    setDeadlineWallTime(deadlineInputValue(item.deadline, item.deadlineTimeZone))
+    setDeadlineError('')
     savedFingerprintRef.current = campaignFingerprint(item)
     setIsNew(false)
     setSlugManuallyEdited(true)
@@ -93,6 +100,8 @@ export function CampaignAdminPage() {
     if (!canDiscardChanges()) return
     const next = blankCampaign()
     setDraft(next)
+    setDeadlineWallTime('')
+    setDeadlineError('')
     savedFingerprintRef.current = campaignFingerprint(next)
     setIsNew(true)
     setSlugManuallyEdited(false)
@@ -104,6 +113,48 @@ export function CampaignAdminPage() {
 
   function patchTitle(title) {
     setDraft((current) => ({ ...current, title, ...(!slugManuallyEdited ? { slug: campaignSlug(title) } : {}) }))
+  }
+
+  function duplicateCampaign() {
+    if (!draft || !canDiscardChanges()) return
+    const identity = blankCampaign()
+    const nextSlug = `${campaignSlug(draft.slug || draft.title)}-copy`
+    const next = { ...draft, id: identity.id, title: `Copy of ${draft.title}`, shortTitle: `Copy of ${draft.shortTitle || draft.title}`, slug: nextSlug, status: 'draft', campaignStatus: 'active', createdAt: '', updatedAt: '' }
+    setDraft(next)
+    setDeadlineWallTime(deadlineInputValue(next.deadline, next.deadlineTimeZone))
+    setDeadlineError('')
+    setIsNew(true)
+    setSlugManuallyEdited(true)
+    setRevisions([])
+    setRevisionState('idle')
+  }
+
+  async function archiveCampaign() {
+    if (!draft || isNew || saving || !window.confirm(`Archive “${draft.title}”? Its public page will be removed from the campaign directory.`)) return
+    try {
+      setSaving(true)
+      const saved = await saveCampaign({ ...draft, status: 'archived', campaignStatus: 'archived' }, 'archive')
+      setDraft(saved); savedFingerprintRef.current = campaignFingerprint(saved)
+      setCampaigns((items) => [saved, ...items.filter((item) => item.id !== saved.id)])
+      pushNotice('Campaign archived.', 'success')
+      reloadRevisions(saved.id)
+    } catch (error) { pushNotice(`Campaign archive failed: ${String(error?.message || error)}`, 'error') } finally { setSaving(false) }
+  }
+
+  async function removeCampaign() {
+    if (!draft || isNew || isProtectedAiCampaign(draft) || saving || !window.confirm(`Permanently delete “${draft.title}” and its revision history?`)) return
+    try {
+      setSaving(true)
+      await deleteCampaignApi(draft.id)
+      const remaining = campaigns.filter((item) => item.id !== draft.id)
+      setCampaigns(remaining)
+      const next = remaining[0] || null
+      setDraft(next); savedFingerprintRef.current = campaignFingerprint(next)
+      setDeadlineWallTime(deadlineInputValue(next?.deadline, next?.deadlineTimeZone))
+      setRevisions([]); setRevisionState('idle')
+      if (next) reloadRevisions(next.id)
+      pushNotice('Campaign deleted from D1.', 'success')
+    } catch (error) { pushNotice(`Campaign delete failed: ${String(error?.message || error)}`, 'error') } finally { setSaving(false) }
   }
 
   function patchRow(section, index, key, value) {
@@ -162,10 +213,16 @@ export function CampaignAdminPage() {
       previewWindow?.close()
       return null
     }
+    if (deadlineError) {
+      pushNotice(deadlineError, 'error')
+      previewWindow?.close()
+      return null
+    }
     setSaving(true)
     try {
-      const saved = await saveCampaign({ ...draft, slug: campaignSlug(draft.slug), partners: normalizeCsv(draft.partners), campaignKeywords: normalizeCsv(draft.campaignKeywords), sectionOrder: normalizeSectionOrder(draft.sectionOrder) }, previewWindow ? 'save-and-preview' : 'manual-save')
+      const saved = await saveCampaign({ ...draft, slug: campaignSlug(draft.slug), partners: normalizeCsv(draft.partners), campaignKeywords: normalizeCsv(draft.campaignKeywords), sectionOrder: normalizeSectionOrder(draft.sectionOrder), automation: normalizeAutomationDraft(draft.automation) }, previewWindow ? 'save-and-preview' : 'manual-save')
       setDraft(saved)
+      setDeadlineWallTime(deadlineInputValue(saved.deadline, saved.deadlineTimeZone))
       savedFingerprintRef.current = campaignFingerprint(saved)
       setCampaigns((items) => [saved, ...items.filter((item) => item.id !== saved.id)].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)))
       setIsNew(false)
@@ -214,8 +271,16 @@ export function CampaignAdminPage() {
   }
 
   function changeDeadlineTimeZone(nextZone) {
-    const wallTime = deadlineInputValue(draft?.deadline, draft?.deadlineTimeZone)
-    patch({ deadlineTimeZone: nextZone, deadline: wallTime ? deadlineIsoValue(wallTime, nextZone) : '' })
+    const result = deadlineWallTime ? validateDeadlineWallTime(deadlineWallTime, nextZone) : { iso: '', error: '' }
+    setDeadlineError(result.error)
+    patch({ deadlineTimeZone: nextZone, ...(result.error ? {} : { deadline: result.iso }) })
+  }
+
+  function changeDeadline(value) {
+    setDeadlineWallTime(value)
+    const result = value ? validateDeadlineWallTime(value, draft?.deadlineTimeZone) : { iso: '', error: '' }
+    setDeadlineError(result.error)
+    if (!result.error) patch({ deadline: result.iso })
   }
 
   return <AdminFrame>
@@ -225,6 +290,9 @@ export function CampaignAdminPage() {
         <div className="wp-screen-header__actions">
           {draft ? <span className={`campaign-admin-save-state${dirty ? ' is-dirty' : ''}`} role="status">{dirty ? 'Unsaved changes' : 'All changes saved'}</span> : null}
           <button type="button" className="button" onClick={startCampaign}>Add New Campaign</button>
+          {draft ? <button type="button" className="button" onClick={duplicateCampaign}>Duplicate</button> : null}
+          {draft && !isNew ? <button type="button" className="button" onClick={archiveCampaign} disabled={saving || draft.status === 'archived'}>Archive</button> : null}
+          {draft && !isNew && !isProtectedAiCampaign(draft) ? <button type="button" className="button button-link-delete" onClick={removeCampaign} disabled={saving}>Delete</button> : null}
           {draft?.status === 'published' && draft.slug ? <Link className="button" to={`/campaigns/${draft.slug}`} onClick={(event) => { if (!canDiscardChanges()) event.preventDefault() }}>View Campaign</Link> : null}
           {draft ? <button type="button" className="button" onClick={saveAndPreview} disabled={saving}>Save + Preview</button> : null}
           <button type="button" className="button button--primary" onClick={save} disabled={!draft || saving}>{saving ? 'Saving…' : isNew ? 'Create Campaign' : 'Save Campaign'}</button>
@@ -244,12 +312,12 @@ export function CampaignAdminPage() {
               <div className="campaign-admin-section-header"><h2>{isNew ? 'New Campaign' : 'Campaign Identity'}</h2><span className="description">{draft.slug ? `/campaigns/${draft.slug}` : 'Draft URL not set'}</span></div>
               <div className="campaign-admin-grid">
                 <TextField label="Title" value={draft.title} onChange={patchTitle} />
-                <TextField label="URL slug" value={draft.slug} onChange={(value) => { setSlugManuallyEdited(true); patch({ slug: campaignSlug(value) }) }} />
+                <TextField label="URL slug" value={draft.slug} disabled={isProtectedAiCampaign(draft)} onChange={(value) => { setSlugManuallyEdited(true); patch({ slug: campaignSlug(value) }) }} />
                 <TextField label="Kicker" value={draft.kicker} onChange={(value) => patch({ kicker: value })} />
                 <TextField label="Short title" value={draft.shortTitle} onChange={(value) => patch({ shortTitle: value })} />
                 <SelectField label="Public state" value={draft.status} onChange={(value) => patch({ status: value })} options={['draft', 'published', 'archived']} />
-                <SelectField label="Campaign status" value={draft.campaignStatus} onChange={(value) => patch({ campaignStatus: value })} options={['active', 'urgent', 'monitoring', 'archived']} />
-                <TextField label="Deadline" value={deadlineInputValue(draft.deadline, draft.deadlineTimeZone)} type="datetime-local" onChange={(value) => patch({ deadline: deadlineIsoValue(value, draft.deadlineTimeZone) })} />
+                <SelectField label="Campaign status" value={draft.campaignStatus} onChange={(value) => patch({ campaignStatus: value })} options={['active', 'urgent', 'monitoring', 'completed', 'archived']} />
+                <TextField label="Deadline" value={deadlineWallTime} type="datetime-local" onChange={changeDeadline} error={deadlineError} />
                 <SelectField label="Deadline timezone" value={draft.deadlineTimeZone} onChange={changeDeadlineTimeZone} options={CAMPAIGN_TIME_ZONES} />
               </div>
               <p className="description campaign-admin-deadline-note">The deadline is saved as an exact UTC instant and displayed here in the selected campaign timezone.</p>
@@ -264,6 +332,7 @@ export function CampaignAdminPage() {
               <TextField label="Monitor label" value={draft.monitorLabel} onChange={(value) => patch({ monitorLabel: value })} />
               <TextField label="Independence / legal note" value={draft.disclaimer} textarea onChange={(value) => patch({ disclaimer: value })} />
             </section>
+            <AutomationSettings value={draft.automation || {}} onChange={(automation) => patch({ automation })} />
             <SectionControls
               order={normalizeSectionOrder(draft.sectionOrder)}
               hidden={draft.hiddenSections || []}
@@ -315,8 +384,23 @@ function RevisionHistory({ revisions, state, restoringId, onRestore }) {
   return <section className="wp-meta-box"><div className="campaign-admin-section-header"><h2>Revision History</h2><span className="description">{state === 'loading' ? 'Loading…' : `${revisions.length} saved`}</span></div>{state === 'error' ? <p className="notice notice-error">Revision history is unavailable. Campaign saving remains fail-closed.</p> : null}{revisions.length ? <div className="campaign-admin-revisions">{revisions.slice(0, 20).map((revision) => <article key={revision.id}><div><strong>{new Date(revision.createdAt).toLocaleString()}</strong><span>{revision.revisionNote}</span></div><button className="button" type="button" disabled={Boolean(restoringId)} onClick={() => onRestore(revision)}>{restoringId === revision.id ? 'Restoring…' : 'Restore'}</button></article>)}</div> : state === 'loaded' ? <p className="description">The first saved revision will appear after the next save.</p> : null}</section>
 }
 
-function TextField({ label, value = '', onChange, textarea = false, type = 'text' }) {
-  return <label className="native-content-editor__field"><span>{label}</span>{textarea ? <textarea value={value || ''} onChange={(event) => onChange(event.target.value)} /> : <input type={type} value={value || ''} onChange={(event) => onChange(event.target.value)} />}</label>
+function AutomationSettings({ value, onChange }) {
+  const patch = (next) => onChange({ ...value, ...next })
+  return <section className="wp-meta-box"><div className="campaign-admin-section-header"><div><h2>Live Automation</h2><p className="description">Optional public sources are refreshed server-side. Exact campaign relationships still control Sabot articles.</p></div></div>
+    <label className="native-content-editor__field"><span><input type="checkbox" checked={Boolean(value.enabled)} onChange={(event) => patch({ enabled: event.target.checked })} /> Enable configured live sources</span></label>
+    <label className="native-content-editor__field"><span><input type="checkbox" checked={Boolean(value.discoverNews)} onChange={(event) => patch({ discoverNews: event.target.checked })} /> Discover exact-match news coverage automatically</span></label>
+    <div className="campaign-admin-grid">
+      <TextField label="Automation start (ISO date/time)" value={value.startAt || ''} onChange={(startAt) => patch({ startAt })} />
+      <TextField label="Signatories JSON URL" value={value.signatoriesUrl || ''} onChange={(signatoriesUrl) => patch({ signatoriesUrl })} />
+    </div>
+    <TextField label="Bluesky handles (one per line)" value={(value.blueskyActors || []).join('\n')} textarea onChange={(text) => patch({ blueskyActors: normalizeLines(text) })} />
+    <TextField label="Mastodon accounts (one @name@server per line)" value={(value.mastodonAccounts || []).join('\n')} textarea onChange={(text) => patch({ mastodonAccounts: normalizeLines(text) })} />
+    <TextField label="Coverage RSS / Atom feeds (one HTTPS URL per line)" value={(value.coverageFeeds || []).join('\n')} textarea onChange={(text) => patch({ coverageFeeds: normalizeLines(text) })} />
+  </section>
+}
+
+function TextField({ label, value = '', onChange, textarea = false, type = 'text', disabled = false, error = '' }) {
+  return <label className="native-content-editor__field"><span>{label}</span>{textarea ? <textarea value={value || ''} disabled={disabled} onChange={(event) => onChange(event.target.value)} /> : <input type={type} value={value || ''} disabled={disabled} aria-invalid={error ? 'true' : undefined} onChange={(event) => onChange(event.target.value)} />}{error ? <small className="campaign-admin-field-error" role="alert">{error}</small> : null}</label>
 }
 
 function SelectField({ label, value, onChange, options }) {
@@ -329,10 +413,31 @@ function normalizeCsv(value) {
   return String(value || '').split(',').map((item) => item.trim()).filter(Boolean)
 }
 
+function normalizeLines(value) {
+  if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean)
+  return String(value || '').split(/\r?\n/).map((item) => item.trim()).filter(Boolean)
+}
+
+function normalizeAutomationDraft(value = {}) {
+  return {
+    enabled: Boolean(value.enabled),
+    discoverNews: Boolean(value.discoverNews),
+    startAt: String(value.startAt || '').trim(),
+    blueskyActors: normalizeLines(value.blueskyActors),
+    mastodonAccounts: normalizeLines(value.mastodonAccounts),
+    coverageFeeds: normalizeLines(value.coverageFeeds),
+    signatoriesUrl: String(value.signatoriesUrl || '').trim(),
+  }
+}
+
 function campaignFingerprint(value) {
   if (!value) return ''
   const { updatedAt, ...stable } = value
   return JSON.stringify(stable)
+}
+
+function isProtectedAiCampaign(value) {
+  return value?.id === AI_CAMPAIGN_ID || value?.slug === 'autistici-inventati'
 }
 
 function normalizeSectionOrder(value) {

@@ -330,6 +330,20 @@
 .campaign-admin-preview img { width: 100%; height: auto; display: block; }
 .campaign-admin-deadline-note { margin-top: 6px; }
 .campaign-section-flow { display: flex; flex-direction: column; min-width: 0; }
+
+.campaign-directory__hero { padding: clamp(72px, 10vw, 150px) 0 clamp(48px, 7vw, 96px); color: var(--campaign-paper); background: var(--campaign-red); border-bottom: 4px solid #111; }
+.campaign-directory__hero h1 { max-width: 12ch; margin: 12px 0; font-size: clamp(3rem, 9vw, 8rem); line-height: .82; letter-spacing: -.055em; text-transform: uppercase; overflow-wrap: normal; word-break: normal; }
+.campaign-directory__hero p:last-child { max-width: 58ch; font-size: clamp(1rem, 1.8vw, 1.35rem); }
+.campaign-directory__body { min-height: 50vh; padding: clamp(42px, 7vw, 90px) 0; background: var(--campaign-paper); color: #111; }
+.campaign-directory__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 26px; }
+.campaign-directory__grid article { display: grid; background: #fffaf0; border: 2px solid #111; box-shadow: 8px 8px 0 var(--campaign-red); min-width: 0; }
+.campaign-directory__grid article > div { padding: 24px; }
+.campaign-directory__grid img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-bottom: 2px solid #111; }
+.campaign-directory__grid span { font-size: .78rem; font-weight: 900; text-transform: uppercase; color: var(--campaign-red); }
+.campaign-directory__grid h2 { margin: 10px 0; font-size: clamp(1.8rem, 3vw, 3.2rem); line-height: .95; overflow-wrap: normal; word-break: normal; }
+.campaign-directory__grid h2 a { color: inherit; }
+.campaign-directory__grid p { max-width: 58ch; line-height: 1.55; }
+.campaign-admin-field-error { display: block; margin-top: 5px; color: #b42318; font-weight: 700; }
 .campaign-admin-save-state { display: inline-flex; align-items: center; min-height: 32px; padding: 0 8px; color: #2271b1; font-weight: 700; }
 .campaign-admin-save-state.is-dirty { color: #b32d2e; }
 .campaign-admin-media-field { display: grid; gap: 8px; align-items: end; }

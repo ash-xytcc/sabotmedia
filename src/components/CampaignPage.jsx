@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Children, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { loadCampaign, loadCampaignMonitor } from '../lib/campaignsApi'
 import { loadPublishedNativePieces } from '../lib/nativePublicFeed'
 import { selectHubCoverage } from '../lib/campaignCoverage'
+import { setDocumentMeta } from '../lib/documentMeta'
 
 const AI_CAMPAIGN_SLUG = 'autistici-inventati'
 const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social']
@@ -75,14 +76,14 @@ export function CampaignPage() {
   }, [])
 
   useEffect(() => {
-    if (!isAiCampaign) {
+    if (!campaign?.monitorUrl) {
       setMonitor({ state: 'unavailable', data: null })
       return undefined
     }
     let cancelled = false
     async function refresh() {
       try {
-        const data = await loadCampaignMonitor()
+        const data = await loadCampaignMonitor(campaignSlug)
         if (!cancelled) setMonitor({ state: data?.ok ? 'loaded' : 'unavailable', data })
       } catch (err) {
         if (!cancelled) setMonitor({ state: 'unavailable', data: { error: String(err?.message || err) } })
@@ -91,7 +92,18 @@ export function CampaignPage() {
     refresh()
     const timer = window.setInterval(refresh, 60000)
     return () => { cancelled = true; window.clearInterval(timer) }
-  }, [isAiCampaign])
+  }, [campaign?.monitorUrl, campaignSlug])
+
+  useEffect(() => {
+    if (!campaign) return
+    setDocumentMeta({
+      title: campaign.title,
+      description: campaign.deck || campaign.summary || campaign.shortTitle,
+      canonicalPath: `/campaigns/${campaign.slug}`,
+      image: campaign.heroImage || '/sabot-logo.png',
+      type: 'website',
+    })
+  }, [campaign])
 
   const campaignPieces = useMemo(() => findCampaignPieces(pieces, campaign), [pieces, campaign])
   const letterPieces = campaignPieces.filter((piece) => /letter/i.test(String(piece.title || '')))
@@ -162,16 +174,15 @@ export function CampaignPage() {
     graphics: graphics.length > 0,
     updates: updates.length > 0,
     timeline: (campaign.timeline || []).length > 0,
-    coverage: coverage.length > 0 || isAiCampaign,
+    coverage: coverage.length > 0 || isAiCampaign || Boolean(campaign.automation?.enabled && campaign.automation?.coverageFeeds?.length),
     sources: (campaign.sources || []).length > 0,
     faq: (campaign.faq || []).length > 0,
     translations: (campaign.translations || []).length > 0,
-    signatories: signatories.length > 0,
-    social: social.length > 0 || isAiCampaign,
+    signatories: signatories.length > 0 || Boolean(campaign.automation?.enabled && campaign.automation?.signatoriesUrl),
+    social: social.length > 0 || isAiCampaign || Boolean(campaign.automation?.enabled && (campaign.automation?.blueskyActors?.length || campaign.automation?.mastodonAccounts?.length)),
   }
   const visibleSections = sectionOrder.filter((key) => !hiddenSections.has(key) && sectionContent[key])
   const showSection = (key) => visibleSections.includes(key)
-  const sectionStyle = (key) => ({ order: sectionOrder.indexOf(key) })
   const sectionTitle = (key) => campaign.sectionTitles?.[key] || (isAiCampaign ? AI_CAMPAIGN_SECTION_TITLES[key] : '') || CAMPAIGN_SECTION_META[key]?.title || key
 
   return (
@@ -218,8 +229,8 @@ export function CampaignPage() {
         </section>
       ) : null}
 
-      <div className="campaign-section-flow">
-      {showSection('status') ? <section className="campaign-section campaign-section--status" id="status" style={sectionStyle('status')}>
+      <OrderedCampaignSections order={sectionOrder}>
+      {showSection('status') ? <section className="campaign-section campaign-section--status" id="status">
         <div className="campaign-shell">
           <SectionHeading eyebrow="LIVE CAMPAIGN DASHBOARD" title={sectionTitle('status')} />
           {isAiCampaign ? <ItalyClock /> : null}
@@ -229,7 +240,7 @@ export function CampaignPage() {
               <strong>{isPastDeadline ? 'Deadline passed' : countdown?.primary || 'Tracking deadline'}</strong>
               <p>{isPastDeadline ? 'This page remains the permanent campaign record. Updates continue below.' : countdown?.secondary || 'Campaign deadline'}</p>
             </article> : null}
-            {isAiCampaign && campaign.monitorUrl ? <MonitorCard monitor={monitor} sourceUrl={campaign.monitorUrl} label={campaign.monitorLabel} /> : null}
+            {campaign.monitorUrl ? <MonitorCard monitor={monitor} sourceUrl={campaign.monitorUrl} label={campaign.monitorLabel} /> : null}
             <article className="campaign-metric">
               <span className="campaign-metric__label">CAMPAIGN FEED</span>
               <strong>Follow every update</strong>
@@ -240,7 +251,7 @@ export function CampaignPage() {
         </div>
       </section> : null}
 
-      {showSection('reporting') ? <section className="campaign-section" id="reporting" style={sectionStyle('reporting')}>
+      {showSection('reporting') ? <section className="campaign-section" id="reporting">
         <div className="campaign-shell">
           <SectionHeading eyebrow="REPORTING + CONTEXT" title={sectionTitle('reporting')} description="The campaign is anchored in reporting and source material. These are the Sabot pieces connected to this campaign." />
           <PieceGrid pieces={reportingPieces} empty="Campaign reporting will appear here as relevant published posts are detected." />
@@ -248,7 +259,7 @@ export function CampaignPage() {
         </div>
       </section> : null}
 
-      {showSection('letters') ? <section className="campaign-section campaign-section--paper" id="letters" style={sectionStyle('letters')}>
+      {showSection('letters') ? <section className="campaign-section campaign-section--paper" id="letters">
         <div className="campaign-shell">
           <SectionHeading eyebrow="LETTERS" title={sectionTitle('letters')} description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
           <PieceGrid pieces={letterPieces} empty="Letter downloads are temporarily unavailable. The reporting section remains available while they are restored." />
@@ -256,7 +267,7 @@ export function CampaignPage() {
         </div>
       </section> : null}
 
-      {showSection('act') ? <section className="campaign-section campaign-section--act" id="act" style={sectionStyle('act')}>
+      {showSection('act') ? <section className="campaign-section campaign-section--act" id="act">
         <div className="campaign-shell">
           <SectionHeading eyebrow="NOW THAT YOU KNOW" title={sectionTitle('act')} description="Reporting first. Letters next. Direct action follows." />
           <div className="campaign-action-grid">
@@ -272,7 +283,7 @@ export function CampaignPage() {
         </div>
       </section> : null}
 
-      {showSection('updates') ? <section className="campaign-section campaign-section--updates" id="updates" style={sectionStyle('updates')}>
+      {showSection('updates') ? <section className="campaign-section campaign-section--updates" id="updates">
         <div className="campaign-shell">
           <SectionHeading eyebrow="LIVE UPDATES" title={sectionTitle('updates')} description="A dated record of statements, publications, deadlines, and material changes in the campaign." />
           <div className="campaign-update-list">
@@ -286,7 +297,7 @@ export function CampaignPage() {
         </div>
       </section> : null}
 
-      {showSection('graphics') ? <section className="campaign-section" id="graphics" style={sectionStyle('graphics')}>
+      {showSection('graphics') ? <section className="campaign-section" id="graphics">
         <div className="campaign-shell">
           <SectionHeading eyebrow="CAMPAIGN KIT" title={sectionTitle('graphics')} description="Download, repost, print and remix. Each card includes its full-resolution original, accessible alt text and a ready-to-use caption." />
           {graphics.length ? (
@@ -303,7 +314,7 @@ export function CampaignPage() {
       </section> : null}
 
       {showSection('timeline') ? (
-        <section className="campaign-section campaign-section--timeline" id="timeline" style={sectionStyle('timeline')}>
+        <section className="campaign-section campaign-section--timeline" id="timeline">
           <div className="campaign-shell">
             <SectionHeading eyebrow="TIMELINE" title={sectionTitle('timeline')} />
             <div className="campaign-timeline">
@@ -313,11 +324,12 @@ export function CampaignPage() {
         </section>
       ) : null}
 
-      {showSection('coverage') ? <section className="campaign-section" id="coverage" style={sectionStyle('coverage')}>
+      {showSection('coverage') ? <section className="campaign-section" id="coverage">
         <div className="campaign-shell">
           <SectionHeading eyebrow="PRESS + RESPONSE" title={sectionTitle('coverage')} description={isAiCampaign ? 'Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available.' : 'Reporting, statements, and media coverage connected to this campaign.'} />
           {isAiCampaign ? <CampaignTrackerStatus campaign={campaign} /> : null}
           {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.automated ? 'LIVE COVERAGE' : '', item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>No additional campaign coverage is available yet.</EmptyState>}
+          {!isAiCampaign && campaign.automationErrors?.some((item) => item.kind === 'coverage') ? <p className="campaign-source-error">Some configured coverage sources are temporarily unavailable. Editorial campaign material remains available.</p> : null}
           {isAiCampaign ? <div className="campaign-coverage-archive-link">
             <Link className="campaign-button campaign-button--dark" to="/campaigns/autistici-inventati/coverage">Browse the full coverage archive{campaign.coverageArchiveCount ? ` (${campaign.coverageArchiveCount})` : ''} →</Link>
             <p>The hub keeps the strongest current items in view. The archive preserves the wider record with search, outlet and language filters.</p>
@@ -325,7 +337,7 @@ export function CampaignPage() {
         </div>
       </section> : null}
 
-      {showSection('sources') ? <section className="campaign-section campaign-section--sources" id="sources" style={sectionStyle('sources')}>
+      {showSection('sources') ? <section className="campaign-section campaign-section--sources" id="sources">
         <div className="campaign-shell">
           <SectionHeading eyebrow="PRIMARY SOURCES" title={sectionTitle('sources')} description={isAiCampaign ? 'Government material, A/I statements, legal analysis, historical documents, and other primary sources are gathered here for direct verification.' : 'Primary documents and source material are gathered here for direct verification.'} />
           {campaign.sources?.length ? <LinkList items={campaign.sources.map((item) => ({ id: item.id, eyebrow: item.publisher, title: item.title, body: item.note, url: item.url }))} /> : <p className="campaign-reader-note">The reporting above retains its article-level citations and primary-source links.</p>}
@@ -333,7 +345,7 @@ export function CampaignPage() {
       </section> : null}
 
       {showSection('faq') ? (
-        <section className="campaign-section campaign-section--faq" id="faq" style={sectionStyle('faq')}>
+        <section className="campaign-section campaign-section--faq" id="faq">
           <div className="campaign-shell">
             <SectionHeading eyebrow="FAQ" title={sectionTitle('faq')} />
             <div className="campaign-faq">
@@ -344,15 +356,15 @@ export function CampaignPage() {
       ) : null}
 
       {showSection('translations') ? (
-        <section className="campaign-section" id="translations" style={sectionStyle('translations')}>
+        <section className="campaign-section" id="translations">
           <div className="campaign-shell"><SectionHeading eyebrow="TRANSLATIONS" title={sectionTitle('translations')} /><LinkList items={campaign.translations.map((item) => ({ id: item.id, eyebrow: item.language, title: item.title, url: item.url }))} /></div>
         </section>
       ) : null}
 
-      {showSection('signatories') ? <SignatoryCarousel signatories={signatories} title={sectionTitle('signatories')} style={sectionStyle('signatories')} /> : null}
+      {showSection('signatories') ? <SignatoryCarousel signatories={signatories} title={sectionTitle('signatories')} sectionKey="signatories" /> : null}
 
-      {showSection('social') ? <SocialSection campaign={campaign} social={social} copyState={copyState} copyCampaignLink={copyCampaignLink} isAiCampaign={isAiCampaign} title={sectionTitle('social')} style={sectionStyle('social')} /> : null}
-      </div>
+      {showSection('social') ? <SocialSection campaign={campaign} social={social} copyState={copyState} copyCampaignLink={copyCampaignLink} isAiCampaign={isAiCampaign} title={sectionTitle('social')} sectionKey="social" /> : null}
+      </OrderedCampaignSections>
 
       <section className="campaign-disclaimer">
         <div className="campaign-shell">
@@ -367,7 +379,13 @@ export function CampaignPage() {
   )
 }
 
-function SignatoryCarousel({ signatories, title, style }) {
+function OrderedCampaignSections({ order, children }) {
+  const rank = new Map(order.map((key, index) => [key, index]))
+  const sorted = Children.toArray(children).sort((a, b) => (rank.get(a.props.id || a.props.sectionKey) ?? 999) - (rank.get(b.props.id || b.props.sectionKey) ?? 999))
+  return <div className="campaign-section-flow">{sorted}</div>
+}
+
+function SignatoryCarousel({ signatories, title }) {
   const railRef = useRef(null)
   const statementCount = signatories.filter((item) => item.statement).length
   function move(direction) {
@@ -377,7 +395,7 @@ function SignatoryCarousel({ signatories, title, style }) {
     rail.scrollBy({ left: direction * Math.max(280, rail.clientWidth * 0.82), behavior: reducedMotion ? 'auto' : 'smooth' })
   }
   return (
-    <section className="campaign-section campaign-section--signatories" id="signatories" style={style}>
+    <section className="campaign-section campaign-section--signatories" id="signatories">
       <div className="campaign-shell">
         <SectionHeading eyebrow="OPEN LETTER" title={title} description={`${signatories.length} signatories${statementCount ? ` · ${statementCount} public statements` : ''}.`} />
         <div className="campaign-carousel-controls">
@@ -398,8 +416,8 @@ function SignatoryCarousel({ signatories, title, style }) {
   )
 }
 
-function SocialSection({ campaign, social, copyState, copyCampaignLink, isAiCampaign, title, style }) {
-  return <section className="campaign-section campaign-section--social" id="social" style={style}>
+function SocialSection({ campaign, social, copyState, copyCampaignLink, isAiCampaign, title }) {
+  return <section className="campaign-section campaign-section--social" id="social">
     <div className="campaign-shell">
       <SectionHeading eyebrow="SOCIAL CIRCULATION" title={title} description={isAiCampaign ? 'Campaign posts from A/I and Sabot Media. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual.' : 'Public posts and dispatches connected to this campaign.'} />
       <SocialSources sources={campaign.socialSources || []} />
@@ -415,7 +433,7 @@ function SocialSection({ campaign, social, copyState, copyCampaignLink, isAiCamp
         {item.external?.url ? <a className="campaign-social-post__external" href={item.external.url} target="_blank" rel="noreferrer"><strong>{item.external.title || item.external.url}</strong>{item.external.description ? <span>{item.external.description}</span> : null}</a> : null}
         {item.url ? <a href={item.url} target="_blank" rel="noreferrer">Open original post ↗</a> : null}
       </article>)}</div> : <EmptyState>No recent campaign posts are available.</EmptyState>}
-      {campaign.socialErrors?.length ? <p className="campaign-source-error">The social feed is incomplete at the moment. Campaign materials remain available.</p> : null}
+      {campaign.socialErrors?.length ? <p className="campaign-source-error">Some configured social sources are temporarily unavailable. Published campaign materials remain available.</p> : null}
     </div>
   </section>
 }
@@ -454,11 +472,11 @@ function MonitorCard({ monitor, sourceUrl, label }) {
   return (
     <article className={`campaign-metric campaign-monitor campaign-monitor--${overall}`} id="monitor">
       <span className="campaign-metric__label">LIVE / EXTERNAL</span>
-      <div className="campaign-monitor__headline"><i aria-hidden="true" /><strong>{monitor.state === 'loading' ? 'Checking A/I monitor…' : statusText(overall)}</strong></div>
+      <div className="campaign-monitor__headline"><i aria-hidden="true" /><strong>{monitor.state === 'loading' ? `Checking ${label || 'infrastructure monitor'}…` : statusText(overall)}</strong></div>
       <p>{label || 'A/I infrastructure monitor'}{data?.checkedAt ? ` · checked ${formatTime(data.checkedAt)}` : ''}</p>
       {monitors.length ? <div className="campaign-monitor__services">{monitors.slice(0, 8).map((item) => <span key={item.id}><i className={`is-${item.status}`} aria-hidden="true" />{item.name}{item.uptime24h != null ? <small>{(item.uptime24h * 100).toFixed(item.uptime24h >= 0.9995 ? 2 : 1)}%</small> : null}</span>)}</div> : null}
       {sourceUrl ? <a href={sourceUrl} target="_blank" rel="noreferrer">Open original monitor ↗</a> : null}
-      {monitor.state === 'unavailable' ? <small className="campaign-monitor__note">Sabot could not read the public Kuma data just now. This does not mean A/I is down; use the original monitor above.</small> : null}
+      {monitor.state === 'unavailable' ? <small className="campaign-monitor__note">The public monitor data is unavailable right now. This is not equivalent to an outage; use the original monitor above.</small> : null}
     </article>
   )
 }

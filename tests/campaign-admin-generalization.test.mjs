@@ -31,7 +31,7 @@ test('new campaigns start unpublished and do not inherit A/I identity', () => {
   assert.equal(campaignSlug('  Save Our Local Press!  '), 'save-our-local-press')
   assert.doesNotMatch(JSON.stringify(campaign), /Autistici|Inventati|Noblogs/)
   assert.doesNotMatch(endpoint, /slug:\s*incoming\.slug\s*\|\|\s*AI_CAMPAIGN_SLUG/)
-  assert.match(endpoint, /includeDrafts \|\| item\.slug !== AI_CAMPAIGN_SLUG/)
+  assert.match(endpoint, /decorateCampaignAutomation\(item, context\.request\.url, \{ posts \}\)/)
   assert.match(endpoint, /missing campaign title/)
 })
 

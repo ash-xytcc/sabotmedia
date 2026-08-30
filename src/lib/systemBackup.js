@@ -145,7 +145,19 @@ function requireSettingsPayload(data, label) {
 }
 async function fetchCollectionsForBackup() { return fetchRequiredList('/api/collections?includeDrafts=1', 'collections') }
 async function fetchCampaignsForBackup() { return fetchRequiredList('/api/campaigns?includeDrafts=1', 'campaigns') }
-async function fetchCampaignRevisionsForBackup() { return fetchRequiredList('/api/campaign-revisions?all=1&limit=10000', 'campaign revisions') }
+async function fetchCampaignRevisionsForBackup() {
+  const items = []
+  let page = 1
+  let pages = 1
+  do {
+    const data = await fetchRequiredList(`/api/campaign-revisions?all=1&limit=500&page=${page}`, 'campaign revisions')
+    items.push(...data.items)
+    pages = Math.max(1, Number(data.pages || 1))
+    page += 1
+    if (page > 10000) throw new Error('campaign revision backup exceeded the safe page limit')
+  } while (page <= pages)
+  return { ok: true, mode: 'd1', items }
+}
 async function fetchCampaignCoverageForBackup() {
   const items = []
   let page = 1

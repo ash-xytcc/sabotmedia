@@ -62,8 +62,20 @@ export async function restoreCampaignRevision(revisionId) {
   return data.item
 }
 
-export async function loadCampaignMonitor() {
-  const response = await fetch('/api/campaign-monitor', {
+export async function deleteCampaign(id) {
+  const response = await fetch('/api/campaigns', {
+    method: 'DELETE', credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ id }),
+  })
+  const data = await safeJson(response)
+  if (!response.ok || !data?.ok) throw new Error(data?.error || `campaign delete failed: ${response.status}`)
+  return data.removed
+}
+
+export async function loadCampaignMonitor(slug = 'autistici-inventati') {
+  const params = new URLSearchParams({ campaign: slug })
+  const response = await fetch(`/api/campaign-monitor?${params.toString()}`, {
     method: 'GET',
     credentials: 'same-origin',
     headers: { accept: 'application/json' },

@@ -1,12 +1,27 @@
-const STATUS_PAGE_URL = 'https://kuma.accol.li/status/aimonitor'
-const STATUS_API_URL = 'https://kuma.accol.li/api/status-page/aimonitor'
-const HEARTBEAT_API_URL = 'https://kuma.accol.li/api/status-page/heartbeat/aimonitor'
+import { getBoundDb } from './_lib/database.js'
+import { getCampaign } from './_lib/campaigns.js'
 
-export async function onRequestGet() {
+const STATUS_PAGE_URL = 'https://kuma.accol.li/status/aimonitor'
+
+export async function onRequestGet(context) {
+  let statusPageUrl = STATUS_PAGE_URL
   try {
+    const requestedSlug = new URL(context.request.url).searchParams.get('campaign') || 'autistici-inventati'
+    if (requestedSlug !== 'autistici-inventati') {
+      const db = getBoundDb(context)
+      if (!db) throw new Error('campaign data unavailable')
+      const campaign = await getCampaign(db, requestedSlug)
+      if (!campaign || campaign.status !== 'published' || !campaign.monitorUrl) throw new Error('campaign monitor not configured')
+      statusPageUrl = validateStatusPageUrl(campaign.monitorUrl)
+    }
+    const statusUrl = new URL(statusPageUrl)
+    const pageSlug = statusUrl.pathname.match(/\/status\/([a-z0-9_-]+)\/?$/i)?.[1]
+    if (!pageSlug) throw new Error('monitor URL must be an Uptime Kuma public status page')
+    const statusApiUrl = new URL(`/api/status-page/${pageSlug}`, statusUrl.origin)
+    const heartbeatApiUrl = new URL(`/api/status-page/heartbeat/${pageSlug}`, statusUrl.origin)
     const [page, heartbeat] = await Promise.all([
-      fetchJson(STATUS_API_URL),
-      fetchJson(HEARTBEAT_API_URL),
+      fetchJson(statusApiUrl),
+      fetchJson(heartbeatApiUrl),
     ])
 
     const groups = Array.isArray(page?.publicGroupList) ? page.publicGroupList : []
@@ -39,23 +54,30 @@ export async function onRequestGet() {
     const overall = aggregateStatus(monitors)
     return json({
       ok: true,
-      source: STATUS_PAGE_URL,
+      source: statusPageUrl,
       checkedAt: new Date().toISOString(),
       overall,
-      title: String(page?.config?.title || page?.config?.name || 'A/I Monitor'),
+      title: String(page?.config?.title || page?.config?.name || 'Infrastructure monitor'),
       description: String(page?.config?.description || ''),
       monitors,
     }, 200, 'public, max-age=45, s-maxage=60, stale-while-revalidate=120')
   } catch (error) {
     return json({
       ok: false,
-      source: STATUS_PAGE_URL,
+      source: statusPageUrl,
       checkedAt: new Date().toISOString(),
       overall: 'unknown',
       monitors: [],
       error: String(error?.message || error),
     }, 502, 'public, max-age=15, s-maxage=15')
   }
+}
+
+function validateStatusPageUrl(value) {
+  const url = new URL(String(value || ''))
+  if (url.protocol !== 'https:') throw new Error('monitor URL must use HTTPS')
+  if (/^(?:localhost|127\.|0\.|10\.|192\.168\.|169\.254\.|172\.(?:1[6-9]|2\d|3[01])\.|\[?::1\]?$)/i.test(url.hostname)) throw new Error('monitor host is not public')
+  return url.toString()
 }
 
 async function fetchJson(url) {

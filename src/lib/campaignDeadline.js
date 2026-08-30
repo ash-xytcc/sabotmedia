@@ -41,8 +41,12 @@ export function deadlineInputValue(value, timeZone = 'UTC') {
 }
 
 export function deadlineIsoValue(value, timeZone = 'UTC') {
+  return validateDeadlineWallTime(value, timeZone).iso
+}
+
+export function validateDeadlineWallTime(value, timeZone = 'UTC') {
   const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/)
-  if (!match) return ''
+  if (!match) return { iso: '', error: value ? 'Enter a complete date and time.' : '' }
   const target = match.slice(1).map(Number)
   const targetAsUtc = Date.UTC(target[0], target[1] - 1, target[2], target[3], target[4])
   let instant = targetAsUtc
@@ -55,7 +59,11 @@ export function deadlineIsoValue(value, timeZone = 'UTC') {
     const representedAsUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute)
     instant += targetAsUtc - representedAsUtc
   }
-  return new Date(instant).toISOString()
+  const iso = new Date(instant).toISOString()
+  if (deadlineInputValue(iso, zone) !== String(value)) {
+    return { iso: '', error: 'That local time does not exist in the selected timezone because of a daylight-saving change.' }
+  }
+  return { iso, error: '' }
 }
 
 export function campaignSlug(value) {
@@ -78,6 +86,7 @@ export function blankCampaign() {
     sectionOrder: [...CAMPAIGN_SECTION_KEYS],
     hiddenSections: [],
     sectionTitles: {},
+    automation: { enabled: false, discoverNews: false, startAt: '', blueskyActors: [], mastodonAccounts: [], coverageFeeds: [], signatoriesUrl: '' },
   }
 }
 
