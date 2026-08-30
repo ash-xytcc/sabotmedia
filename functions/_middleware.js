@@ -136,7 +136,7 @@ function isPublicPostPath(pathname) {
 }
 
 export function isPublicCampaignPath(pathname = '') {
-  return pathname === '/campaigns' || /^\/campaigns\/[a-z0-9-]+\/?$/i.test(pathname)
+  return pathname === '/campaigns' || /^\/campaigns\/[a-z0-9-]+(?:\/coverage)?\/?$/i.test(pathname)
 }
 
 async function renderSpaShell(context, url) {

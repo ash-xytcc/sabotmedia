@@ -3,6 +3,7 @@ import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 import { decorateAiCampaignForPublic, extractAiLetterSignatories, hasAiLetterSignatureSection } from './_lib/aiCampaignPublic.js'
 import { getNativeEntry, listNativeEntries } from './_lib/nativePublicContent.js'
+import { getAiCoverageArchiveSummary, refreshGdeltCoverageIfStale, upsertAiCoverageItems } from './_lib/aiCampaignCoverageArchive.js'
 import {
   AI_CAMPAIGN_SLUG,
   ensureAiCampaign,
@@ -58,6 +59,14 @@ export async function onRequestGet(context) {
         } catch { /* the bundled public snapshot remains available */ }
       }
       const output = includeDrafts ? item : await decorateAiCampaignForPublic(item, context.request.url, { signatories, posts })
+      if (!includeDrafts && item.slug === AI_CAMPAIGN_SLUG) {
+        await upsertAiCoverageItems(db, output.coverage || [])
+        const archive = await getAiCoverageArchiveSummary(db, AI_CAMPAIGN_SLUG)
+        output.coverageArchiveCount = archive.total
+        const refreshPromise = refreshGdeltCoverageIfStale(db)
+        if (typeof context.waitUntil === 'function') context.waitUntil(refreshPromise.catch(() => {}))
+        else refreshPromise.catch(() => {})
+      }
       return json({ ok: true, mode: 'd1', item: output })
     }
 

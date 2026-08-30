@@ -38,3 +38,20 @@ export async function loadCampaignMonitor() {
   if (!response.ok || !data.ok) return data
   return data
 }
+
+export async function loadCampaignCoverage(options = {}) {
+  const params = new URLSearchParams({ campaign: 'autistici-inventati' })
+  if (options.q) params.set('q', options.q)
+  if (options.language) params.set('language', options.language)
+  if (options.outlet) params.set('outlet', options.outlet)
+  if (options.page) params.set('page', String(options.page))
+  if (options.limit) params.set('limit', String(options.limit))
+  const response = await fetch(`/api/campaign-coverage?${params.toString()}`, {
+    method: 'GET',
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+  })
+  const data = await safeJson(response)
+  if (!response.ok || !data?.ok || !Array.isArray(data.items)) throw new Error(data?.error || `campaign coverage archive failed: ${response.status}`)
+  return data
+}

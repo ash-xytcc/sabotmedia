@@ -23,6 +23,7 @@ import { CollectionsIndexPage } from './components/CollectionsIndexPage'
 import { CollectionPage } from './components/CollectionPage'
 import { CollectionsAdminPage } from './components/CollectionsAdminPage'
 import { CampaignPage } from './components/CampaignPage'
+import { CampaignCoverageArchivePage } from './components/CampaignCoverageArchivePage'
 import { CampaignAdminPage } from './components/CampaignAdminPage'
 import { FeedSettingsAdminPage } from './components/FeedSettingsAdminPage'
 import { PublicFeedsPage } from './components/PublicFeedsPage'
@@ -121,6 +122,7 @@ function RouteMeta({ pieces = [] }) {
       '/archive': ['Archive', 'Browse the Sabot Media archive by search, project, format, and date.'],
       '/collections': ['Collections', 'Browse Sabot Media bodies of work by timeline, downloads, gallery, and related pieces.'],
       '/campaigns/autistici-inventati': ['Communications Infrastructure Is Not Terrorism', 'Campaign hub for reporting, open letters, graphics, live updates, source material, and infrastructure status related to Autistici/Inventati.'],
+      '/campaigns/autistici-inventati/coverage': ['A/I Campaign Coverage Archive', 'Search reporting, analysis and official dispatches related to the Autistici/Inventati designation and its consequences.'],
       '/feeds': ['Feeds', 'Subscribe to Sabot Media feeds for the whole archive, formats, projects, collections, and author labels.'],
       '/aberdeen-local-1312-gallery': ['Aberdeen Local 1312 Gallery', 'Historical image archive from Aberdeen Local 1312, preserved by Sabot Media.'],
       '/search': ['Search', 'Search the Sabot Media archive.'],
@@ -255,6 +257,7 @@ export default function App() {
               <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
               <Route path="/campaigns" element={<Navigate to={publicRoutes.aiCampaign} replace />} />
               <Route path={publicRoutes.aiCampaign} element={<CampaignPage />} />
+              <Route path={publicRoutes.aiCampaignCoverage} element={<CampaignCoverageArchivePage />} />
               <Route path={publicRoutes.feeds} element={<PublicFeedsPage />} />
               <Route path={publicRoutes.gallery} element={<GalleryArchivePage />} />
 

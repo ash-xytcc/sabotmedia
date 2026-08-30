@@ -16,6 +16,7 @@ test('verified backup accepts D1 feed defaults when no custom row exists', async
     fetchMediaAssets: list,
     fetchCollections: list,
     fetchCampaigns: list,
+    fetchCampaignCoverage: list,
     fetchPublications: list,
     fetchSites: list,
     fetchFeedSettings: async () => ({ ok: true, mode: 'd1', settings: null }),
