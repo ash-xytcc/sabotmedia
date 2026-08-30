@@ -116,7 +116,7 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     sources: dedupeByUrl([...builtInSources, ...(campaign.sources || [])], 'url'),
     faq: (campaign.faq || []).map((item) => item.id === 'faq-affiliation' ? { ...item, answer: 'No. Sabot Media is an independent publisher and does not represent or speak for A/I.' } : item),
     graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'),
-    social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'),
+    social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url').filter((item) => !mentionsWithdrawnPartner(item)),
     socialSources: feed.sources,
     socialErrors: feed.errors,
     socialCheckedAt: feed.checkedAt,
@@ -144,6 +144,11 @@ export function removeWithdrawnPartnerName(value) {
     .replace(/\s+([,.;:!?])/g, '$1')
     .replace(/\s{2,}/g, ' ')
     .trim()
+}
+
+export function mentionsWithdrawnPartner(item = {}) {
+  const copy = [item.text, item.excerpt, item.contentWarning, item.external?.title, item.external?.description].filter(Boolean).join(' ')
+  return /we\s+will\s+free\s+us/i.test(copy)
 }
 
 function actionRank(action) {

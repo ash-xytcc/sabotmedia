@@ -268,7 +268,7 @@ test('signatory carousel is populated from the published letter and placed befor
 })
 
 test('withdrawn campaign partner is omitted from every generated public-page surface', async () => {
-  const { removeWithdrawnPartnerName } = await import('../functions/api/_lib/aiCampaignPublic.js')
+  const { mentionsWithdrawnPartner, removeWithdrawnPartnerName } = await import('../functions/api/_lib/aiCampaignPublic.js')
   assert.doesNotMatch(model, /We Will Free Us/i)
   assert.doesNotMatch(socialServer, /We Will Free Us/i)
   assert.match(socialServer, /partners:\s*\['Sabot Media'\]/)
@@ -278,9 +278,12 @@ test('withdrawn campaign partner is omitted from every generated public-page sur
   assert.match(socialServer, /!\/we\\s\+will\\s\+free\\s\+us\/i/)
   assert.match(socialServer, /\.map\(sanitizeWithdrawnPartnerCopy\)/)
   assert.match(socialServer, /removeWithdrawnPartnerName/)
+  assert.match(socialServer, /\.filter\(\(item\) => !mentionsWithdrawnPartner\(item\)\)/)
   assert.match(socialServer, /replace\(\/Sabot Media\\s\+/)
   assert.equal(removeWithdrawnPartnerName('Sabot Media and We Will Free Us consolidated the campaign hub.'), 'Sabot Media consolidated the campaign hub.')
   assert.equal(removeWithdrawnPartnerName('Update from We Will Free Us.'), 'Update.')
+  assert.equal(mentionsWithdrawnPartner({ text: 'Sabot Media and We Will Free Us are publishing an open letter.' }), true)
+  assert.equal(mentionsWithdrawnPartner({ text: 'A/I reports partial service restoration.' }), false)
 })
 
 test('coverage and live social disclose language and exact followed accounts', () => {
