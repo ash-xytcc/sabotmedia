@@ -6,6 +6,7 @@ export const publicRoutes = Object.freeze({
   campaigns: '/campaigns',
   campaign: '/campaigns/:slug',
   aiCampaign: '/campaigns/autistici-inventati',
+  aiCampaignCoverage: '/campaigns/autistici-inventati/coverage',
   feeds: '/feeds',
   gallery: '/aberdeen-local-1312-gallery',
   project: '/project/:slug',

@@ -4,6 +4,7 @@ import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { loadCampaign, loadCampaignMonitor } from '../lib/campaignsApi'
 import { loadPublishedNativePieces } from '../lib/nativePublicFeed'
+import { selectHubCoverage } from '../lib/campaignCoverage'
 
 const CAMPAIGN_SLUG = 'autistici-inventati'
 const ITALY_TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
@@ -66,7 +67,7 @@ export function CampaignPage() {
   const reportingPieces = campaignPieces.filter((piece) => !letterPieces.includes(piece))
   const graphics = useMemo(() => mergeGraphics(campaign?.graphics || [], campaignPieces), [campaign, campaignPieces])
   const updates = useMemo(() => sortByDate(campaign?.updates || [], false), [campaign])
-  const coverage = useMemo(() => sortByDate(campaign?.coverage || []), [campaign])
+  const coverage = useMemo(() => selectHubCoverage(campaign?.coverage || []), [campaign])
   const social = useMemo(() => sortByDate(campaign?.social || []), [campaign])
   const signatories = campaign?.signatories || []
   const deadline = campaign?.deadline ? new Date(campaign.deadline).getTime() : NaN
@@ -270,6 +271,10 @@ export function CampaignPage() {
           <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" description="Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available." />
           <CampaignTrackerStatus campaign={campaign} />
           {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.automated ? 'LIVE COVERAGE' : '', item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>No additional campaign coverage is available yet.</EmptyState>}
+          <div className="campaign-coverage-archive-link">
+            <Link className="campaign-button campaign-button--dark" to="/campaigns/autistici-inventati/coverage">Browse the full coverage archive{campaign.coverageArchiveCount ? ` (${campaign.coverageArchiveCount})` : ''} →</Link>
+            <p>The hub keeps the strongest current items in view. The archive preserves the wider record with search, outlet and language filters.</p>
+          </div>
         </div>
       </section>
 

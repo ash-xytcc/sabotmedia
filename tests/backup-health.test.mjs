@@ -16,6 +16,7 @@ function backupLoaders(overrides = {}) {
     fetchMediaAssets: () => okItems([{ id: 'media-1' }]),
     fetchCollections: () => okItems([{ id: 'collection-1' }]),
     fetchCampaigns: () => okItems([{ id: 'campaign-1', slug: 'autistici-inventati' }]),
+    fetchCampaignCoverage: () => okItems([{ id: 'coverage-1', title: 'Coverage' }]),
     fetchPublications: () => okItems([{ id: 'publication-1' }]),
     fetchSites: () => okItems([{ id: 'site-1', domain: 'sabot.media' }]),
     fetchFeedSettings: () => Promise.resolve({ ok: true, mode: 'd1', settings: { exposeMainFeed: true } }),
@@ -30,7 +31,7 @@ test('verified system backup includes every required dataset without credential 
   const summary = summarizeSnapshot(snapshot)
   assert.equal(snapshot.manifest.complete, true)
   assert.equal(snapshot.manifest.credentialMaterialExcluded, true)
-  assert.equal(snapshot.schemaVersion, 6)
+  assert.equal(snapshot.schemaVersion, 7)
   assert.equal(summary.complete, true)
   assert.equal(summary.nativeCount, 1)
   assert.equal(summary.revisionCount, 1)
@@ -41,6 +42,7 @@ test('verified system backup includes every required dataset without credential 
   assert.equal(summary.mediaCount, 1)
   assert.equal(summary.collectionCount, 1)
   assert.equal(summary.campaignCount, 1)
+  assert.equal(summary.campaignCoverageCount, 1)
   assert.equal(summary.publicationCount, 1)
   assert.equal(summary.siteCount, 1)
   assert.equal(summary.feedSettingsIncluded, true)
@@ -50,11 +52,12 @@ test('verified system backup includes every required dataset without credential 
   assert.equal(snapshot.adminUsers[0].email, 'editor@example.org')
   assert.equal('password_hash' in snapshot.adminUsers[0], false)
   assert.equal(snapshot.campaigns[0].slug, 'autistici-inventati')
+  assert.equal(snapshot.campaignCoverage[0].id, 'coverage-1')
   assert.equal(snapshot.feedSettings.exposeMainFeed, true)
   assert.equal(snapshot.podcastSettings.podcastTitle, 'Sabot Media Podcast')
   assert.equal(snapshot.publicSiteConfig.siteTitle, 'Sabot Media')
   assert.deepEqual(snapshot.manifest.datasets, [
-    'nativeContent', 'revisionsByNativeId', 'taxonomyTerms', 'adminUsers', 'editorRoles', 'auditLog', 'mediaAssets', 'collections', 'campaigns', 'publications', 'sites', 'feedSettings', 'podcastSettings', 'publicSiteConfig',
+    'nativeContent', 'revisionsByNativeId', 'taxonomyTerms', 'adminUsers', 'editorRoles', 'auditLog', 'mediaAssets', 'collections', 'campaigns', 'campaignCoverage', 'publications', 'sites', 'feedSettings', 'podcastSettings', 'publicSiteConfig',
   ])
 })
 
