@@ -210,7 +210,7 @@ export function CampaignPage() {
 
       <section className="campaign-section campaign-section--act" id="act">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="NOW THAT YOU KNOW" title="Do something useful" description="Start with the reporting and letters above, then choose the action you can take right now." />
+          <SectionHeading eyebrow="NOW THAT YOU KNOW" title="Do something useful" description="Reporting first. Letters next. Direct action follows." />
           <div className="campaign-action-grid">
             {(campaign.actions || []).map((action, index) => (
               <article className="campaign-action-card" key={action.id || index}>
@@ -226,7 +226,7 @@ export function CampaignPage() {
 
       <section className="campaign-section campaign-section--updates" id="updates">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="LIVE UPDATES" title="Campaign log" description="Short, timestamped updates keep the page current without rewriting the investigation every time something changes." />
+          <SectionHeading eyebrow="LIVE UPDATES" title="Campaign log" description="A dated record of statements, publications, deadlines, and material changes in the campaign." />
           <div className="campaign-update-list">
             {updates.length ? updates.map((item) => (
               <article className={`campaign-update${item.pinned ? ' is-pinned' : ''}`} key={item.id}>
@@ -267,9 +267,9 @@ export function CampaignPage() {
 
       <section className="campaign-section" id="coverage">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" description="A/I is based in Italy, so this section checks its official dispatch feed and a global news index for exact campaign matches. Italian headlines remain clearly labeled, with an English rendering where one has been curated." />
+          <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" description="Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available." />
           <CampaignTrackerStatus campaign={campaign} />
-          {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.automated ? 'AUTO-DISCOVERED' : '', item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>No exact campaign coverage was found in the latest source check.</EmptyState>}
+          {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.automated ? 'LIVE COVERAGE' : '', item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>No additional campaign coverage is available yet.</EmptyState>}
         </div>
       </section>
 
@@ -326,7 +326,7 @@ function SignatoryCarousel({ signatories }) {
   return (
     <section className="campaign-section campaign-section--signatories" id="signatories">
       <div className="campaign-shell">
-        <SectionHeading eyebrow="OPEN LETTER" title="Who has signed" description={`${signatories.length} current signatories${statementCount ? ` · ${statementCount} public statements` : ''}. The list is read from the published open letter and retains optional statements supplied for public display.`} />
+        <SectionHeading eyebrow="OPEN LETTER" title="Who has signed" description={`${signatories.length} signatories${statementCount ? ` · ${statementCount} public statements` : ''}.`} />
         <div className="campaign-carousel-controls">
           <span>DRAG / SWIPE / USE CONTROLS</span>
           <div><button type="button" onClick={() => move(-1)} aria-label="Previous signatories">←</button><button type="button" onClick={() => move(1)} aria-label="Next signatories">→</button></div>
@@ -335,7 +335,7 @@ function SignatoryCarousel({ signatories }) {
           {signatories.map((item, index) => (
             <article className="campaign-signatory" key={item.id || item.name}>
               <span>{String(index + 1).padStart(2, '0')}</span>
-              <div><p>{item.statement ? 'PUBLIC STATEMENT' : 'SIGNED THE LETTER'}</p><h3>{item.url ? <SmartLink href={item.url}>{item.name}</SmartLink> : item.name}</h3>{item.location ? <small>{item.location}</small> : null}</div>
+              <div><p>{item.statement ? 'PUBLIC STATEMENT' : 'SIGNED THE LETTER'}</p><h3 className={signatoryNameClass(item.name)}>{item.url ? <SmartLink href={item.url}>{item.name}</SmartLink> : item.name}</h3>{item.location ? <small>{item.location}</small> : null}</div>
               {item.statement ? <blockquote><p>“{item.statement}”</p></blockquote> : <p className="campaign-signatory__plain">Supports the call to defend independent communications infrastructure.</p>}
             </article>
           ))}
@@ -348,7 +348,7 @@ function SignatoryCarousel({ signatories }) {
 function SocialSection({ campaign, social, copyState, copyCampaignLink }) {
   return <section className="campaign-section campaign-section--social" id="social">
     <div className="campaign-shell">
-      <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description="Live campaign posts from A/I and Sabot public accounts, filtered and source-linked without third-party embed scripts. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual." />
+      <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description="Campaign posts from A/I and Sabot Media. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual." />
       <SocialSources sources={campaign.socialSources || []} />
       <div className="campaign-share-row">
         <a className="campaign-button campaign-button--light" href={`https://bsky.app/intent/compose?text=${encodeURIComponent(`${campaign.shortTitle}\n\n${window.location.href.split('#')[0]}`)}`} target="_blank" rel="noreferrer">Post to Bluesky ↗</a>
@@ -361,15 +361,15 @@ function SocialSection({ campaign, social, copyState, copyCampaignLink }) {
         <p lang={item.languageCode || undefined}>{item.text || item.excerpt}</p>
         {item.external?.url ? <a className="campaign-social-post__external" href={item.external.url} target="_blank" rel="noreferrer"><strong>{item.external.title || item.external.url}</strong>{item.external.description ? <span>{item.external.description}</span> : null}</a> : null}
         {item.url ? <a href={item.url} target="_blank" rel="noreferrer">Open original post ↗</a> : null}
-      </article>)}</div> : <EmptyState>No matching public campaign posts are available from the live sources right now.</EmptyState>}
-      {campaign.socialErrors?.length ? <p className="campaign-source-error">Some public social sources could not be reached. The rest of the campaign remains available.</p> : null}
+      </article>)}</div> : <EmptyState>No recent campaign posts are available.</EmptyState>}
+      {campaign.socialErrors?.length ? <p className="campaign-source-error">The social feed is incomplete at the moment. Campaign materials remain available.</p> : null}
     </div>
   </section>
 }
 
 function SocialSources({ sources }) {
   if (!sources.length) return null
-  return <div className="campaign-social-sources"><div><span>ACCOUNTS IN THIS LIVE FEED</span><p>These are the exact public accounts queried by the server.</p></div><ul>{sources.map((source) => <li key={`${source.platform}-${source.account}`}><span>{String(source.platform || 'social').toUpperCase()}</span><div><strong>{source.url ? <SmartLink href={source.url}>{source.account}</SmartLink> : source.account}</strong>{source.note ? <small>{source.note}</small> : null}</div><i className={source.ok ? 'is-live' : 'is-unavailable'}>{source.ok ? 'LIVE' : 'UNAVAILABLE'}</i></li>)}</ul></div>
+  return <div className="campaign-social-sources"><div><span>FOLLOWED ACCOUNTS</span><p>Official and campaign accounts represented in the feed.</p></div><ul>{sources.map((source) => <li key={`${source.platform}-${source.account}`}><span>{String(source.platform || 'social').toUpperCase()}</span><div><strong>{source.url ? <SmartLink href={source.url}>{source.account}</SmartLink> : source.account}</strong>{source.note ? <small>{source.note}</small> : null}</div><i className={source.ok ? 'is-live' : 'is-unavailable'}>{source.ok ? 'LIVE' : 'UNAVAILABLE'}</i></li>)}</ul></div>
 }
 
 function ItalyClock() {
@@ -419,9 +419,9 @@ function CampaignTrackerStatus({ campaign }) {
   const errors = campaign.intelligenceErrors || []
   return (
     <aside className="campaign-tracker-status" aria-label="Campaign coverage tracker status">
-      <div><strong>AUTOMATIC CAMPAIGN WATCH</strong><span>{campaign.intelligenceCheckedAt ? `Last checked ${formatDateTime(campaign.intelligenceCheckedAt)}` : 'Waiting for the next source check'}</span></div>
-      {sources.length ? <ul>{sources.map((source) => <li key={source.id}><i className={source.ok ? 'is-live' : 'is-unavailable'} aria-hidden="true" /><SmartLink href={source.url}>{source.label}</SmartLink><small>{source.ok ? `${source.count || 0} exact matches` : 'temporarily unavailable'}</small></li>)}</ul> : null}
-      {errors.length && !sources.some((source) => source.ok) ? <p>Automatic discovery is temporarily unavailable. Curated reporting and sources remain accessible.</p> : null}
+      <div><strong>LIVE COVERAGE SOURCES</strong><span>{campaign.intelligenceCheckedAt ? `Updated ${formatDateTime(campaign.intelligenceCheckedAt)}` : 'Update pending'}</span></div>
+      {sources.length ? <ul>{sources.map((source) => <li key={source.id}><i className={source.ok ? 'is-live' : 'is-unavailable'} aria-hidden="true" /><SmartLink href={source.url}>{source.label}</SmartLink><small>{source.ok ? `${source.count || 0} recent items` : 'temporarily unavailable'}</small></li>)}</ul> : null}
+      {errors.length && !sources.some((source) => source.ok) ? <p>Live coverage is temporarily unavailable. Reporting and primary sources remain accessible.</p> : null}
     </aside>
   )
 }
@@ -438,6 +438,13 @@ function PieceGrid({ pieces, empty }) {
       ))}
     </div>
   )
+}
+
+function signatoryNameClass(name) {
+  const longestWord = String(name || '').split(/\s+/).reduce((length, word) => Math.max(length, word.length), 0)
+  if (longestWord >= 22) return 'is-extra-long-token'
+  if (longestWord >= 15) return 'is-long-token'
+  return ''
 }
 
 function ResourceStrip({ resources = [] }) {
