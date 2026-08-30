@@ -204,7 +204,7 @@ test('campaign ships external coverage and prioritizes the official A\/I Mastodo
 test('campaign coverage and official statements refresh automatically with strict server-side sources', () => {
   assert.match(intelligence, /cavallette\.noblogs\.org\/feed/)
   assert.match(intelligence, /api\.gdeltproject\.org\/api\/v2\/doc\/doc/)
-  assert.match(intelligence, /news\.google\.com\/rss\/search/)
+  assert.match(intelligence, /www\.bing\.com\/news\/search/)
   assert.match(intelligence, /Promise\.allSettled/)
   assert.match(intelligence, /isCampaignCoverageCandidate/)
   assert.match(intelligence, /CACHE_TTL_SECONDS = 600/)
