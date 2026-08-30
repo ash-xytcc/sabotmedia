@@ -17,6 +17,7 @@ test('campaign admin is a general D1-backed manager with an add-new flow', () =>
   assert.match(admin, /blankCampaign\(\)/)
   assert.match(admin, /URL slug/)
   assert.doesNotMatch(admin, /A\/I Campaign Hub|const CAMPAIGN_SLUG/)
+  assert.doesNotMatch(admin, /Campaign Endpoints|Public hub:|Campaign RSS:/)
   assert.doesNotMatch(admin, /localStorage/)
   assert.match(client, /export async function loadCampaigns/)
 })
