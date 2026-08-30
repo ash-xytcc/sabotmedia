@@ -28,4 +28,5 @@ test('rewritten info pages use fresh versioned fields instead of stale v1 conten
   assert.match(publicInfoCopy.submit.body, /You do not need a journalism degree/i)
   assert.match(publicInfoCopy.support.body, /help it circulate/i)
   assert.match(infoPageSource, /getPublicInfoField/)
+  assert.equal(getPublicInfoField('security', 'body'), 'info.security.body.v2')
 })

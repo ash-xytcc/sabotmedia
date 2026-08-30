@@ -13,6 +13,10 @@ export const ADMIN_PREFIXES = [
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 const PAGE_METHODS = new Set(['GET', 'HEAD'])
 const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/analytics/collect'])
+const PUBLIC_SPA_EXACT_PATHS = new Set([
+  '/', '/archive', '/search', '/about', '/security', '/contact', '/submit', '/support', '/press', '/feeds',
+  '/collections', '/publications', '/updates', '/projects', '/aberdeen-local-1312-gallery', '/login', '/wp-login', '/logout',
+])
 
 const ADMIN_PAGE_CAPABILITIES = [
   ['/wp-admin/users', 'users:manage'],
@@ -60,12 +64,23 @@ export function isAdminRoutePath(pathname = '') {
   return ADMIN_PREFIXES.some((path) => pathname === path || pathname.startsWith(`${path}/`))
 }
 
+export function isPublicSpaPath(pathname = '') {
+  const normalized = pathname === '/' ? '/' : String(pathname || '').replace(/\/+$/, '')
+  if (PUBLIC_SPA_EXACT_PATHS.has(normalized)) return true
+  return /^\/(?:project|projects|print|zine|collections|publications|reader|updates)\/[^/]+$/i.test(normalized)
+    || /^\/(?:post|piece)\/[^/]+\/print$/i.test(normalized)
+}
+
 export async function onRequest(context) {
   const url = new URL(context.request.url)
 
   if (url.hostname.toLowerCase() === 'www.sabot.media') {
     url.hostname = 'sabot.media'
     return Response.redirect(url.toString(), 308)
+  }
+
+  if (url.pathname === '/pgp.asc') {
+    return Response.redirect(new URL('/keys/info-sabot-media.asc', url.origin).toString(), 308)
   }
 
   const pathname = url.pathname
@@ -76,6 +91,7 @@ export async function onRequest(context) {
   if (PUBLIC_AUTH_API_PATHS.has(pathname)) return context.next()
   if (method === 'GET' && isPublicPostPath(pathname)) return renderPublicPost(context, url)
   if (PAGE_METHODS.has(method) && isPublicCampaignPath(pathname)) return renderPublicCampaign(context, url)
+  if (PAGE_METHODS.has(method) && !isAdminRoute && isPublicSpaPath(pathname)) return renderSpaShell(context, url)
   if (!isAdminRoute && !isApiWrite) return context.next()
 
   const permission = await resolvePublicSitePermission(context)
