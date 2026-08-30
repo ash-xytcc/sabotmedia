@@ -216,14 +216,14 @@ test('campaign ships external coverage and prioritizes the official A\/I Mastodo
 
 test('campaign coverage and official statements refresh automatically with strict server-side sources', () => {
   assert.match(intelligence, /cavallette\.noblogs\.org\/feed/)
-  assert.match(intelligence, /api\.gdeltproject\.org\/api\/v2\/doc\/doc/)
   assert.match(intelligence, /www\.bing\.com\/news\/search/)
+  assert.doesNotMatch(intelligence, /GDELT|gdeltproject/)
   assert.match(intelligence, /Promise\.allSettled/)
   assert.match(intelligence, /isCampaignCoverageCandidate/)
   assert.match(intelligence, /CACHE_TTL_SECONDS = 600/)
   assert.match(socialServer, /loadLiveAiIntelligence/)
   assert.match(socialServer, /intelligenceCheckedAt/)
-  assert.match(page, /AUTOMATIC CAMPAIGN WATCH/)
+  assert.match(page, /LIVE COVERAGE SOURCES/)
   assert.match(page, /setInterval\(refreshDashboard, 300000\)/)
   assert.doesNotMatch(intelligence, /localStorage|embed\.js|<script/)
 })
@@ -260,6 +260,7 @@ test('signatory carousel is populated from the published letter and placed befor
   assert.match(server, /extractAiLetterSignatories/)
   assert.match(server, /if \(extracted\.length\) signatories = extracted/)
   assert.match(page, /function SignatoryCarousel/)
+  assert.match(page, /signatoryNameClass\(item\.name\)/)
   assert.match(page, /scrollBy/)
   assert.ok(page.indexOf('<SignatoryCarousel') < page.indexOf('<SocialSection'))
   assert.match(polish, /scroll-snap-type:\s*inline mandatory/)
@@ -268,12 +269,20 @@ test('signatory carousel is populated from the published letter and placed befor
 test('coverage and live social disclose language and exact followed accounts', () => {
   for (const expected of ['Italian', 'translatedTitle', 'mastodon.bida.im/@cavallette', 'Official Autistici/Inventati account', 'primarily Italian', 'Italian + English']) assert.match(socialServer, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   assert.match(socialServer, /label: `@\$\{account\.acct\}@\$\{new URL\(account\.instance\)\.host\}`/)
-  assert.match(page, /ACCOUNTS IN THIS LIVE FEED/)
-  assert.match(page, /These are the exact public accounts queried by the server/)
-  assert.match(page, /A\/I is based in Italy/)
+  assert.match(page, /FOLLOWED ACCOUNTS/)
+  assert.match(page, /Official and campaign accounts represented in the feed/)
+  assert.match(page, /Official dispatches and international coverage/)
   assert.match(page, /campaign-social-post__language/)
   assert.match(page, /campaign-link-list__translation/)
   assert.match(model, /signatories: normalizeRows/)
+})
+
+test('campaign copy is editorial and names wrap only at word boundaries', () => {
+  assert.doesNotMatch(page, /queried by the server|read from the published open letter|third-party embed scripts|AUTO-DISCOVERED|Automatically discovered/)
+  assert.doesNotMatch(polish, /overflow-wrap:\s*anywhere/)
+  assert.match(polish, /\.campaign-page \.campaign-signatory h3[\s\S]*overflow-wrap:\s*normal[\s\S]*word-break:\s*normal[\s\S]*hyphens:\s*none/)
+  assert.match(polish, /\.campaign-page \.campaign-signatory h3\.is-long-token/)
+  assert.match(polish, /Override legacy mobile rules/)
 })
 
 test('hero uses an asterisk and campaign chronology is fully populated', () => {

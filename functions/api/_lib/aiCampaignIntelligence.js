@@ -3,7 +3,6 @@ import { XMLParser } from 'fast-xml-parser'
 const CAMPAIGN_START_MS = Date.parse('2026-08-26T00:00:00Z')
 const CACHE_TTL_SECONDS = 600
 const OFFICIAL_AI_FEED = 'https://cavallette.noblogs.org/feed/'
-const GDELT_ENDPOINT = 'https://api.gdeltproject.org/api/v2/doc/doc'
 const BING_NEWS_ENDPOINT = 'https://www.bing.com/news/search'
 const AI_NAME = /autistici(?:\s*\/\s*|\s+)?inventati/i
 const NOBLOGS = /\bnoblogs(?:\.org)?\b/i
@@ -11,7 +10,7 @@ const CASE_SIGNAL = /designat|sanction|terroris|ofac|serverhold|communications i
 
 export async function loadLiveAiIntelligence(requestUrl, fetcher = fetch) {
   const origin = new URL(requestUrl).origin
-  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-intelligence-v2`)
+  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-intelligence-v3`)
   const cache = globalThis.caches?.default
   if (cache) {
     const cached = await cache.match(cacheKey)
@@ -20,8 +19,7 @@ export async function loadLiveAiIntelligence(requestUrl, fetcher = fetch) {
 
   const jobs = [
     { id: 'official-ai', label: 'A/I official dispatches', url: OFFICIAL_AI_FEED, run: () => fetchOfficialAiDispatches(fetcher) },
-    { id: 'global-coverage', label: 'GDELT global news index', url: 'https://www.gdeltproject.org/', run: () => fetchGdeltCoverage(fetcher) },
-    { id: 'bing-news', label: 'Bing News exact-match RSS', url: 'https://www.bing.com/news', run: () => fetchBingNewsCoverage(fetcher) },
+    { id: 'bing-news', label: 'International news coverage', url: 'https://www.bing.com/news', run: () => fetchBingNewsCoverage(fetcher) },
   ]
   const settled = await Promise.allSettled(jobs.map((job) => job.run()))
   const sources = []
@@ -160,45 +158,6 @@ async function fetchOfficialAiDispatches(fetcher) {
   }
 }
 
-async function fetchGdeltCoverage(fetcher) {
-  const url = new URL(GDELT_ENDPOINT)
-  url.searchParams.set('query', '("Autistici/Inventati" OR "Autistici Inventati")')
-  url.searchParams.set('mode', 'artlist')
-  url.searchParams.set('format', 'json')
-  url.searchParams.set('maxrecords', '100')
-  url.searchParams.set('timespan', '3m')
-  url.searchParams.set('sort', 'datedesc')
-  const response = await fetchWithTimeout(url, fetcher, 'application/json')
-  if (!response.ok) throw new Error(`GDELT returned ${response.status}`)
-  const contentType = String(response.headers.get('content-type') || '')
-  if (!contentType.includes('json')) throw new Error('GDELT returned a non-JSON response')
-  const data = await response.json()
-  const articles = asArray(data?.articles).map((article) => ({
-    title: cleanText(article.title),
-    url: safeHttpUrl(article.url),
-    date: normalizeDate(article.seendate),
-    domain: String(article.domain || '').replace(/^www\./, ''),
-    language: normalizeLanguage(article.language),
-    imageUrl: safeHttpUrl(article.socialimage),
-  })).filter((item) => item.url && !isExcludedCoverageDomain(item.domain) && isCampaignCoverageCandidate(item))
-
-  return {
-    updates: [],
-    coverage: dedupeByUrl(articles).map((item) => ({
-      id: `coverage-live-${slugify(`${item.domain}-${item.title}`)}`,
-      date: item.date,
-      outlet: outletName(item.domain),
-      language: item.language.label,
-      languageCode: item.language.code,
-      title: item.title,
-      url: item.url,
-      imageUrl: item.imageUrl,
-      summary: 'Automatically discovered global coverage matched against exact A/I campaign signals.',
-      automated: true,
-    })),
-  }
-}
-
 async function fetchBingNewsCoverage(fetcher) {
   const url = new URL(BING_NEWS_ENDPOINT)
   url.searchParams.set('q', '"Autistici/Inventati" OR "Autistici Inventati" OR "NoBlogs.org"')
@@ -231,7 +190,7 @@ async function fetchBingNewsCoverage(fetcher) {
       languageCode: inferLanguage(item.title, item.description) === 'Italian' ? 'it' : '',
       title: item.title,
       url: item.url,
-      summary: 'Automatically discovered news coverage matched against exact A/I campaign signals.',
+      summary: summarize(item.description, 300),
       automated: true,
     })),
   }
@@ -249,10 +208,6 @@ async function fetchWithTimeout(url, fetcher, accept) {
   } finally {
     clearTimeout(timer)
   }
-}
-
-function isExcludedCoverageDomain(domain) {
-  return /(?:^|\.)(?:sabot\.media|inventati\.org|autistici\.org|noblogs\.org|bsky\.app|mastodon\.bida\.im|kolektiva\.social)$/i.test(String(domain || ''))
 }
 
 function rssLink(value) {
@@ -284,18 +239,6 @@ function normalizeDate(value) {
 function inferLanguage(...values) {
   const text = values.join(' ').toLowerCase()
   return /\b(?:gli|della|collettivo|comunicato|sanzioni|servizi|stati uniti|terroristi)\b/.test(text) ? 'Italian' : ''
-}
-
-function normalizeLanguage(value) {
-  const language = String(value || '').toLowerCase()
-  if (language.startsWith('ital')) return { code: 'it', label: 'Italian' }
-  if (language.startsWith('eng')) return { code: 'en', label: 'English' }
-  return { code: '', label: String(value || '') }
-}
-
-function outletName(domain) {
-  const value = String(domain || '').replace(/^www\./, '').split('.')[0]
-  return value ? value.charAt(0).toUpperCase() + value.slice(1) : 'External coverage'
 }
 
 function safeHttpUrl(value) {
