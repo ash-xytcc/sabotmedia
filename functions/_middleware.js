@@ -48,6 +48,7 @@ const API_WRITE_CAPABILITIES = [
   ['/api/taxonomy', 'content:write'],
   ['/api/collections', 'publishing:write'],
   ['/api/campaigns', 'publishing:write'],
+  ['/api/campaign-coverage', 'publishing:write'],
   ['/api/publications', 'publishing:write'],
   ['/api/media-assets', 'media:write'],
   ['/api/media/files', 'media:write'],

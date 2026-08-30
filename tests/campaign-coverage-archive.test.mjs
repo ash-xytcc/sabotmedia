@@ -2,20 +2,75 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import {
+  canonicalCoverageUrl,
+  defaultEditorialStatusForUrl,
   fetchGdeltAiCoverage,
   isStrictGdeltCandidate,
+  listAiCoverageArchive,
   normalizeArchiveItem,
+  updateCoverageEditorialState,
+  upsertAiCoverageItems,
 } from '../functions/api/_lib/aiCampaignCoverageArchive.js'
+import { DatabaseSync } from 'node:sqlite'
 import { selectHubCoverage } from '../src/lib/campaignCoverage.js'
 import { isPublicCampaignPath } from '../functions/_middleware.js'
 
 const read = (path) => fs.readFileSync(new URL(path, import.meta.url), 'utf8')
 
 test('campaign hub deliberately limits coverage while preserving editorial selections', () => {
-  const items = Array.from({ length: 14 }, (_, index) => ({ id: `item-${index}`, date: `2026-08-${String(30 - index).padStart(2, '0')}`, title: `Coverage ${index}`, url: `https://example.org/${index}`, automated: index > 4 }))
+  const items = Array.from({ length: 14 }, (_, index) => ({ id: `item-${index}`, date: `2026-08-${String(30 - index).padStart(2, '0')}`, title: `Coverage ${index}`, url: `https://example.org/${index}`, editorialStatus: index === 5 ? 'featured' : index === 6 ? 'hidden' : 'automatic' }))
   const selected = selectHubCoverage(items)
   assert.equal(selected.length, 8)
-  assert.deepEqual(selected.slice(0, 5).map((item) => item.id), ['item-0', 'item-1', 'item-2', 'item-3', 'item-4'])
+  assert.equal(selected[0].id, 'item-5')
+  assert.equal(selected.some((item) => item.id === 'item-6'), false)
+})
+
+test('coverage URL canonicalization removes fragments, tracking and trailing slash variants', () => {
+  const base = 'https://www.torinocronaca.it/news/cronaca/687032/luomo-del-pd-e-tra-i-siti-dei-terroristi-ora-interrogazioni-a-roma-e-bruxelles.html'
+  assert.equal(canonicalCoverageUrl(`${base}/?utm_source=x&fbclid=abc#google_vignette`), base)
+  assert.equal(canonicalCoverageUrl(`${base}?msclkid=abc`), base)
+  assert.equal(defaultEditorialStatusForUrl(`${base}/?utm_campaign=test#google_vignette`), 'hidden')
+  assert.equal(defaultEditorialStatusForUrl('https://www.torinocronaca.it/news/cronaca/future-story.html'), 'automatic')
+})
+
+test('D1 editorial flow hides, preserves and restores collected coverage without deletion', async () => {
+  const db = d1Database()
+  const item = { title: 'Autistici/Inventati sanctions coverage', url: 'https://example.org/case?utm_source=first', date: '2026-08-30', automated: true }
+  await upsertAiCoverageItems(db, [item])
+  let publicView = await listAiCoverageArchive(db)
+  assert.equal(publicView.items.length, 1)
+  assert.equal('editorialNote' in publicView.items[0], false)
+  const id = publicView.items[0].id
+
+  await updateCoverageEditorialState(db, { id, campaignSlug: 'autistici-inventati', editorialStatus: 'hidden', editorialNote: 'Private review', actor: 'editor@example.org' })
+  publicView = await listAiCoverageArchive(db)
+  assert.equal(publicView.items.length, 0)
+  let hiddenView = await listAiCoverageArchive(db, { includeHidden: true, editorialStatus: 'hidden' })
+  assert.equal(hiddenView.items.length, 1)
+  assert.equal(hiddenView.items[0].editorialNote, 'Private review')
+
+  await upsertAiCoverageItems(db, [{ ...item, url: 'https://example.org/case/?fbclid=refresh#duplicate', title: 'Refreshed title' }])
+  hiddenView = await listAiCoverageArchive(db, { includeHidden: true, editorialStatus: 'hidden' })
+  assert.equal(hiddenView.items.length, 1)
+  assert.equal(hiddenView.items[0].title, 'Refreshed title')
+
+  await updateCoverageEditorialState(db, { id, campaignSlug: 'autistici-inventati', editorialStatus: 'automatic', editorialNote: '', actor: 'editor@example.org' })
+  publicView = await listAiCoverageArchive(db)
+  assert.equal(publicView.items.length, 1)
+  assert.equal(publicView.items[0].editorialStatus, 'automatic')
+})
+
+test('the two specified Torino Cronaca records seed hidden while future outlet stories remain automatic', async () => {
+  const db = d1Database()
+  await upsertAiCoverageItems(db, [
+    { title: 'Specified Torino item one', url: 'https://www.torinocronaca.it/news/cronaca/687032/luomo-del-pd-e-tra-i-siti-dei-terroristi-ora-interrogazioni-a-roma-e-bruxelles.html#google_vignette', date: '2026-08-30', automated: true },
+    { title: 'Specified Torino item two', url: 'https://www.torinocronaca.it/news/cronaca/687100/e-questa-sinistra-vorrebbe-governare-litalia-autistici-inventati-cavedagna-incalza-chiariscano-su-de-rosa.html?utm_medium=feed', date: '2026-08-30', automated: true },
+    { title: 'Future Torino Cronaca coverage', url: 'https://www.torinocronaca.it/news/cronaca/future-ai-report.html', date: '2026-08-31', automated: true },
+  ])
+  const publicView = await listAiCoverageArchive(db)
+  assert.deepEqual(publicView.items.map((item) => item.title), ['Future Torino Cronaca coverage'])
+  const hiddenView = await listAiCoverageArchive(db, { includeHidden: true, editorialStatus: 'hidden' })
+  assert.equal(hiddenView.items.length, 2)
 })
 
 test('GDELT archive ingestion accepts exact case coverage and rejects broad keyword collisions', () => {
@@ -88,4 +143,42 @@ test('verified system backup includes the D1 campaign coverage archive', () => {
   assert.match(backup, /campaignCoverage/)
   assert.match(backup, /fetchCampaignCoverageForBackup/)
   assert.match(backup, /schemaVersion:\s*8/)
+  assert.match(backup, /admin=1&editorialStatus=all/)
 })
+
+test('coverage moderation is authenticated, reusable and separated on the public campaign page', () => {
+  const server = read('../functions/api/_lib/aiCampaignCoverageArchive.js')
+  const endpoint = read('../functions/api/campaign-coverage.js')
+  const campaignsEndpoint = read('../functions/api/campaigns.js')
+  const admin = read('../src/components/CampaignCoverageModeration.jsx')
+  const campaign = read('../src/components/CampaignPage.jsx')
+  assert.match(server, /editorial_status TEXT NOT NULL DEFAULT 'automatic'/)
+  assert.match(server, /reviewed_at TEXT/)
+  assert.match(server, /reviewed_by TEXT/)
+  assert.match(server, /editorial_note TEXT/)
+  assert.doesNotMatch(server.match(/ON CONFLICT\(campaign_slug, canonical_url\)[\s\S]*?last_seen_at = excluded\.last_seen_at/)?.[0] || '', /editorial_status\s*=/)
+  assert.match(endpoint, /resolvePublicSitePermission/)
+  assert.match(endpoint, /COVERAGE_EDITORIAL_STATUSES\.includes/)
+  assert.match(endpoint, /includeHidden:\s*adminView/)
+  assert.match(campaignsEndpoint, /campaignSlug:\s*item\.slug/)
+  for (const label of ['Feature', 'Show publicly', 'Hide from public feed', 'Restore', 'Private editorial note', 'Featured', 'Automatic', 'Hidden']) assert.match(admin, new RegExp(label))
+  assert.match(campaign, /Featured Coverage/)
+  assert.match(campaign, /Automated Coverage Feed/)
+  assert.match(campaign, /Inclusion does not constitute endorsement by Sabot Media or indicate that we have independently verified the reporting/)
+  assert.doesNotMatch(campaign, /editorialNote|reviewedBy/)
+})
+
+function d1Database() {
+  const sqlite = new DatabaseSync(':memory:')
+  return {
+    prepare(sql) {
+      let values = []
+      return {
+        bind(...next) { values = next; return this },
+        async run() { const result = sqlite.prepare(sql).run(...values); return { meta: { changes: Number(result.changes || 0) } } },
+        async all() { return { results: sqlite.prepare(sql).all(...values) } },
+        async first() { return sqlite.prepare(sql).get(...values) || null },
+      }
+    },
+  }
+}

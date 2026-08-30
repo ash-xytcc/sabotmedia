@@ -111,6 +111,8 @@ export function CampaignPage() {
   const graphics = useMemo(() => mergeGraphics(campaign?.graphics || [], campaignPieces), [campaign, campaignPieces])
   const updates = useMemo(() => sortByDate(campaign?.updates || [], false), [campaign])
   const coverage = useMemo(() => selectHubCoverage(campaign?.coverage || []), [campaign])
+  const featuredCoverage = coverage.filter((item) => item.editorialStatus === 'featured')
+  const automaticCoverage = coverage.filter((item) => item.editorialStatus !== 'featured' && item.editorialStatus !== 'hidden')
   const social = useMemo(() => sortByDate(campaign?.social || []), [campaign])
   const signatories = campaign?.signatories || []
   const reportingResources = (campaign?.resources || []).filter((item) => !/letter|template/i.test(`${item.type} ${item.title}`))
@@ -328,7 +330,9 @@ export function CampaignPage() {
         <div className="campaign-shell">
           <SectionHeading eyebrow="PRESS + RESPONSE" title={sectionTitle('coverage')} description={isAiCampaign ? 'Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available.' : 'Reporting, statements, and media coverage connected to this campaign.'} />
           {isAiCampaign ? <CampaignTrackerStatus campaign={campaign} /> : null}
-          {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.automated ? 'LIVE COVERAGE' : '', item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>No additional campaign coverage is available yet.</EmptyState>}
+          {featuredCoverage.length ? <div className="campaign-coverage-group campaign-coverage-group--featured"><h3>Featured Coverage</h3><LinkList items={featuredCoverage.map(coverageLinkItem)} /></div> : null}
+          {automaticCoverage.length ? <div className="campaign-coverage-group campaign-coverage-group--automatic"><h3>Automated Coverage Feed</h3><LinkList items={automaticCoverage.map(coverageLinkItem)} /><p className="campaign-coverage-disclaimer">Links in this section are collected automatically for public awareness and research. Inclusion does not constitute endorsement by Sabot Media or indicate that we have independently verified the reporting.</p></div> : null}
+          {!coverage.length ? <EmptyState>No additional campaign coverage is available yet.</EmptyState> : null}
           {!isAiCampaign && campaign.automationErrors?.some((item) => item.kind === 'coverage') ? <p className="campaign-source-error">Some configured coverage sources are temporarily unavailable. Editorial campaign material remains available.</p> : null}
           {isAiCampaign ? <div className="campaign-coverage-archive-link">
             <Link className="campaign-button campaign-button--dark" to="/campaigns/autistici-inventati/coverage">Browse the full coverage archive{campaign.coverageArchiveCount ? ` (${campaign.coverageArchiveCount})` : ''} →</Link>
@@ -377,6 +381,10 @@ export function CampaignPage() {
       <PublicationFooter />
     </main>
   )
+}
+
+function coverageLinkItem(item) {
+  return { id: item.id, eyebrow: [item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }
 }
 
 function OrderedCampaignSections({ order, children }) {

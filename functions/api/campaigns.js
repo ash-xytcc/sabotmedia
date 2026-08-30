@@ -4,7 +4,7 @@ import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 import { decorateAiCampaignForPublic, extractAiLetterSignatories, hasAiLetterSignatureSection } from './_lib/aiCampaignPublic.js'
 import { decorateCampaignAutomation } from './_lib/campaignAutomation.js'
 import { getNativeEntry, listNativeEntries } from './_lib/nativePublicContent.js'
-import { getAiCoverageArchiveSummary, refreshGdeltCoverageIfStale, upsertAiCoverageItems } from './_lib/aiCampaignCoverageArchive.js'
+import { getAiCoverageArchiveSummary, listAiCoverageArchive, refreshGdeltCoverageIfStale, upsertAiCoverageItems } from './_lib/aiCampaignCoverageArchive.js'
 import {
   AI_CAMPAIGN_SLUG,
   AI_CAMPAIGN_ID,
@@ -71,13 +71,17 @@ export async function onRequestGet(context) {
         : item.slug === AI_CAMPAIGN_SLUG
           ? await decorateAiCampaignForPublic(item, context.request.url, { signatories, posts })
           : await decorateCampaignAutomation(item, context.request.url, { posts })
-      if (!includeDrafts && item.slug === AI_CAMPAIGN_SLUG) {
-        await upsertAiCoverageItems(db, output.coverage || [])
-        const archive = await getAiCoverageArchiveSummary(db, AI_CAMPAIGN_SLUG)
+      if (!includeDrafts) {
+        await upsertAiCoverageItems(db, output.coverage || [], { campaignSlug: item.slug })
+        const archive = await getAiCoverageArchiveSummary(db, item.slug)
+        const visibleCoverage = await listAiCoverageArchive(db, { campaignSlug: item.slug, limit: 500 })
+        output.coverage = visibleCoverage.items
         output.coverageArchiveCount = archive.total
-        const refreshPromise = refreshGdeltCoverageIfStale(db)
-        if (typeof context.waitUntil === 'function') context.waitUntil(refreshPromise.catch(() => {}))
-        else refreshPromise.catch(() => {})
+        if (item.slug === AI_CAMPAIGN_SLUG) {
+          const refreshPromise = refreshGdeltCoverageIfStale(db)
+          if (typeof context.waitUntil === 'function') context.waitUntil(refreshPromise.catch(() => {}))
+          else refreshPromise.catch(() => {})
+        }
       }
       return json({ ok: true, mode: 'd1', item: output })
     }
