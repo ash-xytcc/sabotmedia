@@ -7,6 +7,27 @@ export const CAMPAIGN_TIME_ZONES = [
   { value: 'UTC', label: 'UTC' },
 ]
 
+export const CAMPAIGN_SECTION_KEYS = [
+  'status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline',
+  'coverage', 'sources', 'faq', 'translations', 'signatories', 'social',
+]
+
+export const CAMPAIGN_SECTION_LABELS = {
+  status: 'Status + countdown',
+  reporting: 'Reporting + context',
+  letters: 'Letters + resources',
+  act: 'Action center',
+  graphics: 'Campaign graphics',
+  updates: 'Campaign updates',
+  timeline: 'Timeline',
+  coverage: 'Press + coverage',
+  sources: 'Primary sources',
+  faq: 'FAQ',
+  translations: 'Translations',
+  signatories: 'Signatories',
+  social: 'Social feeds',
+}
+
 export function deadlineInputValue(value, timeZone = 'UTC') {
   const date = new Date(value || '')
   if (!Number.isFinite(date.getTime())) return ''
@@ -54,6 +75,9 @@ export function blankCampaign() {
     partners: [], campaignKeywords: [], disclaimer: '',
     actions: [], updates: [], resources: [], social: [], graphics: [], coverage: [],
     signatories: [], sources: [], timeline: [], faq: [], translations: [],
+    sectionOrder: [...CAMPAIGN_SECTION_KEYS],
+    hiddenSections: [],
+    sectionTitles: {},
   }
 }
 

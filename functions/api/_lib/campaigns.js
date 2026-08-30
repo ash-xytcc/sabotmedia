@@ -1,6 +1,10 @@
-const CAMPAIGN_SCHEMA_VERSION = 2
+const CAMPAIGN_SCHEMA_VERSION = 3
 export const AI_CAMPAIGN_SLUG = 'autistici-inventati'
 export const AI_CAMPAIGN_DEADLINE = '2026-09-25T04:01:00.000Z'
+export const CAMPAIGN_SECTION_KEYS = [
+  'status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline',
+  'coverage', 'sources', 'faq', 'translations', 'signatories', 'social',
+]
 
 export function defaultAiCampaign() {
   return normalizeCampaign({
@@ -49,6 +53,16 @@ export function defaultAiCampaign() {
       { id: 'faq-status', question: 'Is the monitor operated by Sabot?', answer: 'No. Sabot reads the public A/I status page at kuma.accol.li and presents a compact summary here. The original monitor remains the authoritative view of its own data.' },
     ],
     translations: [],
+    sectionOrder: [...CAMPAIGN_SECTION_KEYS],
+    hiddenSections: [],
+    sectionTitles: {
+      status: 'What is happening now', reporting: 'Read before you repeat',
+      letters: 'Read it. Sign it. Send it.', act: 'Do something useful',
+      graphics: 'Take the graphics', updates: 'Campaign log', timeline: 'How we got here',
+      coverage: 'Coverage and statements', sources: 'Check the receipts',
+      faq: 'The questions people keep asking', translations: 'Circulate it further',
+      signatories: 'Who has signed', social: 'Follow the signal, not the algorithm',
+    },
     createdAt: '2026-08-28T21:30:00Z',
   })
 }
@@ -65,6 +79,14 @@ export async function ensureCampaignsTable(db) {
   )`).run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status)').run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaigns_updated_at ON campaigns(updated_at DESC)').run()
+  await db.prepare(`CREATE TABLE IF NOT EXISTS campaign_revisions (
+    id TEXT PRIMARY KEY,
+    campaign_id TEXT NOT NULL,
+    revision_json TEXT NOT NULL,
+    revision_note TEXT NOT NULL DEFAULT 'save',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`).run()
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaign_revisions_campaign_id ON campaign_revisions(campaign_id, created_at DESC)').run()
 }
 
 export async function ensureAiCampaign(db) {
@@ -119,6 +141,49 @@ export async function upsertCampaign(db, campaign) {
   return normalized
 }
 
+export async function saveCampaignRevision(db, campaign, revisionNote = 'save') {
+  await ensureCampaignsTable(db)
+  const normalized = normalizeCampaign(campaign)
+  const id = `campaign-revision-${randomId()}`
+  const createdAt = new Date().toISOString()
+  await db.prepare(`INSERT INTO campaign_revisions (id, campaign_id, revision_json, revision_note, created_at)
+    VALUES (?, ?, ?, ?, ?)`)
+    .bind(id, normalized.id, JSON.stringify(normalized), String(revisionNote || 'save'), createdAt)
+    .run()
+  return { id, campaignId: normalized.id, revisionNote: String(revisionNote || 'save'), createdAt, campaign: normalized }
+}
+
+export async function listCampaignRevisions(db, campaignId, limit = 30) {
+  await ensureCampaignsTable(db)
+  const result = await db.prepare(`SELECT id, campaign_id, revision_json, revision_note, created_at
+    FROM campaign_revisions WHERE campaign_id = ? ORDER BY created_at DESC LIMIT ?`)
+    .bind(String(campaignId || ''), Math.max(1, Math.min(100, Number(limit) || 30)))
+    .all()
+  return (Array.isArray(result?.results) ? result.results : []).map(revisionRow)
+}
+
+export async function listAllCampaignRevisions(db, limit = 5000) {
+  await ensureCampaignsTable(db)
+  const result = await db.prepare(`SELECT id, campaign_id, revision_json, revision_note, created_at
+    FROM campaign_revisions ORDER BY created_at DESC LIMIT ?`)
+    .bind(Math.max(1, Math.min(10000, Number(limit) || 5000)))
+    .all()
+  return (Array.isArray(result?.results) ? result.results : []).map(revisionRow)
+}
+
+export async function restoreCampaignRevision(db, revisionId) {
+  await ensureCampaignsTable(db)
+  const row = await db.prepare(`SELECT id, campaign_id, revision_json, revision_note, created_at
+    FROM campaign_revisions WHERE id = ? LIMIT 1`).bind(String(revisionId || '')).first()
+  if (!row) throw new Error('campaign revision not found')
+  const revision = revisionRow(row)
+  const current = await getCampaign(db, revision.campaignId)
+  if (current) await saveCampaignRevision(db, current, `before:restore:${revision.id}`)
+  const restored = await upsertCampaign(db, { ...revision.campaign, id: revision.campaignId })
+  await saveCampaignRevision(db, restored, `restore:${revision.id}`)
+  return restored
+}
+
 export function normalizeCampaign(input = {}) {
   const now = new Date().toISOString()
   const title = String(input.title || 'Campaign')
@@ -154,9 +219,39 @@ export function normalizeCampaign(input = {}) {
     timeline: normalizeRows(input.timeline, ['date', 'title', 'body']),
     faq: normalizeRows(input.faq, ['question', 'answer']),
     translations: normalizeRows(input.translations, ['language', 'title', 'url']),
+    sectionOrder: normalizeSectionOrder(input.sectionOrder),
+    hiddenSections: normalizeSectionKeys(input.hiddenSections),
+    sectionTitles: normalizeSectionTitles(input.sectionTitles),
     createdAt: String(input.createdAt || now),
     updatedAt: String(input.updatedAt || now),
   }
+}
+
+function revisionRow(row) {
+  let parsed = {}
+  try { parsed = JSON.parse(row.revision_json || '{}') } catch { parsed = {} }
+  return {
+    id: String(row.id || ''),
+    campaignId: String(row.campaign_id || ''),
+    revisionNote: String(row.revision_note || 'save'),
+    createdAt: String(row.created_at || ''),
+    campaign: normalizeCampaign({ ...parsed, id: row.campaign_id }),
+  }
+}
+
+function normalizeSectionOrder(value) {
+  const requested = normalizeSectionKeys(value)
+  return [...requested, ...CAMPAIGN_SECTION_KEYS.filter((key) => !requested.includes(key))]
+}
+
+function normalizeSectionKeys(value) {
+  const values = Array.isArray(value) ? value : []
+  return [...new Set(values.map((item) => String(item || '').trim()).filter((item) => CAMPAIGN_SECTION_KEYS.includes(item)))]
+}
+
+function normalizeSectionTitles(value) {
+  const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+  return Object.fromEntries(CAMPAIGN_SECTION_KEYS.map((key) => [key, String(input[key] || '')]).filter(([, title]) => title))
 }
 
 export function buildCampaignRssXml({ campaign, requestUrl }) {

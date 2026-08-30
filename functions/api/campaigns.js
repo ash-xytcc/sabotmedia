@@ -10,6 +10,7 @@ import {
   getCampaign,
   listCampaigns,
   normalizeCampaign,
+  saveCampaignRevision,
   upsertCampaign,
 } from './_lib/campaigns.js'
 
@@ -97,7 +98,10 @@ async function handleWrite(context) {
 
     if (!item.title || !item.slug) return json({ ok: false, error: 'missing campaign title or slug' }, 400)
 
+    const existing = await getCampaign(db, item.id)
+    if (existing) await saveCampaignRevision(db, existing, 'before:save')
     const saved = await upsertCampaign(db, item)
+    await saveCampaignRevision(db, saved, String(body?.revisionNote || 'save'))
     await writeAuditLog(db, {
       action: 'campaigns.upsert',
       entityType: 'campaign',

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { loadCampaign, loadCampaignMonitor } from '../lib/campaignsApi'
@@ -7,13 +7,37 @@ import { loadPublishedNativePieces } from '../lib/nativePublicFeed'
 import { selectHubCoverage } from '../lib/campaignCoverage'
 
 const AI_CAMPAIGN_SLUG = 'autistici-inventati'
+const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social']
+const CAMPAIGN_SECTION_META = {
+  status: { nav: 'Status', title: 'Campaign status' },
+  reporting: { nav: 'Reporting', title: 'Reporting and context' },
+  letters: { nav: 'Letters', title: 'Letters and resources' },
+  act: { nav: 'Act', title: 'Take action' },
+  graphics: { nav: 'Graphics', title: 'Campaign media kit' },
+  updates: { nav: 'Updates', title: 'Campaign updates' },
+  timeline: { nav: 'Timeline', title: 'Campaign timeline' },
+  coverage: { nav: 'Coverage', title: 'Coverage and statements' },
+  sources: { nav: 'Sources', title: 'Primary sources' },
+  faq: { nav: 'FAQ', title: 'Frequently asked questions' },
+  translations: { nav: 'Translations', title: 'Translations' },
+  signatories: { nav: 'Signers', title: 'Signatories' },
+  social: { nav: 'Social', title: 'Social updates' },
+}
+const AI_CAMPAIGN_SECTION_TITLES = {
+  status: 'What is happening now', reporting: 'Read before you repeat', letters: 'Read it. Sign it. Send it.',
+  act: 'Do something useful', graphics: 'Take the graphics', updates: 'Campaign log', timeline: 'How we got here',
+  coverage: 'Coverage and statements', sources: 'Check the receipts', faq: 'The questions people keep asking',
+  translations: 'Circulate it further', signatories: 'Who has signed', social: 'Follow the signal, not the algorithm',
+}
 const ITALY_TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
 const ITALY_DATE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 const ITALY_ZONE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', timeZoneName: 'short' })
 
 export function CampaignPage() {
   const { slug } = useParams()
+  const [searchParams] = useSearchParams()
   const campaignSlug = slug || AI_CAMPAIGN_SLUG
+  const previewDraft = searchParams.get('preview') === '1'
   const isAiCampaign = campaignSlug === AI_CAMPAIGN_SLUG
   const [campaign, setCampaign] = useState(null)
   const [pieces, setPieces] = useState([])
@@ -28,7 +52,7 @@ export function CampaignPage() {
     async function refreshDashboard() {
       try {
         const [loadedCampaign, loadedPieces] = await Promise.all([
-          loadCampaign(campaignSlug),
+          loadCampaign(campaignSlug, { includeDrafts: previewDraft }),
           loadPublishedNativePieces().catch(() => []),
         ])
         if (cancelled) return
@@ -43,7 +67,7 @@ export function CampaignPage() {
     refreshDashboard()
     const timer = window.setInterval(refreshDashboard, 300000)
     return () => { cancelled = true; window.clearInterval(timer) }
-  }, [campaignSlug])
+  }, [campaignSlug, previewDraft])
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60000)
@@ -77,6 +101,8 @@ export function CampaignPage() {
   const coverage = useMemo(() => selectHubCoverage(campaign?.coverage || []), [campaign])
   const social = useMemo(() => sortByDate(campaign?.social || []), [campaign])
   const signatories = campaign?.signatories || []
+  const reportingResources = (campaign?.resources || []).filter((item) => !/letter|template/i.test(`${item.type} ${item.title}`))
+  const letterResources = (campaign?.resources || []).filter((item) => /letter|template/i.test(`${item.type} ${item.title}`))
   const deadline = campaign?.deadline ? new Date(campaign.deadline).getTime() : NaN
   const countdown = Number.isFinite(deadline) ? formatCountdown(deadline - now) : null
 
@@ -126,6 +152,27 @@ export function CampaignPage() {
   const latestUpdate = updates.at(-1)
   const pinnedUpdate = new Date(latestUpdate?.date || 0) > new Date(latestPinned?.date || 0) ? latestUpdate : (latestPinned || latestUpdate)
   const isPastDeadline = Number.isFinite(deadline) && deadline <= now
+  const sectionOrder = normalizeSectionOrder(campaign.sectionOrder)
+  const hiddenSections = new Set(campaign.hiddenSections || [])
+  const sectionContent = {
+    status: true,
+    reporting: reportingPieces.length > 0 || reportingResources.length > 0,
+    letters: letterPieces.length > 0 || letterResources.length > 0,
+    act: (campaign.actions || []).length > 0,
+    graphics: graphics.length > 0,
+    updates: updates.length > 0,
+    timeline: (campaign.timeline || []).length > 0,
+    coverage: coverage.length > 0 || isAiCampaign,
+    sources: (campaign.sources || []).length > 0,
+    faq: (campaign.faq || []).length > 0,
+    translations: (campaign.translations || []).length > 0,
+    signatories: signatories.length > 0,
+    social: social.length > 0 || isAiCampaign,
+  }
+  const visibleSections = sectionOrder.filter((key) => !hiddenSections.has(key) && sectionContent[key])
+  const showSection = (key) => visibleSections.includes(key)
+  const sectionStyle = (key) => ({ order: sectionOrder.indexOf(key) })
+  const sectionTitle = (key) => campaign.sectionTitles?.[key] || (isAiCampaign ? AI_CAMPAIGN_SECTION_TITLES[key] : '') || CAMPAIGN_SECTION_META[key]?.title || key
 
   return (
     <main className="page campaign-page" data-campaign={campaign.slug}>
@@ -143,8 +190,8 @@ export function CampaignPage() {
             <p className="campaign-hero__short">{campaign.shortTitle}</p>
             <p className="campaign-hero__deck">{campaign.deck}</p>
             <div className="campaign-hero__actions">
-              <a className="campaign-button campaign-button--light" href="#reporting">Read the reporting</a>
-              <a className="campaign-button campaign-button--dark" href="#letters">Read the letters</a>
+              {showSection('reporting') ? <a className="campaign-button campaign-button--light" href="#reporting">Read the reporting</a> : null}
+              {showSection('letters') ? <a className="campaign-button campaign-button--dark" href="#letters">Read the letters</a> : null}
               <button className="campaign-button campaign-button--ghost" type="button" onClick={shareCampaign}>Share campaign</button>
             </div>
             {campaign.partners?.length ? <p className="campaign-hero__partners">Independent campaign by {campaign.partners.join(' × ')}</p> : null}
@@ -155,19 +202,11 @@ export function CampaignPage() {
 
       <nav className="campaign-local-nav" aria-label="Campaign sections">
         <div className="campaign-shell">
-          <a href="#status">Status</a>
-          <a href="#reporting">Reporting</a>
-          <a href="#letters">Letters</a>
-          <a href="#act">Act</a>
-          <a href="#updates">Updates</a>
-          <a href="#graphics">Graphics</a>
-          <a href="#signatories">Signers</a>
-          <a href="#social">Social</a>
-          <a href="#sources">Sources</a>
+          {visibleSections.map((key) => <a href={`#${key}`} key={key}>{CAMPAIGN_SECTION_META[key]?.nav || key}</a>)}
         </div>
       </nav>
 
-      {pinnedUpdate ? (
+      {pinnedUpdate && showSection('updates') ? (
         <section className="campaign-latest">
           <div className="campaign-shell campaign-latest__inner">
             <span>LATEST</span>
@@ -179,9 +218,10 @@ export function CampaignPage() {
         </section>
       ) : null}
 
-      <section className="campaign-section campaign-section--status" id="status">
+      <div className="campaign-section-flow">
+      {showSection('status') ? <section className="campaign-section campaign-section--status" id="status" style={sectionStyle('status')}>
         <div className="campaign-shell">
-          <SectionHeading eyebrow="LIVE CAMPAIGN DASHBOARD" title="What is happening now" />
+          <SectionHeading eyebrow="LIVE CAMPAIGN DASHBOARD" title={sectionTitle('status')} />
           {isAiCampaign ? <ItalyClock /> : null}
           <div className="campaign-status-grid">
             {Number.isFinite(deadline) ? <article className="campaign-metric campaign-metric--deadline">
@@ -198,27 +238,27 @@ export function CampaignPage() {
             </article>
           </div>
         </div>
-      </section>
+      </section> : null}
 
-      <section className="campaign-section" id="reporting">
+      {showSection('reporting') ? <section className="campaign-section" id="reporting" style={sectionStyle('reporting')}>
         <div className="campaign-shell">
-          <SectionHeading eyebrow="REPORTING + CONTEXT" title="Read before you repeat" description="The campaign is anchored in reporting and source material. These are the Sabot pieces connected to this campaign." />
+          <SectionHeading eyebrow="REPORTING + CONTEXT" title={sectionTitle('reporting')} description="The campaign is anchored in reporting and source material. These are the Sabot pieces connected to this campaign." />
           <PieceGrid pieces={reportingPieces} empty="Campaign reporting will appear here as relevant published posts are detected." />
-          <ResourceStrip resources={(campaign.resources || []).filter((item) => !/letter|template/i.test(`${item.type} ${item.title}`))} />
+          <ResourceStrip resources={reportingResources} />
         </div>
-      </section>
+      </section> : null}
 
-      <section className="campaign-section campaign-section--paper" id="letters">
+      {showSection('letters') ? <section className="campaign-section campaign-section--paper" id="letters" style={sectionStyle('letters')}>
         <div className="campaign-shell">
-          <SectionHeading eyebrow="LETTERS" title="Read it. Sign it. Send it." description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
+          <SectionHeading eyebrow="LETTERS" title={sectionTitle('letters')} description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
           <PieceGrid pieces={letterPieces} empty="Letter downloads are temporarily unavailable. The reporting section remains available while they are restored." />
-          <ResourceStrip resources={(campaign.resources || []).filter((item) => /letter|template/i.test(`${item.type} ${item.title}`))} />
+          <ResourceStrip resources={letterResources} />
         </div>
-      </section>
+      </section> : null}
 
-      <section className="campaign-section campaign-section--act" id="act">
+      {showSection('act') ? <section className="campaign-section campaign-section--act" id="act" style={sectionStyle('act')}>
         <div className="campaign-shell">
-          <SectionHeading eyebrow="NOW THAT YOU KNOW" title="Do something useful" description="Reporting first. Letters next. Direct action follows." />
+          <SectionHeading eyebrow="NOW THAT YOU KNOW" title={sectionTitle('act')} description="Reporting first. Letters next. Direct action follows." />
           <div className="campaign-action-grid">
             {(campaign.actions || []).map((action, index) => (
               <article className="campaign-action-card" key={action.id || index}>
@@ -230,11 +270,11 @@ export function CampaignPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> : null}
 
-      <section className="campaign-section campaign-section--updates" id="updates">
+      {showSection('updates') ? <section className="campaign-section campaign-section--updates" id="updates" style={sectionStyle('updates')}>
         <div className="campaign-shell">
-          <SectionHeading eyebrow="LIVE UPDATES" title="Campaign log" description="A dated record of statements, publications, deadlines, and material changes in the campaign." />
+          <SectionHeading eyebrow="LIVE UPDATES" title={sectionTitle('updates')} description="A dated record of statements, publications, deadlines, and material changes in the campaign." />
           <div className="campaign-update-list">
             {updates.length ? updates.map((item) => (
               <article className={`campaign-update${item.pinned ? ' is-pinned' : ''}`} key={item.id}>
@@ -244,11 +284,11 @@ export function CampaignPage() {
             )) : <EmptyState>Updates will appear here as the campaign develops.</EmptyState>}
           </div>
         </div>
-      </section>
+      </section> : null}
 
-      <section className="campaign-section" id="graphics">
+      {showSection('graphics') ? <section className="campaign-section" id="graphics" style={sectionStyle('graphics')}>
         <div className="campaign-shell">
-          <SectionHeading eyebrow="CAMPAIGN KIT" title="Take the graphics" description="Download, repost, print and remix. Each card includes its full-resolution original, accessible alt text and a ready-to-use caption." />
+          <SectionHeading eyebrow="CAMPAIGN KIT" title={sectionTitle('graphics')} description="Download, repost, print and remix. Each card includes its full-resolution original, accessible alt text and a ready-to-use caption." />
           {graphics.length ? (
             <div className="campaign-graphics-grid">
               {graphics.map((graphic) => (
@@ -260,12 +300,12 @@ export function CampaignPage() {
             </div>
           ) : null}
         </div>
-      </section>
+      </section> : null}
 
-      {campaign.timeline?.length ? (
-        <section className="campaign-section campaign-section--timeline" id="timeline">
+      {showSection('timeline') ? (
+        <section className="campaign-section campaign-section--timeline" id="timeline" style={sectionStyle('timeline')}>
           <div className="campaign-shell">
-            <SectionHeading eyebrow="TIMELINE" title="How we got here" />
+            <SectionHeading eyebrow="TIMELINE" title={sectionTitle('timeline')} />
             <div className="campaign-timeline">
               {sortByDate(campaign.timeline, false).map((item) => <article key={item.id}><time>{formatDate(item.date)}</time><div><h3>{item.title}</h3><p>{item.body}</p></div></article>)}
             </div>
@@ -273,9 +313,9 @@ export function CampaignPage() {
         </section>
       ) : null}
 
-      <section className="campaign-section" id="coverage">
+      {showSection('coverage') ? <section className="campaign-section" id="coverage" style={sectionStyle('coverage')}>
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" description={isAiCampaign ? 'Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available.' : 'Reporting, statements, and media coverage connected to this campaign.'} />
+          <SectionHeading eyebrow="PRESS + RESPONSE" title={sectionTitle('coverage')} description={isAiCampaign ? 'Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available.' : 'Reporting, statements, and media coverage connected to this campaign.'} />
           {isAiCampaign ? <CampaignTrackerStatus campaign={campaign} /> : null}
           {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.automated ? 'LIVE COVERAGE' : '', item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>No additional campaign coverage is available yet.</EmptyState>}
           {isAiCampaign ? <div className="campaign-coverage-archive-link">
@@ -283,19 +323,19 @@ export function CampaignPage() {
             <p>The hub keeps the strongest current items in view. The archive preserves the wider record with search, outlet and language filters.</p>
           </div> : null}
         </div>
-      </section>
+      </section> : null}
 
-      <section className="campaign-section campaign-section--sources" id="sources">
+      {showSection('sources') ? <section className="campaign-section campaign-section--sources" id="sources" style={sectionStyle('sources')}>
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRIMARY SOURCES" title="Check the receipts" description={isAiCampaign ? 'Government material, A/I statements, legal analysis, historical documents, and other primary sources are gathered here for direct verification.' : 'Primary documents and source material are gathered here for direct verification.'} />
+          <SectionHeading eyebrow="PRIMARY SOURCES" title={sectionTitle('sources')} description={isAiCampaign ? 'Government material, A/I statements, legal analysis, historical documents, and other primary sources are gathered here for direct verification.' : 'Primary documents and source material are gathered here for direct verification.'} />
           {campaign.sources?.length ? <LinkList items={campaign.sources.map((item) => ({ id: item.id, eyebrow: item.publisher, title: item.title, body: item.note, url: item.url }))} /> : <p className="campaign-reader-note">The reporting above retains its article-level citations and primary-source links.</p>}
         </div>
-      </section>
+      </section> : null}
 
-      {campaign.faq?.length ? (
-        <section className="campaign-section campaign-section--faq" id="faq">
+      {showSection('faq') ? (
+        <section className="campaign-section campaign-section--faq" id="faq" style={sectionStyle('faq')}>
           <div className="campaign-shell">
-            <SectionHeading eyebrow="FAQ" title="The questions people keep asking" />
+            <SectionHeading eyebrow="FAQ" title={sectionTitle('faq')} />
             <div className="campaign-faq">
               {campaign.faq.map((item) => <details key={item.id}><summary>{item.question}</summary><p>{item.answer}</p></details>)}
             </div>
@@ -303,15 +343,16 @@ export function CampaignPage() {
         </section>
       ) : null}
 
-      {campaign.translations?.length ? (
-        <section className="campaign-section" id="translations">
-          <div className="campaign-shell"><SectionHeading eyebrow="TRANSLATIONS" title="Circulate it further" /><LinkList items={campaign.translations.map((item) => ({ id: item.id, eyebrow: item.language, title: item.title, url: item.url }))} /></div>
+      {showSection('translations') ? (
+        <section className="campaign-section" id="translations" style={sectionStyle('translations')}>
+          <div className="campaign-shell"><SectionHeading eyebrow="TRANSLATIONS" title={sectionTitle('translations')} /><LinkList items={campaign.translations.map((item) => ({ id: item.id, eyebrow: item.language, title: item.title, url: item.url }))} /></div>
         </section>
       ) : null}
 
-      {signatories.length ? <SignatoryCarousel signatories={signatories} /> : null}
+      {showSection('signatories') ? <SignatoryCarousel signatories={signatories} title={sectionTitle('signatories')} style={sectionStyle('signatories')} /> : null}
 
-      <SocialSection campaign={campaign} social={social} copyState={copyState} copyCampaignLink={copyCampaignLink} isAiCampaign={isAiCampaign} />
+      {showSection('social') ? <SocialSection campaign={campaign} social={social} copyState={copyState} copyCampaignLink={copyCampaignLink} isAiCampaign={isAiCampaign} title={sectionTitle('social')} style={sectionStyle('social')} /> : null}
+      </div>
 
       <section className="campaign-disclaimer">
         <div className="campaign-shell">
@@ -326,7 +367,7 @@ export function CampaignPage() {
   )
 }
 
-function SignatoryCarousel({ signatories }) {
+function SignatoryCarousel({ signatories, title, style }) {
   const railRef = useRef(null)
   const statementCount = signatories.filter((item) => item.statement).length
   function move(direction) {
@@ -336,9 +377,9 @@ function SignatoryCarousel({ signatories }) {
     rail.scrollBy({ left: direction * Math.max(280, rail.clientWidth * 0.82), behavior: reducedMotion ? 'auto' : 'smooth' })
   }
   return (
-    <section className="campaign-section campaign-section--signatories" id="signatories">
+    <section className="campaign-section campaign-section--signatories" id="signatories" style={style}>
       <div className="campaign-shell">
-        <SectionHeading eyebrow="OPEN LETTER" title="Who has signed" description={`${signatories.length} signatories${statementCount ? ` · ${statementCount} public statements` : ''}.`} />
+        <SectionHeading eyebrow="OPEN LETTER" title={title} description={`${signatories.length} signatories${statementCount ? ` · ${statementCount} public statements` : ''}.`} />
         <div className="campaign-carousel-controls">
           <span>DRAG / SWIPE / USE CONTROLS</span>
           <div><button type="button" onClick={() => move(-1)} aria-label="Previous signatories">←</button><button type="button" onClick={() => move(1)} aria-label="Next signatories">→</button></div>
@@ -357,10 +398,10 @@ function SignatoryCarousel({ signatories }) {
   )
 }
 
-function SocialSection({ campaign, social, copyState, copyCampaignLink, isAiCampaign }) {
-  return <section className="campaign-section campaign-section--social" id="social">
+function SocialSection({ campaign, social, copyState, copyCampaignLink, isAiCampaign, title, style }) {
+  return <section className="campaign-section campaign-section--social" id="social" style={style}>
     <div className="campaign-shell">
-      <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description={isAiCampaign ? 'Campaign posts from A/I and Sabot Media. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual.' : 'Public posts and dispatches connected to this campaign.'} />
+      <SectionHeading eyebrow="SOCIAL CIRCULATION" title={title} description={isAiCampaign ? 'Campaign posts from A/I and Sabot Media. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual.' : 'Public posts and dispatches connected to this campaign.'} />
       <SocialSources sources={campaign.socialSources || []} />
       <div className="campaign-share-row">
         <a className="campaign-button campaign-button--light" href={`https://bsky.app/intent/compose?text=${encodeURIComponent(`${campaign.shortTitle}\n\n${window.location.href.split('#')[0]}`)}`} target="_blank" rel="noreferrer">Post to Bluesky ↗</a>
@@ -534,6 +575,11 @@ function formatCountdown(ms) {
   if (days > 0) return { primary: `${days} day${days === 1 ? '' : 's'} remaining`, secondary: `${hours} hours beyond the full days` }
   const minutes = Math.max(0, Math.floor((ms % 3600000) / 60000))
   return { primary: `${hours}h ${minutes}m remaining`, secondary: 'The deadline is close' }
+}
+
+function normalizeSectionOrder(value) {
+  const requested = Array.isArray(value) ? value.filter((key) => CAMPAIGN_SECTION_ORDER.includes(key)) : []
+  return [...new Set([...requested, ...CAMPAIGN_SECTION_ORDER])]
 }
 
 function formatDeadlineLabel(value, timeZone = 'UTC') {
