@@ -60,7 +60,7 @@ export async function upsertAiCoverageItems(db, items = [], { campaignSlug = AI_
       title = excluded.title,
       translated_title = CASE WHEN excluded.translated_title != '' THEN excluded.translated_title ELSE translated_title END,
       outlet = CASE WHEN excluded.outlet != '' THEN excluded.outlet ELSE outlet END,
-      summary = CASE WHEN length(excluded.summary) > length(summary) THEN excluded.summary ELSE summary END,
+      summary = CASE WHEN excluded.summary != '' THEN excluded.summary ELSE summary END,
       published_at = CASE WHEN excluded.published_at != '' THEN excluded.published_at ELSE published_at END,
       language = CASE WHEN excluded.language != '' THEN excluded.language ELSE language END,
       language_code = CASE WHEN excluded.language_code != '' THEN excluded.language_code ELSE language_code END,
