@@ -11,11 +11,12 @@ import {
   updateCoverageEditorialState,
   upsertAiCoverageItems,
 } from '../functions/api/_lib/aiCampaignCoverageArchive.js'
-import { DatabaseSync } from 'node:sqlite'
 import { selectHubCoverage } from '../src/lib/campaignCoverage.js'
 import { isPublicCampaignPath } from '../functions/_middleware.js'
 
 const read = (path) => fs.readFileSync(new URL(path, import.meta.url), 'utf8')
+let DatabaseSync = null
+try { ({ DatabaseSync } = await import('node:sqlite')) } catch { /* Node 20 CI lacks the optional built-in SQLite test driver. */ }
 
 test('campaign hub deliberately limits coverage while preserving editorial selections', () => {
   const items = Array.from({ length: 14 }, (_, index) => ({ id: `item-${index}`, date: `2026-08-${String(30 - index).padStart(2, '0')}`, title: `Coverage ${index}`, url: `https://example.org/${index}`, editorialStatus: index === 5 ? 'featured' : index === 6 ? 'hidden' : 'automatic' }))
@@ -33,7 +34,7 @@ test('coverage URL canonicalization removes fragments, tracking and trailing sla
   assert.equal(defaultEditorialStatusForUrl('https://www.torinocronaca.it/news/cronaca/future-story.html'), 'automatic')
 })
 
-test('D1 editorial flow hides, preserves and restores collected coverage without deletion', async () => {
+test('D1 editorial flow hides, preserves and restores collected coverage without deletion', { skip: !DatabaseSync }, async () => {
   const db = d1Database()
   const item = { title: 'Autistici/Inventati sanctions coverage', url: 'https://example.org/case?utm_source=first', date: '2026-08-30', automated: true }
   await upsertAiCoverageItems(db, [item])
@@ -60,7 +61,7 @@ test('D1 editorial flow hides, preserves and restores collected coverage without
   assert.equal(publicView.items[0].editorialStatus, 'automatic')
 })
 
-test('the two specified Torino Cronaca records seed hidden while future outlet stories remain automatic', async () => {
+test('the two specified Torino Cronaca records seed hidden while future outlet stories remain automatic', { skip: !DatabaseSync }, async () => {
   const db = d1Database()
   await upsertAiCoverageItems(db, [
     { title: 'Specified Torino item one', url: 'https://www.torinocronaca.it/news/cronaca/687032/luomo-del-pd-e-tra-i-siti-dei-terroristi-ora-interrogazioni-a-roma-e-bruxelles.html#google_vignette', date: '2026-08-30', automated: true },
