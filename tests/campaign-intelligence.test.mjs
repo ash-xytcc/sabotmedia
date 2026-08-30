@@ -42,6 +42,14 @@ test('campaign update merging deduplicates a publication already represented edi
   assert.deepEqual(merged.map((item) => item.id), ['curated', 'no-url'])
 })
 
+test('campaign update merging also removes stale persisted copies with the same id', () => {
+  const merged = mergeCampaignUpdates(
+    [{ id: 'update-launch', url: 'https://sabot.media/campaigns/autistici-inventati', body: 'Current public copy' }],
+    [{ id: 'update-launch', url: '', body: 'Stale persisted copy' }],
+  )
+  assert.deepEqual(merged.map((item) => item.body), ['Current public copy'])
+})
+
 test('live intelligence normalizes official dispatches and strict news coverage', async () => {
   const rss = `<?xml version="1.0"?><rss><channel>
     <item><title>Comunicato stampa Autistici / Inventati 29.8.2026</title><link>https://cavallette.noblogs.org/2026/08/10093</link><pubDate>Sat, 29 Aug 2026 17:00:51 GMT</pubDate><description>Aggiornamento sulle sanzioni e sui servizi.</description></item>
