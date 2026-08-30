@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
+import { CampaignCoverageModeration } from './CampaignCoverageModeration'
 import { deleteCampaign as deleteCampaignApi, loadCampaignRevisions, loadCampaigns, restoreCampaignRevision, saveCampaign } from '../lib/campaignsApi'
 import { blankCampaign, campaignSlug, CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_LABELS, CAMPAIGN_TIME_ZONES, deadlineInputValue, validateDeadlineWallTime } from '../lib/campaignDeadline'
 
@@ -333,6 +334,7 @@ export function CampaignAdminPage() {
               <TextField label="Independence / legal note" value={draft.disclaimer} textarea onChange={(value) => patch({ disclaimer: value })} />
             </section>
             <AutomationSettings value={draft.automation || {}} onChange={(automation) => patch({ automation })} />
+            {!isNew && draft.slug ? <CampaignCoverageModeration campaignSlug={draft.slug} onNotice={pushNotice} /> : null}
             <SectionControls
               order={normalizeSectionOrder(draft.sectionOrder)}
               hidden={draft.hiddenSections || []}

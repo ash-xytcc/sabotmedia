@@ -163,7 +163,7 @@ async function fetchCampaignCoverageForBackup() {
   let page = 1
   let pages = 1
   do {
-    const data = await fetchRequiredList(`/api/campaign-coverage?limit=500&page=${page}`, 'campaign coverage archive')
+    const data = await fetchRequiredList(`/api/campaign-coverage?admin=1&editorialStatus=all&limit=500&page=${page}`, 'campaign coverage archive')
     items.push(...data.items)
     pages = Math.max(1, Number(data.pages || 1))
     page += 1
