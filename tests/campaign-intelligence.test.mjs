@@ -53,13 +53,13 @@ test('live intelligence normalizes official dispatches and strict global coverag
       { title: 'General infrastructure policy', url: 'https://news.example/general', seendate: '20260830T090000Z', domain: 'news.example', language: 'English' },
     ],
   }
-  const googleRss = `<?xml version="1.0"?><rss><channel>
-    <item><title>Autistici/Inventati designation draws new scrutiny - News Example</title><link>https://news.google.com/articles/duplicate</link><pubDate>Sun, 30 Aug 2026 09:00:00 GMT</pubDate><description>Exact campaign coverage.</description></item>
+  const bingRss = `<?xml version="1.0"?><rss><channel>
+    <item><title>Autistici/Inventati designation draws new scrutiny - News Example</title><link>https://www.bing.com/news/apiclick.aspx?url=https%3A%2F%2Fnews.example%2Fai</link><pubDate>Sun, 30 Aug 2026 09:00:00 GMT</pubDate><description>Exact campaign coverage.</description></item>
   </channel></rss>`
   const fetcher = async (url) => {
     if (String(url).includes('cavallette.noblogs.org/feed')) return new Response(rss, { headers: { 'content-type': 'application/rss+xml' } })
     if (String(url).includes('api.gdeltproject.org')) return new Response(JSON.stringify(gdelt), { headers: { 'content-type': 'application/json' } })
-    if (String(url).includes('news.google.com/rss')) return new Response(googleRss, { headers: { 'content-type': 'application/rss+xml' } })
+    if (String(url).includes('bing.com/news/search')) return new Response(bingRss, { headers: { 'content-type': 'application/rss+xml' } })
     throw new Error(`unexpected URL ${url}`)
   }
   const result = await loadLiveAiIntelligence('https://sabot.media/api/campaigns', fetcher)

@@ -4,14 +4,14 @@ const CAMPAIGN_START_MS = Date.parse('2026-08-26T00:00:00Z')
 const CACHE_TTL_SECONDS = 600
 const OFFICIAL_AI_FEED = 'https://cavallette.noblogs.org/feed/'
 const GDELT_ENDPOINT = 'https://api.gdeltproject.org/api/v2/doc/doc'
-const GOOGLE_NEWS_ENDPOINT = 'https://news.google.com/rss/search'
+const BING_NEWS_ENDPOINT = 'https://www.bing.com/news/search'
 const AI_NAME = /autistici(?:\s*\/\s*|\s+)?inventati/i
 const NOBLOGS = /\bnoblogs(?:\.org)?\b/i
 const CASE_SIGNAL = /designat|sanction|terroris|ofac|serverhold|communications infrastructure|infrastruttur|sanzion|terrorist|lista usa/i
 
 export async function loadLiveAiIntelligence(requestUrl, fetcher = fetch) {
   const origin = new URL(requestUrl).origin
-  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-intelligence-v1`)
+  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-intelligence-v2`)
   const cache = globalThis.caches?.default
   if (cache) {
     const cached = await cache.match(cacheKey)
@@ -21,7 +21,7 @@ export async function loadLiveAiIntelligence(requestUrl, fetcher = fetch) {
   const jobs = [
     { id: 'official-ai', label: 'A/I official dispatches', url: OFFICIAL_AI_FEED, run: () => fetchOfficialAiDispatches(fetcher) },
     { id: 'global-coverage', label: 'GDELT global news index', url: 'https://www.gdeltproject.org/', run: () => fetchGdeltCoverage(fetcher) },
-    { id: 'google-news', label: 'Google News exact-match RSS', url: 'https://news.google.com/', run: () => fetchGoogleNewsCoverage(fetcher) },
+    { id: 'bing-news', label: 'Bing News exact-match RSS', url: 'https://www.bing.com/news', run: () => fetchBingNewsCoverage(fetcher) },
   ]
   const settled = await Promise.allSettled(jobs.map((job) => job.run()))
   const sources = []
@@ -162,7 +162,7 @@ async function fetchOfficialAiDispatches(fetcher) {
 
 async function fetchGdeltCoverage(fetcher) {
   const url = new URL(GDELT_ENDPOINT)
-  url.searchParams.set('query', '("Autistici/Inventati" OR "Autistici Inventati" OR "NoBlogs.org")')
+  url.searchParams.set('query', '("Autistici/Inventati" OR "Autistici Inventati")')
   url.searchParams.set('mode', 'artlist')
   url.searchParams.set('format', 'json')
   url.searchParams.set('maxrecords', '100')
@@ -199,14 +199,13 @@ async function fetchGdeltCoverage(fetcher) {
   }
 }
 
-async function fetchGoogleNewsCoverage(fetcher) {
-  const url = new URL(GOOGLE_NEWS_ENDPOINT)
+async function fetchBingNewsCoverage(fetcher) {
+  const url = new URL(BING_NEWS_ENDPOINT)
   url.searchParams.set('q', '"Autistici/Inventati" OR "Autistici Inventati" OR "NoBlogs.org"')
-  url.searchParams.set('hl', 'en-US')
-  url.searchParams.set('gl', 'US')
-  url.searchParams.set('ceid', 'US:en')
+  url.searchParams.set('qft', 'sortbydate="1"')
+  url.searchParams.set('format', 'RSS')
   const response = await fetchWithTimeout(url, fetcher, 'application/rss+xml, application/xml, text/xml')
-  if (!response.ok) throw new Error(`Google News RSS returned ${response.status}`)
+  if (!response.ok) throw new Error(`Bing News RSS returned ${response.status}`)
   const xml = await response.text()
   const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
   const parsed = parser.parse(xml)
@@ -216,16 +215,16 @@ async function fetchGoogleNewsCoverage(fetcher) {
     const separator = fullTitle.lastIndexOf(' - ')
     return {
       title: separator > 0 ? fullTitle.slice(0, separator) : fullTitle,
-      outlet: separator > 0 ? fullTitle.slice(separator + 3) : 'Google News',
+      outlet: cleanText(item['News:Source'] || item.source || (separator > 0 ? fullTitle.slice(separator + 3) : 'Bing News')),
       description: cleanText(item.description || ''),
-      url: rssLink(item.link),
+      url: unwrapBingUrl(rssLink(item.link)),
       date: normalizeDate(item.pubDate),
     }
   }).filter(isCampaignCoverageCandidate)
   return {
     updates: [],
     coverage: items.map((item) => ({
-      id: `coverage-google-${slugify(`${item.outlet}-${item.title}`)}`,
+      id: `coverage-bing-${slugify(`${item.outlet}-${item.title}`)}`,
       date: item.date,
       outlet: item.outlet,
       language: inferLanguage(item.title, item.description),
@@ -260,6 +259,14 @@ function rssLink(value) {
   if (typeof value === 'string') return safeHttpUrl(value)
   if (Array.isArray(value)) return rssLink(value.find((item) => item?.['@_rel'] === 'alternate') || value[0])
   return safeHttpUrl(value?.['@_href'] || value?.['#text'] || '')
+}
+
+function unwrapBingUrl(value) {
+  try {
+    const url = new URL(String(value || ''))
+    if (url.hostname.endsWith('bing.com') && url.pathname.includes('apiclick')) return safeHttpUrl(url.searchParams.get('url')) || url.toString()
+    return url.toString()
+  } catch { return '' }
 }
 
 function parseDate(value) {
