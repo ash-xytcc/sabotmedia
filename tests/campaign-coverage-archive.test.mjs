@@ -57,6 +57,7 @@ test('coverage archive is D1-backed, searchable, scheduled and gracefully isolat
   assert.match(server, /campaign_coverage_refresh/)
   assert.match(server, /lower\(title\) LIKE/)
   assert.match(server, /ON CONFLICT\(campaign_slug, canonical_url\)/)
+  assert.match(server, /summary = CASE WHEN excluded\.summary != '' THEN excluded\.summary ELSE summary END/)
   assert.match(server, /reason: 'source-error'/)
   assert.doesNotMatch(server + endpoint, /localStorage|sessionStorage/)
   assert.match(endpoint, /context\.waitUntil\(refreshPromise/)
