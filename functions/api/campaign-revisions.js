@@ -12,8 +12,8 @@ export async function onRequestGet(context) {
     const url = new URL(context.request.url)
     const campaignId = String(url.searchParams.get('campaignId') || '')
     if (url.searchParams.get('all') === '1') {
-      const items = await listAllCampaignRevisions(db, url.searchParams.get('limit'))
-      return json({ ok: true, mode: 'd1', items })
+      const result = await listAllCampaignRevisions(db, { limit: url.searchParams.get('limit'), page: url.searchParams.get('page') })
+      return json({ ok: true, mode: 'd1', ...result })
     }
     if (!campaignId) return json({ ok: false, error: 'missing campaignId' }, 400)
     const items = await listCampaignRevisions(db, campaignId, url.searchParams.get('limit'))

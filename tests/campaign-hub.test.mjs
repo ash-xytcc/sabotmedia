@@ -64,14 +64,14 @@ test('campaign seeds the canonical A/I hub and exposes the requested sections', 
   assert.match(page, /campaign\.disclaimer/)
 })
 
-test('A/I status uses a fixed server-side Uptime Kuma proxy and fails gracefully', () => {
-  assert.match(monitor, /https:\/\/kuma\.accol\.li\/api\/status-page\/aimonitor/)
-  assert.match(monitor, /https:\/\/kuma\.accol\.li\/api\/status-page\/heartbeat\/aimonitor/)
+test('campaign status uses a server-side Uptime Kuma proxy and fails gracefully', () => {
+  assert.match(monitor, /new URL\(`\/api\/status-page\/\$\{pageSlug\}`/)
+  assert.match(monitor, /new URL\(`\/api\/status-page\/heartbeat\/\$\{pageSlug\}`/)
+  assert.match(monitor, /getCampaign\(db, requestedSlug\)/)
   assert.match(monitor, /aggregateStatus/)
   assert.match(monitor, /overall:\s*'unknown'/)
-  assert.doesNotMatch(monitor, /searchParams/)
   assert.match(page, /window\.setInterval\(refresh, 60000\)/)
-  assert.match(page, /This does not mean A\/I is down/)
+  assert.match(page, /This is not equivalent to an outage/)
   assert.doesNotMatch(page, /<iframe/)
 })
 

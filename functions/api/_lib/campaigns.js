@@ -1,5 +1,6 @@
-const CAMPAIGN_SCHEMA_VERSION = 3
+const CAMPAIGN_SCHEMA_VERSION = 4
 export const AI_CAMPAIGN_SLUG = 'autistici-inventati'
+export const AI_CAMPAIGN_ID = 'campaign-autistici-inventati'
 export const AI_CAMPAIGN_DEADLINE = '2026-09-25T04:01:00.000Z'
 export const CAMPAIGN_SECTION_KEYS = [
   'status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline',
@@ -8,7 +9,7 @@ export const CAMPAIGN_SECTION_KEYS = [
 
 export function defaultAiCampaign() {
   return normalizeCampaign({
-    id: 'campaign-autistici-inventati',
+    id: AI_CAMPAIGN_ID,
     slug: AI_CAMPAIGN_SLUG,
     status: 'published',
     campaignStatus: 'active',
@@ -63,6 +64,7 @@ export function defaultAiCampaign() {
       faq: 'The questions people keep asking', translations: 'Circulate it further',
       signatories: 'Who has signed', social: 'Follow the signal, not the algorithm',
     },
+    automation: { enabled: false, discoverNews: false, startAt: '2026-08-26T00:00:00.000Z', blueskyActors: [], mastodonAccounts: [], coverageFeeds: [], signatoriesUrl: '' },
     createdAt: '2026-08-28T21:30:00Z',
   })
 }
@@ -91,8 +93,12 @@ export async function ensureCampaignsTable(db) {
 
 export async function ensureAiCampaign(db) {
   await ensureCampaignsTable(db)
-  const existing = await getCampaign(db, AI_CAMPAIGN_SLUG)
+  const existingById = await getCampaign(db, AI_CAMPAIGN_ID)
+  const existing = existingById || await getCampaign(db, AI_CAMPAIGN_SLUG)
   if (existing) {
+    if (existing.id === AI_CAMPAIGN_ID && existing.slug !== AI_CAMPAIGN_SLUG) {
+      return upsertCampaign(db, { ...existing, slug: AI_CAMPAIGN_SLUG })
+    }
     const legacyDeadline = existing.deadline === '2026-09-25T23:59:59.000Z' || existing.deadline === '2026-09-25T23:59:59Z'
     if (legacyDeadline) return upsertCampaign(db, { ...existing, deadline: AI_CAMPAIGN_DEADLINE, deadlineTimeZone: 'America/New_York' })
     return existing
@@ -141,6 +147,16 @@ export async function upsertCampaign(db, campaign) {
   return normalized
 }
 
+export async function deleteCampaign(db, idOrSlug) {
+  await ensureCampaignsTable(db)
+  const existing = await getCampaign(db, idOrSlug)
+  if (!existing) return null
+  if (existing.id === AI_CAMPAIGN_ID || existing.slug === AI_CAMPAIGN_SLUG) throw new Error('the seeded A/I campaign cannot be deleted')
+  await db.prepare('DELETE FROM campaign_revisions WHERE campaign_id = ?').bind(existing.id).run()
+  await db.prepare('DELETE FROM campaigns WHERE id = ?').bind(existing.id).run()
+  return existing
+}
+
 export async function saveCampaignRevision(db, campaign, revisionNote = 'save') {
   await ensureCampaignsTable(db)
   const normalized = normalizeCampaign(campaign)
@@ -162,13 +178,17 @@ export async function listCampaignRevisions(db, campaignId, limit = 30) {
   return (Array.isArray(result?.results) ? result.results : []).map(revisionRow)
 }
 
-export async function listAllCampaignRevisions(db, limit = 5000) {
+export async function listAllCampaignRevisions(db, { limit = 500, page = 1 } = {}) {
   await ensureCampaignsTable(db)
+  const safeLimit = Math.max(1, Math.min(500, Number(limit) || 500))
+  const safePage = Math.max(1, Number(page) || 1)
+  const countRow = await db.prepare('SELECT COUNT(*) AS total FROM campaign_revisions').first()
+  const total = Number(countRow?.total || 0)
   const result = await db.prepare(`SELECT id, campaign_id, revision_json, revision_note, created_at
-    FROM campaign_revisions ORDER BY created_at DESC LIMIT ?`)
-    .bind(Math.max(1, Math.min(10000, Number(limit) || 5000)))
+    FROM campaign_revisions ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .bind(safeLimit, (safePage - 1) * safeLimit)
     .all()
-  return (Array.isArray(result?.results) ? result.results : []).map(revisionRow)
+  return { items: (Array.isArray(result?.results) ? result.results : []).map(revisionRow), total, page: safePage, pages: Math.max(1, Math.ceil(total / safeLimit)), limit: safeLimit }
 }
 
 export async function restoreCampaignRevision(db, revisionId) {
@@ -193,7 +213,7 @@ export function normalizeCampaign(input = {}) {
     schemaVersion: CAMPAIGN_SCHEMA_VERSION,
     slug,
     status: ['draft', 'published', 'archived'].includes(input.status) ? input.status : 'published',
-    campaignStatus: ['active', 'urgent', 'monitoring', 'archived'].includes(input.campaignStatus) ? input.campaignStatus : 'active',
+    campaignStatus: ['active', 'urgent', 'monitoring', 'completed', 'archived'].includes(input.campaignStatus) ? input.campaignStatus : 'active',
     kicker: String(input.kicker || ''),
     title,
     shortTitle: String(input.shortTitle || title),
@@ -222,8 +242,22 @@ export function normalizeCampaign(input = {}) {
     sectionOrder: normalizeSectionOrder(input.sectionOrder),
     hiddenSections: normalizeSectionKeys(input.hiddenSections),
     sectionTitles: normalizeSectionTitles(input.sectionTitles),
+    automation: normalizeAutomation(input.automation),
     createdAt: String(input.createdAt || now),
     updatedAt: String(input.updatedAt || now),
+  }
+}
+
+function normalizeAutomation(value) {
+  const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+  return {
+    enabled: Boolean(input.enabled),
+    discoverNews: Boolean(input.discoverNews),
+    startAt: normalizeDate(input.startAt),
+    blueskyActors: normalizeStrings(input.blueskyActors).slice(0, 12),
+    mastodonAccounts: normalizeStrings(input.mastodonAccounts).slice(0, 12),
+    coverageFeeds: normalizeStrings(input.coverageFeeds).slice(0, 20),
+    signatoriesUrl: String(input.signatoriesUrl || '').trim(),
   }
 }
 

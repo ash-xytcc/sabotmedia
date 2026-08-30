@@ -1,5 +1,6 @@
 import { permissionHasCapability, resolvePublicSitePermission } from './api/_lib/publicSiteAuth.js'
 import { getNativeEntry } from './api/_lib/nativePublicContent.js'
+import { getCampaign } from './api/_lib/campaigns.js'
 
 export const ADMIN_PREFIXES = [
   '/admin', '/wp-admin', '/printlab', '/audiolab', '/content', '/posts', '/add-new', '/post-new', '/native-bridge',
@@ -73,7 +74,7 @@ export async function onRequest(context) {
 
   if (PUBLIC_AUTH_API_PATHS.has(pathname)) return context.next()
   if (method === 'GET' && isPublicPostPath(pathname)) return renderPublicPost(context, url)
-  if (PAGE_METHODS.has(method) && isPublicCampaignPath(pathname)) return renderSpaShell(context, url)
+  if (PAGE_METHODS.has(method) && isPublicCampaignPath(pathname)) return renderPublicCampaign(context, url)
   if (!isAdminRoute && !isApiWrite) return context.next()
 
   const permission = await resolvePublicSitePermission(context)
@@ -150,6 +151,43 @@ async function renderSpaShell(context, url) {
   const headers = new Headers(response.headers)
   headers.set('cache-control', 'public, max-age=60, s-maxage=300')
   return new Response(context.request.method === 'HEAD' ? null : response.body, { status: 200, headers })
+}
+
+async function renderPublicCampaign(context, url) {
+  const slug = url.pathname.match(/^\/campaigns\/([^/]+)/)?.[1] || ''
+  const isCoverageArchive = /\/coverage\/?$/.test(url.pathname)
+  let campaign = null
+  if (slug && context.env?.BF_DB) {
+    try { campaign = await getCampaign(context.env.BF_DB, decodeURIComponent(slug)) } catch { /* serve a safe generic shell */ }
+  }
+  if (campaign?.status !== 'published') campaign = null
+  const campaignTitle = cleanText(campaign?.title || (slug ? titleFromSlug(slug) : 'Campaigns'))
+  const title = isCoverageArchive ? `${campaign?.shortTitle || campaignTitle} Coverage Archive` : campaignTitle
+  const description = truncate(cleanText(isCoverageArchive ? `Search reporting, analysis, and public statements connected to ${campaign?.shortTitle || campaignTitle}.` : campaign?.deck || campaign?.summary || (slug
+    ? 'Sabot Media campaign reporting, source records, live updates, and public action materials.'
+    : 'Sabot Media campaign hubs gathering reporting, sources, live updates, and public action materials.')), 240)
+  const canonicalPath = isCoverageArchive ? `/campaigns/${encodeURIComponent(slug)}/coverage` : slug ? `/campaigns/${encodeURIComponent(slug)}` : '/campaigns'
+  const canonical = `${url.origin}${canonicalPath}`
+  const image = absoluteUrl(campaign?.heroImage || '/sabot-logo.png', url.origin)
+  const response = await renderSpaShell(context, url)
+  if (!response.ok || context.request.method === 'HEAD' || !String(response.headers.get('content-type') || '').includes('text/html')) return response
+  let html = await response.text()
+  const pageTitle = title === 'Sabot Media' ? title : `${title} | Sabot Media`
+  const replacements = {
+    '<title>Sabot Media</title>': `<title>${escapeHtml(pageTitle)}</title>`,
+    '<meta name="description" content="Independent reporting, essays, comics, podcasts, zines, and project-based archive work from Sabot Media." />': `<meta name="description" content="${escapeHtml(description)}" />`,
+    '<meta property="og:title" content="Sabot Media" />': `<meta property="og:title" content="${escapeHtml(title)}" />`,
+    '<meta property="og:description" content="Independent reporting, essays, comics, podcasts, zines, and project-based archive work from Sabot Media." />': `<meta property="og:description" content="${escapeHtml(description)}" />`,
+    '<meta property="og:image" content="/sabot-logo.png" />': `<meta property="og:image" content="${escapeHtml(image)}" />`,
+    '<meta name="twitter:title" content="Sabot Media" />': `<meta name="twitter:title" content="${escapeHtml(title)}" />`,
+    '<meta name="twitter:description" content="Independent reporting, essays, comics, podcasts, zines, and project-based archive work from Sabot Media." />': `<meta name="twitter:description" content="${escapeHtml(description)}" />`,
+    '<meta name="twitter:image" content="/sabot-logo.png" />': `<meta name="twitter:image" content="${escapeHtml(image)}" />`,
+  }
+  for (const [from, to] of Object.entries(replacements)) html = html.replace(from, to)
+  html = html.replace('</head>', `    <meta property="og:url" content="${escapeHtml(canonical)}" />\n    <link rel="canonical" href="${escapeHtml(canonical)}" />\n  </head>`)
+  const headers = new Headers(response.headers)
+  headers.delete('content-length')
+  return new Response(html, { status: 200, headers })
 }
 
 async function renderPublicPost(context, url) {

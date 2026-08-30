@@ -2,10 +2,13 @@ import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 import { decorateAiCampaignForPublic, extractAiLetterSignatories, hasAiLetterSignatureSection } from './_lib/aiCampaignPublic.js'
+import { decorateCampaignAutomation } from './_lib/campaignAutomation.js'
 import { getNativeEntry, listNativeEntries } from './_lib/nativePublicContent.js'
 import { getAiCoverageArchiveSummary, refreshGdeltCoverageIfStale, upsertAiCoverageItems } from './_lib/aiCampaignCoverageArchive.js'
 import {
   AI_CAMPAIGN_SLUG,
+  AI_CAMPAIGN_ID,
+  deleteCampaign,
   ensureAiCampaign,
   getCampaign,
   listCampaigns,
@@ -45,23 +48,29 @@ export async function onRequestGet(context) {
       // into D1 by accident.
       let signatories
       let posts = []
-      if (!includeDrafts && item.slug === AI_CAMPAIGN_SLUG) {
+      if (!includeDrafts) {
         try {
-          const [letter, publishedPosts] = await Promise.all([
-            getNativeEntry(db, 'open-letter-ai'),
-            listNativeEntries(db, { status: 'published' }),
-          ])
-          const letterBody = letter?.bodyHtml || letter?.body || ''
-          if (hasAiLetterSignatureSection(letterBody)) {
-            const extracted = extractAiLetterSignatories(letterBody)
-            if (extracted.length) signatories = extracted
+          if (item.slug === AI_CAMPAIGN_SLUG) {
+            const [letter, publishedPosts] = await Promise.all([
+              getNativeEntry(db, 'open-letter-ai'),
+              listNativeEntries(db, { status: 'published' }),
+            ])
+            const letterBody = letter?.bodyHtml || letter?.body || ''
+            if (hasAiLetterSignatureSection(letterBody)) {
+              const extracted = extractAiLetterSignatories(letterBody)
+              if (extracted.length) signatories = extracted
+            }
+            posts = publishedPosts
+          } else {
+            posts = await listNativeEntries(db, { status: 'published' })
           }
-          posts = publishedPosts
         } catch { /* the bundled public snapshot remains available */ }
       }
-      const output = includeDrafts || item.slug !== AI_CAMPAIGN_SLUG
+      const output = includeDrafts
         ? item
-        : await decorateAiCampaignForPublic(item, context.request.url, { signatories, posts })
+        : item.slug === AI_CAMPAIGN_SLUG
+          ? await decorateAiCampaignForPublic(item, context.request.url, { signatories, posts })
+          : await decorateCampaignAutomation(item, context.request.url, { posts })
       if (!includeDrafts && item.slug === AI_CAMPAIGN_SLUG) {
         await upsertAiCoverageItems(db, output.coverage || [])
         const archive = await getAiCoverageArchiveSummary(db, AI_CAMPAIGN_SLUG)
@@ -82,6 +91,26 @@ export async function onRequestGet(context) {
 
 export async function onRequestPost(context) { return handleWrite(context) }
 export async function onRequestPut(context) { return handleWrite(context) }
+export async function onRequestDelete(context) {
+  try {
+    const permission = await resolvePublicSitePermission(context)
+    if (!permission.canEdit) return json({ ok: false, error: permission.reason || 'authentication required', canEdit: false }, 403)
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('campaign deletes')
+    const body = await context.request.json().catch(() => ({}))
+    const id = String(body?.id || body?.slug || '')
+    if (!id) return json({ ok: false, error: 'missing campaign id' }, 400)
+    const removed = await deleteCampaign(db, id)
+    if (!removed) return json({ ok: false, error: 'campaign not found' }, 404)
+    await writeAuditLog(db, {
+      action: 'campaigns.delete', entityType: 'campaign', entityId: removed.id,
+      actor: inferActorFromRequest(context.request), detail: { slug: removed.slug, title: removed.title },
+    })
+    return json({ ok: true, mode: 'd1', removed: { id: removed.id, slug: removed.slug } })
+  } catch (error) {
+    return json({ ok: false, error: String(error?.message || error) }, 400)
+  }
+}
 
 async function handleWrite(context) {
   try {
@@ -97,8 +126,16 @@ async function handleWrite(context) {
     const item = normalizeCampaign(incoming)
 
     if (!item.title || !item.slug) return json({ ok: false, error: 'missing campaign title or slug' }, 400)
+    if (incoming.deadline && !Number.isFinite(new Date(incoming.deadline).getTime())) return json({ ok: false, error: 'invalid campaign deadline' }, 400)
 
     const existing = await getCampaign(db, item.id)
+    const protectedAiCampaign = existing?.id === AI_CAMPAIGN_ID || existing?.slug === AI_CAMPAIGN_SLUG || item.id === AI_CAMPAIGN_ID
+    if (protectedAiCampaign && item.slug !== AI_CAMPAIGN_SLUG) {
+      return json({ ok: false, error: 'the seeded A/I campaign URL slug cannot be changed' }, 400)
+    }
+    if (!protectedAiCampaign && item.slug === AI_CAMPAIGN_SLUG) {
+      return json({ ok: false, error: 'the A/I campaign URL slug is reserved' }, 400)
+    }
     if (existing) await saveCampaignRevision(db, existing, 'before:save')
     const saved = await upsertCampaign(db, item)
     await saveCampaignRevision(db, saved, String(body?.revisionNote || 'save'))
