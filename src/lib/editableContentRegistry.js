@@ -333,8 +333,8 @@ submit@sabot.media
 Tips:
 tips@sabot.media
 
-Security:
-security@sabot.media
+Encrypted or sensitive contact:
+info@sabot.media
 
 Support:
 support@sabot.media
@@ -360,16 +360,16 @@ If your message is sensitive, use OpenPGP.
 Use this key to encrypt email to Sabot Media.
 
 Identity:
-Sabot Media <security@sabot.media>
+Sabot Media <info@sabot.media>
 
 Fingerprint:
-55D4 995F 3C93 E0B4 94B4 6D10 8D0E 0AF9 4E20 A4B1
+3166 FF41 1CC8 71E7 2D15 344C AC26 8457 855E 57BA
 
 Key ID:
-8D0E0AF94E20A4B1
+AC268457855E57BA
 
 Download our public key:
-https://sabot.media/pgp.asc
+https://sabot.media/keys/info-sabot-media.asc
 
 Before sending sensitive information, verify that the fingerprint above matches the key you imported.
 
@@ -421,7 +421,7 @@ https://proton.me/mail
 
 2. Download our public key.
 
-https://sabot.media/pgp.asc
+https://sabot.media/keys/info-sabot-media.asc
 
 3. Import the key into your OpenPGP tool.
 
@@ -429,15 +429,11 @@ https://sabot.media/pgp.asc
 
 Make sure the fingerprint shown by your tool matches:
 
-55D4 995F 3C93 E0B4 94B4 6D10 8D0E 0AF9 4E20 A4B1
+3166 FF41 1CC8 71E7 2D15 344C AC26 8457 855E 57BA
 
 5. Write your message to:
 
-security@sabot.media
-
-or
-
-tips@sabot.media
+info@sabot.media
 
 6. Enable encryption before sending.
 
@@ -547,10 +543,10 @@ You can write something like:
 "I have a sensitive tip and need help choosing a safer way to send it."
 
 Use:
-security@sabot.media`,
+info@sabot.media`,
     },
     actions: [
-      { id: 'pgp', labelField: 'info.security.actions.pgp.label', hrefField: 'info.security.actions.pgp.href', defaultLabel: 'Download PGP key', defaultHref: '/pgp.asc' },
+      { id: 'pgp', labelField: 'info.security.actions.pgp.label', hrefField: 'info.security.actions.pgp.href', defaultLabel: 'Download PGP key', defaultHref: '/keys/info-sabot-media.asc' },
       { id: 'contact', labelField: 'info.security.actions.contact.label', hrefField: 'info.security.actions.contact.href', defaultLabel: 'Contact', defaultHref: '/contact' },
     ],
   },

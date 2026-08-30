@@ -9,7 +9,6 @@ const CONTACT_CHANNELS = [
   { label: 'News tips, documents, and leads', address: 'tips@sabot.media' },
   { label: 'Submissions and pitches', address: 'submit@sabot.media' },
   { label: 'Press and interview requests', address: 'press@sabot.media' },
-  { label: 'Security questions', address: 'security@sabot.media' },
   { label: 'Support and material help', address: 'support@sabot.media' },
 ]
 

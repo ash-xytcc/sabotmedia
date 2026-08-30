@@ -1,5 +1,5 @@
 const CURRENT_INFO_COPY_VERSION = 'v2'
-const INFO_COPY_VERSIONS = { contact: 'v3' }
+const INFO_COPY_VERSIONS = { contact: 'v3', security: 'v2' }
 
 export const publicInfoCopy = {
   about: {
@@ -89,7 +89,7 @@ export function getPublicInfoCopy(page) {
 }
 
 export function getPublicInfoField(page, part, fallbackField = '') {
-  if (!publicInfoCopy[page]) return fallbackField
+  if (!publicInfoCopy[page] && !INFO_COPY_VERSIONS[page]) return fallbackField
   const version = INFO_COPY_VERSIONS[page] || CURRENT_INFO_COPY_VERSION
   return `info.${page}.${part}.${version}`
 }
