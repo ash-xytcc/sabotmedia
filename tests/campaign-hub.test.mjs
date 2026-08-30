@@ -172,6 +172,19 @@ test('campaign follow-up keeps the hero contained and places social last', () =>
   assert.ok(page.indexOf('href="#reporting">Read the reporting') < page.indexOf('href="#letters">Read the letters'))
 })
 
+test('campaign asks readers to understand the case before taking action', () => {
+  const reportingSection = page.indexOf('id="reporting"')
+  const lettersSection = page.indexOf('id="letters"')
+  const actionSection = page.indexOf('id="act"')
+  assert.ok(reportingSection > 0)
+  assert.ok(lettersSection > reportingSection)
+  assert.ok(actionSection > lettersSection)
+
+  const nav = page.slice(page.indexOf('aria-label="Campaign sections"'), page.indexOf('</nav>'))
+  assert.ok(nav.indexOf('href="#reporting"') < nav.indexOf('href="#letters"'))
+  assert.ok(nav.indexOf('href="#letters"') < nav.indexOf('href="#act"'))
+})
+
 test('individual letter PDF remains bundled in letters but not primary sources', () => {
   assert.ok(fs.existsSync(new URL('../public/campaigns/autistici-inventati/resources/individual-letter-defend-autistici-inventati.pdf', import.meta.url)))
   assert.match(socialServer, /resource-individual-letter-pdf/)

@@ -148,9 +148,9 @@ export function CampaignPage() {
       <nav className="campaign-local-nav" aria-label="Campaign sections">
         <div className="campaign-shell">
           <a href="#status">Status</a>
-          <a href="#act">Act</a>
           <a href="#reporting">Reporting</a>
           <a href="#letters">Letters</a>
+          <a href="#act">Act</a>
           <a href="#updates">Updates</a>
           <a href="#graphics">Graphics</a>
           <a href="#signatories">Signers</a>
@@ -192,22 +192,6 @@ export function CampaignPage() {
         </div>
       </section>
 
-      <section className="campaign-section campaign-section--act" id="act">
-        <div className="campaign-shell">
-          <SectionHeading eyebrow="FIVE MINUTES IS ENOUGH TO START" title="Do something useful" />
-          <div className="campaign-action-grid">
-            {(campaign.actions || []).map((action, index) => (
-              <article className="campaign-action-card" key={action.id || index}>
-                <span>{String(index + 1).padStart(2, '0')}</span>
-                <h3>{action.title}</h3>
-                <p>{action.body}</p>
-                <SmartLink href={action.href || '#'}>{action.label || 'Open'}</SmartLink>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="campaign-section" id="reporting">
         <div className="campaign-shell">
           <SectionHeading eyebrow="REPORTING + CONTEXT" title="Read before you repeat" description="The campaign is anchored in reporting, not vibes. These are the Sabot pieces currently connected to the A/I campaign." />
@@ -221,6 +205,22 @@ export function CampaignPage() {
           <SectionHeading eyebrow="LETTERS" title="Read it. Sign it. Send it." description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
           <PieceGrid pieces={letterPieces} empty="Letter downloads are temporarily unavailable. The reporting section remains available while they are restored." />
           <ResourceStrip resources={(campaign.resources || []).filter((item) => /letter|template/i.test(`${item.type} ${item.title}`))} />
+        </div>
+      </section>
+
+      <section className="campaign-section campaign-section--act" id="act">
+        <div className="campaign-shell">
+          <SectionHeading eyebrow="NOW THAT YOU KNOW" title="Do something useful" description="Start with the reporting and letters above, then choose the action you can take right now." />
+          <div className="campaign-action-grid">
+            {(campaign.actions || []).map((action, index) => (
+              <article className="campaign-action-card" key={action.id || index}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <h3>{action.title}</h3>
+                <p>{action.body}</p>
+                <SmartLink href={action.href || '#'}>{action.label || 'Open'}</SmartLink>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
