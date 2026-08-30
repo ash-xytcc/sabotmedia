@@ -1,6 +1,6 @@
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 import { buildLiveFeedBundle } from './_lib/feedRuntime.js'
-import { AI_CAMPAIGN_SLUG, ensureAiCampaign } from './_lib/campaigns.js'
+import { ensureAiCampaign, listCampaigns } from './_lib/campaigns.js'
 import { getPodcastFeedItems } from '../rss/podcast.xml.js'
 
 export async function onRequestGet(context) {
@@ -8,15 +8,16 @@ export async function onRequestGet(context) {
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('live feed manifest')
 
-    const [runtime, podcastItems, campaign] = await Promise.all([
+    await ensureAiCampaign(db)
+    const [runtime, podcastItems, campaigns] = await Promise.all([
       buildLiveFeedBundle(db),
       getPodcastFeedItems(db),
-      ensureAiCampaign(db),
+      listCampaigns(db),
     ])
     const files = [...new Set([
       ...Object.keys(runtime.bundle || {}),
       'podcasts/all.xml',
-      ...(campaign?.status === 'published' ? [`campaigns/${AI_CAMPAIGN_SLUG}.xml`] : []),
+      ...campaigns.map((campaign) => `campaigns/${campaign.slug}.xml`),
     ])].sort()
 
     return json({
@@ -27,7 +28,7 @@ export async function onRequestGet(context) {
       terms: runtime.terms || {},
       itemCount: runtime.itemCount,
       podcastItemCount: podcastItems.length,
-      campaignFeeds: campaign?.status === 'published' ? [{ slug: AI_CAMPAIGN_SLUG, title: campaign.shortTitle || campaign.title, itemCount: campaign.updates.length }] : [],
+      campaignFeeds: campaigns.map((campaign) => ({ slug: campaign.slug, title: campaign.shortTitle || campaign.title, itemCount: campaign.updates.length })),
       settingsUpdatedAt: runtime.updatedAt,
     })
   } catch (error) {

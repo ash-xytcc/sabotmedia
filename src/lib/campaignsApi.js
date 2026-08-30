@@ -15,6 +15,20 @@ export async function loadCampaign(slug = 'autistici-inventati', { includeDrafts
   return data.item
 }
 
+export async function loadCampaigns({ includeDrafts = false } = {}) {
+  const params = new URLSearchParams()
+  if (includeDrafts) params.set('includeDrafts', '1')
+  const query = params.toString()
+  const response = await fetch(`/api/campaigns${query ? `?${query}` : ''}`, {
+    method: 'GET',
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+  })
+  const data = await safeJson(response)
+  if (!response.ok || !data?.ok || !Array.isArray(data?.items)) throw new Error(data?.error || `campaign list failed: ${response.status}`)
+  return data.items
+}
+
 export async function saveCampaign(item) {
   const response = await fetch('/api/campaigns', {
     method: 'POST',

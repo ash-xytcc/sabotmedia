@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { loadCampaign, loadCampaignMonitor } from '../lib/campaignsApi'
 import { loadPublishedNativePieces } from '../lib/nativePublicFeed'
 import { selectHubCoverage } from '../lib/campaignCoverage'
 
-const CAMPAIGN_SLUG = 'autistici-inventati'
+const AI_CAMPAIGN_SLUG = 'autistici-inventati'
 const ITALY_TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
 const ITALY_DATE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 const ITALY_ZONE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', timeZoneName: 'short' })
 
 export function CampaignPage() {
+  const { slug } = useParams()
+  const campaignSlug = slug || AI_CAMPAIGN_SLUG
+  const isAiCampaign = campaignSlug === AI_CAMPAIGN_SLUG
   const [campaign, setCampaign] = useState(null)
   const [pieces, setPieces] = useState([])
   const [monitor, setMonitor] = useState({ state: 'loading', data: null })
@@ -25,7 +28,7 @@ export function CampaignPage() {
     async function refreshDashboard() {
       try {
         const [loadedCampaign, loadedPieces] = await Promise.all([
-          loadCampaign(CAMPAIGN_SLUG),
+          loadCampaign(campaignSlug),
           loadPublishedNativePieces().catch(() => []),
         ])
         if (cancelled) return
@@ -40,7 +43,7 @@ export function CampaignPage() {
     refreshDashboard()
     const timer = window.setInterval(refreshDashboard, 300000)
     return () => { cancelled = true; window.clearInterval(timer) }
-  }, [])
+  }, [campaignSlug])
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 60000)
@@ -48,6 +51,10 @@ export function CampaignPage() {
   }, [])
 
   useEffect(() => {
+    if (!isAiCampaign) {
+      setMonitor({ state: 'unavailable', data: null })
+      return undefined
+    }
     let cancelled = false
     async function refresh() {
       try {
@@ -60,7 +67,7 @@ export function CampaignPage() {
     refresh()
     const timer = window.setInterval(refresh, 60000)
     return () => { cancelled = true; window.clearInterval(timer) }
-  }, [])
+  }, [isAiCampaign])
 
   const campaignPieces = useMemo(() => findCampaignPieces(pieces, campaign), [pieces, campaign])
   const letterPieces = campaignPieces.filter((piece) => /letter/i.test(String(piece.title || '')))
@@ -88,7 +95,7 @@ export function CampaignPage() {
     const url = window.location.href.split('#')[0]
     if (navigator.share) {
       try {
-        await navigator.share({ title: campaign?.title || 'Communications Infrastructure Is Not Terrorism', text: campaign?.shortTitle || 'Defend Autistici/Inventati', url })
+        await navigator.share({ title: campaign?.title || 'Campaign', text: campaign?.shortTitle || campaign?.deck || 'Campaign hub', url })
         return
       } catch { /* user cancelled or sharing is unavailable */ }
     }
@@ -140,7 +147,7 @@ export function CampaignPage() {
               <a className="campaign-button campaign-button--dark" href="#letters">Read the letters</a>
               <button className="campaign-button campaign-button--ghost" type="button" onClick={shareCampaign}>Share campaign</button>
             </div>
-            <p className="campaign-hero__partners">Independent campaign by {campaign.partners.join(' × ')}</p>
+            {campaign.partners?.length ? <p className="campaign-hero__partners">Independent campaign by {campaign.partners.join(' × ')}</p> : null}
           </div>
 
         </div>
@@ -175,14 +182,14 @@ export function CampaignPage() {
       <section className="campaign-section campaign-section--status" id="status">
         <div className="campaign-shell">
           <SectionHeading eyebrow="LIVE CAMPAIGN DASHBOARD" title="What is happening now" />
-          <ItalyClock />
+          {isAiCampaign ? <ItalyClock /> : null}
           <div className="campaign-status-grid">
-            <article className="campaign-metric campaign-metric--deadline">
-              <span className="campaign-metric__label">SEPT. 25</span>
+            {Number.isFinite(deadline) ? <article className="campaign-metric campaign-metric--deadline">
+              <span className="campaign-metric__label">{formatDeadlineLabel(campaign.deadline, campaign.deadlineTimeZone)}</span>
               <strong>{isPastDeadline ? 'Deadline passed' : countdown?.primary || 'Tracking deadline'}</strong>
               <p>{isPastDeadline ? 'This page remains the permanent campaign record. Updates continue below.' : countdown?.secondary || 'Campaign deadline'}</p>
-            </article>
-            <MonitorCard monitor={monitor} sourceUrl={campaign.monitorUrl} label={campaign.monitorLabel} />
+            </article> : null}
+            {isAiCampaign && campaign.monitorUrl ? <MonitorCard monitor={monitor} sourceUrl={campaign.monitorUrl} label={campaign.monitorLabel} /> : null}
             <article className="campaign-metric">
               <span className="campaign-metric__label">CAMPAIGN FEED</span>
               <strong>Follow every update</strong>
@@ -195,7 +202,7 @@ export function CampaignPage() {
 
       <section className="campaign-section" id="reporting">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="REPORTING + CONTEXT" title="Read before you repeat" description="The campaign is anchored in reporting, not vibes. These are the Sabot pieces currently connected to the A/I campaign." />
+          <SectionHeading eyebrow="REPORTING + CONTEXT" title="Read before you repeat" description="The campaign is anchored in reporting and source material. These are the Sabot pieces connected to this campaign." />
           <PieceGrid pieces={reportingPieces} empty="Campaign reporting will appear here as relevant published posts are detected." />
           <ResourceStrip resources={(campaign.resources || []).filter((item) => !/letter|template/i.test(`${item.type} ${item.title}`))} />
         </div>
@@ -268,19 +275,19 @@ export function CampaignPage() {
 
       <section className="campaign-section" id="coverage">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" description="Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available." />
-          <CampaignTrackerStatus campaign={campaign} />
+          <SectionHeading eyebrow="PRESS + RESPONSE" title="Coverage and statements" description={isAiCampaign ? 'Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available.' : 'Reporting, statements, and media coverage connected to this campaign.'} />
+          {isAiCampaign ? <CampaignTrackerStatus campaign={campaign} /> : null}
           {coverage.length ? <LinkList items={coverage.map((item) => ({ id: item.id, eyebrow: [item.automated ? 'LIVE COVERAGE' : '', item.outlet, item.language?.toUpperCase(), formatDate(item.date)].filter(Boolean).join(' / '), title: item.title, translation: item.translatedTitle, languageCode: item.languageCode, body: item.summary, url: item.url }))} /> : <EmptyState>No additional campaign coverage is available yet.</EmptyState>}
-          <div className="campaign-coverage-archive-link">
+          {isAiCampaign ? <div className="campaign-coverage-archive-link">
             <Link className="campaign-button campaign-button--dark" to="/campaigns/autistici-inventati/coverage">Browse the full coverage archive{campaign.coverageArchiveCount ? ` (${campaign.coverageArchiveCount})` : ''} →</Link>
             <p>The hub keeps the strongest current items in view. The archive preserves the wider record with search, outlet and language filters.</p>
-          </div>
+          </div> : null}
         </div>
       </section>
 
       <section className="campaign-section campaign-section--sources" id="sources">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRIMARY SOURCES" title="Check the receipts" description="Government material, A/I statements, legal analysis, historical documents, and other primary sources belong here so readers and journalists can verify the campaign without reverse-engineering footnotes." />
+          <SectionHeading eyebrow="PRIMARY SOURCES" title="Check the receipts" description={isAiCampaign ? 'Government material, A/I statements, legal analysis, historical documents, and other primary sources are gathered here for direct verification.' : 'Primary documents and source material are gathered here for direct verification.'} />
           {campaign.sources?.length ? <LinkList items={campaign.sources.map((item) => ({ id: item.id, eyebrow: item.publisher, title: item.title, body: item.note, url: item.url }))} /> : <p className="campaign-reader-note">The reporting above retains its article-level citations and primary-source links.</p>}
         </div>
       </section>
@@ -304,13 +311,13 @@ export function CampaignPage() {
 
       {signatories.length ? <SignatoryCarousel signatories={signatories} /> : null}
 
-      <SocialSection campaign={campaign} social={social} copyState={copyState} copyCampaignLink={copyCampaignLink} />
+      <SocialSection campaign={campaign} social={social} copyState={copyState} copyCampaignLink={copyCampaignLink} isAiCampaign={isAiCampaign} />
 
       <section className="campaign-disclaimer">
         <div className="campaign-shell">
           <strong>INDEPENDENT CAMPAIGN</strong>
           <p>{campaign.disclaimer}</p>
-          <div><a href="#top">Back to top ↑</a><a href={`/feeds/campaigns/${campaign.slug}.xml`}>Campaign RSS ↗</a>{campaign.monitorUrl ? <a href={campaign.monitorUrl} target="_blank" rel="noreferrer">Original A/I monitor ↗</a> : null}</div>
+          <div><a href="#top">Back to top ↑</a><a href={`/feeds/campaigns/${campaign.slug}.xml`}>Campaign RSS ↗</a>{campaign.monitorUrl ? <a href={campaign.monitorUrl} target="_blank" rel="noreferrer">Original monitor ↗</a> : null}</div>
         </div>
       </section>
 
@@ -350,10 +357,10 @@ function SignatoryCarousel({ signatories }) {
   )
 }
 
-function SocialSection({ campaign, social, copyState, copyCampaignLink }) {
+function SocialSection({ campaign, social, copyState, copyCampaignLink, isAiCampaign }) {
   return <section className="campaign-section campaign-section--social" id="social">
     <div className="campaign-shell">
-      <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description="Campaign posts from A/I and Sabot Media. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual." />
+      <SectionHeading eyebrow="SOCIAL CIRCULATION" title="Follow the signal, not the algorithm" description={isAiCampaign ? 'Campaign posts from A/I and Sabot Media. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual.' : 'Public posts and dispatches connected to this campaign.'} />
       <SocialSources sources={campaign.socialSources || []} />
       <div className="campaign-share-row">
         <a className="campaign-button campaign-button--light" href={`https://bsky.app/intent/compose?text=${encodeURIComponent(`${campaign.shortTitle}\n\n${window.location.href.split('#')[0]}`)}`} target="_blank" rel="noreferrer">Post to Bluesky ↗</a>
@@ -480,12 +487,15 @@ function CopyButton({ value, label }) {
 
 function findCampaignPieces(pieces, campaign) {
   if (!Array.isArray(pieces) || !campaign) return []
+  const campaignSlug = String(campaign.slug || '').toLowerCase()
+  const isAiCampaign = campaignSlug === AI_CAMPAIGN_SLUG
   const exactSlugs = new Set(['the-us-designated-a-25-year-old-volunteer-communications-collective-a-terrorist-organization', 'communications-infrastructure-is-not-terrorism', 'open-letter-defend-autistici-inventati', 'open-letter-ai', 'individual-letter-defend-autistici-inventati', 'the-server-called-paranoia'])
   return pieces.filter((piece) => {
     const explicit = [...(piece.campaigns || []), ...(piece.tags || []), ...(piece.collections || []), ...(piece.projects || []), piece.primaryProject]
       .map((item) => String(item || '').toLowerCase())
-      .some((item) => item === CAMPAIGN_SLUG || item.includes('autistici') || item.includes('inventati') || item.includes('a/i campaign'))
-    if (explicit || exactSlugs.has(String(piece.slug || '').toLowerCase())) return true
+      .some((item) => item === campaignSlug || (isAiCampaign && (item.includes('autistici') || item.includes('inventati') || item.includes('a/i campaign'))))
+    if (explicit || (isAiCampaign && exactSlugs.has(String(piece.slug || '').toLowerCase()))) return true
+    if (!isAiCampaign) return false
     const title = String(piece.title || '').toLowerCase()
     return /autistici(?:\s*\/\s*|\s+)?inventati/.test(title) || (/communications infrastructure/.test(title) && /terrorism|sanction|designation/.test(title))
   }).sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0) - new Date(a.publishedAt || a.updatedAt || 0))
@@ -524,6 +534,16 @@ function formatCountdown(ms) {
   if (days > 0) return { primary: `${days} day${days === 1 ? '' : 's'} remaining`, secondary: `${hours} hours beyond the full days` }
   const minutes = Math.max(0, Math.floor((ms % 3600000) / 60000))
   return { primary: `${hours}h ${minutes}m remaining`, secondary: 'The deadline is close' }
+}
+
+function formatDeadlineLabel(value, timeZone = 'UTC') {
+  const date = new Date(value || '')
+  if (!Number.isFinite(date.getTime())) return 'DEADLINE'
+  try {
+    return new Intl.DateTimeFormat('en-US', { timeZone, month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(date).toUpperCase()
+  } catch {
+    return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(date).toUpperCase()
+  }
 }
 
 function statusText(status) {

@@ -258,6 +258,7 @@ export default function App() {
               <Route path="/campaigns" element={<Navigate to={publicRoutes.aiCampaign} replace />} />
               <Route path={publicRoutes.aiCampaign} element={<CampaignPage />} />
               <Route path={publicRoutes.aiCampaignCoverage} element={<CampaignCoverageArchivePage />} />
+              <Route path={publicRoutes.campaign} element={<CampaignPage />} />
               <Route path={publicRoutes.feeds} element={<PublicFeedsPage />} />
               <Route path={publicRoutes.gallery} element={<GalleryArchivePage />} />
 
