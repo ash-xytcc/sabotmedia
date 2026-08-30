@@ -1,71 +1,25 @@
+import { fetchBoundedText, validatePublicRemoteUrl } from './safeRemoteFeed.js'
+
 const MAX_FEED_BYTES = 5 * 1024 * 1024
 const MAX_REDIRECTS = 5
 const MAX_EPISODES = 1000
 
 export async function fetchPodcastFeed(sourceUrl, fetcher = fetch) {
-  let current = validatePodcastFeedUrl(sourceUrl)
-
-  for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount += 1) {
-    const response = await fetcher(current, {
-      method: 'GET',
-      redirect: 'manual',
-      headers: {
-        accept: 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.1',
-        'user-agent': 'SabotPress Podcast RSS Importer/1.0',
-      },
-    })
-
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get('location')
-      if (!location) throw new Error(`feed redirect ${response.status} did not include a Location header`)
-      current = validatePodcastFeedUrl(new URL(location, current).toString())
-      continue
-    }
-
-    if (!response.ok) throw new Error(`feed request failed: ${response.status}`)
-
-    const contentLength = Number(response.headers.get('content-length') || 0)
-    if (Number.isFinite(contentLength) && contentLength > MAX_FEED_BYTES) {
-      throw new Error(`feed is too large; maximum supported size is ${MAX_FEED_BYTES} bytes`)
-    }
-
-    const bytes = new Uint8Array(await response.arrayBuffer())
-    if (bytes.byteLength > MAX_FEED_BYTES) {
-      throw new Error(`feed is too large; maximum supported size is ${MAX_FEED_BYTES} bytes`)
-    }
-
-    const xml = new TextDecoder().decode(bytes)
-    return {
-      sourceUrl: validatePodcastFeedUrl(sourceUrl),
-      resolvedUrl: current,
-      xml,
-      parsed: parsePodcastRss(xml, current),
-    }
-  }
-
-  throw new Error(`feed exceeded ${MAX_REDIRECTS} redirects`)
+  const source = validatePodcastFeedUrl(sourceUrl)
+  const { text: xml, resolvedUrl } = await fetchBoundedText(source, {
+    fetcher, allowHttp: true, maxBytes: MAX_FEED_BYTES, maxRedirects: MAX_REDIRECTS,
+    accept: 'application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.1',
+    userAgent: 'SabotPress Podcast RSS Importer/1.0',
+  })
+  return { sourceUrl: source, resolvedUrl, xml, parsed: parsePodcastRss(xml, resolvedUrl) }
 }
 
 export function validatePodcastFeedUrl(value) {
-  let url
-  try {
-    url = new URL(String(value || '').trim())
-  } catch {
-    throw new Error('enter a valid http or https RSS feed URL')
+  try { return validatePublicRemoteUrl(value, { allowHttp: true }).toString() }
+  catch (error) {
+    const message = String(error?.message || error).replace(/^feed URL/, 'RSS feed URL')
+    throw new Error(message === 'enter a valid feed URL' ? 'enter a valid http or https RSS feed URL' : message)
   }
-
-  if (!['http:', 'https:'].includes(url.protocol)) throw new Error('RSS feed URL must use http or https')
-  if (url.username || url.password) throw new Error('RSS feed URL cannot contain embedded credentials')
-
-  const hostname = String(url.hostname || '').toLowerCase().replace(/^\[|\]$/g, '')
-  if (!hostname) throw new Error('RSS feed URL must include a hostname')
-  if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.endsWith('.local') || hostname.endsWith('.internal')) {
-    throw new Error('RSS feed URL must point to a public host')
-  }
-  if (isPrivateIpv4(hostname) || isPrivateIpv6(hostname)) throw new Error('RSS feed URL cannot point to a private network address')
-
-  url.hash = ''
-  return url.toString()
 }
 
 export function parsePodcastRss(xmlText, resolvedUrl = '') {
@@ -250,20 +204,6 @@ function cleanPublicUrl(value) {
 
 function unique(values = []) {
   return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))]
-}
-
-function isPrivateIpv4(hostname) {
-  const match = hostname.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
-  if (!match) return false
-  const parts = match.slice(1).map(Number)
-  if (parts.some((part) => part < 0 || part > 255)) return true
-  const [a, b] = parts
-  return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)
-}
-
-function isPrivateIpv6(hostname) {
-  const value = String(hostname || '').toLowerCase()
-  return value === '::1' || value === '::' || value.startsWith('fc') || value.startsWith('fd') || value.startsWith('fe8') || value.startsWith('fe9') || value.startsWith('fea') || value.startsWith('feb')
 }
 
 function escapeRegExp(value) {
