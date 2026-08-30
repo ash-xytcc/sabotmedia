@@ -298,9 +298,10 @@ test('coverage and live social disclose language and exact followed accounts', (
   assert.match(model, /signatories: normalizeRows/)
 })
 
-test('campaign copy is editorial and names wrap only at word boundaries', () => {
+test('campaign copy is editorial and live tokens wrap only when containment requires it', () => {
   assert.doesNotMatch(page, /queried by the server|read from the published open letter|third-party embed scripts|AUTO-DISCOVERED|Automatically discovered/)
-  assert.doesNotMatch(polish, /overflow-wrap:\s*anywhere/)
+  assert.match(polish, /Override legacy mobile rules[\s\S]*overflow-wrap:\s*normal[\s\S]*word-break:\s*normal/)
+  assert.match(polish, /Live sources can contain handles[\s\S]*\.campaign-page \.campaign-social-post p[\s\S]*overflow-wrap:\s*anywhere[\s\S]*word-break:\s*normal/)
   assert.match(polish, /\.campaign-page \.campaign-signatory h3[\s\S]*overflow-wrap:\s*normal[\s\S]*word-break:\s*normal[\s\S]*hyphens:\s*none/)
   assert.match(polish, /\.campaign-page \.campaign-signatory h3\.is-long-token/)
   assert.match(polish, /Override legacy mobile rules/)

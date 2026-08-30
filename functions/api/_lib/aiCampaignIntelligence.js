@@ -1,4 +1,5 @@
 import { XMLParser } from 'fast-xml-parser'
+import { fetchBoundedText } from './safeRemoteFeed.js'
 
 const CAMPAIGN_START_MS = Date.parse('2026-08-26T00:00:00Z')
 const CACHE_TTL_SECONDS = 600
@@ -121,9 +122,7 @@ export function mergeCampaignUpdates(...groups) {
 }
 
 async function fetchOfficialAiDispatches(fetcher) {
-  const response = await fetchWithTimeout(OFFICIAL_AI_FEED, fetcher, 'application/rss+xml, application/xml, text/xml')
-  if (!response.ok) throw new Error(`A/I dispatch feed returned ${response.status}`)
-  const xml = await response.text()
+  const { text: xml } = await fetchBoundedText(OFFICIAL_AI_FEED, feedOptions(fetcher))
   const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
   const parsed = parser.parse(xml)
   const channel = parsed?.rss?.channel || parsed?.feed || {}
@@ -166,18 +165,17 @@ async function fetchBingNewsCoverage(fetcher) {
   url.searchParams.set('q', '"Autistici/Inventati" OR "Autistici Inventati" OR "NoBlogs.org"')
   url.searchParams.set('qft', 'sortbydate="1"')
   url.searchParams.set('format', 'RSS')
-  const response = await fetchWithTimeout(url, fetcher, 'application/rss+xml, application/xml, text/xml')
-  if (!response.ok) throw new Error(`Bing News RSS returned ${response.status}`)
-  const xml = await response.text()
+  const { text: xml } = await fetchBoundedText(url, feedOptions(fetcher))
   const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
   const parsed = parser.parse(xml)
   const rawItems = asArray(parsed?.rss?.channel?.item)
   const items = rawItems.map((item) => {
     const fullTitle = cleanText(item.title)
-    const separator = fullTitle.lastIndexOf(' - ')
+    const explicitSource = cleanText(item['News:Source'] || item.source || '')
+    const separator = explicitSource ? -1 : fullTitle.lastIndexOf(' - ')
     return {
       title: separator > 0 ? fullTitle.slice(0, separator) : fullTitle,
-      outlet: cleanText(item['News:Source'] || item.source || (separator > 0 ? fullTitle.slice(separator + 3) : 'Bing News')),
+      outlet: explicitSource || (separator > 0 ? fullTitle.slice(separator + 3) : 'Bing News'),
       description: cleanText(item.description || ''),
       url: unwrapBingUrl(rssLink(item.link)),
       date: normalizeDate(item.pubDate),
@@ -199,18 +197,8 @@ async function fetchBingNewsCoverage(fetcher) {
   }
 }
 
-async function fetchWithTimeout(url, fetcher, accept) {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 12000)
-  try {
-    return await fetcher(url.toString(), {
-      headers: { accept, 'user-agent': 'SabotMediaCampaignTracker/1.0 (+https://sabot.media)' },
-      signal: controller.signal,
-      redirect: 'follow',
-    })
-  } finally {
-    clearTimeout(timer)
-  }
+function feedOptions(fetcher) {
+  return { fetcher, maxBytes: 2 * 1024 * 1024, timeoutMs: 12000, accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml', userAgent: 'SabotMediaCampaignTracker/1.0 (+https://sabot.media)' }
 }
 
 function rssLink(value) {

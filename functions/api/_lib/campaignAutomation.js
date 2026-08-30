@@ -1,4 +1,5 @@
 import { XMLParser } from 'fast-xml-parser'
+import { fetchBoundedJson, fetchBoundedText, validatePublicRemoteUrl } from './safeRemoteFeed.js'
 
 const CACHE_TTL_SECONDS = 300
 
@@ -24,6 +25,7 @@ export async function decorateCampaignAutomation(campaign, requestUrl, options =
 export async function loadCampaignAutomation(campaign, requestUrl, fetcher = fetch) {
   const origin = new URL(requestUrl).origin
   const config = campaign.automation || {}
+  if (!config.enabled) return disabledAutomationPayload()
   const cacheKey = new Request(`${origin}/__campaign-cache/${encodeURIComponent(campaign.slug)}-automation-v1`)
   const cache = globalThis.caches?.default
   if (cache) {
@@ -64,7 +66,7 @@ export function isCampaignRelevant(item, campaign, requestUrl) {
   const date = new Date(item.date || item.publishedAt || 0).getTime()
   const start = new Date(campaign.automation?.startAt || campaign.createdAt || 0).getTime()
   if (Number.isFinite(start) && start > 0 && (!Number.isFinite(date) || date < start)) return false
-  const text = cleanText(`${item.title || ''} ${item.text || ''} ${item.description || ''} ${item.url || ''}`).toLowerCase()
+  const text = cleanText(`${item.title || ''} ${item.text || ''} ${item.description || ''} ${item.summary || ''} ${item.excerpt || ''} ${item.content || ''} ${item.url || ''}`).toLowerCase()
   const canonical = new URL(`/campaigns/${campaign.slug}`, new URL(requestUrl).origin).toString().toLowerCase()
   if (text.includes(canonical) || text.includes(`/campaigns/${campaign.slug}`)) return true
   const signals = [campaign.title, campaign.shortTitle, ...(campaign.campaignKeywords || [])]
@@ -89,9 +91,7 @@ export function deriveCampaignPublicationUpdates(posts, campaign, requestUrl) {
 async function fetchBluesky(actor, campaign, requestUrl, fetcher) {
   const url = new URL('https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed')
   url.searchParams.set('actor', actor); url.searchParams.set('limit', '50'); url.searchParams.set('filter', 'posts_no_replies')
-  const response = await fetchWithTimeout(url, fetcher, 'application/json')
-  if (!response.ok) throw new Error(`Bluesky returned ${response.status}`)
-  const data = await response.json()
+  const { data } = await fetchBoundedJson(url, remoteOptions(fetcher, 'application/json'))
   const social = (data.feed || []).map(({ post }) => {
     const record = post?.record || {}
     const handle = String(post?.author?.handle || actor)
@@ -110,14 +110,10 @@ async function fetchBluesky(actor, campaign, requestUrl, fetcher) {
 async function fetchMastodon(account, campaign, requestUrl, fetcher) {
   const parsed = parseMastodonAccount(account)
   const lookup = new URL('/api/v1/accounts/lookup', parsed.origin); lookup.searchParams.set('acct', parsed.acct)
-  const accountResponse = await fetchWithTimeout(lookup, fetcher, 'application/json')
-  if (!accountResponse.ok) throw new Error(`Mastodon account lookup returned ${accountResponse.status}`)
-  const profile = await accountResponse.json()
+  const { data: profile } = await fetchBoundedJson(lookup, remoteOptions(fetcher, 'application/json'))
   const statusesUrl = new URL(`/api/v1/accounts/${encodeURIComponent(profile.id)}/statuses`, parsed.origin)
   statusesUrl.searchParams.set('limit', '40'); statusesUrl.searchParams.set('exclude_replies', 'true')
-  const response = await fetchWithTimeout(statusesUrl, fetcher, 'application/json')
-  if (!response.ok) throw new Error(`Mastodon returned ${response.status}`)
-  const statuses = await response.json()
+  const { data: statuses } = await fetchBoundedJson(statusesUrl, remoteOptions(fetcher, 'application/json'))
   const social = (Array.isArray(statuses) ? statuses : []).map((status) => ({
     id: `mastodon-${status.id}`, platform: 'Mastodon', account: cleanText(status.account?.display_name || status.account?.username || parsed.acct),
     handle: `@${status.account?.acct || `${parsed.acct}@${parsed.host}`}`, date: String(status.created_at || ''), text: cleanText(status.content || ''),
@@ -129,10 +125,9 @@ async function fetchMastodon(account, campaign, requestUrl, fetcher) {
 
 async function fetchCoverageFeed(rawUrl, campaign, requestUrl, fetcher) {
   const url = safePublicUrl(rawUrl)
-  const response = await fetchWithTimeout(url, fetcher, 'application/rss+xml, application/atom+xml, application/xml, text/xml')
-  if (!response.ok) throw new Error(`Coverage feed returned ${response.status}`)
+  const { text: xml } = await fetchBoundedText(url, remoteOptions(fetcher, 'application/rss+xml, application/atom+xml, application/xml, text/xml'))
   const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
-  const parsed = parser.parse(await response.text())
+  const parsed = parser.parse(xml)
   const channel = parsed?.rss?.channel || parsed?.feed || {}
   const outlet = cleanText(channel.title || url.hostname)
   const coverage = asArray(channel.item || channel.entry).map((item) => ({
@@ -154,9 +149,7 @@ async function fetchNewsDiscovery(campaign, requestUrl, fetcher) {
 
 async function fetchSignatories(rawUrl, fetcher) {
   const url = safePublicUrl(rawUrl)
-  const response = await fetchWithTimeout(url, fetcher, 'application/json')
-  if (!response.ok) throw new Error(`Signatories endpoint returned ${response.status}`)
-  const data = await response.json()
+  const { data } = await fetchBoundedJson(url, remoteOptions(fetcher, 'application/json'))
   const rows = Array.isArray(data) ? data : data?.signatories
   if (!Array.isArray(rows)) throw new Error('Signatories endpoint did not return an array')
   return { signatories: rows.map((item, index) => ({ id: String(item.id || `signatory-${index + 1}`), name: cleanText(item.name || item.organization), location: cleanText(item.location), statement: cleanText(item.statement), url: safeOptionalUrl(item.url) })).filter((item) => item.name) }
@@ -168,8 +161,8 @@ function parseMastodonAccount(value) {
   const url = safePublicUrl(`https://${match[2]}`)
   return { acct: match[1], host: match[2], origin: url.origin }
 }
-async function fetchWithTimeout(url, fetcher, accept) { const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 9000); try { return await fetcher(url.toString(), { headers: { accept, 'user-agent': 'SabotMediaCampaignAutomation/1.0 (+https://sabot.media)' }, redirect: 'follow', signal: controller.signal }) } finally { clearTimeout(timer) } }
-function safePublicUrl(value) { const url = new URL(String(value || '')); if (url.protocol !== 'https:') throw new Error('Automation sources must use HTTPS'); if (/^(?:localhost|127\.|0\.|10\.|192\.168\.|169\.254\.|172\.(?:1[6-9]|2\d|3[01])\.|\[?::1\]?$)/i.test(url.hostname)) throw new Error('Automation source host is not public'); return url }
+function remoteOptions(fetcher, accept) { return { fetcher, accept, maxBytes: 2 * 1024 * 1024, timeoutMs: 9000, userAgent: 'SabotMediaCampaignAutomation/1.0 (+https://sabot.media)' } }
+function safePublicUrl(value) { return validatePublicRemoteUrl(value) }
 function safeOptionalUrl(value) { try { return value ? safePublicUrl(value).toString() : '' } catch { return '' } }
 function rssLink(value) { if (typeof value === 'string') return safeOptionalUrl(value); if (Array.isArray(value)) return rssLink(value.find((item) => item?.['@_rel'] === 'alternate') || value[0]); return safeOptionalUrl(value?.['@_href'] || value?.['#text'] || '') }
 function asArray(value) { return Array.isArray(value) ? value : value ? [value] : [] }
@@ -180,3 +173,4 @@ function normalizeDate(value) { const date = new Date(value || 0); return Number
 function normalizeSlug(value) { return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') }
 function cleanText(value) { return String(value || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&quot;/gi, '"').replace(/&#(?:39|x27);/gi, "'").replace(/\s+/g, ' ').trim() }
 function summarize(value, length) { const text = cleanText(value); return text.length <= length ? text : `${text.slice(0, length - 1).trimEnd()}…` }
+function disabledAutomationPayload() { return { ok: true, social: [], coverage: [], signatories: [], socialSources: [], errors: [], checkedAt: null, disabled: true } }

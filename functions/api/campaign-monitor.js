@@ -12,6 +12,9 @@ export async function onRequestGet(context) {
       if (!db) throw new Error('campaign data unavailable')
       const campaign = await getCampaign(db, requestedSlug)
       if (!campaign || campaign.status !== 'published' || !campaign.monitorUrl) throw new Error('campaign monitor not configured')
+      if (!campaign.automation?.enabled) {
+        return json({ ok: false, disabled: true, source: '', checkedAt: null, overall: 'unknown', monitors: [] }, 200, 'public, max-age=60, s-maxage=120')
+      }
       statusPageUrl = validateStatusPageUrl(campaign.monitorUrl)
     }
     const statusUrl = new URL(statusPageUrl)

@@ -140,7 +140,7 @@
 }
 
 .campaign-page .campaign-action-card h3 {
-  max-width: 15ch;
+  max-width: 100%;
   font-size: clamp(1.7rem, 2.35vw, 2.45rem);
   line-height: 0.96;
   overflow-wrap: normal;
@@ -378,7 +378,7 @@
 }
 
 .campaign-page .campaign-social-post p {
-  overflow-wrap: normal;
+  overflow-wrap: anywhere;
   word-break: normal;
   hyphens: none;
 }
@@ -443,6 +443,27 @@
   overflow-wrap: normal;
   word-break: normal;
   hyphens: none;
+}
+
+/* Live sources can contain handles, URLs, hashtags, or names without a legal
+   line-break. Preserve ordinary word boundaries and wrap only when the token
+   would otherwise escape its card. */
+.campaign-page .campaign-piece-card h3,
+.campaign-page .campaign-link-list h3 a,
+.campaign-page .campaign-signatory h3,
+.campaign-page .campaign-signatory blockquote,
+.campaign-page .campaign-signatory__plain,
+.campaign-page .campaign-social-sources strong,
+.campaign-page .campaign-social-sources strong a,
+.campaign-page .campaign-social-sources small,
+.campaign-page .campaign-social-post p,
+.campaign-page .campaign-social-post__meta,
+.campaign-page .campaign-social-post__external,
+.campaign-page .campaign-tracker-status a,
+.campaign-page .campaign-graphic figcaption {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 @media (max-width: 1050px) {
