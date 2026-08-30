@@ -1,4 +1,5 @@
 import { AI_CAMPAIGN_GRAPHICS } from './aiCampaignGraphics.js'
+import { deriveAiCampaignPublicationUpdates, loadLiveAiIntelligence, mergeCampaignUpdates } from './aiCampaignIntelligence.js'
 
 const CAMPAIGN_URL = 'https://sabot.media/campaigns/autistici-inventati'
 // Verified against the public profile endpoints. No We Will Free Us account is
@@ -16,7 +17,12 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
   if (!campaign || campaign.slug !== 'autistici-inventati') return campaign
   const origin = new URL(requestUrl).origin
   const graphics = AI_CAMPAIGN_GRAPHICS.map((item) => ({ ...item, imageUrl: new URL(item.imageUrl, origin).toString(), downloadUrl: new URL(item.downloadUrl, origin).toString() }))
-  const feed = await loadLiveAiSocial(requestUrl).catch((error) => ({ items: [], errors: [{ platform: 'social', message: String(error?.message || error) }], sources: [] }))
+  const [feed, intelligence] = await Promise.all([
+    options.includeSocial === false
+      ? Promise.resolve({ items: [], errors: [], sources: [], checkedAt: '' })
+      : loadLiveAiSocial(requestUrl).catch((error) => ({ items: [], errors: [{ platform: 'social', message: String(error?.message || error) }], sources: [], checkedAt: '' })),
+    loadLiveAiIntelligence(requestUrl).catch((error) => ({ updates: [], coverage: [], errors: [{ source: 'campaign intelligence', message: String(error?.message || error) }], sources: [], checkedAt: '' })),
+  ])
   const letterPdf = new URL('/campaigns/autistici-inventati/resources/individual-letter-defend-autistici-inventati.pdf', origin).toString()
   const articlePdf = new URL('/campaigns/autistici-inventati/resources/the-server-called-paranoia-article.pdf', origin).toString()
   const pdfResource = { id: 'resource-individual-letter-pdf', type: 'PDF / LETTER TEMPLATE', title: 'Individual Letter: Defend Independent Communications Infrastructure', description: 'Printable three-page individual letter template with recipient guidance for the United States, European Union, Italy and other countries.', href: letterPdf, label: 'Open / download PDF' }
@@ -30,11 +36,13 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     { id: 'source-ai-kaos', publisher: 'Autistici/Inventati', title: '+KAOS: 10 Years of Hacking and Media Activism', url: 'https://www.inventati.org/static/img/book/ai-book-kaos.pdf', note: 'The collective’s book-length account of its first decade, technical practice, political context and legal cases.' },
     { id: 'source-ai-sanctions', publisher: 'Cavallette / Autistici/Inventati', title: 'A/I public statement on U.S. sanctions', url: 'https://cavallette.noblogs.org/2026/08/10076', note: 'The collective’s public response to the U.S. sanctions.' },
     { id: 'source-ai-press-release', publisher: 'Autistici/Inventati', title: 'Press Release — August 28, 2026', url: 'https://www.inventati.org/campaign/press', note: 'English-language A/I briefing on the designation, DNS disruption, reported banking pressure and cascading risks to the collective’s communications services.' },
+    { id: 'source-ai-communique-aug29', publisher: 'Autistici/Inventati', title: 'A/I communiqué — August 29, 2026', url: 'https://cavallette.noblogs.org/2026/08/10093', note: 'Official follow-up reporting partial service restoration, continuing Noblogs publishing disruption, and financial-service consequences.' },
     { id: 'source-material-support', publisher: 'Material Support and OFAC primer', title: 'Material Support and OFAC primer', url: 'https://static1.squarespace.com/static/548748b1e4b083fc03ebf70e/t/67be35d745142c70ddc7430f/1740518871622/MST%2Bresource_edit-2.pdf', note: 'Background resource on material-support law and OFAC restrictions.' },
     { id: 'source-sabot-reporting', publisher: 'Sabot Media', title: 'The Server Called Paranoia: Defend Autistici/Inventati Before September 25', url: new URL('/post/the-server-called-paranoia', origin).toString(), note: 'Sabot Media’s investigation and campaign reporting.' },
     { id: 'source-open-letter', publisher: 'Sabot Media × We Will Free Us', title: 'Open Letter: Communications Infrastructure Is Not Terrorism', url: new URL('/post/open-letter-ai', origin).toString(), note: 'The organizational open letter.' },
   ]
   const builtInCoverage = [
+    { id: 'coverage-ai-communique-aug29', date: '2026-08-29T17:00:51Z', outlet: 'Autistici/Inventati', language: 'Italian', languageCode: 'it', title: 'Comunicato stampa Autistici / Inventati 29.8.2026', translatedTitle: 'Autistici/Inventati press release — August 29, 2026', url: 'https://cavallette.noblogs.org/2026/08/10093', summary: 'A/I reports that mail access was restored for almost all users and Noblogs returned read-only, while also reporting actions affecting its banking and PayPal services.' },
     { id: 'coverage-crimethinc', date: '2026-08-27', outlet: 'CrimethInc.', language: 'English', languageCode: 'en', title: 'US Government Designates Host of NoBlogs.org a “Global Terrorist”', url: 'https://en.crimethinc.com/2026/08/27/us-government-designates-host-of-noblogsorg-a-global-terrorist', summary: 'A detailed response situating the designation within attacks on independent communications infrastructure and anti-fascist organizing.' },
     { id: 'coverage-repubblica', date: '2026-08-26', outlet: 'la Repubblica', language: 'Italian', languageCode: 'it', title: 'Rubio contro l’estrema sinistra, nella lista nera di Washington un gruppo di hacker italiani', translatedTitle: 'Rubio targets the far left; an Italian hacker group is placed on Washington’s blacklist', url: 'https://www.repubblica.it/esteri/2026/08/26/news/usa_rubio_annuncia_sanzioni_a_network_estrema_sinistra_autistici_inventati_gruppo_hacker_italiani-425548615/amp/', summary: 'Italian national coverage of the designation, A/I’s services and the collective’s public response.' },
     { id: 'coverage-effimera', date: '2026-08-28', outlet: 'Effimera', language: 'Italian', languageCode: 'it', title: 'Il collettivo digitale Autistici/Inventati nella lista Usa dei terroristi globali', translatedTitle: 'The digital collective Autistici/Inventati on the U.S. global-terrorist list', url: 'https://effimera.org/il-collettivo-digitale-autistici-inventati-nella-lista-usa-dei-terroristi-globali-di-effimera/', summary: 'Movement analysis connecting the sanctions to A/I’s history, autonomous technology and the projects that depend on its infrastructure.' },
@@ -66,6 +74,7 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     { id: 'timeline-norway', date: '2010-11-01', title: 'Servers in three countries are seized', body: 'An investigation seeks logs A/I does not keep and triggers international requests involving servers in Norway, the Netherlands and Switzerland. Authorities recover encrypted files but no useful identifying information.' },
     { id: 'timeline-designation', date: '2026-08-26', title: 'The United States designates A/I', body: 'The U.S. announces terrorism-related sanctions against the volunteer collective, treating shared communications infrastructure as a target because movements used the services it provided.' },
     { id: 'timeline-ai-press-release', date: '2026-08-28', title: 'A/I documents cascading service pressure', body: 'A/I publishes an English-language briefing on the designation, the autistici.org DNS serverHold, reported pressure on banking and payment services, and the resulting risks to email, mailing lists, websites and blogs. The release distinguishes established facts from unresolved questions about who ordered each intervention.' },
+    { id: 'timeline-ai-restoration', date: '2026-08-29', title: 'A/I restores access while financial pressure grows', body: 'A/I reports that mail service is accessible again for almost all users and Noblogs is back online in read-only mode. The collective also reports that Banca Etica intends to close its banking relationship and that PayPal blocked its account.' },
     { id: 'timeline-deadline', date: '2026-09-25', title: 'The wind-down period ends', body: 'The temporary U.S. authorization expires at 12:01 a.m. Eastern. Banks, hosts, registrars, certificate providers and other intermediaries may face pressure to cut services or over-comply.' },
   ]
   const builtInUpdates = [
@@ -76,11 +85,44 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     { id: 'update-individual-letter', date: '2026-08-28T20:15:00Z', title: 'Individual action letter released', body: 'A printable letter template and recipient guide are released for direct advocacy in the United States, European Union, Italy and elsewhere.', url: letterPdf, pinned: false },
     { id: 'update-graphics', date: '2026-08-28T21:00:00Z', title: 'Campaign media kit released', body: 'Twenty-two campaign graphics, full-resolution downloads, alt text and captions are collected for public circulation.', url: new URL('/campaigns/autistici-inventati#graphics', origin).toString(), pinned: false },
     { id: 'update-launch', date: '2026-08-28T21:30:00Z', title: 'Live campaign hub launched', body: 'Reporting, letters, primary sources, graphics, infrastructure status and public social updates are consolidated into one permanent campaign dashboard.', url: new URL('/campaigns/autistici-inventati', origin).toString(), pinned: false },
-    { id: 'update-ai-press-release', date: '2026-08-29T18:21:09Z', title: 'A/I press briefing documents cascading impacts', body: 'Autistici/Inventati publishes an English-language briefing detailing the designation, the autistici.org DNS serverHold, reported banking and payment pressure, and risks to email, mailing lists, websites and blogs while separating confirmed facts from unresolved attribution.', url: 'https://www.inventati.org/campaign/press', pinned: true },
+    { id: 'update-ai-press-release', date: '2026-08-28T18:21:09Z', title: 'A/I press briefing documents cascading impacts', body: 'Autistici/Inventati publishes an English-language briefing detailing the designation, the autistici.org DNS serverHold, reported banking and payment pressure, and risks to email, mailing lists, websites and blogs while separating confirmed facts from unresolved attribution.', url: 'https://www.inventati.org/campaign/press', pinned: false },
+    { id: 'update-ai-communique-aug29', date: '2026-08-29T17:00:51Z', title: 'A/I reports partial restoration and financial-service pressure', body: 'A/I reports that mail access has returned for almost all users and Noblogs is online read-only while technicians continue restoration. The collective also reports banking and PayPal consequences following the designation.', url: 'https://cavallette.noblogs.org/2026/08/10093', pinned: true },
   ]
   const actions = [...(campaign.actions || [])].sort((a, b) => actionRank(a) - actionRank(b))
-  const signatories = dedupeSignatories([...(options.signatories || []), ...builtInSignatories, ...(campaign.signatories || [])])
-  return { ...campaign, actions, campaignKeywords: ['autistici/inventati', 'a/i campaign'], updates: dedupeById([...builtInUpdates, ...(campaign.updates || [])]), timeline: dedupeById([...builtInTimeline, ...(campaign.timeline || [])]), resources: dedupeByUrl([articlePdfResource, pdfResource, ...(campaign.resources || [])], 'href'), coverage: dedupeById([...builtInCoverage, ...(campaign.coverage || [])]), signatories, sources: dedupeByUrl([...builtInSources, ...(campaign.sources || [])], 'url'), graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'), social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'), socialSources: feed.sources, socialErrors: feed.errors }
+  const sourceSignatories = Array.isArray(options.signatories) ? options.signatories : builtInSignatories
+  const signatories = dedupeSignatories([...sourceSignatories, ...(campaign.signatories || [])])
+  const publicationUpdates = deriveAiCampaignPublicationUpdates(options.posts || [], requestUrl)
+  const officialSocialUpdates = (feed.items || []).filter((item) => /cavallette/i.test(`${item.account || ''} ${item.handle || ''}`)).map((item) => ({
+    id: `official-social-${item.id}`,
+    date: item.date,
+    title: 'A/I public campaign update',
+    body: String(item.text || item.excerpt || '').slice(0, 360),
+    url: item.url,
+    pinned: false,
+    automated: true,
+    source: 'A/I official Mastodon',
+  }))
+  const updates = mergeCampaignUpdates(builtInUpdates, publicationUpdates, intelligence.updates, officialSocialUpdates, campaign.updates || [])
+  return {
+    ...campaign,
+    actions,
+    campaignKeywords: ['autistici/inventati', 'a/i campaign'],
+    updates,
+    timeline: dedupeById([...builtInTimeline, ...(campaign.timeline || [])]),
+    resources: dedupeByUrl([articlePdfResource, pdfResource, ...(campaign.resources || [])], 'href'),
+    coverage: dedupeCoverage([...(campaign.coverage || []), ...builtInCoverage, ...intelligence.coverage]),
+    signatories,
+    signatoriesSource: Array.isArray(options.signatories) ? 'published-open-letter' : 'bundled-fallback',
+    sources: dedupeByUrl([...builtInSources, ...(campaign.sources || [])], 'url'),
+    graphics: dedupeByUrl([...graphics, ...(campaign.graphics || [])], 'imageUrl'),
+    social: dedupeByUrl([...feed.items, ...(campaign.social || [])], 'url'),
+    socialSources: feed.sources,
+    socialErrors: feed.errors,
+    socialCheckedAt: feed.checkedAt,
+    intelligenceSources: intelligence.sources,
+    intelligenceErrors: intelligence.errors,
+    intelligenceCheckedAt: intelligence.checkedAt,
+  }
 }
 
 function actionRank(action) {
@@ -164,6 +206,10 @@ export function extractAiLetterSignatories(html) {
   return signatories.map(({ expectsStatement, ...item }) => item)
 }
 
+export function hasAiLetterSignatureSection(html) {
+  return /Signed,\s*<\/div>[\s\S]*?<b>\s*Sign on/i.test(String(html || ''))
+}
+
 function socialLanguage(text, declared = []) {
   const value = String(text || '')
   const codes = (Array.isArray(declared) ? declared : [declared]).map((item) => String(item || '').toLowerCase())
@@ -186,5 +232,6 @@ async function fetchWithTimeout(url, fetcher) { const controller = new AbortCont
 function dedupeByUrl(items, key) { const seen = new Set(); return items.filter((item) => { const value = String(item?.[key] || '').trim(); if (!value || seen.has(value)) return false; seen.add(value); return true }) }
 function dedupeById(items) { const seen = new Set(); return items.filter((item) => { const value = String(item?.id || '').trim(); if (!value || seen.has(value)) return false; seen.add(value); return true }) }
 function dedupeSignatories(items) { const seen = new Set(); return items.filter((item) => { const value = String(item?.name || '').trim().toLowerCase(); if (!value || seen.has(value)) return false; seen.add(value); return true }) }
+function dedupeCoverage(items) { const urls = new Set(), titles = new Set(); return items.filter((item) => { const url = String(item?.url || '').trim().replace(/\/$/, '').toLowerCase(), title = String(item?.title || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' '); if ((!url && !title) || urls.has(url) || titles.has(title)) return false; if (url) urls.add(url); if (title) titles.add(title); return true }) }
 function slugify(value) { return String(value || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'signatory' }
 function stripHtml(value) { return String(value || '').replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, ' ').replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#(?:39|x27);/gi, "'").replace(/\s+/g, ' ').trim() }

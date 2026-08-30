@@ -38,6 +38,7 @@ function createTypedEntry(kind = 'article') {
     tags: [],
     categories: [],
     collections: [],
+    campaigns: [],
     featuredImage: '',
     heroImage: '',
     featuredImageTitle: '',
@@ -226,6 +227,7 @@ function toAutosaveFingerprint(draft, allowComments) {
     tags: Array.isArray(draft?.tags) ? draft.tags : [],
     categories: Array.isArray(draft?.categories) ? draft.categories : [],
     collections: Array.isArray(draft?.collections) ? draft.collections : [],
+    campaigns: Array.isArray(draft?.campaigns) ? draft.campaigns : [],
     featuredImage: draft?.featuredImage || '',
     heroImage: draft?.heroImage || '',
     featuredTitleDisplay: draft?.featuredTitleDisplay || '',
@@ -363,11 +365,11 @@ export function NativeContentBridgePage() {
         let nextDraft
         let shouldLoadServerHistory = false
         if (found) {
-          nextDraft = { ...found, tags: found.tags || [], categories: found.categories || found.projects || [], collections: found.collections || [], slugManuallyEdited: true }
+          nextDraft = { ...found, tags: found.tags || [], categories: found.categories || found.projects || [], collections: found.collections || [], campaigns: found.campaigns || [], slugManuallyEdited: true }
           shouldLoadServerHistory = true
         } else if (importedPiece) {
           const importedDraft = createNativeEntryFromImportedPiece(importedPiece)
-          nextDraft = { ...importedDraft, tags: importedDraft.tags || [], categories: importedDraft.categories || importedDraft.projects || [], collections: importedDraft.collections || [], slugManuallyEdited: true }
+          nextDraft = { ...importedDraft, tags: importedDraft.tags || [], categories: importedDraft.categories || importedDraft.projects || [], collections: importedDraft.collections || [], campaigns: importedDraft.campaigns || [], slugManuallyEdited: true }
         } else {
           nextDraft = createTypedEntry(mode)
         }
@@ -430,6 +432,7 @@ export function NativeContentBridgePage() {
         tags: Array.isArray(data.item.tags) ? data.item.tags : [],
         categories: Array.isArray(data.item.categories || data.item.projects) ? (data.item.categories || data.item.projects) : [],
         collections: Array.isArray(data.item.collections) ? data.item.collections : [],
+        campaigns: Array.isArray(data.item.campaigns) ? data.item.campaigns : [],
         slugManuallyEdited: true,
       }
       suppressAutosaveRef.current = true
@@ -461,6 +464,7 @@ export function NativeContentBridgePage() {
       tags: Array.isArray(revision.draft.tags) ? revision.draft.tags : [],
       categories: Array.isArray(revision.draft.categories) ? revision.draft.categories : [],
       collections: Array.isArray(revision.draft.collections) ? revision.draft.collections : [],
+      campaigns: Array.isArray(revision.draft.campaigns) ? revision.draft.campaigns : [],
     }
     suppressAutosaveRef.current = true
     setDraft(restored)
@@ -519,6 +523,7 @@ export function NativeContentBridgePage() {
       slug: slugify(merged.slug || merged.title),
       tags: Array.isArray(merged.tags) ? merged.tags : [],
       collections: normalizeTermList(merged.collections),
+      campaigns: normalizeTermList(merged.campaigns),
       categories: normalizedCategories,
       projects: normalizedCategories,
       featuredImage: merged.featuredImage || merged.heroImage || '',
@@ -977,6 +982,21 @@ export function NativeContentBridgePage() {
                 />
               </label>
               <p className="description">{(draft.collections || []).join(', ') || 'No collections'}</p>
+            </section>
+
+            <section className="wp-meta-box">
+              <h2>Campaign relationship</h2>
+              <label className="native-content-editor__field">
+                <span>Connected campaign</span>
+                <select
+                  value={(draft.campaigns || [])[0] || ''}
+                  onChange={(event) => setDraft((current) => ({ ...current, campaigns: event.target.value ? [event.target.value] : [] }))}
+                >
+                  <option value="">No campaign</option>
+                  <option value="autistici-inventati">A/I — Communications Infrastructure Is Not Terrorism</option>
+                </select>
+              </label>
+              <p className="description">Published posts connected here automatically appear in campaign reporting and the campaign log.</p>
             </section>
 
             <section className="wp-meta-box">
