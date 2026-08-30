@@ -18,12 +18,13 @@ test('visual editor preserves browser-created DIV block boundaries', () => {
 test('rewritten info pages use fresh versioned fields instead of stale v1 content', () => {
   for (const page of ['about', 'contact', 'submit', 'support']) {
     assert.ok(publicInfoCopy[page]?.body?.length > 250, `${page} should have substantial current copy`)
-    assert.equal(getPublicInfoField(page, 'body'), `info.${page}.body.v2`)
+    const expectedVersion = page === 'contact' ? 'v3' : 'v2'
+    assert.equal(getPublicInfoField(page, 'body'), `info.${page}.body.${expectedVersion}`)
   }
 
   assert.match(publicInfoCopy.about.body, /open collective of radical media makers/i)
   assert.match(publicInfoCopy.about.body, /Grays Harbor/i)
-  assert.match(publicInfoCopy.contact.body, /tips@sabot\.media/)
+  assert.match(publicInfoCopy.contact.body, /encrypted form below/i)
   assert.match(publicInfoCopy.submit.body, /You do not need a journalism degree/i)
   assert.match(publicInfoCopy.support.body, /help it circulate/i)
   assert.match(infoPageSource, /getPublicInfoField/)
