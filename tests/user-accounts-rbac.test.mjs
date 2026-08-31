@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
-import { capabilitiesForRole, hashPassword, verifyPassword } from '../functions/api/_lib/adminUsers.js'
+import { capabilitiesForRole, hashPassword, PASSWORD_ITERATIONS, verifyPassword } from '../functions/api/_lib/adminUsers.js'
 
 test('passwords are PBKDF2 hashed with a random salt and verify without plaintext storage', async () => {
   const first = await hashPassword('correct horse battery staple')
@@ -9,7 +9,8 @@ test('passwords are PBKDF2 hashed with a random salt and verify without plaintex
   assert.notEqual(first.hash, 'correct horse battery staple')
   assert.notEqual(first.hash, second.hash)
   assert.notEqual(first.salt, second.salt)
-  assert.equal(first.iterations, 210000)
+  assert.equal(PASSWORD_ITERATIONS, 100000)
+  assert.equal(first.iterations, PASSWORD_ITERATIONS)
   assert.equal(await verifyPassword('correct horse battery staple', {
     password_hash: first.hash,
     password_salt: first.salt,
@@ -19,6 +20,11 @@ test('passwords are PBKDF2 hashed with a random salt and verify without plaintex
     password_hash: first.hash,
     password_salt: first.salt,
     password_iterations: first.iterations,
+  }), false)
+  assert.equal(await verifyPassword('correct horse battery staple', {
+    password_hash: first.hash,
+    password_salt: first.salt,
+    password_iterations: 100001,
   }), false)
 })
 
