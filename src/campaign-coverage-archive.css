@@ -2,10 +2,18 @@
   --coverage-red: #ff3139;
   --coverage-ink: #0c0c0c;
   --coverage-paper: #f2eee4;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   min-width: 0;
   overflow-x: clip;
   background: var(--coverage-paper);
   color: var(--coverage-ink);
+}
+
+.campaign-coverage-page .publication-topbar--masthead {
+  background: var(--coverage-ink) !important;
 }
 
 .campaign-coverage-shell {
@@ -37,7 +45,7 @@
 .campaign-coverage-controls {
   position: sticky;
   z-index: 4;
-  top: calc(var(--masthead-height, 0px) + var(--public-admin-bar-height, 0px));
+  top: 0;
   padding: 16px 0;
   border-bottom: 2px solid var(--coverage-ink);
   background: var(--coverage-ink);
@@ -73,8 +81,8 @@
 .campaign-coverage-card__image { display: block; margin: calc(-1 * clamp(20px, 2.8vw, 32px)) calc(-1 * clamp(20px, 2.8vw, 32px)) 22px; aspect-ratio: 16 / 9; overflow: hidden; background: #111; }
 .campaign-coverage-card__image img { width: 100%; height: 100%; object-fit: cover; }
 .campaign-coverage-card__meta { display: flex; flex-wrap: wrap; gap: 7px 12px; color: var(--coverage-red); font: 900 .7rem/1.15 var(--campaign-display, sans-serif); letter-spacing: .045em; text-transform: uppercase; }
-.campaign-coverage-card h2 { margin: 20px 0 12px; font: 900 clamp(1.35rem, 2.1vw, 2.15rem)/.94 var(--campaign-display, sans-serif); letter-spacing: -.035em; text-transform: uppercase; overflow-wrap: break-word; word-break: normal; hyphens: none; }
-.campaign-coverage-card h2 a { color: inherit; }
+.campaign-coverage-card h2 { margin: 20px 0 12px; font: 900 clamp(1.25rem, 1.75vw, 1.85rem)/.98 var(--campaign-display, sans-serif); letter-spacing: -.025em; text-transform: uppercase; overflow-wrap: normal; word-break: normal; hyphens: none; text-wrap: pretty; }
+.campaign-coverage-card h2 a { color: inherit; overflow-wrap: normal !important; word-break: normal !important; hyphens: none !important; }
 .campaign-coverage-card > p { margin: 0 0 18px; line-height: 1.48; overflow-wrap: break-word; word-break: normal; }
 .campaign-coverage-card .campaign-coverage-card__translation { color: var(--coverage-red); font-weight: 900; }
 .campaign-coverage-card__open { margin-top: auto; padding-top: 18px; color: inherit; font-weight: 900; }
