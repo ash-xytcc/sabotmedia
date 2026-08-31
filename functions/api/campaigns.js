@@ -9,7 +9,7 @@ import {
   AI_CAMPAIGN_SLUG,
   AI_CAMPAIGN_ID,
   deleteCampaign,
-  ensureAiCampaign,
+  ensureDefaultCampaigns,
   getCampaign,
   listCampaigns,
   normalizeCampaign,
@@ -38,7 +38,7 @@ export async function onRequestGet(context) {
     const id = String(url.searchParams.get('id') || '')
     const includeDrafts = permission.canEdit && url.searchParams.get('includeDrafts') === '1'
 
-    await ensureAiCampaign(db)
+    await ensureDefaultCampaigns(db)
 
     if (slug || id) {
       const item = await getCampaign(db, slug || id)

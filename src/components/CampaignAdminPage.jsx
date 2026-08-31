@@ -4,6 +4,7 @@ import { AdminFrame } from './AdminRail'
 import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { CampaignCoverageModeration } from './CampaignCoverageModeration'
+import { CampaignCorrespondenceAdmin } from './CampaignCorrespondenceAdmin'
 import { deleteCampaign as deleteCampaignApi, loadCampaignRevisions, loadCampaigns, restoreCampaignRevision, saveCampaign } from '../lib/campaignsApi'
 import { blankCampaign, campaignSlug, CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_LABELS, CAMPAIGN_TIME_ZONES, deadlineInputValue, validateDeadlineWallTime } from '../lib/campaignDeadline'
 
@@ -318,6 +319,7 @@ export function CampaignAdminPage() {
                 <TextField label="Short title" value={draft.shortTitle} onChange={(value) => patch({ shortTitle: value })} />
                 <SelectField label="Public state" value={draft.status} onChange={(value) => patch({ status: value })} options={['draft', 'published', 'archived']} />
                 <SelectField label="Campaign status" value={draft.campaignStatus} onChange={(value) => patch({ campaignStatus: value })} options={['active', 'urgent', 'monitoring', 'completed', 'archived']} />
+                <SelectField label="Campaign type" value={draft.campaignType || 'advocacy'} onChange={(value) => patch({ campaignType: value })} options={['advocacy', 'direct-aid', 'reporting', 'solidarity']} />
                 <TextField label="Deadline" value={deadlineWallTime} type="datetime-local" onChange={changeDeadline} error={deadlineError} />
                 <SelectField label="Deadline timezone" value={draft.deadlineTimeZone} onChange={changeDeadlineTimeZone} options={CAMPAIGN_TIME_ZONES} />
               </div>
@@ -332,9 +334,23 @@ export function CampaignAdminPage() {
               <TextField label="Infrastructure monitor URL (optional)" value={draft.monitorUrl} onChange={(value) => patch({ monitorUrl: value })} />
               <TextField label="Monitor label" value={draft.monitorLabel} onChange={(value) => patch({ monitorLabel: value })} />
               <TextField label="Independence / legal note" value={draft.disclaimer} textarea onChange={(value) => patch({ disclaimer: value })} />
+              <h3>Donation destination</h3>
+              <div className="campaign-admin-grid">
+                <TextField label="Donation URL" value={draft.donation?.url || ''} onChange={(value) => patch({ donation: { ...(draft.donation || {}), url: value } })} />
+                <TextField label="Button label" value={draft.donation?.label || ''} onChange={(value) => patch({ donation: { ...(draft.donation || {}), label: value } })} />
+                <TextField label="Fundraiser platform" value={draft.donation?.platform || ''} onChange={(value) => patch({ donation: { ...(draft.donation || {}), platform: value } })} />
+                <TextField label="Recipient" value={draft.donation?.recipient || ''} onChange={(value) => patch({ donation: { ...(draft.donation || {}), recipient: value } })} />
+              </div>
+              <TextField label="How the money moves" value={draft.donation?.explanation || ''} textarea onChange={(value) => patch({ donation: { ...(draft.donation || {}), explanation: value } })} />
+              <h3>Field contributor portal</h3>
+              <label className="campaign-admin-check"><input type="checkbox" checked={Boolean(draft.correspondence?.enabled)} onChange={(event) => patch({ correspondence: { ...(draft.correspondence || {}), enabled: event.target.checked } })} /> Enable campaign correspondence and dispatches</label>
+              <label className="campaign-admin-check"><input type="checkbox" checked={Boolean(draft.correspondence?.publicQuestions)} onChange={(event) => patch({ correspondence: { ...(draft.correspondence || {}), publicQuestions: event.target.checked } })} /> Accept moderated public questions</label>
+              <div className="campaign-admin-grid"><TextField label="Editor conversation label" value={draft.correspondence?.editorLabel || ''} onChange={(value) => patch({ correspondence: { ...(draft.correspondence || {}), editorLabel: value } })} /><TextField label="Contributor label" value={draft.correspondence?.contributorLabel || ''} onChange={(value) => patch({ correspondence: { ...(draft.correspondence || {}), contributorLabel: value } })} /></div>
+              <TextField label="Private room welcome" value={draft.correspondence?.intro || ''} textarea onChange={(value) => patch({ correspondence: { ...(draft.correspondence || {}), intro: value } })} />
             </section>
             <AutomationSettings value={draft.automation || {}} onChange={(automation) => patch({ automation })} />
             {!isNew && draft.slug ? <CampaignCoverageModeration campaignSlug={draft.slug} onNotice={pushNotice} /> : null}
+            {!isNew && draft.slug && draft.correspondence?.enabled ? <CampaignCorrespondenceAdmin campaign={draft} onNotice={pushNotice} /> : null}
             <SectionControls
               order={normalizeSectionOrder(draft.sectionOrder)}
               hidden={draft.hiddenSections || []}

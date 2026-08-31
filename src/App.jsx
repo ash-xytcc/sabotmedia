@@ -22,6 +22,7 @@ import { CampaignPage } from './components/CampaignPage'
 import { CampaignsIndexPage } from './components/CampaignsIndexPage'
 import { CampaignCoverageArchivePage } from './components/CampaignCoverageArchivePage'
 import { CampaignAdminPage } from './components/CampaignAdminPage'
+import { CampaignContributorPage } from './components/CampaignContributorPage'
 import { FeedSettingsAdminPage } from './components/FeedSettingsAdminPage'
 import { PublicFeedsPage } from './components/PublicFeedsPage'
 import { GalleryArchivePage } from './components/GalleryArchivePage'
@@ -66,7 +67,7 @@ const ADMIN_SHELL_PATHS = [
 ]
 
 function shouldUseBareShell(pathname) {
-  return ADMIN_SHELL_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+  return pathname.startsWith('/contribute/') || ADMIN_SHELL_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
 }
 
 function ScrollToTop() {
@@ -80,6 +81,7 @@ function ScrollToTop() {
 function AnalyticsTracker() {
   const location = useLocation()
   useEffect(() => {
+    if (location.pathname.startsWith('/contribute/')) return undefined
     const expectedPath = canonicalizeAnalyticsPath(location.pathname)
     let settleTimer = 0
     let fallbackTimer = 0
@@ -285,6 +287,7 @@ export default function App() {
               <Route path={publicRoutes.collections} element={<CollectionsIndexPage pieces={pieces} />} />
               <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
               <Route path="/campaigns" element={<CampaignsIndexPage />} />
+              <Route path="/contribute/:slug" element={<CampaignContributorPage />} />
               <Route path={publicRoutes.aiCampaign} element={<CampaignPage />} />
               <Route path={publicRoutes.aiCampaignCoverage} element={<CampaignCoverageArchivePage />} />
               <Route path={publicRoutes.campaign} element={<CampaignPage />} />

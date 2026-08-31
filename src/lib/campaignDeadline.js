@@ -10,9 +10,14 @@ export const CAMPAIGN_TIME_ZONES = [
 export const CAMPAIGN_SECTION_KEYS = [
   'status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline',
   'coverage', 'sources', 'faq', 'translations', 'signatories', 'social',
+  'donate', 'dispatches', 'questions', 'benefit',
 ]
 
 export const CAMPAIGN_SECTION_LABELS = {
+  donate: 'Donation destination',
+  dispatches: 'Field dispatches',
+  questions: 'Public questions',
+  benefit: 'Benefit toolkit',
   status: 'Status + countdown',
   reporting: 'Reporting + context',
   letters: 'Letters + resources',
@@ -77,10 +82,13 @@ export function blankCampaign() {
     slug: '',
     status: 'draft',
     campaignStatus: 'active',
+    campaignType: 'advocacy',
     kicker: '', title: '', shortTitle: '', deck: '', summary: '',
     deadline: '', deadlineTimeZone: 'America/New_York',
     heroImage: '', heroAlt: '', monitorUrl: '', monitorLabel: 'Infrastructure monitor',
     partners: [], campaignKeywords: [], disclaimer: '',
+    donation: { url: '', label: 'Donate', platform: '', recipient: '', explanation: '', lastVerifiedAt: '' },
+    correspondence: { enabled: false, publicQuestions: false, contributorLabel: 'Field contributor', editorLabel: 'Sabot Media', intro: '' },
     actions: [], updates: [], resources: [], social: [], graphics: [], coverage: [],
     signatories: [], sources: [], timeline: [], faq: [], translations: [],
     sectionOrder: [...CAMPAIGN_SECTION_KEYS],

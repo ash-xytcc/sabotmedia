@@ -8,10 +8,15 @@ import { selectHubCoverage } from '../lib/campaignCoverage'
 import { setDocumentMeta } from '../lib/documentMeta'
 import { EditableText } from './EditableText'
 import { EditableLink } from './EditableLink'
+import { CampaignBenefitToolkit, CampaignDispatches, CampaignDonation, CampaignQuestionForm } from './CampaignCorrespondence'
 
 const AI_CAMPAIGN_SLUG = 'autistici-inventati'
-const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social']
+const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social', 'donate', 'dispatches', 'questions', 'benefit']
 const CAMPAIGN_SECTION_META = {
+  donate: { nav: 'Donate', title: 'Donate' },
+  dispatches: { nav: 'Dispatches', title: 'Dispatches' },
+  questions: { nav: 'Ask', title: 'Ask a question' },
+  benefit: { nav: 'Organize', title: 'Organize a benefit' },
   status: { nav: 'Status', title: 'Campaign status' },
   reporting: { nav: 'Reporting', title: 'Reporting and context' },
   letters: { nav: 'Letters', title: 'Letters and resources' },
@@ -178,6 +183,10 @@ export function CampaignPage() {
   const sectionOrder = normalizeSectionOrder(campaign.sectionOrder)
   const hiddenSections = new Set(campaign.hiddenSections || [])
   const sectionContent = {
+    donate: Boolean(campaign.donation?.url),
+    dispatches: Boolean(campaign.correspondence?.enabled),
+    questions: Boolean(campaign.correspondence?.enabled && campaign.correspondence?.publicQuestions),
+    benefit: campaign.campaignType === 'direct-aid',
     status: true,
     reporting: reportingPieces.length > 0 || reportingResources.length > 0,
     letters: letterPieces.length > 0 || letterResources.length > 0,
@@ -212,6 +221,7 @@ export function CampaignPage() {
             <EditableText as="p" className="campaign-hero__short" field={`campaign.${campaign.slug}.hero.short-title`}>{campaign.shortTitle}</EditableText>
             <EditableText as="p" className="campaign-hero__deck" field={`campaign.${campaign.slug}.hero.deck`} multiline>{campaign.deck}</EditableText>
             <div className="campaign-hero__actions">
+              {campaign.donation?.url ? <a className="campaign-button campaign-button--light" href={campaign.donation.url} target="_blank" rel="noreferrer">{campaign.donation.label || 'Donate'} ↗</a> : null}
               {showSection('reporting') ? <EditableLink className="campaign-button campaign-button--light" labelField={`campaign.${campaign.slug}.actions.reporting.label`} hrefField={`campaign.${campaign.slug}.actions.reporting.href`} defaultLabel="Read the reporting" defaultHref="#reporting" /> : null}
               {showSection('letters') ? <EditableLink className="campaign-button campaign-button--dark" labelField={`campaign.${campaign.slug}.actions.letters.label`} hrefField={`campaign.${campaign.slug}.actions.letters.href`} defaultLabel="Read the letters" defaultHref="#letters" /> : null}
               <button className="campaign-button campaign-button--ghost" type="button" onClick={shareCampaign}><EditableText as="span" field={`campaign.${campaign.slug}.actions.share.label`}>Share campaign</EditableText></button>
@@ -241,6 +251,10 @@ export function CampaignPage() {
       ) : null}
 
       <OrderedCampaignSections order={sectionOrder}>
+      {showSection('donate') ? <CampaignDonation campaign={campaign} sectionKey="donate" /> : null}
+      {showSection('dispatches') ? <CampaignDispatches campaign={campaign} sectionKey="dispatches" /> : null}
+      {showSection('questions') ? <CampaignQuestionForm campaign={campaign} sectionKey="questions" /> : null}
+      {showSection('benefit') ? <CampaignBenefitToolkit campaign={campaign} sectionKey="benefit" /> : null}
       {showSection('status') ? <section className="campaign-section campaign-section--status" id="status">
         <div className="campaign-shell">
           <SectionHeading sectionKey="status" eyebrow="LIVE CAMPAIGN DASHBOARD" title={sectionTitle('status')} />

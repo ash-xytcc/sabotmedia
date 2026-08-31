@@ -1,11 +1,70 @@
-const CAMPAIGN_SCHEMA_VERSION = 4
+const CAMPAIGN_SCHEMA_VERSION = 5
 export const AI_CAMPAIGN_SLUG = 'autistici-inventati'
 export const AI_CAMPAIGN_ID = 'campaign-autistici-inventati'
+export const FNB_GAZA_CAMPAIGN_SLUG = 'food-not-bombs-gaza'
+export const FNB_GAZA_CAMPAIGN_ID = 'campaign-food-not-bombs-gaza'
 export const AI_CAMPAIGN_DEADLINE = '2026-09-25T04:01:00.000Z'
 export const CAMPAIGN_SECTION_KEYS = [
   'status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline',
   'coverage', 'sources', 'faq', 'translations', 'signatories', 'social',
+  'donate', 'dispatches', 'questions', 'benefit',
 ]
+
+export function defaultFnbGazaCampaign() {
+  return normalizeCampaign({
+    id: FNB_GAZA_CAMPAIGN_ID,
+    slug: FNB_GAZA_CAMPAIGN_SLUG,
+    status: 'published',
+    campaignStatus: 'urgent',
+    campaignType: 'direct-aid',
+    kicker: 'DIRECT AID · DIRECT SOLIDARITY',
+    title: 'Food Not Bombs Gaza',
+    shortTitle: 'Keep the meals coming',
+    deck: 'A Palestinian-led mutual-aid project is cooking for displaced families in Gaza. Help keep the meals coming—and hear directly from the people doing the work.',
+    summary: 'Sabot Media is amplifying and preserving updates from Food Not Bombs Gaza. Donations go directly through the verified Chuffed fundraiser; Sabot takes no percentage.',
+    partners: ['Food Not Bombs Gaza', 'Sabot Media'],
+    campaignKeywords: ['Food Not Bombs Gaza', 'Gaza', 'mutual aid', 'direct aid', 'Jamal Abu Al-Ata'],
+    disclaimer: 'Sabot Media maintains and hosts this campaign space. Donations are processed by Chuffed, not Sabot Media. Fundraiser claims are attributed to the organizers unless independently verified.',
+    donation: {
+      url: 'https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza',
+      label: 'Send direct aid',
+      platform: 'Chuffed',
+      recipient: 'Food Not Bombs Gaza',
+      explanation: 'The campaign organizer reports that funds are transferred to Jamal Abu Al-Ata using USDT because ordinary payment access and fees are prohibitive.',
+      lastVerifiedAt: '2026-08-31T00:00:00.000Z',
+    },
+    correspondence: {
+      enabled: true,
+      publicQuestions: true,
+      contributorLabel: 'Food Not Bombs Gaza',
+      editorLabel: 'Ash / Sabot Media',
+      intro: 'This is a private conversation with Ash and Sabot Media. Send text, audio, video, or a photo whenever you have time.',
+    },
+    actions: [
+      { id: 'action-donate', title: 'Send direct aid', body: 'Money is the immediate need. Donate through the verified fundraiser.', href: 'https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza', label: 'Donate on Chuffed' },
+      { id: 'action-benefit', title: 'Organize a benefit', body: 'Use the organizer toolkit to turn a show, meal, raffle, or community event into direct support.', href: '#benefit', label: 'Get the toolkit' },
+      { id: 'action-question', title: 'Ask a question', body: 'Submit a respectful question. Sabot reviews and forwards selected questions without flooding Jamal’s inbox.', href: '#questions', label: 'Ask Food Not Bombs Gaza' },
+      { id: 'action-share', title: 'Share the stable link', body: 'Send people here so the campaign remains reachable even if a commercial platform removes an account.', href: '#top', label: 'Share this campaign' },
+    ],
+    resources: [
+      { id: 'fnb-instagram', type: 'social', title: 'Food Not Bombs Gaza on Instagram', description: 'The project’s active public account and original source for many field updates.', href: 'https://www.instagram.com/foodnotbombs_gaza/', label: 'Follow @foodnotbombs_gaza' },
+    ],
+    sources: [
+      { id: 'fnb-chuffed', title: 'Send Direct Aid to Food Not Bombs Gaza', publisher: 'Chuffed', url: 'https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza', note: 'Current donation destination and organizer account of how funds reach Gaza.' },
+      { id: 'fnb-instagram-source', title: '@foodnotbombs_gaza', publisher: 'Instagram', url: 'https://www.instagram.com/foodnotbombs_gaza/', note: 'Original public updates from the project.' },
+    ],
+    faq: [
+      { id: 'fnb-relationship', question: 'Is Sabot Media collecting these donations?', answer: 'No. Donation buttons lead to the named Chuffed fundraiser. Sabot Media takes no percentage.' },
+      { id: 'fnb-verification', question: 'What has Sabot independently checked?', answer: 'Sabot identifies the source of each claim and retains links to the fundraiser and project account. Statements about spending or impact remain attributed to Food Not Bombs Gaza or the fundraiser organizer unless independently verified.' },
+      { id: 'fnb-interview', question: 'Has Sabot interviewed Jamal?', answer: 'Sabot has opened an asynchronous correspondence channel so Jamal can answer in text, audio, or video as his time and connectivity permit. The campaign does not depend on his ability to respond during war and displacement.' },
+    ],
+    updates: [{ id: 'fnb-launch', date: '2026-08-31T00:00:00Z', title: 'Campaign space opened', body: 'Sabot Media opened this independent campaign and correspondence space for Food Not Bombs Gaza.', pinned: true }],
+    sectionOrder: ['donate', 'dispatches', 'act', 'questions', 'benefit', 'reporting', 'updates', 'sources', 'faq'],
+    hiddenSections: ['letters', 'graphics', 'timeline', 'coverage', 'translations', 'signatories', 'social', 'status'],
+    sectionTitles: { donate: 'The need is money', dispatches: 'Dispatches from Gaza', questions: 'Ask Food Not Bombs Gaza', benefit: 'Turn your event into direct aid', act: 'Ways to act', reporting: 'Reporting and context', updates: 'Campaign log', sources: 'Verification and sources', faq: 'Questions about this campaign' },
+    createdAt: '2026-08-31T00:00:00Z',
+  })
+}
 
 export function defaultAiCampaign() {
   return normalizeCampaign({
@@ -104,6 +163,15 @@ export async function ensureAiCampaign(db) {
     return existing
   }
   const seeded = defaultAiCampaign()
+  await upsertCampaign(db, seeded)
+  return seeded
+}
+
+export async function ensureDefaultCampaigns(db) {
+  await ensureAiCampaign(db)
+  const existing = await getCampaign(db, FNB_GAZA_CAMPAIGN_ID) || await getCampaign(db, FNB_GAZA_CAMPAIGN_SLUG)
+  if (existing) return existing
+  const seeded = defaultFnbGazaCampaign()
   await upsertCampaign(db, seeded)
   return seeded
 }
@@ -214,6 +282,7 @@ export function normalizeCampaign(input = {}) {
     slug,
     status: ['draft', 'published', 'archived'].includes(input.status) ? input.status : 'published',
     campaignStatus: ['active', 'urgent', 'monitoring', 'completed', 'archived'].includes(input.campaignStatus) ? input.campaignStatus : 'active',
+    campaignType: String(input.campaignType || 'advocacy'),
     kicker: String(input.kicker || ''),
     title,
     shortTitle: String(input.shortTitle || title),
@@ -228,6 +297,8 @@ export function normalizeCampaign(input = {}) {
     partners: normalizeStrings(input.partners),
     campaignKeywords: normalizeStrings(input.campaignKeywords),
     disclaimer: String(input.disclaimer || ''),
+    donation: normalizeDonation(input.donation),
+    correspondence: normalizeCorrespondence(input.correspondence),
     actions: normalizeRows(input.actions, ['title', 'body', 'href', 'label']),
     updates: normalizeRows(input.updates, ['date', 'title', 'body', 'url'], { booleanFields: ['pinned'] }),
     resources: normalizeRows(input.resources, ['type', 'title', 'description', 'href', 'label', 'imageUrl']),
@@ -246,6 +317,16 @@ export function normalizeCampaign(input = {}) {
     createdAt: String(input.createdAt || now),
     updatedAt: String(input.updatedAt || now),
   }
+}
+
+function normalizeDonation(value) {
+  const input = value && typeof value === 'object' ? value : {}
+  return { url: String(input.url || ''), label: String(input.label || 'Donate'), platform: String(input.platform || ''), recipient: String(input.recipient || ''), explanation: String(input.explanation || ''), lastVerifiedAt: normalizeDate(input.lastVerifiedAt) }
+}
+
+function normalizeCorrespondence(value) {
+  const input = value && typeof value === 'object' ? value : {}
+  return { enabled: Boolean(input.enabled), publicQuestions: Boolean(input.publicQuestions), contributorLabel: String(input.contributorLabel || 'Field contributor'), editorLabel: String(input.editorLabel || 'Sabot Media'), intro: String(input.intro || '') }
 }
 
 function normalizeAutomation(value) {
@@ -288,11 +369,11 @@ function normalizeSectionTitles(value) {
   return Object.fromEntries(CAMPAIGN_SECTION_KEYS.map((key) => [key, String(input[key] || '')]).filter(([, title]) => title))
 }
 
-export function buildCampaignRssXml({ campaign, requestUrl }) {
+export function buildCampaignRssXml({ campaign, requestUrl, dispatches = [] }) {
   const origin = new URL(requestUrl).origin
   const pageUrl = `${origin}/campaigns/${encodeURIComponent(campaign.slug)}`
   const selfUrl = `${origin}/feeds/campaigns/${encodeURIComponent(campaign.slug)}.xml`
-  const items = [...(campaign.updates || [])]
+  const items = [...(campaign.updates || []), ...dispatches.map((item) => ({ id: `dispatch-${item.id}`, date: item.createdAt, title: item.displayName ? `Dispatch from ${item.displayName}` : 'Field dispatch', body: item.body || (item.mediaType ? `${item.mediaType} dispatch` : ''), url: `${pageUrl}#dispatches`, mediaUrl: item.mediaUrl, mediaType: item.mediaType }))]
     .filter((item) => item.title || item.body)
     .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
 
@@ -300,7 +381,8 @@ export function buildCampaignRssXml({ campaign, requestUrl }) {
     const link = item.url ? absoluteUrl(item.url, origin) : `${pageUrl}#updates`
     const guid = `${campaign.slug}:${item.id}`
     const pubDate = validRssDate(item.date || campaign.updatedAt)
-    return `    <item>\n      <title>${xml(item.title || 'Campaign update')}</title>\n      <link>${xml(link)}</link>\n      <guid isPermaLink="false">${xml(guid)}</guid>\n      <pubDate>${xml(pubDate)}</pubDate>\n      <description>${xml(item.body || '')}</description>\n    </item>`
+    const enclosure = item.mediaUrl && ['audio', 'video'].includes(item.mediaType) ? `\n      <enclosure url="${xml(item.mediaUrl)}" type="${item.mediaType === 'audio' ? 'audio/webm' : 'video/webm'}" />` : ''
+    return `    <item>\n      <title>${xml(item.title || 'Campaign update')}</title>\n      <link>${xml(link)}</link>\n      <guid isPermaLink="false">${xml(guid)}</guid>\n      <pubDate>${xml(pubDate)}</pubDate>\n      <description>${xml(item.body || '')}</description>${enclosure}\n    </item>`
   }).join('\n')
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n  <channel>\n    <title>${xml(`${campaign.shortTitle || campaign.title} — Campaign Updates`)}</title>\n    <link>${xml(pageUrl)}</link>\n    <description>${xml(campaign.deck || campaign.summary || campaign.title)}</description>\n    <language>en</language>\n    <atom:link href="${xml(selfUrl)}" rel="self" type="application/rss+xml" />\n    <lastBuildDate>${xml(validRssDate(campaign.updatedAt))}</lastBuildDate>\n${xmlItems}\n  </channel>\n</rss>`

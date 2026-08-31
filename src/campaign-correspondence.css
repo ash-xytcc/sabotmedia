@@ -1,0 +1,55 @@
+.campaign-page[data-campaign="food-not-bombs-gaza"] { --campaign-red: #e6392f; --campaign-paper: #f2ead8; --campaign-ink: #14130f; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero { background: #e8d7b7; color: #14130f; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero::after { content: "FOOD / NOT / BOMBS"; right: -3vw; top: 9%; max-width: 5ch; color: rgba(230,57,47,.14); font-size: clamp(7rem,18vw,17rem); line-height: .72; text-align: right; }
+.campaign-donation { display: grid; grid-template-columns: minmax(0,.8fr) minmax(320px,1.2fr); gap: clamp(30px,6vw,90px); align-items: center; }
+.campaign-section--donate { background: #e6392f; color: #fff; }
+.campaign-donation > div:first-child > p { font-weight: 900; letter-spacing: .08em; }
+.campaign-donation h2 { margin: 10px 0; font: 900 clamp(3rem,8vw,7rem)/.82 var(--campaign-display); text-transform: uppercase; }
+.campaign-donation__card { padding: clamp(24px,4vw,48px); border: 3px solid #14130f; background: #14130f; box-shadow: 12px 12px 0 #f2ead8; }
+.campaign-donation__card > span,.campaign-donation__card > small { display: block; }
+.campaign-donation__card > strong { display: block; margin: 12px 0; font: 900 clamp(1.8rem,4vw,3.5rem)/.9 var(--campaign-display); text-transform: uppercase; }
+.campaign-donation__card .campaign-button { margin: 14px 0; width: 100%; text-align: center; background: #e6392f; }
+.campaign-dispatch-list { display: grid; gap: 18px; }
+.campaign-dispatch-list article,.campaign-dispatch-empty { max-width: 780px; padding: clamp(20px,4vw,38px); border: 2px solid var(--campaign-ink); background: #fff; box-shadow: 8px 8px 0 var(--campaign-red); }
+.campaign-dispatch-list header { display: flex; justify-content: space-between; gap: 18px; border-bottom: 1px solid #bbb; padding-bottom: 12px; }
+.campaign-dispatch-list audio,.campaign-dispatch-list video,.campaign-dispatch-list img { width: 100%; max-height: 70vh; margin: 15px 0; }
+.campaign-question-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(30px,6vw,90px); }
+.campaign-question-layout .campaign-section-heading { display: block; }
+.campaign-question-layout form { display: grid; gap: 16px; padding: clamp(20px,4vw,38px); background: #fff; border: 2px solid var(--campaign-ink); }
+.campaign-question-layout label { display: grid; gap: 7px; font-weight: 900; }
+.campaign-question-layout form > div { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.campaign-question-layout textarea,.campaign-question-layout input { width: 100%; padding: 12px; border: 2px solid #14130f; font: inherit; }
+.campaign-section--benefit { background: #14130f; color: #fff; }
+.campaign-benefit-grid { display: grid; grid-template-columns: repeat(3,1fr); border: 1px solid #fff; }
+.campaign-benefit-grid article { padding: clamp(20px,3vw,34px); border-right: 1px solid #fff; }
+.campaign-benefit-grid article:last-child { border-right: 0; }
+.campaign-benefit-grid span { color: #e6392f; font-weight: 900; }
+.campaign-benefit-copy { margin-top: 28px; padding: clamp(20px,3vw,34px); background: #f2ead8; color: #14130f; }
+.campaign-benefit-copy button { padding: 10px 16px; border: 2px solid #14130f; background: #e6392f; font-weight: 900; cursor: pointer; }
+.contributor-page { min-height: 100svh; background: #ece7dc; color: #14130f; font-family: system-ui,sans-serif; }
+.contributor-lock { width: min(100% - 32px,480px); margin: 0 auto; padding: 10vh 0 40px; }
+.contributor-mark { color: #e6392f; font-weight: 950; letter-spacing: .09em; }
+.contributor-lock h1 { font-size: clamp(2.2rem,10vw,4rem); line-height: .9; }
+.contributor-lock form { display: grid; gap: 9px; margin: 30px 0; }
+.contributor-lock input { min-height: 64px; padding: 8px 16px; border: 3px solid #14130f; font-size: 2rem; letter-spacing: .35em; }
+.contributor-lock button,.contributor-send { min-height: 58px; border: 0; background: #e6392f; color: #fff; font: 900 1rem system-ui; }
+.contributor-error { padding: 12px; border-left: 5px solid #e6392f; background: #fff; }
+.contributor-room { display: grid; grid-template-rows: auto 1fr auto; max-width: 760px; margin: 0 auto; background: #f8f5ef; box-shadow: 0 0 40px #0002; }
+.contributor-room > header { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; gap: 12px; padding: 14px 18px; background: #14130f; color: #fff; }
+.contributor-room header h1 { margin: 3px 0; font-size: 1.05rem; }.contributor-room header p { margin: 0; font-size: .78rem; opacity: .8; }.contributor-room header span { color: #e6392f; font-size: .66rem; font-weight: 900; }
+.contributor-thread { min-height: 62vh; padding: 20px 14px; display: flex; flex-direction: column; gap: 12px; }
+.contributor-bubble { width: min(88%,560px); padding: 12px 14px; border-radius: 4px 16px 16px; background: #fff; box-shadow: 0 1px 3px #0002; }
+.contributor-bubble--contributor { align-self: flex-end; border-radius: 16px 4px 16px 16px; background: #d8efcb; }
+.contributor-bubble > div,.contributor-bubble footer { display: flex; justify-content: space-between; gap: 10px; font-size: .72rem; }.contributor-bubble p { white-space: pre-wrap; }.contributor-bubble audio,.contributor-bubble video,.contributor-bubble img { width: 100%; max-height: 60vh; }.contributor-bubble footer button { border: 0; background: none; text-decoration: underline; }
+.contributor-composer { position: sticky; bottom: 0; display: grid; gap: 8px; padding: 10px; background: #ece7dc; border-top: 1px solid #bbb; }
+.contributor-composer textarea { width: 100%; resize: none; padding: 13px; border: 0; border-radius: 18px; font: 1rem system-ui; }
+.contributor-compose-actions { display: flex; gap: 7px; }.contributor-compose-actions button { min-height: 44px; padding: 8px 12px; border: 1px solid #bbb; border-radius: 22px; background: #fff; }.contributor-compose-actions .is-recording { background: #e6392f; color: #fff; }
+.contributor-attachment,.contributor-publish-choice { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px; background: #fff; }.contributor-publish-choice { justify-content: flex-start; }.contributor-publish-choice small { display: block; }
+@media (max-width:700px) { .campaign-donation,.campaign-question-layout { grid-template-columns: 1fr; }.campaign-question-layout form > div,.campaign-benefit-grid { grid-template-columns: 1fr; }.campaign-benefit-grid article { border-right: 0; border-bottom: 1px solid #fff; }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero::after { display:none; }.contributor-room { width:100%; }.contributor-room > header > strong { display:none; } }
+.campaign-correspondence-admin__grid { display:grid; grid-template-columns:minmax(280px,.8fr) minmax(340px,1.2fr); gap:24px; }
+.campaign-contributor-create,.campaign-admin-message { display:grid; gap:9px; }.campaign-contributor-create input,.campaign-admin-message textarea,.campaign-correspondence-admin .notice input { width:100%; padding:9px; }
+.campaign-admin-simple-list,.campaign-admin-thread,.campaign-question-queue { display:grid; gap:8px; margin-top:14px; }
+.campaign-admin-simple-list article,.campaign-question-queue article { display:flex; justify-content:space-between; gap:12px; align-items:start; padding:12px; border:1px solid #ccd0d4; background:#fff; }.campaign-admin-simple-list small { display:block; }
+.campaign-admin-thread { max-height:460px; overflow:auto; padding:10px; background:#ece7dc; }.campaign-admin-thread article { max-width:88%; padding:10px; border-radius:3px 12px 12px; background:#fff; }.campaign-admin-thread .is-contributor { margin-left:auto; background:#d8efcb; }.campaign-admin-thread p { margin:5px 0; white-space:pre-wrap; }
+.campaign-question-queue article span { color:#b32d2e; font-size:.7rem; font-weight:900; text-transform:uppercase; }.campaign-question-queue article strong { display:block; }.campaign-question-queue article p { margin:6px 0; }
+@media (max-width:900px) { .campaign-correspondence-admin__grid { grid-template-columns:1fr; } }

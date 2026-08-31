@@ -12,7 +12,7 @@ export const ADMIN_PREFIXES = [
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 const PAGE_METHODS = new Set(['GET', 'HEAD'])
-const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/analytics/collect'])
+const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/analytics/collect', '/api/campaign-contributor-auth', '/api/campaign-correspondence', '/api/campaign-contributor-media'])
 const PUBLIC_SPA_EXACT_PATHS = new Set([
   '/', '/archive', '/search', '/about', '/security', '/contact', '/submit', '/support', '/press', '/feeds',
   '/collections', '/publications', '/updates', '/projects', '/aberdeen-local-1312-gallery', '/login', '/wp-login', '/logout',
@@ -67,7 +67,7 @@ export function isAdminRoutePath(pathname = '') {
 export function isPublicSpaPath(pathname = '') {
   const normalized = pathname === '/' ? '/' : String(pathname || '').replace(/\/+$/, '')
   if (PUBLIC_SPA_EXACT_PATHS.has(normalized)) return true
-  return /^\/(?:project|projects|print|zine|collections|publications|reader|updates)\/[^/]+$/i.test(normalized)
+  return /^\/(?:project|projects|print|zine|collections|publications|reader|updates|contribute)\/[^/]+$/i.test(normalized)
     || /^\/(?:post|piece)\/[^/]+\/print$/i.test(normalized)
 }
 

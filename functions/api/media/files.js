@@ -161,7 +161,7 @@ export async function onRequestGet(context) {
 
     const url = new URL(context.request.url)
     const storageKey = String(url.searchParams.get('key') || '').trim()
-    if (!storageKey || storageKey.includes('..') || !storageKey.startsWith('media/uploads/')) {
+    if (!storageKey || storageKey.includes('..') || !(storageKey.startsWith('media/uploads/') || storageKey.startsWith('media/campaign-contributors/'))) {
       return text('missing or invalid media key', 400)
     }
 
