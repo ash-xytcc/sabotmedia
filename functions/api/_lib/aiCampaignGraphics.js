@@ -1,6 +1,7 @@
 const BASE = '/campaigns/autistici-inventati/graphics'
 
 const rows = [
+  ['section-230-hypocrisy', 'One Rule for Big Tech', 'Black, red, cream and pink vertical campaign graphic reading “One rule for Big Tech. Another for movement infrastructure. The hypocrisy of Section 230.” Marked urgent for the A/I campaign on August 30, 2026, with “Read / share / preserve / organize” along the bottom.', 'One rule for Big Tech. Another for movement infrastructure. Corporate platforms are protected from automatic liability for their users, while the United States collapses the distinction between A/I and what users publish. Infrastructure is not authorship. Read and share the full argument.', 'https://kolektiva.social/@AberdeenLocal1312/117184117978084213'],
   ['book-download-card', 'Ten Years of Hacking and Media Activism', 'Red, black, pink and green book-download card for The Kaos Ten Years of Hacking and Media Activism, with Hacklabs, Genova, Plan B and Noblogs listed.', 'Download and share the free Kaos book on A/I, hacklabs and radical media infrastructure.'],
   ['carousel-1', 'The Server Called Paranoia', 'Red and black campaign card reading “The server called Paranoia” above a server icon and text saying the U.S. is trying to make Autistici/Inventati untouchable.', 'Before September 25: read, share, preserve and organize.'],
   ['carousel-2', 'Immediate Answer Is Solidarity', 'Black campaign card reading “The immediate answer is solidarity” with six red action boxes: read, share, preserve, document, organize and pressure.', 'Six immediate ways to defend resistant communications infrastructure.'],
@@ -25,11 +26,12 @@ const rows = [
   ['web-banner', 'Do Not Let A/I Disappear Banner', 'Wide black campaign banner reading “Do not let A/I disappear” beside a Welcome to A/I browser screenshot.', 'A wide campaign banner for websites and social headers.'],
 ]
 
-export const AI_CAMPAIGN_GRAPHICS = rows.map(([slug, title, alt, caption], index) => ({
+export const AI_CAMPAIGN_GRAPHICS = rows.map(([slug, title, alt, caption, sourceUrl], index) => ({
   id: `built-in-${index + 1}`,
   title,
   imageUrl: `${BASE}/${slug}.webp?v=20260829-2`,
   alt,
   caption,
   downloadUrl: `${BASE}/originals/${slug}.png`,
+  sourceUrl: sourceUrl || '',
 }))
