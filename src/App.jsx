@@ -50,6 +50,7 @@ import { adminRoutes, publicRoutes } from './routing/routes'
 import { buildPostMeta, setDocumentMeta } from './lib/documentMeta'
 import { trackPageView } from './lib/analyticsApi'
 import { canonicalizeAnalyticsPath } from '../shared/analyticsPath'
+import { getPublicPageMeta } from './lib/publicPageRegistry'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -172,6 +173,7 @@ function Layout({ children }) {
   const navigate = useNavigate()
   const bareShell = shouldUseBareShell(location.pathname)
   const isHomepage = location.pathname === '/'
+  const publicPageMeta = getPublicPageMeta(location.pathname)
 
   useEffect(() => {
     document.body.classList.toggle('is-homepage', isHomepage)
@@ -225,7 +227,12 @@ function Layout({ children }) {
   }
 
   return (
-    <div className={`public-route-shell${isEditing ? ' public-route-shell--editing' : ''}`} onClick={() => { if (isEditing) setSelectedField(null) }}>
+    <div
+      className={`public-route-shell${isEditing ? ' public-route-shell--editing' : ''}`}
+      data-live-edit-page={publicPageMeta.id}
+      data-live-edit-family={publicPageMeta.family}
+      onClick={() => { if (isEditing) setSelectedField(null) }}
+    >
       <a className="skip-link" href="#main-content">Skip to content</a>
       <PublicAdminToolbar />
       <PublicEditPanel />

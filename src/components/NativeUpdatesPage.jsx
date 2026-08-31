@@ -6,11 +6,11 @@ import { useWordPressPieces } from '../lib/useWordPressPieces'
 import { PublicationFooter } from './PublicationFooter'
 import { splitDisplayTitle } from '../lib/content'
 import { PublicationTopbar } from './PublicationTopbar'
-import { loadCustomizerSettings } from '../lib/customizerLocal'
 import { EditableText } from './EditableText'
+import { EditableLink } from './EditableLink'
 import { HomeFeedCard } from './HomeFeedCard'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
-import { getConfiguredText } from '../lib/publicConfig'
+import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 import { useResolvedConfig } from '../lib/useResolvedConfig'
 
 function normalizeNativeItem(item) {
@@ -107,8 +107,8 @@ function pickArchiveFeed({ pieces = [], featured = null, latest = [] }) {
   }
 }
 
-function getHomepageDisplaySettings() {
-  const homepage = loadCustomizerSettings().homepage || {}
+function getHomepageDisplaySettings(resolvedConfig) {
+  const homepage = getConfiguredBlock(resolvedConfig, 'site.homepage') || {}
   const featuredLayout = ['grid', 'list', 'stack'].includes(homepage.featuredLayout)
     ? homepage.featuredLayout
     : 'grid'
@@ -128,7 +128,7 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
   const [state, setState] = useState('loading')
   const [error, setError] = useState('')
 
-  const homepageSettings = getHomepageDisplaySettings()
+  const homepageSettings = getHomepageDisplaySettings(resolvedConfig)
 
   useEffect(() => {
     let cancelled = false
@@ -213,9 +213,7 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
               </section>
 
               <section className="publication-next-row">
-                <Link className="publication-next-link" to="/archive">
-                  {nextLabel} →
-                </Link>
+                <EditableLink className="publication-next-link" labelField="home.next.link-label" hrefField="home.next.href" defaultLabel={`${nextLabel} →`} defaultHref="/archive" />
               </section>
             </>
           ) : null}

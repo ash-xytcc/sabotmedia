@@ -4,6 +4,7 @@ import { AdminPublicConfigCard } from './AdminPublicConfigCard'
 import { LegacyInfoPageRecovery } from './LegacyInfoPageRecovery'
 import { getPieces } from '../lib/pieces'
 import { adminRoutes } from '../routing/routes'
+import { publicPageRegistry, withSiteEdit } from '../lib/publicPageRegistry'
 
 export { AdminUsersPage as UsersAdminPage } from './AdminUsersPage'
 
@@ -11,17 +12,8 @@ export function PagesAdminPage() {
   const samplePost = getPieces().find((piece) => piece?.slug)
   const samplePostPath = samplePost?.slug ? `/post/${samplePost.slug}` : '/archive'
   const pages = [
-    { title: 'Home', slug: 'home', path: '/', type: 'Public route', editPath: adminRoutes.liveEditor },
-    { title: 'Archive', slug: 'archive', path: '/archive', type: 'Public route', editPath: adminRoutes.liveEditor },
-    { title: 'Collections', slug: 'collections', path: '/collections', type: 'Public index', editPath: adminRoutes.collections },
-    { title: 'Publications', slug: 'publications', path: '/publications', type: 'Public index', editPath: adminRoutes.publications },
-    { title: 'Feeds', slug: 'feeds', path: '/feeds', type: 'Public index', editPath: adminRoutes.feeds },
-    { title: 'About', slug: 'about', path: '/about', type: 'Public route', editPath: adminRoutes.liveEditor },
-    { title: 'Contact', slug: 'contact', path: '/contact', type: 'Public route', editPath: adminRoutes.liveEditor },
-    { title: 'Submit', slug: 'submit', path: '/submit', type: 'Public route', editPath: adminRoutes.liveEditor },
-    { title: 'Support', slug: 'support', path: '/support', type: 'Public route', editPath: adminRoutes.liveEditor },
-    { title: 'Security', slug: 'security', path: '/security', type: 'Public route', editPath: adminRoutes.liveEditor },
-    { title: 'Post template', slug: 'post-template', path: samplePostPath, type: 'Template', editPath: adminRoutes.liveEditor },
+    ...publicPageRegistry.map((page) => ({ title: page.label, slug: page.id, path: page.path, type: page.family })),
+    { title: 'Post template', slug: 'post-template', path: samplePostPath, type: 'template' },
   ]
 
   return (
@@ -39,7 +31,7 @@ export function PagesAdminPage() {
             <tbody>
               {pages.map((page) => (
                 <tr key={page.slug}>
-                  <td><strong className="content-table__title">{page.title}</strong><div className="wp-row-actions"><Link to={page.path}>View</Link><Link to={`${page.editPath}?page=${encodeURIComponent(page.slug)}`}>Edit</Link></div></td>
+                  <td><strong className="content-table__title">{page.title}</strong><div className="wp-row-actions"><Link to={page.path}>View</Link><Link to={withSiteEdit(page.path)}>Edit live</Link></div></td>
                   <td>{page.slug}</td><td>{page.type}</td><td><code>{page.path}</code></td>
                 </tr>
               ))}
@@ -57,7 +49,7 @@ export function SettingsAdminPage() {
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <div><h1>Settings</h1><p className="description">The single home for production-backed site configuration. Saved changes use the authenticated public-site-config API and D1 rather than browser storage.</p></div>
-          <Link className="button button--primary" to={adminRoutes.liveEditor}>Edit Live</Link>
+          <Link className="button button--primary" to={withSiteEdit('/')}>Edit Live</Link>
         </div>
         <AdminPublicConfigCard />
         <LegacyInfoPageRecovery />

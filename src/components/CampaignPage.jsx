@@ -6,6 +6,8 @@ import { loadCampaign, loadCampaignMonitor } from '../lib/campaignsApi'
 import { loadPublishedNativePieces } from '../lib/nativePublicFeed'
 import { selectHubCoverage } from '../lib/campaignCoverage'
 import { setDocumentMeta } from '../lib/documentMeta'
+import { EditableText } from './EditableText'
+import { EditableLink } from './EditableLink'
 
 const AI_CAMPAIGN_SLUG = 'autistici-inventati'
 const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social']
@@ -146,7 +148,11 @@ export function CampaignPage() {
     return (
       <main className="page campaign-page campaign-page--error">
         <PublicationTopbar />
-        <section className="campaign-shell campaign-error"><p className="campaign-kicker">CAMPAIGN HUB</p><h1>Campaign data unavailable</h1><p>{error}</p></section>
+        <section className="campaign-shell campaign-error">
+          <EditableText as="p" className="campaign-kicker" field="campaign.system.error.eyebrow">CAMPAIGN HUB</EditableText>
+          <EditableText as="h1" field="campaign.system.error.title">Campaign data unavailable</EditableText>
+          <p>{error}</p>
+        </section>
         <PublicationFooter />
       </main>
     )
@@ -156,7 +162,10 @@ export function CampaignPage() {
     return (
       <main className="page campaign-page campaign-page--loading">
         <PublicationTopbar />
-        <section className="campaign-shell campaign-loading"><p className="campaign-kicker">CAMPAIGN HUB</p><h1>Loading campaign...</h1></section>
+        <section className="campaign-shell campaign-loading">
+          <EditableText as="p" className="campaign-kicker" field="campaign.system.loading.eyebrow">CAMPAIGN HUB</EditableText>
+          <EditableText as="h1" field="campaign.system.loading.title">Loading campaign...</EditableText>
+        </section>
         <PublicationFooter />
       </main>
     )
@@ -199,13 +208,13 @@ export function CampaignPage() {
               <span className="campaign-stamp">{campaign.kicker || 'CAMPAIGN'}</span>
               <span className={`campaign-status campaign-status--${campaign.campaignStatus}`}>{campaign.campaignStatus}</span>
             </div>
-            <h1>{campaign.title}</h1>
-            <p className="campaign-hero__short">{campaign.shortTitle}</p>
-            <p className="campaign-hero__deck">{campaign.deck}</p>
+            <EditableText as="h1" field={`campaign.${campaign.slug}.hero.title`}>{campaign.title}</EditableText>
+            <EditableText as="p" className="campaign-hero__short" field={`campaign.${campaign.slug}.hero.short-title`}>{campaign.shortTitle}</EditableText>
+            <EditableText as="p" className="campaign-hero__deck" field={`campaign.${campaign.slug}.hero.deck`} multiline>{campaign.deck}</EditableText>
             <div className="campaign-hero__actions">
-              {showSection('reporting') ? <a className="campaign-button campaign-button--light" href="#reporting">Read the reporting</a> : null}
-              {showSection('letters') ? <a className="campaign-button campaign-button--dark" href="#letters">Read the letters</a> : null}
-              <button className="campaign-button campaign-button--ghost" type="button" onClick={shareCampaign}>Share campaign</button>
+              {showSection('reporting') ? <EditableLink className="campaign-button campaign-button--light" labelField={`campaign.${campaign.slug}.actions.reporting.label`} hrefField={`campaign.${campaign.slug}.actions.reporting.href`} defaultLabel="Read the reporting" defaultHref="#reporting" /> : null}
+              {showSection('letters') ? <EditableLink className="campaign-button campaign-button--dark" labelField={`campaign.${campaign.slug}.actions.letters.label`} hrefField={`campaign.${campaign.slug}.actions.letters.href`} defaultLabel="Read the letters" defaultHref="#letters" /> : null}
+              <button className="campaign-button campaign-button--ghost" type="button" onClick={shareCampaign}><EditableText as="span" field={`campaign.${campaign.slug}.actions.share.label`}>Share campaign</EditableText></button>
             </div>
             {campaign.partners?.length ? <p className="campaign-hero__partners">Independent campaign by {campaign.partners.join(' × ')}</p> : null}
           </div>
@@ -234,7 +243,7 @@ export function CampaignPage() {
       <OrderedCampaignSections order={sectionOrder}>
       {showSection('status') ? <section className="campaign-section campaign-section--status" id="status">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="LIVE CAMPAIGN DASHBOARD" title={sectionTitle('status')} />
+          <SectionHeading sectionKey="status" eyebrow="LIVE CAMPAIGN DASHBOARD" title={sectionTitle('status')} />
           {isAiCampaign ? <ItalyClock /> : null}
           <div className="campaign-status-grid">
             {Number.isFinite(deadline) ? <article className="campaign-metric campaign-metric--deadline">
@@ -255,7 +264,7 @@ export function CampaignPage() {
 
       {showSection('reporting') ? <section className="campaign-section" id="reporting">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="REPORTING + CONTEXT" title={sectionTitle('reporting')} description="The campaign is anchored in reporting and source material. These are the Sabot pieces connected to this campaign." />
+          <SectionHeading sectionKey="reporting" eyebrow="REPORTING + CONTEXT" title={sectionTitle('reporting')} description="The campaign is anchored in reporting and source material. These are the Sabot pieces connected to this campaign." />
           <PieceGrid pieces={reportingPieces} empty="Campaign reporting will appear here as relevant published posts are detected." />
           <ResourceStrip resources={reportingResources} />
         </div>
@@ -263,7 +272,7 @@ export function CampaignPage() {
 
       {showSection('letters') ? <section className="campaign-section campaign-section--paper" id="letters">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="LETTERS" title={sectionTitle('letters')} description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
+          <SectionHeading sectionKey="letters" eyebrow="LETTERS" title={sectionTitle('letters')} description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
           <PieceGrid pieces={letterPieces} empty="Letter downloads are temporarily unavailable. The reporting section remains available while they are restored." />
           <ResourceStrip resources={letterResources} />
         </div>
@@ -271,7 +280,7 @@ export function CampaignPage() {
 
       {showSection('act') ? <section className="campaign-section campaign-section--act" id="act">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="NOW THAT YOU KNOW" title={sectionTitle('act')} description="Reporting first. Letters next. Direct action follows." />
+          <SectionHeading sectionKey="act" eyebrow="NOW THAT YOU KNOW" title={sectionTitle('act')} description="Reporting first. Letters next. Direct action follows." />
           <div className="campaign-action-grid">
             {(campaign.actions || []).map((action, index) => (
               <article className="campaign-action-card" key={action.id || index}>
@@ -287,7 +296,7 @@ export function CampaignPage() {
 
       {showSection('updates') ? <section className="campaign-section campaign-section--updates" id="updates">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="LIVE UPDATES" title={sectionTitle('updates')} description="A dated record of statements, publications, deadlines, and material changes in the campaign." />
+          <SectionHeading sectionKey="updates" eyebrow="LIVE UPDATES" title={sectionTitle('updates')} description="A dated record of statements, publications, deadlines, and material changes in the campaign." />
           <div className="campaign-update-list">
             {updates.length ? updates.map((item) => (
               <article className={`campaign-update${item.pinned ? ' is-pinned' : ''}`} key={item.id}>
@@ -301,7 +310,7 @@ export function CampaignPage() {
 
       {showSection('graphics') ? <section className="campaign-section" id="graphics">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="CAMPAIGN KIT" title={sectionTitle('graphics')} description="Download, repost, print and remix. Each card includes its full-resolution original, accessible alt text and a ready-to-use caption." />
+          <SectionHeading sectionKey="graphics" eyebrow="CAMPAIGN KIT" title={sectionTitle('graphics')} description="Download, repost, print and remix. Each card includes its full-resolution original, accessible alt text and a ready-to-use caption." />
           {graphics.length ? (
             <div className="campaign-graphics-grid">
               {graphics.map((graphic) => (
@@ -318,7 +327,7 @@ export function CampaignPage() {
       {showSection('timeline') ? (
         <section className="campaign-section campaign-section--timeline" id="timeline">
           <div className="campaign-shell">
-            <SectionHeading eyebrow="TIMELINE" title={sectionTitle('timeline')} />
+            <SectionHeading sectionKey="timeline" eyebrow="TIMELINE" title={sectionTitle('timeline')} />
             <div className="campaign-timeline">
               {sortByDate(campaign.timeline, false).map((item) => <article key={item.id}><time>{formatDate(item.date)}</time><div><h3>{item.title}</h3><p>{item.body}</p></div></article>)}
             </div>
@@ -328,7 +337,7 @@ export function CampaignPage() {
 
       {showSection('coverage') ? <section className="campaign-section" id="coverage">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRESS + RESPONSE" title={sectionTitle('coverage')} description={isAiCampaign ? 'Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available.' : 'Reporting, statements, and media coverage connected to this campaign.'} />
+          <SectionHeading sectionKey="coverage" eyebrow="PRESS + RESPONSE" title={sectionTitle('coverage')} description={isAiCampaign ? 'Official dispatches and international coverage of the designation and its consequences. Italian-language material is labeled, with an English rendering where one is available.' : 'Reporting, statements, and media coverage connected to this campaign.'} />
           {isAiCampaign ? <CampaignTrackerStatus campaign={campaign} /> : null}
           {featuredCoverage.length ? <div className="campaign-coverage-group campaign-coverage-group--featured"><h3>Featured Coverage</h3><LinkList items={featuredCoverage.map(coverageLinkItem)} /></div> : null}
           {automaticCoverage.length ? <div className="campaign-coverage-group campaign-coverage-group--automatic"><h3>Automated Coverage Feed</h3><LinkList items={automaticCoverage.map(coverageLinkItem)} /><p className="campaign-coverage-disclaimer">Links in this section are collected automatically for public awareness and research. Inclusion does not constitute endorsement by Sabot Media or indicate that we have independently verified the reporting.</p></div> : null}
@@ -343,7 +352,7 @@ export function CampaignPage() {
 
       {showSection('sources') ? <section className="campaign-section campaign-section--sources" id="sources">
         <div className="campaign-shell">
-          <SectionHeading eyebrow="PRIMARY SOURCES" title={sectionTitle('sources')} description={isAiCampaign ? 'Government material, A/I statements, legal analysis, historical documents, and other primary sources are gathered here for direct verification.' : 'Primary documents and source material are gathered here for direct verification.'} />
+          <SectionHeading sectionKey="sources" eyebrow="PRIMARY SOURCES" title={sectionTitle('sources')} description={isAiCampaign ? 'Government material, A/I statements, legal analysis, historical documents, and other primary sources are gathered here for direct verification.' : 'Primary documents and source material are gathered here for direct verification.'} />
           {campaign.sources?.length ? <LinkList items={campaign.sources.map((item) => ({ id: item.id, eyebrow: item.publisher, title: item.title, body: item.note, url: item.url }))} /> : <p className="campaign-reader-note">The reporting above retains its article-level citations and primary-source links.</p>}
         </div>
       </section> : null}
@@ -351,7 +360,7 @@ export function CampaignPage() {
       {showSection('faq') ? (
         <section className="campaign-section campaign-section--faq" id="faq">
           <div className="campaign-shell">
-            <SectionHeading eyebrow="FAQ" title={sectionTitle('faq')} />
+            <SectionHeading sectionKey="faq" eyebrow="FAQ" title={sectionTitle('faq')} />
             <div className="campaign-faq">
               {campaign.faq.map((item) => <details key={item.id}><summary>{item.question}</summary><p>{item.answer}</p></details>)}
             </div>
@@ -361,7 +370,7 @@ export function CampaignPage() {
 
       {showSection('translations') ? (
         <section className="campaign-section" id="translations">
-          <div className="campaign-shell"><SectionHeading eyebrow="TRANSLATIONS" title={sectionTitle('translations')} /><LinkList items={campaign.translations.map((item) => ({ id: item.id, eyebrow: item.language, title: item.title, url: item.url }))} /></div>
+          <div className="campaign-shell"><SectionHeading sectionKey="translations" eyebrow="TRANSLATIONS" title={sectionTitle('translations')} /><LinkList items={campaign.translations.map((item) => ({ id: item.id, eyebrow: item.language, title: item.title, url: item.url }))} /></div>
         </section>
       ) : null}
 
@@ -405,7 +414,7 @@ function SignatoryCarousel({ signatories, title }) {
   return (
     <section className="campaign-section campaign-section--signatories" id="signatories">
       <div className="campaign-shell">
-        <SectionHeading eyebrow="OPEN LETTER" title={title} description={`${signatories.length} signatories${statementCount ? ` · ${statementCount} public statements` : ''}.`} />
+        <SectionHeading sectionKey="signatories" eyebrow="OPEN LETTER" title={title} description={`${signatories.length} signatories${statementCount ? ` · ${statementCount} public statements` : ''}.`} />
         <div className="campaign-carousel-controls">
           <span>DRAG / SWIPE / USE CONTROLS</span>
           <div><button type="button" onClick={() => move(-1)} aria-label="Previous signatories">←</button><button type="button" onClick={() => move(1)} aria-label="Next signatories">→</button></div>
@@ -427,7 +436,7 @@ function SignatoryCarousel({ signatories, title }) {
 function SocialSection({ campaign, social, copyState, copyCampaignLink, isAiCampaign, title }) {
   return <section className="campaign-section campaign-section--social" id="social">
     <div className="campaign-shell">
-      <SectionHeading eyebrow="SOCIAL CIRCULATION" title={title} description={isAiCampaign ? 'Campaign posts from A/I and Sabot Media. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual.' : 'Public posts and dispatches connected to this campaign.'} />
+      <SectionHeading sectionKey="social" eyebrow="SOCIAL CIRCULATION" title={title} description={isAiCampaign ? 'Campaign posts from A/I and Sabot Media. Cavallette is A/I’s official account and posts primarily in Italian; some updates are bilingual.' : 'Public posts and dispatches connected to this campaign.'} />
       <SocialSources sources={campaign.socialSources || []} />
       <div className="campaign-share-row">
         <a className="campaign-button campaign-button--light" href={`https://bsky.app/intent/compose?text=${encodeURIComponent(`${campaign.shortTitle}\n\n${window.location.href.split('#')[0]}`)}`} target="_blank" rel="noreferrer">Post to Bluesky ↗</a>
@@ -489,8 +498,14 @@ function MonitorCard({ monitor, sourceUrl, label }) {
   )
 }
 
-function SectionHeading({ eyebrow, title, description = '' }) {
-  return <header className="campaign-section-heading"><p>{eyebrow}</p><h2>{title}</h2>{description ? <div>{description}</div> : null}</header>
+function SectionHeading({ sectionKey, eyebrow, title, description = '' }) {
+  const { slug = AI_CAMPAIGN_SLUG } = useParams()
+  const fieldPrefix = `campaign.${slug}.${sectionKey}`
+  return <header className="campaign-section-heading">
+    <EditableText as="p" field={`${fieldPrefix}.eyebrow`}>{eyebrow}</EditableText>
+    <EditableText as="h2" field={`${fieldPrefix}.title`}>{title}</EditableText>
+    {description ? <EditableText as="div" field={`${fieldPrefix}.description`} multiline>{description}</EditableText> : null}
+  </header>
 }
 
 function CampaignTrackerStatus({ campaign }) {

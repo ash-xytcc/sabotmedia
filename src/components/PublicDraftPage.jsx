@@ -10,18 +10,13 @@ import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 import { validatePublicConfig } from '../lib/publicConfigSchema'
 import { AdminFrame } from './AdminRail'
 import { adminRoutes } from '../routing/routes'
+import { publicPageRegistry, withSiteEdit } from '../lib/publicPageRegistry'
 
 function unwrapImportedPayload(raw) {
   if (raw?.publicSite) return raw.publicSite
   if (raw?.config) return raw.config
   return raw
 }
-
-const SITE_PAGES = [
-  { label: 'Home', path: '/' },
-  { label: 'Archive', path: '/archive' },
-  { label: 'Press', path: '/press' },
-]
 
 const SITE_SECTIONS = ['Masthead', 'Navigation', 'Homepage layout', 'Public surfaces']
 
@@ -41,7 +36,6 @@ export function PublicDraftPage() {
     discardDraftAndReload,
     replaceDraftWithImported,
     importDraftPatch,
-    replaceSavedConfigLocally,
     loadState,
     saveState,
     loadError,
@@ -132,12 +126,6 @@ export function PublicDraftPage() {
       return
     }
 
-    if (importMode === 'replace-saved-local') {
-      replaceSavedConfigLocally(result.normalized)
-      setImportStatus('replaced saved local config from imported config')
-      return
-    }
-
     importDraftPatch(result.normalized)
     setImportStatus('merged imported config into draft')
   }
@@ -179,11 +167,11 @@ export function PublicDraftPage() {
           <article className="review-summary-card">
             <div className="review-summary-card__eyebrow">Pages</div>
             <ul>
-              {SITE_PAGES.map((page) => (
+              {publicPageRegistry.map((page) => (
                 <li key={page.path}>
                   <div>{page.label}</div>
                   <div className="review-card__actions">
-                    <Link className="button button--primary" to={`${page.path}?edit=site`}>
+                    <Link className="button button--primary" to={withSiteEdit(page.path)}>
                       Edit live
                     </Link>
                     <Link className="button" to={page.path}>
@@ -284,7 +272,6 @@ export function PublicDraftPage() {
                 <select value={importMode} onChange={(e) => setImportMode(e.target.value)}>
                   <option value="merge-draft">merge into draft</option>
                   <option value="replace-draft">replace draft</option>
-                  <option value="replace-saved-local">replace saved local</option>
                 </select>
               </label>
 

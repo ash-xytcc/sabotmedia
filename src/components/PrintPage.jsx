@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
 import { renderImportedBody } from '../lib/renderImportedBody'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
 import { useWordPressPieces } from '../lib/useWordPressPieces'
@@ -9,6 +9,8 @@ import { normalizePost } from '../models/publication'
 import { DEFAULT_PRINT_OPTIONS, PrintLayouts, printEngine } from '../print/printEngine'
 import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
+import { EditableText } from './EditableText'
+import { EditableLink } from './EditableLink'
 
 function getPieceBySlug(pieces, slug) {
   return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
@@ -96,13 +98,13 @@ export function PrintPage({ pieces = [] }) {
     <main className="page print-page">
       <header className="print-header">
         <div className="print-header__actions">
-          <Link className="print-header__back-link" to={`/post/${piece.slug}`}>Back to article</Link>
-          <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
+          <EditableLink className="print-header__back-link" labelField={`print.${piece.slug}.actions.back.label`} hrefField={`print.${piece.slug}.actions.back.href`} defaultLabel="Back to article" defaultHref={`/post/${piece.slug}`} />
+          <button type="button" onClick={() => window.print()}><EditableText as="span" field="print.template.actions.print">Print / Save PDF</EditableText></button>
         </div>
         <fieldset className="print-header__controls" aria-label="print layout options">
-          <label><input type="checkbox" checked={printOptions.showMetadata} onChange={handleToggle('showMetadata')} /> Show metadata</label>
-          <label><input type="checkbox" checked={printOptions.showFeaturedImage} onChange={handleToggle('showFeaturedImage')} /> Show featured image</label>
-          <label><input type="checkbox" checked={printOptions.showColophon} onChange={handleToggle('showColophon')} /> Show colophon</label>
+          <label><input type="checkbox" checked={printOptions.showMetadata} onChange={handleToggle('showMetadata')} /> <EditableText as="span" field="print.template.controls.metadata">Show metadata</EditableText></label>
+          <label><input type="checkbox" checked={printOptions.showFeaturedImage} onChange={handleToggle('showFeaturedImage')} /> <EditableText as="span" field="print.template.controls.image">Show featured image</EditableText></label>
+          <label><input type="checkbox" checked={printOptions.showColophon} onChange={handleToggle('showColophon')} /> <EditableText as="span" field="print.template.controls.colophon">Show colophon</EditableText></label>
         </fieldset>
       </header>
 

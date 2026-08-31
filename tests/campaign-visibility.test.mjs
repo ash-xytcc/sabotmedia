@@ -10,8 +10,8 @@ const footer = fs.readFileSync(new URL('../src/components/PublicationFooter.jsx'
 
 test('A/I campaign launch links are hidden behind an explicit temporary flag', () => {
   assert.match(visibility, /SHOW_AI_CAMPAIGN_LINKS\s*=\s*false/)
-  assert.match(topbar, /SHOW_AI_CAMPAIGN_LINKS\s*\?\s*<Link/)
-  assert.match(footer, /SHOW_AI_CAMPAIGN_LINKS\s*\?\s*<Link/)
+  assert.match(topbar, /SHOW_AI_CAMPAIGN_LINKS\s*\?\s*<EditableLink/)
+  assert.match(footer, /SHOW_AI_CAMPAIGN_LINKS\s*\?\s*<EditableLink/)
 })
 
 test('hiding launch links does not remove the direct campaign route', () => {

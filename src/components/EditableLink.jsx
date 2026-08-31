@@ -8,6 +8,11 @@ function isExternalHref(href = '') {
   return /^https?:\/\//i.test(String(href || ''))
 }
 
+function usesNativeAnchor(href = '') {
+  const value = String(href || '')
+  return isExternalHref(value) || /^(mailto|tel):/i.test(value) || /\.(xml|pdf|zip|epub|mp3|wav|ogg)(?:[?#]|$)/i.test(value) || value.startsWith('/keys/')
+}
+
 function normalizeHref(value = '') {
   const href = String(value || '').trim()
   if (!href) return '/'
@@ -25,19 +30,21 @@ export function EditableLink({
   children,
   variant = 'link',
 }) {
-  const { isEditing, isAdmin, selectedField, setSelectedField, updateText } = usePublicEdit()
+  const { isEditing, isAdmin, isConfigReady, selectedField, setSelectedField, updateText } = usePublicEdit()
   const [isOpen, setIsOpen] = useState(false)
   const resolvedConfig = useResolvedConfig()
   const label = getConfiguredText(resolvedConfig, labelField, defaultLabel || children || '')
   const href = normalizeHref(getConfiguredText(resolvedConfig, hrefField, defaultHref))
   const external = isExternalHref(href)
-  const selected = isEditing && isAdmin && selectedField === labelField
+  const nativeAnchor = usesNativeAnchor(href)
+  const canEditInline = isEditing && isAdmin && isConfigReady
+  const selected = canEditInline && selectedField === labelField
 
   const popoverId = useMemo(() => `editable-link-${labelField.replace(/[^a-z0-9]+/gi, '-')}`, [labelField])
-  const linkClassName = `${className} ${isEditing && isAdmin ? 'editable-link editable-link--active' : ''} ${selected ? 'editable-link--selected' : ''}`.trim()
+  const linkClassName = `${className} ${canEditInline ? 'editable-link editable-link--active' : ''} ${selected ? 'editable-link--selected' : ''}`.trim()
 
   function openEditor(event) {
-    if (!isEditing || !isAdmin) return
+    if (!canEditInline) return
     event.preventDefault()
     event.stopPropagation()
     setSelectedField(labelField)
@@ -47,7 +54,7 @@ export function EditableLink({
   const content = (
     <>
       <span>{label}</span>
-      {isOpen && isEditing && isAdmin ? (
+      {isOpen && canEditInline ? (
         <span className="editable-link-popover" id={popoverId} onClick={(event) => event.stopPropagation()}>
           <label>
             <span>Label</span>
@@ -64,13 +71,13 @@ export function EditableLink({
     </>
   )
 
-  if (external) {
+  if (nativeAnchor) {
     return (
       <a
         className={linkClassName}
         href={href}
-        target="_blank"
-        rel="noopener noreferrer"
+        target={external ? '_blank' : undefined}
+        rel={external ? 'noopener noreferrer' : undefined}
         aria-describedby={isOpen ? popoverId : undefined}
         onClick={openEditor}
       >

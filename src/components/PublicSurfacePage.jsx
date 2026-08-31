@@ -4,6 +4,8 @@ import { fetchNativeEntries } from '../lib/nativePublicContentApi'
 import { getSurfaceConfig, listSurfaceConfigs } from '../lib/publicSurfaceTargets'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
+import { EditableText } from './EditableText'
+import { EditableLink } from './EditableLink'
 
 function SurfaceCard({ item }) {
   return (
@@ -64,9 +66,9 @@ export function PublicSurfacePage({ target = 'general' }) {
     <main className="page public-surface-page">
       <PublicationTopbar />
       <section className="project-hero">
-        <div className="project-hero__eyebrow">{surface.eyebrow}</div>
-        <h1>{surface.title}</h1>
-        <p className="project-hero__description">{surface.description}</p>
+        <EditableText as="div" className="project-hero__eyebrow" field={`surface.${surface.key}.eyebrow`}>{surface.eyebrow}</EditableText>
+        <EditableText as="h1" field={`surface.${surface.key}.title`}>{surface.title}</EditableText>
+        <EditableText as="p" className="project-hero__description" field={`surface.${surface.key}.description`} multiline>{surface.description}</EditableText>
         <div className="project-hero__meta">
           <span>{items.length} published entries</span>
           <span>status: {state}</span>
@@ -75,7 +77,7 @@ export function PublicSurfacePage({ target = 'general' }) {
       </section>
 
       <section className="archive-results-bar">
-        <Link className="button button--primary" to="/archive">search</Link>
+        <EditableLink className="button button--primary" labelField={`surface.${surface.key}.actions.search.label`} hrefField={`surface.${surface.key}.actions.search.href`} defaultLabel="search" defaultHref="/archive" />
         {navTargets.map((entry) => (
           <Link className="button" key={entry.key} to={entry.route}>{entry.title}</Link>
         ))}
@@ -84,23 +86,23 @@ export function PublicSurfacePage({ target = 'general' }) {
       {isPress ? (
         <section className="public-press-kit">
           <article className="wp-meta-box">
-            <h2>Sabot Media</h2>
-            <p>
+            <EditableText as="h2" field="surface.press.about.title">Sabot Media</EditableText>
+            <EditableText as="p" field="surface.press.about.body" multiline>
               Sabot Media is an independent public-interest media project publishing reporting, essays,
               archive work, print material, and project-based dispatches.
-            </p>
+            </EditableText>
           </article>
           <article className="wp-meta-box">
-            <h2>Press contact</h2>
-            <p>For press questions, statements, interviews, corrections, or background, use the public contact route.</p>
-            <Link className="button button--primary" to="/contact">Contact</Link>
+            <EditableText as="h2" field="surface.press.contact.title">Press contact</EditableText>
+            <EditableText as="p" field="surface.press.contact.body" multiline>For press questions, statements, interviews, corrections, or background, use the public contact route.</EditableText>
+            <EditableLink className="button button--primary" labelField="surface.press.actions.contact.label" hrefField="surface.press.actions.contact.href" defaultLabel="Contact" defaultHref="/contact" />
           </article>
           <article className="wp-meta-box">
-            <h2>Routes</h2>
-            <p>Browse the archive and public updates for current context.</p>
+            <EditableText as="h2" field="surface.press.routes.title">Routes</EditableText>
+            <EditableText as="p" field="surface.press.routes.body">Browse the archive and public updates for current context.</EditableText>
             <div className="project-featured-callout__actions">
-              <Link className="button" to="/archive">Archive</Link>
-              <Link className="button" to="/about">About</Link>
+              <EditableLink className="button" labelField="surface.press.actions.archive.label" hrefField="surface.press.actions.archive.href" defaultLabel="Archive" defaultHref="/archive" />
+              <EditableLink className="button" labelField="surface.press.actions.about.label" hrefField="surface.press.actions.about.href" defaultLabel="About" defaultHref="/about" />
             </div>
           </article>
         </section>
@@ -114,8 +116,8 @@ export function PublicSurfacePage({ target = 'general' }) {
         </section>
       ) : !isPress ? (
         <section className="missing-state">
-          <h2>No published entries</h2>
-          <p>This surface is live, but nothing has been published into it yet.</p>
+          <EditableText as="h2" field={`surface.${surface.key}.empty.title`}>No published entries</EditableText>
+          <EditableText as="p" field={`surface.${surface.key}.empty.body`}>This surface is live, but nothing has been published into it yet.</EditableText>
         </section>
       ) : null}
       <PublicationFooter />

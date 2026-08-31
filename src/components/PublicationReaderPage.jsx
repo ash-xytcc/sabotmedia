@@ -3,6 +3,8 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { PAGE_SIZES, loadPublicationsAsync } from '../lib/publications'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
+import { EditableText } from './EditableText'
+import { EditableLink } from './EditableLink'
 import '../publicationReader.css'
 
 function RenderPage({ page, zoom = 1 }) {
@@ -58,8 +60,8 @@ function usePublications() {
 }
 
 function PublicPublicationStatus({ state, error }) {
-  if (state === 'loading') return <section className="missing-state" role="status"><h2>Loading publication</h2><p>Reading the publication registry…</p></section>
-  if (state === 'error') return <section className="missing-state" role="alert"><h2>Publication unavailable</h2><p>{error || 'The publication registry could not be loaded.'}</p></section>
+  if (state === 'loading') return <section className="missing-state" role="status"><EditableText as="h2" field="publications.state.loading.title">Loading publication</EditableText><EditableText as="p" field="publications.state.loading.body">Reading the publication registry…</EditableText></section>
+  if (state === 'error') return <section className="missing-state" role="alert"><EditableText as="h2" field="publications.state.error.title">Publication unavailable</EditableText><p>{error || 'The publication registry could not be loaded.'}</p></section>
   return null
 }
 
@@ -112,12 +114,12 @@ export function PublicationReaderPage() {
       <header className="publication-reader__bar">
         <Link to={`/publications/${publication.slug}`}>{publication.title}</Link>
         <div className="publication-reader__controls">
-          <button type="button" onClick={() => setShowThumbnails((value) => !value)}>Thumbnails</button>
-          <button type="button" onClick={toggleBookmark}>{bookmarks.includes(pageIndex) ? 'Bookmarked' : 'Bookmark'}</button>
+          <button type="button" onClick={() => setShowThumbnails((value) => !value)}><EditableText as="span" field="publications.reader.controls.thumbnails">Thumbnails</EditableText></button>
+          <button type="button" onClick={toggleBookmark}><EditableText as="span" field={bookmarks.includes(pageIndex) ? 'publications.reader.controls.bookmarked' : 'publications.reader.controls.bookmark'}>{bookmarks.includes(pageIndex) ? 'Bookmarked' : 'Bookmark'}</EditableText></button>
           <button type="button" onClick={() => setZoom((value) => Math.max(0.6, Number((value - 0.1).toFixed(2))))} aria-label="Zoom out">-</button>
           <span>{Math.round(zoom * 100)}%</span>
           <button type="button" onClick={() => setZoom((value) => Math.min(1.6, Number((value + 0.1).toFixed(2))))} aria-label="Zoom in">+</button>
-          <button type="button" onClick={() => document.documentElement.requestFullscreen?.()}>Fullscreen</button>
+          <button type="button" onClick={() => document.documentElement.requestFullscreen?.()}><EditableText as="span" field="publications.reader.controls.fullscreen">Fullscreen</EditableText></button>
         </div>
       </header>
       <section className="publication-reader__body">
@@ -131,9 +133,9 @@ export function PublicationReaderPage() {
           </aside>
         ) : null}
         <div className="publication-reader__stage">
-          <button type="button" className="publication-reader__nav publication-reader__nav--prev" onClick={goPrevious} disabled={pageIndex === 0}>Prev</button>
+          <button type="button" className="publication-reader__nav publication-reader__nav--prev" onClick={goPrevious} disabled={pageIndex === 0}><EditableText as="span" field="publications.reader.controls.previous">Prev</EditableText></button>
           {currentPage ? <RenderPage page={currentPage} zoom={zoom} /> : null}
-          <button type="button" className="publication-reader__nav publication-reader__nav--next" onClick={goNext} disabled={pageIndex >= pages.length - 1}>Next</button>
+          <button type="button" className="publication-reader__nav publication-reader__nav--next" onClick={goNext} disabled={pageIndex >= pages.length - 1}><EditableText as="span" field="publications.reader.controls.next">Next</EditableText></button>
         </div>
       </section>
       <footer className="publication-reader__footer"><span>Page {pageIndex + 1} of {pages.length}</span></footer>
@@ -150,7 +152,7 @@ export function PublicationsIndexPage() {
   return (
     <main className="page publications-index-page">
       <PublicationTopbar />
-      <section className="project-hero"><div className="project-hero__eyebrow">Publications</div><h1>Publications</h1><p className="project-hero__description">Books, magazines, zines, readers, pamphlets, poster packs, campaign kits, and booklets.</p></section>
+      <section className="project-hero"><EditableText as="div" className="project-hero__eyebrow" field="publications.index.eyebrow">Publications</EditableText><EditableText as="h1" field="publications.index.title">Publications</EditableText><EditableText as="p" className="project-hero__description" field="publications.index.description" multiline>Books, magazines, zines, readers, pamphlets, poster packs, campaign kits, and booklets.</EditableText></section>
       {visible.length ? (
         <section className="piece-grid">
           {visible.map((publication) => (
@@ -161,7 +163,7 @@ export function PublicationsIndexPage() {
             </article>
           ))}
         </section>
-      ) : <section className="missing-state"><h2>No publications</h2><p>No public publications have been prepared yet.</p></section>}
+      ) : <section className="missing-state"><EditableText as="h2" field="publications.index.empty.title">No publications</EditableText><EditableText as="p" field="publications.index.empty.body">No public publications have been prepared yet.</EditableText></section>}
       <PublicationFooter />
     </main>
   )
@@ -182,14 +184,14 @@ export function PublicationLandingPage() {
       <PublicationTopbar />
       <section className="project-hero">
         <div className="project-hero__eyebrow">{publication.publicationType || 'Publication'}{publication.issueNumber ? ` / Issue ${publication.issueNumber}` : ''}</div>
-        <h1>{publication.title}</h1>
-        <p className="project-hero__description">{publication.description || publication.subtitle || `${publication.pages.length} managed pages with reader and print editions.`}</p>
+        <EditableText as="h1" field={`publications.${publication.slug}.hero.title`}>{publication.title}</EditableText>
+        <EditableText as="p" className="project-hero__description" field={`publications.${publication.slug}.hero.description`} multiline>{publication.description || publication.subtitle || `${publication.pages.length} managed pages with reader and print editions.`}</EditableText>
         <div className="publication-actions">
-          {publication.pages.length ? <Link className="button button--primary" to={`/reader/${publication.slug}`}>Read Online</Link> : null}
-          {publication.printlabProjectUrl ? <Link className="button" to={publication.printlabProjectUrl}>Open Printlab Project</Link> : null}
-          {printPdf ? <a className="button" href={printPdf}>Download Print Edition</a> : null}
-          {imposedPdf ? <a className="button" href={imposedPdf}>Download Imposed Booklet</a> : null}
-          {readerPdf ? <a className="button" href={readerPdf}>Download Reader PDF</a> : null}
+          {publication.pages.length ? <EditableLink className="button button--primary" labelField={`publications.${publication.slug}.actions.read.label`} hrefField={`publications.${publication.slug}.actions.read.href`} defaultLabel="Read Online" defaultHref={`/reader/${publication.slug}`} /> : null}
+          {publication.printlabProjectUrl ? <EditableLink className="button" labelField={`publications.${publication.slug}.actions.printlab.label`} hrefField={`publications.${publication.slug}.actions.printlab.href`} defaultLabel="Open Printlab Project" defaultHref={publication.printlabProjectUrl} /> : null}
+          {printPdf ? <EditableLink className="button" labelField={`publications.${publication.slug}.actions.print.label`} hrefField={`publications.${publication.slug}.actions.print.href`} defaultLabel="Download Print Edition" defaultHref={printPdf} /> : null}
+          {imposedPdf ? <EditableLink className="button" labelField={`publications.${publication.slug}.actions.imposed.label`} hrefField={`publications.${publication.slug}.actions.imposed.href`} defaultLabel="Download Imposed Booklet" defaultHref={imposedPdf} /> : null}
+          {readerPdf ? <EditableLink className="button" labelField={`publications.${publication.slug}.actions.pdf.label`} hrefField={`publications.${publication.slug}.actions.pdf.href`} defaultLabel="Download Reader PDF" defaultHref={readerPdf} /> : null}
         </div>
       </section>
       <section className="publication-page-strip" aria-label="Publication pages">

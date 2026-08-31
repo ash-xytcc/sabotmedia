@@ -5,6 +5,7 @@ import { PublicationFooter } from './PublicationFooter'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
 import { loadCollections, loadCollectionsAsync, getCollectionPieces } from '../lib/collections'
 import { getImportedImage } from '../lib/getImportedImage'
+import { EditableText } from './EditableText'
 
 function resolvePieceImage(piece) {
   return piece?.featuredImage || piece?.heroImage || piece?.imageUrl || getImportedImage(piece) || ''
@@ -52,9 +53,9 @@ export function CollectionsIndexPage({ pieces = [] }) {
     <main className="page collections-page">
       <PublicationTopbar />
       <section className="collections-hero">
-        <p className="collections-hero__eyebrow">Collections</p>
-        <h1>Bodies of work</h1>
-        <p>Browse Sabot Media collections by project, timeline, downloads, gallery, and related reading.</p>
+        <EditableText as="p" className="collections-hero__eyebrow" field="collections.index.eyebrow">Collections</EditableText>
+        <EditableText as="h1" field="collections.index.title">Bodies of work</EditableText>
+        <EditableText as="p" field="collections.index.description" multiline>Browse Sabot Media collections by project, timeline, downloads, gallery, and related reading.</EditableText>
       </section>
 
       <section className="collections-grid" aria-label="Collections">
@@ -64,8 +65,8 @@ export function CollectionsIndexPage({ pieces = [] }) {
           ))
         ) : (
           <div className="collections-empty">
-            <h2>No public collections yet</h2>
-            <p>Collections created in the newsroom will appear here once published.</p>
+            <EditableText as="h2" field="collections.index.empty.title">No public collections yet</EditableText>
+            <EditableText as="p" field="collections.index.empty.body" multiline>Collections created in the newsroom will appear here once published.</EditableText>
           </div>
         )}
       </section>

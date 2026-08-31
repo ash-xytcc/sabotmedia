@@ -1,18 +1,20 @@
 import { Link, useLocation } from 'react-router-dom'
-import { loadCustomizerSettings } from '../lib/customizerLocal'
 import { sabotMastheadTransparent } from '../lib/sabotMastheadTransparent'
 import { EditableLink } from './EditableLink'
 import { editableContentRegistry } from '../lib/editableContentRegistry'
 import { publicRoutes } from '../routing/routes'
 import { SHOW_AI_CAMPAIGN_LINKS } from '../config/campaignVisibility'
+import { useResolvedConfig } from '../lib/useResolvedConfig'
+import { getConfiguredBlock, getConfiguredText } from '../lib/publicConfig'
 
 export function PublicationTopbar() {
   const location = useLocation()
-  const customizer = loadCustomizerSettings()
+  const resolvedConfig = useResolvedConfig()
+  const masthead = getConfiguredBlock(resolvedConfig, 'site.masthead') || {}
 
-  const siteTitle = String(customizer.siteIdentity?.siteTitle || 'Sabot Media').trim() || 'Sabot Media'
-  const mastheadSize = ['compact', 'medium', 'large'].includes(customizer.masthead?.mastheadSize)
-    ? customizer.masthead.mastheadSize
+  const siteTitle = String(getConfiguredText(resolvedConfig, 'site.identity.title', 'Sabot Media')).trim() || 'Sabot Media'
+  const mastheadSize = ['compact', 'medium', 'large'].includes(masthead.size)
+    ? masthead.size
     : 'medium'
 
   const isHome = location.pathname === '/'
@@ -46,8 +48,8 @@ export function PublicationTopbar() {
                 labelField={item.labelField}
               />
             ))}
-            {SHOW_AI_CAMPAIGN_LINKS ? <Link className="publication-topbar__campaign-link" to={publicRoutes.aiCampaign}>A/I Campaign</Link> : null}
-            <Link to="/aberdeen-local-1312-gallery">Gallery</Link>
+            {SHOW_AI_CAMPAIGN_LINKS ? <EditableLink className="publication-topbar__campaign-link" labelField="nav.campaign.label" hrefField="nav.campaign.href" defaultLabel="A/I Campaign" defaultHref={publicRoutes.aiCampaign} /> : null}
+            <EditableLink labelField="nav.gallery.label" hrefField="nav.gallery.href" defaultLabel="Gallery" defaultHref="/aberdeen-local-1312-gallery" />
           </nav>
         </div>
       </div>
