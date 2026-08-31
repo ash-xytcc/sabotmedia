@@ -307,7 +307,7 @@ export function CampaignPage() {
               {graphics.map((graphic) => (
                 <figure className="campaign-graphic" key={graphic.id || graphic.imageUrl}>
                   <a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer"><img src={graphic.imageUrl} alt={graphic.alt || ''} loading="lazy" /></a>
-                  <figcaption><strong>{graphic.title || 'Campaign graphic'}</strong>{graphic.caption ? <p>{graphic.caption}</p> : null}<div className="campaign-graphic__actions"><a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer" download>Open / download ↗</a><CopyButton value={graphic.alt} label="Copy alt text" /><CopyButton value={graphic.caption} label="Copy caption" /></div></figcaption>
+                  <figcaption><strong>{graphic.title || 'Campaign graphic'}</strong>{graphic.caption ? <p>{graphic.caption}</p> : null}<div className="campaign-graphic__actions"><a href={graphic.downloadUrl || graphic.imageUrl} target="_blank" rel="noreferrer" download>Open / download ↗</a>{graphic.sourceUrl ? <a href={graphic.sourceUrl} target="_blank" rel="noreferrer">View original post ↗</a> : null}<CopyButton value={graphic.alt} label="Copy alt text" /><CopyButton value={graphic.caption} label="Copy caption" /></div></figcaption>
                 </figure>
               ))}
             </div>

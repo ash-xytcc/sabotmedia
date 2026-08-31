@@ -148,13 +148,16 @@ test('live social filtering excludes pre-campaign A\/I and NoBlogs posts', async
 
 test('bundled campaign graphics manifest resolves every accessible asset', () => {
   const slugs = [...graphicsManifest.matchAll(/\['([a-z0-9-]+)',/g)].map((match) => match[1])
-  assert.equal(slugs.length, 22)
+  assert.equal(slugs.length, 23)
   for (const slug of slugs) {
     assert.ok(fs.existsSync(new URL(`../public/campaigns/autistici-inventati/graphics/${slug}.webp`, import.meta.url)), `${slug} web asset exists`)
     assert.ok(fs.existsSync(new URL(`../public/campaigns/autistici-inventati/graphics/originals/${slug}.png`, import.meta.url)), `${slug} original exists`)
   }
   assert.match(graphicsManifest, /alt,/)
+  assert.match(graphicsManifest, /section-230-hypocrisy/)
+  assert.match(graphicsManifest, /kolektiva\.social\/@AberdeenLocal1312\/117184117978084213/)
   assert.match(page, /Copy alt text/)
+  assert.match(page, /View original post/)
   assert.doesNotMatch(page, /Add Bluesky, Mastodon|attached from Campaigns admin|added in Campaigns admin|Source links can be attached/)
 })
 
