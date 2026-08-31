@@ -25,7 +25,6 @@ const NAV_GROUPS = [
       { to: adminRoutes.publications, label: 'Publications' },
       { to: adminRoutes.campaigns, label: 'Campaigns', capability: 'publishing:write' },
       { to: adminRoutes.podcasts, label: 'Podcasts' },
-      { to: adminRoutes.podcastSettings, label: 'Podcast Settings / Import RSS', capability: 'publishing:write' },
       { to: adminRoutes.feeds, label: 'Feeds & Syndication' },
       { to: adminRoutes.qa, label: 'Editorial QA' },
     ],
@@ -43,7 +42,6 @@ const NAV_GROUPS = [
     items: [
       { to: adminRoutes.settings, label: 'Settings', capability: 'site:manage' },
       { to: adminRoutes.analytics, label: 'Analytics', capability: 'analytics:view' },
-      { to: adminRoutes.sites, label: 'Sites & Domains', capability: 'site:manage' },
     ],
   },
   {
@@ -53,7 +51,6 @@ const NAV_GROUPS = [
       { to: adminRoutes.backup, label: 'Backups', capability: 'system:view' },
       { to: adminRoutes.auditLog, label: 'Audit Log', capability: 'system:view' },
       { to: adminRoutes.users, label: 'Users & Access', capability: 'users:manage' },
-      { to: adminRoutes.tools, label: 'Tools', capability: 'system:view' },
     ],
   },
 ]
@@ -137,7 +134,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
           <Link to={adminRoutes.dashboard} className="wp-admin-topbar__link wp-admin-topbar__link--icon" aria-label="SabotPress" title="SabotPress"><span className="wp-admin-topbar__wpicon" aria-hidden="true">S</span></Link>
           <AdminBarMenu label="My Sites">
             <Link to="/" className="wp-admin-topbar__dropdown-link">{primarySiteName}</Link>
-            {canManageSite ? <Link to={adminRoutes.sites} className="wp-admin-topbar__dropdown-link">Manage Sites</Link> : null}
+            {canManageSite ? <Link to={adminRoutes.settings} className="wp-admin-topbar__dropdown-link">Site Settings</Link> : null}
           </AdminBarMenu>
           <Link to="/" className="wp-admin-topbar__link wp-admin-topbar__brand-logo-link" aria-label="Sabot Media home"><img src={mastheadLogo} alt="Sabot Media" className="wp-admin-topbar__brand-logo" /></Link>
           {canCreate ? (

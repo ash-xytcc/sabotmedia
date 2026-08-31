@@ -48,7 +48,7 @@ export const adminRoutes = Object.freeze({
   qa: '/wp-admin/qa',
   settings: '/wp-admin/settings',
   users: '/wp-admin/users',
-  sites: '/wp-admin/sites',
+  sites: '/wp-admin/settings/domains',
   podcasts: '/wp-admin/podcasts',
   podcastSettings: '/wp-admin/podcasts/settings',
   overrides: '/wp-admin/overrides',
@@ -68,7 +68,7 @@ export const routeRedirects = Object.freeze([
   { from: '/audiolab', to: adminRoutes.audiolab },
   { from: '/customize', to: adminRoutes.settings },
   { from: '/draft', to: adminRoutes.liveEditor },
-  { from: '/tools', to: adminRoutes.tools },
+  { from: '/tools', to: adminRoutes.siteHealth },
   { from: '/settings', to: adminRoutes.settings },
   { from: '/users', to: adminRoutes.users },
   { from: '/sites', to: adminRoutes.sites },
@@ -76,8 +76,8 @@ export const routeRedirects = Object.freeze([
   { from: '/podcasts/settings', to: adminRoutes.podcastSettings },
   { from: '/analytics', to: adminRoutes.analytics },
   { from: '/taxonomy', to: adminRoutes.taxonomy },
-  { from: '/roles', to: adminRoutes.roles },
-  { from: '/platform-map', to: adminRoutes.platformMap },
+  { from: '/roles', to: adminRoutes.users },
+  { from: '/platform-map', to: adminRoutes.siteHealth },
 ])
 
 export function postPath(slug) {

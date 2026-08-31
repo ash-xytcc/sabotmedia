@@ -14,11 +14,10 @@ test('podcast settings has a canonical named admin route and protected page', ()
   assert.match(app, /path=\{`\$\{adminRoutes\.podcasts\}\/settings`\} element=\{protect\(<PodcastSettingsPage/)
 })
 
-test('podcast area is reachable from normal admin navigation', () => {
+test('podcast area has one normal admin destination with settings nested inside it', () => {
   assert.match(rail, /adminRoutes\.podcasts, label: 'Podcasts'/)
-  assert.match(rail, /adminRoutes\.podcastSettings, label: 'Podcast Settings \/ Import RSS'/)
-  assert.match(palette, /Podcast Settings \/ Import RSS/)
-  assert.match(palette, /adminRoutes\.podcastSettings/)
+  assert.doesNotMatch(rail, /adminRoutes\.podcastSettings/)
+  assert.doesNotMatch(palette, /Podcast Settings \/ Import RSS|adminRoutes\.podcastSettings/)
 })
 
 test('podcast episodes page exposes import and canonical RSS actions', () => {

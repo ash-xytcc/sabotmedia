@@ -2,6 +2,7 @@ import { permissionHasCapability, resolvePublicSitePermission } from './_lib/pub
 import { writeAuditLog } from './_lib/auditLog.js'
 
 const STATUS_OPTIONS = new Set(['connected', 'planned', 'needs DNS', 'disabled'])
+const CANONICAL_DOMAIN = 'sabot.media'
 
 export async function onRequestGet(context) {
   const permission = await resolvePublicSitePermission(context)
@@ -26,6 +27,7 @@ export async function onRequestPost(context) {
     const body = await context.request.json()
     const item = normalizeSite(body?.item || body || {})
     if (!item.name || !item.domain) return json({ ok: false, error: 'site name and domain are required' }, 400)
+    if (!isValidHostname(item.domain)) return json({ ok: false, error: 'enter a hostname only, such as mag.sabot.media (no path, port, or URL)' }, 400)
     await ensureSitesTable(context.env.BF_DB)
     await context.env.BF_DB.prepare(`INSERT INTO site_domains (id, name, domain, base_path, status, notes, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -55,6 +57,7 @@ export async function onRequestDelete(context) {
   try {
     await ensureSitesTable(context.env.BF_DB)
     const existing = await context.env.BF_DB.prepare('SELECT domain FROM site_domains WHERE id = ? LIMIT 1').bind(id).first()
+    if (normalizeDomain(existing?.domain) === CANONICAL_DOMAIN) return json({ ok: false, error: 'the canonical sabot.media registry record cannot be deleted' }, 409)
     await context.env.BF_DB.prepare('DELETE FROM site_domains WHERE id = ?').bind(id).run()
     await writeAuditLog(context.env.BF_DB, {
       action: 'sites.delete', entityType: 'site_domain', entityId: id, actor: permission.actor, detail: existing || { id },
@@ -94,6 +97,11 @@ function rowToSite(row = {}) {
 }
 
 function normalizeDomain(value) { return String(value || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '') }
+function isValidHostname(value) {
+  const hostname = String(value || '')
+  if (hostname.length > 253 || hostname.includes('/') || hostname.includes(':') || hostname.includes('..')) return false
+  return hostname.split('.').length >= 2 && hostname.split('.').every((label) => /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label))
+}
 function normalizeBasePath(value) {
   const trimmed = String(value || '').trim()
   if (!trimmed || trimmed === '/') return '/'

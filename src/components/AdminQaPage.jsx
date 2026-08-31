@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
-import { loadPublicConfigPayload } from '../lib/publicConfigApi'
-import { fetchNativeEntries } from '../lib/nativePublicContentApi'
+import { adminRoutes } from '../routing/routes'
 
 const CORE_ROUTES = [
   ['Home', '/'],
@@ -34,46 +34,15 @@ const MANUAL_STEPS = [
 ]
 
 export function AdminQaPage() {
-  const [status, setStatus] = useState('idle')
-  const [error, setError] = useState('')
-
   const routeRows = useMemo(() => CORE_ROUTES, [])
-
-  async function exportSiteConfig() {
-    try {
-      setStatus('exporting site config')
-      setError('')
-      const payload = await loadPublicConfigPayload()
-      downloadJson('sabot-site-config-export.json', payload)
-      setStatus('site config exported')
-    } catch (err) {
-      setError(String(err?.message || err))
-      setStatus('error')
-    }
-  }
-
-  async function exportNativeContent() {
-    try {
-      setStatus('exporting native content')
-      setError('')
-      const payload = await fetchNativeEntries({ includeFuture: 1 })
-      downloadJson('sabot-native-content-export.json', payload)
-      setStatus('native content exported')
-    } catch (err) {
-      setError(String(err?.message || err))
-      setStatus('error')
-    }
-  }
 
   return (
     <AdminFrame>
       <main className="page wp-admin-screen admin-qa-page">
         <div className="wp-screen-header">
           <h1>QA Checklist</h1>
-          <span className="description">Status: {status}</span>
+          <span className="description">Manual release verification</span>
         </div>
-
-        {error ? <div className="wp-notice wp-notice--error"><p>{error}</p></div> : null}
 
         <section className="wp-meta-box admin-qa-card">
           <h2>Core Routes</h2>
@@ -97,32 +66,13 @@ export function AdminQaPage() {
         </section>
 
         <section className="wp-meta-box admin-qa-card">
-          <h2>Safe Exports</h2>
-          <p>
-            Download current editable public config and native content JSON for QA comparison before and after manual edits.
-          </p>
+          <h2>Pre-release snapshot</h2>
+          <p>Use the canonical server-backed backup before a release. It includes the datasets that the former partial QA exports omitted.</p>
           <div className="wp-meta-actions">
-            <button className="button button--primary" type="button" onClick={exportSiteConfig}>
-              Download site config
-            </button>
-            <button className="button" type="button" onClick={exportNativeContent}>
-              Download native content
-            </button>
+            <Link className="button button--primary" to={adminRoutes.backup}>Open System Backup</Link>
           </div>
         </section>
       </main>
     </AdminFrame>
   )
-}
-
-function downloadJson(filename, payload) {
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  document.body.appendChild(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
 }

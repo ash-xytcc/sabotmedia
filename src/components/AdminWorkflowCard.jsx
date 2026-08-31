@@ -56,7 +56,7 @@ export function AdminWorkflowCard() {
 
       <div className="admin-workflow-card__grid">
         <WorkflowStep title={title1} body={body1} action={action1} to={adminRoutes.qa} />
-        <WorkflowStep title={title2} body={body2} action={action2} to={adminRoutes.overrides} />
+        <WorkflowStep title={title2} body={body2} action={action2} to={adminRoutes.posts} />
         <WorkflowStep title={title3} body={body3} action={action3} to={adminRoutes.podcasts} />
         <WorkflowStep title={title4} body={body4} action={action4} to={adminRoutes.nativeBridge} />
         <WorkflowStep title={title5} body={body5} action={action5} to="/updates" />

@@ -69,7 +69,7 @@ export function SettingsAdminPage() {
             <Link className="button" to={adminRoutes.podcasts}>Podcasts</Link>
             <Link className="button" to={adminRoutes.siteHealth}>Site Health</Link>
             <Link className="button" to={adminRoutes.backup}>Backups</Link>
-            <Link className="button" to={adminRoutes.sites}>Sites / Domains</Link>
+            <Link className="button" to={adminRoutes.sites}>Advanced Domain Registry</Link>
           </div>
         </section>
       </main>

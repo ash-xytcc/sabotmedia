@@ -7,7 +7,6 @@ import { adminRoutes } from '../routing/routes'
 const EMPTY_FORM = {
   name: '',
   domain: '',
-  basePath: '/',
   status: 'planned',
   notes: '',
 }
@@ -38,8 +37,6 @@ export function SitesAdminPage() {
   }, [])
 
   const sortedSites = useMemo(() => [...sites].sort((a, b) => a.name.localeCompare(b.name)), [sites])
-  const connectedCount = sites.filter((site) => site.status === 'connected').length
-  const needsDnsCount = sites.filter((site) => site.status === 'needs DNS').length
   const canonicalSite = sites.find((site) => site.domain === DEFAULT_SITE.domain)
 
   function updateForm(field, value) {
@@ -116,8 +113,8 @@ export function SitesAdminPage() {
       <main className="page wp-admin-screen wp-sites-screen">
         <div className="wp-screen-header">
           <div>
-            <h1>Sites & Domains</h1>
-            <p className="description">Track which hostnames belong to SabotPress and whether Cloudflare has actually attached them. This registry does not change DNS by itself.</p>
+            <h1>Domain Registry (Advanced)</h1>
+            <p className="description">Record intended hostnames and operator notes. This registry does not configure or verify Cloudflare, DNS, TLS, redirects, or application routing.</p>
           </div>
           <Link className="button" to={adminRoutes.settings}>Back to Settings</Link>
         </div>
@@ -125,12 +122,7 @@ export function SitesAdminPage() {
         {error ? <div className="notice notice-error" role="alert"><p><strong>Sites error:</strong> {error}</p></div> : null}
         {state === 'loading' ? <div className="notice notice-info" role="status"><p>Loading site registry…</p></div> : null}
 
-        <section className="newsroom-stat-grid" aria-label="Domain status summary">
-          <article className="review-summary-card"><div className="review-summary-card__eyebrow">canonical</div><strong>{canonicalSite ? 'OK' : '!'}</strong><span>{canonicalSite ? 'sabot.media registered' : 'registry record missing'}</span></article>
-          <article className="review-summary-card"><div className="review-summary-card__eyebrow">connected</div><strong>{connectedCount}</strong><span>hostnames marked live</span></article>
-          <article className="review-summary-card"><div className="review-summary-card__eyebrow">needs DNS</div><strong>{needsDnsCount}</strong><span>require Cloudflare action</span></article>
-          <article className="review-summary-card"><div className="review-summary-card__eyebrow">www</div><strong>308</strong><span>redirects to sabot.media</span></article>
-        </section>
+        <div className="notice notice-info"><p><strong>Source of truth:</strong> Cloudflare Custom Domains and DNS. Status values below are planning notes entered by an administrator, not live probes. Use <Link to={adminRoutes.siteHealth}>Site Health</Link> for facts the application can verify itself.</p></div>
 
         {!canonicalSite && state === 'loaded' ? (
           <section className="wp-meta-box">
@@ -148,8 +140,7 @@ export function SitesAdminPage() {
           <form className="wp-settings-form wp-sites-form" onSubmit={addSite}>
             <label><span>Display name</span><input value={form.name} onChange={(e) => updateForm('name', e.target.value)} placeholder="Sabot Magazine" required /></label>
             <label><span>Hostname</span><input value={form.domain} onChange={(e) => updateForm('domain', e.target.value)} placeholder="mag.sabot.media" required /></label>
-            <label><span>Base path</span><input value={form.basePath} onChange={(e) => updateForm('basePath', e.target.value)} placeholder="/" /></label>
-            <label><span>Connection state</span><select value={form.status} onChange={(e) => updateForm('status', e.target.value)}>{SITE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
+            <label><span>Operator status</span><select value={form.status} onChange={(e) => updateForm('status', e.target.value)}>{SITE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}</select><small>Manual planning state only; it is not a connectivity test.</small></label>
             <label><span>Notes</span><textarea value={form.notes} onChange={(e) => updateForm('notes', e.target.value)} placeholder="Why this hostname exists, who controls DNS, launch note…" /></label>
             <p><button className="button button--primary" type="submit" disabled={Boolean(savingId)}>Add hostname</button></p>
           </form>
@@ -161,14 +152,14 @@ export function SitesAdminPage() {
           {sortedSites.length ? (
             <div className="content-table-wrap">
               <table className="content-table wp-posts-table">
-                <thead><tr><th>Site</th><th>Hostname</th><th>Base route</th><th>Status</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Site</th><th>Hostname</th><th>Operator status</th><th>Notes</th><th>Actions</th></tr></thead>
                 <tbody>
                   {sortedSites.map((site) => (
                     <tr key={site.id}>
                       <td><strong>{site.name}</strong>{site.domain === DEFAULT_SITE.domain ? <div className="description">canonical production site</div> : null}</td>
                       <td><code>{site.domain}</code></td>
-                      <td><input value={site.basePath} onChange={(e) => updateSiteLocal(site.id, 'basePath', e.target.value)} aria-label={`Base path for ${site.name}`} /></td>
                       <td><select value={site.status} onChange={(e) => updateSiteLocal(site.id, 'status', e.target.value)} aria-label={`Status for ${site.name}`}>{SITE_STATUS_OPTIONS.map((status) => <option key={status} value={status}>{status}</option>)}</select></td>
+                      <td><textarea value={site.notes} onChange={(e) => updateSiteLocal(site.id, 'notes', e.target.value)} aria-label={`Notes for ${site.name}`} rows="2" /></td>
                       <td><div className="wp-row-actions"><button className="button" type="button" onClick={() => persistSite(site)} disabled={savingId === site.id}>{savingId === site.id ? 'Saving…' : 'Save'}</button>{site.domain !== DEFAULT_SITE.domain ? <button className="button button-link-delete" type="button" onClick={() => removeSite(site)} disabled={savingId === site.id}>Delete</button> : null}</div></td>
                     </tr>
                   ))}
@@ -184,9 +175,9 @@ export function SitesAdminPage() {
             <li>Add the hostname here and leave it <strong>planned</strong> or <strong>needs DNS</strong>.</li>
             <li>Open Cloudflare Dashboard → Workers &amp; Pages → <strong>sabotmedia</strong> → Custom domains → <strong>Set up a custom domain</strong>.</li>
             <li>Enter the exact hostname, complete any DNS change Cloudflare requests, and wait until Cloudflare reports it active.</li>
-            <li>Return here and change the registry status to <strong>connected</strong>.</li>
+            <li>Verify the hostname directly, then optionally return here and record the result as an operator note.</li>
           </ol>
-          <p className="description"><code>sabot.media</code> remains canonical. <code>www.sabot.media</code> is not a second site; edge middleware uses a permanent <strong>308 redirect</strong> to the canonical hostname while preserving path and query.</p>
+          <p className="description"><code>sabot.media</code> remains the application canonical hostname. Any <code>www</code> behavior must be verified at the edge; this registry does not assert a redirect response.</p>
         </section>
       </main>
     </AdminFrame>
