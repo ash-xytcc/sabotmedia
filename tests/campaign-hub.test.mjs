@@ -172,7 +172,7 @@ test('campaign follow-up keeps the hero contained and places social last', () =>
   assert.match(polish, /\.campaign-hero__copy[\s\S]*min-width:\s*0/)
   assert.doesNotMatch(page, /campaign-hero__poster/)
   assert.ok(page.indexOf('<SocialSection') > page.indexOf('id="translations"'))
-  assert.ok(page.indexOf('href="#reporting">Read the reporting') < page.indexOf('href="#letters">Read the letters'))
+  assert.ok(page.indexOf('defaultHref="#reporting"') < page.indexOf('defaultHref="#letters"'))
 })
 
 test('campaign asks readers to understand the case before taking action', () => {

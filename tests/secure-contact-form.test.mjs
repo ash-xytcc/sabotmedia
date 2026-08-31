@@ -8,7 +8,7 @@ const publicKey = fs.readFileSync(new URL('../public/keys/info-sabot-media.asc',
 const securityCopy = fs.readFileSync(new URL('../src/lib/editableContentRegistry.js', import.meta.url), 'utf8')
 
 test('contact page keeps ordinary addresses as mail links and places encrypted contact under info', () => {
-  assert.match(infoPage, /href="mailto:info@sabot\.media"/)
+  assert.match(infoPage, /defaultHref="mailto:info@sabot\.media"/)
   assert.match(infoPage, /<SecureContactForm \/>/)
   for (const address of ['tips', 'submit', 'press', 'support']) {
     assert.match(infoPage, new RegExp(`${address}@sabot\\.media`))

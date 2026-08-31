@@ -8,6 +8,7 @@ import { findCollection, getCollectionPieces, loadCollections, loadCollectionsAs
 import { getImportedImage } from '../lib/getImportedImage'
 import { buildPublicPostPath } from '../lib/publicSiteRouting'
 import { setDocumentMeta } from '../lib/documentMeta'
+import { EditableText } from './EditableText'
 
 function resolvePieceSlug(piece) {
   return String(piece?.slug || piece?.nativeSlug || piece?.id || '').trim()
@@ -97,7 +98,7 @@ export function CollectionPage({ pieces = [] }) {
             </div>
           ) : null}
           <div className="collection-lead__copy">
-            <p className="collection-lead__eyebrow">Collection</p>
+            <EditableText as="p" className="collection-lead__eyebrow" field="collections.detail.eyebrow">Collection</EditableText>
             <h1>{collection.title}</h1>
             {collection.subtitle ? <p className="collection-lead__subtitle">{collection.subtitle}</p> : null}
             {collection.overview ? <p>{collection.overview}</p> : null}
@@ -112,7 +113,7 @@ export function CollectionPage({ pieces = [] }) {
 
         <section className="collection-section" aria-labelledby="collection-pieces-heading">
           <div className="collection-section__header">
-            <h2 id="collection-pieces-heading">Related pieces</h2>
+            <EditableText as="h2" id="collection-pieces-heading" field="collections.detail.sections.pieces">Related pieces</EditableText>
             <span>{collectionPieces.length} pieces</span>
           </div>
           <div className="collection-piece-grid">
@@ -124,7 +125,7 @@ export function CollectionPage({ pieces = [] }) {
 
         {collection.timeline.length ? (
           <section className="collection-section collection-timeline" aria-labelledby="collection-timeline-heading">
-            <h2 id="collection-timeline-heading">Timeline</h2>
+            <EditableText as="h2" id="collection-timeline-heading" field="collections.detail.sections.timeline">Timeline</EditableText>
             {collection.timeline.map((item) => (
               <article className="collection-timeline__item" key={item.id}>
                 <time>{formatDate(item.date)}</time>
@@ -137,7 +138,7 @@ export function CollectionPage({ pieces = [] }) {
 
         {collection.downloads.length ? (
           <section className="collection-section" aria-labelledby="collection-downloads-heading">
-            <h2 id="collection-downloads-heading">Downloads</h2>
+            <EditableText as="h2" id="collection-downloads-heading" field="collections.detail.sections.downloads">Downloads</EditableText>
             <div className="collection-downloads">
               {collection.downloads.map((download) => (
                 <a className="collection-download" href={download.url} key={download.id} target="_blank" rel="noopener noreferrer">
@@ -151,7 +152,7 @@ export function CollectionPage({ pieces = [] }) {
 
         {collection.gallery.length ? (
           <section className="collection-section" aria-labelledby="collection-gallery-heading">
-            <h2 id="collection-gallery-heading">Gallery</h2>
+            <EditableText as="h2" id="collection-gallery-heading" field="collections.detail.sections.gallery">Gallery</EditableText>
             <div className="collection-gallery">
               {collection.gallery.map((image) => (
                 <figure key={image.id}>
@@ -165,7 +166,7 @@ export function CollectionPage({ pieces = [] }) {
 
         {collection.updates.length ? (
           <section className="collection-section collection-updates" aria-labelledby="collection-updates-heading">
-            <h2 id="collection-updates-heading">Updates</h2>
+            <EditableText as="h2" id="collection-updates-heading" field="collections.detail.sections.updates">Updates</EditableText>
             {collection.updates.map((update) => (
               <article key={update.id}>
                 <p>{formatDate(update.date)}</p>
@@ -178,7 +179,7 @@ export function CollectionPage({ pieces = [] }) {
 
         {(relatedCollections.length || relatedPieces.length || collection.externalLinks.length) ? (
           <section className="collection-section collection-related" aria-labelledby="collection-related-heading">
-            <h2 id="collection-related-heading">Related reading</h2>
+            <EditableText as="h2" id="collection-related-heading" field="collections.detail.sections.related">Related reading</EditableText>
             {relatedCollections.map((item) => (
               <Link key={item.id} to={`/collections/${item.slug}`}>{item.title}</Link>
             ))}

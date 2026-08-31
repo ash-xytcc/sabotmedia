@@ -1,15 +1,10 @@
-import { Link } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { DEFAULT_FEED_SETTINGS, loadFeedSettingsAsync } from '../lib/feedSettings.js'
 import { loadFeedManifest } from '../lib/feedManifestApi.js'
-
-function renderParagraphs(text = '') {
-  return String(text || '').split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean).map((paragraph, index) => (
-    <p key={`${index}-${paragraph.slice(0, 12)}`}>{paragraph}</p>
-  ))
-}
+import { EditableText } from './EditableText'
+import { EditableLink } from './EditableLink'
 
 function groupFeedFiles(files = []) {
   return files.reduce((groups, file) => {
@@ -88,9 +83,9 @@ export function PublicFeedsPage() {
     <main className="page feeds-public-page">
       <PublicationTopbar />
       <section className="public-info-page__hero">
-        <p className="public-info-page__eyebrow">feeds / syndication / archive</p>
-        <h1>{settings.feedsIntroTitle || 'Follow the Sabot Media archive'}</h1>
-        <div className="public-info-page__body">{renderParagraphs(settings.feedsIntroBody)}</div>
+        <EditableText as="p" className="public-info-page__eyebrow" field="feeds.hero.eyebrow">feeds / syndication / archive</EditableText>
+        <EditableText as="h1" field="feeds.hero.title">{settings.feedsIntroTitle || 'Follow the Sabot Media archive'}</EditableText>
+        <EditableText as="div" className="public-info-page__body" field="feeds.hero.body" multiline>{settings.feedsIntroBody}</EditableText>
         {state === 'loading' ? <p className="description" role="status">Loading live feed endpoints…</p> : null}
         {errors.length ? (
           <div className="notice notice-error" role="alert">
@@ -98,18 +93,20 @@ export function PublicFeedsPage() {
             <ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul>
           </div>
         ) : null}
-        {mainFeedAvailable ? <a className="button button--primary" href="/feeds/all-content.xml">Open main RSS feed</a> : null}
+        {mainFeedAvailable ? <EditableLink className="button button--primary" labelField="feeds.actions.main.label" hrefField="feeds.actions.main.href" defaultLabel="Open main RSS feed" defaultHref="/feeds/all-content.xml" /> : null}
       </section>
 
       <section className="feeds-public-page__panel">
-        <h2>How this works</h2>
-        <p>These are real RSS endpoints backed by the persisted public feed configuration, not download-package placeholders. A reader can subscribe with an RSS reader or compatible app, an archivist can mirror them, and another site can syndicate them.</p>
-        <p>The live XML endpoints are generated from published native records in the server database and respect the persisted feed aliases and hidden-term settings. Scheduled work enters the feeds when it becomes publicly visible.</p>
-        <p>Older imported archive pieces remain browseable on Sabot and enter these live feeds as they are migrated into native server-backed content.</p>
+        <EditableText as="h2" field="feeds.how.title">How this works</EditableText>
+        <EditableText as="div" field="feeds.how.body" multiline>{`These are real RSS endpoints backed by the persisted public feed configuration, not download-package placeholders. A reader can subscribe with an RSS reader or compatible app, an archivist can mirror them, and another site can syndicate them.
+
+The live XML endpoints are generated from published native records in the server database and respect the persisted feed aliases and hidden-term settings. Scheduled work enters the feeds when it becomes publicly visible.
+
+Older imported archive pieces remain browseable on Sabot and enter these live feeds as they are migrated into native server-backed content.`}</EditableText>
       </section>
 
       <section className="feeds-public-page__panel">
-        <h2>Available live feeds</h2>
+        <EditableText as="h2" field="feeds.available.title">Available live feeds</EditableText>
         <p>{itemCount} published server-backed {itemCount === 1 ? 'entry is' : 'entries are'} currently eligible for the live feed system.</p>
         <div className="feeds-public-page__grid">
           {Object.entries(grouped).map(([group, groupFiles]) => (
@@ -131,15 +128,16 @@ export function PublicFeedsPage() {
       </section>
 
       <section className="feeds-public-page__panel">
-        <h2>Privacy and bylines</h2>
-        <p>A feed byline is not required to be a legal name. It can be a collective name, a role, a handle, a house label, or a pseudonym. That choice belongs to the people publishing and to the safety needs of the work.</p>
-        <p>Editors can rename or hide bad imported labels in the backend, and the same persisted rules are applied by the live XML endpoints.</p>
+        <EditableText as="h2" field="feeds.privacy.title">Privacy and bylines</EditableText>
+        <EditableText as="div" field="feeds.privacy.body" multiline>{`A feed byline is not required to be a legal name. It can be a collective name, a role, a handle, a house label, or a pseudonym. That choice belongs to the people publishing and to the safety needs of the work.
+
+Editors can rename or hide bad imported labels in the backend, and the same persisted rules are applied by the live XML endpoints.`}</EditableText>
       </section>
 
       <section className="feeds-public-page__panel">
-        <h2>Why this matters</h2>
-        <p>Feeds make Sabot easier to follow, mirror, cite, preserve, and rebuild. If the homepage changes, the archive still has structure. If social platforms bury a post, the feed still publishes it.</p>
-        <Link className="button" to="/archive">Browse the archive</Link>
+        <EditableText as="h2" field="feeds.why.title">Why this matters</EditableText>
+        <EditableText as="p" field="feeds.why.body" multiline>Feeds make Sabot easier to follow, mirror, cite, preserve, and rebuild. If the homepage changes, the archive still has structure. If social platforms bury a post, the feed still publishes it.</EditableText>
+        <EditableLink className="button" labelField="feeds.actions.archive.label" hrefField="feeds.actions.archive.href" defaultLabel="Browse the archive" defaultHref="/archive" />
       </section>
       <PublicationFooter />
     </main>

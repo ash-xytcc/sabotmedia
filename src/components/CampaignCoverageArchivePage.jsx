@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { PublicationFooter } from './PublicationFooter'
 import { PublicationTopbar } from './PublicationTopbar'
 import { loadCampaignCoverage } from '../lib/campaignsApi'
+import { EditableText } from './EditableText'
+import { EditableLink } from './EditableLink'
 
 const PAGE_SIZE = 24
 
@@ -45,11 +47,11 @@ export function CampaignCoverageArchivePage() {
       <PublicationTopbar />
       <header className="campaign-coverage-hero">
         <div className="campaign-coverage-shell">
-          <p>COMMUNICATIONS INFRASTRUCTURE IS NOT TERRORISM</p>
-          <h1>Coverage archive</h1>
+          <EditableText as="p" field="campaign.coverage.hero.eyebrow">COMMUNICATIONS INFRASTRUCTURE IS NOT TERRORISM</EditableText>
+          <EditableText as="h1" field="campaign.coverage.hero.title">Coverage archive</EditableText>
           <div className="campaign-coverage-hero__copy">
-            <p>A searchable record of reporting, analysis and official A/I dispatches connected to the designation and its consequences.</p>
-            <Link to="/campaigns/autistici-inventati">← Return to the campaign hub</Link>
+            <EditableText as="p" field="campaign.coverage.hero.description" multiline>A searchable record of reporting, analysis and official A/I dispatches connected to the designation and its consequences.</EditableText>
+            <EditableLink labelField="campaign.coverage.hero.back.label" hrefField="campaign.coverage.hero.back.href" defaultLabel="← Return to the campaign hub" defaultHref="/campaigns/autistici-inventati" />
           </div>
         </div>
       </header>

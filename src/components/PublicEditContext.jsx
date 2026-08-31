@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { clearStoredPublicConfig, getStoredPublicConfig, mergePublicConfig, setStoredPublicConfig } from '../lib/publicConfig'
+import { mergePublicConfig } from '../lib/publicConfig'
 import { getPublicConfigPermissions, loadPublicConfigPayload, savePublicConfigPayload } from '../lib/publicConfigApi'
 import { buildPublicConfigPayload } from '../lib/publicDraftExport'
 import { normalizePublicConfig } from '../lib/publicConfigSchema'
@@ -14,14 +14,6 @@ function emptyConfig() {
 
 function emptyDraft() {
   return { text: {}, styles: {} }
-}
-
-function hasConfigOverrides(config) {
-  return Boolean(
-    Object.keys(config?.text || {}).length ||
-    Object.keys(config?.styles || {}).length ||
-    Object.keys(config?.blocks || {}).length
-  )
 }
 
 function toDraftShape(config) {
@@ -39,7 +31,9 @@ export function PublicEditProvider({ children }) {
   const [backendMode, setBackendMode] = useState('unknown')
   const [selectedField, setSelectedField] = useState(null)
 
-  const [savedConfig, setSavedConfig] = useState(() => getStoredPublicConfig() || emptyConfig())
+  // D1 is the only published source of truth. A legacy browser cache must not
+  // become the initial rendered site configuration, even briefly.
+  const [savedConfig, setSavedConfig] = useState(() => emptyConfig())
   const [draft, setDraft] = useState(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY)
@@ -89,17 +83,7 @@ export function PublicEditProvider({ children }) {
       setLoadError('')
       const data = await loadPublicConfigPayload()
       const config = data?.config || emptyConfig()
-      const preserveLocalSavedConfig = data?.mode === 'scaffold' && !hasConfigOverrides(config)
-
-      setSavedConfig((current) => {
-        if (preserveLocalSavedConfig && hasConfigOverrides(current)) {
-          setStoredPublicConfig(current)
-          return current
-        }
-
-        setStoredPublicConfig(config)
-        return config
-      })
+      setSavedConfig(config)
       setBackendMode(data?.mode || 'unknown')
       setLastLoadedAt(data?.updatedAt || new Date().toISOString())
       setConfigVersion(Number(data?.version || 1))
@@ -208,6 +192,7 @@ export function PublicEditProvider({ children }) {
   }), [effectiveConfig])
 
   const hasDraftChanges = changedFields.length > 0
+  const isConfigReady = backendMode === 'd1' && loadState === 'loaded'
 
   const startEditing = useCallback(() => {
     if (!isAdmin) return false
@@ -220,6 +205,7 @@ export function PublicEditProvider({ children }) {
     isAdmin,
     canSave,
     backendMode,
+    isConfigReady,
     selectedField,
     setSelectedField,
     draft,
@@ -299,22 +285,10 @@ export function PublicEditProvider({ children }) {
         return { text: nextText, styles: nextStyles }
       })
     },
-    applyDraftLocally() {
-      const next = mergePublicConfig(savedConfig || emptyConfig(), draftRef.current || emptyDraft())
-      setSavedConfig(next)
-      setStoredPublicConfig(next)
-      setDraftSnapshot(emptyDraft())
-      try {
-        window.localStorage.removeItem(STORAGE_KEY)
-      } catch {
-        // ignore
-      }
-      setLastSavedAt(new Date().toISOString())
-    },
     async saveDraftToBackend() {
-      if (!canSave) {
+      if (!canSave || backendMode !== 'd1' || loadState !== 'loaded') {
         setSaveState('error')
-        setSaveError('save not allowed')
+        setSaveError(!canSave ? 'save not allowed' : 'wait for the saved D1 configuration to finish loading before saving')
         return
       }
 
@@ -328,7 +302,6 @@ export function PublicEditProvider({ children }) {
         const saved = data?.received?.publicSite || next
 
         setSavedConfig(saved)
-        setStoredPublicConfig(saved)
         setDraftSnapshot(emptyDraft())
         try {
           window.localStorage.removeItem(STORAGE_KEY)
@@ -356,10 +329,6 @@ export function PublicEditProvider({ children }) {
         // ignore
       }
     },
-    clearSavedConfig() {
-      setSavedConfig(emptyConfig())
-      clearStoredPublicConfig()
-    },
     importDraftPatch(configLike) {
       const normalized = normalizePublicConfig(configLike)
       setDraftSnapshot((prev) => mergePublicConfig(prev || emptyDraft(), toDraftShape(normalized)))
@@ -367,12 +336,6 @@ export function PublicEditProvider({ children }) {
     replaceDraftWithImported(configLike) {
       const normalized = normalizePublicConfig(configLike)
       setDraftSnapshot(toDraftShape(normalized))
-    },
-    replaceSavedConfigLocally(configLike) {
-      const normalized = normalizePublicConfig(configLike)
-      setSavedConfig(normalized)
-      setStoredPublicConfig(normalized)
-      setLastSavedAt(new Date().toISOString())
     },
     exportDraft() {
       return JSON.stringify(draftRef.current || draft, null, 2)
@@ -383,6 +346,7 @@ export function PublicEditProvider({ children }) {
     isAdmin,
     canSave,
     backendMode,
+    isConfigReady,
     selectedField,
     draft,
     savedConfig,

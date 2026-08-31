@@ -15,6 +15,8 @@ import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
 import { buildPostMeta, setDocumentMeta } from '../lib/documentMeta'
 import { loadCollectionsAsync } from '../lib/collections'
 import { loadPublicationsAsync } from '../lib/publications'
+import { EditableText } from './EditableText'
+import { EditableLink } from './EditableLink'
 import {
   estimateReadingTimeFromHtml,
   extractArticleEnhancements,
@@ -313,7 +315,7 @@ export function PiecePage({ pieces = [] }) {
       <main className="page piece-page piece-page--loading">
         <PublicationTopbar />
         <section className="piece-header">
-          <p>Loading post…</p>
+          <EditableText as="p" field="post.template.loading">Loading post…</EditableText>
         </section>
       </main>
     )
@@ -327,9 +329,9 @@ export function PiecePage({ pieces = [] }) {
       <main className="page piece-page piece-page--not-found">
         <PublicationTopbar />
         <section className="piece-header">
-          <h1>Post not found</h1>
-          <p>This post is not published, does not exist, or is still saving.</p>
-          <Link className="button" to="/archive">Back to archive</Link>
+          <EditableText as="h1" field="post.template.not-found.title">Post not found</EditableText>
+          <EditableText as="p" field="post.template.not-found.body" multiline>This post is not published, does not exist, or is still saving.</EditableText>
+          <EditableLink className="button" labelField="post.template.not-found.back.label" hrefField="post.template.not-found.back.href" defaultLabel="Back to archive" defaultHref="/archive" />
         </section>
         <PublicationFooter />
       </main>
@@ -382,9 +384,7 @@ export function PiecePage({ pieces = [] }) {
           ) : null}
 
           {displaySettings.enablePrintMode ? (
-            <Link className="piece-article-lead__print-link" to={`/post/${piece.slug}/print`}>
-              Print
-            </Link>
+            <EditableLink className="piece-article-lead__print-link" labelField={`post.${piece.slug}.actions.print.label`} hrefField={`post.${piece.slug}.actions.print.href`} defaultLabel="Print" defaultHref={`/post/${piece.slug}/print`} />
           ) : null}
         </div>
       </section>
@@ -393,7 +393,7 @@ export function PiecePage({ pieces = [] }) {
         <aside className="public-reading-tools" aria-label="Article tools">
           {enhancements.headings.length ? (
             <nav className="public-reading-card public-reading-toc" aria-label="Table of contents">
-              <h2>Contents</h2>
+              <EditableText as="h2" field="post.template.tools.contents">Contents</EditableText>
               {enhancements.headings.slice(0, 8).map((heading) => (
                 <a className={`public-reading-toc__item public-reading-toc__item--${heading.level}`} href={`#${heading.id}`} key={`${heading.id}-${heading.text}`}>
                   {heading.text}
@@ -403,9 +403,9 @@ export function PiecePage({ pieces = [] }) {
           ) : null}
           {podcastAudioUrl ? (
             <section className="public-reading-card public-podcast-player" aria-label="Podcast player">
-              <h2>Listen</h2>
+              <EditableText as="h2" field="post.template.tools.listen">Listen</EditableText>
               <audio controls preload="metadata" src={podcastAudioUrl} />
-              <a href={podcastAudioUrl}>Download audio</a>
+              <EditableLink labelField={`post.${piece.slug}.actions.audio.label`} hrefField={`post.${piece.slug}.actions.audio.href`} defaultLabel="Download audio" defaultHref={podcastAudioUrl} />
             </section>
           ) : null}
         </aside>
@@ -480,7 +480,7 @@ function ArticleEnhancementSections({ piece, enhancements, relatedArticles, rela
 
       {downloads.length ? (
         <section className="public-experience-panel">
-          <h2>Downloads</h2>
+          <EditableText as="h2" field="post.template.sections.downloads">Downloads</EditableText>
           <div className="public-download-grid">
             {downloads.map((download) => (
               <a className="public-download-card" href={download.url} key={`${download.id}-${download.url}`} target="_blank" rel="noopener noreferrer">
@@ -494,7 +494,7 @@ function ArticleEnhancementSections({ piece, enhancements, relatedArticles, rela
 
       {enhancements.timeline.length ? (
         <section className="public-experience-panel">
-          <h2>Timeline</h2>
+          <EditableText as="h2" field="post.template.sections.timeline">Timeline</EditableText>
           <div className="public-timeline-block">
             {enhancements.timeline.map((item) => (
               <article key={item.id}>
@@ -509,7 +509,7 @@ function ArticleEnhancementSections({ piece, enhancements, relatedArticles, rela
 
       {enhancements.locations.length ? (
         <section className="public-experience-panel">
-          <h2>Locations</h2>
+          <EditableText as="h2" field="post.template.sections.locations">Locations</EditableText>
           <div className="public-map-grid">
             {enhancements.locations.map((location) => (
               <article className="public-location-card" key={location.id}>
@@ -528,7 +528,7 @@ function ArticleEnhancementSections({ piece, enhancements, relatedArticles, rela
 
       {enhancements.sources.length ? (
         <section className="public-experience-panel">
-          <h2>Sources</h2>
+          <EditableText as="h2" field="post.template.sections.sources">Sources</EditableText>
           <div className="public-source-list">
             {enhancements.sources.map((source) => (
               <article className="public-source-block" key={source.id}>
@@ -543,7 +543,7 @@ function ArticleEnhancementSections({ piece, enhancements, relatedArticles, rela
 
       {enhancements.footnotes.length ? (
         <section className="public-experience-panel">
-          <h2>Footnotes</h2>
+          <EditableText as="h2" field="post.template.sections.footnotes">Footnotes</EditableText>
           <ol className="public-footnotes">
             {enhancements.footnotes.map((note) => <li key={note.id}>{note.text}</li>)}
           </ol>
@@ -552,7 +552,7 @@ function ArticleEnhancementSections({ piece, enhancements, relatedArticles, rela
 
       {(relatedArticles.length || relatedCollections.length || relatedPublications.length) ? (
         <section className="public-experience-panel">
-          <h2>Related</h2>
+          <EditableText as="h2" field="post.template.sections.related">Related</EditableText>
           <div className="public-related-grid">
             {relatedArticles.map((item) => (
               <Link className="public-related-card" to={`/post/${item.slug}`} key={`article-${item.slug}`}>

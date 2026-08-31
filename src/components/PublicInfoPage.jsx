@@ -4,6 +4,7 @@ import { EditableText } from './EditableText'
 import { getEditablePage } from '../lib/editableContentRegistry'
 import { getPublicInfoCopy, getPublicInfoField } from '../content/publicInfoCopy'
 import { SecureContactForm } from './SecureContactForm'
+import { EditableLink } from './EditableLink'
 
 const CONTACT_CHANNELS = [
   { label: 'News tips, documents, and leads', address: 'tips@sabot.media' },
@@ -17,8 +18,8 @@ function ContactChannels() {
     <div className="contact-channels">
       <section className="contact-channel contact-channel--general" aria-labelledby="general-contact-title">
         <div>
-          <p className="contact-channel__label" id="general-contact-title">General correspondence, corrections, collaboration, and questions</p>
-          <a href="mailto:info@sabot.media">info@sabot.media</a>
+          <EditableText as="p" className="contact-channel__label" id="general-contact-title" field="info.contact.channels.general.label">General correspondence, corrections, collaboration, and questions</EditableText>
+          <EditableLink labelField="info.contact.channels.general.address" hrefField="info.contact.channels.general.href" defaultLabel="info@sabot.media" defaultHref="mailto:info@sabot.media" />
         </div>
         <SecureContactForm />
       </section>
@@ -26,8 +27,8 @@ function ContactChannels() {
       <div className="contact-channel-grid" aria-label="Other Sabot Media contact addresses">
         {CONTACT_CHANNELS.map((channel) => (
           <section className="contact-channel" key={channel.address}>
-            <p className="contact-channel__label">{channel.label}</p>
-            <a href={`mailto:${channel.address}`}>{channel.address}</a>
+            <EditableText as="p" className="contact-channel__label" field={`info.contact.channels.${channel.address.split('@')[0]}.label`}>{channel.label}</EditableText>
+            <EditableLink labelField={`info.contact.channels.${channel.address.split('@')[0]}.address`} hrefField={`info.contact.channels.${channel.address.split('@')[0]}.href`} defaultLabel={channel.address} defaultHref={`mailto:${channel.address}`} />
           </section>
         ))}
       </div>

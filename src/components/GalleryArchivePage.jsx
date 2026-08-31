@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PublicationFooter } from './PublicationFooter'
 import { PublicationTopbar } from './PublicationTopbar'
+import { EditableText } from './EditableText'
+import { EditableLink } from './EditableLink'
 import './GalleryArchivePage.css'
 
 const GALLERY_SLUG = 'aberdeen-local-1312'
@@ -56,28 +58,28 @@ export function GalleryArchivePage() {
       <PublicationTopbar />
 
       <section className="project-hero archive-page__hero publication-gallery-hero">
-        <p className="project-hero__eyebrow">archive / photography / Aberdeen Local 1312</p>
-        <h1>{gallery?.title || 'Aberdeen Local 1312 Gallery'}</h1>
-        <p className="project-hero__description">
+        <EditableText as="p" className="project-hero__eyebrow" field="gallery.aberdeen-local-1312.hero.eyebrow">archive / photography / Aberdeen Local 1312</EditableText>
+        <EditableText as="h1" field="gallery.aberdeen-local-1312.hero.title">{gallery?.title || 'Aberdeen Local 1312 Gallery'}</EditableText>
+        <EditableText as="p" className="project-hero__description" field="gallery.aberdeen-local-1312.hero.description" multiline>
           {gallery?.description || 'Historical image archive from Aberdeen Local 1312, preserved from the original Sabot Media Noblogs site.'}
-        </p>
+        </EditableText>
         <div className="project-hero__meta publication-gallery-hero__meta">
           <span>{items.length} image{items.length === 1 ? '' : 's'}</span>
           {gallery?.expectedItemCount ? <span>{gallery.complete ? 'migration complete' : `${gallery.expectedItemCount - items.length} still migrating`}</span> : null}
-          <Link to="/archive">Browse full archive</Link>
+          <EditableLink labelField="gallery.aberdeen-local-1312.actions.archive.label" hrefField="gallery.aberdeen-local-1312.actions.archive.href" defaultLabel="Browse full archive" defaultHref="/archive" />
         </div>
       </section>
 
       {state === 'loading' ? (
-        <section className="archive-results publication-gallery-state"><h2>Loading gallery</h2><p>Reading the preserved gallery from Sabot Media storage.</p></section>
+        <section className="archive-results publication-gallery-state"><EditableText as="h2" field="gallery.state.loading.title">Loading gallery</EditableText><EditableText as="p" field="gallery.state.loading.body">Reading the preserved gallery from Sabot Media storage.</EditableText></section>
       ) : null}
 
       {state === 'error' ? (
-        <section className="archive-results publication-gallery-state"><h2>Gallery unavailable</h2><p>{error}</p><Link to="/archive">Return to archive</Link></section>
+        <section className="archive-results publication-gallery-state"><EditableText as="h2" field="gallery.state.error.title">Gallery unavailable</EditableText><p>{error}</p><Link to="/archive">Return to archive</Link></section>
       ) : null}
 
       {state === 'loaded' && !items.length ? (
-        <section className="archive-results publication-gallery-state"><h2>No images available yet</h2><p>The gallery record exists, but its media migration has not finished.</p></section>
+        <section className="archive-results publication-gallery-state"><EditableText as="h2" field="gallery.state.empty.title">No images available yet</EditableText><EditableText as="p" field="gallery.state.empty.body">The gallery record exists, but its media migration has not finished.</EditableText></section>
       ) : null}
 
       {items.length ? (

@@ -30,7 +30,7 @@ export function PublicAdminToolbar() {
       })
     return () => { cancelled = true }
   }, [isAuthenticated])
-  const { isEditing, canSave, changedFields, saveState, saveDraftToBackend, applyDraftLocally } = usePublicEdit()
+  const { isEditing, canSave, isConfigReady, changedFields, saveState, saveDraftToBackend } = usePublicEdit()
   const [canUseToolbar, setCanUseToolbar] = useState(false)
 
   useEffect(() => {
@@ -100,8 +100,14 @@ export function PublicAdminToolbar() {
         {canSave && changedFields.length ? (
           <>
             <span className="wp-public-admin-bar__status">{changedFields.length} unsaved</span>
-            <button className="wp-public-admin-bar__item" type="button" onClick={applyDraftLocally}>Apply Local</button>
-            <button className="wp-public-admin-bar__item" type="button" onClick={saveDraftToBackend}>{saveState === 'saving' ? 'Saving…' : 'Save Site'}</button>
+            <button
+              className="wp-public-admin-bar__item"
+              type="button"
+              onClick={saveDraftToBackend}
+              disabled={!isConfigReady || saveState === 'saving'}
+            >
+              {saveState === 'saving' ? 'Saving…' : isConfigReady ? 'Save Site' : 'Loading Site…'}
+            </button>
           </>
         ) : null}
       </div>

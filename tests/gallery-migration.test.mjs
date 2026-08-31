@@ -71,7 +71,7 @@ test('gallery reuses the archive public layout instead of a separate paper micro
 
 test('gallery is linked from the site-wide masthead and footer', () => {
   assert.match(topbar, /aberdeen-local-1312-gallery/)
-  assert.match(topbar, />Gallery<\/Link>/)
+  assert.match(topbar, /defaultLabel="Gallery"/)
   assert.match(footer, /aberdeen-local-1312-gallery/)
-  assert.match(footer, />Gallery<\/Link>/)
+  assert.match(footer, /defaultLabel="Gallery"/)
 })
