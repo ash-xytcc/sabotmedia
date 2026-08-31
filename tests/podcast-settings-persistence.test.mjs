@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import test from 'node:test'
+
+const client = fs.readFileSync(new URL('../src/lib/podcastSettings.js', import.meta.url), 'utf8')
+const page = fs.readFileSync(new URL('../src/components/PodcastSettingsPage.jsx', import.meta.url), 'utf8')
+const api = fs.readFileSync(new URL('../functions/api/podcast-settings.js', import.meta.url), 'utf8')
+const helper = fs.readFileSync(new URL('../functions/api/_lib/podcastSettings.js', import.meta.url), 'utf8')
+const podcastFeed = fs.readFileSync(new URL('../functions/rss/podcast.xml.js', import.meta.url), 'utf8')
+
+test('podcast settings have no browser-only persistence', () => {
+  assert.doesNotMatch(client, /localStorage|PODCAST_SETTINGS_KEY/)
+  assert.match(client, /\/api\/podcast-settings/)
+  assert.match(client, /loadPodcastSettingsAsync/)
+  assert.match(client, /await fetch/)
+})
+
+test('podcast settings API persists through D1 with publishing permission', () => {
+  assert.match(api, /permissionHasCapability\(permission, 'publishing:write'\)/)
+  assert.match(api, /writePodcastSettings/)
+  assert.match(helper, /INSERT INTO site_settings/)
+  assert.match(helper, /podcast-settings-v1/)
+  assert.doesNotMatch(helper, /db\.exec/)
+})
+
+test('Podcast Settings UI shows the canonical production RSS URL and confirmed database save', () => {
+  assert.match(page, /https:\/\/sabot\.media\/feeds\/podcasts\/all\.xml/)
+  assert.match(page, /await savePodcastSettings/)
+  assert.match(page, /saved to the production database/)
+  assert.doesNotMatch(page, /saved locally|localStorage/)
+})
+
+test('podcast RSS consumes persisted server settings and directory metadata', () => {
+  assert.match(podcastFeed, /readPodcastSettings\(db\)/)
+  assert.match(podcastFeed, /<itunes:author>/)
+  assert.match(podcastFeed, /<itunes:category/)
+  assert.match(podcastFeed, /<itunes:image/)
+  assert.match(podcastFeed, /<itunes:owner>/)
+  assert.match(podcastFeed, /<enclosure url=/)
+})
