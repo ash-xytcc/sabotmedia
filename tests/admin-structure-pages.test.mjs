@@ -3,7 +3,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 const taxonomy = fs.readFileSync(new URL('../src/components/TaxonomyAdminPage.jsx', import.meta.url), 'utf8')
-const roles = fs.readFileSync(new URL('../src/components/EditorRolesPage.jsx', import.meta.url), 'utf8')
+const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
 const users = fs.readFileSync(new URL('../src/components/AdminUsersPage.jsx', import.meta.url), 'utf8')
 
 test('taxonomy uses the current admin shell instead of legacy project-page chrome', () => {
@@ -17,8 +17,7 @@ test('taxonomy uses the current admin shell instead of legacy project-page chrom
 })
 
 test('legacy editor roles route redirects to the real Users and Access surface', () => {
-  assert.match(roles, /Navigate to=\{adminRoutes\.users\}/)
-  assert.doesNotMatch(roles, /Add role record|advisory today|do not independently grant or revoke access/)
+  assert.match(app, /path=\{adminRoutes\.roles\} element=\{protect\(<Navigate to=\{adminRoutes\.users\}/)
   assert.match(users, /<AdminFrame>/)
   assert.match(users, /wp-admin-screen/)
   assert.match(users, /Users & Access/)

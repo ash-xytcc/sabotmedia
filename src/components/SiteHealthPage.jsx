@@ -4,7 +4,7 @@ import { AdminFrame } from './AdminRail'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import { getPieces } from '../lib/pieces'
 import { loadMediaLibraryItems } from './MediaLibraryPage'
-import { buildMediaAuditSummary } from '../lib/localSiteBackup'
+import { fetchMediaAssets } from '../lib/mediaAssetsApi'
 import { fetchSiteHealth } from '../lib/siteHealthApi'
 import { adminRoutes } from '../routing/routes'
 
@@ -32,6 +32,7 @@ function statusWord(value) {
 export function SiteHealthPage({ pieces = [] }) {
   const [nativeItems, setNativeItems] = useState([])
   const [health, setHealth] = useState(null)
+  const [registryItems, setRegistryItems] = useState([])
   const [state, setState] = useState('loading')
   const [error, setError] = useState('')
 
@@ -41,13 +42,15 @@ export function SiteHealthPage({ pieces = [] }) {
       try {
         setState('loading')
         setError('')
-        const [items, diagnostics] = await Promise.all([
+        const [items, diagnostics, mediaRegistry] = await Promise.all([
           loadNativeCollection({ includeFuture: 1 }),
           fetchSiteHealth(),
+          fetchMediaAssets(),
         ])
         if (cancelled) return
         setNativeItems(Array.isArray(items) ? items : [])
         setHealth(diagnostics)
+        setRegistryItems(Array.isArray(mediaRegistry?.items) ? mediaRegistry.items : [])
         setState('ready')
       } catch (nextError) {
         if (cancelled) return
@@ -62,8 +65,7 @@ export function SiteHealthPage({ pieces = [] }) {
   }, [])
 
   const allItems = useMemo(() => [...nativeItems, ...(pieces.length ? pieces : getPieces())], [nativeItems, pieces])
-  const mediaItems = useMemo(() => loadMediaLibraryItems(nativeItems), [nativeItems])
-  const mediaAudit = useMemo(() => buildMediaAuditSummary({ nativeItems }), [nativeItems])
+  const mediaItems = useMemo(() => loadMediaLibraryItems(nativeItems, registryItems), [nativeItems, registryItems])
 
   const missingFeatured = allItems.filter((item) => !String(item.featuredImage || item.heroImage || '').trim()).slice(0, 25)
   const missingAlt = mediaItems.filter((item) => !String(item.alt || '').trim()).slice(0, 25)
@@ -101,7 +103,7 @@ export function SiteHealthPage({ pieces = [] }) {
           <article className="review-summary-card"><div className="review-summary-card__eyebrow">database</div><strong>{health?.bindings?.BF_DB ? 'D1 ready' : 'unavailable'}</strong><span>{dbRecordCount} records across checked tables</span></article>
           <article className="review-summary-card"><div className="review-summary-card__eyebrow">schema</div><strong>{missingTables.length}</strong><span>missing expected tables</span></article>
           <article className="review-summary-card"><div className="review-summary-card__eyebrow">media storage</div><strong>{mediaStorageReady ? 'ready' : 'missing'}</strong><span>{health?.bindings?.mediaBinding || 'R2 binding required for uploads'}</span></article>
-          <article className="review-summary-card"><div className="review-summary-card__eyebrow">content QA</div><strong>{linkRows.length}</strong><span>links queued for review</span></article>
+          <article className="review-summary-card"><div className="review-summary-card__eyebrow">content QA</div><strong>{linkRows.length}</strong><span>references needing manual review</span></article>
         </section>
 
         <section className="newsroom-grid">
@@ -140,7 +142,7 @@ export function SiteHealthPage({ pieces = [] }) {
             <ul className="wp-checklist">
               <li>Searchable records: {allItems.length}</li>
               <li>Feed-ready records: {allItems.filter((item) => item.publishedAt || item.status === 'published').length}</li>
-              <li>Media references: {mediaAudit.totalMedia}</li>
+              <li>Deduplicated media references and registry assets: {mediaItems.length}</li>
               <li>Missing featured images: {missingFeatured.length}</li>
               <li>Missing alt text: {missingAlt.length}</li>
               <li>Possible orphaned media: {orphanedMedia.length}</li>
@@ -148,7 +150,8 @@ export function SiteHealthPage({ pieces = [] }) {
           </article>
 
           <article className="wp-meta-box newsroom-panel">
-            <h2>Link Checker</h2>
+            <h2>Link Reference Review</h2>
+            <p className="description">This classifies stored references; it does not claim that external URLs were fetched successfully.</p>
             <table className="content-table wp-posts-table">
               <thead><tr><th>Source</th><th>Reference</th><th>Status</th></tr></thead>
               <tbody>

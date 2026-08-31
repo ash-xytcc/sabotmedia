@@ -2,11 +2,8 @@ import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 're
 import { useEffect } from 'react'
 import { PiecePage } from './components/PiecePage'
 import { PrintPage } from './components/PrintPage'
-import { ProjectsIndexPage } from './components/ProjectsIndexPage'
-import { ReviewQueuePage } from './components/ReviewQueuePage'
 import { AdminPage } from './components/AdminPage'
 import { ContentListPage } from './components/ContentListPage'
-import { OverridesPage } from './components/OverridesPage'
 import { PodcastAdminPage } from './components/PodcastAdminPage'
 import { PodcastSettingsPage } from './components/PodcastSettingsPage'
 import { NativeContentBridgePage } from './components/NativeContentBridgePage'
@@ -43,14 +40,12 @@ import { PublicInfoPage } from './components/PublicInfoPage'
 import { AdminNoticeProvider } from './components/WpAdminNotices'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
 import { AnalyticsPage } from './components/AnalyticsPage'
-import { PagesAdminPage, SettingsAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminPages'
+import { PagesAdminPage, SettingsAdminPage, UsersAdminPage } from './components/WpAdminPages'
 import { SitesAdminPage } from './components/SitesAdminPage'
 import { SiteHealthPage } from './components/SiteHealthPage'
 import { SystemBackupPage } from './components/SystemBackupPage'
 import { AuditLogPage } from './components/AuditLogPage'
 import { TaxonomyAdminPage } from './components/TaxonomyAdminPage'
-import { EditorRolesPage } from './components/EditorRolesPage'
-import { PlatformMapPage } from './components/PlatformMapPage'
 import { adminRoutes, publicRoutes } from './routing/routes'
 import { buildPostMeta, setDocumentMeta } from './lib/documentMeta'
 import { trackPageView } from './lib/analyticsApi'
@@ -300,11 +295,11 @@ export default function App() {
               <Route path="/add-new" element={protect(<Navigate to={adminRoutes.addNew} replace />)} />
               <Route path="/post-new" element={protect(<Navigate to={adminRoutes.addNew} replace />)} />
               <Route path="/wp-admin/post-new.php" element={protect(<Navigate to={adminRoutes.addNew} replace />)} />
-              <Route path="/overrides" element={protect(<Navigate to={adminRoutes.overrides} replace />)} />
-              <Route path={adminRoutes.overrides} element={protect(<OverridesPage />)} />
+              <Route path="/overrides" element={protect(<Navigate to={adminRoutes.posts} replace />)} />
+              <Route path={adminRoutes.overrides} element={protect(<Navigate to={adminRoutes.posts} replace />)} />
               <Route path="/media" element={protect(<Navigate to={adminRoutes.media} replace />)} />
               <Route path={adminRoutes.media} element={protect(<MediaLibraryPage />)} />
-              <Route path={adminRoutes.projects} element={protect(<ProjectsIndexPage projectMap={projectMap} />)} />
+              <Route path={adminRoutes.projects} element={protect(<Navigate to={adminRoutes.collections} replace />)} />
               <Route path="/collections-admin" element={protect(<Navigate to={adminRoutes.collections} replace />)} />
               <Route path={adminRoutes.collections} element={protect(<CollectionsAdminPage />)} />
               <Route path="/campaigns-admin" element={protect(<Navigate to={adminRoutes.campaigns} replace />)} />
@@ -321,9 +316,9 @@ export default function App() {
               <Route path="/customize" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
               <Route path={adminRoutes.customize} element={protect(<Navigate to={adminRoutes.settings} replace />)} />
               <Route path="/site-editor" element={protect(<Navigate to={adminRoutes.liveEditor} replace />)} />
-              <Route path="/advanced-draft-tools" element={protect(<Navigate to={`${adminRoutes.tools}#advanced-draft-tools`} replace />)} />
-              <Route path="/tools" element={protect(<Navigate to={adminRoutes.tools} replace />)} />
-              <Route path={adminRoutes.tools} element={protect(<ToolsAdminPage />)} />
+              <Route path="/advanced-draft-tools" element={protect(<Navigate to={adminRoutes.liveEditor} replace />)} />
+              <Route path="/tools" element={protect(<Navigate to={adminRoutes.siteHealth} replace />)} />
+              <Route path={adminRoutes.tools} element={protect(<Navigate to={adminRoutes.siteHealth} replace />)} />
               <Route path="/site-health" element={protect(<Navigate to={adminRoutes.siteHealth} replace />)} />
               <Route path={adminRoutes.siteHealth} element={protect(<SiteHealthPage pieces={pieces} />)} />
               <Route path="/system-backup" element={protect(<Navigate to={adminRoutes.backup} replace />)} />
@@ -339,18 +334,18 @@ export default function App() {
               <Route path="/settings" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
               <Route path={adminRoutes.settings} element={protect(<SettingsAdminPage />)} />
               <Route path="/settings/social" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
-              <Route path="/settings/sites" element={protect(<Navigate to={`${adminRoutes.settings}/sites`} replace />)} />
+              <Route path="/settings/sites" element={protect(<Navigate to={adminRoutes.sites} replace />)} />
               <Route path="/sites" element={protect(<Navigate to={adminRoutes.sites} replace />)} />
-              <Route path={`${adminRoutes.settings}/sites`} element={protect(<SitesAdminPage />)} />
+              <Route path="/wp-admin/sites" element={protect(<Navigate to={adminRoutes.sites} replace />)} />
               <Route path={adminRoutes.sites} element={protect(<SitesAdminPage />)} />
               <Route path="/analytics" element={protect(<Navigate to={adminRoutes.analytics} replace />)} />
               <Route path={adminRoutes.analytics} element={protect(<AnalyticsPage pieces={pieces} />)} />
               <Route path="/taxonomy" element={protect(<Navigate to={adminRoutes.taxonomy} replace />)} />
               <Route path={adminRoutes.taxonomy} element={protect(<TaxonomyAdminPage />)} />
-              <Route path="/roles" element={protect(<Navigate to={adminRoutes.roles} replace />)} />
-              <Route path={adminRoutes.roles} element={protect(<EditorRolesPage />)} />
-              <Route path="/platform-map" element={protect(<Navigate to={adminRoutes.platformMap} replace />)} />
-              <Route path={adminRoutes.platformMap} element={protect(<PlatformMapPage />)} />
+              <Route path="/roles" element={protect(<Navigate to={adminRoutes.users} replace />)} />
+              <Route path={adminRoutes.roles} element={protect(<Navigate to={adminRoutes.users} replace />)} />
+              <Route path="/platform-map" element={protect(<Navigate to={adminRoutes.siteHealth} replace />)} />
+              <Route path={adminRoutes.platformMap} element={protect(<Navigate to={adminRoutes.siteHealth} replace />)} />
 
               <Route path="/podcasts" element={protect(<Navigate to={adminRoutes.podcasts} replace />)} />
               <Route path="/podcasts/settings" element={protect(<Navigate to={`${adminRoutes.podcasts}/settings`} replace />)} />
@@ -383,7 +378,7 @@ export default function App() {
               <Route path="/media/*" element={protect(<Navigate to={adminRoutes.media} replace />)} />
               <Route path="/customize/*" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
               <Route path="/settings/*" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
-              <Route path="/tools/*" element={protect(<Navigate to={adminRoutes.tools} replace />)} />
+              <Route path="/tools/*" element={protect(<Navigate to={adminRoutes.siteHealth} replace />)} />
               <Route path="/printlab/*" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />
               <Route path="/audiolab/*" element={protect(<Navigate to={adminRoutes.audiolab} replace />)} />
               <Route path="*" element={<NotFoundPage />} />

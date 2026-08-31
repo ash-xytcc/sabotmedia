@@ -22,7 +22,7 @@ test('settings is the single production public config surface', () => {
   assert.doesNotMatch(pages, /customizerLocal|saveCustomizerSettings|saveWpSettings/)
 })
 
-test('tools routes backups to the fail-closed system backup screen', () => {
-  assert.match(pages, /to=\{adminRoutes\.backup\}/)
+test('obsolete tools implementation is removed in favor of canonical operational screens', () => {
   assert.doesNotMatch(pages, /exportLocalSiteBackupJson|collectPrintlabRecords/)
+  assert.doesNotMatch(pages, /ToolsAdminPage|<h1>Tools<\/h1>/)
 })

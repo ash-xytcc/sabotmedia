@@ -11,7 +11,6 @@ const COMMANDS = [
   { label: 'Printlab', description: 'Open printable layout tools', to: adminRoutes.printlab, keywords: ['print', 'zine', 'poster'] },
   { label: 'AudioLab', description: 'Open audio projects and episode tools', to: adminRoutes.audiolab, keywords: ['audio', 'waveform', 'episode'] },
   { label: 'Podcasts', description: 'Manage podcast episodes and the public feed', to: adminRoutes.podcasts, keywords: ['podcast', 'episodes', 'rss', 'audio'] },
-  { label: 'Podcast Settings / Import RSS', description: 'Import or resync an existing podcast feed and edit channel metadata', to: adminRoutes.podcastSettings, keywords: ['podcast', 'rss', 'import', 'migrate', 'resync', 'feed settings'], capability: 'publishing:write' },
   { label: 'Collections', description: 'Organize bodies of work', to: adminRoutes.collections, keywords: ['projects', 'archive'] },
   { label: 'Campaigns', description: 'Create and manage campaign hubs, updates, resources, graphics, sources, and coverage', to: adminRoutes.campaigns, keywords: ['campaign', 'new campaign', 'hub', 'updates', 'letters', 'coverage'], capability: 'publishing:write' },
   { label: 'Publications', description: 'Build zines, readers, and editions', to: adminRoutes.publications, keywords: ['zine', 'booklet', 'issue'] },
@@ -23,8 +22,6 @@ const COMMANDS = [
   { label: 'Site Health', description: 'Check bindings, storage, links, media, RSS, and readiness', to: adminRoutes.siteHealth, keywords: ['health', 'broken links', 'd1', 'r2'], capability: 'system:view' },
   { label: 'Backups', description: 'Export a verified server-backed system snapshot', to: adminRoutes.backup, keywords: ['export', 'backup', 'snapshot'], capability: 'system:view' },
   { label: 'Audit Log', description: 'Review recent persisted site changes', to: adminRoutes.auditLog, keywords: ['history', 'changes'], capability: 'system:view' },
-  { label: 'Sites & Domains', description: 'Track hostnames and Cloudflare attachment state', to: adminRoutes.sites, keywords: ['domain', 'hostname', 'dns', 'cloudflare'], capability: 'site:manage' },
-  { label: 'Tools', description: 'Open operational utilities', to: adminRoutes.tools, keywords: ['utilities', 'rss', 'backup'], capability: 'system:view' },
   { label: 'Settings', description: 'Edit production-backed site configuration', to: adminRoutes.settings, keywords: ['configuration', 'customize', 'theme', 'site config'], capability: 'site:manage' },
   { label: 'Users & Access', description: 'Manage individual accounts and enforced roles', to: adminRoutes.users, keywords: ['account', 'auth', 'rbac', 'roles'], capability: 'users:manage' },
 ]

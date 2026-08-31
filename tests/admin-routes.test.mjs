@@ -8,8 +8,6 @@ const routes = fs.readFileSync(new URL('../src/routing/routes.js', import.meta.u
 const required = {
   analytics: 'AnalyticsPage',
   taxonomy: 'TaxonomyAdminPage',
-  roles: 'EditorRolesPage',
-  platformMap: 'PlatformMapPage',
 }
 
 for (const [key, component] of Object.entries(required)) {
@@ -23,4 +21,9 @@ test('legacy ops aliases redirect instead of falling through', () => {
   for (const alias of ['/analytics', '/taxonomy', '/roles', '/platform-map']) {
     assert.match(app, new RegExp(`path="${alias}"`))
   }
+})
+
+test('obsolete roles and platform-map routes redirect directly to canonical sections', () => {
+  assert.match(app, /path=\{adminRoutes\.roles\} element=\{protect\(<Navigate to=\{adminRoutes\.users\}/)
+  assert.match(app, /path=\{adminRoutes\.platformMap\} element=\{protect\(<Navigate to=\{adminRoutes\.siteHealth\}/)
 })

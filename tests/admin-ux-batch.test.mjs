@@ -35,10 +35,10 @@ test('verified backup accepts D1 feed defaults when no custom row exists', async
 test('obsolete Platform Map is removed from normal navigation', () => {
   const rail = fs.readFileSync(new URL('../src/components/AdminRail.jsx', import.meta.url), 'utf8')
   const palette = fs.readFileSync(new URL('../src/components/AdminCommandPalette.jsx', import.meta.url), 'utf8')
-  const platformMap = fs.readFileSync(new URL('../src/components/PlatformMapPage.jsx', import.meta.url), 'utf8')
+  const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
   assert.doesNotMatch(rail, /Platform Map/)
   assert.doesNotMatch(palette, /Platform Map/)
-  assert.match(platformMap, /Navigate to=\{adminRoutes\.dashboard\}/)
+  assert.match(app, /path=\{adminRoutes\.platformMap\} element=\{protect\(<Navigate to=\{adminRoutes\.siteHealth\}/)
 })
 
 test('Sites page explains the real Cloudflare attachment workflow', () => {
@@ -47,6 +47,7 @@ test('Sites page explains the real Cloudflare attachment workflow', () => {
   assert.match(sites, /Workers &amp; Pages/)
   assert.match(sites, /Set up a custom domain/)
   assert.match(sites, /needs DNS/)
+  assert.match(sites, /planning notes entered by an administrator/)
 })
 
 test('Media Library uses the current component CSS contract without obsolete grid-fix layers', () => {

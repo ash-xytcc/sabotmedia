@@ -71,7 +71,7 @@ test('edge middleware enforces capability-specific writes', () => {
 })
 
 test('legacy advisory Editor Roles UI redirects to real Users and Access', () => {
-  const roles = fs.readFileSync(new URL('../src/components/EditorRolesPage.jsx', import.meta.url), 'utf8')
-  assert.match(roles, /Navigate to=\{adminRoutes\.users\}/)
-  assert.doesNotMatch(roles, /advisory today|Add role record/)
+  const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
+  assert.match(app, /path=\{adminRoutes\.roles\} element=\{protect\(<Navigate to=\{adminRoutes\.users\}/)
+  assert.doesNotMatch(app, /<EditorRolesPage/)
 })
