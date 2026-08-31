@@ -11,7 +11,6 @@ import { PodcastAdminPage } from './components/PodcastAdminPage'
 import { PodcastSettingsPage } from './components/PodcastSettingsPage'
 import { NativeContentBridgePage } from './components/NativeContentBridgePage'
 import { NativeUpdatesPage } from './components/NativeUpdatesPage'
-import { NativeUpdateDetailPage } from './components/NativeUpdateDetailPage'
 import { NativeDraftPreviewPage } from './components/NativeDraftPreviewPage'
 import { PublicSearchPage } from './components/PublicSearchPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
@@ -55,6 +54,7 @@ import { PlatformMapPage } from './components/PlatformMapPage'
 import { adminRoutes, publicRoutes } from './routing/routes'
 import { buildPostMeta, setDocumentMeta } from './lib/documentMeta'
 import { trackPageView } from './lib/analyticsApi'
+import { canonicalizeAnalyticsPath } from '../shared/analyticsPath'
 
 const pieces = getPieces()
 const featured = getFeaturedPiece(pieces)
@@ -84,10 +84,35 @@ function ScrollToTop() {
 function AnalyticsTracker() {
   const location = useLocation()
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      trackPageView({ path: location.pathname, title: document.title, referrer: document.referrer })
-    }, 500)
-    return () => window.clearTimeout(timer)
+    const expectedPath = canonicalizeAnalyticsPath(location.pathname)
+    let settleTimer = 0
+    let fallbackTimer = 0
+    let tracked = false
+
+    const send = (title = '') => {
+      if (tracked) return
+      tracked = true
+      window.clearTimeout(settleTimer)
+      window.clearTimeout(fallbackTimer)
+      trackPageView({ path: expectedPath, title, referrer: document.referrer })
+    }
+
+    const checkMetadata = () => {
+      const metadataPath = canonicalizeAnalyticsPath(document.documentElement.dataset.sabotMetaPath || '')
+      if (metadataPath !== expectedPath) return
+      window.clearTimeout(settleTimer)
+      settleTimer = window.setTimeout(() => send(document.documentElement.dataset.sabotMetaTitle || document.title), 250)
+    }
+
+    document.addEventListener('sabot:meta-updated', checkMetadata)
+    checkMetadata()
+    fallbackTimer = window.setTimeout(() => send(''), 4_000)
+
+    return () => {
+      document.removeEventListener('sabot:meta-updated', checkMetadata)
+      window.clearTimeout(settleTimer)
+      window.clearTimeout(fallbackTimer)
+    }
   }, [location.pathname])
   return null
 }
@@ -336,7 +361,7 @@ export default function App() {
               <Route path={adminRoutes.nativeBridge} element={protect(<NativeContentBridgePage />)} />
 
               <Route path="/updates" element={<NativeUpdatesPage pieces={pieces} featured={featured} latest={latest} />} />
-              <Route path="/updates/:slug" element={<NativeUpdateDetailPage />} />
+              <Route path="/updates/:slug" element={<LegacyUpdateRedirect />} />
               <Route path="/native-preview/:id" element={protect(<NativeDraftPreviewPage />)} />
               <Route path="/press" element={<PublicSurfacePage target="press" />} />
               <Route path="/publications" element={<PublicationsIndexPage />} />
@@ -373,6 +398,12 @@ export default function App() {
 function LegacyPieceRedirect() {
   const location = useLocation()
   const slug = location.pathname.replace(/^\/piece\//, '').replace(/\/+$/, '')
+  return <Navigate to={`/post/${slug}${location.search || ''}`} replace />
+}
+
+function LegacyUpdateRedirect() {
+  const location = useLocation()
+  const slug = location.pathname.replace(/^\/updates\//, '').replace(/\/+$/, '')
   return <Navigate to={`/post/${slug}${location.search || ''}`} replace />
 }
 

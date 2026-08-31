@@ -1,4 +1,14 @@
-import { cleanPath, cleanText, ensureAnalyticsTable, hashSession, json, parseDevice, parseReferrer } from './_lib.js'
+import {
+  cleanPath,
+  cleanText,
+  ensureAnalyticsTable,
+  hashSession,
+  isAutomatedRequest,
+  isSameOriginAnalyticsRequest,
+  json,
+  parseDevice,
+  parseReferrer,
+} from './_lib.js'
 
 export async function onRequestPost(context) {
   if (!context.env?.BF_DB) return json({ ok: false, error: 'analytics storage unavailable' }, 503)
@@ -7,13 +17,17 @@ export async function onRequestPost(context) {
     return json({ ok: true, ignored: 'privacy-signal' }, 202)
   }
 
+  if (!isSameOriginAnalyticsRequest(context.request)) {
+    return json({ ok: true, ignored: 'non-site-origin' }, 202)
+  }
+
   try {
     const body = await context.request.json()
     const sessionId = cleanText(body?.sessionId, 120)
     if (sessionId.length < 12) return json({ ok: false, error: 'invalid session' }, 400)
 
     const agent = parseDevice(context.request.headers.get('user-agent'))
-    if (agent.bot) return json({ ok: true, ignored: 'bot' })
+    if (isAutomatedRequest(context, agent)) return json({ ok: true, ignored: 'bot' }, 202)
 
     const url = new URL(context.request.url)
     const referrer = parseReferrer(body?.referrer, url.origin)

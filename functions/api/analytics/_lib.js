@@ -1,3 +1,5 @@
+import { canonicalizeAnalyticsPath } from '../../../shared/analyticsPath.js'
+
 const DAY_MS = 86_400_000
 
 export async function ensureAnalyticsTable(db) {
@@ -27,9 +29,7 @@ export async function ensureAnalyticsTable(db) {
 }
 
 export function cleanPath(value) {
-  const path = String(value || '/').split('?')[0].split('#')[0]
-  if (!path.startsWith('/') || path.length > 500) return '/'
-  return path.replace(/\/{2,}/g, '/') || '/'
+  return canonicalizeAnalyticsPath(value)
 }
 
 export function cleanText(value, max = 180) {
@@ -56,18 +56,41 @@ export function parseReferrer(value, siteOrigin) {
 
 export function parseDevice(userAgent) {
   const ua = String(userAgent || '')
-  if (/bot|crawler|spider|preview|facebookexternalhit|slurp/i.test(ua)) return { bot: true, device: 'bot', browser: 'bot' }
-  const device = /ipad|tablet/i.test(ua) ? 'tablet' : /mobile|iphone|android/i.test(ua) ? 'mobile' : 'desktop'
-  const browser = /firefox/i.test(ua)
+  if (!ua || /bot|crawler|spider|preview|facebookexternalhit|slurp|headless|lighthouse|pingdom|uptime|curl|wget/i.test(ua)) {
+    return { bot: true, device: 'bot', browser: 'bot' }
+  }
+  const device = /ipad|tablet|kindle|silk/i.test(ua) ? 'tablet' : /mobile|iphone|ipod|android/i.test(ua) ? 'mobile' : 'desktop'
+  const browser = /firefox|fxios/i.test(ua)
     ? 'Firefox'
-    : /edg\//i.test(ua)
+    : /edg(?:e|a|ios)?\//i.test(ua)
       ? 'Edge'
-      : /chrome|crios/i.test(ua)
-        ? 'Chrome'
-        : /safari/i.test(ua)
-          ? 'Safari'
-          : 'Other'
+      : /opr\/|opera/i.test(ua)
+        ? 'Opera'
+        : /chrome|crios/i.test(ua)
+          ? 'Chrome'
+          : /safari/i.test(ua) && !/android/i.test(ua)
+            ? 'Safari'
+            : 'Other'
   return { bot: false, device, browser }
+}
+
+export function isAutomatedRequest(context, parsedAgent) {
+  if (parsedAgent?.bot) return true
+  const botManagement = context?.request?.cf?.botManagement || context?.request?.cf?.bot_management
+  if (botManagement?.verifiedBot === true || botManagement?.verified_bot === true) return true
+  const score = Number(botManagement?.score)
+  return Number.isFinite(score) && score > 0 && score <= 10
+}
+
+export function isSameOriginAnalyticsRequest(request) {
+  try {
+    const requestUrl = new URL(request.url)
+    const origin = String(request.headers.get('origin') || '').trim()
+    if (origin) return new URL(origin).origin === requestUrl.origin
+    return String(request.headers.get('sec-fetch-site') || '').toLowerCase() === 'same-origin'
+  } catch {
+    return false
+  }
 }
 
 export async function hashSession(value) {
