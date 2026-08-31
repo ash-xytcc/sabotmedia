@@ -1,36 +1,62 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchAnalyticsReport } from '../lib/analyticsApi'
 
 function TrafficGraph({ points = [] }) {
-  const width = 640
-  const height = 210
-  const minX = 20
+  const width = 760
+  const height = 270
+  const minX = 46
   const maxX = width - 20
-  const minY = 24
-  const maxY = height - 32
-  const maxViews = Math.max(...points.map((point) => Number(point.views || 0)), 1)
-  const pathData = points.map((point, index) => {
-    const x = minX + ((maxX - minX) * index) / (points.length - 1 || 1)
-    const y = maxY - ((maxY - minY) * Number(point.views || 0)) / maxViews
-    return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`
-  }).join(' ')
-  const labels = points.filter((_, index) => index === 0 || index === points.length - 1 || index % Math.ceil(points.length / 6) === 0)
+  const minY = 20
+  const maxY = height - 38
+  const maxValue = Math.max(...points.flatMap((point) => [Number(point.views || 0), Number(point.sessions || 0)]), 1)
+  const roundedMax = niceCeiling(maxValue)
+  const xFor = (index) => minX + ((maxX - minX) * index) / Math.max(1, points.length - 1)
+  const yFor = (value) => maxY - ((maxY - minY) * Number(value || 0)) / roundedMax
+  const line = (key) => points.map((point, index) => `${index ? 'L' : 'M'} ${xFor(index).toFixed(2)} ${yFor(point[key]).toFixed(2)}`).join(' ')
+  const viewsLine = line('views')
+  const sessionsLine = line('sessions')
+  const area = viewsLine ? `${viewsLine} L ${maxX} ${maxY} L ${minX} ${maxY} Z` : ''
+  const gridValues = Array.from({ length: 5 }, (_, index) => Math.round((roundedMax * index) / 4))
+  const labelCount = Math.min(5, points.length)
+  const labelIndexes = new Set(Array.from({ length: labelCount }, (_, index) => Math.round((index * (points.length - 1)) / Math.max(1, labelCount - 1))))
 
   return (
-    <div className="wp-analytics-graph" role="img" aria-label="Actual page views over time">
-      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-        <line x1={minX} y1={maxY} x2={maxX} y2={maxY} className="wp-analytics-graph__axis" />
-        {pathData ? <path d={pathData} className="wp-analytics-graph__line" /> : null}
-      </svg>
-      <div className="wp-analytics-graph__labels">
-        {labels.map((point) => <span key={point.day}>{formatDay(point.day)}</span>)}
+    <div className="wp-analytics-chart-wrap">
+      <div className="wp-analytics-chart-legend" aria-hidden="true">
+        <span><i className="is-views" />Views</span>
+        <span><i className="is-sessions" />Sessions</span>
       </div>
+      <svg className="wp-analytics-graph" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Daily page views and privacy-preserving sessions">
+        {gridValues.map((value) => {
+          const y = yFor(value)
+          return (
+            <g key={value}>
+              <line x1={minX} y1={y} x2={maxX} y2={y} className="wp-analytics-graph__grid" />
+              <text x={minX - 10} y={y + 4} textAnchor="end" className="wp-analytics-graph__axis-label">{number(value)}</text>
+            </g>
+          )
+        })}
+        {area ? <path d={area} className="wp-analytics-graph__area" /> : null}
+        {viewsLine ? <path d={viewsLine} className="wp-analytics-graph__line wp-analytics-graph__line--views" /> : null}
+        {sessionsLine ? <path d={sessionsLine} className="wp-analytics-graph__line wp-analytics-graph__line--sessions" /> : null}
+        {points.map((point, index) => (
+          <g key={point.day}>
+            <circle cx={xFor(index)} cy={yFor(point.views)} r="3" className="wp-analytics-graph__point wp-analytics-graph__point--views">
+              <title>{formatDay(point.day)}: {number(point.views)} views</title>
+            </circle>
+            <circle cx={xFor(index)} cy={yFor(point.sessions)} r="3" className="wp-analytics-graph__point wp-analytics-graph__point--sessions">
+              <title>{formatDay(point.day)}: {number(point.sessions)} sessions</title>
+            </circle>
+            {labelIndexes.has(index) ? <text x={xFor(index)} y={height - 10} textAnchor={index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle'} className="wp-analytics-graph__date">{formatDay(point.day)}</text> : null}
+          </g>
+        ))}
+      </svg>
     </div>
   )
 }
 
-export function WpAnalyticsWidgets({ pieces = [], compact = false }) {
+export function WpAnalyticsWidgets({ compact = false }) {
   const [days, setDays] = useState(compact ? 7 : 30)
   const [analytics, setAnalytics] = useState(null)
   const [state, setState] = useState('loading')
@@ -51,57 +77,74 @@ export function WpAnalyticsWidgets({ pieces = [], compact = false }) {
 
   useEffect(() => { load() }, [load])
 
-  const publishedPosts = useMemo(() => pieces.filter((piece) => piece.publishedAt).length, [pieces])
   const summary = analytics?.summary || {}
   const realtime = analytics?.realtime || {}
+  const viewsPerSession = summary.sessions ? Number(summary.views || 0) / summary.sessions : 0
+  const metrics = [
+    { title: 'Views Today', value: summary.views_today },
+    { title: 'Sessions Today', value: summary.sessions_today },
+    { title: `Views · ${days}d`, value: summary.views, change: percentChange(summary.views, summary.previous_views) },
+    { title: `Sessions · ${days}d`, value: summary.sessions, change: percentChange(summary.sessions, summary.previous_sessions) },
+    { title: 'Views / Session', value: viewsPerSession, decimal: true },
+    { title: 'Active · 30 min', value: realtime.sessions },
+  ]
 
   return (
-    <section className="wp-dashboard-grid wp-dashboard-grid--analytics">
+    <section className={`wp-dashboard-grid wp-dashboard-grid--analytics${compact ? ' is-compact' : ''}`} aria-busy={state === 'loading'}>
       {!compact ? (
-        <div className="wp-analytics-toolbar wp-meta-box wp-meta-box--wide">
+        <div className="wp-analytics-toolbar wp-meta-box wp-meta-box--full">
           <div>
-            <strong>Traffic period</strong>
-            <span>{analytics?.generatedAt ? ` Updated ${formatTime(analytics.generatedAt)}` : ''}</span>
+            <strong>Traffic overview</strong>
+            <span>{analytics?.generatedAt ? `Updated ${formatTime(analytics.generatedAt)}` : 'Loading current report…'}</span>
           </div>
           <div className="wp-analytics-periods" aria-label="Analytics reporting period">
             {[7, 30, 90].map((period) => (
-              <button key={period} type="button" className={`button${days === period ? ' button--primary' : ''}`} onClick={() => setDays(period)}>
+              <button key={period} type="button" aria-pressed={days === period} className={`button${days === period ? ' button--primary' : ''}`} onClick={() => setDays(period)}>
                 {period} days
               </button>
             ))}
-            <button type="button" className="button" onClick={load}>Refresh</button>
+            <button type="button" className="button" onClick={load} disabled={state === 'loading'}>{state === 'loading' ? 'Refreshing…' : 'Refresh'}</button>
           </div>
         </div>
       ) : null}
 
       {state === 'error' ? (
-        <article className="wp-meta-box wp-meta-box--wide wp-meta-box--notice">
+        <article className="wp-meta-box wp-meta-box--full wp-meta-box--notice" role="alert">
           <h2>Analytics unavailable</h2>
           <p>{error}</p>
           <button type="button" className="button" onClick={load}>Try again</button>
         </article>
       ) : null}
 
-      <Metric title="Views Today" value={summary.views_today} loading={state === 'loading'} />
-      <Metric title="Visitors Today" value={summary.visitors_today} loading={state === 'loading'} />
-      <Metric title={`Views · ${days}d`} value={summary.views} loading={state === 'loading'} />
-      <Metric title="Active · 30 min" value={realtime.visitors} loading={state === 'loading'} />
+      {metrics.slice(0, compact ? 4 : metrics.length).map((metric) => (
+        <Metric key={metric.title} {...metric} loading={state === 'loading'} />
+      ))}
 
-      {!compact ? <Metric title="Published Posts" value={publishedPosts} loading={false} /> : null}
-
-      <article className="wp-meta-box wp-meta-box--wide">
-        <h2>Traffic</h2>
+      <article className="wp-meta-box wp-analytics-card wp-analytics-card--traffic">
+        <div className="wp-analytics-card__header">
+          <div><h2>Traffic over time</h2><p>Every point is recorded first-party traffic, not an estimate.</p></div>
+          <strong>{number(summary.views)} views</strong>
+        </div>
         {analytics?.daily?.length ? <TrafficGraph points={fillDays(analytics.daily, days)} /> : <Empty loading={state === 'loading'} />}
       </article>
 
-      <article className="wp-meta-box wp-meta-box--wide">
-        <h2>Top Pages</h2>
+      <article className="wp-meta-box wp-analytics-card wp-analytics-card--content">
+        <div className="wp-analytics-card__header">
+          <div><h2>Top Content</h2><p>Legacy, alternate, and print URLs are consolidated.</p></div>
+        </div>
         {analytics?.topPages?.length ? (
-          <ol className="wp-analytics-list">
-            {analytics.topPages.map((page) => (
+          <ol className="wp-analytics-pages">
+            {analytics.topPages.slice(0, compact ? 5 : 10).map((page, index) => (
               <li key={page.path}>
-                <Link to={page.path}>{page.title || labelPath(page.path)}</Link>
-                <strong>{number(page.views)} views · {number(page.visitors)} visitors</strong>
+                <span className="wp-analytics-pages__rank">{index + 1}</span>
+                <div className="wp-analytics-pages__identity">
+                  <Link to={page.path}>{page.title || labelPath(page.path)}</Link>
+                  <code>{page.path}</code>
+                </div>
+                <div className="wp-analytics-pages__numbers">
+                  <strong>{number(page.views)}</strong>
+                  <span>{number(page.sessions)} sessions · {share(page.views, summary.views)}%</span>
+                </div>
               </li>
             ))}
           </ol>
@@ -110,16 +153,25 @@ export function WpAnalyticsWidgets({ pieces = [], compact = false }) {
 
       {!compact ? (
         <>
-          <Breakdown title="Referrers" rows={analytics?.referrers} labelKey="referrer" empty="No external referrers recorded yet." />
-          <Breakdown title="Campaigns" rows={analytics?.campaigns} empty="Campaign-tagged links will appear here." />
+          <Breakdown title="External Referrers" subtitle="Page views carrying an external referrer" rows={analytics?.referrers} labelKey="referrer" empty="No external referrers recorded yet." />
+          <Breakdown title="Campaign Entries" subtitle="Views arriving with a campaign tag" rows={analytics?.campaigns} empty="Campaign-tagged entries will appear here." />
+          <Breakdown title="Traffic Sources" subtitle="How each recorded view reached its page" rows={analytics?.sources} />
           <Breakdown title="Devices" rows={analytics?.devices} />
           <Breakdown title="Browsers" rows={analytics?.browsers} />
-          <Breakdown title="Countries" rows={analytics?.countries} empty="Countries appear after at least three views." />
-          <article className="wp-meta-box wp-meta-box--wide wp-meta-box--notice">
-            <h2>Real first-party data</h2>
-            <p>
-              Counts public page views and browser-tab sessions from Sabot Media itself. No advertising ID, fingerprint, cookie, or IP address is stored. Do Not Track and Global Privacy Control are respected. Data begins accumulating after this release; earlier traffic cannot be reconstructed.
-            </p>
+          <Breakdown title="Countries" subtitle="Shown only after three views for privacy" rows={analytics?.countries} empty="No country has reached the privacy threshold yet." />
+          <article className="wp-meta-box wp-meta-box--full wp-analytics-methodology">
+            <div>
+              <h2>What these numbers mean</h2>
+              <p>Views count public-page loads. Sessions count browser tabs using a daily rotating hash; they are deliberately not claimed as unique people. Historic aliases are rolled into their canonical content path.</p>
+            </div>
+            <dl>
+              <div><dt>Source</dt><dd>First-party D1 events</dd></div>
+              <div><dt>Tracking since</dt><dd>{formatDateTime(analytics?.dataRange?.tracking_since) || 'No events yet'}</dd></div>
+              <div><dt>Latest event</dt><dd>{formatDateTime(analytics?.dataRange?.last_event_at) || 'No events yet'}</dd></div>
+              <div><dt>Retention</dt><dd>{analytics?.privacy?.retention || '400 days'}</dd></div>
+              <div><dt>Excluded</dt><dd>Bots, admin/API routes, DNT and GPC</dd></div>
+              <div><dt>Never stored</dt><dd>Cookies, raw IPs, fingerprints</dd></div>
+            </dl>
           </article>
         </>
       ) : null}
@@ -127,42 +179,68 @@ export function WpAnalyticsWidgets({ pieces = [], compact = false }) {
   )
 }
 
-function Metric({ title, value, loading }) {
+function Metric({ title, value, loading, change = null, decimal = false }) {
   return (
-    <article className="wp-meta-box wp-meta-box--stat">
+    <article className="wp-meta-box wp-meta-box--stat wp-analytics-stat">
       <h2>{title}</h2>
-      <p className="wp-metric">{loading && value == null ? '—' : number(value)}</p>
+      <div className="wp-analytics-stat__value">
+        <p className="wp-metric">{loading && value == null ? '—' : decimal ? Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }) : number(value)}</p>
+        {change != null ? <span className={change > 0 ? 'is-up' : change < 0 ? 'is-down' : 'is-flat'}>{change > 0 ? '↑' : change < 0 ? '↓' : '→'} {Math.abs(change)}%</span> : null}
+      </div>
+      {change != null ? <small>versus prior {title.match(/\d+d/)?.[0] || 'period'}</small> : null}
     </article>
   )
 }
 
-function Breakdown({ title, rows = [], labelKey = 'label', empty = 'No data recorded yet.' }) {
+function Breakdown({ title, subtitle = '', rows = [], labelKey = 'label', empty = 'No data recorded yet.' }) {
   const safeRows = Array.isArray(rows) ? rows : []
   const total = safeRows.reduce((sum, row) => sum + Number(row.views || 0), 0)
+  const max = Math.max(...safeRows.map((row) => Number(row.views || 0)), 1)
   return (
-    <article className="wp-meta-box wp-meta-box--wide">
-      <h2>{title}</h2>
+    <article className="wp-meta-box wp-analytics-breakdown-card">
+      <div className="wp-analytics-card__header">
+        <div><h2>{title}</h2>{subtitle ? <p>{subtitle}</p> : null}</div>
+        {safeRows.length ? <strong>{number(total)}</strong> : null}
+      </div>
       {safeRows.length ? (
         <ul className="wp-analytics-breakdown">
           {safeRows.map((row) => (
             <li key={row[labelKey]}>
-              <span>{row[labelKey] || 'Unknown'}</span>
-              <span className="wp-analytics-breakdown__bar"><i style={{ width: `${Math.max(2, (Number(row.views || 0) / Math.max(total, 1)) * 100)}%` }} /></span>
-              <strong>{number(row.views)}</strong>
+              <div><span>{row[labelKey] || 'Unknown'}</span><strong>{number(row.views)}</strong></div>
+              <span className="wp-analytics-breakdown__bar"><i style={{ width: `${Math.max(2, (Number(row.views || 0) / max) * 100)}%` }} /></span>
             </li>
           ))}
         </ul>
-      ) : <p>{empty}</p>}
+      ) : <p className="description">{empty}</p>}
     </article>
   )
 }
 
 function Empty({ loading }) {
-  return <p>{loading ? 'Loading real traffic data…' : 'No traffic recorded for this period yet.'}</p>
+  return <p className="wp-analytics-empty">{loading ? 'Loading real traffic data…' : 'No traffic recorded for this period yet.'}</p>
 }
 
 function number(value) {
   return Number(value || 0).toLocaleString()
+}
+
+function share(value, total) {
+  if (!Number(total)) return '0'
+  return ((Number(value || 0) / Number(total)) * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })
+}
+
+function percentChange(current, previous) {
+  const before = Number(previous || 0)
+  const now = Number(current || 0)
+  if (!before) return null
+  return Math.round(((now - before) / before) * 100)
+}
+
+function niceCeiling(value) {
+  const magnitude = 10 ** Math.floor(Math.log10(Math.max(1, value)))
+  const normalized = value / magnitude
+  const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10
+  return nice * magnitude
 }
 
 function formatDay(value) {
@@ -175,6 +253,12 @@ function formatTime(value) {
   return Number.isFinite(date.getTime()) ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''
 }
 
+function formatDateTime(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  return Number.isFinite(date.getTime()) ? date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''
+}
+
 function labelPath(path) {
   return path === '/' ? 'Homepage' : path.replace(/^\//, '').replace(/[-/]+/g, ' ')
 }
@@ -185,6 +269,6 @@ function fillDays(rows, days) {
     const date = new Date()
     date.setUTCDate(date.getUTCDate() - (days - offset - 1))
     const day = date.toISOString().slice(0, 10)
-    return byDay.get(day) || { day, views: 0, visitors: 0 }
+    return byDay.get(day) || { day, views: 0, sessions: 0 }
   })
 }

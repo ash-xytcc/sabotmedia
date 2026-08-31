@@ -27,6 +27,9 @@ export function setDocumentMeta({
   setMeta('name', 'twitter:description', cleanDescription)
   setMeta('name', 'twitter:image', imageUrl)
   setCanonical(url)
+  document.documentElement.dataset.sabotMetaPath = new URL(url).pathname
+  document.documentElement.dataset.sabotMetaTitle = cleanTitle
+  document.dispatchEvent(new CustomEvent('sabot:meta-updated', { detail: { path: canonicalPath, title: cleanTitle } }))
 }
 
 export function stripHtmlForMeta(value, fallback = '') {
