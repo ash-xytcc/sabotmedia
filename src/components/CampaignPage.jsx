@@ -211,6 +211,7 @@ export function CampaignPage() {
 
       <section className="campaign-hero" id="top">
         <div className="campaign-hero__noise" aria-hidden="true" />
+        {campaign.slug === 'food-not-bombs-gaza' ? <div className="campaign-hero__watermelon-seeds" aria-hidden="true"><i /><i /><i /><i /><i /></div> : null}
         <div className="campaign-shell campaign-hero__inner">
           <div className="campaign-hero__copy">
             <div className="campaign-hero__flags">
