@@ -135,7 +135,10 @@ test('coverage archive route receives the SPA shell and public UI exposes useful
   assert.match(campaign, /Browse the full coverage archive/)
   assert.match(selection, /slice\(0, limit\)/)
   assert.match(css, /overflow-x:\s*clip/)
-  assert.match(css, /top:\s*calc\(var\(--masthead-height/)
+  assert.match(css, /\.campaign-coverage-page\s*\{[\s\S]*?max-width:\s*none/)
+  assert.match(css, /\.campaign-coverage-page \.publication-topbar--masthead\s*\{[\s\S]*?background:\s*var\(--coverage-ink\)\s*!important/)
+  assert.match(css, /\.campaign-coverage-controls\s*\{[\s\S]*?top:\s*0/)
+  assert.match(css, /\.campaign-coverage-card h2 a\s*\{[\s\S]*?overflow-wrap:\s*normal\s*!important/)
   assert.ok(main.indexOf("campaign-coverage-archive.css") > main.indexOf("campaign-page-polish.css"))
 })
 
