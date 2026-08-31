@@ -20,7 +20,7 @@
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds {
   position: absolute;
   z-index: 0;
-  inset: 0 28.5% clamp(22px,2vw,30px) 58%;
+  inset: 0 34% clamp(22px,2vw,30px) 58%;
   pointer-events: none;
 }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds i {
@@ -110,11 +110,13 @@
 .contributor-composer textarea { width: 100%; resize: none; padding: 13px; border: 0; border-radius: 18px; font: 1rem system-ui; }
 .contributor-compose-actions { display: flex; gap: 7px; }.contributor-compose-actions button { min-height: 44px; padding: 8px 12px; border: 1px solid #bbb; border-radius: 22px; background: #fff; }.contributor-compose-actions .is-recording { background: #e6392f; color: #fff; }
 .contributor-attachment,.contributor-publish-choice { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px; background: #fff; }.contributor-publish-choice { justify-content: flex-start; }.contributor-publish-choice small { display: block; }
-@media (max-width:700px) { .campaign-donation,.campaign-question-layout { grid-template-columns: 1fr; }.campaign-question-layout form > div,.campaign-benefit-grid { grid-template-columns: 1fr; }.campaign-benefit-grid article { border-right: 0; border-bottom: 1px solid #fff; }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero { background: linear-gradient(160deg,#ce1126 0 80%,#fff 80% 83%,#007a3d 83% 100%); }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds { inset:0 5% 17% 70%; }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds i:nth-child(3),.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds i:nth-child(5) { display:none; }.contributor-room { width:100%; }.contributor-room > header > strong { display:none; } }
+@media (max-width:700px) { .campaign-donation,.campaign-question-layout { grid-template-columns: 1fr; }.campaign-question-layout form > div,.campaign-benefit-grid { grid-template-columns: 1fr; }.campaign-benefit-grid article { border-right: 0; border-bottom: 1px solid #fff; }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero { background: linear-gradient(160deg,#ce1126 0 80%,#fff 80% 83%,#007a3d 83% 100%); }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds { inset:0 24% 17% 70%; }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds i:nth-child(3),.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds i:nth-child(5) { display:none; }.contributor-room { width:100%; }.contributor-room > header > strong { display:none; } }
 .campaign-correspondence-admin__grid { display:grid; grid-template-columns:minmax(280px,.8fr) minmax(340px,1.2fr); gap:24px; }
+.campaign-instagram-import { display:grid; grid-template-columns:minmax(240px,.7fr) minmax(320px,1.3fr); gap:20px; margin:18px 0 26px; padding:18px; border:1px solid #ccd0d4; background:#f6f7f7; }
+.campaign-instagram-import h3 { margin-top:0; }.campaign-instagram-import form { display:grid; grid-template-columns:1fr 1fr; gap:10px; }.campaign-instagram-import form label { display:grid; gap:5px; font-weight:700; }.campaign-instagram-import form label:nth-child(3),.campaign-instagram-import form label:nth-child(4),.campaign-instagram-import form button { grid-column:1 / -1; }.campaign-instagram-import input,.campaign-instagram-import textarea { width:100%; }
 .campaign-contributor-create,.campaign-admin-message { display:grid; gap:9px; }.campaign-contributor-create input,.campaign-admin-message textarea,.campaign-correspondence-admin .notice input { width:100%; padding:9px; }
 .campaign-admin-simple-list,.campaign-admin-thread,.campaign-question-queue { display:grid; gap:8px; margin-top:14px; }
 .campaign-admin-simple-list article,.campaign-question-queue article { display:flex; justify-content:space-between; gap:12px; align-items:start; padding:12px; border:1px solid #ccd0d4; background:#fff; }.campaign-admin-simple-list small { display:block; }
 .campaign-admin-thread { max-height:460px; overflow:auto; padding:10px; background:#ece7dc; }.campaign-admin-thread article { max-width:88%; padding:10px; border-radius:3px 12px 12px; background:#fff; }.campaign-admin-thread .is-contributor { margin-left:auto; background:#d8efcb; }.campaign-admin-thread p { margin:5px 0; white-space:pre-wrap; }
 .campaign-question-queue article span { color:#b32d2e; font-size:.7rem; font-weight:900; text-transform:uppercase; }.campaign-question-queue article strong { display:block; }.campaign-question-queue article p { margin:6px 0; }
-@media (max-width:900px) { .campaign-correspondence-admin__grid { grid-template-columns:1fr; } }
+@media (max-width:900px) { .campaign-correspondence-admin__grid,.campaign-instagram-import { grid-template-columns:1fr; } }
