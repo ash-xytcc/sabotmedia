@@ -66,7 +66,7 @@ export const routeRedirects = Object.freeze([
   { from: '/feeds-admin', to: adminRoutes.feeds },
   { from: '/printlab', to: adminRoutes.printlab },
   { from: '/audiolab', to: adminRoutes.audiolab },
-  { from: '/customize', to: adminRoutes.customize },
+  { from: '/customize', to: adminRoutes.settings },
   { from: '/draft', to: adminRoutes.liveEditor },
   { from: '/tools', to: adminRoutes.tools },
   { from: '/settings', to: adminRoutes.settings },

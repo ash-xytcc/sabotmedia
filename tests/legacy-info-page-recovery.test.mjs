@@ -3,12 +3,12 @@ import fs from 'node:fs'
 import test from 'node:test'
 
 const recovery = fs.readFileSync(new URL('../src/components/LegacyInfoPageRecovery.jsx', import.meta.url), 'utf8')
-const customize = fs.readFileSync(new URL('../src/components/CustomizePage.jsx', import.meta.url), 'utf8')
+const settings = fs.readFileSync(new URL('../src/components/WpAdminScaffoldPages.jsx', import.meta.url), 'utf8')
 const publicConfig = fs.readFileSync(new URL('../src/lib/publicConfig.js', import.meta.url), 'utf8')
 
-test('legacy recovery is exposed in Customize instead of affecting public rendering', () => {
-  assert.match(customize, /LegacyInfoPageRecovery/)
-  assert.match(customize, /<LegacyInfoPageRecovery \/>/)
+test('legacy recovery is exposed in Settings instead of affecting public rendering', () => {
+  assert.match(settings, /LegacyInfoPageRecovery/)
+  assert.match(settings, /<LegacyInfoPageRecovery \/>/)
   assert.match(publicConfig, /resolvePublicConfig\(runtimeConfig = \{\}\)/)
   assert.doesNotMatch(publicConfig, /runtimeConfig \|\| getStoredPublicConfig\(\)/)
 })

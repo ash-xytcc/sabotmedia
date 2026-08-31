@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { AdminPublicConfigCard } from './AdminPublicConfigCard'
+import { LegacyInfoPageRecovery } from './LegacyInfoPageRecovery'
 import { getPieces } from '../lib/pieces'
 import { adminRoutes } from '../routing/routes'
 
@@ -11,7 +12,7 @@ export function PagesAdminPage() {
   const samplePostPath = samplePost?.slug ? `/post/${samplePost.slug}` : '/archive'
   const pages = [
     { title: 'Home', slug: 'home', path: '/', type: 'Public route', editPath: adminRoutes.liveEditor },
-    { title: 'Archive', slug: 'archive', path: '/archive', type: 'Public route', editPath: adminRoutes.customize },
+    { title: 'Archive', slug: 'archive', path: '/archive', type: 'Public route', editPath: adminRoutes.liveEditor },
     { title: 'Collections', slug: 'collections', path: '/collections', type: 'Public index', editPath: adminRoutes.collections },
     { title: 'Publications', slug: 'publications', path: '/publications', type: 'Public index', editPath: adminRoutes.publications },
     { title: 'Feeds', slug: 'feeds', path: '/feeds', type: 'Public index', editPath: adminRoutes.feeds },
@@ -20,7 +21,7 @@ export function PagesAdminPage() {
     { title: 'Submit', slug: 'submit', path: '/submit', type: 'Public route', editPath: adminRoutes.liveEditor },
     { title: 'Support', slug: 'support', path: '/support', type: 'Public route', editPath: adminRoutes.liveEditor },
     { title: 'Security', slug: 'security', path: '/security', type: 'Public route', editPath: adminRoutes.liveEditor },
-    { title: 'Post template', slug: 'post-template', path: samplePostPath, type: 'Template', editPath: adminRoutes.customize },
+    { title: 'Post template', slug: 'post-template', path: samplePostPath, type: 'Template', editPath: adminRoutes.liveEditor },
   ]
 
   return (
@@ -55,9 +56,11 @@ export function SettingsAdminPage() {
     <AdminFrame>
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
-          <div><h1>Settings</h1><p className="description">Production-backed site configuration. Saved changes use the authenticated public-site-config API and D1 rather than browser storage.</p></div>
+          <div><h1>Settings</h1><p className="description">The single home for production-backed site configuration. Saved changes use the authenticated public-site-config API and D1 rather than browser storage.</p></div>
+          <Link className="button button--primary" to={adminRoutes.liveEditor}>Edit Live</Link>
         </div>
         <AdminPublicConfigCard />
+        <LegacyInfoPageRecovery />
         <section className="wp-meta-box">
           <h2>Operational settings</h2>
           <p className="description">Settings with their own data models live on the relevant operational screen instead of being duplicated here.</p>

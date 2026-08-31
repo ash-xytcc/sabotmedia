@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
-import { AdminPublicConfigCard } from './AdminPublicConfigCard'
 import {
   PagesAdminPage,
   SettingsAdminPage,
@@ -13,31 +12,6 @@ import { getPieces } from '../lib/pieces'
 import { downloadRssBundle } from '../lib/rssFeeds'
 
 export { PagesAdminPage, SettingsAdminPage, UsersAdminPage }
-
-export function CustomizeAdminPage() {
-  return (
-    <AdminFrame>
-      <main className="page wp-admin-screen">
-        <div className="wp-screen-header">
-          <div>
-            <h1>Customize</h1>
-            <p className="description">Public-facing configuration saved through the authenticated D1-backed site configuration API.</p>
-          </div>
-          <div>
-            <Link className="button" to={adminRoutes.liveEditor}>Edit Live</Link>
-          </div>
-        </div>
-
-        <AdminPublicConfigCard />
-
-        <section className="wp-meta-box">
-          <h2>How customization works</h2>
-          <p className="description">Use Edit Live for visual field selection and this screen to inspect, reload, save, or reset the persisted public configuration. Browser-only customizer settings are no longer presented as production saves.</p>
-        </section>
-      </main>
-    </AdminFrame>
-  )
-}
 
 export function SiteEditorAdminPage() {
   return (

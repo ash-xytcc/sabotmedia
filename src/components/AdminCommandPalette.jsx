@@ -16,7 +16,6 @@ const COMMANDS = [
   { label: 'Campaigns', description: 'Create and manage campaign hubs, updates, resources, graphics, sources, and coverage', to: adminRoutes.campaigns, keywords: ['campaign', 'new campaign', 'hub', 'updates', 'letters', 'coverage'], capability: 'publishing:write' },
   { label: 'Publications', description: 'Build zines, readers, and editions', to: adminRoutes.publications, keywords: ['zine', 'booklet', 'issue'] },
   { label: 'Feeds', description: 'View RSS and syndication', to: adminRoutes.feeds, keywords: ['rss', 'syndication', 'podcast feed'] },
-  { label: 'Customize', description: 'Edit persisted public site configuration', to: adminRoutes.customize, keywords: ['theme', 'live edit', 'site config'], capability: 'site:manage' },
   { label: 'Pages', description: 'Open the public route inventory', to: adminRoutes.pages, keywords: ['about', 'contact', 'support', 'submit', 'security'] },
   { label: 'Analytics', description: 'View first-party D1 traffic reports', to: adminRoutes.analytics, keywords: ['traffic', 'visitors', 'referrers', 'campaigns'], capability: 'analytics:view' },
   { label: 'Taxonomy', description: 'Manage tags, themes, series, and terms', to: adminRoutes.taxonomy, keywords: ['tags', 'categories', 'series'] },
@@ -26,7 +25,7 @@ const COMMANDS = [
   { label: 'Audit Log', description: 'Review recent persisted site changes', to: adminRoutes.auditLog, keywords: ['history', 'changes'], capability: 'system:view' },
   { label: 'Sites & Domains', description: 'Track hostnames and Cloudflare attachment state', to: adminRoutes.sites, keywords: ['domain', 'hostname', 'dns', 'cloudflare'], capability: 'site:manage' },
   { label: 'Tools', description: 'Open operational utilities', to: adminRoutes.tools, keywords: ['utilities', 'rss', 'backup'], capability: 'system:view' },
-  { label: 'Settings', description: 'Open production-backed site settings', to: adminRoutes.settings, keywords: ['configuration'], capability: 'site:manage' },
+  { label: 'Settings', description: 'Edit production-backed site configuration', to: adminRoutes.settings, keywords: ['configuration', 'customize', 'theme', 'site config'], capability: 'site:manage' },
   { label: 'Users & Access', description: 'Manage individual accounts and enforced roles', to: adminRoutes.users, keywords: ['account', 'auth', 'rbac', 'roles'], capability: 'users:manage' },
 ]
 

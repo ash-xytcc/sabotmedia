@@ -1,6 +1,7 @@
 export const editableContentRegistry = {
   nav: [
     { id: 'archive', labelField: 'nav.archive.label', hrefField: 'nav.archive.href', defaultLabel: 'Archive', defaultHref: '/archive' },
+    { id: 'feeds', labelField: 'nav.feeds.label', hrefField: 'nav.feeds.href', defaultLabel: 'Feeds', defaultHref: '/feeds' },
     { id: 'about', labelField: 'nav.about.label', hrefField: 'nav.about.href', defaultLabel: 'About', defaultHref: '/about' },
   ],
   footer: {
@@ -29,6 +30,7 @@ export const editableContentRegistry = {
         links: [
           { id: 'home', labelField: 'footer.site.home.label', hrefField: 'footer.site.home.href', defaultLabel: 'Home', defaultHref: '/' },
           { id: 'archive', labelField: 'footer.site.archive.label', hrefField: 'footer.site.archive.href', defaultLabel: 'Archive', defaultHref: '/archive' },
+          { id: 'feeds', labelField: 'footer.site.feeds.label', hrefField: 'footer.site.feeds.href', defaultLabel: 'Feeds / RSS', defaultHref: '/feeds' },
           { id: 'about', labelField: 'footer.site.about.label', hrefField: 'footer.site.about.href', defaultLabel: 'About', defaultHref: '/about' },
           { id: 'security', labelField: 'footer.site.security.label', hrefField: 'footer.site.security.href', defaultLabel: 'Security', defaultHref: '/security' },
           { id: 'contact', labelField: 'footer.site.contact.label', hrefField: 'footer.site.contact.href', defaultLabel: 'Contact', defaultHref: '/contact' },

@@ -108,7 +108,7 @@ export function LegacyInfoPageRecovery() {
     return (
       <section className="review-card legacy-public-config-recovery">
         <h2>Legacy public page recovery</h2>
-        <p className="description">This browser does not contain the old saved public-site cache. Open Customize in the desktop/browser where the newer info pages were previously visible.</p>
+        <p className="description">This browser does not contain the old saved public-site cache. Open Settings in the desktop/browser where the newer info pages were previously visible.</p>
       </section>
     )
   }

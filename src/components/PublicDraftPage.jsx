@@ -161,7 +161,7 @@ export function PublicDraftPage() {
             Site Editor
           </EditableText>
           <EditableText as="div" className="project-hero__description" field={heroBlock?.descriptionField || 'draft.hero.description'} multiline>
-            Choose a public page to edit live, view on the site, or customize. Advanced config import/export tools are available below for developers.
+            Choose a public page to edit live or view on the site. Site-wide configuration lives under Settings, with advanced import/export tools below for developers.
           </EditableText>
           <div className="project-hero__meta">
             <span>{changedFields.length} {changedFieldsLabel}</span>
@@ -189,8 +189,8 @@ export function PublicDraftPage() {
                     <Link className="button" to={page.path}>
                       View
                     </Link>
-                    <Link className="button" to={adminRoutes.customize}>
-                      Customize
+                    <Link className="button" to={adminRoutes.settings}>
+                      Site settings
                     </Link>
                   </div>
                 </li>
