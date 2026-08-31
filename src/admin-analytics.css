@@ -18,6 +18,13 @@
 .wp-analytics-toolbar span,
 .wp-analytics-card__header p,
 .wp-analytics-stat small { color: #646970; font-size: 12px; }
+.wp-analytics-toolbar .wp-analytics-coverage-note {
+  max-width: 680px;
+  margin-top: 3px;
+  color: #1d4f73;
+  font-weight: 600;
+  line-height: 1.4;
+}
 .wp-analytics-periods { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .wp-analytics-stat {
