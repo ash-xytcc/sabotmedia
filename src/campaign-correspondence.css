@@ -15,26 +15,7 @@
   background: linear-gradient(180deg,var(--watermelon-rind) 0 35%,#fff 35% 52%,#007a3d 52%);
 }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0 28% clamp(18px,2vw,28px) 0;
-  width: auto;
-  max-width: none;
-  aspect-ratio: auto;
-  border: 0;
-  border-radius: 0;
-  opacity: .72;
-  transform: none;
-  background-image:
-    radial-gradient(ellipse 36% 70% at 12% 17%,#000 0 32%,transparent 36%),
-    radial-gradient(ellipse 36% 70% at 53% 31%,#000 0 32%,transparent 36%),
-    radial-gradient(ellipse 36% 70% at 82% 16%,#000 0 32%,transparent 36%),
-    radial-gradient(ellipse 36% 70% at 28% 75%,#000 0 32%,transparent 36%),
-    radial-gradient(ellipse 36% 70% at 73% 78%,#000 0 32%,transparent 36%);
-  background-size: 38px 55px,42px 60px,34px 50px,40px 58px,36px 52px;
-  background-repeat: no-repeat;
-  background-position: 91% 14%,94% 47%,79% 78%,70% 15%,88% 90%;
+  display: none;
 }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__inner { position: relative; z-index: 1; }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__noise { opacity: .08; }
@@ -75,7 +56,17 @@
 .campaign-benefit-copy button { padding: 10px 16px; border: 2px solid #000; background: #ce1126; color: #fff; font-weight: 900; cursor: pointer; }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-section--questions { background: #fff; color: #000; border-top: clamp(10px,1.5vw,18px) solid #ce1126; }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-section--dispatches { background: #f4f4f4; color: #000; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] #reporting { background: #007a3d; color: #fff; border-bottom-color: #000; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] #reporting .campaign-section-heading > p { color: #fff; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] #reporting .campaign-piece-card { background: #000; color: #fff; border-color: #fff; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] #reporting .campaign-piece-card__body > p,
+.campaign-page[data-campaign="food-not-bombs-gaza"] #reporting .campaign-piece-card__body > a { color: var(--watermelon-rind); }
+.campaign-page[data-campaign="food-not-bombs-gaza"] #reporting .campaign-resource-strip article { background: #000; color: #fff; border-color: #fff; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] #reporting .campaign-resource-strip span { color: var(--watermelon-rind); }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-section--act { background: #fff; color: #000; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-section--act .campaign-action-card { color: #fff; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-section--act .campaign-action-card h3 { color: #fff; }
+.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-section--act .campaign-action-card p { color: #e7e7e7; }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-action-card:nth-child(3n+1) { border-top-color: #ce1126; }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-action-card:nth-child(3n+2) { border-top-color: #007a3d; }
 .campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-disclaimer { background: #000; color: #fff; border-top: clamp(10px,1.5vw,18px) solid #007a3d; }
@@ -98,7 +89,7 @@
 .contributor-composer textarea { width: 100%; resize: none; padding: 13px; border: 0; border-radius: 18px; font: 1rem system-ui; }
 .contributor-compose-actions { display: flex; gap: 7px; }.contributor-compose-actions button { min-height: 44px; padding: 8px 12px; border: 1px solid #bbb; border-radius: 22px; background: #fff; }.contributor-compose-actions .is-recording { background: #e6392f; color: #fff; }
 .contributor-attachment,.contributor-publish-choice { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px; background: #fff; }.contributor-publish-choice { justify-content: flex-start; }.contributor-publish-choice small { display: block; }
-@media (max-width:700px) { .campaign-donation,.campaign-question-layout { grid-template-columns: 1fr; }.campaign-question-layout form > div,.campaign-benefit-grid { grid-template-columns: 1fr; }.campaign-benefit-grid article { border-right: 0; border-bottom: 1px solid #fff; }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero { background: linear-gradient(160deg,#ce1126 0 80%,#fff 80% 83%,#007a3d 83% 100%); }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero::after { display:block; inset:0 0 18px 0; opacity:.55; background-position:92% 10%,94% 44%,90% 78%,72% 19%,73% 87%; }.contributor-room { width:100%; }.contributor-room > header > strong { display:none; } }
+@media (max-width:700px) { .campaign-donation,.campaign-question-layout { grid-template-columns: 1fr; }.campaign-question-layout form > div,.campaign-benefit-grid { grid-template-columns: 1fr; }.campaign-benefit-grid article { border-right: 0; border-bottom: 1px solid #fff; }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero { background: linear-gradient(160deg,#ce1126 0 80%,#fff 80% 83%,#007a3d 83% 100%); }.contributor-room { width:100%; }.contributor-room > header > strong { display:none; } }
 .campaign-correspondence-admin__grid { display:grid; grid-template-columns:minmax(280px,.8fr) minmax(340px,1.2fr); gap:24px; }
 .campaign-contributor-create,.campaign-admin-message { display:grid; gap:9px; }.campaign-contributor-create input,.campaign-admin-message textarea,.campaign-correspondence-admin .notice input { width:100%; padding:9px; }
 .campaign-admin-simple-list,.campaign-admin-thread,.campaign-question-queue { display:grid; gap:8px; margin-top:14px; }
