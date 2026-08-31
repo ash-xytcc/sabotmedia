@@ -10,6 +10,8 @@ const runtime = fs.readFileSync(new URL('../functions/api/_lib/feedRuntime.js', 
 const manifest = fs.readFileSync(new URL('../functions/api/feed-manifest.js', import.meta.url), 'utf8')
 const manifestClient = fs.readFileSync(new URL('../src/lib/feedManifestApi.js', import.meta.url), 'utf8')
 const publicPage = fs.readFileSync(new URL('../src/components/PublicFeedsPage.jsx', import.meta.url), 'utf8')
+const publicRegistry = fs.readFileSync(new URL('../src/lib/editableContentRegistry.js', import.meta.url), 'utf8')
+const documentShell = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8')
 
 test('feed catch-all path normalization preserves grouped XML paths', () => {
   assert.equal(normalizeFeedRequestPath(['projects', 'grays-harbor.xml']), 'projects/grays-harbor.xml')
@@ -61,6 +63,12 @@ test('public feeds page links only to server manifest endpoints', () => {
   assert.match(publicPage, /Nothing is being presented as a working subscription URL until it does/)
   assert.match(manifest, /mode: 'd1'/)
   assert.match(manifest, /'podcasts\/all\.xml'/)
+})
+
+test('public feeds are discoverable from site navigation and RSS-aware browsers', () => {
+  assert.match(publicRegistry, /defaultLabel: 'Feeds'.*defaultHref: '\/feeds'/)
+  assert.match(publicRegistry, /defaultLabel: 'Feeds \/ RSS'.*defaultHref: '\/feeds'/)
+  assert.match(documentShell, /rel="alternate" type="application\/rss\+xml".*href="\/feeds\/all-content\.xml"/)
 })
 
 test('podcast feed output includes enclosure and directory metadata', () => {

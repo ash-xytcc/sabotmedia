@@ -91,7 +91,7 @@ export function PublicAdminToolbar() {
         <Link className="wp-public-admin-bar__item" to={adminRoutes.addNew}>New</Link>
         <Link className="wp-public-admin-bar__item" to={adminRoutes.posts}>Posts</Link>
         <Link className="wp-public-admin-bar__item" to={adminRoutes.media}>Media</Link>
-        <Link className="wp-public-admin-bar__item" to={adminRoutes.customize}>Customize</Link>
+        <Link className="wp-public-admin-bar__item" to={adminRoutes.settings}>Settings</Link>
         {editPostLink ? <Link className="wp-public-admin-bar__item" to={editPostLink}>Edit Post</Link> : null}
         <Link className="wp-public-admin-bar__item" to={editSiteLink}>Edit Site</Link>
       </div>

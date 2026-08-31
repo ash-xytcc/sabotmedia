@@ -43,7 +43,7 @@ import { PublicInfoPage } from './components/PublicInfoPage'
 import { AdminNoticeProvider } from './components/WpAdminNotices'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
 import { AnalyticsPage } from './components/AnalyticsPage'
-import { CustomizeAdminPage, PagesAdminPage, SettingsAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminPages'
+import { PagesAdminPage, SettingsAdminPage, ToolsAdminPage, UsersAdminPage } from './components/WpAdminPages'
 import { SitesAdminPage } from './components/SitesAdminPage'
 import { SiteHealthPage } from './components/SiteHealthPage'
 import { SystemBackupPage } from './components/SystemBackupPage'
@@ -317,9 +317,9 @@ export default function App() {
               <Route path={adminRoutes.pages} element={protect(<PagesAdminPage />)} />
               <Route path="/users" element={protect(<Navigate to={adminRoutes.users} replace />)} />
               <Route path={adminRoutes.users} element={protect(<UsersAdminPage />)} />
-              <Route path="/menus" element={protect(<Navigate to={`${adminRoutes.customize}?section=navigation`} replace />)} />
-              <Route path="/customize" element={protect(<Navigate to={adminRoutes.customize} replace />)} />
-              <Route path={adminRoutes.customize} element={protect(<CustomizeAdminPage />)} />
+              <Route path="/menus" element={protect(<Navigate to={`${adminRoutes.settings}?section=navigation`} replace />)} />
+              <Route path="/customize" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
+              <Route path={adminRoutes.customize} element={protect(<Navigate to={adminRoutes.settings} replace />)} />
               <Route path="/site-editor" element={protect(<Navigate to={adminRoutes.liveEditor} replace />)} />
               <Route path="/advanced-draft-tools" element={protect(<Navigate to={`${adminRoutes.tools}#advanced-draft-tools`} replace />)} />
               <Route path="/tools" element={protect(<Navigate to={adminRoutes.tools} replace />)} />
@@ -381,7 +381,7 @@ export default function App() {
               <Route path="/wp-admin/*" element={protect(<Navigate to={adminRoutes.dashboard} replace />)} />
               <Route path="/content/*" element={protect(<Navigate to={adminRoutes.posts} replace />)} />
               <Route path="/media/*" element={protect(<Navigate to={adminRoutes.media} replace />)} />
-              <Route path="/customize/*" element={protect(<Navigate to={adminRoutes.customize} replace />)} />
+              <Route path="/customize/*" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
               <Route path="/settings/*" element={protect(<Navigate to={adminRoutes.settings} replace />)} />
               <Route path="/tools/*" element={protect(<Navigate to={adminRoutes.tools} replace />)} />
               <Route path="/printlab/*" element={protect(<Navigate to={adminRoutes.printlab} replace />)} />

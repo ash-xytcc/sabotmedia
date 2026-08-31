@@ -41,7 +41,7 @@ const NAV_GROUPS = [
   {
     id: 'site', label: 'Site', icon: '⌂',
     items: [
-      { to: adminRoutes.customize, label: 'Customize', capability: 'site:manage' },
+      { to: adminRoutes.settings, label: 'Settings', capability: 'site:manage' },
       { to: adminRoutes.analytics, label: 'Analytics', capability: 'analytics:view' },
       { to: adminRoutes.sites, label: 'Sites & Domains', capability: 'site:manage' },
     ],
@@ -52,7 +52,6 @@ const NAV_GROUPS = [
       { to: adminRoutes.siteHealth, label: 'Site Health', capability: 'system:view' },
       { to: adminRoutes.backup, label: 'Backups', capability: 'system:view' },
       { to: adminRoutes.auditLog, label: 'Audit Log', capability: 'system:view' },
-      { to: adminRoutes.settings, label: 'Settings', capability: 'site:manage' },
       { to: adminRoutes.users, label: 'Users & Access', capability: 'users:manage' },
       { to: adminRoutes.tools, label: 'Tools', capability: 'system:view' },
     ],

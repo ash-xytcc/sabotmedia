@@ -59,7 +59,7 @@ export function PagesListPage() {
                     <div className="wp-row-actions">
                       <Link to={adminRoutes.liveEditor}>Edit Site</Link>
                       <Link to={page.path}>View</Link>
-                      <Link to={adminRoutes.customize}>Customize</Link>
+                      <Link to={adminRoutes.settings}>Site Settings</Link>
                     </div>
                   </td>
                   <td>{page.path}</td>

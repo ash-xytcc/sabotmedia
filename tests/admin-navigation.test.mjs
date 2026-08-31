@@ -28,3 +28,9 @@ test('command palette exposes operational backend routes without obsolete archit
   }
   assert.doesNotMatch(palette, /adminRoutes\.platformMap|Platform Map/)
 })
+
+test('settings is the single site-configuration destination', () => {
+  assert.equal((rail.match(/label: 'Settings'/g) || []).length, 1)
+  assert.doesNotMatch(rail, /label: 'Customize'/)
+  assert.doesNotMatch(palette, /label: 'Customize'|adminRoutes\.customize/)
+})
