@@ -10,6 +10,13 @@ export function sendMessage(campaign, message, session = '') { return request('/
 export function submitQuestion(campaign, values) { return request('/api/campaign-correspondence', { method: 'POST', body: JSON.stringify({ action: 'question', campaign, ...values }) }) }
 export function createContributor(campaign, values) { return request('/api/campaign-correspondence', { method: 'POST', body: JSON.stringify({ action: 'contributor', campaign, ...values }) }) }
 export function patchCorrespondence(values, session = '') { return request('/api/campaign-correspondence', { method: 'PATCH', headers: session ? { authorization: `Bearer ${session}` } : {}, body: JSON.stringify(values) }) }
+export async function uploadCampaignArchiveMedia(file) {
+  const body = new FormData(); body.append('file', file); body.append('folder', 'campaign-archives'); body.append('title', file.name || 'Instagram archive')
+  const response = await fetch('/api/media/files', { method: 'POST', credentials: 'same-origin', headers: { accept: 'application/json' }, body })
+  const data = await response.json().catch(() => null)
+  if (!response.ok || !data?.ok) throw new Error(data?.error || `upload failed: ${response.status}`)
+  return { mediaUrl: data.media?.publicUrl || data.media?.url, mediaType: String(file.type || '').split('/')[0] }
+}
 export async function uploadContributorMedia(file, session, onProgress) {
   const body = new FormData(); body.append('file', file)
   return new Promise((resolve, reject) => {
