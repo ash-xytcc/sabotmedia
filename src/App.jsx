@@ -23,6 +23,7 @@ import { CampaignsIndexPage } from './components/CampaignsIndexPage'
 import { CampaignCoverageArchivePage } from './components/CampaignCoverageArchivePage'
 import { CampaignAdminPage } from './components/CampaignAdminPage'
 import { CampaignContributorPage } from './components/CampaignContributorPage'
+import { CampaignBenefitKitPage } from './components/CampaignBenefitKitPage'
 import { FeedSettingsAdminPage } from './components/FeedSettingsAdminPage'
 import { PublicFeedsPage } from './components/PublicFeedsPage'
 import { GalleryArchivePage } from './components/GalleryArchivePage'
@@ -288,6 +289,7 @@ export default function App() {
               <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
               <Route path="/campaigns" element={<CampaignsIndexPage />} />
               <Route path="/contribute/:slug" element={<CampaignContributorPage />} />
+              <Route path="/campaigns/:slug/benefit-kit" element={<CampaignBenefitKitPage />} />
               <Route path={publicRoutes.aiCampaign} element={<CampaignPage />} />
               <Route path={publicRoutes.aiCampaignCoverage} element={<CampaignCoverageArchivePage />} />
               <Route path={publicRoutes.campaign} element={<CampaignPage />} />
