@@ -76,17 +76,29 @@ export async function onRequestGet(context) {
           COUNT(*) AS views,
           COUNT(DISTINCT session_hash) AS sessions
         FROM ranked GROUP BY canonical_path ORDER BY views DESC LIMIT 15`).bind(since).all(),
-      referrers: db.prepare(`SELECT referrer_host AS referrer, COUNT(*) AS views, COUNT(DISTINCT session_hash) AS sessions
-        FROM analytics_events WHERE event_type = 'pageview' AND day >= ? AND referrer_host != '' GROUP BY referrer_host ORDER BY views DESC LIMIT 12`).bind(since).all(),
-      campaigns: db.prepare(`SELECT campaign AS label, COUNT(*) AS views, COUNT(DISTINCT session_hash) AS sessions
-        FROM analytics_events WHERE event_type = 'pageview' AND day >= ? AND campaign != '' GROUP BY campaign ORDER BY views DESC LIMIT 12`).bind(since).all(),
-      sources: db.prepare(`SELECT CASE
+      referrers: db.prepare(`WITH entries AS (
+          SELECT referrer_host, session_hash, ROW_NUMBER() OVER (PARTITION BY session_hash ORDER BY occurred_at, id) AS entry_rank
+          FROM analytics_events WHERE event_type = 'pageview' AND day >= ?
+        )
+        SELECT referrer_host AS referrer, COUNT(*) AS views, COUNT(DISTINCT session_hash) AS sessions
+        FROM entries WHERE entry_rank = 1 AND referrer_host != '' GROUP BY referrer_host ORDER BY views DESC LIMIT 12`).bind(since).all(),
+      campaigns: db.prepare(`WITH entries AS (
+          SELECT campaign, session_hash, ROW_NUMBER() OVER (PARTITION BY session_hash ORDER BY occurred_at, id) AS entry_rank
+          FROM analytics_events WHERE event_type = 'pageview' AND day >= ?
+        )
+        SELECT campaign AS label, COUNT(*) AS views, COUNT(DISTINCT session_hash) AS sessions
+        FROM entries WHERE entry_rank = 1 AND campaign != '' GROUP BY campaign ORDER BY views DESC LIMIT 12`).bind(since).all(),
+      sources: db.prepare(`WITH entries AS (
+          SELECT campaign, referrer_host, source, session_hash,
+            ROW_NUMBER() OVER (PARTITION BY session_hash ORDER BY occurred_at, id) AS entry_rank
+          FROM analytics_events WHERE event_type = 'pageview' AND day >= ?
+        )
+        SELECT CASE
           WHEN campaign != '' THEN 'Campaign tagged'
           WHEN referrer_host != '' THEN 'External referral'
-          WHEN source = 'internal' THEN 'Internal navigation'
           ELSE 'Direct / unknown'
         END AS label, COUNT(*) AS views, COUNT(DISTINCT session_hash) AS sessions
-        FROM analytics_events WHERE event_type = 'pageview' AND day >= ? GROUP BY label ORDER BY views DESC`).bind(since).all(),
+        FROM entries WHERE entry_rank = 1 GROUP BY label ORDER BY views DESC`).bind(since).all(),
       devices: db.prepare(`SELECT device AS label, COUNT(*) AS views, COUNT(DISTINCT session_hash) AS sessions FROM analytics_events WHERE event_type = 'pageview' AND day >= ? GROUP BY device ORDER BY views DESC`).bind(since).all(),
       browsers: db.prepare(`SELECT browser AS label, COUNT(*) AS views, COUNT(DISTINCT session_hash) AS sessions FROM analytics_events WHERE event_type = 'pageview' AND day >= ? GROUP BY browser ORDER BY views DESC`).bind(since).all(),
       countries: db.prepare(`SELECT country AS label, COUNT(*) AS views, COUNT(DISTINCT session_hash) AS sessions FROM analytics_events

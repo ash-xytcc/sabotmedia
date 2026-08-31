@@ -153,9 +153,9 @@ export function WpAnalyticsWidgets({ compact = false }) {
 
       {!compact ? (
         <>
-          <Breakdown title="External Referrers" subtitle="Page views carrying an external referrer" rows={analytics?.referrers} labelKey="referrer" empty="No external referrers recorded yet." />
-          <Breakdown title="Campaign Entries" subtitle="Views arriving with a campaign tag" rows={analytics?.campaigns} empty="Campaign-tagged entries will appear here." />
-          <Breakdown title="Traffic Sources" subtitle="How each recorded view reached its page" rows={analytics?.sources} />
+          <Breakdown title="External Referrers" subtitle="Sessions entering from an external site" rows={analytics?.referrers} labelKey="referrer" empty="No external referrers recorded yet." />
+          <Breakdown title="Campaign Entries" subtitle="Sessions entering with a campaign tag" rows={analytics?.campaigns} empty="Campaign-tagged entries will appear here." />
+          <Breakdown title="Traffic Sources" subtitle="How sessions first reached Sabot Media" rows={analytics?.sources} />
           <Breakdown title="Devices" rows={analytics?.devices} />
           <Breakdown title="Browsers" rows={analytics?.browsers} />
           <Breakdown title="Countries" subtitle="Shown only after three views for privacy" rows={analytics?.countries} empty="No country has reached the privacy threshold yet." />
