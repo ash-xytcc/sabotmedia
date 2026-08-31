@@ -223,6 +223,7 @@ export function CampaignPage() {
             <EditableText as="p" className="campaign-hero__deck" field={`campaign.${campaign.slug}.hero.deck`} multiline>{campaign.deck}</EditableText>
             <div className="campaign-hero__actions">
               {campaign.donation?.url ? <a className="campaign-button campaign-button--light" href={campaign.donation.url} target="_blank" rel="noreferrer">{campaign.donation.label || 'Donate'} ↗</a> : null}
+              {campaign.slug === 'food-not-bombs-gaza' && showSection('benefit') ? <a className="campaign-button campaign-button--benefit" href="#benefit">Organize a benefit</a> : null}
               {showSection('reporting') ? <EditableLink className="campaign-button campaign-button--light" labelField={`campaign.${campaign.slug}.actions.reporting.label`} hrefField={`campaign.${campaign.slug}.actions.reporting.href`} defaultLabel="Read the reporting" defaultHref="#reporting" /> : null}
               {showSection('letters') ? <EditableLink className="campaign-button campaign-button--dark" labelField={`campaign.${campaign.slug}.actions.letters.label`} hrefField={`campaign.${campaign.slug}.actions.letters.href`} defaultLabel="Read the letters" defaultHref="#letters" /> : null}
               <button className="campaign-button campaign-button--ghost" type="button" onClick={shareCampaign}><EditableText as="span" field={`campaign.${campaign.slug}.actions.share.label`}>Share campaign</EditableText></button>
@@ -253,9 +254,9 @@ export function CampaignPage() {
 
       <OrderedCampaignSections order={sectionOrder}>
       {showSection('donate') ? <CampaignDonation campaign={campaign} sectionKey="donate" /> : null}
+      {showSection('benefit') ? <CampaignBenefitToolkit campaign={campaign} sectionKey="benefit" /> : null}
       {showSection('dispatches') ? <CampaignDispatches campaign={campaign} sectionKey="dispatches" /> : null}
       {showSection('questions') ? <CampaignQuestionForm campaign={campaign} sectionKey="questions" /> : null}
-      {showSection('benefit') ? <CampaignBenefitToolkit campaign={campaign} sectionKey="benefit" /> : null}
       {showSection('status') ? <section className="campaign-section campaign-section--status" id="status">
         <div className="campaign-shell">
           <SectionHeading sectionKey="status" eyebrow="LIVE CAMPAIGN DASHBOARD" title={sectionTitle('status')} />
