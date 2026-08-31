@@ -16,6 +16,13 @@ export async function ensureCampaignCorrespondenceTables(db) {
     `CREATE INDEX IF NOT EXISTS idx_campaign_questions_campaign ON campaign_questions(campaign_id, status, created_at DESC)`,
   ]
   for (const sql of statements) await db.prepare(sql).run()
+  for (const sql of [
+    `ALTER TABLE campaign_messages ADD COLUMN origin_source TEXT NOT NULL DEFAULT ''`,
+    `ALTER TABLE campaign_messages ADD COLUMN origin_id TEXT NOT NULL DEFAULT ''`,
+    `ALTER TABLE campaign_messages ADD COLUMN origin_url TEXT NOT NULL DEFAULT ''`,
+    `ALTER TABLE campaign_messages ADD COLUMN original_published_at TEXT`,
+  ]) { try { await db.prepare(sql).run() } catch {} }
+  try { await db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_campaign_messages_origin ON campaign_messages(campaign_id, origin_source, origin_id) WHERE origin_id != ''`).run() } catch {}
 }
 
 export async function createContributor(db, campaignId, input = {}) {
@@ -94,8 +101,9 @@ export async function createMessage(db, campaignId, input = {}, actor = {}) {
   const visibility = input.visibility === 'public' && (actor.isEditor || actor.permissions?.directPublish) ? 'public' : 'private'
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
-  await db.prepare(`INSERT INTO campaign_messages (id, campaign_id, contributor_id, sender_role, body, media_url, media_type, visibility, status, reply_to_id, reuse_social, reuse_original, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?, ?, ?, ?)`).bind(
-    id, campaignId, actor.contributorId || null, actor.isEditor ? 'editor' : 'contributor', body, mediaUrl, clean(input.mediaType, 40), visibility, clean(input.replyToId, 80) || null, input.reuseSocial ? 1 : 0, input.reuseOriginal ? 1 : 0, now, now,
+  const publishedAt = actor.isEditor && input.originalPublishedAt && !Number.isNaN(Date.parse(input.originalPublishedAt)) ? new Date(input.originalPublishedAt).toISOString() : now
+  await db.prepare(`INSERT INTO campaign_messages (id, campaign_id, contributor_id, sender_role, body, media_url, media_type, visibility, status, reply_to_id, reuse_social, reuse_original, origin_source, origin_id, origin_url, original_published_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+    id, campaignId, actor.contributorId || null, actor.isEditor ? 'editor' : 'contributor', body, mediaUrl, clean(input.mediaType, 40), visibility, clean(input.replyToId, 80) || null, input.reuseSocial ? 1 : 0, input.reuseOriginal ? 1 : 0, clean(input.originSource, 40), clean(input.originId, 160), clean(input.originUrl, 2000), publishedAt, publishedAt, now,
   ).run()
   return (await listMessages(db, campaignId)).find((item) => item.id === id)
 }
@@ -135,7 +143,7 @@ export async function patchQuestion(db, id, patch = {}) {
 }
 
 function contributorRow(row) { let permissions = {}; try { permissions = JSON.parse(row.permissions_json || '{}') } catch {} return { id: row.id, campaignId: row.campaign_id, displayName: row.display_name, byline: row.byline, permissions, revokedAt: row.revoked_at, createdAt: row.created_at } }
-function messageRow(row) { return { id: row.id, campaignId: row.campaign_id, contributorId: row.contributor_id, senderRole: row.sender_role, displayName: row.byline || row.display_name || (row.sender_role === 'editor' ? 'Sabot Media' : 'Contributor'), body: row.body, mediaUrl: row.media_url, mediaType: row.media_type, visibility: row.visibility, status: row.status, replyToId: row.reply_to_id, reuseSocial: Boolean(row.reuse_social), reuseOriginal: Boolean(row.reuse_original), createdAt: row.created_at, updatedAt: row.updated_at } }
+function messageRow(row) { return { id: row.id, campaignId: row.campaign_id, contributorId: row.contributor_id, senderRole: row.sender_role, displayName: row.origin_source === 'instagram' ? 'Food Not Bombs Gaza' : (row.byline || row.display_name || (row.sender_role === 'editor' ? 'Sabot Media' : 'Contributor')), body: row.body, mediaUrl: row.media_url, mediaType: row.media_type, visibility: row.visibility, status: row.status, replyToId: row.reply_to_id, reuseSocial: Boolean(row.reuse_social), reuseOriginal: Boolean(row.reuse_original), originSource: row.origin_source || '', originId: row.origin_id || '', originUrl: row.origin_url || '', originalPublishedAt: row.original_published_at || null, createdAt: row.created_at, updatedAt: row.updated_at } }
 function clean(value, max = 500) { return String(value || '').trim().slice(0, max) }
 function randomSecret(bytes) { const data = crypto.getRandomValues(new Uint8Array(bytes)); return base64url(data) }
 function base64url(bytes) { return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '') }
