@@ -4,6 +4,7 @@ import { authenticateContributor, loadCorrespondence, patchCorrespondence, sendM
 
 export function CampaignContributorPage() {
   const { slug } = useParams()
+  const preview = new URLSearchParams(window.location.search).get('preview') === '1'
   const token = new URLSearchParams(window.location.hash.replace(/^#/, '')).get('access') || ''
   const storageKey = `sabot-contributor-session:${slug}`
   const [session, setSession] = useState(() => localStorage.getItem(storageKey) || '')
@@ -15,6 +16,8 @@ export function CampaignContributorPage() {
     catch (error) { localStorage.removeItem(storageKey); setSession(''); setState({ loading: false, error: String(error.message || error), data: null }) }
   }
   useEffect(() => { if (session) load(session) }, [])
+
+  if (preview) return <ContributorRoom data={previewData(slug)} session="" reload={() => {}} preview />
 
   async function unlock(event) {
     event.preventDefault()
@@ -28,7 +31,7 @@ export function CampaignContributorPage() {
   return <ContributorRoom data={state.data} session={session} reload={() => load(session)} />
 }
 
-function ContributorRoom({ data, session, reload }) {
+function ContributorRoom({ data, session, reload, preview = false }) {
   const [body, setBody] = useState(''); const [publish, setPublish] = useState(false); const [media, setMedia] = useState(null); const [progress, setProgress] = useState(0); const [sending, setSending] = useState(false); const [error, setError] = useState(''); const fileRef = useRef(null); const recorderRef = useRef(null); const chunksRef = useRef([]); const [recording, setRecording] = useState('')
   const campaign = data.campaign; const contributor = data.contributor
   async function send(event) { event.preventDefault(); if (!body.trim() && !media) return; setSending(true); setError(''); try { let uploaded = null; if (media) uploaded = await uploadContributorMedia(media, session, setProgress); await sendMessage(campaign.slug, { body, visibility: publish ? 'public' : 'private', mediaUrl: uploaded?.mediaUrl || '', mediaType: uploaded?.mediaType || '', reuseSocial: false, reuseOriginal: false }, session); setBody(''); setMedia(null); setProgress(0); setPublish(false); await reload() } catch (e) { setError(String(e.message || e)) } finally { setSending(false) } }
@@ -40,3 +43,4 @@ function MessageMedia({ message }) { if (!message.mediaUrl) return null; if (mes
 function preferredMime(kind) { const candidates = kind === 'video' ? ['video/webm;codecs=vp8,opus', 'video/webm'] : ['audio/webm;codecs=opus', 'audio/webm']; return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || '' }
 function formatDate(value) { try { return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value)) } catch { return value } }
 function formatBytes(value) { return value > 1024 * 1024 ? `${(value / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(value / 1024)} KB` }
+function previewData(slug) { return { campaign: { slug, correspondence: { editorLabel: 'SAFE PREVIEW · Conversation with Ash / Sabot Media', intro: 'Nothing entered on this preview page is sent or published.' } }, contributor: { id: 'preview-jamal', displayName: 'Jamal · Preview' }, messages: [{ id: 'preview-1', senderRole: 'editor', displayName: 'Ash / Sabot Media', body: 'Welcome, Jamal. Use this like a simple WhatsApp conversation. Send anything privately, or choose Publish this when you want it on the campaign page.', visibility: 'private', status: 'sent', createdAt: new Date(Date.now() - 86400000).toISOString() }, { id: 'preview-2', contributorId: 'preview-jamal', senderRole: 'contributor', displayName: 'Jamal', body: 'Thank you. I can answer here when I have time and connection.', visibility: 'private', status: 'sent', createdAt: new Date(Date.now() - 82800000).toISOString() }, { id: 'preview-3', senderRole: 'editor', displayName: 'Ash / Sabot Media', body: 'What would you like people outside Gaza to understand about the work right now?', visibility: 'private', status: 'sent', createdAt: new Date(Date.now() - 3600000).toISOString() }] } }
