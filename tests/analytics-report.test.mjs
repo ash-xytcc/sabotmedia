@@ -3,8 +3,10 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { resolveNamedQueries } from '../functions/api/analytics/reportQueries.js'
 import { resolvePageTitle } from '../functions/api/analytics/report.js'
+import { analyticsCoverageNote } from '../src/lib/analyticsCoverage.js'
 
 const reportSource = readFileSync(new URL('../functions/api/analytics/report.js', import.meta.url), 'utf8')
+const widgetSource = readFileSync(new URL('../src/components/WpAnalyticsWidgets.jsx', import.meta.url), 'utf8')
 
 test('analytics report preserves named result sections regardless of promise timing', async () => {
   const result = await resolveNamedQueries({
@@ -34,4 +36,20 @@ test('analytics report resolves current native titles by canonical path', () => 
 test('analytics acquisition reports use only the first event in each privacy session', () => {
   assert.match(reportSource, /ROW_NUMBER\(\) OVER \(PARTITION BY session_hash ORDER BY occurred_at, id\) AS entry_rank/)
   assert.equal((reportSource.match(/WHERE entry_rank = 1/g) || []).length, 3)
+})
+
+test('analytics range changes never pair a selected label with another report', () => {
+  assert.match(widgetSource, /Number\(analytics\?\.days\) === days \? analytics : null/)
+  assert.match(widgetSource, /currentRequest !== requestId\.current/)
+  assert.match(widgetSource, /Number\(report\?\.days\) !== days/)
+})
+
+test('analytics explains when limited history makes all range totals match', () => {
+  const note = analyticsCoverageNote(
+    { tracking_since: '2026-08-29T12:00:00.000Z' },
+    new Date('2026-08-31T21:00:00.000Z'),
+  )
+  assert.match(note, /Tracking began Aug 29, 2026/)
+  assert.match(note, /7-, 30-, and 90-day totals can match/)
+  assert.equal(analyticsCoverageNote({}, new Date('2026-08-31T21:00:00.000Z')), '')
 })
