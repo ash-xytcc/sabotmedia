@@ -72,6 +72,7 @@ import './publicArchiveCleanup.js'
 import './publicTypeRuntimeFix.js'
 import './publicTranslationSelector.js'
 import './audioLabDirectManipulation.js'
+import './audioLabAudacityParity.js'
 import './audioLabRobotVoice.js'
 import './audioLabWorkspaceV2.js'
 
