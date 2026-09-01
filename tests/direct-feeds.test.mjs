@@ -73,8 +73,8 @@ test('public feeds are discoverable from site navigation and RSS-aware browsers'
 
 test('podcast feed output includes enclosure and directory metadata', () => {
   const xml = buildPodcastFeedXml({
-    requestUrl: 'https://sabot.media/feeds/podcasts/all.xml',
-    selfPath: '/feeds/podcasts/all.xml',
+    requestUrl: 'https://sabot.media/feeds/podcasts/molotov-now.xml',
+    selfPath: '/feeds/podcasts/molotov-now.xml',
     settings: {
       podcastTitle: 'Molotov Now!',
       author: 'Sabot Media',
@@ -103,12 +103,15 @@ test('podcast feed output includes enclosure and directory metadata', () => {
   assert.match(xml, /<itunes:duration>00:42:00<\/itunes:duration>/)
   assert.match(xml, /<itunes:episode>7<\/itunes:episode>/)
   assert.match(xml, /<itunes:season>2<\/itunes:season>/)
-  assert.match(xml, /<atom:link href="https:\/\/sabot\.media\/feeds\/podcasts\/all\.xml"/)
+  assert.match(xml, /<atom:link href="https:\/\/sabot\.media\/feeds\/podcasts\/molotov-now\.xml"/)
 })
 
-test('direct podcasts endpoint uses D1 settings and proper podcast feed generator', () => {
+test('direct podcasts endpoint supports default alias and distinct per-show feeds', () => {
   assert.match(directRoute, /requestedPath === 'podcasts\/all\.xml'/)
-  assert.match(directRoute, /getPodcastFeedItems\(db\)/)
-  assert.match(directRoute, /readPodcastSettings\(db\)/)
+  assert.match(directRoute, /readPodcastShows\(db\)/)
+  assert.match(directRoute, /podcastMatch = requestedPath\.match/)
+  assert.match(directRoute, /findPodcastShow\(db, slug\)/)
+  assert.match(directRoute, /getPodcastFeedItems\(db, show\)/)
+  assert.match(directRoute, /`\/feeds\/podcasts\/\$\{show\.slug\}\.xml`/)
   assert.match(directRoute, /buildPodcastFeedXml/)
 })
