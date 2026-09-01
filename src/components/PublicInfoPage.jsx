@@ -15,6 +15,10 @@ const CONTACT_CHANNELS = [
   { label: 'Support and material help', address: 'support@sabot.media' },
 ]
 
+const ABOUT_PROJECT_LOGO_OVERRIDES = {
+  'the-sabotuers': '/project-logos/the-sabotuers.svg',
+}
+
 function ContactChannels() {
   return (
     <div className="contact-channels">
@@ -58,25 +62,28 @@ function ProjectDirectory() {
       </header>
 
       <div className="project-directory__grid">
-        {projects.map((project) => (
-          <article className="project-directory__card" key={project.slug}>
-            <div className="project-directory__brand">
-              {project.logoUrl ? (
-                <img src={project.logoUrl} alt={`${project.name} logo`} loading="lazy" />
-              ) : (
-                <span className="project-directory__wordmark">{project.name}</span>
-              )}
-            </div>
-            <div className="project-directory__body">
-              <p className="project-directory__format">{project.format}</p>
-              <h3>{project.name}</h3>
-              <p>{project.description}</p>
-              <Link className="project-directory__link" to={`/archive?project=${encodeURIComponent(project.slug)}`}>
-                Browse project →
-              </Link>
-            </div>
-          </article>
-        ))}
+        {projects.map((project) => {
+          const logoUrl = ABOUT_PROJECT_LOGO_OVERRIDES[project.slug] || project.logoUrl
+          return (
+            <article className="project-directory__card" key={project.slug}>
+              <div className="project-directory__brand">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={`${project.name} logo`} loading="lazy" />
+                ) : (
+                  <span className="project-directory__wordmark">{project.name}</span>
+                )}
+              </div>
+              <div className="project-directory__body">
+                <p className="project-directory__format">{project.format}</p>
+                <h3>{project.name}</h3>
+                <p>{project.description}</p>
+                <Link className="project-directory__link" to={`/archive?project=${encodeURIComponent(project.slug)}`}>
+                  Browse project →
+                </Link>
+              </div>
+            </article>
+          )
+        })}
       </div>
     </section>
   )
