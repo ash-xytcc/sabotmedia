@@ -79,6 +79,11 @@ function ScrollToTop() {
   return null
 }
 
+function CampaignRoute() {
+  const location = useLocation()
+  return new URLSearchParams(location.search).get('tool') === 'benefit-kit' ? <CampaignBenefitKitPage /> : <CampaignPage />
+}
+
 function AnalyticsTracker() {
   const location = useLocation()
   useEffect(() => {
@@ -292,7 +297,7 @@ export default function App() {
               <Route path="/campaigns/:slug/benefit-kit" element={<CampaignBenefitKitPage />} />
               <Route path={publicRoutes.aiCampaign} element={<CampaignPage />} />
               <Route path={publicRoutes.aiCampaignCoverage} element={<CampaignCoverageArchivePage />} />
-              <Route path={publicRoutes.campaign} element={<CampaignPage />} />
+              <Route path={publicRoutes.campaign} element={<CampaignRoute />} />
               <Route path={publicRoutes.feeds} element={<PublicFeedsPage />} />
               <Route path={publicRoutes.gallery} element={<GalleryArchivePage />} />
 
