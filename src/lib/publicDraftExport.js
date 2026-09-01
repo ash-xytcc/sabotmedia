@@ -1,6 +1,7 @@
 export function buildPublicConfigPayload(input) {
   const text = input?.text || {}
   const styles = input?.styles || {}
+  const blocks = input?.blocks || {}
 
   return {
     version: 1,
@@ -8,6 +9,7 @@ export function buildPublicConfigPayload(input) {
     publicSite: {
       text,
       styles,
+      blocks,
     },
   }
 }
@@ -15,6 +17,7 @@ export function buildPublicConfigPayload(input) {
 export function buildChangedOnlyPayload(input) {
   const text = input?.text || {}
   const styles = input?.styles || {}
+  const blocks = input?.blocks || {}
 
   return {
     version: 1,
@@ -23,6 +26,7 @@ export function buildChangedOnlyPayload(input) {
     publicSite: {
       text,
       styles,
+      blocks,
     },
   }
 }
