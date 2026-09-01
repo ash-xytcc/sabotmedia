@@ -1,4 +1,4 @@
-import { CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_LABELS } from './campaignSections'
+import { CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_LABELS } from './campaignSections.js'
 
 export { CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_LABELS }
 
