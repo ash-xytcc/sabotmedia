@@ -13,8 +13,10 @@ export async function onRequestGet(context) {
     if (!campaign) return json({ ok: false, error: 'campaign not found' }, 404)
     const permission = await resolvePublicSitePermission(context)
     const contributor = await contributorFromRequest(db, context.request)
+    const contributorSessionSupplied = Boolean(context.request.headers.get('x-sabot-contributor-session') || /^Bearer\s+/i.test(String(context.request.headers.get('authorization') || '')))
     if (permission.canEdit) return json({ ok: true, campaign: publicCampaign(campaign), contributors: await listContributors(db, campaign.id), messages: await listMessages(db, campaign.id), questions: await listQuestions(db, campaign.id) })
     if (contributor?.campaignId === campaign.id) return json({ ok: true, campaign: publicCampaign(campaign), contributor, messages: await listMessages(db, campaign.id) })
+    if (contributorSessionSupplied) return json({ ok: false, error: 'Contributor session expired or is invalid. Enter the PIN again.' }, 401)
     return json({ ok: true, campaign: publicCampaign(campaign), messages: await listMessages(db, campaign.id, { publicOnly: true }) })
   } catch (error) { return json({ ok: false, error: String(error?.message || error) }, 500) }
 }
