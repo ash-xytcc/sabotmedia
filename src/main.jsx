@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
+import { PublicAccessibilityPanel } from './components/PublicAccessibilityPanel'
 import './styles.css'
 import './public-mobile.css'
 import './public-admin-toolbar-fix.css'
@@ -52,6 +53,7 @@ import './campaign-correspondence.css'
 import './campaign-benefit-kit.css'
 import './contact-secure-form.css'
 import './admin-editor-sticky-toolbar.css'
+import './public-accessibility.css'
 import './audioLabKeyboardShortcuts.js'
 import './audioLabWorkspaceControls.js'
 import './audioLabTaskPages.js'
@@ -73,6 +75,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <App />
+      <PublicAccessibilityPanel />
     </BrowserRouter>
   </React.StrictMode>,
 )
