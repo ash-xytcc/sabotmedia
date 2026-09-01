@@ -2,7 +2,9 @@ const AUDIO_LAB_PATHS = new Set(['/wp-admin/audiolab', '/audiolab'])
 const STUDIO_PARAM = 'studio'
 const STUDIO_BOOT_PARAM = 'audiolab-studio'
 const STUDIO_WINDOW_NAME = 'sabot-audiolab-studio'
-let observer = null
+let trackObserver = null
+let observedTrackInner = null
+let trackFrame = 0
 
 function bootstrapStudioRoute() {
   if (typeof window === 'undefined') return
@@ -17,7 +19,7 @@ function bootstrapStudioRoute() {
   window.history.replaceState(window.history.state, '', next)
 }
 
-// A fresh popup must first request the guaranteed root document. Rewrite the
+// A fresh popup first requests the guaranteed root document. Rewrite the
 // location before React Router and the route-aware AudioLab modules initialize.
 bootstrapStudioRoute()
 
@@ -72,16 +74,60 @@ function applyStudioClass() {
   const active = isStudioMode()
   document.documentElement.classList.toggle('audio-lab-standalone-window', active)
   document.body?.classList.toggle('audio-lab-standalone-window', active)
-  if (active) document.title = `AudioLab Studio · ${document.title.replace(/^AudioLab Studio ·\s*/, '')}`
+
+  const prefix = 'AudioLab Studio · '
+  if (active && !document.title.startsWith(prefix)) document.title = `${prefix}${document.title}`
+  if (!active && document.title.startsWith(prefix)) document.title = document.title.slice(prefix.length)
+}
+
+function countTrackRows(inner) {
+  return Array.from(inner?.children || []).filter((node) => node.classList?.contains('audio-lab-multitrack-row')).length
+}
+
+function applyTrackGeometry(inner = observedTrackInner) {
+  trackFrame = 0
+  if (!isStudioMode() || !inner?.isConnected) return
+  const count = Math.max(1, countTrackRows(inner))
+  const nextCount = String(count)
+  const nextMin = `${25 + count * 132}px`
+  if (inner.style.getPropertyValue('--al-track-count') !== nextCount) inner.style.setProperty('--al-track-count', nextCount)
+  if (inner.style.getPropertyValue('--al-track-content-min') !== nextMin) inner.style.setProperty('--al-track-content-min', nextMin)
+}
+
+function scheduleTrackGeometry() {
+  if (trackFrame) return
+  trackFrame = window.requestAnimationFrame(() => applyTrackGeometry())
+}
+
+function disconnectTrackObserver() {
+  trackObserver?.disconnect()
+  trackObserver = null
+  observedTrackInner = null
+  if (trackFrame) window.cancelAnimationFrame(trackFrame)
+  trackFrame = 0
 }
 
 function syncTrackGeometry() {
-  if (!isStudioMode()) return
-  document.querySelectorAll('.audio-lab-multitrack-inner').forEach((inner) => {
-    const count = Math.max(1, inner.querySelectorAll(':scope > .audio-lab-multitrack-row').length)
-    inner.style.setProperty('--al-track-count', String(count))
-    inner.style.setProperty('--al-track-content-min', `${25 + count * 132}px`)
-  })
+  if (!isStudioMode()) {
+    disconnectTrackObserver()
+    return
+  }
+
+  const inner = document.querySelector('.audio-lab-multitrack-inner')
+  if (!inner) return
+
+  if (inner !== observedTrackInner) {
+    disconnectTrackObserver()
+    observedTrackInner = inner
+    if (typeof MutationObserver !== 'undefined') {
+      trackObserver = new MutationObserver(scheduleTrackGeometry)
+      // Only track direct add/remove operations. Never observe the whole document:
+      // doing so can self-trigger on title/UI mutations and lock the renderer.
+      trackObserver.observe(inner, { childList: true, subtree: false })
+    }
+  }
+
+  applyTrackGeometry(inner)
 }
 
 function ensurePopoutButton() {
@@ -120,10 +166,5 @@ function handleAudioLabLink(event) {
 document.addEventListener('click', handleAudioLabLink, true)
 window.addEventListener('popstate', () => window.setTimeout(refresh, 0))
 window.addEventListener('pageshow', refresh)
-
-if (typeof MutationObserver !== 'undefined') {
-  observer = new MutationObserver(refresh)
-  observer.observe(document.documentElement, { childList: true, subtree: true })
-}
-
-refresh()
+window.addEventListener('beforeunload', disconnectTrackObserver)
+window.setTimeout(refresh, 0)
