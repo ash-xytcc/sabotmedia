@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
-import { PublicAccessibilityPanel } from './components/PublicAccessibilityPanel'
+import { PublicAccessibilityGate } from './components/PublicAccessibilityGate'
 import './styles.css'
 import './public-mobile.css'
 import './public-admin-toolbar-fix.css'
@@ -75,7 +75,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <App />
-      <PublicAccessibilityPanel />
+      <PublicAccessibilityGate />
     </BrowserRouter>
   </React.StrictMode>,
 )
