@@ -49,11 +49,15 @@ test('public questions are moderated and never delivered directly to contributor
 })
 
 test('private contributor routes skip analytics and private APIs perform their own authorization', async () => {
-  const [app, middleware, endpoint] = await Promise.all([read('src/App.jsx'), read('functions/_middleware.js'), read('functions/api/campaign-correspondence.js')])
+  const [app, middleware, endpoint, client, storage] = await Promise.all([read('src/App.jsx'), read('functions/_middleware.js'), read('functions/api/campaign-correspondence.js'), read('src/lib/campaignCorrespondenceApi.js'), read('functions/api/_lib/campaignCorrespondence.js')])
   assert.match(app, /pathname\.startsWith\('\/contribute\/'\).*return undefined/)
   assert.match(middleware, /campaign-contributor-auth/)
   assert.match(endpoint, /contributorFromRequest/)
   assert.match(endpoint, /permission\.canEdit/)
+  assert.match(client, /x-sabot-contributor-session/)
+  assert.match(storage, /x-sabot-contributor-session/)
+  assert.match(storage, /datetime\(s\.expires_at\) > datetime\(\?\)/)
+  assert.match(endpoint, /Contributor session expired or is invalid/)
 })
 
 test('editors can edit and permanently delete correspondence messages', async () => {
