@@ -44,7 +44,7 @@ export async function onRequestGet(context) {
       ok: true,
       content: { id: content.id, slug: content.slug, title: content.title },
       current: { code: 'en', label: 'English' },
-      translations: translations.map(publicTranslationShape),
+      translations: translations.map((item) => publicTranslationShape(item, content.slug)),
     })
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
@@ -138,9 +138,9 @@ async function resolveContent(db, contentId, slug) {
   return null
 }
 
-function publicTranslationShape(item) {
+function publicTranslationShape(item, slug) {
   const localHref = item.status === 'published'
-    ? `/post/${encodeURIComponent(String(item.nativeContentId || ''))}?lang=${encodeURIComponent(item.languageCode)}`
+    ? `/post/${encodeURIComponent(String(slug || ''))}?lang=${encodeURIComponent(item.languageCode)}`
     : ''
   return {
     code: item.languageCode,
