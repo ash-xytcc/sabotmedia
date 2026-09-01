@@ -6,7 +6,7 @@ const ARTICLE_TRANSLATIONS = {
         code: 'es',
         label: 'Español',
         href: 'https://babelicosas.sutty.nl/2026/08/29/a-i-el-servidor-llamado-paranoia/',
-        credit: 'Translation by Dazi Bao',
+        credit: 'Dazibao translation',
       },
     ],
   },
