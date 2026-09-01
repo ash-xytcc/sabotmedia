@@ -6,6 +6,10 @@ function isAudioLabRoute() {
   return typeof window !== 'undefined' && /\/wp-admin\/audiolab(?:\/|$)/.test(window.location.pathname)
 }
 
+function rootPage() {
+  return document.querySelector('.audio-lab-page')
+}
+
 function labelForPanel(panel, index) {
   if (panel.dataset.audiolabInspectorLabel) return panel.dataset.audiolabInspectorLabel
   const text = `${panel.querySelector('.audio-lab-eyebrow')?.textContent || ''} ${panel.querySelector('h2')?.textContent || ''}`.trim()
@@ -32,6 +36,24 @@ function storeTab(value) {
   try { window.localStorage.setItem(ACTIVE_TAB_KEY, value) } catch { /* local workspace preference only */ }
 }
 
+function updateInspectorButton() {
+  const root = rootPage()
+  const button = root?.querySelector('[data-audiolab-inspector-toggle]')
+  if (!button) return
+  const open = root.dataset.audiolabInspectorOpen === 'true'
+  button.textContent = open ? 'Close Inspector' : 'Inspector'
+  button.setAttribute('aria-expanded', open ? 'true' : 'false')
+}
+
+function setInspectorOpen(open) {
+  const root = rootPage()
+  if (!root) return
+  if (open) root.dataset.audiolabInspectorOpen = 'true'
+  else delete root.dataset.audiolabInspectorOpen
+  updateInspectorButton()
+  window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')))
+}
+
 function activate(sidebar, id) {
   const panels = Array.from(sidebar.querySelectorAll(':scope > .audio-lab-panel'))
   let matched = false
@@ -53,6 +75,17 @@ function activate(sidebar, id) {
     button.tabIndex = active ? 0 : -1
   })
   if (id) storeTab(id)
+}
+
+function activateByLabel(label) {
+  const sidebar = document.querySelector('.audio-lab-page .audio-lab-project-sidebar')
+  if (!sidebar) return false
+  const panel = Array.from(sidebar.querySelectorAll(':scope > .audio-lab-panel'))
+    .find((candidate, index) => labelForPanel(candidate, index).toLowerCase() === String(label || '').toLowerCase())
+  if (!panel) return false
+  setInspectorOpen(true)
+  activate(sidebar, panel.dataset.audiolabInspectorId)
+  return true
 }
 
 function buildTabs(sidebar, panels) {
@@ -78,35 +111,99 @@ function buildTabs(sidebar, panels) {
   sidebar.insertBefore(nav, sidebar.firstChild)
   const stored = getStoredTab()
   const storedMatch = panels.find((panel) => panel.dataset.audiolabInspectorId === stored)
-  const defaultPanel = storedMatch || panels.find((panel) => /robot voice/i.test(labelForPanel(panel, 0))) || panels.find((panel) => /clip/i.test(labelForPanel(panel, 0))) || panels[0]
+  const defaultPanel = storedMatch || panels.find((panel, index) => /clip/i.test(labelForPanel(panel, index))) || panels[0]
   activate(sidebar, defaultPanel?.dataset.audiolabInspectorId || '')
 }
 
 function normalizeWorkflowNav() {
-  const root = document.querySelector('.audio-lab-page')
+  const root = rootPage()
   const nav = root?.querySelector(':scope > .audio-lab-workflow-nav')
+  const chrome = root?.querySelector(':scope > .audio-lab-compact-chrome')
   const header = root?.querySelector(':scope > .audio-lab-header, :scope > .wp-screen-header.audio-lab-header')
   if (!root || !nav || !header) return
-  if (header.nextElementSibling !== nav) header.insertAdjacentElement('afterend', nav)
-  Object.assign(nav.style, {
-    position: 'relative',
-    left: 'auto',
-    right: 'auto',
-    bottom: 'auto',
-    zIndex: '1',
-    width: '100%',
-    height: 'auto',
-    minHeight: '34px',
-    margin: '0 0 8px',
-    flexWrap: 'wrap',
-    boxShadow: 'none',
-  })
+  const anchor = chrome || header
+  if (anchor.nextElementSibling !== nav) anchor.insertAdjacentElement('afterend', nav)
+  nav.removeAttribute('style')
+}
+
+function projectCards() {
+  return Array.from(document.querySelectorAll('.audio-lab-page .audio-lab-sidebar .audio-lab-project-card'))
+}
+
+function syncProjectSelector(select) {
+  const cards = projectCards()
+  const activeIndex = Math.max(0, cards.findIndex((card) => card.classList.contains('is-active')))
+  const signature = cards.map((card) => card.querySelector('strong')?.textContent?.trim() || 'Untitled').join('|')
+  if (select.dataset.signature !== signature) {
+    select.innerHTML = ''
+    cards.forEach((card, index) => {
+      const option = document.createElement('option')
+      option.value = String(index)
+      option.textContent = card.querySelector('strong')?.textContent?.trim() || `Project ${index + 1}`
+      select.appendChild(option)
+    })
+    if (!cards.length) {
+      const option = document.createElement('option')
+      option.value = ''
+      option.textContent = 'No projects yet'
+      select.appendChild(option)
+    }
+    select.dataset.signature = signature
+  }
+  select.value = cards.length ? String(activeIndex) : ''
+  select.disabled = !cards.length
+}
+
+function ensureCompactChrome() {
+  const root = rootPage()
+  const header = root?.querySelector(':scope > .audio-lab-header, :scope > .wp-screen-header.audio-lab-header')
+  if (!root || !header) return
+
+  let chrome = root.querySelector(':scope > .audio-lab-compact-chrome')
+  if (!chrome) {
+    chrome = document.createElement('div')
+    chrome.className = 'audio-lab-compact-chrome'
+    chrome.setAttribute('aria-label', 'AudioLab project and tool controls')
+    chrome.innerHTML = `
+      <label class="audio-lab-compact-project">
+        <span>Project</span>
+        <select data-audiolab-project-select aria-label="Current AudioLab project"></select>
+      </label>
+      <button type="button" class="button" data-audiolab-new-project>New</button>
+      <span class="audio-lab-compact-separator" aria-hidden="true"></span>
+      <button type="button" class="button" data-audiolab-inspector-toggle aria-expanded="false">Inspector</button>
+      <button type="button" class="button" data-audiolab-robot-open>Robot Voice</button>
+    `
+    header.insertAdjacentElement('afterend', chrome)
+
+    chrome.querySelector('[data-audiolab-project-select]')?.addEventListener('change', (event) => {
+      const card = projectCards()[Number(event.target.value)]
+      card?.click()
+    })
+    chrome.querySelector('[data-audiolab-new-project]')?.addEventListener('click', () => {
+      document.querySelector('.audio-lab-page .audio-lab-sidebar__header .button')?.click()
+    })
+    chrome.querySelector('[data-audiolab-inspector-toggle]')?.addEventListener('click', () => {
+      setInspectorOpen(root.dataset.audiolabInspectorOpen !== 'true')
+    })
+    chrome.querySelector('[data-audiolab-robot-open]')?.addEventListener('click', () => {
+      if (!activateByLabel('Robot voice')) {
+        setInspectorOpen(true)
+        window.setTimeout(() => activateByLabel('Robot voice'), 80)
+      }
+    })
+  }
+
+  const select = chrome.querySelector('[data-audiolab-project-select]')
+  if (select) syncProjectSelector(select)
+  updateInspectorButton()
 }
 
 function refresh() {
   refreshQueued = false
   if (!isAudioLabRoute()) return
   document.querySelectorAll('.audio-lab-dock-close, .audio-lab-project-close').forEach((node) => node.remove())
+  ensureCompactChrome()
   normalizeWorkflowNav()
 
   const sidebar = document.querySelector('.audio-lab-page .audio-lab-project-sidebar')
@@ -134,6 +231,8 @@ function queueRefresh() {
 
 function start() {
   if (!isAudioLabRoute()) return
+  const root = rootPage()
+  if (root) delete root.dataset.audiolabInspectorOpen
   refresh()
   observer?.disconnect()
   observer = new MutationObserver(queueRefresh)
