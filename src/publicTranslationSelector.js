@@ -13,7 +13,6 @@ const ARTICLE_TRANSLATIONS = {
 }
 
 const SELECTOR_ATTR = 'data-sabot-language-selector'
-const ALTERNATE_ATTR = 'data-sabot-translation-alternate'
 
 function normalizedPathname() {
   return String(window.location.pathname || '/').replace(/\/+$/, '') || '/'
@@ -22,20 +21,6 @@ function normalizedPathname() {
 function clearStaleSelectors(pathname) {
   document.querySelectorAll(`[${SELECTOR_ATTR}]`).forEach((node) => {
     if (node.getAttribute(SELECTOR_ATTR) !== pathname) node.remove()
-  })
-}
-
-function syncAlternateLinks(config) {
-  document.head.querySelectorAll(`link[${ALTERNATE_ATTR}]`).forEach((node) => node.remove())
-  if (!config) return
-
-  config.translations.forEach((translation) => {
-    const link = document.createElement('link')
-    link.rel = 'alternate'
-    link.hreflang = translation.code
-    link.href = translation.href
-    link.setAttribute(ALTERNATE_ATTR, translation.code)
-    document.head.appendChild(link)
   })
 }
 
@@ -97,7 +82,6 @@ function refreshTranslationSelector() {
   const pathname = normalizedPathname()
   const config = ARTICLE_TRANSLATIONS[pathname]
   clearStaleSelectors(pathname)
-  syncAlternateLinks(config)
   if (!config) return
 
   const mount = document.querySelector('.piece-article-lead__below')
