@@ -26,6 +26,13 @@ test('podcast episodes page exposes import and canonical RSS actions', () => {
   assert.match(podcastAdmin, /href="\/feeds\/podcasts\/all\.xml"/)
 })
 
+test('podcast episodes page uses the live D1 feed identity and does not merge the legacy archive', () => {
+  assert.match(podcastAdmin, /loadPodcastSettingsAsync/)
+  assert.match(podcastAdmin, /loadNativeCollection\(\{ includeFuture: 1 \}\)/)
+  assert.match(podcastAdmin, /item\.contentType === 'podcast'/)
+  assert.doesNotMatch(podcastAdmin, /getPieces|importedPodcastPieces|source: 'archive'/)
+})
+
 test('edge middleware serves the SPA shell for nested authenticated wp-admin routes', () => {
   assert.match(middleware, /'\/wp-admin'/)
   assert.match(middleware, /pathname\.startsWith\(`\$\{path\}\/`\)/)

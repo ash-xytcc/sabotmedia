@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
-import { getPieces } from '../lib/pieces'
 import { loadNativeCollection } from '../lib/nativePublicContent'
-import { loadPodcastSettings } from '../lib/podcastSettings'
+import { loadPodcastSettings, loadPodcastSettingsAsync } from '../lib/podcastSettings'
 import { adminRoutes } from '../routing/routes'
 
 function toDisplayDate(value) {
@@ -12,48 +11,42 @@ function toDisplayDate(value) {
   return d.toLocaleDateString()
 }
 
-export function PodcastAdminPage({ pieces }) {
+export function PodcastAdminPage() {
   const [nativeItems, setNativeItems] = useState([])
+  const [podcastSettings, setPodcastSettings] = useState(() => loadPodcastSettings())
 
   useEffect(() => {
+    let cancelled = false
+
     async function boot() {
-      const loaded = await loadNativeCollection({ includeFuture: 1 })
-      setNativeItems(Array.isArray(loaded) ? loaded : [])
+      const [loadedItems, loadedSettings] = await Promise.allSettled([
+        loadNativeCollection({ includeFuture: 1 }),
+        loadPodcastSettingsAsync(),
+      ])
+
+      if (cancelled) return
+      if (loadedItems.status === 'fulfilled') {
+        setNativeItems(Array.isArray(loadedItems.value) ? loadedItems.value : [])
+      }
+      if (loadedSettings.status === 'fulfilled') {
+        setPodcastSettings(loadedSettings.value)
+      }
     }
+
     boot()
+    return () => { cancelled = true }
   }, [])
 
-  const importedPodcastPieces = useMemo(
-    () => (pieces || getPieces()).filter((piece) => piece.type === 'podcast').map((piece) => ({
-      id: `archive-${piece.slug}`,
-      title: piece.title,
-      slug: piece.slug,
-      status: 'published',
-      updatedAt: piece.publishedAt || piece.publishedDateLabel || '',
-      podcastEpisodeNumber: piece.episodeNumber || '',
-      podcastSeason: piece.season || '',
-      podcastDuration: piece.duration || '',
-      source: 'archive',
-    })),
-    [pieces]
-  )
-
-  const nativePodcastEntries = useMemo(
-    () => nativeItems.filter((item) => item.contentType === 'podcast').map((item) => ({
-      ...item,
-      source: 'native',
-    })),
+  // The canonical podcast feed is backed by native D1 podcast entries. Do not
+  // merge the legacy static archive here: that archive includes audio/podcast
+  // material from other shows and would make this page look like one giant feed.
+  const episodes = useMemo(
+    () => nativeItems
+      .filter((item) => item.contentType === 'podcast')
+      .map((item) => ({ ...item, source: 'native' }))
+      .sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime()),
     [nativeItems]
   )
-
-  const episodes = useMemo(() => {
-    const bySlug = new Map()
-    for (const item of importedPodcastPieces) bySlug.set(item.slug || item.id, item)
-    for (const item of nativePodcastEntries) bySlug.set(item.slug || item.id, item)
-    return [...bySlug.values()].sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime())
-  }, [importedPodcastPieces, nativePodcastEntries])
-
-  const podcastSettings = loadPodcastSettings()
 
   return (
     <AdminFrame>
@@ -109,7 +102,7 @@ export function PodcastAdminPage({ pieces }) {
                   <td>
                     <div className="wp-row-actions">
                       {episode.slug ? <Link to={`/post/${episode.slug}`} target="_blank" rel="noreferrer">View</Link> : null}
-                      {episode.source === 'native' ? <Link to={`${adminRoutes.nativeBridge}?edit=${episode.id}`}>Edit</Link> : <span>Imported</span>}
+                      <Link to={`${adminRoutes.nativeBridge}?edit=${episode.id}`}>Edit</Link>
                     </div>
                   </td>
                 </tr>
