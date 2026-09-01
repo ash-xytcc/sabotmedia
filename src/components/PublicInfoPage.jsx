@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
@@ -7,7 +8,7 @@ import { getPublicInfoCopy, getPublicInfoField } from '../content/publicInfoCopy
 import { SecureContactForm } from './SecureContactForm'
 import { EditableLink } from './EditableLink'
 import { PUBLICATION_IDENTITY, getFeaturedPublicProjects } from '../lib/projectCatalog'
-import { getAboutProjectLogo } from '../lib/aboutProjectLogos'
+import { findMediaProjectLogo, getAboutProjectLogo } from '../lib/aboutProjectLogos'
 import '../about-project-directory.css'
 
 const CONTACT_CHANNELS = [
@@ -41,7 +42,23 @@ function ContactChannels() {
 }
 
 function ProjectDirectory() {
-  const projects = getFeaturedPublicProjects()
+  const projects = useMemo(() => getFeaturedPublicProjects(), [])
+  const [mediaAssets, setMediaAssets] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/media-assets?mediaType=image', { headers: { accept: 'application/json' } })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (!cancelled && Array.isArray(payload?.items)) setMediaAssets(payload.items)
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <section className="project-directory" aria-labelledby="project-directory-title">
@@ -61,7 +78,7 @@ function ProjectDirectory() {
 
       <div className="project-directory__grid">
         {projects.map((project) => {
-          const logoUrl = getAboutProjectLogo(project)
+          const logoUrl = findMediaProjectLogo(project, mediaAssets) || getAboutProjectLogo(project)
           return (
             <article className="project-directory__card" key={project.slug}>
               <div className="project-directory__brand">
