@@ -124,6 +124,17 @@
 .contributor-composer textarea { width: 100%; resize: none; padding: 13px; border: 0; border-radius: 18px; font: 1rem system-ui; }
 .contributor-compose-actions { display: flex; gap: 7px; }.contributor-compose-actions button { min-height: 44px; padding: 8px 12px; border: 1px solid #bbb; border-radius: 22px; background: #fff; }.contributor-compose-actions .is-recording { background: #e6392f; color: #fff; }
 .contributor-attachment,.contributor-publish-choice { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px; background: #fff; }.contributor-publish-choice { justify-content: flex-start; }.contributor-publish-choice small { display: block; }
+.contributor-destination { display: grid; gap: 8px; margin: 4px 0; padding: 10px; border: 3px solid #111; background: #fff; }
+.contributor-destination legend { padding: 0 7px; font: 900 .78rem system-ui; letter-spacing: .08em; }
+.contributor-destination label { display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 10px 12px; border: 3px solid #aaa; background: #f4f1e9; cursor: pointer; }
+.contributor-destination label.is-selected.is-private { border-color: #4b4638; background: #d8c778; color: #111; }
+.contributor-destination label.is-selected.is-public { border-color: #005b32; background: #00834a; color: #fff; }
+.contributor-destination input { width: 22px; height: 22px; flex: 0 0 auto; accent-color: #d70c27; }
+.contributor-destination strong,.contributor-destination small { display: block; }
+.contributor-destination strong { font: 900 .95rem system-ui; }
+.contributor-destination small { margin-top: 3px; font: 600 .78rem/1.3 system-ui; }
+.contributor-send.is-private { background: #4b4638; }
+.contributor-send.is-public { background: #00834a; outline: 3px solid #005b32; outline-offset: -3px; }
 @media (max-width:700px) { .campaign-donation,.campaign-question-layout { grid-template-columns: 1fr; }.campaign-question-layout form > div,.campaign-benefit-grid { grid-template-columns: 1fr; }.campaign-benefit-grid article { border-right: 0; border-bottom: 1px solid #fff; }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero { background: linear-gradient(160deg,#ce1126 0 80%,#fff 80% 83%,#007a3d 83% 100%); }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds { inset:0 24% 17% 70%; }.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds i:nth-child(3),.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-hero__watermelon-seeds i:nth-child(5) { display:none; }.contributor-room { width:100%; }.contributor-room > header > strong { display:none; } }
 .campaign-correspondence-admin__grid { display:grid; grid-template-columns:minmax(280px,.8fr) minmax(340px,1.2fr); gap:24px; }
 .campaign-instagram-import { display:grid; grid-template-columns:minmax(240px,.7fr) minmax(320px,1.3fr); gap:20px; margin:18px 0 26px; padding:18px; border:1px solid #ccd0d4; background:#f6f7f7; }

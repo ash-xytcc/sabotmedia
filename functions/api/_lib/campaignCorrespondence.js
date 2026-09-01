@@ -21,6 +21,7 @@ export async function ensureCampaignCorrespondenceTables(db) {
     `ALTER TABLE campaign_messages ADD COLUMN origin_id TEXT NOT NULL DEFAULT ''`,
     `ALTER TABLE campaign_messages ADD COLUMN origin_url TEXT NOT NULL DEFAULT ''`,
     `ALTER TABLE campaign_messages ADD COLUMN original_published_at TEXT`,
+    `ALTER TABLE campaign_messages ADD COLUMN publication_confirmed INTEGER NOT NULL DEFAULT 0`,
   ]) { try { await db.prepare(sql).run() } catch {} }
   try { await db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_campaign_messages_origin ON campaign_messages(campaign_id, origin_source, origin_id) WHERE origin_id != ''`).run() } catch {}
 }
@@ -100,7 +101,7 @@ export async function reissueContributorToken(db, id) {
 
 export async function listMessages(db, campaignId, { publicOnly = false } = {}) {
   await ensureCampaignCorrespondenceTables(db)
-  const where = publicOnly ? "AND m.visibility = 'public' AND m.status = 'sent'" : ''
+  const where = publicOnly ? "AND m.visibility = 'public' AND m.status = 'sent' AND (m.sender_role = 'editor' OR m.publication_confirmed = 1)" : ''
   const result = await db.prepare(`SELECT m.*, c.display_name, c.byline FROM campaign_messages m LEFT JOIN campaign_contributors c ON c.id = m.contributor_id WHERE m.campaign_id = ? ${where} ORDER BY m.created_at ASC`).bind(campaignId).all()
   return (result.results || []).map(messageRow)
 }
@@ -110,12 +111,13 @@ export async function createMessage(db, campaignId, input = {}, actor = {}) {
   const body = clean(input.body, 12000)
   const mediaUrl = clean(input.mediaUrl, 2000)
   if (!body && !mediaUrl) throw new Error('write a message or attach media')
-  const visibility = input.visibility === 'public' && (actor.isEditor || actor.permissions?.directPublish) ? 'public' : 'private'
+  const visibility = input.visibility === 'public' && (actor.isEditor || (actor.permissions?.directPublish && actor.publicationConfirmed)) ? 'public' : 'private'
+  const publicationConfirmed = visibility === 'public' && (actor.isEditor || actor.publicationConfirmed) ? 1 : 0
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
   const publishedAt = actor.isEditor && input.originalPublishedAt && !Number.isNaN(Date.parse(input.originalPublishedAt)) ? new Date(input.originalPublishedAt).toISOString() : now
-  await db.prepare(`INSERT INTO campaign_messages (id, campaign_id, contributor_id, sender_role, body, media_url, media_type, visibility, status, reply_to_id, reuse_social, reuse_original, origin_source, origin_id, origin_url, original_published_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-    id, campaignId, actor.contributorId || null, actor.isEditor ? 'editor' : 'contributor', body, mediaUrl, clean(input.mediaType, 40), visibility, clean(input.replyToId, 80) || null, input.reuseSocial ? 1 : 0, input.reuseOriginal ? 1 : 0, clean(input.originSource, 40), clean(input.originId, 160), clean(input.originUrl, 2000), publishedAt, publishedAt, now,
+  await db.prepare(`INSERT INTO campaign_messages (id, campaign_id, contributor_id, sender_role, body, media_url, media_type, visibility, status, reply_to_id, reuse_social, reuse_original, origin_source, origin_id, origin_url, original_published_at, publication_confirmed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+    id, campaignId, actor.contributorId || null, actor.isEditor ? 'editor' : 'contributor', body, mediaUrl, clean(input.mediaType, 40), visibility, clean(input.replyToId, 80) || null, input.reuseSocial ? 1 : 0, input.reuseOriginal ? 1 : 0, clean(input.originSource, 40), clean(input.originId, 160), clean(input.originUrl, 2000), publishedAt, publicationConfirmed, publishedAt, now,
   ).run()
   return (await listMessages(db, campaignId)).find((item) => item.id === id)
 }
@@ -127,10 +129,11 @@ export async function patchMessage(db, id, patch = {}, actor = {}) {
   if (!actor.isEditor && current.contributor_id !== actor.contributorId) throw authError('You can only change your own messages.', 403)
   const body = patch.body === undefined ? current.body : clean(patch.body, 12000)
   if (!body && !current.media_url) throw new Error('write a message or attach media')
-  const visibility = patch.visibility === undefined ? current.visibility : (patch.visibility === 'public' && (actor.isEditor || actor.permissions?.directPublish) ? 'public' : 'private')
+  const visibility = patch.visibility === undefined ? current.visibility : (patch.visibility === 'public' && (actor.isEditor || (actor.permissions?.directPublish && actor.publicationConfirmed)) ? 'public' : 'private')
+  const publicationConfirmed = visibility === 'public' && (actor.isEditor || actor.publicationConfirmed || current.publication_confirmed) ? 1 : 0
   const status = patch.status === 'withdrawn' ? 'withdrawn' : current.status
   const updatedAt = new Date().toISOString()
-  await db.prepare('UPDATE campaign_messages SET body = ?, visibility = ?, status = ?, updated_at = ? WHERE id = ?').bind(body, visibility, status, updatedAt, id).run()
+  await db.prepare('UPDATE campaign_messages SET body = ?, visibility = ?, publication_confirmed = ?, status = ?, updated_at = ? WHERE id = ?').bind(body, visibility, publicationConfirmed, status, updatedAt, id).run()
   return { ...messageRow(current), body, visibility, status, updatedAt }
 }
 

@@ -35,9 +35,12 @@ export async function onRequestPost(context) {
       if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
       return json({ ok: true, ...(await createContributor(db, campaign.id, body)) }, 201)
     }
-    if (body.action === 'message') {
+    if (body.action === 'message' || body.action === 'publish-message') {
       if (!permission.canEdit && contributor?.campaignId !== campaign.id) return json({ ok: false, error: 'contributor access required' }, 403)
-      const item = await createMessage(db, campaign.id, body, permission.canEdit ? { isEditor: true } : { contributorId: contributor.id, permissions: contributor.permissions })
+      const publishRequested = body.action === 'publish-message'
+      if (publishRequested && !permission.canEdit && !contributor?.permissions?.directPublish) return json({ ok: false, error: 'direct publishing is not enabled for this contributor' }, 403)
+      const safeBody = permission.canEdit ? body : { ...body, visibility: publishRequested ? 'public' : 'private' }
+      const item = await createMessage(db, campaign.id, safeBody, permission.canEdit ? { isEditor: true } : { contributorId: contributor.id, permissions: contributor.permissions, publicationConfirmed: publishRequested })
       return json({ ok: true, item }, 201)
     }
     return json({ ok: false, error: 'unsupported action' }, 400)
