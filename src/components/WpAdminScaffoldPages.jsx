@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { AdminPublicConfigCard } from './AdminPublicConfigCard'
 import { LegacyInfoPageRecovery } from './LegacyInfoPageRecovery'
+import { RobotVoiceSettingsCard } from './RobotVoiceSettingsCard'
 import { getPieces } from '../lib/pieces'
 import { adminRoutes } from '../routing/routes'
 import { publicPageRegistry, withSiteEdit } from '../lib/publicPageRegistry'
@@ -52,6 +53,7 @@ export function SettingsAdminPage() {
           <Link className="button button--primary" to={withSiteEdit('/')}>Edit Live</Link>
         </div>
         <AdminPublicConfigCard />
+        <RobotVoiceSettingsCard />
         <LegacyInfoPageRecovery />
         <section className="wp-meta-box">
           <h2>Operational settings</h2>
