@@ -25,6 +25,7 @@ const NAV_GROUPS = [
       { to: adminRoutes.publications, label: 'Publications' },
       { to: adminRoutes.campaigns, label: 'Campaigns', capability: 'publishing:write' },
       { to: adminRoutes.podcasts, label: 'Podcasts' },
+      { to: adminRoutes.translations, label: 'Translations', capability: 'publishing:write' },
       { to: adminRoutes.feeds, label: 'Feeds & Syndication' },
       { to: adminRoutes.qa, label: 'Editorial QA' },
     ],

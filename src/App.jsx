@@ -7,6 +7,7 @@ import { ContentListPage } from './components/ContentListPage'
 import { PodcastAdminPage } from './components/PodcastAdminPage'
 import { PodcastSettingsPage } from './components/PodcastSettingsPage'
 import { NativeContentBridgePage } from './components/NativeContentBridgePage'
+import { TranslationsAdminPage } from './components/TranslationsAdminPage'
 import { NativeUpdatesPage } from './components/NativeUpdatesPage'
 import { NativeDraftPreviewPage } from './components/NativeDraftPreviewPage'
 import { PublicSearchPage } from './components/PublicSearchPage'
@@ -310,6 +311,7 @@ export default function App() {
               <Route path="/content" element={protect(<Navigate to={adminRoutes.posts} replace />)} />
               <Route path="/posts" element={protect(<Navigate to={adminRoutes.posts} replace />)} />
               <Route path={adminRoutes.posts} element={protect(<ContentListPage />)} />
+              <Route path={adminRoutes.translations} element={protect(<TranslationsAdminPage />)} />
               <Route path={adminRoutes.addNew} element={protect(<Navigate to={`${adminRoutes.nativeBridge}?new=article`} replace />)} />
               <Route path="/add-new" element={protect(<Navigate to={adminRoutes.addNew} replace />)} />
               <Route path="/post-new" element={protect(<Navigate to={adminRoutes.addNew} replace />)} />

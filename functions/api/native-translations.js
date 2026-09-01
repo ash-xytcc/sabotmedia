@@ -147,6 +147,7 @@ function publicTranslationShape(item, slug) {
     label: item.languageLabel || item.languageCode,
     href: item.externalUrl || localHref,
     credit: item.translatorCredit || (item.provider === 'weblate' ? 'Community translation via Weblate' : 'Translation'),
+    reviewerCredit: item.reviewerCredit,
     status: item.status,
     provider: item.provider,
     weblateUrl: item.weblateUrl,
