@@ -1,52 +1,77 @@
 .public-info-page .project-directory {
-  width: calc(100vw - 24px);
-  max-width: none;
-  margin-left: auto;
-  margin-right: auto;
+  position: relative;
+  left: 50%;
+  width: calc(100vw - 24px) !important;
+  max-width: none !important;
+  margin-left: -50vw !important;
+  margin-right: 0 !important;
+}
+
+.public-info-page .project-directory__header {
+  width: 100%;
 }
 
 .public-info-page .project-directory__grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
-  gap: clamp(16px, 1.6vw, 24px);
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: clamp(18px, 1.8vw, 28px) !important;
+}
+
+.public-info-page .project-directory__card {
+  min-width: 0;
 }
 
 .public-info-page .project-directory__brand {
-  min-height: clamp(220px, 22vw, 320px);
-  padding: clamp(20px, 2.4vw, 34px);
+  min-height: clamp(320px, 31vw, 470px) !important;
+  padding: clamp(18px, 2vw, 30px) !important;
 }
 
 .public-info-page .project-directory__brand img {
-  width: 100%;
-  max-width: 520px;
-  max-height: clamp(190px, 20vw, 280px);
-  object-fit: contain;
+  width: 100% !important;
+  max-width: min(100%, 680px) !important;
+  height: auto !important;
+  max-height: clamp(285px, 28vw, 420px) !important;
+  object-fit: contain !important;
 }
 
 .public-info-page .project-directory__publication-brand {
-  min-height: 190px;
-  max-width: 560px;
+  min-height: 220px !important;
+  max-width: 720px;
 }
 
 .public-info-page .project-directory__publication-brand img {
-  max-width: 500px;
-  max-height: 170px;
+  max-width: 650px !important;
+  max-height: 200px !important;
+}
+
+.public-info-page .project-directory__body {
+  padding: clamp(18px, 2vw, 28px) !important;
+}
+
+@media (max-width: 900px) {
+  .public-info-page .project-directory__grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .public-info-page .project-directory__brand {
+    min-height: clamp(280px, 58vw, 420px) !important;
+  }
+
+  .public-info-page .project-directory__brand img {
+    max-height: clamp(250px, 52vw, 380px) !important;
+  }
 }
 
 @media (max-width: 760px) {
   .public-info-page .project-directory {
-    width: calc(100vw - 16px);
-  }
-
-  .public-info-page .project-directory__grid {
-    grid-template-columns: 1fr;
+    width: calc(100vw - 16px) !important;
   }
 
   .public-info-page .project-directory__brand {
-    min-height: 210px;
-    padding: 18px;
+    min-height: 240px !important;
+    padding: 14px !important;
   }
 
   .public-info-page .project-directory__brand img {
-    max-height: 190px;
+    max-height: 220px !important;
   }
 }
