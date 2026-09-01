@@ -22,6 +22,20 @@ test('Weblate source bundle splits article HTML into ordered translation units',
   assert.equal(bundle.bodyHtml, undefined)
 })
 
+test('Weblate source segmentation preserves nested block markup', () => {
+  const bundle = buildWeblateSourceBundle({
+    title: 'Nested',
+    bodyHtml: '<blockquote><p>Quoted paragraph.</p></blockquote><figure><img src="/image.jpg"><figcaption>Caption</figcaption></figure><hr><p>After.</p>',
+  })
+
+  assert.deepEqual(bundle.body, {
+    '001': '<blockquote><p>Quoted paragraph.</p></blockquote>',
+    '002': '<figure><img src="/image.jpg"><figcaption>Caption</figcaption></figure>',
+    '003': '<hr>',
+    '004': '<p>After.</p>',
+  })
+})
+
 test('Weblate translated body units are reassembled in numeric order', () => {
   const translated = translationFromWeblateBundle({
     title: 'Titolo',
