@@ -1,0 +1,1 @@
+Binary logo assets are committed via Git data blobs; this directory is intentionally local to the site so public project identity does not depend on remote legacy hosts.
