@@ -77,7 +77,9 @@ import './audioLabRobotVoice.js'
 import './audioLabWorkspaceV2.js'
 /* Final AudioLab layer: menus, visible tracks, standard Audacity spatial hierarchy. */
 import './audio-lab-audacity-v5.css'
+import './audio-lab-audacity-tools.css'
 import './audioLabAudacityMenu.js'
+import './audioLabAudacityQuickTools.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
