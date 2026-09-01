@@ -29,6 +29,11 @@ function podcastTitleDisplayValue(episode) {
   return ['overlay', 'below', 'hidden'].includes(explicit) ? explicit : 'hidden'
 }
 
+function showTitleDisplayValue(episodes = []) {
+  const values = [...new Set(episodes.map(podcastTitleDisplayValue))]
+  return values.length === 1 ? values[0] : 'mixed'
+}
+
 export function PodcastAdminPage() {
   const [nativeItems, setNativeItems] = useState([])
   const [shows, setShows] = useState([])
@@ -87,11 +92,34 @@ export function PodcastAdminPage() {
         { ...episode, featuredTitleDisplay },
         'Podcast homepage title display'
       )
-      const saved = result?.item || { ...episode, featuredTitleDisplay }
-      setNativeItems((current) => current.map((item) => String(item.id) === String(episode.id) ? { ...item, ...saved, featuredTitleDisplay } : item))
+      setNativeItems(result.items)
       setDisplayNotice(`Saved homepage title treatment for “${episode.title || 'episode'}”.`)
     } catch (saveError) {
       setDisplayNotice(`Could not save homepage title treatment: ${String(saveError?.message || saveError)}`)
+    } finally {
+      setSavingDisplayId('')
+    }
+  }
+
+  async function updateShowTitleDisplay(show, episodes, featuredTitleDisplay) {
+    if (!episodes.length || !['overlay', 'below', 'hidden'].includes(featuredTitleDisplay)) return
+    const showKey = `show:${show.id || show.slug}`
+    try {
+      setSavingDisplayId(showKey)
+      setDisplayNotice(`Applying homepage title treatment to ${episodes.length} episode${episodes.length === 1 ? '' : 's'}…`)
+      let working = nativeItems
+      for (const episode of episodes) {
+        const result = await upsertNativeEntryWithMeta(
+          working,
+          { ...episode, featuredTitleDisplay },
+          'Podcast show homepage title display'
+        )
+        working = result.items
+      }
+      setNativeItems(working)
+      setDisplayNotice(`Saved “${show.podcastTitle || 'Podcast'}” homepage title treatment for all ${episodes.length} episodes.`)
+    } catch (saveError) {
+      setDisplayNotice(`Could not save show title treatment: ${String(saveError?.message || saveError)}`)
     } finally {
       setSavingDisplayId('')
     }
@@ -152,69 +180,88 @@ export function PodcastAdminPage() {
           <p><Link className="button button--primary" to={`${adminRoutes.podcastSettings}?new=1`}>Add Podcast</Link></p>
         </section>
 
-        {showGroups.map(({ show, episodes }) => (
-          <section className="wp-meta-box" key={`episodes-${show.id || show.slug}`}>
-            <div className="wp-screen-header">
-              <div>
-                <h2>{show.podcastTitle || 'Untitled podcast'} Episodes</h2>
-                <p className="description">{episodes.length} episode{episodes.length === 1 ? '' : 's'} assigned from this show's source feed. Homepage title treatment is set per episode because some cover art already contains its title and some does not.</p>
+        {showGroups.map(({ show, episodes }) => {
+          const showDisplay = showTitleDisplayValue(episodes)
+          const showSavingKey = `show:${show.id || show.slug}`
+          return (
+            <section className="wp-meta-box" key={`episodes-${show.id || show.slug}`}>
+              <div className="wp-screen-header podcast-show-episode-header">
+                <div>
+                  <h2>{show.podcastTitle || 'Untitled podcast'} Episodes</h2>
+                  <p className="description">{episodes.length} episode{episodes.length === 1 ? '' : 's'} assigned from this show's source feed. Set one default for the whole show, then override individual episodes only when their artwork differs.</p>
+                </div>
+                <div className="podcast-show-display-control">
+                  <label>
+                    <span>Homepage title for this show</span>
+                    <select
+                      value={showDisplay}
+                      disabled={!episodes.length || savingDisplayId === showSavingKey}
+                      onChange={(event) => updateShowTitleDisplay(show, episodes, event.target.value)}
+                    >
+                      {showDisplay === 'mixed' ? <option value="mixed" disabled>Mixed episode settings</option> : null}
+                      <option value="hidden">Image only</option>
+                      <option value="below">Title below image</option>
+                      <option value="overlay">Title over image</option>
+                    </select>
+                  </label>
+                  <div className="review-card__actions">
+                    <Link className="button" to={`${adminRoutes.podcastSettings}?show=${encodeURIComponent(show.id || show.slug)}`}>Import / Settings</Link>
+                    <a className="button" href={show.rssFeedUrl || podcastFeedUrl(show.slug || show.id)} target="_blank" rel="noreferrer">Open RSS</a>
+                  </div>
+                </div>
               </div>
-              <div className="review-card__actions">
-                <Link className="button" to={`${adminRoutes.podcastSettings}?show=${encodeURIComponent(show.id || show.slug)}`}>Import / Settings</Link>
-                <a className="button" href={show.rssFeedUrl || podcastFeedUrl(show.slug || show.id)} target="_blank" rel="noreferrer">Open Show RSS</a>
-              </div>
-            </div>
-            <div className="wp-list-table-wrap">
-              <table className="content-table wp-posts-table podcast-episodes-table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Episode</th>
-                    <th>Season</th>
-                    <th>Duration</th>
-                    <th>Homepage title</th>
-                    <th>Status</th>
-                    <th>Published</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {episodes.length ? episodes.map((episode) => (
-                    <tr key={episode.id || episode.slug}>
-                      <td><strong>{episode.title || '(Untitled episode)'}</strong></td>
-                      <td>{episode.podcastEpisodeNumber || '—'}</td>
-                      <td>{episode.podcastSeason || '—'}</td>
-                      <td>{episode.podcastDuration || '—'}</td>
-                      <td>
-                        <select
-                          className="podcast-title-display-select"
-                          value={podcastTitleDisplayValue(episode)}
-                          disabled={savingDisplayId === String(episode.id)}
-                          onChange={(event) => updateTitleDisplay(episode, event.target.value)}
-                          aria-label={`Homepage title treatment for ${episode.title || 'episode'}`}
-                        >
-                          <option value="hidden">Image only</option>
-                          <option value="below">Title below image</option>
-                          <option value="overlay">Title over image</option>
-                        </select>
-                      </td>
-                      <td>{episode.status || 'draft'}</td>
-                      <td>{toDisplayDate(episode.publishedAt || episode.updatedAt)}</td>
-                      <td>
-                        <div className="wp-row-actions">
-                          {episode.slug ? <Link to={`/post/${episode.slug}`} target="_blank" rel="noreferrer">View</Link> : null}
-                          <Link to={`${adminRoutes.nativeBridge}?edit=${episode.id}`}>Full edit</Link>
-                        </div>
-                      </td>
+              <div className="wp-list-table-wrap">
+                <table className="content-table wp-posts-table podcast-episodes-table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Episode</th>
+                      <th>Season</th>
+                      <th>Duration</th>
+                      <th>Homepage title</th>
+                      <th>Status</th>
+                      <th>Published</th>
+                      <th>Actions</th>
                     </tr>
-                  )) : (
-                    <tr><td colSpan={8}>No episodes imported for this show yet.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        ))}
+                  </thead>
+                  <tbody>
+                    {episodes.length ? episodes.map((episode) => (
+                      <tr key={episode.id || episode.slug}>
+                        <td><strong>{episode.title || '(Untitled episode)'}</strong></td>
+                        <td>{episode.podcastEpisodeNumber || '—'}</td>
+                        <td>{episode.podcastSeason || '—'}</td>
+                        <td>{episode.podcastDuration || '—'}</td>
+                        <td>
+                          <select
+                            className="podcast-title-display-select"
+                            value={podcastTitleDisplayValue(episode)}
+                            disabled={savingDisplayId === String(episode.id) || savingDisplayId === showSavingKey}
+                            onChange={(event) => updateTitleDisplay(episode, event.target.value)}
+                            aria-label={`Homepage title treatment for ${episode.title || 'episode'}`}
+                          >
+                            <option value="hidden">Image only</option>
+                            <option value="below">Title below image</option>
+                            <option value="overlay">Title over image</option>
+                          </select>
+                        </td>
+                        <td>{episode.status || 'draft'}</td>
+                        <td>{toDisplayDate(episode.publishedAt || episode.updatedAt)}</td>
+                        <td>
+                          <div className="wp-row-actions">
+                            {episode.slug ? <Link to={`/post/${episode.slug}`} target="_blank" rel="noreferrer">View</Link> : null}
+                            <Link to={`${adminRoutes.nativeBridge}?edit=${episode.id}`}>Full edit</Link>
+                          </div>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={8}>No episodes imported for this show yet.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )
+        })}
       </main>
     </AdminFrame>
   )
