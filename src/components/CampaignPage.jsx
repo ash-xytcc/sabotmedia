@@ -40,6 +40,9 @@ const AI_CAMPAIGN_SECTION_TITLES = {
 const ITALY_TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
 const ITALY_DATE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 const ITALY_ZONE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Rome', timeZoneName: 'short' })
+const GAZA_TIME_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Gaza', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
+const GAZA_DATE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Gaza', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+const GAZA_ZONE_FORMAT = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Gaza', timeZoneName: 'short' })
 
 export function CampaignPage() {
   const { slug } = useParams()
@@ -260,7 +263,7 @@ export function CampaignPage() {
       {showSection('status') ? <section className="campaign-section campaign-section--status" id="status">
         <div className="campaign-shell">
           <SectionHeading sectionKey="status" eyebrow="LIVE CAMPAIGN DASHBOARD" title={sectionTitle('status')} />
-          {isAiCampaign ? <ItalyClock /> : null}
+          {isAiCampaign ? <ItalyClock /> : campaign.slug === 'food-not-bombs-gaza' ? <GazaClock /> : null}
           <div className="campaign-status-grid">
             {Number.isFinite(deadline) ? <article className="campaign-metric campaign-metric--deadline">
               <span className="campaign-metric__label">{formatDeadlineLabel(campaign.deadline, campaign.deadlineTimeZone)}</span>
@@ -493,6 +496,28 @@ function ItalyClock() {
       <time dateTime={instant.toISOString()} title="Live local time in Rome" aria-live="off">
         <strong>{ITALY_TIME_FORMAT.format(instant)}</strong>
         <span>{ITALY_DATE_FORMAT.format(instant)}</span>
+      </time>
+    </aside>
+  )
+}
+
+function GazaClock() {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+  const instant = new Date(now)
+  const zone = GAZA_ZONE_FORMAT.formatToParts(instant).find((part) => part.type === 'timeZoneName')?.value || 'Asia/Gaza'
+  return (
+    <aside className="campaign-italy-clock campaign-gaza-clock" aria-label="Current time in Gaza">
+      <div>
+        <span>CURRENT TIME IN GAZA</span>
+        <p>GAZA / PALESTINE · {zone}</p>
+      </div>
+      <time dateTime={instant.toISOString()} title="Live local time in Gaza" aria-live="off">
+        <strong>{GAZA_TIME_FORMAT.format(instant)}</strong>
+        <span>{GAZA_DATE_FORMAT.format(instant)}</span>
       </time>
     </aside>
   )

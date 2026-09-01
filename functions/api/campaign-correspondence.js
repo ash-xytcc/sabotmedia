@@ -1,7 +1,8 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { getBoundDb, databaseUnavailable } from './_lib/database.js'
 import { getCampaign } from './_lib/campaigns.js'
-import { contributorFromRequest, createContributor, createMessage, createQuestion, listContributors, listMessages, listQuestions, patchMessage, patchQuestion, revokeContributor } from './_lib/campaignCorrespondence.js'
+import { contributorFromRequest, createContributor, createMessage, createQuestion, deleteMessage, listContributors, listMessages, listQuestions, patchMessage, patchQuestion, revokeContributor } from './_lib/campaignCorrespondence.js'
+import { inferActorFromRequest, writeAuditLog } from './_lib/auditLog.js'
 
 export async function onRequestGet(context) {
   try {
@@ -58,9 +59,25 @@ export async function onRequestPatch(context) {
     }
     if (body.action === 'message') {
       if (!permission.canEdit && !contributor) return json({ ok: false, error: 'contributor access required' }, 403)
-      return json({ ok: true, item: await patchMessage(db, body.id, body, permission.canEdit ? { isEditor: true } : { contributorId: contributor.id, permissions: contributor.permissions }) })
+      const item = await patchMessage(db, body.id, body, permission.canEdit ? { isEditor: true } : { contributorId: contributor.id, permissions: contributor.permissions })
+      if (permission.canEdit) await writeAuditLog(db, { action: 'campaign_correspondence.message.update', entityType: 'campaign_message', entityId: item.id, actor: inferActorFromRequest(context.request), detail: { campaignId: item.campaignId, visibility: item.visibility } })
+      return json({ ok: true, item })
     }
     return json({ ok: false, error: 'unsupported action' }, 400)
+  } catch (error) { return json({ ok: false, error: String(error?.message || error) }, Number(error?.status) || 400) }
+}
+
+export async function onRequestDelete(context) {
+  try {
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('campaign correspondence')
+    const permission = await resolvePublicSitePermission(context)
+    if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
+    const body = await context.request.json()
+    if (body.action !== 'message' || !body.id) return json({ ok: false, error: 'unsupported action' }, 400)
+    const item = await deleteMessage(db, body.id)
+    await writeAuditLog(db, { action: 'campaign_correspondence.message.delete', entityType: 'campaign_message', entityId: item.id, actor: inferActorFromRequest(context.request), detail: { campaignId: item.campaignId, senderRole: item.senderRole, visibility: item.visibility, hadMedia: Boolean(item.mediaUrl) } })
+    return json({ ok: true, item })
   } catch (error) { return json({ ok: false, error: String(error?.message || error) }, Number(error?.status) || 400) }
 }
 

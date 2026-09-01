@@ -55,3 +55,20 @@ test('private contributor routes skip analytics and private APIs perform their o
   assert.match(endpoint, /contributorFromRequest/)
   assert.match(endpoint, /permission\.canEdit/)
 })
+
+test('editors can edit and permanently delete correspondence messages', async () => {
+  const [admin, client, endpoint, storage] = await Promise.all([read('src/components/CampaignCorrespondenceAdmin.jsx'), read('src/lib/campaignCorrespondenceApi.js'), read('functions/api/campaign-correspondence.js'), read('functions/api/_lib/campaignCorrespondence.js')])
+  assert.match(admin, /Save changes/)
+  assert.match(admin, /Permanently delete/)
+  assert.match(client, /method: 'DELETE'/)
+  assert.match(endpoint, /onRequestDelete/)
+  assert.match(endpoint, /campaign_correspondence\.message\.delete/)
+  assert.match(storage, /UPDATE campaign_messages SET body = \?, visibility = \?, status = \?/)
+  assert.match(storage, /DELETE FROM campaign_messages WHERE id = \?/)
+})
+
+test('every saved campaign uses the same optional correspondence admin module', async () => {
+  const admin = await read('src/components/CampaignAdminPage.jsx')
+  assert.match(admin, /<CampaignCorrespondenceAdmin campaign=\{draft\} enabled=\{Boolean\(draft\.correspondence\?\.enabled\)\}/)
+  assert.doesNotMatch(admin, /draft\.correspondence\?\.enabled \? <CampaignCorrespondenceAdmin/)
+})

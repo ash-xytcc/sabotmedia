@@ -86,6 +86,11 @@
   text-transform: uppercase;
 }
 
+.campaign-page[data-campaign="food-not-bombs-gaza"] .campaign-gaza-clock {
+  border-color: #000;
+  background: linear-gradient(110deg, #007a3d 0 42%, #101010 42% 100%);
+}
+
 .campaign-page .campaign-italy-clock p {
   margin: 8px 0 0;
   font: 900 clamp(1.05rem, 1.8vw, 1.45rem)/1 var(--campaign-display);
