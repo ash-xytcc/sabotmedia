@@ -173,10 +173,34 @@ function splitArticleBodyHtml(value) {
   const html = String(value || '').trim()
   if (!html) return {}
 
-  const chunks = html
-    .split(/(?=<(?:p|h[1-6]|ul|ol|blockquote|figure|hr)\b)/gi)
-    .map((chunk) => chunk.trim())
-    .filter(Boolean)
+  const voidElements = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'])
+  const tagPattern = /<\/?([a-zA-Z][\w:-]*)\b[^>]*>/g
+  const chunks = []
+  let depth = 0
+  let chunkStart = 0
+  let match
+
+  while ((match = tagPattern.exec(html))) {
+    const tag = match[0]
+    const name = String(match[1] || '').toLowerCase()
+    const closing = /^<\//.test(tag)
+    const selfClosing = /\/\s*>$/.test(tag) || voidElements.has(name)
+
+    if (closing) {
+      depth = Math.max(0, depth - 1)
+    } else if (!selfClosing) {
+      depth += 1
+    }
+
+    if (depth === 0) {
+      const chunk = html.slice(chunkStart, tagPattern.lastIndex).trim()
+      if (chunk) chunks.push(chunk)
+      chunkStart = tagPattern.lastIndex
+    }
+  }
+
+  const tail = html.slice(chunkStart).trim()
+  if (tail) chunks.push(tail)
 
   return Object.fromEntries(
     chunks.map((chunk, index) => [String(index + 1).padStart(3, '0'), chunk])
