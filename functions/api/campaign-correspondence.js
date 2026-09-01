@@ -92,11 +92,15 @@ export async function onRequestDelete(context) {
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('campaign correspondence')
     const permission = await resolvePublicSitePermission(context)
-    if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
+    const contributor = await contributorFromRequest(db, context.request)
+    const contributorSessionSupplied = Boolean(context.request.headers.get('x-sabot-contributor-session') || /^Bearer\s+/i.test(String(context.request.headers.get('authorization') || '')))
+    if (contributorSessionSupplied && !contributor) return json({ ok: false, error: 'contributor access required' }, 403)
+    if (!contributorSessionSupplied && !permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
     const body = await context.request.json()
     if (body.action !== 'message' || !body.id) return json({ ok: false, error: 'unsupported action' }, 400)
-    const item = await deleteMessage(db, body.id)
-    await writeAuditLog(db, { action: 'campaign_correspondence.message.delete', entityType: 'campaign_message', entityId: item.id, actor: inferActorFromRequest(context.request), detail: { campaignId: item.campaignId, senderRole: item.senderRole, visibility: item.visibility, hadMedia: Boolean(item.mediaUrl) } })
+    const actingAsContributor = contributorSessionSupplied && contributor
+    const item = await deleteMessage(db, body.id, actingAsContributor ? { contributorId: contributor.id } : { isEditor: true })
+    await writeAuditLog(db, { action: 'campaign_correspondence.message.delete', entityType: 'campaign_message', entityId: item.id, actor: actingAsContributor ? { type: 'campaign_contributor', id: contributor.id } : inferActorFromRequest(context.request), detail: { campaignId: item.campaignId, senderRole: item.senderRole, visibility: item.visibility, hadMedia: Boolean(item.mediaUrl) } })
     return json({ ok: true, item })
   } catch (error) { return json({ ok: false, error: String(error?.message || error) }, Number(error?.status) || 400) }
 }
