@@ -6,7 +6,8 @@ import { getEditablePage } from '../lib/editableContentRegistry'
 import { getPublicInfoCopy, getPublicInfoField } from '../content/publicInfoCopy'
 import { SecureContactForm } from './SecureContactForm'
 import { EditableLink } from './EditableLink'
-import { PUBLICATION_IDENTITY, getFeaturedPublicProjects } from '../lib/projectCatalog'
+import { getFeaturedPublicProjects } from '../lib/projectCatalog'
+import { getProjectLogo, publicationLogo } from '../lib/projectLogoData'
 
 const CONTACT_CHANNELS = [
   { label: 'News tips, documents, and leads', address: 'tips@sabot.media' },
@@ -46,7 +47,7 @@ function ProjectDirectory() {
       <header className="project-directory__header">
         <div>
           <div className="project-directory__brand project-directory__publication-brand">
-            <img src={PUBLICATION_IDENTITY.logoUrl} alt={`${PUBLICATION_IDENTITY.name} logo`} />
+            <img src={publicationLogo} alt="Sabot Media logo" />
           </div>
           <p className="project-directory__eyebrow">Projects</p>
           <h2 id="project-directory-title">Our projects</h2>
@@ -58,25 +59,28 @@ function ProjectDirectory() {
       </header>
 
       <div className="project-directory__grid">
-        {projects.map((project) => (
-          <article className="project-directory__card" key={project.slug}>
-            <div className="project-directory__brand">
-              {project.logoUrl ? (
-                <img src={project.logoUrl} alt={`${project.name} logo`} loading="lazy" />
-              ) : (
-                <span className="project-directory__wordmark">{project.name}</span>
-              )}
-            </div>
-            <div className="project-directory__body">
-              <p className="project-directory__format">{project.format}</p>
-              <h3>{project.name}</h3>
-              <p>{project.description}</p>
-              <Link className="project-directory__link" to={`/archive?project=${encodeURIComponent(project.slug)}`}>
-                Browse project →
-              </Link>
-            </div>
-          </article>
-        ))}
+        {projects.map((project) => {
+          const logoUrl = getProjectLogo(project.slug)
+          return (
+            <article className="project-directory__card" key={project.slug}>
+              <div className="project-directory__brand">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={`${project.name} logo`} loading="lazy" />
+                ) : (
+                  <span className="project-directory__wordmark">{project.name}</span>
+                )}
+              </div>
+              <div className="project-directory__body">
+                <p className="project-directory__format">{project.format}</p>
+                <h3>{project.name}</h3>
+                <p>{project.description}</p>
+                <Link className="project-directory__link" to={`/archive?project=${encodeURIComponent(project.slug)}`}>
+                  Browse project →
+                </Link>
+              </div>
+            </article>
+          )
+        })}
       </div>
     </section>
   )
