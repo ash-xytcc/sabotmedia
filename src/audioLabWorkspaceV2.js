@@ -125,11 +125,10 @@ function buildTabs(sidebar, panels) {
 function normalizeWorkflowNav() {
   const root = rootPage()
   const nav = root?.querySelector(':scope > .audio-lab-workflow-nav')
-  const chrome = root?.querySelector(':scope > .audio-lab-compact-chrome')
   const header = root?.querySelector(':scope > .audio-lab-header, :scope > .wp-screen-header.audio-lab-header')
   if (!root || !nav || !header) return
-  const anchor = chrome || header
-  if (anchor.nextElementSibling !== nav) anchor.insertAdjacentElement('afterend', nav)
+  if (!root.dataset.audiolabTask) return
+  if (header.nextElementSibling !== nav) header.insertAdjacentElement('afterend', nav)
   nav.removeAttribute('style')
 }
 
@@ -166,7 +165,7 @@ function ensureCompactChrome() {
   const header = root?.querySelector(':scope > .audio-lab-header, :scope > .wp-screen-header.audio-lab-header')
   if (!root || !header) return
 
-  let chrome = root.querySelector(':scope > .audio-lab-compact-chrome')
+  let chrome = header.querySelector(':scope > .audio-lab-compact-chrome') || root.querySelector(':scope > .audio-lab-compact-chrome')
   if (!chrome) {
     chrome = document.createElement('div')
     chrome.className = 'audio-lab-compact-chrome'
@@ -181,7 +180,10 @@ function ensureCompactChrome() {
       <button type="button" class="button" data-audiolab-robot-open>Robot Voice</button>
       <button type="button" class="button" data-audiolab-inspector-toggle aria-expanded="false">Tools</button>
     `
-    header.insertAdjacentElement('afterend', chrome)
+
+    const actionGroup = header.querySelector(':scope > .review-card__actions')
+    if (actionGroup) header.insertBefore(chrome, actionGroup)
+    else header.appendChild(chrome)
 
     chrome.querySelector('[data-audiolab-project-select]')?.addEventListener('change', (event) => {
       const card = projectCards()[Number(event.target.value)]
@@ -199,6 +201,10 @@ function ensureCompactChrome() {
         window.setTimeout(() => activateByLabel('Robot Voice'), 80)
       }
     })
+  } else if (chrome.parentElement !== header) {
+    const actionGroup = header.querySelector(':scope > .review-card__actions')
+    if (actionGroup) header.insertBefore(chrome, actionGroup)
+    else header.appendChild(chrome)
   }
 
   const select = chrome.querySelector('[data-audiolab-project-select]')
