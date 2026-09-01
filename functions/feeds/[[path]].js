@@ -1,6 +1,6 @@
 import { getBoundDb } from '../api/_lib/database.js'
 import { buildLiveFeedBundle, normalizeFeedRequestPath } from '../api/_lib/feedRuntime.js'
-import { readPodcastSettings } from '../api/_lib/podcastSettings.js'
+import { findPodcastShow, readPodcastShows } from '../api/_lib/podcastSettings.js'
 import { AI_CAMPAIGN_SLUG, buildCampaignRssXml, ensureDefaultCampaigns, getCampaign } from '../api/_lib/campaigns.js'
 import { listMessages } from '../api/_lib/campaignCorrespondence.js'
 import { decorateAiCampaignForPublic } from '../api/_lib/aiCampaignPublic.js'
@@ -20,15 +20,29 @@ export async function onRequestGet(context) {
 
   try {
     if (requestedPath === 'podcasts/all.xml') {
-      const [items, metadata] = await Promise.all([
-        getPodcastFeedItems(db),
-        readPodcastSettings(db),
-      ])
+      const registry = await readPodcastShows(db)
+      const show = registry.shows.find((candidate) => candidate.id === registry.defaultShowId) || registry.shows[0] || null
+      if (!show) return text('Podcast feed not found.', 404)
+      const items = await getPodcastFeedItems(db, show)
       return podcastXmlResponse(buildPodcastFeedXml({
         requestUrl: context.request.url,
         items,
-        settings: metadata.settings,
+        settings: show,
         selfPath: '/feeds/podcasts/all.xml',
+      }))
+    }
+
+    const podcastMatch = requestedPath.match(/^podcasts\/([a-z0-9-]+)\.xml$/i)
+    if (podcastMatch) {
+      const slug = podcastMatch[1].toLowerCase()
+      const show = await findPodcastShow(db, slug)
+      if (!show) return text('Podcast feed not found.', 404)
+      const items = await getPodcastFeedItems(db, show)
+      return podcastXmlResponse(buildPodcastFeedXml({
+        requestUrl: context.request.url,
+        items,
+        settings: show,
+        selfPath: `/feeds/podcasts/${show.slug}.xml`,
       }))
     }
 
