@@ -1,6 +1,6 @@
 import { canonicalizeAnalyticsPath } from '../../../shared/analyticsPath.js'
 
-const DAY_MS = 86_400_000
+export const ANALYTICS_TIME_ZONE = 'America/Los_Angeles'
 
 export async function ensureAnalyticsTable(db) {
   await db.prepare(`
@@ -19,13 +19,32 @@ export async function ensureAnalyticsTable(db) {
       device TEXT NOT NULL DEFAULT 'desktop',
       browser TEXT NOT NULL DEFAULT 'other',
       country TEXT NOT NULL DEFAULT '',
-      event_type TEXT NOT NULL DEFAULT 'pageview'
+      event_type TEXT NOT NULL DEFAULT 'pageview',
+      reporting_timezone TEXT NOT NULL DEFAULT ''
     );
   `).run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_analytics_events_time ON analytics_events(occurred_at DESC);').run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_analytics_events_day ON analytics_events(day);').run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_analytics_events_path ON analytics_events(path);').run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_analytics_events_session ON analytics_events(day, session_hash);').run()
+  const columns = await db.prepare('PRAGMA table_info(analytics_events)').all()
+  if (!(columns?.results || []).some((column) => column.name === 'reporting_timezone')) {
+    try {
+      await db.prepare("ALTER TABLE analytics_events ADD COLUMN reporting_timezone TEXT NOT NULL DEFAULT ''").run()
+    } catch (error) {
+      if (!/duplicate column/i.test(String(error?.message || error))) throw error
+    }
+  }
+}
+
+export async function ensureAnalyticsReportingDays(db, timeZone = ANALYTICS_TIME_ZONE) {
+  const result = await db.prepare(`SELECT id, occurred_at, day FROM analytics_events
+    WHERE reporting_timezone IS NULL OR reporting_timezone != ? LIMIT 5000`).bind(timeZone).all()
+  const rows = Array.isArray(result?.results) ? result.results : []
+  const statements = rows.map((row) => db.prepare('UPDATE analytics_events SET day = ?, reporting_timezone = ? WHERE id = ?')
+    .bind(reportingDay(row.occurred_at, timeZone), timeZone, row.id))
+  for (let index = 0; index < statements.length; index += 100) await db.batch(statements.slice(index, index + 100))
+  return rows.length
 }
 
 export function cleanPath(value) {
@@ -99,8 +118,23 @@ export async function hashSession(value) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
-export function daysAgo(days) {
-  return new Date(Date.now() - Math.max(0, days - 1) * DAY_MS).toISOString().slice(0, 10)
+export function reportingDay(value = new Date(), timeZone = ANALYTICS_TIME_ZONE) {
+  const date = value instanceof Date ? value : new Date(value)
+  if (!Number.isFinite(date.getTime())) return ''
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const part = (type) => parts.find((item) => item.type === type)?.value || ''
+  return `${part('year')}-${part('month')}-${part('day')}`
+}
+
+export function daysAgo(days, now = new Date(), timeZone = ANALYTICS_TIME_ZONE) {
+  const today = reportingDay(now, timeZone)
+  const [year, month, day] = today.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day - Math.max(0, days - 1))).toISOString().slice(0, 10)
 }
 
 export function json(data, status = 200) {

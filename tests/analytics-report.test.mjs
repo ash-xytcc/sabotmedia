@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { resolveNamedQueries } from '../functions/api/analytics/reportQueries.js'
 import { resolvePageTitle } from '../functions/api/analytics/report.js'
 import { analyticsCoverageNote } from '../src/lib/analyticsCoverage.js'
+import { daysAgo, reportingDay } from '../functions/api/analytics/_lib.js'
 
 const reportSource = readFileSync(new URL('../functions/api/analytics/report.js', import.meta.url), 'utf8')
 const widgetSource = readFileSync(new URL('../src/components/WpAnalyticsWidgets.jsx', import.meta.url), 'utf8')
@@ -52,4 +53,14 @@ test('analytics explains when limited history makes all range totals match', () 
   assert.match(note, /Tracking began Aug 29, 2026/)
   assert.match(note, /7-, 30-, and 90-day totals can match/)
   assert.equal(analyticsCoverageNote({}, new Date('2026-08-31T21:00:00.000Z')), '')
+})
+
+test('analytics reporting days use Pacific time rather than UTC midnight', () => {
+  const utcAfterMidnight = new Date('2026-09-01T00:30:00.000Z')
+  assert.equal(reportingDay(utcAfterMidnight), '2026-08-31')
+  assert.equal(daysAgo(7, utcAfterMidnight), '2026-08-25')
+  assert.equal(reportingDay(new Date('2026-09-01T07:30:00.000Z')), '2026-09-01')
+  assert.equal(reportingDay(new Date('2026-12-01T07:30:00.000Z')), '2026-11-30')
+  assert.match(reportSource, /ensureAnalyticsReportingDays\(db\)/)
+  assert.match(widgetSource, /daily totals use Pacific Time/)
 })

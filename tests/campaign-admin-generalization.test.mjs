@@ -36,7 +36,7 @@ test('new campaigns start unpublished and do not inherit A/I identity', () => {
 })
 
 test('generic campaign slugs have a public route and appear in the feed manifest', () => {
-  assert.match(app, /path=\{publicRoutes\.campaign\} element=\{<CampaignPage \/>\}/)
+  assert.match(app, /path=\{publicRoutes\.campaign\} element=\{<CampaignRoute \/>\}/)
   assert.match(manifest, /listCampaigns\(db\)/)
   assert.match(manifest, /campaigns\.map\(\(campaign\) => `campaigns\/\$\{campaign\.slug\}\.xml`\)/)
 })
