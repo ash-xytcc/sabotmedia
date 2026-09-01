@@ -37,6 +37,13 @@
   overflow: visible !important;
 }
 
+/* The home logo includes small lower details/"teeth" that need more visual air than
+   the compact inner-page masthead. Keep the logo where it is and move only the nav
+   down so the mark remains fully legible. */
+.publication-topbar--home .publication-topbar__brand {
+  gap: 15px !important;
+}
+
 .publication-topbar--masthead .publication-topbar__brand-link--isolated {
   width: 280px !important;
   max-width: min(72vw, 280px) !important;
@@ -130,6 +137,10 @@
 
   .publication-topbar--masthead .publication-topbar__brand {
     gap: 5px !important;
+  }
+
+  .publication-topbar--home .publication-topbar__brand {
+    gap: 11px !important;
   }
 
   .publication-topbar--home .publication-topbar__brand-link--isolated,
