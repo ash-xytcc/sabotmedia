@@ -18,7 +18,8 @@ function groupFeedFiles(files = []) {
 function groupLabel(group) {
   const labels = {
     'all-content.xml': 'everything', formats: 'formats', projects: 'projects', collections: 'collections',
-    bylines: 'public byline labels', authors: 'public byline labels', topics: 'topics', series: 'series', podcasts: 'podcasts',
+    bylines: 'public byline labels', authors: 'public byline labels', topics: 'topics', series: 'series',
+    campaigns: 'campaigns',
   }
   return labels[group] || group.replace(/-/g, ' ')
 }
@@ -26,14 +27,14 @@ function groupLabel(group) {
 function groupDescription(group) {
   const descriptions = {
     'all-content.xml': 'The broad live feed for published server-backed Sabot Media content.',
-    formats: 'Follow one kind of work, such as articles, comics, newsletters, print material, or podcasts.',
+    formats: 'Follow one kind of published website content, such as articles, comics, newsletters, print material, audio, or podcast posts.',
     projects: 'Follow work connected to a project or public organizing body.',
     collections: 'Follow curated bodies of work, campaigns, issues, readers, or publication packages.',
     bylines: 'Follow public byline labels. These may be collective names, pseudonyms, handles, or house labels.',
     authors: 'Follow public byline labels. These may be collective names, pseudonyms, handles, or house labels.',
     topics: 'Follow subjects across formats and projects.',
     series: 'Follow recurring columns, comics, newsletters, shows, or other serial work.',
-    podcasts: 'Follow audio and podcast material.',
+    campaigns: 'Follow updates from a specific published campaign hub.',
   }
   return descriptions[group] || 'A live RSS feed generated from published server metadata.'
 }
@@ -41,6 +42,8 @@ function groupDescription(group) {
 export function PublicFeedsPage() {
   const [settings, setSettings] = useState(DEFAULT_FEED_SETTINGS)
   const [files, setFiles] = useState([])
+  const [podcastShows, setPodcastShows] = useState([])
+  const [podcastDefaultAlias, setPodcastDefaultAlias] = useState('')
   const [state, setState] = useState('loading')
   const [errors, setErrors] = useState([])
   const [itemCount, setItemCount] = useState(0)
@@ -62,9 +65,13 @@ export function PublicFeedsPage() {
 
       if (manifestResult.status === 'fulfilled') {
         setFiles(manifestResult.value.files)
+        setPodcastShows(manifestResult.value.podcastShows || [])
+        setPodcastDefaultAlias(String(manifestResult.value.podcastDefaultAlias || ''))
         setItemCount(Number(manifestResult.value.itemCount || 0))
       } else {
         setFiles([])
+        setPodcastShows([])
+        setPodcastDefaultAlias('')
         setItemCount(0)
         nextErrors.push(`Live feed endpoints: ${String(manifestResult.reason?.message || manifestResult.reason)}`)
       }
@@ -76,7 +83,7 @@ export function PublicFeedsPage() {
     return () => { cancelled = true }
   }, [])
 
-  const grouped = useMemo(() => groupFeedFiles(files), [files])
+  const grouped = useMemo(() => groupFeedFiles(files.filter((file) => !file.startsWith('podcasts/'))), [files])
   const mainFeedAvailable = files.includes('all-content.xml')
 
   return (
@@ -100,15 +107,34 @@ export function PublicFeedsPage() {
         <EditableText as="h2" field="feeds.how.title">How this works</EditableText>
         <EditableText as="div" field="feeds.how.body" multiline>{`These are real RSS endpoints backed by the persisted public feed configuration, not download-package placeholders. A reader can subscribe with an RSS reader or compatible app, an archivist can mirror them, and another site can syndicate them.
 
-The live XML endpoints are generated from published native records in the server database and respect the persisted feed aliases and hidden-term settings. Scheduled work enters the feeds when it becomes publicly visible.
+Website-content feeds are generated from published native records and can be organized by format, project, collection, topic, series, or public byline. Scheduled work enters those feeds when it becomes publicly visible.
 
-Older imported archive pieces remain browseable on Sabot and enter these live feeds as they are migrated into native server-backed content.`}</EditableText>
+Podcast shows use the same server-backed content records but have their own directory-grade RSS feeds with audio enclosures, stable episode GUIDs, artwork, and podcast metadata. Each show has a separate feed. A format feed such as formats/podcast.xml is a cross-show website-content lane; it is not the feed to submit to a podcast directory.
+
+Older imported archive pieces remain browseable on Sabot and enter live website feeds as they are migrated into native server-backed content.`}</EditableText>
       </section>
 
       <section className="feeds-public-page__panel">
         <EditableText as="h2" field="feeds.available.title">Available live feeds</EditableText>
         <p>{itemCount} published server-backed {itemCount === 1 ? 'entry is' : 'entries are'} currently eligible for the live feed system.</p>
         <div className="feeds-public-page__grid">
+          {podcastShows.length ? (
+            <article className="feeds-public-page__group">
+              <h3>podcasts</h3>
+              <p>Directory-grade podcast feeds, one per show, with audio enclosures and podcast metadata.</p>
+              <ul>
+                {podcastShows.map((show) => (
+                  <li key={show.id || show.slug}>
+                    <a href={`/feeds/${show.feedPath}`}><strong>{show.title || show.slug}</strong></a>
+                    {' '}<code>{show.feedPath}</code>
+                    {show.episodeCount != null ? <span> · {Number(show.episodeCount)} episode{Number(show.episodeCount) === 1 ? '' : 's'}</span> : null}
+                  </li>
+                ))}
+              </ul>
+              {podcastDefaultAlias ? <p className="description"><code>{podcastDefaultAlias}</code> remains available as a legacy alias for the default show; the named show feed above is the canonical subscription URL.</p> : null}
+            </article>
+          ) : null}
+
           {Object.entries(grouped).map(([group, groupFiles]) => (
             <article className="feeds-public-page__group" key={group}>
               <h3>{groupLabel(group)}</h3>
@@ -131,7 +157,7 @@ Older imported archive pieces remain browseable on Sabot and enter these live fe
         <EditableText as="h2" field="feeds.privacy.title">Privacy and bylines</EditableText>
         <EditableText as="div" field="feeds.privacy.body" multiline>{`A feed byline is not required to be a legal name. It can be a collective name, a role, a handle, a house label, or a pseudonym. That choice belongs to the people publishing and to the safety needs of the work.
 
-Editors can rename or hide bad imported labels in the backend, and the same persisted rules are applied by the live XML endpoints.`}</EditableText>
+Editors can rename or hide bad imported labels in the backend, and the same persisted rules are applied by the live website-content XML endpoints.`}</EditableText>
       </section>
 
       <section className="feeds-public-page__panel">
