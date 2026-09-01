@@ -129,6 +129,12 @@ test('live dashboard includes a responsive daylight-saving-safe Italy clock', ()
   assert.match(polish, /@media \(max-width: 760px\)[\s\S]*\.campaign-page \.campaign-italy-clock/)
 })
 
+test('Food Not Bombs Gaza dashboard includes a live Gaza clock', () => {
+  assert.match(page, /timeZone: 'Asia\/Gaza'/)
+  assert.match(page, /CURRENT TIME IN GAZA/)
+  assert.match(page, /campaign-gaza-clock/)
+})
+
 test('live campaign social is server-side, filtered, normalized and graceful', () => {
   assert.match(socialServer, /public\.api\.bsky\.app\/xrpc\/app\.bsky\.feed\.getAuthorFeed/)
   assert.match(socialServer, /api\/v1\/accounts\/lookup/)
