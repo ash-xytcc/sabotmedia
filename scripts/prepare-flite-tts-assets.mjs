@@ -8,6 +8,8 @@ const assets = [
   {
     path: 'flite/flite.wasm',
     minBytes: 10_000_000,
+    attempts: 3,
+    timeoutMs: 15_000,
     urls: [
       'https://cdn.jsdelivr.net/npm/@echogarden/flite-wasi@0.1.1/flite.wasm',
       'https://unpkg.com/@echogarden/flite-wasi@0.1.1/flite.wasm',
@@ -17,6 +19,8 @@ const assets = [
     path: 'flite/cmu_us_lnh.flitevox',
     minBytes: 10_000_000,
     optional: true,
+    attempts: 1,
+    timeoutMs: 8_000,
     urls: [
       'https://festvox.org/flite/packed/flite-2.3/voices/cmu_us_lnh.flitevox',
       'https://www.festvox.org/flite/packed/flite-2.3/voices/cmu_us_lnh.flitevox',
@@ -27,6 +31,8 @@ const assets = [
   ...['debug.js', 'wasi_defs.js', 'fd.js', 'fs_mem.js', 'wasi.js'].map((file) => ({
     path: `vendor/browser-wasi-shim/${file}`,
     minBytes: file === 'wasi.js' || file === 'fs_mem.js' ? 5_000 : 50,
+    attempts: 3,
+    timeoutMs: 10_000,
     urls: [
       `https://cdn.jsdelivr.net/npm/@bjorn3/browser_wasi_shim@0.4.2/dist/${file}`,
       `https://unpkg.com/@bjorn3/browser_wasi_shim@0.4.2/dist/${file}`,
@@ -43,13 +49,14 @@ async function existsWithMinimumSize(pathname, minimum) {
   }
 }
 
-async function fetchWithRetry(url, attempts = 3) {
+async function fetchWithRetry(url, { attempts = 3, timeoutMs = 15_000 } = {}) {
   let lastError
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
       const response = await fetch(url, {
         redirect: 'follow',
         headers: { 'user-agent': 'SabotPress-build/1.0' },
+        signal: AbortSignal.timeout(timeoutMs),
       })
       if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
       return new Uint8Array(await response.arrayBuffer())
@@ -69,7 +76,10 @@ async function prepareAsset(asset) {
   const errors = []
   for (const url of asset.urls) {
     try {
-      const bytes = await fetchWithRetry(url)
+      const bytes = await fetchWithRetry(url, {
+        attempts: asset.attempts,
+        timeoutMs: asset.timeoutMs,
+      })
       if (bytes.byteLength < asset.minBytes) {
         throw new Error(`download was unexpectedly small (${bytes.byteLength} bytes)`)
       }
