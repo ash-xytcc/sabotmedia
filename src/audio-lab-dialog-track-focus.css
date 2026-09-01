@@ -1,0 +1,135 @@
+/* Final AudioLab dialog + timeline authority.
+   Menus open real centered tools; tracks consume the editing viewport. */
+
+.audio-lab-page {
+  --al-track-working-height: clamp(138px, 20vh, 190px);
+}
+
+/* Menu tools are dialogs, not the old docked inspector. The existing
+   menu JS marks the page with data-audiolab-modal-open and supplies a backdrop. */
+.audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar,
+.audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar:hover,
+.audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar:focus-within,
+.audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar.is-open {
+  display: flex !important;
+  position: fixed !important;
+  z-index: 10060 !important;
+  top: 50% !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(920px, calc(100vw - 32px)) !important;
+  height: min(78vh, 730px) !important;
+  max-width: 920px !important;
+  max-height: calc(100vh - 32px) !important;
+  min-width: min(520px, calc(100vw - 32px)) !important;
+  min-height: min(340px, calc(100vh - 32px)) !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  border: 1px solid #607585 !important;
+  border-radius: 7px !important;
+  background: #111a23 !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .72), 0 0 0 1px rgba(255,255,255,.04) inset !important;
+}
+
+/* Tabs make sense for a dock, not a menu-opened modal. The menu already chose the tool. */
+.audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar > .audio-lab-inspector-tabs {
+  display: none !important;
+}
+
+.audio-lab-page[data-audiolab-modal-open] .audio-lab-audacity-modal-title {
+  display: flex !important;
+  flex: 0 0 42px !important;
+}
+
+.audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar > .audio-lab-panel:not([hidden]) {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  padding: 16px !important;
+}
+
+.audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar > .audio-lab-panel[hidden] {
+  display: none !important;
+}
+
+body.audio-lab-modal-is-open {
+  overflow: hidden !important;
+}
+
+body.audio-lab-modal-is-open .audio-lab-audacity-backdrop {
+  display: block !important;
+  z-index: 10040 !important;
+}
+
+/* The multitrack editor is the actual application. Stop reserving a black
+   basement below short tracks and let the visible tracks claim the viewport. */
+.audio-lab-page .audio-lab-multitrack-inner {
+  position: relative !important;
+  min-height: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding-bottom: 0 !important;
+  align-content: stretch !important;
+}
+
+.audio-lab-page .audio-lab-multitrack-ruler {
+  flex: 0 0 25px !important;
+}
+
+.audio-lab-page .audio-lab-multitrack-row {
+  flex: 1 0 var(--al-track-working-height) !important;
+  min-height: var(--al-track-working-height) !important;
+  height: auto !important;
+  max-height: 250px !important;
+}
+
+.audio-lab-page .audio-lab-multitrack-controls,
+.audio-lab-page .audio-lab-multitrack-lane {
+  min-height: var(--al-track-working-height) !important;
+  height: 100% !important;
+}
+
+.audio-lab-page .audio-lab-clip {
+  top: 12px !important;
+  bottom: 12px !important;
+  height: auto !important;
+  min-height: 62px !important;
+  max-height: none !important;
+}
+
+/* Keep the overview deliberately small so vertical pixels go to editable tracks. */
+.audio-lab-page:not([data-audiolab-task]) .audio-lab-timeline-shell {
+  grid-template-rows: 19px 56px minmax(0, 1fr) !important;
+}
+
+.audio-lab-page .audio-lab-waveform {
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+}
+
+@media (max-width: 900px) {
+  .audio-lab-page {
+    --al-track-working-height: 150px;
+  }
+
+  .audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar,
+  .audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar:hover,
+  .audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar:focus-within,
+  .audio-lab-page[data-audiolab-modal-open] .audio-lab-project-sidebar.is-open {
+    top: max(10px, env(safe-area-inset-top)) !important;
+    left: 10px !important;
+    transform: none !important;
+    width: calc(100vw - 20px) !important;
+    min-width: 0 !important;
+    height: calc(100dvh - 20px) !important;
+    max-height: calc(100dvh - 20px) !important;
+  }
+}
