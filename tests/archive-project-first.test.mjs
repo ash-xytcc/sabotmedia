@@ -2,9 +2,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
+  PUBLICATION_IDENTITY,
   PUBLIC_PROJECTS,
   buildArchiveProjectOptions,
   fallbackProjectForType,
+  getFeaturedPublicProjects,
   resolveArchiveProject,
 } from '../src/lib/projectCatalog.js'
 
@@ -110,4 +112,29 @@ test('archive order keeps Molotov, TCAIE, and Get To Know Your Neighborhood toge
 
   assert.equal(tcaie, molotov + 1)
   assert.equal(neighborhood, tcaie + 1)
+})
+
+test('supplied project identities use self-contained local artwork', () => {
+  assert.equal(PUBLICATION_IDENTITY.logoUrl, '/project-logos/sabot-media.svg')
+
+  const expected = new Map([
+    ['the-harbor-rat-report', '/project-logos/the-harbor-rat-report.svg'],
+    ['the-communique', '/project-logos/the-communique.svg'],
+    ['black-cat-distro', '/project-logos/black-cat-distro.svg'],
+    ['molotov-now', '/project-logos/molotov-now.svg'],
+    ['the-child-and-its-enemies', '/project-logos/the-child-and-its-enemies.svg'],
+    ['get-to-know-your-neighborhood', '/project-logos/get-to-know-your-neighborhood.svg'],
+    ['glaring-examples', '/project-logos/glaring-examples.svg'],
+  ])
+
+  for (const [slug, logoUrl] of expected) {
+    const project = PUBLIC_PROJECTS.find((entry) => entry.slug === slug)
+    assert.equal(project?.logoUrl, logoUrl)
+  }
+})
+
+test('About project directory includes the newly branded legacy projects', () => {
+  const featured = getFeaturedPublicProjects().map((project) => project.slug)
+  assert.equal(featured.includes('get-to-know-your-neighborhood'), true)
+  assert.equal(featured.includes('glaring-examples'), true)
 })
