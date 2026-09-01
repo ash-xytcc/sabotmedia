@@ -119,6 +119,9 @@
 .contributor-thread { min-height: 62vh; padding: 20px 14px; display: flex; flex-direction: column; gap: 12px; }
 .contributor-bubble { width: min(88%,560px); padding: 12px 14px; border-radius: 4px 16px 16px; background: #fff; box-shadow: 0 1px 3px #0002; }
 .contributor-bubble--contributor { align-self: flex-end; border-radius: 16px 4px 16px 16px; background: #d8efcb; }
+.contributor-bubble.is-public { border: 3px solid #005b32; background: #d7f2df; box-shadow: 5px 5px 0 #00834a; }
+.contributor-bubble.is-public footer { color: #005b32; font-weight: 900; }
+.contributor-bubble.is-private footer { color: #4b4638; font-weight: 800; }
 .contributor-bubble > div,.contributor-bubble footer { display: flex; justify-content: space-between; gap: 10px; font-size: .72rem; }.contributor-bubble p { white-space: pre-wrap; }.contributor-bubble audio,.contributor-bubble video,.contributor-bubble img { width: 100%; max-height: 60vh; }.contributor-bubble footer button { border: 0; background: none; text-decoration: underline; }
 .contributor-composer { position: sticky; bottom: 0; display: grid; gap: 8px; padding: 10px; background: #ece7dc; border-top: 1px solid #bbb; }
 .contributor-composer textarea { width: 100%; resize: none; padding: 13px; border: 0; border-radius: 18px; font: 1rem system-ui; }
