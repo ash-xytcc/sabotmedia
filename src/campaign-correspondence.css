@@ -76,6 +76,7 @@
 .campaign-benefit-lead > p:nth-of-type(2) { grid-column:2; max-width:56rem; font-size:clamp(1rem,1.5vw,1.25rem); line-height:1.55; }
 .campaign-benefit-lead > div { grid-column:2; display:flex; flex-wrap:wrap; gap:10px; }
 .campaign-benefit-lead button,.campaign-benefit-materials button { padding:11px 16px; border:2px solid #fff; background:#fff; color:#000; font-weight:900; text-transform:uppercase; cursor:pointer; }
+.campaign-benefit-lead .campaign-benefit-studio-link { padding:11px 16px; border:2px solid #fff; background:#ce1126; color:#fff; font-weight:900; text-transform:uppercase; text-decoration:none; box-shadow:5px 5px 0 #007a3d; }
 .campaign-benefit-grid { display: grid; grid-template-columns: repeat(3,1fr); border: 1px solid #fff; }
 .campaign-benefit-grid article { padding: clamp(20px,3vw,34px); border-right: 1px solid #fff; }
 .campaign-benefit-grid article:last-child { border-right: 0; }
@@ -131,6 +132,7 @@
 .campaign-admin-simple-list,.campaign-admin-thread,.campaign-question-queue { display:grid; gap:8px; margin-top:14px; }
 .campaign-admin-simple-list article,.campaign-question-queue article { display:flex; justify-content:space-between; gap:12px; align-items:start; padding:12px; border:1px solid #ccd0d4; background:#fff; }.campaign-admin-simple-list small { display:block; }
 .campaign-admin-thread { max-height:460px; overflow:auto; padding:10px; background:#ece7dc; }.campaign-admin-thread article { max-width:88%; padding:10px; border-radius:3px 12px 12px; background:#fff; }.campaign-admin-thread .is-contributor { margin-left:auto; background:#d8efcb; }.campaign-admin-thread p { margin:5px 0; white-space:pre-wrap; }
+.campaign-admin-message-actions { display:flex; gap:6px; margin-top:9px; padding-top:8px; border-top:1px solid #dcdcde; }.campaign-admin-message-actions .button-link-delete { color:#b32d2e; }.campaign-admin-message-edit { display:grid; gap:9px; min-width:min(430px,70vw); }.campaign-admin-message-edit label { display:grid; gap:4px; font-weight:700; }.campaign-admin-message-edit textarea,.campaign-admin-message-edit select { width:100%; padding:8px; }.campaign-admin-message-edit > div { display:flex; gap:7px; }
 .campaign-question-queue article span { color:#b32d2e; font-size:.7rem; font-weight:900; text-transform:uppercase; }.campaign-question-queue article strong { display:block; }.campaign-question-queue article p { margin:6px 0; }
 @media (max-width:900px) { .campaign-correspondence-admin__grid,.campaign-instagram-import { grid-template-columns:1fr; } }
 @media (max-width:700px) { .campaign-benefit-lead,.campaign-benefit-materials { grid-template-columns:1fr; }.campaign-benefit-lead h2,.campaign-benefit-lead > p:nth-of-type(2),.campaign-benefit-lead > div { grid-column:1; }.campaign-benefit-materials article { min-height:0; } }
