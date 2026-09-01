@@ -7,7 +7,7 @@ export const AI_CAMPAIGN_DEADLINE = '2026-09-25T04:01:00.000Z'
 export const CAMPAIGN_SECTION_KEYS = [
   'status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline',
   'coverage', 'sources', 'faq', 'translations', 'signatories', 'social',
-  'donate', 'dispatches', 'questions', 'benefit',
+  'donate', 'socialArchive', 'dispatches', 'questions', 'benefit',
 ]
 
 export function defaultFnbGazaCampaign() {
@@ -60,9 +60,9 @@ export function defaultFnbGazaCampaign() {
       { id: 'fnb-interview', question: 'Has Sabot interviewed Jamal?', answer: 'Sabot has opened an asynchronous correspondence channel so Jamal can answer in text, audio, or video as his time and connectivity permit. The campaign does not depend on his ability to respond during war and displacement.' },
     ],
     updates: [{ id: 'fnb-launch', date: '2026-08-31T00:00:00Z', title: 'Campaign space opened', body: 'Sabot Media opened this independent campaign and correspondence space for Food Not Bombs Gaza.', pinned: true }],
-    sectionOrder: ['donate', 'dispatches', 'act', 'questions', 'benefit', 'reporting', 'updates', 'sources', 'faq'],
+    sectionOrder: ['donate', 'socialArchive', 'dispatches', 'act', 'questions', 'benefit', 'reporting', 'updates', 'sources', 'faq'],
     hiddenSections: ['letters', 'graphics', 'timeline', 'coverage', 'translations', 'signatories', 'social', 'status'],
-    sectionTitles: { donate: 'The need is money', dispatches: 'Dispatches from Gaza', questions: 'Ask Food Not Bombs Gaza', benefit: 'Turn your event into direct aid', act: 'Ways to act', reporting: 'Reporting and context', updates: 'Campaign log', sources: 'Verification and sources', faq: 'Questions about this campaign' },
+    sectionTitles: { donate: 'The need is money', socialArchive: 'Food Not Bombs Gaza social archive', dispatches: 'Dispatches from Gaza', questions: 'Ask Food Not Bombs Gaza', benefit: 'Turn your event into direct aid', act: 'Ways to act', reporting: 'Reporting and context', updates: 'Campaign log', sources: 'Verification and sources', faq: 'Questions about this campaign' },
     createdAt: '2026-08-31T00:00:00Z',
   })
 }

@@ -10,7 +10,7 @@ export const CAMPAIGN_TIME_ZONES = [
 export const CAMPAIGN_SECTION_KEYS = [
   'status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline',
   'coverage', 'sources', 'faq', 'translations', 'signatories', 'social',
-  'donate', 'dispatches', 'questions', 'benefit',
+  'donate', 'socialArchive', 'dispatches', 'questions', 'benefit',
 ]
 
 export const CAMPAIGN_SECTION_LABELS = {

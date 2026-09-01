@@ -36,7 +36,7 @@ export async function onRequestPost(context) {
         imported += 1
       } catch (error) { errors.push({ id: String(post.id || ''), error: String(error?.message || error) }) }
     }
-    return json({ ok: true, imported, skipped, filtered, errors })
+    return json({ ok: true, imported, skipped, filtered, examined: (payload.data || []).length, errors, note: 'Instagram native reposts are not included in the connected account media feed.' })
   } catch (error) { return json({ ok: false, error: String(error?.message || error) }, 500) }
 }
 

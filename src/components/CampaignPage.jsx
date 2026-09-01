@@ -8,12 +8,13 @@ import { selectHubCoverage } from '../lib/campaignCoverage'
 import { setDocumentMeta } from '../lib/documentMeta'
 import { EditableText } from './EditableText'
 import { EditableLink } from './EditableLink'
-import { CampaignBenefitToolkit, CampaignDispatches, CampaignDonation, CampaignQuestionForm } from './CampaignCorrespondence'
+import { CampaignBenefitToolkit, CampaignDispatches, CampaignDonation, CampaignQuestionForm, CampaignSocialArchive } from './CampaignCorrespondence'
 
 const AI_CAMPAIGN_SLUG = 'autistici-inventati'
-const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social', 'donate', 'dispatches', 'questions', 'benefit']
+const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social', 'donate', 'socialArchive', 'dispatches', 'questions', 'benefit']
 const CAMPAIGN_SECTION_META = {
   donate: { nav: 'Donate', title: 'Donate' },
+  socialArchive: { nav: 'Social archive', title: 'Social media archive' },
   dispatches: { nav: 'Dispatches', title: 'Dispatches' },
   questions: { nav: 'Ask', title: 'Ask a question' },
   benefit: { nav: 'Organize', title: 'Organize a benefit' },
@@ -187,6 +188,7 @@ export function CampaignPage() {
   const hiddenSections = new Set(campaign.hiddenSections || [])
   const sectionContent = {
     donate: Boolean(campaign.donation?.url),
+    socialArchive: Boolean(campaign.correspondence?.enabled),
     dispatches: Boolean(campaign.correspondence?.enabled),
     questions: Boolean(campaign.correspondence?.enabled && campaign.correspondence?.publicQuestions),
     benefit: campaign.campaignType === 'direct-aid',
@@ -259,6 +261,7 @@ export function CampaignPage() {
 
       <OrderedCampaignSections order={sectionOrder}>
       {showSection('donate') ? <CampaignDonation campaign={campaign} sectionKey="donate" /> : null}
+      {showSection('socialArchive') ? <CampaignSocialArchive campaign={campaign} sectionKey="socialArchive" /> : null}
       {showSection('benefit') ? <CampaignBenefitToolkit campaign={campaign} sectionKey="benefit" /> : null}
       {showSection('dispatches') ? <CampaignDispatches campaign={campaign} sectionKey="dispatches" /> : null}
       {showSection('questions') ? <CampaignQuestionForm campaign={campaign} sectionKey="questions" /> : null}
