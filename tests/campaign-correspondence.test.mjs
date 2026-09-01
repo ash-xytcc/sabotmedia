@@ -96,4 +96,8 @@ test('contributor media uses the complete persistent media binding model and D1 
   assert.match(source, /campaign_correspondence\.media\.upload/)
   assert.match(source, /storage\.bucket\.delete\(key\)/)
   assert.match(source, /requiredBinding: CANONICAL_MEDIA_BINDING/)
+  assert.match(source, /split\(';'\)\[0\]/)
+  assert.match(source, /video\/quicktime/)
+  assert.match(source, /image\/heic/)
+  assert.match(source, /audio\/x-m4a/)
 })
