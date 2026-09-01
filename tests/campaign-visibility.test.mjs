@@ -22,6 +22,7 @@ test('hiding launch links does not remove the direct campaign route', () => {
 test('campaign deep links receive the app shell even while launch links are hidden', async () => {
   assert.equal(isPublicCampaignPath('/campaigns/autistici-inventati'), true)
   assert.equal(isPublicCampaignPath('/campaigns/autistici-inventati/'), true)
+  assert.equal(isPublicCampaignPath('/campaigns/food-not-bombs-gaza/instagram-connect'), true)
   assert.equal(isPublicCampaignPath('/campaigning/autistici-inventati'), false)
 
   let fetchedPath = ''

@@ -154,7 +154,7 @@ function isPublicPostPath(pathname) {
 }
 
 export function isPublicCampaignPath(pathname = '') {
-  return pathname === '/campaigns' || /^\/campaigns\/[a-z0-9-]+(?:\/coverage)?\/?$/i.test(pathname)
+  return pathname === '/campaigns' || /^\/campaigns\/[a-z0-9-]+(?:\/(?:coverage|instagram-connect))?\/?$/i.test(pathname)
 }
 
 async function renderSpaShell(context, url) {
