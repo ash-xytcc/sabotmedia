@@ -16,7 +16,10 @@ const assets = [
   {
     path: 'flite/cmu_us_lnh.flitevox',
     minBytes: 10_000_000,
+    optional: true,
     urls: [
+      'https://festvox.org/flite/packed/flite-2.3/voices/cmu_us_lnh.flitevox',
+      'https://www.festvox.org/flite/packed/flite-2.3/voices/cmu_us_lnh.flitevox',
       'https://dk.archive.ubuntu.com/pub/pub/mirrors/gentoo/distfiles/55/cmu_us_lnh.flitevox',
       'https://mirror.iro.umontreal.ca/gentoo/gentoo/distfiles/55/cmu_us_lnh.flitevox',
     ],
@@ -60,7 +63,7 @@ async function fetchWithRetry(url, attempts = 3) {
 
 async function prepareAsset(asset) {
   const pathname = join(PUBLIC_DIR.pathname, asset.path)
-  if (await existsWithMinimumSize(pathname, asset.minBytes)) return
+  if (await existsWithMinimumSize(pathname, asset.minBytes)) return true
   await mkdir(dirname(pathname), { recursive: true })
 
   const errors = []
@@ -72,17 +75,26 @@ async function prepareAsset(asset) {
       }
       await writeFile(pathname, bytes)
       console.log(`Prepared ${asset.path} (${bytes.byteLength} bytes)`)
-      return
+      return true
     } catch (error) {
       errors.push(`${url}: ${error?.message || error}`)
     }
   }
-  throw new Error(`Unable to prepare ${asset.path}\n${errors.join('\n')}`)
+
+  const message = `Unable to prepare ${asset.path}\n${errors.join('\n')}`
+  if (asset.optional) {
+    console.warn(`Optional TTS asset unavailable; continuing build.\n${message}`)
+    return false
+  }
+
+  throw new Error(message)
 }
 
 await mkdir(PUBLIC_DIR, { recursive: true })
-for (const asset of assets) await prepareAsset(asset)
+const prepared = new Map()
+for (const asset of assets) prepared.set(asset.path, await prepareAsset(asset))
 
-const notice = `Sabot local speech runtime assets\n\nVoice: Flite cmu_us_lnh (CMU ARCTIC / FestVox)\nFlite WASI build: @echogarden/flite-wasi 0.1.1\nBrowser WASI shim: @bjorn3/browser_wasi_shim 0.4.2\n\nThese files are fetched at build time and served from the Sabot origin. Runtime speech text is processed locally in the browser and is not sent to the upstream projects or a speech API.\n`
+const voiceReady = prepared.get('flite/cmu_us_lnh.flitevox') === true
+const notice = `Sabot local speech runtime assets\n\nVoice: Flite cmu_us_lnh (CMU ARCTIC / FestVox)${voiceReady ? '' : ' — unavailable in this build'}\nFlite WASI build: @echogarden/flite-wasi 0.1.1\nBrowser WASI shim: @bjorn3/browser_wasi_shim 0.4.2\n\nCore runtime assets are required. Voice packs are optional at build time so a temporary upstream mirror outage cannot block deployment of the entire site. Runtime speech text is processed locally in the browser and is not sent to the upstream projects or a speech API.\n`
 await writeFile(join(PUBLIC_DIR.pathname, 'README.txt'), notice)
 console.log(`Flite TTS assets ready under ${PUBLIC_DIR.pathname.replace(ROOT.pathname, '')}`)
