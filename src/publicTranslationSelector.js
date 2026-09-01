@@ -14,6 +14,12 @@ const ARTICLE_TRANSLATIONS = {
         href: 'https://nantes.indymedia.org/posts/168508/autistici-inventati-designe-organisation-terroriste-internationale-par-les-etats-unis/',
         credit: 'Collective translation via Indymedia Nantes',
       },
+      {
+        code: 'de',
+        label: 'Deutsch',
+        href: 'https://barrikade.info/article/7678',
+        credit: 'German translation via Barrikade',
+      },
     ],
   },
 }
