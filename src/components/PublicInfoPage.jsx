@@ -6,7 +6,7 @@ import { getEditablePage } from '../lib/editableContentRegistry'
 import { getPublicInfoCopy, getPublicInfoField } from '../content/publicInfoCopy'
 import { SecureContactForm } from './SecureContactForm'
 import { EditableLink } from './EditableLink'
-import { getFeaturedPublicProjects } from '../lib/projectCatalog'
+import { PUBLICATION_IDENTITY, getFeaturedPublicProjects } from '../lib/projectCatalog'
 
 const CONTACT_CHANNELS = [
   { label: 'News tips, documents, and leads', address: 'tips@sabot.media' },
@@ -45,6 +45,9 @@ function ProjectDirectory() {
     <section className="project-directory" aria-labelledby="project-directory-title">
       <header className="project-directory__header">
         <div>
+          <div className="project-directory__brand project-directory__publication-brand">
+            <img src={PUBLICATION_IDENTITY.logoUrl} alt={`${PUBLICATION_IDENTITY.name} logo`} />
+          </div>
           <p className="project-directory__eyebrow">Projects</p>
           <h2 id="project-directory-title">Our projects</h2>
         </div>
