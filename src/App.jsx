@@ -24,6 +24,7 @@ import { CampaignCoverageArchivePage } from './components/CampaignCoverageArchiv
 import { CampaignAdminPage } from './components/CampaignAdminPage'
 import { CampaignContributorPage } from './components/CampaignContributorPage'
 import { CampaignBenefitKitPage } from './components/CampaignBenefitKitPage'
+import { CampaignInstagramConnectPage } from './components/CampaignInstagramConnectPage'
 import { FeedSettingsAdminPage } from './components/FeedSettingsAdminPage'
 import { PublicFeedsPage } from './components/PublicFeedsPage'
 import { GalleryArchivePage } from './components/GalleryArchivePage'
@@ -68,7 +69,7 @@ const ADMIN_SHELL_PATHS = [
 ]
 
 function shouldUseBareShell(pathname) {
-  return pathname.startsWith('/contribute/') || ADMIN_SHELL_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+  return pathname.startsWith('/contribute/') || pathname.endsWith('/instagram-connect') || ADMIN_SHELL_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
 }
 
 function ScrollToTop() {
@@ -294,6 +295,7 @@ export default function App() {
               <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
               <Route path="/campaigns" element={<CampaignsIndexPage />} />
               <Route path="/contribute/:slug" element={<CampaignContributorPage />} />
+              <Route path="/campaigns/:slug/instagram-connect" element={<CampaignInstagramConnectPage />} />
               <Route path="/campaigns/:slug/benefit-kit" element={<CampaignBenefitKitPage />} />
               <Route path={publicRoutes.aiCampaign} element={<CampaignPage />} />
               <Route path={publicRoutes.aiCampaignCoverage} element={<CampaignCoverageArchivePage />} />

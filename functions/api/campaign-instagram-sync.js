@@ -2,6 +2,7 @@ import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { getBoundDb, databaseUnavailable } from './_lib/database.js'
 import { getCampaign } from './_lib/campaigns.js'
 import { createMessage, ensureCampaignCorrespondenceTables } from './_lib/campaignCorrespondence.js'
+import { getInstagramConnection } from './_lib/campaignInstagram.js'
 
 const MAX_MEDIA_BYTES = 100 * 1024 * 1024
 
@@ -12,8 +13,9 @@ export async function onRequestPost(context) {
     const db = getBoundDb(context); if (!db) return databaseUnavailable('Instagram campaign sync')
     const input = await context.request.json(); const campaign = await getCampaign(db, input.campaign || '')
     if (!campaign) return json({ ok: false, error: 'campaign not found' }, 404)
-    const token = String(context.env?.INSTAGRAM_ACCESS_TOKEN || '')
-    if (!token) return json({ ok: false, error: 'Instagram is not authorized yet. Use manual archive now, or configure INSTAGRAM_ACCESS_TOKEN after Jamal authorizes syncing.' }, 409)
+    const connection = await getInstagramConnection(db, campaign.id, context.env?.INSTAGRAM_TOKEN_ENCRYPTION_KEY)
+    const token = connection?.token || String(context.env?.INSTAGRAM_ACCESS_TOKEN || '')
+    if (!token) return json({ ok: false, error: 'Instagram is not authorized yet. Create and send an authorization link first.' }, 409)
     const bucket = context.env?.SABOT_MEDIA_BUCKET || context.env?.MEDIA_BUCKET
     if (!bucket) return json({ ok: false, error: 'SABOT_MEDIA_BUCKET is required to preserve Instagram media.' }, 503)
     await ensureCampaignCorrespondenceTables(db)
