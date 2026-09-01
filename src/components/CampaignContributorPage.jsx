@@ -22,7 +22,7 @@ export function CampaignContributorPage() {
   async function unlock(event) {
     event.preventDefault()
     if (!token) { setState({ loading: false, error: 'This private link is incomplete. Ask Sabot Media for a new link.', data: null }); return }
-    try { setState((s) => ({ ...s, loading: true, error: '' })); const data = await authenticateContributor(token, pin); localStorage.setItem(storageKey, data.session); setSession(data.session); await load(data.session) }
+    try { setState((s) => ({ ...s, loading: true, error: '' })); const data = await authenticateContributor(token, pin); localStorage.setItem(storageKey, data.session); setSession(data.session); setState({ loading: false, error: '', data: { campaign: data.campaign, contributor: data.contributor, messages: data.messages || [] } }) }
     catch (error) { setState({ loading: false, error: String(error.message || error), data: null }) }
   }
 

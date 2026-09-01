@@ -88,6 +88,16 @@ export async function revokeContributor(db, id, revoked = true) {
   return { id, revokedAt: at }
 }
 
+export async function reissueContributorToken(db, id) {
+  await ensureCampaignCorrespondenceTables(db)
+  const contributor = await db.prepare('SELECT * FROM campaign_contributors WHERE id = ? LIMIT 1').bind(id).first()
+  if (!contributor) throw authError('contributor not found', 404)
+  const token = randomSecret(32)
+  await db.prepare('UPDATE campaign_contributors SET token_hash = ?, revoked_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(await sha256(token), id).run()
+  await db.prepare('DELETE FROM campaign_contributor_sessions WHERE contributor_id = ?').bind(id).run()
+  return { contributor: contributorRow({ ...contributor, revoked_at: null }), token }
+}
+
 export async function listMessages(db, campaignId, { publicOnly = false } = {}) {
   await ensureCampaignCorrespondenceTables(db)
   const where = publicOnly ? "AND m.visibility = 'public' AND m.status = 'sent'" : ''
