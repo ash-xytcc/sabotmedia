@@ -132,7 +132,49 @@
   margin-bottom: 16px;
 }
 
+.archive-page .archive-project-group__identity-row,
+.archive-page .archive-results__identity-row {
+  min-width: 0;
+  display: flex;
+  gap: clamp(12px, 2vw, 20px);
+  align-items: center;
+}
+
+.archive-page .archive-project-logo {
+  box-sizing: border-box;
+  flex: 0 0 clamp(92px, 12vw, 150px);
+  width: clamp(92px, 12vw, 150px);
+  min-height: 78px;
+  display: grid;
+  place-items: center;
+  padding: 8px 10px;
+  overflow: hidden;
+  border: 1px solid var(--archive-rule);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.archive-page .archive-project-logo img {
+  display: block;
+  width: 100%;
+  max-width: 132px;
+  height: auto;
+  max-height: 88px;
+  object-fit: contain;
+}
+
+.archive-page .archive-project-logo--compact {
+  flex-basis: 96px;
+  width: 96px;
+  min-height: 58px;
+  padding: 6px 8px;
+}
+
+.archive-page .archive-project-logo--compact img {
+  max-height: 64px;
+}
+
 .archive-page .archive-project-group__identity {
+  min-width: 0;
   max-width: 760px;
 }
 
@@ -399,10 +441,10 @@
 }
 
 .public-info-page .project-directory__brand {
-  min-height: 118px;
+  min-height: 156px;
   display: grid;
   place-items: center;
-  padding: 18px;
+  padding: 20px;
   overflow: hidden;
   border-bottom: 1px solid rgba(244, 220, 160, 0.14);
   background:
@@ -413,8 +455,8 @@
 .public-info-page .project-directory__brand img {
   display: block;
   width: 100%;
-  max-width: 260px;
-  max-height: 104px;
+  max-width: 320px;
+  max-height: 132px;
   object-fit: contain;
 }
 
@@ -487,5 +529,37 @@
   .archive-page .archive-card-grid,
   .public-info-page .project-directory__grid {
     grid-template-columns: 1fr;
+  }
+
+  .archive-page .archive-project-logo {
+    flex-basis: 112px;
+    width: 112px;
+  }
+
+  .public-info-page .project-directory__brand {
+    min-height: 138px;
+  }
+}
+
+@media (max-width: 430px) {
+  .archive-page .archive-project-group__identity-row,
+  .archive-page .archive-results__identity-row {
+    display: grid;
+    grid-template-columns: minmax(76px, 96px) minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+  }
+
+  .archive-page .archive-project-logo,
+  .archive-page .archive-project-logo--compact {
+    width: 100%;
+    min-width: 0;
+    min-height: 64px;
+    padding: 6px;
+  }
+
+  .archive-page .archive-project-logo img,
+  .archive-page .archive-project-logo--compact img {
+    max-height: 70px;
   }
 }

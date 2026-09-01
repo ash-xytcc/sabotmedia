@@ -141,6 +141,16 @@ function scoreSearchResult(item, query) {
   return score
 }
 
+function ProjectLogo({ project, compact = false }) {
+  if (!project?.logoUrl) return null
+
+  return (
+    <div className={`archive-project-logo${compact ? ' archive-project-logo--compact' : ''}`} aria-hidden="true">
+      <img src={project.logoUrl} alt="" loading="lazy" />
+    </div>
+  )
+}
+
 function ArchiveCard({ item, query = '', readLabel = 'Read', printLabel = 'Print' }) {
   const [hideImage, setHideImage] = useState(false)
   const hasImage = item.imageUrl && !hideImage
@@ -205,10 +215,13 @@ function ProjectBrowse({ groups, readLabel, printLabel }) {
         {groups.map(({ project, items }) => (
           <section className="archive-project-group" id={`project-${project.slug}`} key={project.slug}>
             <header className="archive-project-group__header">
-              <div className="archive-project-group__identity">
-                <p className="archive-project-group__format">{project.format}</p>
-                <h2>{project.name}</h2>
-                <p>{project.description}</p>
+              <div className="archive-project-group__identity-row">
+                <ProjectLogo project={project} />
+                <div className="archive-project-group__identity">
+                  <p className="archive-project-group__format">{project.format}</p>
+                  <h2>{project.name}</h2>
+                  <p>{project.description}</p>
+                </div>
               </div>
               <div className="archive-project-group__tools">
                 <span><strong>{project.count}</strong> {project.count === 1 ? 'piece' : 'pieces'}</span>
@@ -441,9 +454,12 @@ export function PublicSearchPage({ pieces = [] }) {
       ) : (
         <section className="archive-results" aria-live="polite">
           <header className="archive-results__header">
-            <div>
-              <p className="archive-results__eyebrow">{selectedProject ? selectedProject.format : 'Archive results'}</p>
-              <h2>{selectedProject?.name || 'Search results'}</h2>
+            <div className="archive-results__identity-row">
+              <ProjectLogo project={selectedProject} compact />
+              <div>
+                <p className="archive-results__eyebrow">{selectedProject ? selectedProject.format : 'Archive results'}</p>
+                <h2>{selectedProject?.name || 'Search results'}</h2>
+              </div>
             </div>
             <p className="archive-results__summary">{summaryText}</p>
           </header>
