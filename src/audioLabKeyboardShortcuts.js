@@ -106,6 +106,31 @@ function ensureBaseTimelineWidth(inner) {
   return base
 }
 
+function scaleTimelineElements(scale) {
+  const root = page()
+  const inner = timelineInner()
+  if (!root || !inner) return
+  const previousScale = Math.max(1, Number(root.dataset.audiolabAppliedZoom || '1') || 1)
+
+  inner.querySelectorAll('.audio-lab-clip').forEach((clip) => {
+    const liveLeft = parseFloat(clip.style.left || '0') || 0
+    const liveWidth = parseFloat(clip.style.width || '36') || 36
+    let baseLeft = Number(clip.dataset.audiolabBaseLeft)
+    let baseWidth = Number(clip.dataset.audiolabBaseClipWidth)
+    if (!Number.isFinite(baseLeft) || Math.abs(liveLeft - baseLeft * previousScale) > 1) baseLeft = liveLeft
+    if (!Number.isFinite(baseWidth) || Math.abs(liveWidth - baseWidth * previousScale) > 1) baseWidth = liveWidth
+    clip.dataset.audiolabBaseLeft = String(baseLeft)
+    clip.dataset.audiolabBaseClipWidth = String(baseWidth)
+    clip.style.left = `${baseLeft * scale}px`
+    clip.style.width = `${Math.max(36, baseWidth * scale)}px`
+  })
+
+  const playhead = inner.querySelector('.audio-lab-playhead')
+  const node = audio()
+  if (playhead && node) playhead.style.left = `${150 + Math.max(0, Number(node.currentTime || 0)) * 44 * scale}px`
+  root.dataset.audiolabAppliedZoom = String(scale)
+}
+
 function applyZoom(nextScale, anchorClientX = null) {
   const root = page()
   const scroll = timelineScroll()
@@ -119,6 +144,7 @@ function applyZoom(nextScale, anchorClientX = null) {
   root.dataset.audiolabZoom = String(scale)
   root.style.setProperty('--audiolab-zoom-scale', String(scale))
   inner.style.width = `${Math.max(base, base * scale)}px`
+  scaleTimelineElements(scale)
   window.requestAnimationFrame(() => { scroll.scrollLeft = Math.max(0, anchorRatio * scroll.scrollWidth - viewportX) })
   return true
 }
@@ -132,6 +158,7 @@ function fitTimeline() {
   root.dataset.audiolabZoom = '1'
   root.style.setProperty('--audiolab-zoom-scale', '1')
   inner.style.width = `${base}px`
+  scaleTimelineElements(1)
   scroll.scrollLeft = 0
   flashShortcut('Fit full project')
   return true
@@ -165,6 +192,7 @@ function togglePlayback() {
   if (!node.paused) {
     node.pause()
     node.currentTime = Math.max(0, playStart)
+    scaleTimelineElements(currentZoom())
     flashShortcut('Stop')
     return true
   }
@@ -183,6 +211,7 @@ function toggleLoopPlayback() {
     stopLoop()
     node.pause()
     node.currentTime = start
+    scaleTimelineElements(currentZoom())
     flashShortcut('Loop stopped')
     return true
   }
@@ -197,11 +226,12 @@ function toggleLoopPlayback() {
 
 function handleLoopTimeUpdate() {
   const node = audio()
-  if (!node || !loopState) return
-  if (node.currentTime >= loopState.end - 0.01 || node.currentTime < loopState.start - 0.01) {
+  if (!node) return
+  if (loopState && (node.currentTime >= loopState.end - 0.01 || node.currentTime < loopState.start - 0.01)) {
     node.currentTime = loopState.start
     if (node.paused) node.play().catch(() => {})
   }
+  scaleTimelineElements(currentZoom())
 }
 
 function timeFromTimelinePointer(event) {
@@ -225,6 +255,7 @@ function quickPlay(event) {
   playStart = point
   node.currentTime = point
   node.play().catch(() => {})
+  scaleTimelineElements(currentZoom())
   flashShortcut(`Quick play ${point.toFixed(2)}s`)
 }
 
@@ -289,7 +320,10 @@ function markReady() {
     node.addEventListener('timeupdate', handleLoopTimeUpdate)
   }
   const inner = timelineInner()
-  if (inner) ensureBaseTimelineWidth(inner)
+  if (inner) {
+    ensureBaseTimelineWidth(inner)
+    scaleTimelineElements(currentZoom())
+  }
 }
 
 window.addEventListener('keydown', handleShortcut, true)
@@ -298,5 +332,5 @@ window.addEventListener('click', quickPlay, true)
 window.addEventListener('load', markReady)
 window.addEventListener('popstate', () => window.setTimeout(markReady, 80))
 window.addEventListener('sabot:audiolab-project-updated', () => window.setTimeout(markReady, 80))
-window.setInterval(markReady, 1000)
+window.setInterval(markReady, 500)
 window.setTimeout(markReady, 250)
