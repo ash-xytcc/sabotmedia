@@ -133,6 +133,8 @@ test('Food Not Bombs Gaza dashboard includes a live Gaza clock', () => {
   assert.match(page, /timeZone: 'Asia\/Gaza'/)
   assert.match(page, /CURRENT TIME IN GAZA/)
   assert.match(page, /campaign-gaza-clock/)
+  assert.match(page, /campaign\.slug === 'food-not-bombs-gaza' \? <section className="campaign-gaza-time-band"/)
+  assert.match(polish, /campaign-gaza-time-band/)
 })
 
 test('live campaign social is server-side, filtered, normalized and graceful', () => {
