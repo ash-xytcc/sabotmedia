@@ -31,7 +31,7 @@ export function CampaignsIndexPage() {
     <PublicationTopbar />
     <header className="campaign-directory__hero"><div className="campaign-shell campaign-directory__hero-grid">
       <div><EditableText as="p" className="campaign-kicker" field="campaigns.index.eyebrow">SABOT MEDIA · CAMPAIGN DIRECTORY</EditableText><EditableText as="h1" field="campaigns.index.title">Campaign hub</EditableText></div>
-      <div className="campaign-directory__intro"><EditableText as="p" field="campaigns.index.description" multiline>Find every public Sabot campaign, see what is active now, and move directly from reporting to action.</EditableText><div className="campaign-directory__share"><code>sabot.media/campaigns</code><button type="button" onClick={shareHub}>{copied ? 'Copied' : 'Share this hub'}</button></div></div>
+      <div className="campaign-directory__intro"><EditableText as="p" field="campaigns.index.description" multiline>Find every public Sabot campaign, see what is active now, and move directly from reporting to action.</EditableText><div className="campaign-directory__share"><button type="button" onClick={shareHub}>{copied ? 'Link copied' : 'Share this hub'}</button></div></div>
     </div></header>
     <section className="campaign-directory__body"><div className="campaign-shell">
       <div className="campaign-directory__summary"><div><strong>{state === 'loaded' ? activeCount : '—'}</strong><span>Active now</span></div><div><strong>{state === 'loaded' ? ordered.length : '—'}</strong><span>Public campaigns</span></div><p>Active campaigns appear first. Inactive campaigns remain available as public archives instead of disappearing.</p></div>
@@ -55,7 +55,8 @@ function CampaignCard({ campaign, index }) {
       <div className="campaign-directory-card__status"><span className={`campaign-directory-card__lifecycle is-${active ? 'active' : 'inactive'}`}>{active ? 'Active' : 'Inactive'}</span><span>{campaign.campaignType || 'campaign'}</span>{campaign.campaignStatus && campaign.campaignStatus !== (active ? 'active' : 'inactive') ? <span>{campaign.campaignStatus}</span> : null}</div>
       <p className="campaign-directory-card__age"><time dateTime={campaign.createdAt}>{formatLaunch(campaign.createdAt)}</time> · {formatCampaignAge(campaign)}</p>
       <h2><Link to={href}>{campaign.title}</Link></h2>
-      <p>{campaign.deck || campaign.summary}</p>
+      <p>{directoryDescription(campaign)}</p>
+      <div className="campaign-directory-card__inside"><strong>Inside this campaign</strong><ul>{directoryFeatures(campaign).map((feature) => <li key={feature}>{feature}</li>)}</ul></div>
       <div className="campaign-directory-card__actions"><Link className="campaign-button campaign-button--dark" to={href}>Open campaign →</Link>{campaign.donation?.url ? <a href={campaign.donation.url} target="_blank" rel="noreferrer">{campaign.donation.label || 'Donate'} ↗</a> : null}</div>
     </div>
   </article>
@@ -70,4 +71,14 @@ function formatCampaignAge(campaign) {
   if (!start) return 'Currently running'
   const days = Math.max(1, Math.floor((Date.now() - start) / 86400000) + 1)
   return `Running ${days} ${days === 1 ? 'day' : 'days'}`
+}
+function directoryDescription(campaign) {
+  if (campaign.slug === 'food-not-bombs-gaza') return 'A direct-aid and independent publishing space for Food Not Bombs Gaza. Follow field dispatches, understand how donations reach the project, ask moderated questions, and turn local events into material support.'
+  if (campaign.slug === 'autistici-inventati') return 'A reporting and advocacy hub responding to the designation of Autistici/Inventati. Understand the case, follow its consequences, send the public letters, and circulate sourced campaign material.'
+  return campaign.summary || campaign.deck || 'Open the campaign for reporting, source material, updates, and ways to act.'
+}
+function directoryFeatures(campaign) {
+  if (campaign.slug === 'food-not-bombs-gaza') return ['Verified direct-aid link', 'Field dispatches and continuity archive', 'Public questions and asynchronous interview', 'Benefit poster and social-graphics studio']
+  if (campaign.slug === 'autistici-inventati') return ['Original reporting and interview', 'Open and individual letters', 'Campaign graphics and printable PDFs', 'Timeline, live updates, coverage, and primary sources']
+  return ['Reporting and context', 'Campaign updates', 'Sources and ways to act']
 }
