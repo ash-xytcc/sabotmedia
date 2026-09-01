@@ -12,6 +12,8 @@ export async function loadFeedManifest() {
     ...data,
     files: data.files,
     terms: data.terms && typeof data.terms === 'object' ? data.terms : {},
+    podcastShows: Array.isArray(data.podcastShows) ? data.podcastShows : [],
+    campaignFeeds: Array.isArray(data.campaignFeeds) ? data.campaignFeeds : [],
   }
 }
 
@@ -23,8 +25,14 @@ export function downloadFeedManifest(manifest) {
     files: manifest.files,
     itemCount: Number(manifest.itemCount || 0),
     podcastItemCount: Number(manifest.podcastItemCount || 0),
+    podcastShowCount: Number(manifest.podcastShowCount || 0),
+    unassignedPodcastItemCount: Number(manifest.unassignedPodcastItemCount || 0),
+    podcastDefaultAlias: manifest.podcastDefaultAlias || '',
+    podcastShows: Array.isArray(manifest.podcastShows) ? manifest.podcastShows : [],
+    campaignFeeds: Array.isArray(manifest.campaignFeeds) ? manifest.campaignFeeds : [],
     terms: manifest.terms || {},
     settingsUpdatedAt: manifest.settingsUpdatedAt || '',
+    podcastSettingsUpdatedAt: manifest.podcastSettingsUpdatedAt || '',
   }
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)

@@ -123,8 +123,10 @@ export function buildRssBundle(items = [], options = {}) {
     groups: groupBy(visible, 'series', (item) => getValues(item, ['series', 'seriesSlug']), settings), settings,
   })
 
-  const podcasts = visible.filter((item) => String(normalizeFeedTerm('format', item.contentType || item.type || '', settings)).toLowerCase().includes('podcast'))
-  if (podcasts.length) bundle['podcasts/all.xml'] = buildRssXml('Sabot Media Podcasts', 'Published podcast episodes from Sabot Media.', podcasts, { settings })
+  // Podcast show feeds are deliberately not generated here. The podcast
+  // subsystem owns directory-grade RSS (enclosures, iTunes metadata, GUIDs,
+  // and one feed per show). A generic formats/podcast.xml feed can still exist
+  // as a website-content lane, but it is not a replacement for a show feed.
   return bundle
 }
 
