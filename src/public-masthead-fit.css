@@ -37,11 +37,9 @@
   overflow: visible !important;
 }
 
-/* The home logo includes small lower details/"teeth" that need more visual air than
-   the compact inner-page masthead. Keep the logo where it is and move only the nav
-   down so the mark remains fully legible. */
+/* The home logo has lower tooth details that need to sit fully above the nav. */
 .publication-topbar--home .publication-topbar__brand {
-  gap: 15px !important;
+  gap: 20px !important;
 }
 
 .publication-topbar--masthead .publication-topbar__brand-link--isolated {
@@ -90,9 +88,18 @@
   overflow: hidden !important;
 }
 
+/* Home uses a taller, unclipped logo stage and lifts the entire mark upward.
+   This is intentionally after the generic overflow rule above. */
 .publication-topbar--home .publication-topbar__brand-link--isolated {
   width: 280px !important;
   max-width: min(76vw, 280px) !important;
+  aspect-ratio: 280 / 104 !important;
+  overflow: visible !important;
+  transform: translateY(-10px) !important;
+}
+
+.publication-topbar--home .publication-topbar__brand-image--isolated {
+  object-position: center top !important;
 }
 
 .publication-topbar--inner .publication-topbar__brand-link--isolated {
@@ -140,10 +147,17 @@
   }
 
   .publication-topbar--home .publication-topbar__brand {
-    gap: 11px !important;
+    gap: 16px !important;
   }
 
-  .publication-topbar--home .publication-topbar__brand-link--isolated,
+  .publication-topbar--home .publication-topbar__brand-link--isolated {
+    width: 210px !important;
+    max-width: 68vw !important;
+    aspect-ratio: 210 / 82 !important;
+    overflow: visible !important;
+    transform: translateY(-7px) !important;
+  }
+
   .publication-topbar--inner .publication-topbar__brand-link--isolated {
     width: 210px !important;
     max-width: 68vw !important;
