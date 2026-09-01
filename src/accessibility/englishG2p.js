@@ -21,7 +21,7 @@ const LETTER_NAMES = {
 }
 
 const ACRONYMS = new Set([
-  'AI', 'API', 'CSS', 'D1', 'DNS', 'FBI', 'HTML', 'HTTP', 'HTTPS', 'LLM', 'OFAC', 'PDF', 'RSS', 'TTS',
+  'AI', 'API', 'CSS', 'DNS', 'FBI', 'HTML', 'HTTP', 'HTTPS', 'LLM', 'OFAC', 'PDF', 'RSS', 'TTS',
   'UK', 'US', 'USA', 'URL', 'WAV', 'WWW',
 ])
 
@@ -93,13 +93,13 @@ function spellLetters(word) {
   const phones = []
   for (const letter of word) {
     const value = LETTER_NAMES[letter]
-    if (value) phones.push(...parsePhones(value))
+    if (value) phones.push(...applyDefaultStress(parsePhones(value)))
   }
-  return applyDefaultStress(phones)
+  return phones
 }
 
 export function wordToPhones(rawWord) {
-  const original = String(rawWord || '')
+  const original = String(rawWord || '').normalize('NFKD').replace(/\p{M}/gu, '')
   const word = original.replace(/[^A-Za-z]/g, '')
   if (!word) return []
   const lower = word.toLowerCase()
@@ -144,13 +144,13 @@ function normalizeInitialisms(text) {
 
 export function textToSpeechTokens(rawText) {
   const text = normalizeInitialisms(String(rawText || '').normalize('NFKC'))
-  const parts = text.match(/[A-Za-z]+(?:['’][A-Za-z]+)?|\d+|[.,;:!?]/g) || []
+  const parts = text.match(/[A-Za-zÀ-ÖØ-öø-ÿ]+(?:['’][A-Za-zÀ-ÖØ-öø-ÿ]+)?|\d+|[.,;:!?]/g) || []
   const tokens = []
 
   for (const part of parts) {
     if (/^\d+$/.test(part)) {
       for (const digit of part) {
-        const phones = (DIGIT_PHONEMES[digit] || []).map((code, index) => ({ code, stressed: index === 1 }))
+        const phones = applyDefaultStress((DIGIT_PHONEMES[digit] || []).map((code) => ({ code, stressed: false })))
         if (phones.length) tokens.push({ type: 'word', text: digit, phones })
       }
       continue
