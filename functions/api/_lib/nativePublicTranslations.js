@@ -118,9 +118,10 @@ export async function listTranslations(db, nativeContentId, { includeUnpublished
 export async function upsertTranslation(db, input) {
   await ensureNativePublicTranslationsTable(db)
   const normalized = normalizeTranslation({ ...input, updatedAt: new Date().toISOString() })
-  const existing = await db.prepare(`SELECT created_at FROM native_public_content_translations WHERE native_content_id = ? AND language_code = ? LIMIT 1`)
+  const existing = await db.prepare(`SELECT created_at, reviewer_credit FROM native_public_content_translations WHERE native_content_id = ? AND language_code = ? LIMIT 1`)
     .bind(normalized.nativeContentId, normalized.languageCode).first()
   if (existing?.created_at) normalized.createdAt = existing.created_at
+  if (!normalized.reviewerCredit && existing?.reviewer_credit) normalized.reviewerCredit = String(existing.reviewer_credit)
   if (normalized.status === 'approved' && !normalized.reviewedAt) normalized.reviewedAt = new Date().toISOString()
   if (normalized.status === 'published' && !normalized.publishedAt) normalized.publishedAt = new Date().toISOString()
 
