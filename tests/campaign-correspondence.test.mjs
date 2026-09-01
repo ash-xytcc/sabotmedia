@@ -88,3 +88,12 @@ test('PIN unlock is atomic and editors can replace a lost private link without l
   assert.match(storage, /reissueContributorToken/)
   assert.match(storage, /DELETE FROM campaign_contributor_sessions WHERE contributor_id/)
 })
+
+test('contributor media uses the complete persistent media binding model and D1 registry', async () => {
+  const source = await read('functions/api/campaign-contributor-media.js')
+  assert.match(source, /SABOT_MEDIA_BUCKET.*MEDIA_BUCKET.*ASSETS_BUCKET.*SABOT_AUDIO_BUCKET.*AUDIO_MEDIA_BUCKET/s)
+  assert.match(source, /upsertMediaAsset/)
+  assert.match(source, /campaign_correspondence\.media\.upload/)
+  assert.match(source, /storage\.bucket\.delete\(key\)/)
+  assert.match(source, /requiredBinding: CANONICAL_MEDIA_BINDING/)
+})
