@@ -7,6 +7,8 @@ import { getPublicInfoCopy, getPublicInfoField } from '../content/publicInfoCopy
 import { SecureContactForm } from './SecureContactForm'
 import { EditableLink } from './EditableLink'
 import { PUBLICATION_IDENTITY, getFeaturedPublicProjects } from '../lib/projectCatalog'
+import { getAboutProjectLogo } from '../lib/aboutProjectLogos'
+import '../about-project-directory.css'
 
 const CONTACT_CHANNELS = [
   { label: 'News tips, documents, and leads', address: 'tips@sabot.media' },
@@ -14,10 +16,6 @@ const CONTACT_CHANNELS = [
   { label: 'Press and interview requests', address: 'press@sabot.media' },
   { label: 'Support and material help', address: 'support@sabot.media' },
 ]
-
-const ABOUT_PROJECT_LOGO_OVERRIDES = {
-  'the-sabotuers': '/project-logos/the-sabotuers.svg',
-}
 
 function ContactChannels() {
   return (
@@ -63,7 +61,7 @@ function ProjectDirectory() {
 
       <div className="project-directory__grid">
         {projects.map((project) => {
-          const logoUrl = ABOUT_PROJECT_LOGO_OVERRIDES[project.slug] || project.logoUrl
+          const logoUrl = getAboutProjectLogo(project)
           return (
             <article className="project-directory__card" key={project.slug}>
               <div className="project-directory__brand">
