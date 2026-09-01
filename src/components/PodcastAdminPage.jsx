@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
-import { loadNativeCollection } from '../lib/nativePublicContent'
+import { loadNativeCollection, upsertNativeEntryWithMeta } from '../lib/nativePublicContent'
 import { loadPodcastShowsAsync, podcastFeedUrl } from '../lib/podcastSettings'
 import { adminRoutes } from '../routing/routes'
 
@@ -24,11 +24,18 @@ function episodeBelongsToShow(episode, show) {
   return Boolean(sourceUrl && showSourceUrls(show).includes(sourceUrl))
 }
 
+function podcastTitleDisplayValue(episode) {
+  const explicit = String(episode?.featuredTitleDisplay || '').trim().toLowerCase()
+  return ['overlay', 'below', 'hidden'].includes(explicit) ? explicit : 'hidden'
+}
+
 export function PodcastAdminPage() {
   const [nativeItems, setNativeItems] = useState([])
   const [shows, setShows] = useState([])
   const [defaultShowId, setDefaultShowId] = useState('')
   const [error, setError] = useState('')
+  const [savingDisplayId, setSavingDisplayId] = useState('')
+  const [displayNotice, setDisplayNotice] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -70,6 +77,26 @@ export function PodcastAdminPage() {
     [shows, podcastEpisodes]
   )
 
+  async function updateTitleDisplay(episode, featuredTitleDisplay) {
+    if (!episode?.id) return
+    try {
+      setSavingDisplayId(String(episode.id))
+      setDisplayNotice('')
+      const result = await upsertNativeEntryWithMeta(
+        nativeItems,
+        { ...episode, featuredTitleDisplay },
+        'Podcast homepage title display'
+      )
+      const saved = result?.item || { ...episode, featuredTitleDisplay }
+      setNativeItems((current) => current.map((item) => String(item.id) === String(episode.id) ? { ...item, ...saved, featuredTitleDisplay } : item))
+      setDisplayNotice(`Saved homepage title treatment for “${episode.title || 'episode'}”.`)
+    } catch (saveError) {
+      setDisplayNotice(`Could not save homepage title treatment: ${String(saveError?.message || saveError)}`)
+    } finally {
+      setSavingDisplayId('')
+    }
+  }
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen">
@@ -86,6 +113,7 @@ export function PodcastAdminPage() {
         </div>
 
         {error ? <div className="notice notice-error" role="alert"><p><strong>Podcast error:</strong> {error}</p></div> : null}
+        {displayNotice ? <div className="notice notice-info" role="status"><p>{displayNotice}</p></div> : null}
 
         <section className="wp-meta-box">
           <h2>Podcast Shows</h2>
@@ -129,46 +157,62 @@ export function PodcastAdminPage() {
             <div className="wp-screen-header">
               <div>
                 <h2>{show.podcastTitle || 'Untitled podcast'} Episodes</h2>
-                <p className="description">{episodes.length} episode{episodes.length === 1 ? '' : 's'} assigned from this show's source feed.</p>
+                <p className="description">{episodes.length} episode{episodes.length === 1 ? '' : 's'} assigned from this show's source feed. Homepage title treatment is set per episode because some cover art already contains its title and some does not.</p>
               </div>
               <div className="review-card__actions">
                 <Link className="button" to={`${adminRoutes.podcastSettings}?show=${encodeURIComponent(show.id || show.slug)}`}>Import / Settings</Link>
                 <a className="button" href={show.rssFeedUrl || podcastFeedUrl(show.slug || show.id)} target="_blank" rel="noreferrer">Open Show RSS</a>
               </div>
             </div>
-            <table className="content-table wp-posts-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Episode</th>
-                  <th>Season</th>
-                  <th>Duration</th>
-                  <th>Status</th>
-                  <th>Published</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {episodes.length ? episodes.map((episode) => (
-                  <tr key={episode.id || episode.slug}>
-                    <td><strong>{episode.title || '(Untitled episode)'}</strong></td>
-                    <td>{episode.podcastEpisodeNumber || '—'}</td>
-                    <td>{episode.podcastSeason || '—'}</td>
-                    <td>{episode.podcastDuration || '—'}</td>
-                    <td>{episode.status || 'draft'}</td>
-                    <td>{toDisplayDate(episode.publishedAt || episode.updatedAt)}</td>
-                    <td>
-                      <div className="wp-row-actions">
-                        {episode.slug ? <Link to={`/post/${episode.slug}`} target="_blank" rel="noreferrer">View</Link> : null}
-                        <Link to={`${adminRoutes.nativeBridge}?edit=${episode.id}`}>Edit</Link>
-                      </div>
-                    </td>
+            <div className="wp-list-table-wrap">
+              <table className="content-table wp-posts-table podcast-episodes-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Episode</th>
+                    <th>Season</th>
+                    <th>Duration</th>
+                    <th>Homepage title</th>
+                    <th>Status</th>
+                    <th>Published</th>
+                    <th>Actions</th>
                   </tr>
-                )) : (
-                  <tr><td colSpan={7}>No episodes imported for this show yet.</td></tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {episodes.length ? episodes.map((episode) => (
+                    <tr key={episode.id || episode.slug}>
+                      <td><strong>{episode.title || '(Untitled episode)'}</strong></td>
+                      <td>{episode.podcastEpisodeNumber || '—'}</td>
+                      <td>{episode.podcastSeason || '—'}</td>
+                      <td>{episode.podcastDuration || '—'}</td>
+                      <td>
+                        <select
+                          className="podcast-title-display-select"
+                          value={podcastTitleDisplayValue(episode)}
+                          disabled={savingDisplayId === String(episode.id)}
+                          onChange={(event) => updateTitleDisplay(episode, event.target.value)}
+                          aria-label={`Homepage title treatment for ${episode.title || 'episode'}`}
+                        >
+                          <option value="hidden">Image only</option>
+                          <option value="below">Title below image</option>
+                          <option value="overlay">Title over image</option>
+                        </select>
+                      </td>
+                      <td>{episode.status || 'draft'}</td>
+                      <td>{toDisplayDate(episode.publishedAt || episode.updatedAt)}</td>
+                      <td>
+                        <div className="wp-row-actions">
+                          {episode.slug ? <Link to={`/post/${episode.slug}`} target="_blank" rel="noreferrer">View</Link> : null}
+                          <Link to={`${adminRoutes.nativeBridge}?edit=${episode.id}`}>Full edit</Link>
+                        </div>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={8}>No episodes imported for this show yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </section>
         ))}
       </main>
