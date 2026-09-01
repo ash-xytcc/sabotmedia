@@ -1,7 +1,7 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { getBoundDb, databaseUnavailable } from './_lib/database.js'
 import { getCampaign } from './_lib/campaigns.js'
-import { contributorFromRequest, createContributor, createMessage, createQuestion, deleteMessage, listContributors, listMessages, listQuestions, patchMessage, patchQuestion, revokeContributor } from './_lib/campaignCorrespondence.js'
+import { contributorFromRequest, createContributor, createMessage, createQuestion, deleteMessage, listContributors, listMessages, listQuestions, patchMessage, patchQuestion, reissueContributorToken, revokeContributor } from './_lib/campaignCorrespondence.js'
 import { inferActorFromRequest, writeAuditLog } from './_lib/auditLog.js'
 
 export async function onRequestGet(context) {
@@ -54,6 +54,12 @@ export async function onRequestPatch(context) {
     if (body.action === 'revoke') {
       if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
       return json({ ok: true, item: await revokeContributor(db, body.id, body.revoked !== false) })
+    }
+    if (body.action === 'reissue') {
+      if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
+      const result = await reissueContributorToken(db, body.id)
+      await writeAuditLog(db, { action: 'campaign_correspondence.contributor.reissue', entityType: 'campaign_contributor', entityId: body.id, actor: inferActorFromRequest(context.request), detail: { campaignId: result.contributor.campaignId } })
+      return json({ ok: true, ...result })
     }
     if (body.action === 'question') {
       if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
