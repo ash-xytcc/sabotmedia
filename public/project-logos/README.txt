@@ -1,0 +1,1 @@
+Project identity assets for the public About/archive views. Images in this directory are optimized derivatives of source artwork supplied directly by Sabot Media.
