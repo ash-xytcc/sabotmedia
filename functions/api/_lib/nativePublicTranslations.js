@@ -172,19 +172,11 @@ export async function deleteTranslation(db, nativeContentId, languageCode) {
 export function buildWeblateSourceBundle(content) {
   if (!content) throw new Error('content not found')
   return {
-    meta: {
-      contentId: String(content.id || ''),
-      slug: String(content.slug || ''),
-      sourceLanguage: 'en',
-      schema: 'sabot-weblate-content-v1',
-    },
-    strings: {
-      title: String(content.title || ''),
-      excerpt: String(content.excerpt || ''),
-      bodyHtml: String(content.bodyHtml || content.body || ''),
-      seoTitle: String(content.seoTitle || ''),
-      seoDescription: String(content.seoDescription || ''),
-    },
+    title: String(content.title || ''),
+    excerpt: String(content.excerpt || ''),
+    bodyHtml: String(content.bodyHtml || content.body || ''),
+    seoTitle: String(content.seoTitle || ''),
+    seoDescription: String(content.seoDescription || ''),
   }
 }
 
