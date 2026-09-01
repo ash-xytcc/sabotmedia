@@ -113,10 +113,22 @@ export async function patchMessage(db, id, patch = {}, actor = {}) {
   const current = await db.prepare('SELECT * FROM campaign_messages WHERE id = ? LIMIT 1').bind(id).first()
   if (!current) throw new Error('message not found')
   if (!actor.isEditor && current.contributor_id !== actor.contributorId) throw authError('You can only change your own messages.', 403)
+  const body = patch.body === undefined ? current.body : clean(patch.body, 12000)
+  if (!body && !current.media_url) throw new Error('write a message or attach media')
   const visibility = patch.visibility === undefined ? current.visibility : (patch.visibility === 'public' && (actor.isEditor || actor.permissions?.directPublish) ? 'public' : 'private')
   const status = patch.status === 'withdrawn' ? 'withdrawn' : current.status
-  await db.prepare('UPDATE campaign_messages SET visibility = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(visibility, status, id).run()
-  return { ...messageRow(current), visibility, status }
+  const updatedAt = new Date().toISOString()
+  await db.prepare('UPDATE campaign_messages SET body = ?, visibility = ?, status = ?, updated_at = ? WHERE id = ?').bind(body, visibility, status, updatedAt, id).run()
+  return { ...messageRow(current), body, visibility, status, updatedAt }
+}
+
+export async function deleteMessage(db, id) {
+  await ensureCampaignCorrespondenceTables(db)
+  const current = await db.prepare('SELECT * FROM campaign_messages WHERE id = ? LIMIT 1').bind(id).first()
+  if (!current) throw authError('message not found', 404)
+  await db.prepare('UPDATE campaign_questions SET message_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE message_id = ?').bind(id).run()
+  await db.prepare('DELETE FROM campaign_messages WHERE id = ?').bind(id).run()
+  return messageRow(current)
 }
 
 export async function createQuestion(db, campaignId, input = {}) {
