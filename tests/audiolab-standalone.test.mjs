@@ -35,7 +35,14 @@ test('standalone AudioLab removes admin chrome and owns the whole viewport', () 
   assert.match(css, /\.wp-admin-topbar,[\s\S]*?\.admin-rail[\s\S]*?display:\s*none\s*!important/)
   assert.match(css, /\.audio-lab-page[\s\S]*?width:\s*100vw\s*!important[\s\S]*?height:\s*100dvh\s*!important/)
   assert.match(css, /\.audio-lab-multitrack-inner[\s\S]*?repeat\(var\(--al-track-count, 1\),\s*minmax\(132px, 1fr\)\)/)
-  assert.match(runtime, /querySelectorAll\(':scope > \.audio-lab-multitrack-row'\)/)
+  assert.match(runtime, /countTrackRows/)
+})
+
+test('standalone runtime never observes the whole document and cannot self-trigger on title changes', () => {
+  assert.doesNotMatch(runtime, /observe\(document\.documentElement/)
+  assert.doesNotMatch(runtime, /observe\(document\.body/)
+  assert.match(runtime, /trackObserver\.observe\(inner, \{ childList: true, subtree: false \}\)/)
+  assert.match(runtime, /!document\.title\.startsWith\(prefix\)/)
 })
 
 test('standalone AudioLab authority loads after earlier AudioLab layout CSS', () => {
