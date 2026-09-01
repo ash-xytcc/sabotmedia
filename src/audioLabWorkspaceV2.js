@@ -88,6 +88,19 @@ function normalizeWorkflowNav() {
   const header = root?.querySelector(':scope > .audio-lab-header, :scope > .wp-screen-header.audio-lab-header')
   if (!root || !nav || !header) return
   if (header.nextElementSibling !== nav) header.insertAdjacentElement('afterend', nav)
+  Object.assign(nav.style, {
+    position: 'relative',
+    left: 'auto',
+    right: 'auto',
+    bottom: 'auto',
+    zIndex: '1',
+    width: '100%',
+    height: 'auto',
+    minHeight: '34px',
+    margin: '0 0 8px',
+    flexWrap: 'wrap',
+    boxShadow: 'none',
+  })
 }
 
 function refresh() {
