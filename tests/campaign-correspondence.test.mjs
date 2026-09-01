@@ -96,4 +96,16 @@ test('contributor media uses the complete persistent media binding model and D1 
   assert.match(source, /campaign_correspondence\.media\.upload/)
   assert.match(source, /storage\.bucket\.delete\(key\)/)
   assert.match(source, /requiredBinding: CANONICAL_MEDIA_BINDING/)
+  assert.match(source, /split\(';'\)\[0\]/)
+  assert.match(source, /video\/quicktime/)
+  assert.match(source, /image\/heic/)
+  assert.match(source, /audio\/x-m4a/)
+})
+
+test('successful contributor sends update the room without a second session read', async () => {
+  const portal = await read('src/components/CampaignContributorPage.jsx')
+  assert.match(portal, /const result = await sendMessage/)
+  assert.match(portal, /onMessage\(result\.item\)/)
+  assert.doesNotMatch(portal, /sendMessage\([\s\S]{0,500}await reload\(\)/)
+  assert.match(portal, /onMessageChange\(result\.item\)/)
 })
