@@ -1,19 +1,19 @@
 import { ensureNativePublicContentTable, listNativeEntries } from '../api/_lib/nativePublicContent.js'
 import { databaseUnavailable, getBoundDb } from '../api/_lib/database.js'
-import { readPodcastSettings } from '../api/_lib/podcastSettings.js'
+import { podcastShowOwnsEntry, readPodcastShows } from '../api/_lib/podcastSettings.js'
 
 export async function onRequestGet(context) {
   try {
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('podcast RSS')
-    const [items, metadata] = await Promise.all([
-      getPodcastFeedItems(db),
-      readPodcastSettings(db),
-    ])
+    const registry = await readPodcastShows(db)
+    const show = registry.shows.find((candidate) => candidate.id === registry.defaultShowId) || registry.shows[0] || null
+    if (!show) return new Response('Podcast feed not configured.', { status: 404 })
+    const items = await getPodcastFeedItems(db, show)
     return podcastXmlResponse(buildPodcastFeedXml({
       requestUrl: context.request.url,
       items,
-      settings: metadata.settings,
+      settings: show,
     }))
   } catch (error) {
     return new Response(`RSS feed error: ${String(error?.message || error)}`, {
@@ -23,22 +23,24 @@ export async function onRequestGet(context) {
   }
 }
 
-export async function getPodcastFeedItems(db) {
+export async function getPodcastFeedItems(db, show = null) {
   if (!db) throw new Error('BF_DB binding is required for podcast RSS')
   await ensureNativePublicContentTable(db)
   const entries = await listNativeEntries(db, {})
   return entries
     .filter((entry) => entry?.contentType === 'podcast')
+    .filter((entry) => !show || podcastShowOwnsEntry(show, entry))
     .filter((entry) => isPublicAudioUrl(getAudioUrl(entry)))
+    .sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0).getTime() - new Date(a.publishedAt || a.updatedAt || 0).getTime())
 }
 
 export function buildPodcastFeedXml({ requestUrl, items = [], settings = {}, selfPath = '/rss/podcast.xml' }) {
   const url = new URL(requestUrl)
   const origin = url.origin
   const selfUrl = `${origin}${selfPath}`
-  const title = String(settings.podcastTitle || 'Sabot Media Podcast').trim() || 'Sabot Media Podcast'
+  const title = String(settings.podcastTitle || 'Podcast').trim() || 'Podcast'
   const author = String(settings.author || 'Sabot Media').trim() || 'Sabot Media'
-  const description = String(settings.description || 'Sabot Media podcast and AudioLab episodes.').trim()
+  const description = String(settings.description || `${title} podcast feed.`).trim()
   const websiteUrl = safeAbsoluteUrl(settings.websiteUrl, origin) || origin
   const coverArt = safeAbsoluteUrl(settings.defaultCoverArt, origin)
   const language = String(settings.language || 'en-us').trim().toLowerCase() || 'en-us'
