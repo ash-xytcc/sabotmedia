@@ -1,7 +1,5 @@
-import { GLARING_EXAMPLES_LOGO_URL } from './glaringExamplesLogo'
-
 const ABOUT_PROJECT_LOGO_OVERRIDES = {
-  'glaring-examples': GLARING_EXAMPLES_LOGO_URL,
+  'glaring-examples': '/project-logos/glaring-examples.webp',
   'the-sabotuers': '/project-logos/the-sabotuers.svg',
 }
 
