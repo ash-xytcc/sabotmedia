@@ -17,6 +17,11 @@ const GENERIC_PROJECT_KEYS = new Set([
   'audio',
 ])
 
+export const PUBLICATION_IDENTITY = {
+  name: 'Sabot Media',
+  logoUrl: '/project-logos/sabot-media.svg',
+}
+
 export const PUBLIC_PROJECTS = [
   {
     name: 'The Harbor Rat Report',
@@ -26,7 +31,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['harbor rat report', 'harbor rat'],
     signals: ['the harbor rat report', 'harbor rat report'],
     description: 'Reporting, essays, interviews, and dispatches rooted in Grays Harbor and connected struggles elsewhere.',
-    logoUrl: '',
+    logoUrl: '/project-logos/the-harbor-rat-report.svg',
   },
   {
     name: 'The Communique',
@@ -36,7 +41,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['communique', 'the communiqué', 'communiqué'],
     signals: ['the communique', 'the communiqué', 'communiqué'],
     description: 'Newsletters, roundups, notices, and direct correspondence from Sabot Media.',
-    logoUrl: '',
+    logoUrl: '/project-logos/the-communique.svg',
   },
   {
     name: 'Black Cat Distro',
@@ -46,7 +51,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['black cat', 'black cat distro'],
     signals: ['black cat distro', 'black-cat-distro'],
     description: 'Print matter, zines, pamphlets, and other objects made to leave the screen and circulate by hand.',
-    logoUrl: '',
+    logoUrl: '/project-logos/black-cat-distro.svg',
   },
   {
     name: 'The Sabotuers',
@@ -66,7 +71,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['molotov now', 'molotov now podcast'],
     signals: ['molotov now!', 'molotov now', 'molotov-now'],
     description: 'Sabot Media’s podcast for interviews, field recordings, analysis, and conversations from the places we work.',
-    logoUrl: '',
+    logoUrl: '/project-logos/molotov-now.svg',
   },
   {
     name: 'The Child and Its Enemies',
@@ -82,27 +87,27 @@ export const PUBLIC_PROJECTS = [
       'tcaies',
     ],
     description: 'A youth-liberation podcast about queer and neurodivergent life, anarchy, autonomy, and the worlds young people build against adult control.',
-    logoUrl: 'https://sabotmedia.noblogs.org/files/2024/03/the-child-and-its-enemies-1080-x-1600-px.png',
+    logoUrl: '/project-logos/the-child-and-its-enemies.svg',
   },
   {
     name: 'Get To Know Your Neighborhood',
     slug: 'get-to-know-your-neighborhood',
     format: 'series',
-    featured: false,
+    featured: true,
     aliases: ['get to know your neighborhood'],
     signals: ['get to know your neighborhood'],
     description: 'A Sabot Media neighborhood series preserved as its own project in the archive.',
-    logoUrl: '',
+    logoUrl: '/project-logos/get-to-know-your-neighborhood.svg',
   },
   {
     name: 'Glaring Examples',
     slug: 'glaring-examples',
-    format: 'series',
-    featured: false,
+    format: 'anthology',
+    featured: true,
     aliases: ['glaring examples'],
     signals: ['glaring examples'],
-    description: 'A legacy Sabot Media series preserved in the archive.',
-    logoUrl: '',
+    description: 'An anthology of collective experience, struggle, oppression, anarchy, and the beauty dredged up from underneath it all.',
+    logoUrl: '/project-logos/glaring-examples.svg',
   },
   {
     name: 'Sabots Bay',
