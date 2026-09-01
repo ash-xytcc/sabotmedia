@@ -1,37 +1,16 @@
+import { CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_LABELS } from './campaignSections.js'
+
+export { CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_LABELS }
+
 export const CAMPAIGN_TIME_ZONES = [
   { value: 'America/New_York', label: 'Eastern Time (ET)' },
   { value: 'America/Chicago', label: 'Central Time (CT)' },
   { value: 'America/Denver', label: 'Mountain Time (MT)' },
   { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
   { value: 'Europe/Rome', label: 'Italy time' },
+  { value: 'Asia/Gaza', label: 'Gaza time' },
   { value: 'UTC', label: 'UTC' },
 ]
-
-export const CAMPAIGN_SECTION_KEYS = [
-  'status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline',
-  'coverage', 'sources', 'faq', 'translations', 'signatories', 'social',
-  'donate', 'socialArchive', 'dispatches', 'questions', 'benefit',
-]
-
-export const CAMPAIGN_SECTION_LABELS = {
-  donate: 'Donation destination',
-  dispatches: 'Field dispatches',
-  questions: 'Public questions',
-  benefit: 'Benefit toolkit',
-  status: 'Status + countdown',
-  reporting: 'Reporting + context',
-  letters: 'Letters + resources',
-  act: 'Action center',
-  graphics: 'Campaign graphics',
-  updates: 'Campaign updates',
-  timeline: 'Timeline',
-  coverage: 'Press + coverage',
-  sources: 'Primary sources',
-  faq: 'FAQ',
-  translations: 'Translations',
-  signatories: 'Signatories',
-  social: 'Social feeds',
-}
 
 export function deadlineInputValue(value, timeZone = 'UTC') {
   const date = new Date(value || '')
@@ -57,8 +36,6 @@ export function validateDeadlineWallTime(value, timeZone = 'UTC') {
   let instant = targetAsUtc
   const zone = validTimeZone(timeZone)
 
-  // Resolve the wall-clock value in the selected IANA zone. Repeating once
-  // handles DST-offset transitions without relying on the browser's own zone.
   for (let pass = 0; pass < 2; pass += 1) {
     const parts = zonedParts(new Date(instant), zone)
     const representedAsUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute)
@@ -93,7 +70,7 @@ export function blankCampaign() {
     actions: [], updates: [], resources: [], social: [], graphics: [], coverage: [],
     signatories: [], sources: [], timeline: [], faq: [], translations: [],
     sectionOrder: [...CAMPAIGN_SECTION_KEYS],
-    hiddenSections: [],
+    hiddenSections: [...CAMPAIGN_SECTION_KEYS],
     sectionTitles: {},
     automation: { enabled: false, discoverNews: false, startAt: '', blueskyActors: [], mastodonAccounts: [], coverageFeeds: [], signatoriesUrl: '' },
   }

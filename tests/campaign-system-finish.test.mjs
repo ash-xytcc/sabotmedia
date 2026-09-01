@@ -23,7 +23,7 @@ test('generic campaigns persist opt-in live automation settings', () => {
   assert.equal(item.automation.enabled, true)
   assert.equal(item.automation.discoverNews, true)
   assert.deepEqual(item.automation.mastodonAccounts, ['@library@social.example'])
-  assert.match(admin, /Live Automation/)
+  assert.match(admin, /Live Sources \+ Automation/)
   assert.match(admin, /Signatories JSON URL/)
   assert.match(admin, /Discover exact-match news coverage automatically/)
 })
