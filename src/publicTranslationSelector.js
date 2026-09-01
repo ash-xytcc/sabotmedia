@@ -8,6 +8,12 @@ const ARTICLE_TRANSLATIONS = {
         href: 'https://babelicosas.sutty.nl/2026/08/29/a-i-el-servidor-llamado-paranoia/',
         credit: 'Dazibao translation',
       },
+      {
+        code: 'fr',
+        label: 'Français',
+        href: 'https://nantes.indymedia.org/posts/168508/autistici-inventati-designe-organisation-terroriste-internationale-par-les-etats-unis/',
+        credit: 'Collective translation via Indymedia Nantes',
+      },
     ],
   },
 }
