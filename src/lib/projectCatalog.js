@@ -26,24 +26,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['harbor rat report', 'harbor rat'],
     signals: ['the harbor rat report', 'harbor rat report'],
     description: 'Reporting, essays, interviews, and dispatches rooted in Grays Harbor and connected struggles elsewhere.',
-  },
-  {
-    name: 'Molotov Now!',
-    slug: 'molotov-now',
-    format: 'podcast',
-    featured: true,
-    aliases: ['molotov now', 'molotov now podcast'],
-    signals: ['molotov now!', 'molotov now', 'molotov-now'],
-    description: 'Sabot Media’s audio feed for interviews, field recordings, analysis, and conversations from the places we work.',
-  },
-  {
-    name: 'The Child and Its Enemies',
-    slug: 'the-child-and-its-enemies',
-    format: 'podcast',
-    featured: true,
-    aliases: ['the child and its enemies', 'child and its enemies', 'tcaie'],
-    signals: ['the child and its enemies', 'child and its enemies', 'tcaie'],
-    description: 'A distinct podcast project in the Sabot archive, preserved as its own body of work rather than folded into the main feed.',
+    logoUrl: '',
   },
   {
     name: 'The Communique',
@@ -53,6 +36,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['communique', 'the communiqué', 'communiqué'],
     signals: ['the communique', 'the communiqué', 'communiqué'],
     description: 'Newsletters, roundups, notices, and direct correspondence from Sabot Media.',
+    logoUrl: '',
   },
   {
     name: 'Black Cat Distro',
@@ -62,6 +46,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['black cat', 'black cat distro'],
     signals: ['black cat distro', 'black-cat-distro'],
     description: 'Print matter, zines, pamphlets, and other objects made to leave the screen and circulate by hand.',
+    logoUrl: '',
   },
   {
     name: 'The Sabotuers',
@@ -71,6 +56,45 @@ export const PUBLIC_PROJECTS = [
     aliases: ['sabotuers', 'the sabotuers'],
     signals: ['the sabotuers', 'sabotuers'],
     description: 'Comics and illustrated work from the Sabot archive.',
+    logoUrl: '',
+  },
+  {
+    name: 'Molotov Now!',
+    slug: 'molotov-now',
+    format: 'podcast',
+    featured: true,
+    aliases: ['molotov now', 'molotov now podcast'],
+    signals: ['molotov now!', 'molotov now', 'molotov-now'],
+    strongSignals: ['molotov now!', 'molotov now', 'molotov-now'],
+    description: 'Sabot Media’s podcast for interviews, field recordings, analysis, and conversations from the places we work.',
+    logoUrl: '',
+  },
+  {
+    name: 'The Child and Its Enemies',
+    slug: 'the-child-and-its-enemies',
+    format: 'podcast',
+    featured: true,
+    aliases: ['the child and its enemies', 'child and its enemies', 'tcaie', 'tcaies'],
+    signals: ['the child and its enemies', 'child and its enemies', 'tcaie', 'tcaies'],
+    strongSignals: [
+      'the child and its enemies',
+      'the-child-and-its-enemies',
+      'hello and welcome to the child and its enemies',
+      'you’re listening to the child and its enemies',
+      "you're listening to the child and its enemies",
+    ],
+    description: 'A youth-liberation podcast about queer and neurodivergent life, anarchy, autonomy, and the worlds young people build against adult control.',
+    logoUrl: 'https://sabotmedia.noblogs.org/files/2024/03/the-child-and-its-enemies-1080-x-1600-px.png',
+  },
+  {
+    name: 'Get To Know Your Neighborhood',
+    slug: 'get-to-know-your-neighborhood',
+    format: 'series',
+    featured: false,
+    aliases: ['get to know your neighborhood'],
+    signals: ['get to know your neighborhood'],
+    description: 'A Sabot Media neighborhood series preserved as its own project in the archive.',
+    logoUrl: '',
   },
   {
     name: 'Glaring Examples',
@@ -80,15 +104,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['glaring examples'],
     signals: ['glaring examples'],
     description: 'A legacy Sabot Media series preserved in the archive.',
-  },
-  {
-    name: 'Get To Know Your Neighborhood',
-    slug: 'get-to-know-your-neighborhood',
-    format: 'series',
-    featured: false,
-    aliases: ['get to know your neighborhood'],
-    signals: ['get to know your neighborhood'],
-    description: 'A legacy Sabot Media series preserved in the archive.',
+    logoUrl: '',
   },
   {
     name: 'Sabots Bay',
@@ -98,6 +114,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ["sabot's bay", 'sabots bay'],
     signals: ["sabot's bay", 'sabots bay'],
     description: 'A legacy Sabot Media project preserved in the archive.',
+    logoUrl: '',
   },
   {
     name: 'AL1312',
@@ -107,6 +124,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['al1312'],
     signals: ['al1312'],
     description: 'A legacy project preserved in the Sabot archive.',
+    logoUrl: '',
   },
   {
     name: 'Zines and Comics',
@@ -116,6 +134,7 @@ export const PUBLIC_PROJECTS = [
     aliases: ['zines and comics'],
     signals: ['zines and comics'],
     description: 'Legacy print and comics material preserved as an archive project.',
+    logoUrl: '',
   },
 ]
 
@@ -152,24 +171,29 @@ export function findPublicProject(value) {
   return PROJECT_BY_ALIAS.get(key) || PUBLIC_PROJECTS.find((project) => project.slug === toProjectSlug(value)) || null
 }
 
+function flattenIdentityValues(values = []) {
+  return values
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .map((value) => {
+      if (!value || typeof value !== 'object') return value
+      return value.name || value.title || value.slug || value.label || ''
+    })
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+}
+
 function collectProjectCandidates(piece) {
-  const raw = [
+  return flattenIdentityValues([
     piece?.primaryProject,
     piece?.primaryProjectSlug,
     piece?.project,
     piece?.projectName,
     piece?.projects,
-  ]
-
-  return raw
-    .flatMap((value) => (Array.isArray(value) ? value : [value]))
-    .map((value) => (typeof value === 'object' && value ? value.name || value.title || value.slug : value))
-    .map((value) => String(value || '').trim())
-    .filter(Boolean)
+  ])
 }
 
-function collectIdentityText(piece) {
-  return [
+function collectStrongIdentityText(piece) {
+  return flattenIdentityValues([
     piece?.title,
     piece?.subtitle,
     piece?.slug,
@@ -178,36 +202,50 @@ function collectIdentityText(piece) {
     piece?.sourceUrl,
     piece?.permalink,
     piece?.href,
-    ...(Array.isArray(piece?.categories) ? piece.categories : []),
-    ...(Array.isArray(piece?.tags) ? piece.tags : []),
-  ]
-    .map((value) => (typeof value === 'object' && value ? value.name || value.title || value.slug : value))
-    .join(' ')
-    .toLowerCase()
+    piece?.feedTitle,
+    piece?.sourceTitle,
+    piece?.podcastTitle,
+    piece?.showTitle,
+    piece?.seriesTitle,
+    piece?.excerpt,
+    piece?.bodyHtml,
+    piece?.contentHtml,
+    piece?.content,
+  ]).join(' ').toLowerCase()
 }
 
-function projectFromIdentity(piece, type) {
-  const identity = collectIdentityText(piece)
+function collectWeakIdentityText(piece) {
+  return flattenIdentityValues([
+    piece?.categories,
+    piece?.tags,
+  ]).join(' ').toLowerCase()
+}
+
+function projectFromText(identity, type, signalField = 'signals') {
   if (!identity.trim()) return null
 
   for (const project of PUBLIC_PROJECTS) {
-    const signalMatch = (project.signals || []).some((signal) => identity.includes(String(signal).toLowerCase()))
+    const signals = project[signalField] || project.signals || []
+    const signalMatch = signals.some((signal) => identity.includes(String(signal).toLowerCase()))
     if (!signalMatch) continue
 
-    // The two podcast projects are the most common collision in imported data.
-    // Only let podcast identity signals override an explicit project on podcast/audio records.
-    if (project.format === 'podcast' && !['podcast', 'audio'].includes(type)) continue
+    if (project.format === 'podcast' && !['podcast', 'audio'].includes(String(type || '').toLowerCase())) continue
     return project
   }
 
   return null
 }
 
+function projectFromStrongIdentity(piece, type) {
+  return projectFromText(collectStrongIdentityText(piece), type, 'strongSignals')
+}
+
+function projectFromWeakIdentity(piece, type) {
+  return projectFromText(collectWeakIdentityText(piece), type, 'signals')
+}
+
 export function fallbackProjectForType(type) {
   switch (String(type || '').toLowerCase()) {
-    case 'podcast':
-    case 'audio':
-      return findPublicProject('Molotov Now!')
     case 'comic':
       return findPublicProject('The Sabotuers')
     case 'zine':
@@ -215,6 +253,11 @@ export function fallbackProjectForType(type) {
       return findPublicProject('Black Cat Distro')
     case 'newsletter':
       return findPublicProject('The Communique')
+    case 'podcast':
+    case 'audio':
+      // Never invent a Molotov Now! attribution merely because an imported item is audio.
+      // Known podcast projects are resolved from show identity or explicit project metadata above.
+      return findPublicProject('The Harbor Rat Report')
     default:
       return findPublicProject('The Harbor Rat Report')
   }
@@ -222,16 +265,19 @@ export function fallbackProjectForType(type) {
 
 export function resolveArchiveProject(piece, type = 'article') {
   const candidates = collectProjectCandidates(piece)
-  const identityProject = projectFromIdentity(piece, type)
+  const strongIdentityProject = projectFromStrongIdentity(piece, type)
 
-  // Strong identity clues in the title, slug, source URL, tags, or categories can
-  // repair obvious import collisions such as TCAIE episodes filed under Molotov Now!.
-  if (identityProject) return identityProject
+  // Content/show/source identity wins over legacy taxonomy. This repairs imports where
+  // TCAIE episodes were filed under the Molotov category while preserving source data.
+  if (strongIdentityProject) return strongIdentityProject
 
   for (const candidate of candidates) {
     const canonical = findPublicProject(candidate)
     if (canonical) return canonical
   }
+
+  const weakIdentityProject = projectFromWeakIdentity(piece, type)
+  if (weakIdentityProject) return weakIdentityProject
 
   const explicit = candidates.find((candidate) => !isGenericProject(candidate))
   if (explicit) {
@@ -243,6 +289,7 @@ export function resolveArchiveProject(piece, type = 'article') {
       aliases: [],
       signals: [],
       description: 'Archive project.',
+      logoUrl: '',
       dynamic: true,
     }
   }
