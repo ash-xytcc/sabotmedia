@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
 import { EditableText } from './EditableText'
@@ -5,6 +6,7 @@ import { getEditablePage } from '../lib/editableContentRegistry'
 import { getPublicInfoCopy, getPublicInfoField } from '../content/publicInfoCopy'
 import { SecureContactForm } from './SecureContactForm'
 import { EditableLink } from './EditableLink'
+import { getFeaturedPublicProjects } from '../lib/projectCatalog'
 
 const CONTACT_CHANNELS = [
   { label: 'News tips, documents, and leads', address: 'tips@sabot.media' },
@@ -33,6 +35,47 @@ function ContactChannels() {
         ))}
       </div>
     </div>
+  )
+}
+
+function ProjectDirectory() {
+  const projects = getFeaturedPublicProjects()
+
+  return (
+    <section className="project-directory" aria-labelledby="project-directory-title">
+      <header className="project-directory__header">
+        <div>
+          <p className="project-directory__eyebrow">Projects</p>
+          <h2 id="project-directory-title">Our projects</h2>
+        </div>
+        <p>
+          Sabot Media is one archive made from distinct publishing projects. Each project has its own identity,
+          purpose, and form, while remaining searchable as part of the same body of work.
+        </p>
+      </header>
+
+      <div className="project-directory__grid">
+        {projects.map((project) => (
+          <article className="project-directory__card" key={project.slug}>
+            <div className="project-directory__brand">
+              {project.logoUrl ? (
+                <img src={project.logoUrl} alt={`${project.name} logo`} loading="lazy" />
+              ) : (
+                <span className="project-directory__wordmark">{project.name}</span>
+              )}
+            </div>
+            <div className="project-directory__body">
+              <p className="project-directory__format">{project.format}</p>
+              <h3>{project.name}</h3>
+              <p>{project.description}</p>
+              <Link className="project-directory__link" to={`/archive?project=${encodeURIComponent(project.slug)}`}>
+                Browse project →
+              </Link>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -68,6 +111,7 @@ export function PublicInfoPage({ page = 'about' }) {
         </EditableText>
         {page === 'contact' ? <ContactChannels /> : null}
       </section>
+      {page === 'about' ? <ProjectDirectory /> : null}
       <PublicationFooter />
     </main>
   )
