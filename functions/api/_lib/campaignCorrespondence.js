@@ -137,10 +137,11 @@ export async function patchMessage(db, id, patch = {}, actor = {}) {
   return { ...messageRow(current), body, visibility, status, updatedAt }
 }
 
-export async function deleteMessage(db, id) {
+export async function deleteMessage(db, id, actor = {}) {
   await ensureCampaignCorrespondenceTables(db)
   const current = await db.prepare('SELECT * FROM campaign_messages WHERE id = ? LIMIT 1').bind(id).first()
   if (!current) throw authError('message not found', 404)
+  if (!actor.isEditor && current.contributor_id !== actor.contributorId) throw authError('You can only delete your own messages.', 403)
   await db.prepare('UPDATE campaign_questions SET message_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE message_id = ?').bind(id).run()
   await db.prepare('DELETE FROM campaign_messages WHERE id = ?').bind(id).run()
   return messageRow(current)

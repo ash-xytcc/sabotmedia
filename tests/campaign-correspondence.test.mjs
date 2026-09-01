@@ -137,3 +137,15 @@ test('contributor sessions outrank editor cookies and public reads never expose 
   assert.match(portal, /PUBLIC · ON THE CAMPAIGN WEBSITE/)
   assert.match(portal, /PRIVATE · ONLY IN THIS ROOM/)
 })
+
+test('contributors can permanently delete only their own private or public messages', async () => {
+  const [endpoint, storage, client, portal] = await Promise.all([read('functions/api/campaign-correspondence.js'), read('functions/api/_lib/campaignCorrespondence.js'), read('src/lib/campaignCorrespondenceApi.js'), read('src/components/CampaignContributorPage.jsx')])
+  assert.match(endpoint, /deleteMessage\(db, body\.id, actingAsContributor \? \{ contributorId: contributor\.id \} : \{ isEditor: true \}\)/)
+  assert.match(storage, /current\.contributor_id !== actor\.contributorId/)
+  assert.match(storage, /You can only delete your own messages/)
+  assert.match(client, /deleteCorrespondenceMessage\(id, session = ''\)/)
+  assert.match(client, /headers: contributorSessionHeader\(session\)/)
+  assert.match(portal, /Permanently delete this message from the room and the public campaign website/)
+  assert.match(portal, /Permanently delete this private message from the room/)
+  assert.match(portal, />Delete<\/button>/)
+})

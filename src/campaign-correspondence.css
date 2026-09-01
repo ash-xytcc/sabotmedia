@@ -122,6 +122,8 @@
 .contributor-bubble.is-public { border: 3px solid #005b32; background: #d7f2df; box-shadow: 5px 5px 0 #00834a; }
 .contributor-bubble.is-public footer { color: #005b32; font-weight: 900; }
 .contributor-bubble.is-private footer { color: #4b4638; font-weight: 800; }
+.contributor-message-actions { display: inline-flex; gap: 10px; margin-left: auto; }
+.contributor-message-actions button { color: inherit; font-weight: 800; cursor: pointer; }
 .contributor-bubble > div,.contributor-bubble footer { display: flex; justify-content: space-between; gap: 10px; font-size: .72rem; }.contributor-bubble p { white-space: pre-wrap; }.contributor-bubble audio,.contributor-bubble video,.contributor-bubble img { width: 100%; max-height: 60vh; }.contributor-bubble footer button { border: 0; background: none; text-decoration: underline; }
 .contributor-composer { position: sticky; bottom: 0; display: grid; gap: 8px; padding: 10px; background: #ece7dc; border-top: 1px solid #bbb; }
 .contributor-composer textarea { width: 100%; resize: none; padding: 13px; border: 0; border-radius: 18px; font: 1rem system-ui; }
