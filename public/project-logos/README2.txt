@@ -1,0 +1,1 @@
+This directory is populated from user-supplied artwork.
