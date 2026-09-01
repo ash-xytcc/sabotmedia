@@ -80,12 +80,16 @@ import './audioLabWorkspaceV2.js'
 import './audio-lab-audacity-v5.css'
 import './audio-lab-audacity-tools.css'
 import './audio-lab-dialog-track-focus.css'
+import './audio-lab-standalone.css'
 import './audioLabAudacityMenu.js'
 import './audioLabAudacityQuickTools.js'
 /* React Router uses pushState, which does not emit popstate. This bridge makes
    all route-aware AudioLab enhancements initialize when the page is entered
    through normal SPA admin navigation instead of requiring a hard refresh. */
 import './audioLabSpaRuntimeGuard.js'
+/* AudioLab opens as a named dedicated studio window and strips admin chrome
+   when ?studio=1 is present. */
+import './audioLabStandalone.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
