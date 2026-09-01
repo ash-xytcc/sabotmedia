@@ -54,8 +54,9 @@ import './campaign-benefit-kit.css'
 import './contact-secure-form.css'
 import './admin-editor-sticky-toolbar.css'
 import './public-accessibility.css'
+/* This is intentionally last: it replaces the accumulated fixed/drawer AudioLab layout. */
+import './audio-lab-audacity-layout.css'
 import './audioLabKeyboardShortcuts.js'
-import './audioLabWorkspaceControls.js'
 import './audioLabTaskPages.js'
 import './audioLabTaskNavigationFix.js'
 import './audioLabBestTranscriptionResume.js'
@@ -70,6 +71,8 @@ import './publicArchiveCleanup.js'
 import './publicTypeRuntimeFix.js'
 import './publicTranslationSelector.js'
 import './audioLabDirectManipulation.js'
+import './audioLabRobotVoice.js'
+import './audioLabWorkspaceV2.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
