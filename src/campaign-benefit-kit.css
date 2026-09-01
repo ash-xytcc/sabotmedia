@@ -1,18 +1,21 @@
 .benefit-kit-page { min-height:100vh; background:#f4efe4; color:#090909; }
 .benefit-kit-page button,.benefit-kit-page input { font:inherit; }
-.benefit-kit-hero { position:relative; overflow:hidden; padding:clamp(54px,8vw,110px) clamp(20px,6vw,82px); background:linear-gradient(112deg,#ce1126 0 72%,#fff 72% 75%,#007a3d 75%); color:#fff; border-bottom:14px solid #000; }
+.benefit-kit-page > .publication-topbar--masthead { background:#090909 !important; border-bottom-color:#090909 !important; }
+.benefit-kit-page > .publication-topbar--masthead .publication-topbar__nav a { color:#fff !important; text-shadow:none !important; }
+.benefit-kit-page > .publication-topbar--masthead .publication-topbar__nav a:hover,.benefit-kit-page > .publication-topbar--masthead .publication-topbar__nav a:focus-visible { color:#84bd78 !important; }
+.benefit-kit-hero { position:relative; overflow:hidden; min-height:0; padding:clamp(30px,3.3vw,46px) clamp(20px,4vw,58px); background:linear-gradient(112deg,#ce1126 0 72%,#fff 72% 75%,#007a3d 75%); color:#fff; border-bottom:12px solid #000; }
 .benefit-kit-hero::after { content:""; position:absolute; top:16%; right:26%; width:18px; height:38px; border-radius:75% 25% 70% 30%; background:#000; transform:rotate(38deg); box-shadow:-105px 170px 0 #000,70px 310px 0 #000; }
 .benefit-kit-hero > div { position:relative; z-index:1; max-width:980px; }
 .benefit-kit-hero p:first-child { margin:0 0 14px; color:#000; font-weight:950; letter-spacing:.12em; }
-.benefit-kit-hero h1 { margin:0; max-width:9ch; font:950 clamp(4rem,11vw,10rem)/.78 var(--campaign-display,Impact,sans-serif); text-transform:uppercase; letter-spacing:-.035em; }
-.benefit-kit-hero p:nth-of-type(2) { max-width:630px; margin:28px 0; font-weight:750; font-size:clamp(1rem,1.7vw,1.35rem); line-height:1.35; }
-.benefit-kit-hero a { display:inline-block; padding:12px 16px; background:#000; color:#fff; font-weight:900; text-decoration:none; text-transform:uppercase; }
-.benefit-kit-layout { display:grid; grid-template-columns:minmax(230px,305px) minmax(0,1fr); gap:clamp(22px,3vw,44px); max-width:1500px; margin:auto; padding:clamp(24px,3.5vw,48px); }
-.benefit-kit-fields { align-self:start; position:sticky; top:12px; display:grid; gap:8px; padding:17px 19px; border:3px solid #000; background:#fff; box-shadow:9px 9px 0 #007a3d; }
-.benefit-kit-fields h2,.benefit-kit-heading h2 { margin:0; font:950 clamp(1.8rem,3.3vw,3.4rem)/.88 var(--campaign-display,Impact,sans-serif); text-transform:uppercase; }
-.benefit-kit-fields label { display:grid; gap:5px; font-size:.78rem; font-weight:950; text-transform:uppercase; letter-spacing:.06em; }
-.benefit-kit-fields input { min-width:0; padding:8px 9px; border:2px solid #000; background:#f8f4ea; color:#000; font-weight:750; }
-.benefit-kit-fields p { margin:4px 0 0; font-size:.74rem; line-height:1.35; }
+.benefit-kit-hero h1 { margin:0; max-width:12ch; font:950 clamp(3.4rem,7.2vw,6.2rem)/.82 var(--campaign-display,Impact,sans-serif); text-transform:uppercase; letter-spacing:-.03em; }
+.benefit-kit-hero p:nth-of-type(2) { max-width:630px; margin:16px 0; font-weight:750; font-size:clamp(.92rem,1.25vw,1.08rem); line-height:1.3; }
+.benefit-kit-hero a { display:inline-block; padding:9px 13px; background:#000; color:#fff; font-size:.78rem; font-weight:900; text-decoration:none; text-transform:uppercase; }
+.benefit-kit-layout { display:grid; grid-template-columns:260px minmax(0,1fr); gap:clamp(20px,2.5vw,34px); max-width:1500px; margin:auto; padding:22px clamp(18px,3vw,40px) 48px; }
+.benefit-kit-fields { align-self:start; position:sticky; top:8px; display:grid; gap:5px; padding:12px 14px; border:3px solid #000; background:#fff; box-shadow:7px 7px 0 #007a3d; }
+.benefit-kit-fields h2,.benefit-kit-heading h2 { margin:0; font:950 clamp(1.65rem,2.7vw,2.8rem)/.88 var(--campaign-display,Impact,sans-serif); text-transform:uppercase; }
+.benefit-kit-fields label { display:grid; gap:2px; font-size:.68rem; font-weight:950; text-transform:uppercase; letter-spacing:.055em; }
+.benefit-kit-fields input { min-width:0; height:32px; padding:5px 7px; border:2px solid #000; background:#f8f4ea; color:#000; font-size:.78rem; font-weight:750; }
+.benefit-kit-fields p { margin:3px 0 0; font-size:.64rem; line-height:1.25; }
 .benefit-kit-workspace { min-width:0; }
 .benefit-kit-heading { display:flex; justify-content:space-between; gap:24px; align-items:end; margin-bottom:24px; border-bottom:5px solid #007a3d; padding-bottom:16px; }
 .benefit-kit-heading span,.benefit-kit-materials article > span { color:#ce1126; font-size:.72rem; font-weight:950; letter-spacing:.1em; }
@@ -24,8 +27,8 @@
 .benefit-graphic__art i { position:absolute; width:10px; height:22px; border-radius:78% 22% 72% 28%; background:#000; transform:rotate(35deg); }
 .benefit-graphic__art i:nth-child(1) { top:10%; right:11%; }.benefit-graphic__art i:nth-child(2) { top:47%; right:21%; transform:rotate(65deg); }.benefit-graphic__art i:nth-child(3) { bottom:20%; right:8%; transform:rotate(22deg); }
 .benefit-graphic > span { position:relative; color:#000; font-size:clamp(.56rem,1vw,.78rem); font-weight:950; letter-spacing:.08em; }
-.benefit-graphic h3 { position:relative; max-width:68%; margin:clamp(28px,6vw,70px) 0 20px; font:950 clamp(2rem,12cqi,5.4rem)/.82 var(--campaign-display,Impact,sans-serif); letter-spacing:-.035em; text-transform:uppercase; overflow-wrap:normal; word-break:normal; }
-.benefit-graphic--story h3 { max-width:66%; margin-top:22%; font-size:clamp(1.7rem,12cqi,3rem); line-height:.84; }
+.benefit-graphic h3 { position:relative; max-width:65%; margin:clamp(24px,4vw,48px) 0 14px; font:950 clamp(1.8rem,9cqi,4.35rem)/.86 var(--campaign-display,Impact,sans-serif); letter-spacing:-.025em; text-transform:uppercase; overflow-wrap:normal; word-break:normal; }
+.benefit-graphic--story h3 { max-width:64%; margin-top:18%; font-size:clamp(1.55rem,9.5cqi,2.55rem); line-height:.88; }
 .benefit-graphic > div:not(.benefit-graphic__art) { position:relative; display:grid; gap:3px; color:#000; font-size:clamp(.64rem,1.3vw,1rem); }
 .benefit-graphic > p,.benefit-graphic > b { position:relative; max-width:65%; font-size:clamp(.62rem,1.2vw,.95rem); }
 .benefit-graphic > b { color:#000; }.benefit-graphic > footer { position:absolute; inset:auto 0 0; padding:18px clamp(18px,3vw,42px); background:#000; color:#fff; display:grid; gap:3px; }
