@@ -37,11 +37,18 @@ async function fetchBytes(url) {
   return new Uint8Array(await response.arrayBuffer())
 }
 
+function runtimeUrl(pathname) {
+  if (typeof globalThis.location?.origin !== 'string') throw new Error('Sabot Voice needs a browser origin.')
+  return new URL(pathname, globalThis.location.origin).href
+}
+
 async function loadRuntimeModules() {
   if (!runtimePromise) {
+    const wasiUrl = runtimeUrl(FLITE_ASSET_PATHS.wasi)
+    const wasiFsUrl = runtimeUrl(FLITE_ASSET_PATHS.wasiFs)
     runtimePromise = Promise.all([
-      import(/* @vite-ignore */ '/tts/vendor/browser-wasi-shim/wasi.js'),
-      import(/* @vite-ignore */ '/tts/vendor/browser-wasi-shim/fs_mem.js'),
+      import(/* @vite-ignore */ wasiUrl),
+      import(/* @vite-ignore */ wasiFsUrl),
     ]).then(([wasiModule, fsModule]) => ({
       WASI: wasiModule.default,
       File: fsModule.File,
