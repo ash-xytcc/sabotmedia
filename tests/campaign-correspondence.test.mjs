@@ -76,3 +76,15 @@ test('every saved campaign uses the same optional correspondence admin module', 
   assert.match(admin, /<CampaignCorrespondenceAdmin campaign=\{draft\} enabled=\{Boolean\(draft\.correspondence\?\.enabled\)\}/)
   assert.doesNotMatch(admin, /draft\.correspondence\?\.enabled \? <CampaignCorrespondenceAdmin/)
 })
+
+test('PIN unlock is atomic and editors can replace a lost private link without losing history', async () => {
+  const [auth, portal, admin, endpoint, storage] = await Promise.all([read('functions/api/campaign-contributor-auth.js'), read('src/components/CampaignContributorPage.jsx'), read('src/components/CampaignCorrespondenceAdmin.jsx'), read('functions/api/campaign-correspondence.js'), read('functions/api/_lib/campaignCorrespondence.js')])
+  assert.match(auth, /messages: await listMessages/)
+  assert.match(portal, /data: \{ campaign: data\.campaign, contributor: data\.contributor, messages: data\.messages/)
+  assert.doesNotMatch(portal, /authenticateContributor\(token, pin\)[\s\S]{0,240}await load\(data\.session\)/)
+  assert.match(admin, /Replace private link/)
+  assert.match(admin, /PIN and message history will remain/)
+  assert.match(endpoint, /action === 'reissue'/)
+  assert.match(storage, /reissueContributorToken/)
+  assert.match(storage, /DELETE FROM campaign_contributor_sessions WHERE contributor_id/)
+})
