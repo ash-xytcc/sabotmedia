@@ -35,12 +35,39 @@ test('TCAIE show identity beats a bad Molotov category without rewriting source 
   assert.equal(source.primaryProject, 'Molotov Now!')
 })
 
+test('an incidental Molotov mention later in a TCAIE interview cannot refile the episode', () => {
+  const project = resolveArchiveProject({
+    type: 'podcast',
+    primaryProject: 'Molotov Now!',
+    title: 'David From Queer Satanic on Power Dynamics, Anarchy, and Satanism',
+    bodyHtml: [
+      '<p>MK: Hello and welcome to The Child and Its Enemies, a podcast about queer and neurodivergent kids living out anarchy and youth liberation.</p>',
+      '<p>',
+      'interview '.repeat(400),
+      '</p><p>David: definitely listen to Molotov Now! I am not part of that, they are just a fun podcast.</p>',
+    ].join(''),
+  }, 'podcast')
+
+  assert.equal(project.slug, 'the-child-and-its-enemies')
+})
+
 test('actual Molotov records remain Molotov Now', () => {
   const project = resolveArchiveProject({
     type: 'podcast',
     primaryProject: 'Molotov Now!',
     title: 'Episode 16: Royt on the new Aberdeen IWW and organizing the unhoused',
     sourceUrl: 'https://sabotmedia.noblogs.org/episode-16-royt-on-the-new-aberdeen-iww-and-organizing-the-unhoused/',
+  }, 'podcast')
+
+  assert.equal(project.slug, 'molotov-now')
+})
+
+test('an incidental TCAIE mention cannot pull a canonical Molotov episode into TCAIE', () => {
+  const project = resolveArchiveProject({
+    type: 'podcast',
+    primaryProject: 'Molotov Now!',
+    title: 'Conversation with a guest',
+    bodyHtml: `${'Molotov interview '.repeat(250)} The guest later mentions The Child and Its Enemies.`,
   }, 'podcast')
 
   assert.equal(project.slug, 'molotov-now')
