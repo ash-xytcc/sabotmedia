@@ -82,10 +82,20 @@ function buildTabs(sidebar, panels) {
   activate(sidebar, defaultPanel?.dataset.audiolabInspectorId || '')
 }
 
+function normalizeWorkflowNav() {
+  const root = document.querySelector('.audio-lab-page')
+  const nav = root?.querySelector(':scope > .audio-lab-workflow-nav')
+  const header = root?.querySelector(':scope > .audio-lab-header, :scope > .wp-screen-header.audio-lab-header')
+  if (!root || !nav || !header) return
+  if (header.nextElementSibling !== nav) header.insertAdjacentElement('afterend', nav)
+}
+
 function refresh() {
   refreshQueued = false
   if (!isAudioLabRoute()) return
   document.querySelectorAll('.audio-lab-dock-close, .audio-lab-project-close').forEach((node) => node.remove())
+  normalizeWorkflowNav()
+
   const sidebar = document.querySelector('.audio-lab-page .audio-lab-project-sidebar')
   if (!sidebar) return
   sidebar.classList.remove('is-open')
