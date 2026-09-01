@@ -13,6 +13,26 @@ import { adminRoutes } from '../routing/routes'
 
 const STATUSES = ['draft', 'in_review', 'approved', 'published', 'archived']
 const DEFAULT_WEBLATE_URL = 'https://hosted.weblate.org/projects/sabotpress/ai-server-called-paranoia/'
+const KNOWN_AI_EXTERNAL_TRANSLATIONS = [
+  {
+    languageCode: 'es',
+    languageLabel: 'Español',
+    externalUrl: 'https://babelicosas.sutty.nl/2026/08/29/a-i-el-servidor-llamado-paranoia/',
+    translatorCredit: 'Dazibao translation',
+  },
+  {
+    languageCode: 'fr',
+    languageLabel: 'Français',
+    externalUrl: 'https://nantes.indymedia.org/posts/168508/autistici-inventati-designe-organisation-terroriste-internationale-par-les-etats-unis/',
+    translatorCredit: 'Collective translation via Indymedia Nantes',
+  },
+  {
+    languageCode: 'de',
+    languageLabel: 'Deutsch',
+    externalUrl: 'https://barrikade.info/article/7678',
+    translatorCredit: 'German translation via Barrikade',
+  },
+]
 
 function downloadJson(filename, value) {
   const blob = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json;charset=utf-8' })
@@ -137,19 +157,38 @@ export function TranslationsAdminPage() {
     } catch (err) { setError(String(err?.message || err)) }
   }
 
+  async function registerKnownAiTranslations() {
+    if (activeSlug !== 'the-server-called-paranoia') return
+    try {
+      setError('')
+      for (const item of KNOWN_AI_EXTERNAL_TRANSLATIONS) {
+        await saveNativeTranslation({
+          slug: activeSlug,
+          ...item,
+          status: 'published',
+          provider: 'external',
+        })
+      }
+      await refresh()
+      setNotice('Registered the existing Spanish, French, and German community translations in D1 with their original hosting and credits preserved.')
+    } catch (err) { setError(String(err?.message || err)) }
+  }
+
   async function updateStatus(item, status) {
     try {
       setError('')
       await saveNativeTranslation({
-        slug: activeSlug,
-        languageCode: item.code,
-        languageLabel: item.label,
-        status,
-        provider: item.provider,
-        translatorCredit: item.credit,
-        weblateUrl: item.weblateUrl,
-        externalUrl: item.provider === 'external' ? item.href : '',
-        translation: item.translation,
+        translation: {
+          slug: activeSlug,
+          languageCode: item.code,
+          languageLabel: item.label,
+          status,
+          provider: item.provider,
+          translatorCredit: item.credit,
+          weblateUrl: item.weblateUrl,
+          externalUrl: item.provider === 'external' ? item.href : '',
+          translation: item.translation,
+        },
       })
       await refresh()
       setNotice(`${item.label || item.code} moved to ${status.replace('_', ' ')}.`)
@@ -208,8 +247,10 @@ export function TranslationsAdminPage() {
         </section>
 
         <section className="wp-meta-box">
-          <h2>Existing translations hosted elsewhere</h2>
-          <p className="description">Use this for community translations that should stay on the translator's original site. Sabot links to them and preserves attribution instead of silently relicensing or republishing somebody else's work.</p>
+          <div className="wp-screen-header">
+            <div><h2>Existing translations hosted elsewhere</h2><p className="description">Keep community translations on the translator's original site unless they explicitly want their work moved into Weblate under this project's translation license. Sabot can register the original URL and credit without republishing the text.</p></div>
+            {activeSlug === 'the-server-called-paranoia' ? <button className="button" type="button" onClick={registerKnownAiTranslations}>Register known ES / FR / DE translations</button> : null}
+          </div>
           <form onSubmit={handleExternalSubmit}>
             <div className="form-grid form-grid--two">
               <label className="admin-field"><span>Language code</span><input value={external.languageCode} onChange={(e) => setExternal((v) => ({ ...v, languageCode: e.target.value }))} placeholder="es" /></label>
