@@ -65,7 +65,6 @@ export const PUBLIC_PROJECTS = [
     featured: true,
     aliases: ['molotov now', 'molotov now podcast'],
     signals: ['molotov now!', 'molotov now', 'molotov-now'],
-    strongSignals: ['molotov now!', 'molotov now', 'molotov-now'],
     description: 'Sabot Media’s podcast for interviews, field recordings, analysis, and conversations from the places we work.',
     logoUrl: '',
   },
@@ -75,13 +74,12 @@ export const PUBLIC_PROJECTS = [
     format: 'podcast',
     featured: true,
     aliases: ['the child and its enemies', 'child and its enemies', 'tcaie', 'tcaies'],
-    signals: ['the child and its enemies', 'child and its enemies', 'tcaie', 'tcaies'],
-    strongSignals: [
+    signals: [
       'the child and its enemies',
       'the-child-and-its-enemies',
-      'hello and welcome to the child and its enemies',
-      'you’re listening to the child and its enemies',
-      "you're listening to the child and its enemies",
+      'child and its enemies',
+      'tcaie',
+      'tcaies',
     ],
     description: 'A youth-liberation podcast about queer and neurodivergent life, anarchy, autonomy, and the worlds young people build against adult control.',
     logoUrl: 'https://sabotmedia.noblogs.org/files/2024/03/the-child-and-its-enemies-1080-x-1600-px.png',
@@ -192,7 +190,7 @@ function collectProjectCandidates(piece) {
   ])
 }
 
-function collectStrongIdentityText(piece) {
+function collectDirectIdentityText(piece) {
   return flattenIdentityValues([
     piece?.title,
     piece?.subtitle,
@@ -207,7 +205,20 @@ function collectStrongIdentityText(piece) {
     piece?.podcastTitle,
     piece?.showTitle,
     piece?.seriesTitle,
+  ]).join(' ').toLowerCase()
+}
+
+function collectIntroIdentityText(piece) {
+  return flattenIdentityValues([
     piece?.excerpt,
+    piece?.bodyHtml,
+    piece?.contentHtml,
+    piece?.content,
+  ]).join(' ').slice(0, 2400).toLowerCase()
+}
+
+function collectBodyIdentityText(piece) {
+  return flattenIdentityValues([
     piece?.bodyHtml,
     piece?.contentHtml,
     piece?.content,
@@ -221,27 +232,79 @@ function collectWeakIdentityText(piece) {
   ]).join(' ').toLowerCase()
 }
 
-function projectFromText(identity, type, signalField = 'signals') {
-  if (!identity.trim()) return null
+function countOccurrences(text, needle) {
+  const haystack = String(text || '')
+  const target = String(needle || '').toLowerCase()
+  if (!haystack || !target) return 0
 
-  for (const project of PUBLIC_PROJECTS) {
-    const signals = project[signalField] || project.signals || []
-    const signalMatch = signals.some((signal) => identity.includes(String(signal).toLowerCase()))
-    if (!signalMatch) continue
-
-    if (project.format === 'podcast' && !['podcast', 'audio'].includes(String(type || '').toLowerCase())) continue
-    return project
+  let count = 0
+  let offset = 0
+  while (offset < haystack.length) {
+    const match = haystack.indexOf(target, offset)
+    if (match < 0) break
+    count += 1
+    offset = match + target.length
   }
-
-  return null
+  return count
 }
 
-function projectFromStrongIdentity(piece, type) {
-  return projectFromText(collectStrongIdentityText(piece), type, 'strongSignals')
+function projectAllowedForType(project, type) {
+  if (project.format !== 'podcast') return true
+  return ['podcast', 'audio'].includes(String(type || '').toLowerCase())
+}
+
+function scoreProjectSignals(project, text, weight = 1) {
+  if (!text || !project) return 0
+  return (project.signals || []).reduce((score, signal) => {
+    const normalizedSignal = String(signal || '').toLowerCase()
+    const occurrences = countOccurrences(text, normalizedSignal)
+    if (!occurrences) return score
+    // Longer, more specific names beat tiny aliases when both happen to appear.
+    const specificity = Math.max(1, Math.min(3, normalizedSignal.length / 12))
+    return score + (occurrences * weight * specificity)
+  }, 0)
+}
+
+function bestProjectForIdentity(piece, type, { includeBody = false } = {}) {
+  const direct = collectDirectIdentityText(piece)
+  const intro = collectIntroIdentityText(piece)
+  const body = includeBody ? collectBodyIdentityText(piece) : ''
+
+  let best = null
+  let bestScore = 0
+
+  for (const project of PUBLIC_PROJECTS) {
+    if (!projectAllowedForType(project, type)) continue
+
+    const score =
+      scoreProjectSignals(project, direct, 100) +
+      scoreProjectSignals(project, intro, 30) +
+      scoreProjectSignals(project, body, 1)
+
+    if (score > bestScore) {
+      best = project
+      bestScore = score
+    }
+  }
+
+  return best
 }
 
 function projectFromWeakIdentity(piece, type) {
-  return projectFromText(collectWeakIdentityText(piece), type, 'signals')
+  const identity = collectWeakIdentityText(piece)
+  if (!identity.trim()) return null
+
+  let best = null
+  let bestScore = 0
+  for (const project of PUBLIC_PROJECTS) {
+    if (!projectAllowedForType(project, type)) continue
+    const score = scoreProjectSignals(project, identity, 1)
+    if (score > bestScore) {
+      best = project
+      bestScore = score
+    }
+  }
+  return best
 }
 
 export function fallbackProjectForType(type) {
@@ -265,16 +328,22 @@ export function fallbackProjectForType(type) {
 
 export function resolveArchiveProject(piece, type = 'article') {
   const candidates = collectProjectCandidates(piece)
-  const strongIdentityProject = projectFromStrongIdentity(piece, type)
 
-  // Content/show/source identity wins over legacy taxonomy. This repairs imports where
-  // TCAIE episodes were filed under the Molotov category while preserving source data.
+  // Direct show/title/source identity and the opening copy outrank legacy taxonomy.
+  // This catches TCAIE episodes whose guest-only titles were imported under Molotov.
+  const strongIdentityProject = bestProjectForIdentity(piece, type)
   if (strongIdentityProject) return strongIdentityProject
 
   for (const candidate of candidates) {
     const canonical = findPublicProject(candidate)
     if (canonical) return canonical
   }
+
+  // Only use incidental full-body mentions when there is no canonical project metadata.
+  // That prevents a guest mentioning another Sabot show halfway through an interview from
+  // re-filing the entire piece under that show.
+  const bodyIdentityProject = bestProjectForIdentity(piece, type, { includeBody: true })
+  if (bodyIdentityProject) return bodyIdentityProject
 
   const weakIdentityProject = projectFromWeakIdentity(piece, type)
   if (weakIdentityProject) return weakIdentityProject
