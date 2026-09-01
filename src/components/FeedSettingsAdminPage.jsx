@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { DEFAULT_FEED_SETTINGS, loadFeedSettingsAsync, resetFeedSettings, saveFeedSettings } from '../lib/feedSettings'
 import { downloadFeedManifest, loadFeedManifest } from '../lib/feedManifestApi'
+import { adminRoutes } from '../routing/routes'
 
 const KINDS = [
   ['format', 'Formats', 'Formats are broad reading lanes like article, podcast, comic, newsletter, zine, print, or audio.'],
@@ -35,6 +37,11 @@ function textToAliases(value = '') {
     if (key && target) next[key] = target
   }
   return next
+}
+
+function displayDate(value) {
+  const date = new Date(String(value || ''))
+  return Number.isFinite(date.getTime()) ? date.toLocaleString() : '—'
 }
 
 export function FeedSettingsAdminPage() {
@@ -133,6 +140,9 @@ export function FeedSettingsAdminPage() {
 
   const disabled = state === 'loading' || state === 'saving'
   const liveFiles = Array.isArray(manifest?.files) ? manifest.files : []
+  const podcastShows = Array.isArray(manifest?.podcastShows) ? manifest.podcastShows : []
+  const podcastDefaultAlias = String(manifest?.podcastDefaultAlias || '')
+  const unassignedPodcastItems = Number(manifest?.unassignedPodcastItemCount || 0)
 
   return (
     <AdminFrame>
@@ -140,7 +150,7 @@ export function FeedSettingsAdminPage() {
         <div className="wp-screen-header">
           <div>
             <h1>Feeds & Syndication</h1>
-            <p className="description">Control the live server-backed RSS taxonomy, aliases, hidden labels, public explanation copy, and privacy-safe byline behavior.</p>
+            <p className="description">Manage site-wide RSS discovery, taxonomy feeds, aliases, privacy-safe public labels, and the public feed directory. Podcast show identity and imports live in Podcasts; this page discovers and publishes those show feeds alongside the rest of Sabot's syndication endpoints.</p>
           </div>
           <div className="review-card__actions">
             <a className="button" href="/feeds" target="_blank" rel="noreferrer">Open Public Feeds</a>
@@ -153,29 +163,67 @@ export function FeedSettingsAdminPage() {
         {error ? <div className="notice notice-error" role="alert"><p><strong>Feed settings error:</strong> {error}</p></div> : null}
         {manifestError ? <div className="notice notice-error" role="alert"><p><strong>Live feed manifest error:</strong> {manifestError}</p></div> : null}
         {status ? <div className="notice notice-success" role="status"><p>{status}</p></div> : null}
+        {unassignedPodcastItems > 0 ? (
+          <div className="notice notice-warning" role="alert">
+            <p><strong>{unassignedPodcastItems} public podcast episode{unassignedPodcastItems === 1 ? '' : 's'} are not assigned to a podcast show.</strong> <Link to={adminRoutes.podcasts}>Open Podcasts</Link> to repair the show assignment before relying on podcast-directory feeds.</p>
+          </div>
+        ) : null}
 
         <section className="wp-meta-box">
-          <h2>What this controls</h2>
-          <p className="description">Every published piece can appear in multiple live feeds at once: the main feed, a format feed, a project feed, a collection feed, a topic feed, a series feed, and a public byline feed. The counts and detected terms below come from the same D1-backed server manifest used by the public <code>/feeds</code> page.</p>
+          <h2>What belongs here, and what belongs in Podcasts?</h2>
+          <p className="description"><strong>Feeds & Syndication</strong> controls website-content RSS: the everything feed plus feeds by format, project, collection, topic, series, and public byline. It also owns the public <code>/feeds</code> directory and the server manifest used to verify which endpoints are actually live.</p>
+          <p className="description"><strong>Podcasts</strong> controls each podcast as a show: title, artwork, directory metadata, source RSS import/resync, episode membership, and its directory-grade RSS feed with audio enclosures and podcast metadata. The two systems share the same D1 content records and manifest, but they do not overwrite each other's settings.</p>
+          <p className="description">A generic <code>/feeds/formats/podcast.xml</code> feed may exist as a reading/syndication lane containing podcast posts from every show. It is intentionally different from a show feed such as <code>/feeds/podcasts/molotov-now.xml</code>, which is the feed intended for podcast apps and directories.</p>
         </section>
 
         <section className="wp-meta-box">
           <h2>Live feed status</h2>
           <div className="newsroom-stat-grid">
-            <article className="review-summary-card"><div className="review-summary-card__eyebrow">published records</div><strong>{Number(manifest?.itemCount || 0)}</strong><span>eligible for feed generation</span></article>
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">published records</div><strong>{Number(manifest?.itemCount || 0)}</strong><span>eligible for website feed generation</span></article>
             <article className="review-summary-card"><div className="review-summary-card__eyebrow">live endpoints</div><strong>{liveFiles.length}</strong><span>server-confirmed RSS URLs</span></article>
-            <article className="review-summary-card"><div className="review-summary-card__eyebrow">podcast episodes</div><strong>{Number(manifest?.podcastItemCount || 0)}</strong><span>with public audio enclosures</span></article>
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">podcast shows</div><strong>{Number(manifest?.podcastShowCount || 0)}</strong><span>separate directory-grade feeds</span></article>
+            <article className="review-summary-card"><div className="review-summary-card__eyebrow">podcast episodes</div><strong>{Number(manifest?.podcastItemCount || 0)}</strong><span>public episodes with audio enclosures</span></article>
           </div>
           <div className="review-card__actions">
             <button className="button" type="button" onClick={refreshManifest}>Refresh live manifest</button>
             <a className="button" href="/feeds/all-content.xml" target="_blank" rel="noreferrer">Open main RSS</a>
-            <a className="button" href="/feeds/podcasts/all.xml" target="_blank" rel="noreferrer">Open podcast RSS</a>
+            {podcastDefaultAlias ? <a className="button" href={`/feeds/${podcastDefaultAlias}`} target="_blank" rel="noreferrer">Open legacy/default podcast alias</a> : null}
+          </div>
+        </section>
+
+        <section className="wp-meta-box">
+          <div className="wp-screen-header">
+            <div>
+              <h2>Podcast syndication</h2>
+              <p className="description">Read-only here by design. Add, import, resync, or edit a show in Podcasts; the syndication manifest then exposes its canonical feed automatically.</p>
+            </div>
+            <div className="review-card__actions">
+              <Link className="button" to={adminRoutes.podcasts}>Open Podcasts</Link>
+              <Link className="button button--primary" to={`${adminRoutes.podcastSettings}?new=1`}>Add Podcast</Link>
+            </div>
+          </div>
+          <div className="wp-list-table-wrap">
+            <table className="content-table wp-posts-table">
+              <thead><tr><th>Show</th><th>Episodes</th><th>Source RSS</th><th>Sabot RSS</th><th>Last synced</th><th>Actions</th></tr></thead>
+              <tbody>
+                {podcastShows.length ? podcastShows.map((show) => (
+                  <tr key={show.id || show.slug}>
+                    <td><strong>{show.title || show.slug}</strong>{show.isDefault ? <div className="description">Default show for the legacy <code>/feeds/podcasts/all.xml</code> alias</div> : null}</td>
+                    <td>{Number(show.episodeCount || 0)}</td>
+                    <td>{show.sourceFeedUrl ? <a href={show.sourceFeedUrl} target="_blank" rel="noreferrer">Source feed</a> : '—'}</td>
+                    <td><a href={`/feeds/${show.feedPath}`} target="_blank" rel="noreferrer"><code>/feeds/{show.feedPath}</code></a></td>
+                    <td>{displayDate(show.sourceFeedLastSyncedAt)}</td>
+                    <td><Link to={`${adminRoutes.podcastSettings}?show=${encodeURIComponent(show.id || show.slug)}`}>Manage show</Link></td>
+                  </tr>
+                )) : <tr><td colSpan={6}>No podcast shows are registered. Add a podcast to create its own feed.</td></tr>}
+              </tbody>
+            </table>
           </div>
         </section>
 
         <section className="wp-meta-box">
           <h2>Public feeds page</h2>
-          <p className="description">These fields change the human-readable explanation at <code>/feeds</code>. They do not change the podcast title or podcast-directory metadata.</p>
+          <p className="description">These fields change the human-readable explanation at <code>/feeds</code>. They do not change podcast titles, artwork, episode membership, or podcast-directory metadata.</p>
           <div className="wp-settings-form">
             <label><span>Page title</span><input value={settings.feedsIntroTitle || ''} onChange={(event) => updateField('feedsIntroTitle', event.target.value)} /></label>
             <label><span>Intro copy</span><textarea rows={11} value={settings.feedsIntroBody || ''} onChange={(event) => updateField('feedsIntroBody', event.target.value)} /></label>
@@ -183,7 +231,7 @@ export function FeedSettingsAdminPage() {
         </section>
 
         <section className="wp-meta-box">
-          <h2>Enabled feed groups</h2>
+          <h2>Enabled website-content feed groups</h2>
           <div className="feed-toggle-grid">
             {[
               ['exposeMainFeed', 'Everything'], ['exposeFormatFeeds', 'Formats'], ['exposeProjectFeeds', 'Projects'],
@@ -196,7 +244,7 @@ export function FeedSettingsAdminPage() {
               </label>
             ))}
           </div>
-          <p className="description">Save these settings before expecting the live endpoint list to change. The manifest above is authoritative; unsaved form edits are not.</p>
+          <p className="description">These toggles affect generic website-content feeds only. Podcast show feeds and published campaign feeds are first-class feeds managed by their own subsystems and remain discoverable through the manifest.</p>
         </section>
 
         {KINDS.map(([kind, label, help]) => (
@@ -218,11 +266,11 @@ export function FeedSettingsAdminPage() {
 
         <section className="wp-meta-box">
           <h2>Diagnostics & export</h2>
-          <p className="description">Podcast directories and RSS readers use the live URLs above. This optional JSON export is only a snapshot of the server manifest for debugging, archiving, or external tooling; it is not the feed you submit to Spotify or Apple Podcasts.</p>
+          <p className="description">Podcast directories and RSS readers use the live XML URLs, not the manifest JSON. The JSON export is a snapshot for debugging, archiving, or external tooling and now includes podcast-show and campaign-feed metadata so the syndication inventory can be audited in one place.</p>
           <div className="review-card__actions">
             <button className="button" type="button" onClick={() => downloadFeedManifest(manifest)} disabled={!manifest}>Download feed manifest (JSON)</button>
           </div>
-          {liveFiles.length ? <details><summary>Show live endpoint paths</summary><ul>{liveFiles.slice(0, 150).map((file) => <li key={file}><a href={`/feeds/${file}`} target="_blank" rel="noreferrer"><code>/feeds/{file}</code></a></li>)}</ul></details> : null}
+          {liveFiles.length ? <details><summary>Show live endpoint paths</summary><ul>{liveFiles.slice(0, 200).map((file) => <li key={file}><a href={`/feeds/${file}`} target="_blank" rel="noreferrer"><code>/feeds/{file}</code></a></li>)}</ul></details> : null}
         </section>
       </main>
     </AdminFrame>
