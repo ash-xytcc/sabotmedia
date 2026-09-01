@@ -89,7 +89,7 @@ export function PodcastAdminPage() {
 
         <section className="wp-meta-box">
           <h2>Podcast Shows</h2>
-          <p className="description">Importing another RSS feed creates or updates a separate show. It does not rename another podcast or pour its episodes into the same feed, because apparently software needs to be told not to do that.</p>
+          <p className="description">Importing another RSS feed creates or updates a separate show. Each show's identity, source feed, episodes, and outgoing feed remain isolated from the others.</p>
           <div className="wp-list-table-wrap">
             <table className="content-table wp-posts-table">
               <thead>
