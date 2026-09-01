@@ -243,6 +243,8 @@ export function CampaignPage() {
         </div>
       </nav>
 
+      {campaign.slug === 'food-not-bombs-gaza' ? <section className="campaign-gaza-time-band"><div className="campaign-shell"><GazaClock /></div></section> : null}
+
       {pinnedUpdate && showSection('updates') ? (
         <section className="campaign-latest">
           <div className="campaign-shell campaign-latest__inner">
@@ -263,7 +265,7 @@ export function CampaignPage() {
       {showSection('status') ? <section className="campaign-section campaign-section--status" id="status">
         <div className="campaign-shell">
           <SectionHeading sectionKey="status" eyebrow="LIVE CAMPAIGN DASHBOARD" title={sectionTitle('status')} />
-          {isAiCampaign ? <ItalyClock /> : campaign.slug === 'food-not-bombs-gaza' ? <GazaClock /> : null}
+          {isAiCampaign ? <ItalyClock /> : null}
           <div className="campaign-status-grid">
             {Number.isFinite(deadline) ? <article className="campaign-metric campaign-metric--deadline">
               <span className="campaign-metric__label">{formatDeadlineLabel(campaign.deadline, campaign.deadlineTimeZone)}</span>
