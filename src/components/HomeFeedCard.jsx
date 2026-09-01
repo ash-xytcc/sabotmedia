@@ -24,7 +24,9 @@ export function HomeFeedCard({ item, variant = 'recent' }) {
     return (
       <article className={classes} data-home-card-mode="hidden">
         <Link className="home-feed-card__link home-feed-card__link--image-only" to={item.href}>
-          <img className="home-feed-card__actual-image" src={item.imageUrl} alt="" />
+          <div className="home-feed-card__media home-feed-card__media--image-only">
+            <img className="home-feed-card__actual-image" src={item.imageUrl} alt="" />
+          </div>
           <Heading className="screen-reader-only">{item.title}</Heading>
         </Link>
       </article>
