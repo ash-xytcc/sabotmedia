@@ -18,10 +18,12 @@ test('menu-opened AudioLab tools render above their backdrop as real dialogs', (
 })
 
 test('tracks use the remaining editing viewport instead of leaving a padded black floor', () => {
-  assert.match(css, /--al-track-working-height:\s*clamp\(138px,\s*20vh,\s*190px\)/)
-  assert.match(css, /\.audio-lab-multitrack-inner[\s\S]*?display:\s*flex\s*!important[\s\S]*?flex-direction:\s*column\s*!important/)
-  assert.match(css, /padding-bottom:\s*0\s*!important/)
-  assert.match(css, /\.audio-lab-multitrack-row[\s\S]*?flex:\s*1\s+0\s+var\(--al-track-working-height\)\s*!important/)
+  assert.match(css, /--al-track-working-height:\s*clamp\([^)]*\)/)
+  assert.match(css, /\.audio-lab-multitrack\s*\{[\s\S]*?height:\s*100%\s*!important[\s\S]*?grid-template-rows:\s*30px\s+minmax\(0,\s*1fr\)\s*!important/)
+  assert.match(css, /\.audio-lab-multitrack-scroll\s*\{[\s\S]*?height:\s*100%\s*!important[\s\S]*?overflow-y:\s*auto\s*!important/)
+  assert.match(css, /\.audio-lab-multitrack-inner[\s\S]*?min-height:\s*100%\s*!important[\s\S]*?display:\s*flex\s*!important[\s\S]*?flex-direction:\s*column\s*!important/)
+  assert.match(css, /padding:\s*0\s*!important/)
+  assert.match(css, /\.audio-lab-multitrack-row[\s\S]*?flex:\s*1\s+1\s+var\(--al-track-working-height\)\s*!important[\s\S]*?max-height:\s*none\s*!important/)
   assert.match(css, /\.audio-lab-clip[\s\S]*?bottom:\s*12px\s*!important/)
 })
 
