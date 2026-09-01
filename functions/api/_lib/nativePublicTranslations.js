@@ -169,12 +169,58 @@ export async function deleteTranslation(db, nativeContentId, languageCode) {
   return { ok: true }
 }
 
+function splitArticleBodyHtml(value) {
+  const html = String(value || '').trim()
+  if (!html) return {}
+
+  const voidElements = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'])
+  const tagPattern = /<\/?([a-zA-Z][\w:-]*)\b[^>]*>/g
+  const chunks = []
+  let depth = 0
+  let chunkStart = 0
+  let match
+
+  while ((match = tagPattern.exec(html))) {
+    const tag = match[0]
+    const name = String(match[1] || '').toLowerCase()
+    const closing = /^<\//.test(tag)
+    const selfClosing = /\/\s*>$/.test(tag) || voidElements.has(name)
+
+    if (closing) {
+      depth = Math.max(0, depth - 1)
+    } else if (!selfClosing) {
+      depth += 1
+    }
+
+    if (depth === 0) {
+      const chunk = html.slice(chunkStart, tagPattern.lastIndex).trim()
+      if (chunk) chunks.push(chunk)
+      chunkStart = tagPattern.lastIndex
+    }
+  }
+
+  const tail = html.slice(chunkStart).trim()
+  if (tail) chunks.push(tail)
+
+  return Object.fromEntries(
+    chunks.map((chunk, index) => [String(index + 1).padStart(3, '0'), chunk])
+  )
+}
+
+function joinArticleBodyHtml(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return ''
+  return Object.entries(body)
+    .sort(([left], [right]) => left.localeCompare(right, 'en', { numeric: true }))
+    .map(([, value]) => String(value || ''))
+    .join('')
+}
+
 export function buildWeblateSourceBundle(content) {
   if (!content) throw new Error('content not found')
   return {
     title: String(content.title || ''),
     excerpt: String(content.excerpt || ''),
-    bodyHtml: String(content.bodyHtml || content.body || ''),
+    body: splitArticleBodyHtml(content.bodyHtml || content.body || ''),
     seoTitle: String(content.seoTitle || ''),
     seoDescription: String(content.seoDescription || ''),
   }
@@ -187,7 +233,7 @@ export function translationFromWeblateBundle(bundle = {}, defaults = {}) {
     translation: {
       title: strings.title,
       excerpt: strings.excerpt,
-      bodyHtml: strings.bodyHtml,
+      bodyHtml: joinArticleBodyHtml(strings.body) || String(strings.bodyHtml || ''),
       seoTitle: strings.seoTitle,
       seoDescription: strings.seoDescription,
     },
