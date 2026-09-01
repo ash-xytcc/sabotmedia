@@ -351,7 +351,7 @@ export function CampaignAdminPage() {
             </section>
             <AutomationSettings value={draft.automation || {}} onChange={(automation) => patch({ automation })} />
             {!isNew && draft.slug ? <CampaignCoverageModeration campaignSlug={draft.slug} onNotice={pushNotice} /> : null}
-            {!isNew && draft.slug && draft.correspondence?.enabled ? <CampaignCorrespondenceAdmin campaign={draft} onNotice={pushNotice} /> : null}
+            {!isNew && draft.slug ? <CampaignCorrespondenceAdmin campaign={draft} enabled={Boolean(draft.correspondence?.enabled)} onNotice={pushNotice} /> : null}
             <SectionControls
               order={normalizeSectionOrder(draft.sectionOrder)}
               hidden={draft.hiddenSections || []}
