@@ -10,6 +10,7 @@ export function sendMessage(campaign, message, session = '') { return request('/
 export function submitQuestion(campaign, values) { return request('/api/campaign-correspondence', { method: 'POST', body: JSON.stringify({ action: 'question', campaign, ...values }) }) }
 export function createContributor(campaign, values) { return request('/api/campaign-correspondence', { method: 'POST', body: JSON.stringify({ action: 'contributor', campaign, ...values }) }) }
 export function patchCorrespondence(values, session = '') { return request('/api/campaign-correspondence', { method: 'PATCH', headers: session ? { authorization: `Bearer ${session}` } : {}, body: JSON.stringify(values) }) }
+export function deleteCorrespondenceMessage(id) { return request('/api/campaign-correspondence', { method: 'DELETE', body: JSON.stringify({ action: 'message', id }) }) }
 export async function uploadCampaignArchiveMedia(file) {
   const body = new FormData(); body.append('file', file); body.append('folder', 'campaign-archives'); body.append('title', file.name || 'Instagram archive')
   const response = await fetch('/api/media/files', { method: 'POST', credentials: 'same-origin', headers: { accept: 'application/json' }, body })
