@@ -14,9 +14,11 @@ export async function onRequestGet(context) {
     const permission = await resolvePublicSitePermission(context)
     const contributor = await contributorFromRequest(db, context.request)
     const contributorSessionSupplied = Boolean(context.request.headers.get('x-sabot-contributor-session') || /^Bearer\s+/i.test(String(context.request.headers.get('authorization') || '')))
-    if (permission.canEdit) return json({ ok: true, campaign: publicCampaign(campaign), contributors: await listContributors(db, campaign.id), messages: await listMessages(db, campaign.id), questions: await listQuestions(db, campaign.id) })
-    if (contributor?.campaignId === campaign.id) return json({ ok: true, campaign: publicCampaign(campaign), contributor, messages: await listMessages(db, campaign.id) })
-    if (contributorSessionSupplied) return json({ ok: false, error: 'Contributor session expired or is invalid. Enter the PIN again.' }, 401)
+    if (contributorSessionSupplied) {
+      if (contributor?.campaignId === campaign.id) return json({ ok: true, campaign: publicCampaign(campaign), contributor, messages: await listMessages(db, campaign.id) })
+      return json({ ok: false, error: 'Contributor session expired or is invalid. Enter the PIN again.' }, 401)
+    }
+    if (permission.canEdit && url.searchParams.get('view') === 'admin') return json({ ok: true, campaign: publicCampaign(campaign), contributors: await listContributors(db, campaign.id), messages: await listMessages(db, campaign.id), questions: await listQuestions(db, campaign.id) })
     return json({ ok: true, campaign: publicCampaign(campaign), messages: await listMessages(db, campaign.id, { publicOnly: true }) })
   } catch (error) { return json({ ok: false, error: String(error?.message || error) }, 500) }
 }
@@ -30,17 +32,21 @@ export async function onRequestPost(context) {
     if (!campaign) return json({ ok: false, error: 'campaign not found' }, 404)
     const permission = await resolvePublicSitePermission(context)
     const contributor = await contributorFromRequest(db, context.request)
+    const contributorSessionSupplied = Boolean(context.request.headers.get('x-sabot-contributor-session') || /^Bearer\s+/i.test(String(context.request.headers.get('authorization') || '')))
     if (body.action === 'question') return json({ ok: true, item: await createQuestion(db, campaign.id, body) }, 201)
     if (body.action === 'contributor') {
       if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
       return json({ ok: true, ...(await createContributor(db, campaign.id, body)) }, 201)
     }
     if (body.action === 'message' || body.action === 'publish-message') {
-      if (!permission.canEdit && contributor?.campaignId !== campaign.id) return json({ ok: false, error: 'contributor access required' }, 403)
+      if (contributorSessionSupplied && contributor?.campaignId !== campaign.id) return json({ ok: false, error: 'contributor access required' }, 403)
+      if (!contributorSessionSupplied && !permission.canEdit) return json({ ok: false, error: 'contributor access required' }, 403)
       const publishRequested = body.action === 'publish-message'
-      if (publishRequested && !permission.canEdit && !contributor?.permissions?.directPublish) return json({ ok: false, error: 'direct publishing is not enabled for this contributor' }, 403)
-      const safeBody = permission.canEdit ? body : { ...body, visibility: publishRequested ? 'public' : 'private' }
-      const item = await createMessage(db, campaign.id, safeBody, permission.canEdit ? { isEditor: true } : { contributorId: contributor.id, permissions: contributor.permissions, publicationConfirmed: publishRequested })
+      if (contributorSessionSupplied && publishRequested && !contributor?.permissions?.directPublish) return json({ ok: false, error: 'direct publishing is not enabled for this contributor' }, 403)
+      const actingAsContributor = contributorSessionSupplied && contributor
+      const safeBody = actingAsContributor ? { ...body, visibility: publishRequested ? 'public' : 'private' } : body
+      const actor = actingAsContributor ? { contributorId: contributor.id, permissions: contributor.permissions, publicationConfirmed: publishRequested } : { isEditor: true }
+      const item = await createMessage(db, campaign.id, safeBody, actor)
       return json({ ok: true, item }, 201)
     }
     return json({ ok: false, error: 'unsupported action' }, 400)
@@ -54,6 +60,7 @@ export async function onRequestPatch(context) {
     const body = await context.request.json()
     const permission = await resolvePublicSitePermission(context)
     const contributor = await contributorFromRequest(db, context.request)
+    const contributorSessionSupplied = Boolean(context.request.headers.get('x-sabot-contributor-session') || /^Bearer\s+/i.test(String(context.request.headers.get('authorization') || '')))
     if (body.action === 'revoke') {
       if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
       return json({ ok: true, item: await revokeContributor(db, body.id, body.revoked !== false) })
@@ -69,9 +76,11 @@ export async function onRequestPatch(context) {
       return json({ ok: true, item: await patchQuestion(db, body.id, body) })
     }
     if (body.action === 'message') {
-      if (!permission.canEdit && !contributor) return json({ ok: false, error: 'contributor access required' }, 403)
-      const item = await patchMessage(db, body.id, body, permission.canEdit ? { isEditor: true } : { contributorId: contributor.id, permissions: contributor.permissions })
-      if (permission.canEdit) await writeAuditLog(db, { action: 'campaign_correspondence.message.update', entityType: 'campaign_message', entityId: item.id, actor: inferActorFromRequest(context.request), detail: { campaignId: item.campaignId, visibility: item.visibility } })
+      if (contributorSessionSupplied && !contributor) return json({ ok: false, error: 'contributor access required' }, 403)
+      if (!contributorSessionSupplied && !permission.canEdit) return json({ ok: false, error: 'contributor access required' }, 403)
+      const actingAsContributor = contributorSessionSupplied && contributor
+      const item = await patchMessage(db, body.id, body, actingAsContributor ? { contributorId: contributor.id, permissions: contributor.permissions } : { isEditor: true })
+      if (!actingAsContributor && permission.canEdit) await writeAuditLog(db, { action: 'campaign_correspondence.message.update', entityType: 'campaign_message', entityId: item.id, actor: inferActorFromRequest(context.request), detail: { campaignId: item.campaignId, visibility: item.visibility } })
       return json({ ok: true, item })
     }
     return json({ ok: false, error: 'unsupported action' }, 400)
