@@ -1,26 +1,15 @@
 import { textToSpeechTokens } from './englishG2p.js'
+import { normalizeRobotVoiceOptions } from './robotVoicePresets.js'
 import { KLATT_PHONEMES } from './vendor/klatt1980Bank.js'
 import { renderToBuffer } from './vendor/klattschSynth.js'
 
-const READER_PRESET = Object.freeze({
-  sampleRate: 24000,
-  baseF0: 118,
-  rateMs: 104,
-  wordGapMs: 52,
-  stressF0Lift: 9,
-  stressDuration: 1.18,
-  transitionMs: 26,
-  aspiration: 0.025,
-  effort: 0.58,
-  tilt: 0.04,
-  gain: 3.5,
-})
-
 function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, Number(value) || min))
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return min
+  return Math.min(max, Math.max(min, parsed))
 }
 
-function soundTarget(phone, F0, glideTo = null) {
+function soundTarget(phone, F0, voice, glideTo = null) {
   const source = glideTo ? { ...phone, ...glideTo } : phone
   return {
     ...phone,
@@ -32,10 +21,10 @@ function soundTarget(phone, F0, glideTo = null) {
     BW1: source.BW1,
     BW2: source.BW2,
     BW3: source.BW3,
-    gain: READER_PRESET.gain,
-    aspiration: READER_PRESET.aspiration,
-    effort: READER_PRESET.effort,
-    tilt: READER_PRESET.tilt,
+    gain: voice.gain,
+    aspiration: voice.aspiration,
+    effort: voice.effort,
+    tilt: voice.tilt,
   }
 }
 
@@ -43,7 +32,8 @@ function silenceTarget() {
   return { A1: 0, A2: 0, A3: 0, voicing: 0, aspiration: 0 }
 }
 
-export function buildRobotSchedule(text, speed = 1) {
+export function buildRobotSchedule(text, speed = 1, voiceOptions = {}) {
+  const voice = normalizeRobotVoiceOptions(voiceOptions)
   const speechSpeed = clamp(speed, 0.7, 1.7)
   const tokens = textToSpeechTokens(text)
   const schedule = [{ atMs: 0, target: silenceTarget(), transitionMs: 4 }]
@@ -51,7 +41,7 @@ export function buildRobotSchedule(text, speed = 1) {
   let phoneCount = 0
 
   const silence = (ms) => {
-    schedule.push({ atMs: timeMs, target: silenceTarget(), transitionMs: 18 })
+    schedule.push({ atMs: timeMs, target: silenceTarget(), transitionMs: Math.min(voice.transitionMs, 24) })
     timeMs += Math.max(0, ms)
   }
 
@@ -65,50 +55,52 @@ export function buildRobotSchedule(text, speed = 1) {
       const phone = KLATT_PHONEMES[item.code]
       if (!phone) continue
       phoneCount += 1
-      const duration = (READER_PRESET.rateMs / speechSpeed) * (item.stressed ? READER_PRESET.stressDuration : 1)
-      const F0 = READER_PRESET.baseF0 + (item.stressed ? READER_PRESET.stressF0Lift : 0)
+      const duration = (voice.rateMs / speechSpeed) * (item.stressed ? voice.stressDuration : 1)
+      const F0 = voice.baseF0 + (item.stressed ? voice.stressF0Lift : 0)
 
       if (phone.isStop) {
-        const quiet = duration * 0.62
+        // Keep stop consonants crisp, but shorten the dead closure compared with the
+        // first reader preset. Long closures were a major source of the "rough" sound.
+        const quiet = duration * 0.48
         silence(quiet)
-        schedule.push({ atMs: timeMs, target: soundTarget(phone, F0), transitionMs: 4 })
+        schedule.push({ atMs: timeMs, target: soundTarget(phone, F0, voice), transitionMs: 4 })
         timeMs += duration - quiet
         continue
       }
 
       schedule.push({
         atMs: timeMs,
-        target: soundTarget(phone, F0),
-        transitionMs: Math.min(READER_PRESET.transitionMs, duration * 0.34),
+        target: soundTarget(phone, F0, voice),
+        transitionMs: Math.min(voice.transitionMs, duration * 0.42),
       })
 
       if (phone.glideTo) {
         schedule.push({
-          atMs: timeMs + duration * 0.48,
-          target: soundTarget(phone, F0 - 2, phone.glideTo),
-          transitionMs: Math.max(18, duration * 0.38),
+          atMs: timeMs + duration * 0.5,
+          target: soundTarget(phone, F0 - 2, voice, phone.glideTo),
+          transitionMs: Math.max(18, Math.min(voice.transitionMs + 8, duration * 0.42)),
         })
       }
       timeMs += duration
     }
 
-    silence(READER_PRESET.wordGapMs / Math.sqrt(speechSpeed))
+    silence(voice.wordGapMs / Math.sqrt(speechSpeed))
   }
 
   silence(140)
-  return { schedule, totalMs: timeMs, phoneCount }
+  return { schedule, totalMs: timeMs, phoneCount, voice }
 }
 
-export function renderRobotSpeech(text, speed = 1) {
+export function renderRobotSpeech(text, speed = 1, voiceOptions = {}) {
   const cleanText = String(text || '').replace(/\s+/g, ' ').trim()
   if (!cleanText) throw new Error('Nothing readable was found in this section.')
-  const { schedule, totalMs, phoneCount } = buildRobotSchedule(cleanText, speed)
+  const { schedule, totalMs, phoneCount, voice } = buildRobotSchedule(cleanText, speed, voiceOptions)
   if (!phoneCount) throw new Error('This section could not be converted to speech.')
   const pcm = renderToBuffer({
-    sampleRate: READER_PRESET.sampleRate,
+    sampleRate: voice.sampleRate,
     schedule,
     totalMs,
-    initialTarget: { gain: READER_PRESET.gain, effort: READER_PRESET.effort },
+    initialTarget: { gain: voice.gain, effort: voice.effort },
   })
-  return { pcm, sampleRate: READER_PRESET.sampleRate, durationMs: totalMs }
+  return { pcm, sampleRate: voice.sampleRate, durationMs: totalMs, voice }
 }
