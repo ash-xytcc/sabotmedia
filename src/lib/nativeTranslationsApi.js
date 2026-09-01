@@ -1,4 +1,20 @@
 export async function loadNativeTranslations({ slug, contentId, includeUnpublished = false } = {}) {
+  // Editors should not have to manually shuttle translation files into Sabot.
+  // On the A/I translation dashboard, opportunistically sync the current Weblate
+  // component first, then load D1. A missing token or transient Weblate failure
+  // never blocks access to already-saved translation records.
+  if (includeUnpublished && slug === 'the-server-called-paranoia') {
+    try {
+      await fetch('/api/weblate-sync', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      })
+    } catch {
+      // Manual import remains available as a fallback in the admin screen.
+    }
+  }
+
   const params = new URLSearchParams()
   if (slug) params.set('slug', slug)
   if (contentId) params.set('contentId', contentId)
@@ -17,6 +33,17 @@ export async function exportWeblateSource({ slug, contentId } = {}) {
   const data = await response.json().catch(() => ({}))
   if (!response.ok || !data?.ok || !data?.bundle) throw new Error(data?.error || `Source export failed (${response.status})`)
   return data.bundle
+}
+
+export async function syncWeblateTranslations() {
+  const response = await fetch('/api/weblate-sync', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { accept: 'application/json' },
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok || !data?.ok) throw new Error(data?.error || `Weblate sync failed (${response.status})`)
+  return data
 }
 
 export async function saveNativeTranslation(payload = {}) {
