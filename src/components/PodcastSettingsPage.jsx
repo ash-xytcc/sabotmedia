@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { importPodcastFeed, previewPodcastFeed, syncPodcastFeed } from '../lib/podcastImportApi'
-import { loadPodcastSettings, loadPodcastSettingsAsync, savePodcastSettings } from '../lib/podcastSettings'
+import { loadPodcastSettings, loadPodcastShowsAsync, savePodcastSettings } from '../lib/podcastSettings'
 import { adminRoutes } from '../routing/routes'
 
-const CANONICAL_PODCAST_FEED = 'https://sabot.media/feeds/podcasts/all.xml'
 const IMPORT_BATCH_LIMIT = 250
 
 export function PodcastSettingsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requestedShow = String(searchParams.get('show') || '').trim()
+  const creatingNew = searchParams.get('new') === '1'
   const [settings, setSettings] = useState(() => loadPodcastSettings())
+  const [shows, setShows] = useState([])
   const [state, setState] = useState('loading')
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
@@ -23,12 +26,28 @@ export function PodcastSettingsPage() {
 
   useEffect(() => {
     let cancelled = false
-    loadPodcastSettingsAsync()
+    setState('loading')
+    setError('')
+    setSaved(false)
+    setPreview(null)
+    setSelectedKeys(new Set())
+
+    loadPodcastShowsAsync()
       .then((loaded) => {
         if (cancelled) return
-        const next = { ...loaded, rssFeedUrl: CANONICAL_PODCAST_FEED }
-        setSettings(next)
-        setImportUrl(next.sourceFeedUrl || '')
+        setShows(loaded.shows || [])
+        if (creatingNew) {
+          const blank = loadPodcastSettings()
+          setSettings(blank)
+          setImportUrl('')
+        } else {
+          const selected = (loaded.shows || []).find((show) => show.id === requestedShow || show.slug === requestedShow)
+            || (loaded.shows || []).find((show) => show.id === loaded.defaultShowId)
+            || loaded.shows?.[0]
+            || loadPodcastSettings()
+          setSettings(selected)
+          setImportUrl(selected.sourceFeedUrl || '')
+        }
         setState('loaded')
       })
       .catch((err) => {
@@ -37,10 +56,11 @@ export function PodcastSettingsPage() {
         setState('error')
       })
     return () => { cancelled = true }
-  }, [])
+  }, [requestedShow, creatingNew])
 
   const selectedCount = selectedKeys.size
   const newCount = useMemo(() => preview?.episodes?.filter((episode) => !episode.alreadyImported).length || 0, [preview])
+  const activeShowId = settings.id || requestedShow || ''
 
   function update(field, value) {
     setSettings((prev) => ({ ...prev, [field]: value }))
@@ -48,11 +68,18 @@ export function PodcastSettingsPage() {
   }
 
   async function onSave() {
+    if (!String(settings.podcastTitle || '').trim()) {
+      setError('Podcast title is required before saving a new show.')
+      return
+    }
     try {
       setState('saving')
       setError('')
-      const next = await savePodcastSettings({ ...settings, rssFeedUrl: CANONICAL_PODCAST_FEED })
-      setSettings({ ...next, rssFeedUrl: CANONICAL_PODCAST_FEED })
+      const result = await savePodcastSettings(settings, activeShowId)
+      setSettings(result.show)
+      setShows(result.shows)
+      setImportUrl(result.show.sourceFeedUrl || importUrl)
+      setSearchParams({ show: result.show.id })
       setSaved(true)
       setState('loaded')
     } catch (err) {
@@ -61,7 +88,7 @@ export function PodcastSettingsPage() {
     }
   }
 
-  async function previewFeed(url = importUrl) {
+  async function previewFeed(url = importUrl, showId = activeShowId) {
     const source = String(url || '').trim()
     if (!source) {
       setImportError('Paste the current podcast RSS feed URL first.')
@@ -71,7 +98,7 @@ export function PodcastSettingsPage() {
       setImportState('previewing')
       setImportError('')
       setImportNotice('')
-      const data = await previewPodcastFeed(source)
+      const data = await previewPodcastFeed(source, showId)
       setPreview(data)
       setImportUrl(data.sourceUrl || source)
       const defaultSelection = data.episodes
@@ -101,17 +128,26 @@ export function PodcastSettingsPage() {
       setImportState('importing')
       setImportError('')
       setImportNotice('')
-      const data = mode === 'sync'
-        ? await syncPodcastFeed({ feedUrl: importUrl, selectedKeys: selected, importChannelSettings })
-        : await importPodcastFeed({ feedUrl: importUrl, selectedKeys: selected, syncExisting: false, importChannelSettings })
-      const summary = data.result || {}
-      setImportNotice(`${mode === 'sync' ? 'Sync' : 'Import'} complete: ${summary.created || 0} created, ${summary.updated || 0} updated, ${summary.skipped || 0} skipped.`)
-      if (data.settings) {
-        const next = { ...data.settings, rssFeedUrl: CANONICAL_PODCAST_FEED }
-        setSettings(next)
-        setImportUrl(next.sourceFeedUrl || importUrl)
+      const payload = {
+        feedUrl: importUrl,
+        showId: activeShowId,
+        selectedKeys: selected,
+        importChannelSettings,
       }
-      await previewFeed(importUrl)
+      const data = mode === 'sync'
+        ? await syncPodcastFeed(payload)
+        : await importPodcastFeed({ ...payload, syncExisting: false })
+      const summary = data.result || {}
+      const nextShow = data.show || data.settings
+      setImportNotice(`${mode === 'sync' ? 'Sync' : 'Import'} complete for ${nextShow?.podcastTitle || 'this podcast'}: ${summary.created || 0} created, ${summary.updated || 0} updated, ${summary.skipped || 0} skipped.`)
+      if (nextShow) {
+        setSettings(nextShow)
+        setShows(Array.isArray(data.shows) ? data.shows : shows)
+        setImportUrl(nextShow.sourceFeedUrl || importUrl)
+        setSearchParams({ show: nextShow.id })
+        await previewFeed(nextShow.sourceFeedUrl || importUrl, nextShow.id)
+      }
+      setImportState('ready')
     } catch (err) {
       setImportError(String(err?.message || err))
       setImportState('error')
@@ -139,29 +175,32 @@ export function PodcastSettingsPage() {
       <main className="page wp-admin-screen">
         <div className="wp-screen-header">
           <div>
-            <h1>Podcast Settings</h1>
-            <p className="description">Import an existing podcast, keep it synchronized during migration, and control the server-backed metadata used by Sabot's public podcast RSS feed.</p>
+            <h1>{creatingNew && !settings.id ? 'Add Podcast' : `${settings.podcastTitle || 'Podcast'} Settings`}</h1>
+            <p className="description">A podcast is a show-level container. Its RSS source, metadata, imported episodes, and outgoing Sabot RSS feed stay separate from every other podcast.</p>
           </div>
           <div className="review-card__actions">
-            <Link className="button" to={adminRoutes.podcasts}>Back to Episodes</Link>
-            <a className="button" href="/feeds/podcasts/all.xml" target="_blank" rel="noreferrer">Open RSS Feed</a>
+            <Link className="button" to={adminRoutes.podcasts}>Back to Podcasts</Link>
+            {settings.rssFeedUrl ? <a className="button" href={settings.rssFeedUrl} target="_blank" rel="noreferrer">Open This Show's RSS Feed</a> : null}
             <button className="button button--primary" type="button" onClick={onSave} disabled={state === 'loading' || state === 'saving'}>
-              {state === 'saving' ? 'Saving…' : 'Save Podcast Settings'}
+              {state === 'saving' ? 'Saving…' : settings.id ? 'Save Podcast Settings' : 'Create Podcast'}
             </button>
           </div>
         </div>
 
+        {shows.length > 1 && !creatingNew ? (
+          <div className="notice notice-info"><p><strong>Editing one show:</strong> {settings.podcastTitle}. Return to <Link to={adminRoutes.podcasts}>Podcasts</Link> to manage the others.</p></div>
+        ) : null}
         {error ? <div className="notice notice-error" role="alert"><p><strong>Podcast settings error:</strong> {error}</p></div> : null}
         {saved ? <div className="notice notice-success" role="status"><p>Podcast settings saved to the production database.</p></div> : null}
 
         <section className="wp-meta-box">
-          <h2>Import or synchronize an existing podcast RSS feed</h2>
-          <p className="description">Paste the feed from your current podcast host. Sabot fetches it server-side, previews the channel and episodes, preserves original GUIDs and publication dates, and keeps existing public audio enclosure URLs in place. Importing does not delete or move audio from the old host.</p>
+          <h2>{settings.id ? 'Import or synchronize this podcast RSS feed' : 'Create this podcast from an RSS feed'}</h2>
+          <p className="description">Paste this show's current RSS feed. On a new podcast, the first import creates the show and gives it its own Sabot RSS URL. On an existing podcast, imports and resyncs remain scoped to this show only.</p>
           <div className="wp-settings-form">
             <label>
               <span>Current / source RSS feed URL</span>
               <input type="url" value={importUrl} onChange={(event) => setImportUrl(event.target.value)} placeholder="https://current-host.example/show/rss" />
-              <small>This is the feed Sabot imports from. It is different from Sabot's canonical outgoing feed below.</small>
+              <small>This source belongs to this podcast only. Adding a different podcast should start from Add Podcast instead of replacing this URL.</small>
             </label>
           </div>
           <div className="review-card__actions">
@@ -178,7 +217,7 @@ export function PodcastSettingsPage() {
             <div className="wp-screen-header">
               <div>
                 <h2>{preview.podcast?.title || 'Source podcast'}</h2>
-                <p className="description">{preview.counts?.total || 0} episodes found · {newCount} new · {preview.counts?.existing || 0} already imported.</p>
+                <p className="description">{preview.counts?.total || 0} episodes found · {newCount} new · {preview.counts?.existing || 0} already imported for this show.</p>
               </div>
               <div className="review-card__actions">
                 <button className="button" type="button" onClick={() => selectEpisodes('new')}>Select new</button>
@@ -189,11 +228,11 @@ export function PodcastSettingsPage() {
             <p className="description">One request can import or resync up to {IMPORT_BATCH_LIMIT} episodes. Large archives can be moved in repeated batches without creating duplicates.</p>
             <label className="native-content-editor__check">
               <input type="checkbox" checked={importChannelSettings} onChange={(event) => setImportChannelSettings(event.target.checked)} />
-              <span>Also import/update show title, description, author, artwork, language, category, owner information, and explicit status</span>
+              <span>Import/update this show's title, description, author, artwork, language, category, owner information, and explicit status</span>
             </label>
             <div className="review-card__actions">
               <button className="button button--primary" type="button" onClick={() => runImport('import')} disabled={importState === 'importing' || !selectedCount}>{importState === 'importing' ? 'Working…' : `Import selected (${selectedCount})`}</button>
-              <button className="button" type="button" onClick={() => runImport('sync')} disabled={importState === 'importing' || !selectedCount}>Resync selected</button>
+              {settings.id ? <button className="button" type="button" onClick={() => runImport('sync')} disabled={importState === 'importing' || !selectedCount}>Resync selected</button> : null}
             </div>
             <div className="wp-list-table-wrap">
               <table className="wp-list-table widefat striped">
@@ -205,7 +244,7 @@ export function PodcastSettingsPage() {
                       <td><strong>{episode.title}</strong>{episode.episodeNumber ? <div className="description">Episode {episode.episodeNumber}{episode.season ? ` · Season ${episode.season}` : ''}</div> : null}</td>
                       <td>{episode.publishedAt ? new Date(episode.publishedAt).toLocaleDateString() : 'unknown'}</td>
                       <td>{episode.enclosureUrl ? <a href={episode.enclosureUrl} target="_blank" rel="noreferrer">enclosure</a> : <span className="description">missing</span>}</td>
-                      <td>{episode.alreadyImported ? 'Already imported' : 'New'}</td>
+                      <td>{episode.alreadyImported ? 'Already imported in this show' : 'New'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -219,10 +258,10 @@ export function PodcastSettingsPage() {
           <div className="wp-settings-form">
             <label>
               <span>Canonical Sabot RSS feed URL</span>
-              <input type="url" value={CANONICAL_PODCAST_FEED} readOnly />
-              <small>This is the URL to submit to Spotify, Apple Podcasts, Pocket Casts, AntennaPod, and other podcast directories after you verify the imported archive.</small>
+              <input type="text" value={settings.rssFeedUrl || 'Created after the podcast is saved or imported'} readOnly />
+              <small>Each podcast gets a separate URL such as /feeds/podcasts/molotov-now.xml. This is the URL to submit to podcast directories.</small>
             </label>
-            <label><span>Podcast title</span><input value={settings.podcastTitle} onChange={(e) => update('podcastTitle', e.target.value)} placeholder="Sabot Media Podcast" /></label>
+            <label><span>Podcast title</span><input value={settings.podcastTitle} onChange={(e) => update('podcastTitle', e.target.value)} placeholder="Podcast title" /></label>
             <label><span>Author</span><input value={settings.author} onChange={(e) => update('author', e.target.value)} placeholder="Sabot Media" /></label>
             <label><span>Description</span><textarea rows="4" value={settings.description} onChange={(e) => update('description', e.target.value)} placeholder="Describe the show for podcast directories." /></label>
             <label><span>Website URL</span><input type="url" value={settings.websiteUrl} onChange={(e) => update('websiteUrl', e.target.value)} placeholder="https://sabot.media" /></label>
