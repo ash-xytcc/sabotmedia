@@ -49,6 +49,7 @@ export function PublicationTopbar() {
               />
             ))}
             {SHOW_AI_CAMPAIGN_LINKS ? <EditableLink className="publication-topbar__campaign-link" labelField="nav.campaign.label" hrefField="nav.campaign.href" defaultLabel="A/I Campaign" defaultHref={publicRoutes.aiCampaign} /> : null}
+            <EditableLink className="publication-topbar__campaigns-link" labelField="nav.campaigns.label" hrefField="nav.campaigns.href" defaultLabel="Campaigns" defaultHref={publicRoutes.campaigns} />
             <EditableLink labelField="nav.gallery.label" hrefField="nav.gallery.href" defaultLabel="Gallery" defaultHref="/aberdeen-local-1312-gallery" />
           </nav>
         </div>
