@@ -11,27 +11,36 @@ const podcastFeed = fs.readFileSync(new URL('../functions/rss/podcast.xml.js', i
 test('podcast settings have no browser-only persistence', () => {
   assert.doesNotMatch(client, /localStorage|PODCAST_SETTINGS_KEY/)
   assert.match(client, /\/api\/podcast-settings/)
+  assert.match(client, /loadPodcastShowsAsync/)
   assert.match(client, /loadPodcastSettingsAsync/)
   assert.match(client, /await fetch/)
 })
 
-test('podcast settings API persists through D1 with publishing permission', () => {
+test('podcast settings API persists a multi-show registry through D1 with publishing permission', () => {
   assert.match(api, /permissionHasCapability\(permission, 'publishing:write'\)/)
-  assert.match(api, /writePodcastSettings/)
+  assert.match(api, /upsertPodcastShow/)
+  assert.match(api, /readPodcastShows/)
   assert.match(helper, /INSERT INTO site_settings/)
+  assert.match(helper, /podcast-shows-v1/)
   assert.match(helper, /podcast-settings-v1/)
+  assert.match(helper, /defaultShowId/)
   assert.doesNotMatch(helper, /db\.exec/)
 })
 
-test('Podcast Settings UI shows the canonical production RSS URL and confirmed database save', () => {
-  assert.match(page, /https:\/\/sabot\.media\/feeds\/podcasts\/all\.xml/)
+test('Podcast Settings UI edits one show and confirms database save', () => {
+  assert.match(page, /useSearchParams/)
+  assert.match(page, /searchParams\.get\('show'\)/)
+  assert.match(page, /searchParams\.get\('new'\) === '1'/)
   assert.match(page, /await savePodcastSettings/)
   assert.match(page, /saved to the production database/)
+  assert.match(page, /Each podcast gets a separate URL/)
   assert.doesNotMatch(page, /saved locally|localStorage/)
 })
 
-test('podcast RSS consumes persisted server settings and directory metadata', () => {
-  assert.match(podcastFeed, /readPodcastSettings\(db\)/)
+test('podcast RSS consumes a selected show and its directory metadata', () => {
+  assert.match(podcastFeed, /readPodcastShows\(db\)/)
+  assert.match(podcastFeed, /getPodcastFeedItems\(db, show\)/)
+  assert.match(podcastFeed, /podcastShowOwnsEntry/)
   assert.match(podcastFeed, /<itunes:author>/)
   assert.match(podcastFeed, /<itunes:category/)
   assert.match(podcastFeed, /<itunes:image/)

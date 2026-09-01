@@ -1,21 +1,23 @@
-export async function previewPodcastFeed(feedUrl) {
-  return requestPodcastImport({ action: 'preview', feedUrl })
+export async function previewPodcastFeed(feedUrl, showId = '') {
+  return requestPodcastImport({ action: 'preview', feedUrl, showId })
 }
 
-export async function importPodcastFeed({ feedUrl, selectedKeys, syncExisting = true, importChannelSettings = true }) {
+export async function importPodcastFeed({ feedUrl, showId = '', selectedKeys, syncExisting = true, importChannelSettings = true }) {
   return requestPodcastImport({
     action: 'import',
     feedUrl,
+    showId,
     selectedKeys,
     syncExisting,
     importChannelSettings,
   })
 }
 
-export async function syncPodcastFeed({ feedUrl, selectedKeys, importChannelSettings = true }) {
+export async function syncPodcastFeed({ feedUrl, showId = '', selectedKeys, importChannelSettings = true }) {
   return requestPodcastImport({
     action: 'sync',
     feedUrl,
+    showId,
     selectedKeys,
     syncExisting: true,
     importChannelSettings,

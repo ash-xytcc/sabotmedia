@@ -58,19 +58,24 @@ test('podcast source fetch validation rejects local and private network URLs', (
   assert.equal(validatePodcastFeedUrl('https://example.org/feed.xml'), 'https://example.org/feed.xml')
 })
 
-test('podcast import endpoint is D1 authoritative, permission checked, and duplicate aware', () => {
+test('podcast import endpoint is D1 authoritative, permission checked, duplicate aware, and show scoped', () => {
   assert.match(importApi, /publishing:write/)
   assert.match(importApi, /listNativeEntries\(db, \{ includeFuture: true \}\)/)
   assert.match(importApi, /sourceKind: 'podcast-rss'/)
   assert.match(importApi, /sourceExternalId: episode\.guid/)
   assert.match(importApi, /rss-resync/)
   assert.match(importApi, /MAX_IMPORT_EPISODES = 250/)
+  assert.match(importApi, /requestedShowId/)
+  assert.match(importApi, /entryBelongsToShowImport/)
+  assert.match(importApi, /upsertPodcastShow/)
   assert.doesNotMatch(importApi, /localStorage/)
 })
 
-test('podcast settings UI supports preview, selective import, and repeatable resync', () => {
-  assert.match(settingsPage, /Import or synchronize an existing podcast RSS feed/)
+test('podcast settings UI supports preview, selective import, repeatable resync, and separate shows', () => {
+  assert.match(settingsPage, /Import or synchronize this podcast RSS feed/)
+  assert.match(settingsPage, /Create this podcast from an RSS feed/)
   assert.match(settingsPage, /previewPodcastFeed/)
+  assert.match(settingsPage, /showId: activeShowId/)
   assert.match(settingsPage, /Import selected/)
   assert.match(settingsPage, /Resync selected/)
   assert.match(settingsPage, /sourceFeedLastSyncedAt/)
@@ -89,8 +94,8 @@ test('feeds admin uses authoritative live manifest instead of browser archive gu
 
 test('podcast output uses imported GUID and delivery-asset explicit metadata', () => {
   const xml = buildPodcastFeedXml({
-    requestUrl: 'https://sabot.media/feeds/podcasts/all.xml',
-    selfPath: '/feeds/podcasts/all.xml',
+    requestUrl: 'https://sabot.media/feeds/podcasts/molotov-now.xml',
+    selfPath: '/feeds/podcasts/molotov-now.xml',
     settings: { podcastTitle: 'Imported Show', author: 'Sabot' },
     items: [{
       id: 'native-id',
@@ -113,4 +118,5 @@ test('podcast output uses imported GUID and delivery-asset explicit metadata', (
   assert.match(xml, /<guid isPermaLink="false">original-guid-123<\/guid>/)
   assert.match(xml, /<enclosure url="https:\/\/cdn\.example\.org\/episode\.mp3" type="audio\/mpeg" length="98765" \/>/)
   assert.match(xml, /<itunes:explicit>yes<\/itunes:explicit>/)
+  assert.match(xml, /<atom:link href="https:\/\/sabot\.media\/feeds\/podcasts\/molotov-now\.xml"/)
 })
