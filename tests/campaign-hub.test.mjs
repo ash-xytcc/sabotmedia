@@ -6,6 +6,7 @@ const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
 const routes = fs.readFileSync(new URL('../src/routing/routes.js', import.meta.url), 'utf8')
 const page = fs.readFileSync(new URL('../src/components/CampaignPage.jsx', import.meta.url), 'utf8')
 const admin = fs.readFileSync(new URL('../src/components/CampaignAdminPage.jsx', import.meta.url), 'utf8')
+const sectionRegistry = fs.readFileSync(new URL('../src/lib/campaignSections.js', import.meta.url), 'utf8')
 const client = fs.readFileSync(new URL('../src/lib/campaignsApi.js', import.meta.url), 'utf8')
 const server = fs.readFileSync(new URL('../functions/api/campaigns.js', import.meta.url), 'utf8')
 const model = fs.readFileSync(new URL('../functions/api/_lib/campaigns.js', import.meta.url), 'utf8')
@@ -93,12 +94,13 @@ test('campaign public design is isolated, responsive, and loaded after legacy pu
   assert.ok(main.indexOf("./campaign-page.css") > main.indexOf("./sitewide-mobile-polish.css"))
 })
 
-test('campaign editor can manage updates, resources, social, graphics, coverage, sources, timeline, FAQ and translations', () => {
-  for (const key of ['updates', 'resources', 'social', 'graphics', 'coverage', 'signatories', 'sources', 'timeline', 'faq', 'translations']) {
-    assert.match(admin, new RegExp(`key: '${key}'`))
+test('campaign editor exposes reusable modules for all supported content types', () => {
+  for (const key of ['updates', 'social', 'graphics', 'coverage', 'signatories', 'sources', 'timeline', 'faq', 'translations', 'reporting', 'letters']) {
+    assert.match(sectionRegistry, new RegExp(`key: '${key}'`))
   }
+  assert.match(admin, /Letters \+ Reporting Resources/)
   assert.match(admin, /Campaign saved to D1/)
-  assert.match(admin, /No campaigns yet\. Start with Add New Campaign/)
+  assert.match(admin, /No campaigns yet\./)
 })
 
 test('campaign reporting excludes body-only false positives and keeps explicit A/I relationships', () => {
@@ -190,7 +192,6 @@ test('campaign asks readers to understand the case before taking action', () => 
   assert.ok(reportingSection > 0)
   assert.ok(lettersSection > reportingSection)
   assert.ok(actionSection > lettersSection)
-
   assert.match(page, /visibleSections\.map\(\(key\) => <a href=\{`#\$\{key\}`\}/)
   assert.match(page, /const CAMPAIGN_SECTION_ORDER = \['status', 'reporting', 'letters', 'act'/)
 })
