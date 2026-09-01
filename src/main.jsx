@@ -58,6 +58,10 @@ import './public-accessibility.css'
 /* Authoritative AudioLab workspace layers. */
 import './audio-lab-audacity-layout.css'
 import './audio-lab-studio-v4.css'
+/* A cold Studio popup first requests /?audiolab-studio=1. This module rewrites
+   that guaranteed root document to the real protected AudioLab route before
+   every route-aware AudioLab runtime below evaluates. */
+import './audioLabStandalone.js'
 import './audioLabKeyboardShortcuts.js'
 import './audioLabTaskPages.js'
 import './audioLabTaskNavigationFix.js'
@@ -87,9 +91,6 @@ import './audioLabAudacityQuickTools.js'
    all route-aware AudioLab enhancements initialize when the page is entered
    through normal SPA admin navigation instead of requiring a hard refresh. */
 import './audioLabSpaRuntimeGuard.js'
-/* AudioLab opens as a named dedicated studio window and strips admin chrome
-   when ?studio=1 is present. */
-import './audioLabStandalone.js'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

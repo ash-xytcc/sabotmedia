@@ -1,7 +1,25 @@
 const AUDIO_LAB_PATHS = new Set(['/wp-admin/audiolab', '/audiolab'])
 const STUDIO_PARAM = 'studio'
+const STUDIO_BOOT_PARAM = 'audiolab-studio'
 const STUDIO_WINDOW_NAME = 'sabot-audiolab-studio'
 let observer = null
+
+function bootstrapStudioRoute() {
+  if (typeof window === 'undefined') return
+  const pathname = String(window.location.pathname || '/')
+  const params = new URLSearchParams(window.location.search)
+  if (pathname !== '/' || params.get(STUDIO_BOOT_PARAM) !== '1') return
+
+  params.delete(STUDIO_BOOT_PARAM)
+  params.set(STUDIO_PARAM, '1')
+  const query = params.toString()
+  const next = `/wp-admin/audiolab${query ? `?${query}` : ''}${window.location.hash || ''}`
+  window.history.replaceState(window.history.state, '', next)
+}
+
+// A fresh popup must first request the guaranteed root document. Rewrite the
+// location before React Router and the route-aware AudioLab modules initialize.
+bootstrapStudioRoute()
 
 function isAudioLabPath(pathname = window.location.pathname) {
   return AUDIO_LAB_PATHS.has(String(pathname || '').replace(/\/+$/, '') || '/')
@@ -13,9 +31,12 @@ function isStudioMode() {
 }
 
 function makeStudioUrl(input = window.location.href) {
-  const url = new URL(input, window.location.origin)
-  url.pathname = '/wp-admin/audiolab'
-  url.searchParams.set(STUDIO_PARAM, '1')
+  const source = new URL(input, window.location.origin)
+  const url = new URL('/', window.location.origin)
+  source.searchParams.forEach((value, key) => {
+    if (key !== STUDIO_PARAM && key !== STUDIO_BOOT_PARAM) url.searchParams.set(key, value)
+  })
+  url.searchParams.set(STUDIO_BOOT_PARAM, '1')
   return url
 }
 
