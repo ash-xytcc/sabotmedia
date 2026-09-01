@@ -126,3 +126,14 @@ test('private contributor sends cannot become public through a visibility field'
   assert.match(portal, /session, publish\)/)
   assert.doesNotMatch(portal, /visibility: publish \? 'public' : 'private'/)
 })
+
+test('contributor sessions outrank editor cookies and public reads never expose the private room', async () => {
+  const [endpoint, client, admin, portal] = await Promise.all([read('functions/api/campaign-correspondence.js'), read('src/lib/campaignCorrespondenceApi.js'), read('src/components/CampaignCorrespondenceAdmin.jsx'), read('src/components/CampaignContributorPage.jsx')])
+  assert.match(endpoint, /if \(contributorSessionSupplied\) \{[\s\S]*contributor\?\.campaignId === campaign\.id/)
+  assert.match(endpoint, /permission\.canEdit && url\.searchParams\.get\('view'\) === 'admin'/)
+  assert.match(endpoint, /const actingAsContributor = contributorSessionSupplied && contributor/)
+  assert.match(client, /admin \? '&view=admin' : ''/)
+  assert.match(admin, /loadCorrespondence\(campaign\.slug, '', true\)/)
+  assert.match(portal, /PUBLIC · ON THE CAMPAIGN WEBSITE/)
+  assert.match(portal, /PRIVATE · ONLY IN THIS ROOM/)
+})

@@ -9,7 +9,7 @@ export function CampaignCorrespondenceAdmin({ campaign, enabled = true, onNotice
   const [instagram, setInstagram] = useState({ caption: '', url: '', publishedAt: '', file: null })
   const [busy, setBusy] = useState('')
   const [editingMessage, setEditingMessage] = useState(null)
-  async function reload() { try { setData(await loadCorrespondence(campaign.slug)) } catch (error) { onNotice(`Correspondence failed to load: ${error.message}`, 'error') } }
+  async function reload() { try { setData(await loadCorrespondence(campaign.slug, '', true)) } catch (error) { onNotice(`Correspondence failed to load: ${error.message}`, 'error') } }
   useEffect(() => { if (enabled) reload() }, [campaign.id, enabled])
   async function add(event) { event.preventDefault(); try { const result = await createContributor(campaign.slug, person); setCreatedLink(`${window.location.origin}/contribute/${campaign.slug}#access=${result.token}`); setPerson({ displayName: '', byline: '', pin: '', directPublish: true }); await reload(); onNotice('Contributor key created. Copy it now; the secret is not shown again.', 'success') } catch (error) { onNotice(error.message, 'error') } }
   async function revoke(item) { if (!window.confirm(`${item.revokedAt ? 'Restore' : 'Revoke'} access for ${item.displayName}?`)) return; await patchCorrespondence({ action: 'revoke', id: item.id, revoked: !item.revokedAt }); await reload() }
