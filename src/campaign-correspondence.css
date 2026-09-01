@@ -60,7 +60,9 @@
 .campaign-donation__card > strong { display: block; margin: 12px 0; font: 900 clamp(1.8rem,4vw,3.5rem)/.9 var(--campaign-display); text-transform: uppercase; }
 .campaign-donation__card .campaign-button { margin: 14px 0; width: 100%; text-align: center; background: #ce1126; color: #fff; }
 .campaign-dispatch-list { display: grid; gap: 18px; }
-.campaign-dispatch-list article,.campaign-dispatch-empty { max-width: 780px; padding: clamp(20px,4vw,38px); border: 2px solid var(--campaign-ink); background: #fff; box-shadow: 8px 8px 0 #007a3d; }
+.campaign-dispatch-list article,.campaign-dispatch-empty { max-width: 780px; padding: clamp(20px,4vw,38px); border: 2px solid var(--campaign-ink); background: #fff; color:#111; box-shadow: 8px 8px 0 #007a3d; }
+.campaign-dispatch-list article :is(strong,p,small,time,a),.campaign-dispatch-empty :is(strong,p,a) { color:#111; }
+.campaign-dispatch-list article a,.campaign-dispatch-empty a { text-decoration-color:#ce1126; }
 .campaign-dispatch-list header { display: flex; justify-content: space-between; gap: 18px; border-bottom: 1px solid #bbb; padding-bottom: 12px; }
 .campaign-dispatch-list audio,.campaign-dispatch-list video,.campaign-dispatch-list img { width: 100%; max-height: 70vh; margin: 15px 0; }
 .campaign-question-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(30px,6vw,90px); }
