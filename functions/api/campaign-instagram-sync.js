@@ -24,8 +24,9 @@ export async function onRequestPost(context) {
     endpoint.searchParams.set('limit', '50'); endpoint.searchParams.set('access_token', token)
     const response = await fetch(endpoint, { headers: { accept: 'application/json' } }); const payload = await response.json()
     if (!response.ok) return json({ ok: false, error: payload?.error?.message || `Instagram returned ${response.status}` }, 502)
-    let imported = 0; let skipped = 0; const errors = []
+    let imported = 0; let skipped = 0; let filtered = 0; const errors = []
     for (const post of payload.data || []) {
+      if (!matchesCampaignPost(campaign, post)) { filtered += 1; continue }
       const exists = await db.prepare(`SELECT id FROM campaign_messages WHERE campaign_id = ? AND origin_source = 'instagram' AND origin_id = ? LIMIT 1`).bind(campaign.id, String(post.id)).first()
       if (exists) { skipped += 1; continue }
       try {
@@ -35,7 +36,7 @@ export async function onRequestPost(context) {
         imported += 1
       } catch (error) { errors.push({ id: String(post.id || ''), error: String(error?.message || error) }) }
     }
-    return json({ ok: true, imported, skipped, errors })
+    return json({ ok: true, imported, skipped, filtered, errors })
   } catch (error) { return json({ ok: false, error: String(error?.message || error) }, 500) }
 }
 
@@ -52,5 +53,13 @@ async function archiveMedia(bucket, source, campaignId, post) {
   await bucket.put(key, bytes, { httpMetadata: { contentType, cacheControl: 'public, max-age=31536000, immutable' }, customMetadata: { campaignId, instagramId: String(post.id), sourceUrl: String(post.permalink || '') } })
   const publicUrl = new URL('https://sabot.media/api/media/files'); publicUrl.searchParams.set('key', key)
   return { url: publicUrl.toString(), type: contentType.startsWith('video/') ? 'video' : 'image' }
+}
+
+export function matchesCampaignPost(campaign, post) {
+  const caption = String(post?.caption || '').toLocaleLowerCase('en-US')
+  if (campaign?.slug === 'food-not-bombs-gaza') {
+    return caption.includes('#foodnotbombsgaza') || caption.includes('@foodnotbombs_gaza')
+  }
+  return false
 }
 function json(value, status = 200) { return new Response(JSON.stringify(value), { status, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } }) }
