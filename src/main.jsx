@@ -54,8 +54,9 @@ import './campaign-benefit-kit.css'
 import './contact-secure-form.css'
 import './admin-editor-sticky-toolbar.css'
 import './public-accessibility.css'
-/* This is intentionally last: it replaces the accumulated fixed/drawer AudioLab layout. */
+/* Authoritative AudioLab workspace layers. */
 import './audio-lab-audacity-layout.css'
+import './audio-lab-studio-v4.css'
 import './audioLabKeyboardShortcuts.js'
 import './audioLabTaskPages.js'
 import './audioLabTaskNavigationFix.js'
