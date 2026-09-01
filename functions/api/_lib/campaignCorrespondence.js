@@ -66,9 +66,11 @@ export async function authenticateContributor(db, { token, pin, ip = '' }) {
 
 export async function contributorFromRequest(db, request) {
   await ensureCampaignCorrespondenceTables(db)
+  const dedicated = String(request.headers.get('x-sabot-contributor-session') || '').trim()
   const bearer = String(request.headers.get('authorization') || '').match(/^Bearer\s+(.+)$/i)?.[1] || ''
-  if (!bearer) return null
-  const row = await db.prepare(`SELECT c.* FROM campaign_contributor_sessions s JOIN campaign_contributors c ON c.id = s.contributor_id WHERE s.session_hash = ? AND s.expires_at > ? AND c.revoked_at IS NULL LIMIT 1`).bind(await sha256(bearer), new Date().toISOString()).first()
+  const session = dedicated || bearer
+  if (!session) return null
+  const row = await db.prepare(`SELECT c.* FROM campaign_contributor_sessions s JOIN campaign_contributors c ON c.id = s.contributor_id WHERE s.session_hash = ? AND datetime(s.expires_at) > datetime(?) AND c.revoked_at IS NULL LIMIT 1`).bind(await sha256(session), new Date().toISOString()).first()
   return row ? contributorRow(row) : null
 }
 
