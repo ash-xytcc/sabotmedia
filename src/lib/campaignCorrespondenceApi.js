@@ -5,7 +5,7 @@ async function request(url, options = {}) {
   return data
 }
 function contributorSessionHeader(session) { return session ? { 'x-sabot-contributor-session': session } : {} }
-export function loadCorrespondence(campaign, session = '') { return request(`/api/campaign-correspondence?campaign=${encodeURIComponent(campaign)}`, { headers: contributorSessionHeader(session) }) }
+export function loadCorrespondence(campaign, session = '', admin = false) { return request(`/api/campaign-correspondence?campaign=${encodeURIComponent(campaign)}${admin ? '&view=admin' : ''}`, { headers: contributorSessionHeader(session) }) }
 export function authenticateContributor(token, pin) { return request('/api/campaign-contributor-auth', { method: 'POST', body: JSON.stringify({ token, pin }) }) }
 export function sendMessage(campaign, message, session = '', publish = false) { return request('/api/campaign-correspondence', { method: 'POST', headers: contributorSessionHeader(session), body: JSON.stringify({ action: publish ? 'publish-message' : 'message', campaign, ...message }) }) }
 export function submitQuestion(campaign, values) { return request('/api/campaign-correspondence', { method: 'POST', body: JSON.stringify({ action: 'question', campaign, ...values }) }) }
