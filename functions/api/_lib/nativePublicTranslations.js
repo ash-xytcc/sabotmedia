@@ -169,12 +169,34 @@ export async function deleteTranslation(db, nativeContentId, languageCode) {
   return { ok: true }
 }
 
+function splitArticleBodyHtml(value) {
+  const html = String(value || '').trim()
+  if (!html) return {}
+
+  const chunks = html
+    .split(/(?=<(?:p|h[1-6]|ul|ol|blockquote|figure|hr)\b)/gi)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+
+  return Object.fromEntries(
+    chunks.map((chunk, index) => [String(index + 1).padStart(3, '0'), chunk])
+  )
+}
+
+function joinArticleBodyHtml(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return ''
+  return Object.entries(body)
+    .sort(([left], [right]) => left.localeCompare(right, 'en', { numeric: true }))
+    .map(([, value]) => String(value || ''))
+    .join('')
+}
+
 export function buildWeblateSourceBundle(content) {
   if (!content) throw new Error('content not found')
   return {
     title: String(content.title || ''),
     excerpt: String(content.excerpt || ''),
-    bodyHtml: String(content.bodyHtml || content.body || ''),
+    body: splitArticleBodyHtml(content.bodyHtml || content.body || ''),
     seoTitle: String(content.seoTitle || ''),
     seoDescription: String(content.seoDescription || ''),
   }
@@ -187,7 +209,7 @@ export function translationFromWeblateBundle(bundle = {}, defaults = {}) {
     translation: {
       title: strings.title,
       excerpt: strings.excerpt,
-      bodyHtml: strings.bodyHtml,
+      bodyHtml: joinArticleBodyHtml(strings.body) || String(strings.bodyHtml || ''),
       seoTitle: strings.seoTitle,
       seoDescription: strings.seoDescription,
     },
