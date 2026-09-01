@@ -109,6 +109,7 @@ export function WpAnalyticsWidgets({ compact = false }) {
           <div>
             <strong>Traffic overview</strong>
             <span>{currentAnalytics?.generatedAt ? `Updated ${formatTime(currentAnalytics.generatedAt)}` : 'Loading current report…'}</span>
+            <span>Today and daily totals use Pacific Time.</span>
             {coverageNote ? <span className="wp-analytics-coverage-note">{coverageNote}</span> : null}
           </div>
           <div className="wp-analytics-periods" aria-label="Analytics reporting period">

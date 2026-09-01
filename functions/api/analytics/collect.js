@@ -6,8 +6,10 @@ import {
   isAutomatedRequest,
   isSameOriginAnalyticsRequest,
   json,
+  ANALYTICS_TIME_ZONE,
   parseDevice,
   parseReferrer,
+  reportingDay,
 } from './_lib.js'
 
 export async function onRequestPost(context) {
@@ -33,7 +35,7 @@ export async function onRequestPost(context) {
     const referrer = parseReferrer(body?.referrer, url.origin)
     const now = new Date()
     const occurredAt = now.toISOString()
-    const day = occurredAt.slice(0, 10)
+    const day = reportingDay(now)
     const sessionHash = await hashSession(`${day}:${sessionId}`)
     const path = cleanPath(body?.path)
     const id = crypto.randomUUID()
@@ -47,8 +49,8 @@ export async function onRequestPost(context) {
     await context.env.BF_DB.prepare(`
       INSERT INTO analytics_events (
         id, occurred_at, day, path, page_title, session_hash,
-        referrer_host, referrer_path, source, medium, campaign, device, browser, country, event_type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pageview')
+        referrer_host, referrer_path, source, medium, campaign, device, browser, country, event_type, reporting_timezone
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pageview', ?)
     `).bind(
       id,
       occurredAt,
@@ -64,6 +66,7 @@ export async function onRequestPost(context) {
       agent.device,
       agent.browser,
       country,
+      ANALYTICS_TIME_ZONE,
     ).run()
 
     if (Math.random() < 0.01) {

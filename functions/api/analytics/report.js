@@ -1,6 +1,6 @@
 import { permissionHasCapability, resolvePublicSitePermission } from '../_lib/publicSiteAuth.js'
 import { ensureNativePublicContentTable } from '../_lib/nativePublicContent.js'
-import { daysAgo, ensureAnalyticsTable, json } from './_lib.js'
+import { ANALYTICS_TIME_ZONE, daysAgo, ensureAnalyticsReportingDays, ensureAnalyticsTable, json, reportingDay } from './_lib.js'
 import { resolveNamedQueries } from './reportQueries.js'
 import { analyticsPathLabel } from '../../../shared/analyticsPath.js'
 
@@ -34,9 +34,10 @@ export async function onRequestGet(context) {
     const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 30
     const since = daysAgo(days)
     const previousSince = daysAgo(days * 2)
-    const today = new Date().toISOString().slice(0, 10)
+    const today = reportingDay()
     const db = context.env.BF_DB
-    await Promise.all([ensureAnalyticsTable(db), ensureNativePublicContentTable(db)])
+    await ensureAnalyticsTable(db)
+    await Promise.all([ensureAnalyticsReportingDays(db), ensureNativePublicContentTable(db)])
 
     const report = await resolveNamedQueries({
       summary: db.prepare(`SELECT
@@ -119,6 +120,8 @@ export async function onRequestGet(context) {
     return json({
       ok: true,
       generatedAt: new Date().toISOString(),
+      reportingDate: today,
+      reportingTimeZone: ANALYTICS_TIME_ZONE,
       days,
       summary: normalizeRow(report.summary),
       realtime: normalizeRow(report.realtime),
