@@ -1,8 +1,29 @@
+.piece-page .piece-article-lead {
+  position: relative;
+  z-index: 40;
+  overflow: visible;
+}
+
+.piece-page .piece-article-lead__below {
+  position: relative;
+  z-index: 50;
+  overflow: visible;
+}
+
+.piece-page .piece-layout {
+  position: relative;
+  z-index: 1;
+}
+
 .piece-language-switcher {
   position: relative;
-  z-index: 30;
+  z-index: 60;
   margin-left: auto;
   font: inherit;
+}
+
+.piece-language-switcher[open] {
+  z-index: 1000;
 }
 
 .piece-language-switcher__button {
@@ -68,6 +89,7 @@
   position: absolute;
   top: calc(100% + 0.4rem);
   right: 0;
+  z-index: 1001;
   display: grid;
   width: min(19rem, calc(100vw - 2rem));
   border: 1px solid var(--ink, #111);
