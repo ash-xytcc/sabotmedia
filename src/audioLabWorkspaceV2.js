@@ -1,4 +1,4 @@
-const ACTIVE_TAB_KEY = 'sabot:audiolab:inspector-tab:v2'
+const ACTIVE_TAB_KEY = 'sabot:audiolab:inspector-tab:v3'
 let observer = null
 let refreshQueued = false
 
@@ -13,14 +13,16 @@ function rootPage() {
 function labelForPanel(panel, index) {
   if (panel.dataset.audiolabInspectorLabel) return panel.dataset.audiolabInspectorLabel
   const text = `${panel.querySelector('.audio-lab-eyebrow')?.textContent || ''} ${panel.querySelector('h2')?.textContent || ''}`.trim()
+  if (/robot voice|speech generator/i.test(text)) return 'Robot Voice'
+  if (/project json|preserved source model/i.test(text)) return 'Project'
   if (/render|delivery|feed readiness/i.test(text)) return 'Publish'
-  if (/source/i.test(text)) return 'Sources'
+  if (/project assets|source bin/i.test(text)) return 'Assets'
   if (/clip/i.test(text)) return 'Clip'
   if (/effect/i.test(text)) return 'Effects'
   if (/transcript/i.test(text)) return 'Transcript'
   if (/marker/i.test(text)) return 'Markers'
   if (/episode|metadata/i.test(text)) return 'Episode'
-  if (/project json|preserved source/i.test(text)) return 'Project'
+  if (/source/i.test(text)) return 'Assets'
   return panel.querySelector('h2')?.textContent?.trim() || `Panel ${index + 1}`
 }
 
@@ -41,7 +43,7 @@ function updateInspectorButton() {
   const button = root?.querySelector('[data-audiolab-inspector-toggle]')
   if (!button) return
   const open = root.dataset.audiolabInspectorOpen === 'true'
-  button.textContent = open ? 'Close Inspector' : 'Inspector'
+  button.textContent = open ? 'Close Tools' : 'Tools'
   button.setAttribute('aria-expanded', open ? 'true' : 'false')
 }
 
@@ -93,10 +95,15 @@ function buildTabs(sidebar, panels) {
   const nav = document.createElement('div')
   nav.className = 'audio-lab-inspector-tabs'
   nav.setAttribute('role', 'tablist')
-  nav.setAttribute('aria-label', 'AudioLab inspector')
+  nav.setAttribute('aria-label', 'AudioLab tools')
 
+  const usedLabels = new Map()
   panels.forEach((panel, index) => {
-    const label = labelForPanel(panel, index)
+    let label = labelForPanel(panel, index)
+    const count = (usedLabels.get(label) || 0) + 1
+    usedLabels.set(label, count)
+    if (count > 1) label = `${label} ${count}`
+
     const id = `${slug(label)}-${index}`
     panel.dataset.audiolabInspectorId = id
     const button = document.createElement('button')
@@ -171,8 +178,8 @@ function ensureCompactChrome() {
       </label>
       <button type="button" class="button" data-audiolab-new-project>New</button>
       <span class="audio-lab-compact-separator" aria-hidden="true"></span>
-      <button type="button" class="button" data-audiolab-inspector-toggle aria-expanded="false">Inspector</button>
       <button type="button" class="button" data-audiolab-robot-open>Robot Voice</button>
+      <button type="button" class="button" data-audiolab-inspector-toggle aria-expanded="false">Tools</button>
     `
     header.insertAdjacentElement('afterend', chrome)
 
@@ -187,9 +194,9 @@ function ensureCompactChrome() {
       setInspectorOpen(root.dataset.audiolabInspectorOpen !== 'true')
     })
     chrome.querySelector('[data-audiolab-robot-open]')?.addEventListener('click', () => {
-      if (!activateByLabel('Robot voice')) {
+      if (!activateByLabel('Robot Voice')) {
         setInspectorOpen(true)
-        window.setTimeout(() => activateByLabel('Robot voice'), 80)
+        window.setTimeout(() => activateByLabel('Robot Voice'), 80)
       }
     })
   }
@@ -219,7 +226,7 @@ function refresh() {
   const existingTabs = sidebar.querySelector(':scope > .audio-lab-inspector-tabs')
   const existingButtons = existingTabs ? Array.from(existingTabs.querySelectorAll('button')) : []
   const currentLabels = panels.map((panel, index) => labelForPanel(panel, index)).join('|')
-  const existingLabels = existingButtons.map((button) => button.textContent || '').join('|')
+  const existingLabels = existingButtons.map((button) => button.textContent?.replace(/\s+\d+$/, '') || '').join('|')
   if (!existingTabs || currentLabels !== existingLabels) buildTabs(sidebar, panels)
 }
 
