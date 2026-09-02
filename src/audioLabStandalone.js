@@ -87,9 +87,11 @@ function countTrackRows(inner) {
 function applyTrackGeometry(inner = observedTrackInner) {
   trackFrame = 0
   if (!isStudioMode() || !inner?.isConnected) return
-  const count = Math.max(1, countTrackRows(inner))
+  const renderedTrackCount = countTrackRows(inner)
+  const count = Math.max(1, renderedTrackCount)
   const nextCount = String(count)
   const nextMin = `${25 + count * 132}px`
+  document.body?.classList.toggle('audio-lab-empty-project', renderedTrackCount === 0)
   if (inner.style.getPropertyValue('--al-track-count') !== nextCount) inner.style.setProperty('--al-track-count', nextCount)
   if (inner.style.getPropertyValue('--al-track-content-min') !== nextMin) inner.style.setProperty('--al-track-content-min', nextMin)
 }
@@ -105,6 +107,7 @@ function disconnectTrackObserver() {
   observedTrackInner = null
   if (trackFrame) window.cancelAnimationFrame(trackFrame)
   trackFrame = 0
+  document.body?.classList.remove('audio-lab-empty-project')
 }
 
 function syncTrackGeometry() {
