@@ -62,6 +62,9 @@ import './audio-lab-studio-v4.css'
    that guaranteed root document to the real protected AudioLab route before
    every route-aware AudioLab runtime below evaluates. */
 import './audioLabStandalone.js'
+/* Own audio-file change events before the legacy React importer so source files
+   are preserved first and unsupported decodes produce visible feedback. */
+import './audioLabImportReliability.js'
 import './audioLabKeyboardShortcuts.js'
 import './audioLabTaskPages.js'
 import './audioLabTaskNavigationFix.js'
