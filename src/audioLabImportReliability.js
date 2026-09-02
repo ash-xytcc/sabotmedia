@@ -155,6 +155,7 @@ async function resolveCurrentProject() {
 async function importAudioFile(rawFile) {
   if (busy) return
   busy = true
+  document.body?.classList.remove('audio-lab-drag-active')
   try {
     const file = normalizedAudioFile(rawFile)
     setImportStatus(`Reading ${file.name}…`)
@@ -232,7 +233,45 @@ function interceptAudioImport(event) {
   void importAudioFile(selected)
 }
 
+function isTrackDropTarget(event) {
+  if (!isAudioLabRoute()) return false
+  const target = event.target instanceof Element ? event.target : null
+  return Boolean(target?.closest('.audio-lab-multitrack'))
+}
+
+function handleDragOver(event) {
+  if (!isTrackDropTarget(event)) return
+  event.preventDefault()
+  if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+  document.body?.classList.add('audio-lab-drag-active')
+}
+
+function handleDragLeave(event) {
+  if (!isAudioLabRoute()) return
+  if (event.relatedTarget instanceof Element && event.relatedTarget.closest('.audio-lab-multitrack')) return
+  document.body?.classList.remove('audio-lab-drag-active')
+}
+
+function handleDrop(event) {
+  if (!isTrackDropTarget(event)) return
+  event.preventDefault()
+  event.stopPropagation()
+  document.body?.classList.remove('audio-lab-drag-active')
+  const file = Array.from(event.dataTransfer?.files || []).find((item) => {
+    const extension = filenameExtension(item.name)
+    return String(item.type || '').startsWith('audio/') || AUDIO_EXTENSIONS.has(extension)
+  })
+  if (!file) {
+    setImportStatus('Drop an audio file here. WAV, MP3, M4A, OGG, Opus, WebM, AAC, and FLAC are supported when your browser can decode them.', 'error')
+    return
+  }
+  void importAudioFile(file)
+}
+
 document.addEventListener('change', interceptAudioImport, true)
+document.addEventListener('dragover', handleDragOver, true)
+document.addEventListener('dragleave', handleDragLeave, true)
+document.addEventListener('drop', handleDrop, true)
 window.addEventListener('pageshow', () => window.setTimeout(restoreStatus, 0))
 window.addEventListener('popstate', () => window.setTimeout(restoreStatus, 0))
 window.setTimeout(restoreStatus, 0)
