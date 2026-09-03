@@ -7,7 +7,7 @@ export function CampaignSignatures({ campaign, title = 'Who has signed' }) {
   const [data, setData] = useState(null)
   const [loadError, setLoadError] = useState('')
   const [signerType, setSignerType] = useState('individual')
-  const [form, setForm] = useState(() => ({ displayName: '', affiliation: '', email: '', organizationName: '', contactName: '', role: '', website: '', company: '', formStartedAt: Date.now() }))
+  const [form, setForm] = useState(() => ({ displayName: '', affiliation: '', email: '', organizationName: '', contactName: '', role: '', website: '', publicStatement: '', company: '', formStartedAt: Date.now() }))
   const [submitState, setSubmitState] = useState('idle')
   const [submitMessage, setSubmitMessage] = useState('')
   const manageToken = useMemo(() => {
@@ -74,7 +74,7 @@ export function CampaignSignatures({ campaign, title = 'Who has signed' }) {
       const result = await submitCampaignSignature(slug, { ...form, signerType })
       setSubmitState('sent')
       setSubmitMessage(result.message || 'Check your email for the verification link.')
-      setForm({ displayName: '', affiliation: '', email: '', organizationName: '', contactName: '', role: '', website: '', company: '', formStartedAt: Date.now() })
+      setForm({ displayName: '', affiliation: '', email: '', organizationName: '', contactName: '', role: '', website: '', publicStatement: '', company: '', formStartedAt: Date.now() })
     } catch (error) {
       setSubmitState('error')
       setSubmitMessage(String(error?.message || error))
@@ -113,7 +113,8 @@ export function CampaignSignatures({ campaign, title = 'Who has signed' }) {
           {managed.status !== 'revoked' ? <>
             <label><span>Display name</span><input value={managed.displayName || ''} onChange={(event) => setManaged((item) => ({ ...item, displayName: event.target.value }))} /></label>
             <label><span>Affiliation</span><input value={managed.affiliation || ''} onChange={(event) => setManaged((item) => ({ ...item, affiliation: event.target.value }))} /></label>
-            <div className="campaign-signature-manage__actions"><button type="button" onClick={() => saveManaged({ displayName: managed.displayName, affiliation: managed.affiliation })}>Save public details</button><button className="is-danger" type="button" onClick={() => { if (window.confirm('Remove your signature from the open letter?')) saveManaged({ revoke: true }) }}>Remove my signature</button></div>
+            <label><span>Public statement</span><textarea maxLength={1200} rows={5} value={managed.publicStatement || ''} onChange={(event) => setManaged((item) => ({ ...item, publicStatement: event.target.value }))} /></label>
+            <div className="campaign-signature-manage__actions"><button type="button" onClick={() => saveManaged({ displayName: managed.displayName, affiliation: managed.affiliation, publicStatement: managed.publicStatement })}>Save public details</button><button className="is-danger" type="button" onClick={() => { if (window.confirm('Remove your signature from the open letter?')) saveManaged({ revoke: true }) }}>Remove my signature</button></div>
           </> : <p>Your signature has been removed and is no longer public.</p>}
           <small>{manageState === 'saved' ? 'Saved.' : manageState === 'error' ? 'Could not save that change.' : ''}</small>
         </aside> : null}
@@ -132,6 +133,11 @@ export function CampaignSignatures({ campaign, title = 'Who has signed' }) {
               <Field label="Organization website (optional)" type="url" value={form.website} onChange={(value) => patch('website', value)} />
             </>}
             <Field label="Email address" type="email" required value={form.email} onChange={(value) => patch('email', value)} />
+            <label className="campaign-signature-field campaign-signature-field--statement">
+              <span>Public statement (optional)</span>
+              <textarea maxLength={1200} rows={5} value={form.publicStatement} onChange={(event) => patch('publicStatement', event.target.value)} placeholder="A short public statement of support. This will only appear if your signature is approved." />
+              <small>{form.publicStatement.length}/1200</small>
+            </label>
             <label className="campaign-signature-honeypot" aria-hidden="true"><span>Company</span><input tabIndex="-1" autoComplete="off" value={form.company} onChange={(event) => patch('company', event.target.value)} /></label>
             <p className="campaign-signature-privacy">Your email and private contact information are used for verification and moderation only. They are never shown on the public signer list. Email verification does not publish a signature. A Sabot moderator must approve it.</p>
             <button className="campaign-button campaign-button--dark" type="submit" disabled={submitState === 'sending'}>{submitState === 'sending' ? 'Submitting…' : 'Submit signature'}</button>
@@ -154,7 +160,7 @@ function Field({ label, value, onChange, type = 'text', required = false }) {
 }
 
 function SignerGroup({ title, items }) {
-  return <section className="campaign-signature-group"><div className="campaign-signature-group__header"><h3>{title}</h3><span>{items.length}</span></div>{items.length ? <ol>{items.map((item) => <li key={item.id}><div><strong>{item.website ? <a href={item.website} target="_blank" rel="noreferrer">{publicName(item)}</a> : publicName(item)}</strong>{item.affiliation ? <small>{item.affiliation}</small> : null}{item.signerType === 'organization' && item.role ? <small>{item.role}</small> : null}</div></li>)}</ol> : <p className="campaign-signature-empty">No approved signers in this group yet.</p>}</section>
+  return <section className="campaign-signature-group"><div className="campaign-signature-group__header"><h3>{title}</h3><span>{items.length}</span></div>{items.length ? <ol>{items.map((item) => <li key={item.id}><div><strong>{item.website ? <a href={item.website} target="_blank" rel="noreferrer">{publicName(item)}</a> : publicName(item)}</strong>{item.affiliation ? <small>{item.affiliation}</small> : null}{item.signerType === 'organization' && item.role ? <small>{item.role}</small> : null}{item.publicStatement ? <blockquote className="campaign-signature-statement"><p>“{item.publicStatement}”</p></blockquote> : null}</div></li>)}</ol> : <p className="campaign-signature-empty">No approved signers in this group yet.</p>}</section>
 }
 function publicName(item) { return item.signerType === 'organization' ? item.organizationName || item.displayName : item.displayName }
 function statusLabel(status) { return ({ pending_email: 'Awaiting email verification', awaiting_moderation: 'Verified, awaiting moderation', approved: 'Published', rejected: 'Not published', spam: 'Not published', revoked: 'Removed' })[status] || status }
