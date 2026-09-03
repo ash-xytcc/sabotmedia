@@ -77,6 +77,11 @@ jobs:
 
           test = Path('tests/campaign-officials-letter-action.test.mjs')
           test.write_text("""import assert from 'node:assert/strict'\nimport fs from 'node:fs'\n\nconst page = fs.readFileSync('src/components/CampaignPage.jsx', 'utf8')\nconst sections = fs.readFileSync('src/lib/campaignSections.js', 'utf8')\nconst ai = fs.readFileSync('functions/api/_lib/aiCampaignPublic.js', 'utf8')\n\nassert.match(sections, /key: 'officialsLetter'/)\nassert.match(page, /showSection\('officialsLetter'\)/)\nassert.match(page, /id=\"officialsLetter\"/)\nassert.match(page, /defaultLabel=\"Write to officials\"/)\nassert.match(page, /item\.id !== individualLetter\?\.resourceId/)\nassert.match(ai, /individualLetter: \{ resourceId: pdfResource\.id/)\nassert.match(ai, /Download the individual letter template/)\nassert.doesNotMatch(page, /Use the organizational letter or the individual template/)\n\nconsole.log('campaign officials letter action checks passed')\n""")
+
+          hub_test = 'tests/campaign-hub.test.mjs'
+          replace_once(hub_test,
+              "const CAMPAIGN_SECTION_ORDER = \\['status', 'reporting', 'letters', 'act'",
+              "const CAMPAIGN_SECTION_ORDER = \\['status', 'reporting', 'officialsLetter', 'letters', 'act'")
           PY
       - name: Install dependencies
         run: npm ci
@@ -88,6 +93,6 @@ jobs:
         run: |
           git config user.name 'ash.budding'
           git config user.email 'bjgarr@gmail.com'
-          git add src/components/CampaignPage.jsx src/lib/campaignSections.js functions/api/_lib/aiCampaignPublic.js src/campaign-page.css tests/campaign-officials-letter-action.test.mjs
+          git add src/components/CampaignPage.jsx src/lib/campaignSections.js functions/api/_lib/aiCampaignPublic.js src/campaign-page.css tests/campaign-officials-letter-action.test.mjs tests/campaign-hub.test.mjs
           git commit -m 'add dedicated officials letter action'
           git push origin main
