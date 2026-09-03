@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
+import { MediaPickerModal } from './MediaLibraryPage'
 import { loadNativeCollection } from '../lib/nativePublicContent'
 import {
   deleteNativeTranslation,
@@ -51,6 +52,27 @@ function labelForLanguage(code = '') {
   return known[String(code).toLowerCase()] || String(code || '').toUpperCase()
 }
 
+function editableDraftFrom(item = {}) {
+  const translated = item.translation && typeof item.translation === 'object' ? item.translation : {}
+  return {
+    languageCode: String(item.code || '').trim().toLowerCase(),
+    languageLabel: String(item.label || labelForLanguage(item.code)),
+    status: String(item.status || 'draft'),
+    provider: String(item.provider || 'manual'),
+    translatorCredit: String(item.credit || ''),
+    reviewerCredit: String(item.reviewerCredit || ''),
+    weblateUrl: String(item.weblateUrl || ''),
+    title: String(translated.title || ''),
+    excerpt: String(translated.excerpt || ''),
+    bodyHtml: String(translated.bodyHtml || translated.body || ''),
+    seoTitle: String(translated.seoTitle || ''),
+    seoDescription: String(translated.seoDescription || ''),
+    heroImage: String(translated.heroImage || ''),
+    heroImageAlt: String(translated.heroImageAlt || ''),
+    socialImage: String(translated.socialImage || ''),
+  }
+}
+
 export function TranslationsAdminPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [content, setContent] = useState([])
@@ -61,6 +83,10 @@ export function TranslationsAdminPage() {
   const [notice, setNotice] = useState('')
   const [importMeta, setImportMeta] = useState({ languageCode: 'it', languageLabel: 'Italiano', translatorCredit: '', reviewerCredit: '', weblateUrl: DEFAULT_WEBLATE_URL })
   const [external, setExternal] = useState({ languageCode: '', languageLabel: '', externalUrl: '', translatorCredit: '', status: 'published' })
+  const [editingCode, setEditingCode] = useState('')
+  const [editDraft, setEditDraft] = useState(null)
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [openMediaFor, setOpenMediaFor] = useState('')
 
   const activeContent = useMemo(() => content.find((item) => item.slug === activeSlug) || null, [content, activeSlug])
   const translations = Array.isArray(data?.translations) ? data.translations : []
@@ -79,6 +105,8 @@ export function TranslationsAdminPage() {
     let cancelled = false
     setState('loading')
     setError('')
+    setEditingCode('')
+    setEditDraft(null)
     loadNativeTranslations({ slug: activeSlug, includeUnpublished: true })
       .then((next) => { if (!cancelled) { setData(next); setState('loaded') } })
       .catch((err) => { if (!cancelled) { setError(String(err?.message || err)); setState('error') } })
@@ -96,6 +124,59 @@ export function TranslationsAdminPage() {
     const next = await loadNativeTranslations({ slug: activeSlug, includeUnpublished: true })
     setData(next)
     return next
+  }
+
+  function beginEdit(item) {
+    if (item.provider === 'external') return
+    setError('')
+    setNotice('')
+    setEditingCode(item.code)
+    setEditDraft(editableDraftFrom(item))
+    window.requestAnimationFrame(() => document.getElementById('translation-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+
+  function patchEdit(key, value) {
+    setEditDraft((current) => current ? { ...current, [key]: value } : current)
+  }
+
+  async function saveEdit(event) {
+    event?.preventDefault?.()
+    if (!editDraft || savingEdit) return
+    try {
+      setSavingEdit(true)
+      setError('')
+      setNotice('')
+      await saveNativeTranslation({
+        translation: {
+          slug: activeSlug,
+          languageCode: editDraft.languageCode,
+          languageLabel: editDraft.languageLabel || labelForLanguage(editDraft.languageCode),
+          status: editDraft.status,
+          provider: editDraft.provider || 'manual',
+          translatorCredit: editDraft.translatorCredit,
+          reviewerCredit: editDraft.reviewerCredit,
+          weblateUrl: editDraft.weblateUrl,
+          translation: {
+            title: editDraft.title,
+            excerpt: editDraft.excerpt,
+            bodyHtml: editDraft.bodyHtml,
+            seoTitle: editDraft.seoTitle,
+            seoDescription: editDraft.seoDescription,
+            heroImage: editDraft.heroImage,
+            heroImageAlt: editDraft.heroImageAlt,
+            socialImage: editDraft.socialImage,
+          },
+        },
+      })
+      const next = await refresh()
+      const saved = (next?.translations || []).find((item) => item.code === editDraft.languageCode)
+      if (saved) setEditDraft(editableDraftFrom(saved))
+      setNotice(`${editDraft.languageLabel || editDraft.languageCode} translation saved. The English article was not changed.`)
+    } catch (err) {
+      setError(String(err?.message || err))
+    } finally {
+      setSavingEdit(false)
+    }
   }
 
   async function handleSourceExport() {
@@ -185,21 +266,27 @@ export function TranslationsAdminPage() {
           status,
           provider: item.provider,
           translatorCredit: item.credit,
+          reviewerCredit: item.reviewerCredit,
           weblateUrl: item.weblateUrl,
           externalUrl: item.provider === 'external' ? item.href : '',
           translation: item.translation,
         },
       })
-      await refresh()
+      const next = await refresh()
+      if (editingCode === item.code) {
+        const updated = (next?.translations || []).find((translation) => translation.code === item.code)
+        if (updated) setEditDraft(editableDraftFrom(updated))
+      }
       setNotice(`${item.label || item.code} moved to ${status.replace('_', ' ')}.`)
     } catch (err) { setError(String(err?.message || err)) }
   }
 
   async function remove(item) {
-    if (!data?.content?.id || !window.confirm(`Delete the ${item.label || item.code} translation record?`)) return
+    if (!data?.content?.id || String(data.content.id).startsWith('bundled:') || !window.confirm(`Delete the ${item.label || item.code} translation record?`)) return
     try {
       await deleteNativeTranslation({ contentId: data.content.id, languageCode: item.code })
       await refresh()
+      if (editingCode === item.code) { setEditingCode(''); setEditDraft(null) }
       setNotice(`${item.label || item.code} translation record deleted.`)
     } catch (err) { setError(String(err?.message || err)) }
   }
@@ -210,7 +297,7 @@ export function TranslationsAdminPage() {
         <div className="wp-screen-header">
           <div>
             <h1>Translations</h1>
-            <p className="description">Weblate is the collaboration workspace. Sabot remains the publication authority: import finished language files here, review them, and explicitly publish them to the article language selector.</p>
+            <p className="description">Weblate is the collaboration workspace. Sabot remains the publication authority: import finished language files here, review them, edit native translations, and explicitly publish them to the article language selector.</p>
           </div>
           <div className="review-card__actions">
             {activeSlug ? <a className="button" href={`/post/${encodeURIComponent(activeSlug)}`} target="_blank" rel="noreferrer">Open Article</a> : null}
@@ -263,7 +350,7 @@ export function TranslationsAdminPage() {
         </section>
 
         <section className="wp-meta-box">
-          <div className="wp-screen-header"><div><h2>Editorial translation records</h2><p className="description">Published native translations appear at <code>?lang=xx</code>. External translations keep linking to their original host.</p></div><button className="button" type="button" onClick={refresh} disabled={state === 'loading'}>Refresh</button></div>
+          <div className="wp-screen-header"><div><h2>Editorial translation records</h2><p className="description">Published native translations appear at <code>?lang=xx</code>. Native translations can be edited here without changing the English article. External translations keep linking to their original host.</p></div><button className="button" type="button" onClick={refresh} disabled={state === 'loading'}>Refresh</button></div>
           {state === 'loading' ? <p>Loading translations…</p> : null}
           <div className="wp-list-table-wrap">
             <table className="content-table wp-posts-table">
@@ -277,8 +364,9 @@ export function TranslationsAdminPage() {
                     <td>{item.credit || '—'}</td>
                     <td>{item.href ? <a href={item.href} target="_blank" rel="noreferrer">Open translation</a> : item.weblateUrl ? <a href={item.weblateUrl} target="_blank" rel="noreferrer">Open Weblate</a> : '—'}</td>
                     <td><div className="review-card__actions">
+                      {item.provider !== 'external' ? <button className="button button--primary" type="button" onClick={() => beginEdit(item)}>{editingCode === item.code ? 'Editing' : 'Edit translation'}</button> : null}
                       {STATUSES.filter((status) => status !== item.status).map((status) => <button key={status} className={status === 'published' ? 'button button--primary' : 'button'} type="button" onClick={() => updateStatus(item, status)}>{status === 'published' ? 'Publish' : status.replace('_', ' ')}</button>)}
-                      <button className="button" type="button" onClick={() => remove(item)}>Delete</button>
+                      {!String(data?.content?.id || '').startsWith('bundled:') ? <button className="button" type="button" onClick={() => remove(item)}>Delete</button> : null}
                     </div></td>
                   </tr>
                 )) : <tr><td colSpan={6}>No D1 translation records yet. The A/I article still has its legacy external language links on the public page until they are registered here.</td></tr>}
@@ -287,7 +375,82 @@ export function TranslationsAdminPage() {
           </div>
         </section>
 
-        <section className="wp-meta-box"><h2>Where this fits</h2><p className="description">Write/edit the English source in <Link to={`${adminRoutes.nativeBridge}?edit=${encodeURIComponent(data?.content?.id || '')}`}>Posts</Link>. Translate collaboratively in Weblate. Import and review here. Publishing a translation makes it available through the public language selector without creating a duplicate post.</p></section>
+        {editDraft ? <section className="wp-meta-box translation-native-editor" id="translation-editor">
+          <div className="wp-screen-header">
+            <div>
+              <h2>Edit {editDraft.languageLabel || editDraft.languageCode}</h2>
+              <p className="description">This edits only the <strong>{editDraft.languageLabel || editDraft.languageCode}</strong> version attached to <code>/post/{activeSlug}</code>. English metadata, archive identity, date and analytics remain shared.</p>
+            </div>
+            <div className="review-card__actions">
+              <a className="button" href={`/post/${encodeURIComponent(activeSlug)}?lang=${encodeURIComponent(editDraft.languageCode)}`} target="_blank" rel="noreferrer">Preview translation</a>
+              <button className="button" type="button" onClick={() => { setEditingCode(''); setEditDraft(null) }}>Close editor</button>
+            </div>
+          </div>
+
+          <form onSubmit={saveEdit}>
+            <div className="form-grid form-grid--two">
+              <label className="admin-field"><span>Language</span><input value={editDraft.languageLabel} onChange={(e) => patchEdit('languageLabel', e.target.value)} /></label>
+              <label className="admin-field"><span>Status</span><select value={editDraft.status} onChange={(e) => patchEdit('status', e.target.value)}>{STATUSES.map((status) => <option key={status} value={status}>{status.replace('_', ' ')}</option>)}</select></label>
+              <label className="admin-field"><span>Translator credit</span><input value={editDraft.translatorCredit} onChange={(e) => patchEdit('translatorCredit', e.target.value)} /></label>
+              <label className="admin-field"><span>Reviewer credit</span><input value={editDraft.reviewerCredit} onChange={(e) => patchEdit('reviewerCredit', e.target.value)} /></label>
+            </div>
+
+            <label className="admin-field"><span>Translated title</span><input value={editDraft.title} onChange={(e) => patchEdit('title', e.target.value)} /></label>
+            <label className="admin-field"><span>Excerpt / dek</span><textarea rows={4} value={editDraft.excerpt} onChange={(e) => patchEdit('excerpt', e.target.value)} /></label>
+
+            <label className="admin-field"><span>Translated article body</span><textarea className="translation-body-editor" rows={30} value={editDraft.bodyHtml} onChange={(e) => patchEdit('bodyHtml', e.target.value)} spellCheck="true" /></label>
+            <p className="description">The body is stored as HTML so headings, links, emphasis and the numbered interview structure stay intact. Editing the words here changes only this language version.</p>
+
+            <div className="form-grid form-grid--two">
+              <label className="admin-field"><span>SEO title</span><input value={editDraft.seoTitle} onChange={(e) => patchEdit('seoTitle', e.target.value)} /></label>
+              <label className="admin-field"><span>SEO description</span><textarea rows={3} value={editDraft.seoDescription} onChange={(e) => patchEdit('seoDescription', e.target.value)} /></label>
+            </div>
+
+            <div className="translation-image-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1rem', marginTop: '1rem' }}>
+              <div className="wp-meta-box" style={{ margin: 0 }}>
+                <h3>Featured / hero image</h3>
+                {editDraft.heroImage ? <img src={editDraft.heroImage} alt={editDraft.heroImageAlt || ''} style={{ display: 'block', width: '100%', maxHeight: '280px', objectFit: 'contain', background: '#f0f0f1', marginBottom: '.75rem' }} /> : <p className="description">No language-specific featured image selected. The public page may fall back to the original article image.</p>}
+                <label className="admin-field"><span>Image URL</span><input value={editDraft.heroImage} onChange={(e) => patchEdit('heroImage', e.target.value)} /></label>
+                <label className="admin-field"><span>Alt text</span><textarea rows={3} value={editDraft.heroImageAlt} onChange={(e) => patchEdit('heroImageAlt', e.target.value)} /></label>
+                <div className="review-card__actions">
+                  <button className="button button--primary" type="button" onClick={() => setOpenMediaFor('heroImage')}>Choose / upload image</button>
+                  {editDraft.heroImage ? <button className="button" type="button" onClick={() => patchEdit('heroImage', '')}>Clear</button> : null}
+                </div>
+              </div>
+
+              <div className="wp-meta-box" style={{ margin: 0 }}>
+                <h3>Social image</h3>
+                {editDraft.socialImage ? <img src={editDraft.socialImage} alt="" style={{ display: 'block', width: '100%', maxHeight: '280px', objectFit: 'contain', background: '#f0f0f1', marginBottom: '.75rem' }} /> : <p className="description">Optional. If blank, the translated featured image is used for social metadata.</p>}
+                <label className="admin-field"><span>Social image URL</span><input value={editDraft.socialImage} onChange={(e) => patchEdit('socialImage', e.target.value)} /></label>
+                <div className="review-card__actions">
+                  <button className="button" type="button" onClick={() => setOpenMediaFor('socialImage')}>Choose / upload image</button>
+                  {editDraft.heroImage ? <button className="button" type="button" onClick={() => patchEdit('socialImage', editDraft.heroImage)}>Use featured image</button> : null}
+                  {editDraft.socialImage ? <button className="button" type="button" onClick={() => patchEdit('socialImage', '')}>Clear</button> : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="review-card__actions" style={{ marginTop: '1rem' }}>
+              <button className="button button--primary" type="submit" disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save translation'}</button>
+              <a className="button" href={`/post/${encodeURIComponent(activeSlug)}?lang=${encodeURIComponent(editDraft.languageCode)}`} target="_blank" rel="noreferrer">Open current public version</a>
+            </div>
+          </form>
+        </section> : null}
+
+        <section className="wp-meta-box"><h2>Where this fits</h2><p className="description">Write/edit the English source in <Link to={`${adminRoutes.nativeBridge}?edit=${encodeURIComponent(data?.content?.id || '')}`}>Posts</Link>. Translate collaboratively in Weblate or edit a native language record directly here. Publishing a translation makes it available through the public language selector without creating a duplicate post.</p></section>
+
+        <MediaPickerModal
+          open={Boolean(openMediaFor)}
+          title={openMediaFor === 'socialImage' ? 'Choose translated social image' : 'Choose translated featured image'}
+          onClose={() => setOpenMediaFor('')}
+          onPick={(item) => {
+            const field = openMediaFor
+            if (!field || !item?.url) return
+            patchEdit(field, item.url)
+            if (field === 'heroImage' && !editDraft?.heroImageAlt && (item.alt || item.altText)) patchEdit('heroImageAlt', item.alt || item.altText)
+            setOpenMediaFor('')
+          }}
+        />
       </main>
     </AdminFrame>
   )
