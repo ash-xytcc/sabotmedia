@@ -2,6 +2,7 @@ import { getBoundDb, databaseUnavailable } from './_lib/database.js'
 import { getExistingNativeEntry } from './_lib/nativePublicContent.js'
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
+import { bundledTranslationsForSlug } from './_lib/bundledNativeTranslations.js'
 import {
   buildWeblateSourceBundle,
   deleteTranslation,
@@ -36,9 +37,14 @@ export async function onRequestGet(context) {
       return json({ ok: true, bundle: buildWeblateSourceBundle(content) })
     }
 
-    const translations = await listTranslations(db, content.id, {
+    const storedTranslations = await listTranslations(db, content.id, {
       includeUnpublished: permission.canEdit && url.searchParams.get('includeUnpublished') === '1',
     })
+    const bundledTranslations = bundledTranslationsForSlug(content.slug)
+    const merged = new Map()
+    for (const item of bundledTranslations) merged.set(String(item.languageCode || '').toLowerCase(), item)
+    for (const item of storedTranslations) merged.set(String(item.languageCode || '').toLowerCase(), item)
+    const translations = Array.from(merged.values())
 
     return json({
       ok: true,
