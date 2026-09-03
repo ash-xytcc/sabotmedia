@@ -193,7 +193,7 @@ test('campaign asks readers to understand the case before taking action', () => 
   assert.ok(lettersSection > reportingSection)
   assert.ok(actionSection > lettersSection)
   assert.match(page, /visibleSections\.map\(\(key\) => <a href=\{`#\$\{key\}`\}/)
-  assert.match(page, /const CAMPAIGN_SECTION_ORDER = \['status', 'reporting', 'letters', 'act'/)
+  assert.match(page, /const CAMPAIGN_SECTION_ORDER = \['status', 'reporting', 'officialsLetter', 'letters', 'act'/)
 })
 
 test('individual letter PDF remains bundled in letters but not primary sources', () => {

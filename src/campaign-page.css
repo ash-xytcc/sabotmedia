@@ -440,3 +440,14 @@
 @media (prefers-reduced-motion: reduce) {
   .campaign-page *, .campaign-page *::before, .campaign-page *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+/* Dedicated individual outreach action: intentionally larger than ordinary action cards. */
+.campaign-section--officials-letter { background: var(--campaign-paper); color: var(--campaign-ink); border-color: #c9c2b6; }
+.campaign-officials-letter-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: clamp(28px, 6vw, 84px); align-items: end; padding: clamp(28px, 5vw, 58px); border: 3px solid var(--campaign-ink); background: var(--campaign-paper-2); box-shadow: 10px 10px 0 var(--campaign-red); }
+.campaign-officials-letter-card span { display: inline-block; margin-bottom: 18px; color: var(--campaign-red-deep); font: 900 .72rem/1 var(--campaign-display); letter-spacing: .09em; text-transform: uppercase; }
+.campaign-officials-letter-card h3 { max-width: 14ch; margin: 0 0 18px; font: 900 clamp(2rem, 4.6vw, 4.9rem)/.88 var(--campaign-display); letter-spacing: -.05em; text-transform: uppercase; }
+.campaign-officials-letter-card p { max-width: 54rem; margin: 0; font-size: 1.04rem; line-height: 1.55; }
+.campaign-officials-letter-card > a { min-width: min(100%, 260px); padding: 18px 22px; border: 2px solid var(--campaign-ink); background: var(--campaign-ink); color: #fff; font: 900 .82rem/1.15 var(--campaign-display); letter-spacing: .04em; text-align: center; text-decoration: none; text-transform: uppercase; }
+.campaign-officials-letter-card > a:hover, .campaign-officials-letter-card > a:focus-visible { background: var(--campaign-red); border-color: var(--campaign-red); }
+@media (max-width: 720px) { .campaign-officials-letter-card { grid-template-columns: 1fr; box-shadow: 6px 6px 0 var(--campaign-red); } .campaign-officials-letter-card > a { width: 100%; } }
+

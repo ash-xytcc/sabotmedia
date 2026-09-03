@@ -109,6 +109,7 @@ export async function decorateAiCampaignForPublic(campaign, requestUrl, options 
     campaignKeywords: ['autistici/inventati', 'a/i campaign'],
     updates,
     timeline: dedupeById([...builtInTimeline, ...(campaign.timeline || [])]),
+    individualLetter: { resourceId: pdfResource.id, title: 'Write to officials in your own voice', description: 'Use this individual letter as a starting point for direct outreach to government officials and institutions. Personalize it before sending so the message reflects why this matters to you.', guidance: 'The PDF includes recipient guidance for the United States, European Union, Italy and other countries. Add your own introduction, local context or experience, then send it directly to the relevant offices.', href: letterPdf, label: 'Download the individual letter template' },
     resources: dedupeByUrl([articlePdfResource, pdfResource, ...(campaign.resources || [])], 'href'),
     coverage: dedupeCoverage([...(campaign.coverage || []), ...builtInCoverage, ...intelligence.coverage]),
     signatories,

@@ -1,7 +1,8 @@
 export const CAMPAIGN_SECTION_DEFINITIONS = [
   { key: 'status', label: 'Status + countdown', nav: 'Status', title: 'Campaign status', description: 'Deadline, countdown, infrastructure status, or another live campaign condition.', editor: 'status' },
   { key: 'reporting', label: 'Reporting + context', nav: 'Reporting', title: 'Reporting and context', description: 'Sabot reporting and contextual resources connected to this campaign.', editor: 'resources' },
-  { key: 'letters', label: 'Letters + resources', nav: 'Letters', title: 'Letters and resources', description: 'Public letters, templates, documents, PDFs, and other campaign resources.', editor: 'resources' },
+  { key: 'officialsLetter', label: 'Individual letter to officials', nav: 'Write officials', title: 'Send a letter to officials', description: 'A prominent individual action template supporters can personalize and send directly to officials or institutions.', editor: 'resources' },
+  { key: 'letters', label: 'Open letter + resources', nav: 'Open letter', title: 'Open letter and resources', description: 'Public open letters, organizational sign-on documents, PDFs, and related campaign resources.', editor: 'resources' },
   { key: 'act', label: 'Action center', nav: 'Act', title: 'Take action', description: 'Calls to action with buttons, links, and short explanations.', editor: 'actions' },
   { key: 'graphics', label: 'Campaign graphics', nav: 'Graphics', title: 'Campaign media kit', description: 'Share graphics, captions, alt text, and downloadable campaign media.', editor: 'graphics' },
   { key: 'updates', label: 'Campaign updates', nav: 'Updates', title: 'Campaign updates', description: 'A chronological campaign log with optional pinned updates.', editor: 'updates' },

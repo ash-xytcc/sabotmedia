@@ -12,7 +12,7 @@ import { CampaignBenefitToolkit, CampaignDispatches, CampaignDonation, CampaignQ
 import { CampaignSignatures } from './CampaignSignatures'
 
 const AI_CAMPAIGN_SLUG = 'autistici-inventati'
-const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social', 'donate', 'socialArchive', 'dispatches', 'questions', 'benefit']
+const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'officialsLetter', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social', 'donate', 'socialArchive', 'dispatches', 'questions', 'benefit']
 const CAMPAIGN_SECTION_META = {
   donate: { nav: 'Donate', title: 'Donate' },
   socialArchive: { nav: 'Social archive', title: 'Social media archive' },
@@ -21,7 +21,8 @@ const CAMPAIGN_SECTION_META = {
   benefit: { nav: 'Organize', title: 'Organize a benefit' },
   status: { nav: 'Status', title: 'Campaign status' },
   reporting: { nav: 'Reporting', title: 'Reporting and context' },
-  letters: { nav: 'Letters', title: 'Letters and resources' },
+  officialsLetter: { nav: 'Write officials', title: 'Send a letter to officials' },
+  letters: { nav: 'Open letter', title: 'Open letter and resources' },
   act: { nav: 'Act', title: 'Take action' },
   graphics: { nav: 'Graphics', title: 'Campaign media kit' },
   updates: { nav: 'Updates', title: 'Campaign updates' },
@@ -34,7 +35,7 @@ const CAMPAIGN_SECTION_META = {
   social: { nav: 'Social', title: 'Social updates' },
 }
 const AI_CAMPAIGN_SECTION_TITLES = {
-  status: 'What is happening now', reporting: 'Read before you repeat', letters: 'Read it. Sign it. Send it.',
+  status: 'What is happening now', reporting: 'Read before you repeat', officialsLetter: 'Personalize it. Send it to officials.', letters: 'Read it. Sign it.',
   act: 'Do something useful', graphics: 'Take the graphics', updates: 'Campaign log', timeline: 'How we got here',
   coverage: 'Coverage and statements', sources: 'Check the receipts', faq: 'The questions people keep asking',
   translations: 'Circulate it further', signatories: 'Who has signed', social: 'Follow the signal, not the algorithm',
@@ -127,8 +128,9 @@ export function CampaignPage() {
   const automaticCoverage = coverage.filter((item) => item.editorialStatus !== 'featured' && item.editorialStatus !== 'hidden')
   const social = useMemo(() => sortByDate(campaign?.social || []), [campaign])
   const signatories = campaign?.signatories || []
+  const individualLetter = campaign?.individualLetter || null
   const reportingResources = (campaign?.resources || []).filter((item) => !/letter|template/i.test(`${item.type} ${item.title}`))
-  const letterResources = (campaign?.resources || []).filter((item) => /letter|template/i.test(`${item.type} ${item.title}`))
+  const letterResources = (campaign?.resources || []).filter((item) => /letter|template/i.test(`${item.type} ${item.title}`) && item.id !== individualLetter?.resourceId)
   const deadline = campaign?.deadline ? new Date(campaign.deadline).getTime() : NaN
   const countdown = Number.isFinite(deadline) ? formatCountdown(deadline - now) : null
 
@@ -195,6 +197,7 @@ export function CampaignPage() {
     benefit: campaign.campaignType === 'direct-aid',
     status: true,
     reporting: reportingPieces.length > 0 || reportingResources.length > 0,
+    officialsLetter: Boolean(individualLetter?.href),
     letters: letterPieces.length > 0 || letterResources.length > 0,
     act: (campaign.actions || []).length > 0,
     graphics: graphics.length > 0,
@@ -231,7 +234,8 @@ export function CampaignPage() {
               {campaign.donation?.url ? <a className="campaign-button campaign-button--light" href={campaign.donation.url} target="_blank" rel="noreferrer">{campaign.donation.label || 'Donate'} ↗</a> : null}
               {campaign.slug === 'food-not-bombs-gaza' && showSection('benefit') ? <a className="campaign-button campaign-button--benefit" href="#benefit">Organize a benefit</a> : null}
               {showSection('reporting') ? <EditableLink className="campaign-button campaign-button--light" labelField={`campaign.${campaign.slug}.actions.reporting.label`} hrefField={`campaign.${campaign.slug}.actions.reporting.href`} defaultLabel="Read the reporting" defaultHref="#reporting" /> : null}
-              {showSection('letters') ? <EditableLink className="campaign-button campaign-button--dark" labelField={`campaign.${campaign.slug}.actions.letters.label`} hrefField={`campaign.${campaign.slug}.actions.letters.href`} defaultLabel="Read the letters" defaultHref="#letters" /> : null}
+              {showSection('officialsLetter') ? <EditableLink className="campaign-button campaign-button--light" labelField={`campaign.${campaign.slug}.actions.officials-letter.label`} hrefField={`campaign.${campaign.slug}.actions.officials-letter.href`} defaultLabel="Write to officials" defaultHref="#officialsLetter" /> : null}
+              {showSection('letters') ? <EditableLink className="campaign-button campaign-button--dark" labelField={`campaign.${campaign.slug}.actions.letters.label`} hrefField={`campaign.${campaign.slug}.actions.letters.href`} defaultLabel="Read the open letter" defaultHref="#letters" /> : null}
               <button className="campaign-button campaign-button--ghost" type="button" onClick={shareCampaign}><EditableText as="span" field={`campaign.${campaign.slug}.actions.share.label`}>Share campaign</EditableText></button>
             </div>
             {campaign.partners?.length ? <p className="campaign-hero__partners">Independent campaign by {campaign.partners.join(' × ')}</p> : null}
@@ -295,9 +299,23 @@ export function CampaignPage() {
         </div>
       </section> : null}
 
+      {showSection('officialsLetter') ? <section className="campaign-section campaign-section--officials-letter" id="officialsLetter">
+        <div className="campaign-shell">
+          <SectionHeading sectionKey="officialsLetter" eyebrow="INDIVIDUAL ACTION" title={sectionTitle('officialsLetter')} description={individualLetter.description || 'Download the template, rewrite it in your own voice, and send it directly to the officials and institutions with power to act.'} />
+          <article className="campaign-officials-letter-card">
+            <div>
+              <span>PERSONALIZE + SEND</span>
+              <h3>{individualLetter.title || 'Individual letter template'}</h3>
+              <p>{individualLetter.guidance || 'Use the recipient guidance in the template, add your own introduction or experience, and send the letter directly. A personalized message is harder to dismiss than a copied form letter.'}</p>
+            </div>
+            <SmartLink href={individualLetter.href}>{individualLetter.label || 'Open / download the letter template'} ↗</SmartLink>
+          </article>
+        </div>
+      </section> : null}
+
       {showSection('letters') ? <section className="campaign-section campaign-section--paper" id="letters">
         <div className="campaign-shell">
-          <SectionHeading sectionKey="letters" eyebrow="LETTERS" title={sectionTitle('letters')} description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
+          <SectionHeading sectionKey="letters" eyebrow="OPEN LETTER" title={sectionTitle('letters')} description="Read the public open letter, add your name or organization, and circulate the collective statement. The individual send-to-officials template now has its own action section above." />
           <div className={isAiCampaign ? 'campaign-letter-sign-layout' : undefined}>
             <div>
               <PieceGrid pieces={letterPieces} empty="Letter downloads are temporarily unavailable. The reporting section remains available while they are restored." />
