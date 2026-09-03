@@ -1,0 +1,52 @@
+CREATE TABLE IF NOT EXISTS campaign_signature_forms (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 0,
+  title TEXT NOT NULL DEFAULT '',
+  intro TEXT NOT NULL DEFAULT '',
+  config_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(campaign_id)
+);
+
+CREATE TABLE IF NOT EXISTS campaign_signatures (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  signer_type TEXT NOT NULL DEFAULT 'individual',
+  display_name TEXT NOT NULL DEFAULT '',
+  affiliation TEXT NOT NULL DEFAULT '',
+  organization_name TEXT NOT NULL DEFAULT '',
+  contact_name TEXT NOT NULL DEFAULT '',
+  role TEXT NOT NULL DEFAULT '',
+  website TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL,
+  email_hash TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending_email',
+  verification_method TEXT NOT NULL DEFAULT 'email',
+  verification_token_hash TEXT,
+  verification_expires_at TEXT,
+  verified_at TEXT,
+  management_token_hash TEXT,
+  management_created_at TEXT,
+  published_at TEXT,
+  revoked_at TEXT,
+  moderation_note TEXT NOT NULL DEFAULT '',
+  duplicate_flags_json TEXT NOT NULL DEFAULT '[]',
+  abuse_flags_json TEXT NOT NULL DEFAULT '[]',
+  website_domain_match INTEGER,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS campaign_signature_rate_limits (
+  key_hash TEXT PRIMARY KEY,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  window_started_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_campaign_signatures_campaign_status ON campaign_signatures(campaign_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_campaign_signatures_email_hash ON campaign_signatures(campaign_id, email_hash, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_campaign_signatures_verify ON campaign_signatures(verification_token_hash);
+CREATE INDEX IF NOT EXISTS idx_campaign_signatures_manage ON campaign_signatures(management_token_hash);
