@@ -70,6 +70,8 @@ export function normalizeTranslation(input = {}) {
       bodyHtml: String(translation.bodyHtml || translation.body_html || input.bodyHtml || input.body_html || ''),
       seoTitle: String(translation.seoTitle || translation.seo_title || input.seoTitle || ''),
       seoDescription: String(translation.seoDescription || translation.seo_description || input.seoDescription || ''),
+      heroImage: String(translation.heroImage || translation.hero_image || input.heroImage || input.hero_image || ''),
+      heroImageAlt: String(translation.heroImageAlt || translation.hero_image_alt || input.heroImageAlt || input.hero_image_alt || ''),
     },
     createdAt: String(input.createdAt || input.created_at || now),
     updatedAt: String(input.updatedAt || input.updated_at || now),
@@ -237,6 +239,8 @@ export function translationFromWeblateBundle(bundle = {}, defaults = {}) {
       bodyHtml: joinArticleBodyHtml(strings.body) || String(strings.bodyHtml || ''),
       seoTitle: strings.seoTitle,
       seoDescription: strings.seoDescription,
+      heroImage: strings.heroImage,
+      heroImageAlt: strings.heroImageAlt,
     },
   })
 }

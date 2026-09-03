@@ -9,6 +9,7 @@ import { setDocumentMeta } from '../lib/documentMeta'
 import { EditableText } from './EditableText'
 import { EditableLink } from './EditableLink'
 import { CampaignBenefitToolkit, CampaignDispatches, CampaignDonation, CampaignQuestionForm, CampaignSocialArchive } from './CampaignCorrespondence'
+import { CampaignSignatures } from './CampaignSignatures'
 
 const AI_CAMPAIGN_SLUG = 'autistici-inventati'
 const CAMPAIGN_SECTION_ORDER = ['status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline', 'coverage', 'sources', 'faq', 'translations', 'signatories', 'social', 'donate', 'socialArchive', 'dispatches', 'questions', 'benefit']
@@ -203,7 +204,7 @@ export function CampaignPage() {
     sources: (campaign.sources || []).length > 0,
     faq: (campaign.faq || []).length > 0,
     translations: (campaign.translations || []).length > 0,
-    signatories: signatories.length > 0 || Boolean(campaign.automation?.enabled && campaign.automation?.signatoriesUrl),
+    signatories: isAiCampaign || signatories.length > 0 || Boolean(campaign.automation?.enabled && campaign.automation?.signatoriesUrl),
     social: social.length > 0 || isAiCampaign || Boolean(campaign.automation?.enabled && (campaign.automation?.blueskyActors?.length || campaign.automation?.mastodonAccounts?.length)),
   }
   const visibleSections = sectionOrder.filter((key) => !hiddenSections.has(key) && sectionContent[key])
@@ -398,7 +399,7 @@ export function CampaignPage() {
         </section>
       ) : null}
 
-      {showSection('signatories') ? <SignatoryCarousel signatories={signatories} title={sectionTitle('signatories')} sectionKey="signatories" /> : null}
+      {showSection('signatories') ? (isAiCampaign ? <CampaignSignatures campaign={campaign} title={sectionTitle('signatories')} sectionKey="signatories" /> : <SignatoryCarousel signatories={signatories} title={sectionTitle('signatories')} sectionKey="signatories" />) : null}
 
       {showSection('social') ? <SocialSection campaign={campaign} social={social} copyState={copyState} copyCampaignLink={copyCampaignLink} isAiCampaign={isAiCampaign} title={sectionTitle('social')} sectionKey="social" /> : null}
       </OrderedCampaignSections>

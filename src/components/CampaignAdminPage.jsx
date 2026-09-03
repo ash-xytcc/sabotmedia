@@ -5,6 +5,7 @@ import { MediaPickerModal } from './MediaLibraryPage'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { CampaignCoverageModeration } from './CampaignCoverageModeration'
 import { CampaignCorrespondenceAdmin } from './CampaignCorrespondenceAdmin'
+import { CampaignSignaturesAdmin } from './CampaignSignaturesAdmin'
 import { deleteCampaign as deleteCampaignApi, loadCampaignRevisions, loadCampaigns, restoreCampaignRevision, saveCampaign } from '../lib/campaignsApi'
 import { blankCampaign, campaignSlug, CAMPAIGN_TIME_ZONES, deadlineInputValue, validateDeadlineWallTime } from '../lib/campaignDeadline'
 import { CAMPAIGN_SECTION_DEFINITIONS, CAMPAIGN_SECTION_KEYS, CAMPAIGN_SECTION_META, normalizeCampaignSectionOrder } from '../lib/campaignSections'
@@ -307,10 +308,11 @@ export function CampaignAdminPage() {
             {showCorrespondence ? <CorrespondenceEditor value={draft.correspondence || {}} onChange={(correspondence) => patch({ correspondence })} /> : null}
             {activeSet.has('act') ? <ArrayEditor title="Action Center" rows={draft.actions || []} fields={[field('title', 'Title'), field('body', 'Description', 'textarea'), field('href', 'URL / anchor'), field('label', 'Button label')]} onAdd={(fields) => addRow('actions', fields)} onPatch={(index, key, value) => patchRow('actions', index, key, value)} onRemove={(index) => removeRow('actions', index)} onMove={(index, direction) => moveRow('actions', index, direction)} /> : null}
             {showResources ? <ArrayEditor title={LIST_EDITORS.resources.title} rows={draft.resources || []} fields={LIST_EDITORS.resources.fields} onAdd={(fields) => addRow('resources', fields)} onPatch={(index, key, value) => patchRow('resources', index, key, value)} onRemove={(index) => removeRow('resources', index)} onMove={(index, direction) => moveRow('resources', index, direction)} onPickMedia={(index, key) => setMediaTarget({ section: 'resources', index, key })} /> : null}
-            {Object.entries(LIST_EDITORS).filter(([key]) => key !== 'resources' && activeSet.has(key)).map(([key, editor]) => <ArrayEditor key={key} title={editor.title} rows={draft[key] || []} fields={editor.fields} onAdd={(fields) => addRow(key, fields)} onPatch={(index, fieldKey, value) => patchRow(key, index, fieldKey, value)} onRemove={(index) => removeRow(key, index)} onMove={(index, direction) => moveRow(key, index, direction)} onPickMedia={(index, fieldKey) => setMediaTarget({ section: key, index, key: fieldKey })} />)}
+            {Object.entries(LIST_EDITORS).filter(([key]) => key !== 'resources' && activeSet.has(key) && !(key === 'signatories' && draft.slug === 'autistici-inventati')).map(([key, editor]) => <ArrayEditor key={key} title={editor.title} rows={draft[key] || []} fields={editor.fields} onAdd={(fields) => addRow(key, fields)} onPatch={(index, fieldKey, value) => patchRow(key, index, fieldKey, value)} onRemove={(index) => removeRow(key, index)} onMove={(index, direction) => moveRow(key, index, direction)} onPickMedia={(index, fieldKey) => setMediaTarget({ section: key, index, key: fieldKey })} />)}
 
             {showAutomation ? <AutomationSettings value={draft.automation || {}} onChange={(automation) => patch({ automation })} /> : null}
             {!isNew && draft.slug && activeSet.has('coverage') ? <CampaignCoverageModeration campaignSlug={draft.slug} onNotice={pushNotice} /> : null}
+            {!isNew && draft.slug && activeSet.has('signatories') ? <CampaignSignaturesAdmin campaign={draft} onNotice={pushNotice} /> : null}
             {!isNew && draft.slug && showCorrespondence ? <CampaignCorrespondenceAdmin campaign={draft} enabled={Boolean(draft.correspondence?.enabled)} onNotice={pushNotice} /> : null}
             {!isNew ? <RevisionHistory revisions={revisions} state={revisionState} restoringId={restoringRevisionId} onRestore={restoreRevision} /> : null}
           </> : null}

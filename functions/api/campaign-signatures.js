@@ -19,6 +19,7 @@ import {
   verifySignature,
 } from './_lib/campaignSignatures.js'
 import { getNativeEntry } from './_lib/nativePublicContent.js'
+import { signatureSeedsForCampaign } from './_lib/bundledCampaignSignatureSeeds.js'
 
 const AI_SLUG = 'autistici-inventati'
 
@@ -175,11 +176,12 @@ async function bootstrapCampaign(db, campaign) {
     intro: 'Email verification confirms control of your address. Every verified signature is reviewed by Sabot before publication.',
     config: { allowIndividuals: true, allowOrganizations: true, showAffiliation: true },
   })
+  await importManualSignatories(db, campaign.id, signatureSeedsForCampaign(campaign.slug))
   try {
     const letter = await getNativeEntry(db, 'open-letter-ai')
     const legacy = extractAiLetterSignatories(letter?.bodyHtml || letter?.body || '')
     if (legacy.length) await importManualSignatories(db, campaign.id, legacy)
-  } catch { /* built-in public names remain available through the campaign decorator */ }
+  } catch { /* the bundled manual approvals are already preserved */ }
 }
 
 function sameOrigin(request) {
