@@ -88,11 +88,10 @@ export async function onRequestPost(context) {
       if (!result.suppressed) {
         const origin = new URL(context.request.url).origin
         const verifyUrl = `${origin}/api/campaign-signatures?action=verify&token=${encodeURIComponent(result.verificationToken)}`
-        const manageUrl = `${origin}/campaigns/${campaign.slug}?manage-signature=${encodeURIComponent(result.managementToken)}#signatories`
         await sendSignatureEmail(context.env, {
           to: result.email,
           subject: `Verify your signature: ${campaign.shortTitle || campaign.title}`,
-          text: `Thanks for signing. Verify control of this email address here:\n\n${verifyUrl}\n\nVerification does not publish your signature. After verification it goes to the Sabot moderation queue.\n\nPrivate management link:\n${manageUrl}`,
+          text: `Thanks for signing. Verify control of this email address here:\n\n${verifyUrl}\n\nVerification does not publish your signature. After verification it goes to the Sabot moderation queue.`,
         })
       }
       // Deliberately generic. Do not reveal whether this address has signed before.
@@ -142,10 +141,11 @@ async function handleVerify(context, db, url) {
   const campaign = await getCampaign(db, item.campaignId)
   if (item.email) {
     const origin = new URL(context.request.url).origin
+    const manageUrl = `${origin}/campaigns/${campaign?.slug || ''}#manage-signature=${encodeURIComponent(item.managementToken || '')}`
     await sendSignatureEmail(context.env, {
       to: item.email,
       subject: `Signature verified: ${campaign?.shortTitle || campaign?.title || 'Sabot open letter'}`,
-      text: `Your email address is verified. Your signature is now awaiting moderation and is not public yet.\n\nCampaign: ${origin}/campaigns/${campaign?.slug || ''}#signatories`,
+      text: `Your email address is verified. Your signature is now awaiting moderation and is not public yet.\n\nPrivate management link (keep this link private):\n${manageUrl}`,
     }).catch(() => {})
   }
   const target = campaign?.slug ? `/campaigns/${campaign.slug}?signature=verified#signatories` : '/campaigns'

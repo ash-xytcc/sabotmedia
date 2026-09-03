@@ -72,6 +72,7 @@ export function normalizeTranslation(input = {}) {
       seoDescription: String(translation.seoDescription || translation.seo_description || input.seoDescription || ''),
       heroImage: String(translation.heroImage || translation.hero_image || input.heroImage || input.hero_image || ''),
       heroImageAlt: String(translation.heroImageAlt || translation.hero_image_alt || input.heroImageAlt || input.hero_image_alt || ''),
+      socialImage: String(translation.socialImage || translation.social_image || input.socialImage || input.social_image || ''),
     },
     createdAt: String(input.createdAt || input.created_at || now),
     updatedAt: String(input.updatedAt || input.updated_at || now),
@@ -241,6 +242,7 @@ export function translationFromWeblateBundle(bundle = {}, defaults = {}) {
       seoDescription: strings.seoDescription,
       heroImage: strings.heroImage,
       heroImageAlt: strings.heroImageAlt,
+      socialImage: strings.socialImage,
     },
   })
 }

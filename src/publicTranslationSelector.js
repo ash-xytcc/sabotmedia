@@ -27,6 +27,7 @@ const ARTICLE_TRANSLATIONS = {
 const SELECTOR_ATTR = 'data-sabot-language-selector'
 const LOCAL_TRANSLATION_ATTR = 'data-sabot-local-translation'
 const ORIGINAL_HERO_ATTR = 'data-sabot-original-hero'
+const ORIGINAL_META_ATTR = 'data-sabot-original-content'
 const translationCache = new Map()
 
 function normalizedPathname() {
@@ -192,6 +193,31 @@ function applyTranslatedHero(body) {
   if (body?.heroImageAlt) hero.setAttribute('alt', String(body.heroImageAlt))
 }
 
+function applyTranslatedMeta(body, title) {
+  const pairs = [
+    ['meta[property="og:image"]', body?.socialImage || body?.heroImage],
+    ['meta[name="twitter:image"]', body?.socialImage || body?.heroImage],
+    ['meta[property="og:title"]', title],
+    ['meta[name="twitter:title"]', title],
+    ['meta[name="description"]', body?.seoDescription],
+    ['meta[property="og:description"]', body?.seoDescription],
+  ]
+  for (const [selector, value] of pairs) {
+    if (!value) continue
+    const node = document.querySelector(selector)
+    if (!node) continue
+    if (!node.hasAttribute(ORIGINAL_META_ATTR)) node.setAttribute(ORIGINAL_META_ATTR, node.getAttribute('content') || '')
+    node.setAttribute('content', String(value))
+  }
+}
+
+function restoreOriginalMeta() {
+  document.querySelectorAll(`[${ORIGINAL_META_ATTR}]`).forEach((node) => {
+    node.setAttribute('content', node.getAttribute(ORIGINAL_META_ATTR) || '')
+    node.removeAttribute(ORIGINAL_META_ATTR)
+  })
+}
+
 function restoreOriginalHero() {
   const hero = document.querySelector(`.piece-article-lead__image[${ORIGINAL_HERO_ATTR}]`)
   if (!hero) return
@@ -222,6 +248,7 @@ function applyLocalTranslation(translation) {
   if (bodyHtml && bodyMount) bodyMount.innerHTML = sanitizeTranslatedHtml(bodyHtml)
   if (!bodyMount && bodyHtml) return false
   applyTranslatedHero(body)
+  applyTranslatedMeta(body, title)
 
   document.documentElement.lang = translation.code
   document.documentElement.setAttribute(LOCAL_TRANSLATION_ATTR, marker)
@@ -233,6 +260,7 @@ function configForSelectedLanguage(pathname, baseConfig, nativeData) {
   if (!selectedCode || selectedCode === 'en') {
     if (document.documentElement.hasAttribute(LOCAL_TRANSLATION_ATTR)) {
       restoreOriginalHero()
+      restoreOriginalMeta()
       document.documentElement.removeAttribute(LOCAL_TRANSLATION_ATTR)
       document.documentElement.lang = 'en'
     }

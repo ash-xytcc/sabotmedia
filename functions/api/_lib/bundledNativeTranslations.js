@@ -10,6 +10,7 @@ export const BUNDLED_NATIVE_TRANSLATIONS = {
         title: "UNA RETE CHIAMATA ‘RESISTENZA’: UN'INTERVISTA CON AUTISTICI/INVENTATI",
         excerpt: '',
         heroImage: '/campaigns/autistici-inventati/graphics/a-network-called-resistance-it.svg',
+        socialImage: '/campaigns/autistici-inventati/graphics/a-network-called-resistance-it.png',
         heroImageAlt: "con le loro stesse parole: una rete chiamata resistenza. Un'intervista con Autistici/Inventati. pubblicato in proprio / non affiliato ad A/I",
         bodyHtml: `<p><strong>Nota della redazione</strong></p>
 <p>Questa intervista è stata condotta per iscritto con Autistici/Inventati a seguito della loro designazione, avvenuta il 26 agosto 2026, da parte degli Stati Uniti ai sensi dell'Ordine Esecutivo 13224.</p>

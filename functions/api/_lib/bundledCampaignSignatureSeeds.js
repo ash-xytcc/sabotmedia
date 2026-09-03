@@ -10,8 +10,8 @@ export const BUNDLED_CAMPAIGN_SIGNATURE_SEEDS = {
     { id: 'signer-anarkism', name: 'Anarkism.info', location: 'Sweden' },
     { id: 'signer-milk-tea-alliance', name: '#MilkTeaAlliance Calendar Team', location: 'Southeast Asia' },
     { id: 'signer-datenpunks', name: 'Datenpunks e.V.', location: 'Germany' },
-    { id: 'signer-eric-gallager', name: 'Eric Gallager', location: 'New Hampshire, USA' },
-    { id: 'signer-jeremy-smith', name: 'Jeremy Beausoleil Smith', location: 'Oregon, USA' },
+    { id: 'signer-eric-gallager', name: 'Eric Gallager', location: 'New Hampshire, USA', signerType: 'individual' },
+    { id: 'signer-jeremy-smith', name: 'Jeremy Beausoleil Smith', location: 'Oregon, USA', signerType: 'individual' },
     { id: 'signer-haymarket-customs', name: 'Haymarket Customs', location: 'USA' },
   ],
 }

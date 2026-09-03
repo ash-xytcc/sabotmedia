@@ -10,7 +10,12 @@ export function CampaignSignatures({ campaign, title = 'Who has signed' }) {
   const [form, setForm] = useState(() => ({ displayName: '', affiliation: '', email: '', organizationName: '', contactName: '', role: '', website: '', company: '', formStartedAt: Date.now() }))
   const [submitState, setSubmitState] = useState('idle')
   const [submitMessage, setSubmitMessage] = useState('')
-  const manageToken = useMemo(() => typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('manage-signature') || '', [])
+  const manageToken = useMemo(() => {
+    if (typeof window === 'undefined') return ''
+    const match = String(window.location.hash || '').match(/^#manage-signature=(.+)$/)
+    if (!match) return ''
+    try { return decodeURIComponent(match[1]) } catch { return '' }
+  }, [])
   const [managed, setManaged] = useState(null)
   const [manageState, setManageState] = useState('idle')
 
@@ -27,7 +32,7 @@ export function CampaignSignatures({ campaign, title = 'Who has signed' }) {
   useEffect(() => { refresh() }, [slug])
   useEffect(() => {
     if (!manageToken) return
-    loadManagedSignature(manageToken).then((result) => setManaged(result.item)).catch(() => setManaged(null))
+    loadManagedSignature(manageToken).then((result) => { setManaged(result.item); window.requestAnimationFrame(() => document.getElementById('signatories')?.scrollIntoView({ block: 'start' })) }).catch(() => setManaged(null))
   }, [manageToken])
 
   function patch(key, value) { setForm((current) => ({ ...current, [key]: value })) }

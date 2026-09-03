@@ -100,14 +100,17 @@ export async function importManualSignatories(db, campaignId, signatories = []) 
     if (!displayName) continue
     const legacyId = clean(item?.id || `legacy-${slugify(displayName)}`, 180)
     const id = `manual-${campaignId}-${legacyId}`
-    const exists = await db.prepare('SELECT id FROM campaign_signatures WHERE id = ? LIMIT 1').bind(id).first()
-    if (exists) continue
+    const existingById = await db.prepare('SELECT id FROM campaign_signatures WHERE id = ? LIMIT 1').bind(id).first()
+    const existingByName = await db.prepare(`SELECT id FROM campaign_signatures WHERE campaign_id = ? AND verification_method = 'verified_manual' AND lower(COALESCE(NULLIF(organization_name, ''), display_name)) = lower(?) LIMIT 1`).bind(campaignId, displayName).first()
+    if (existingById || existingByName) continue
     const now = new Date().toISOString()
+    const signerType = item?.signerType === 'individual' ? 'individual' : 'organization'
+    const organizationName = signerType === 'organization' ? displayName : ''
     await db.prepare(`INSERT INTO campaign_signatures (
       id, campaign_id, signer_type, display_name, affiliation, organization_name, contact_name, role, website,
       email, email_hash, status, verification_method, verified_at, published_at, duplicate_flags_json, abuse_flags_json, created_at, updated_at
-    ) VALUES (?, ?, 'organization', ?, ?, ?, '', '', ?, '', ?, 'approved', 'verified_manual', ?, ?, '[]', '[]', ?, ?)`)
-      .bind(id, campaignId, displayName, clean(item?.location, 180), displayName, safeWebsite(item?.url), await sha256(`manual:${campaignId}:${legacyId}`), now, now, now, now).run()
+    ) VALUES (?, ?, ?, ?, ?, ?, '', '', ?, '', ?, 'approved', 'verified_manual', ?, ?, '[]', '[]', ?, ?)`)
+      .bind(id, campaignId, signerType, displayName, clean(item?.location, 180), organizationName, safeWebsite(item?.url), await sha256(`manual:${campaignId}:${legacyId}`), now, now, now, now).run()
     imported += 1
   }
   return imported
@@ -147,18 +150,17 @@ export async function submitSignature(db, campaign, input = {}, requestMeta = {}
   const websiteDomainMatch = signerType === 'organization' ? compareEmailAndWebsiteDomain(email, website) : null
   const id = crypto.randomUUID()
   const verificationToken = randomSecret(32)
-  const managementToken = randomSecret(32)
   const now = new Date().toISOString()
   const expiresAt = new Date(Date.now() + VERIFY_TTL_MS).toISOString()
   await db.prepare(`INSERT INTO campaign_signatures (
     id, campaign_id, signer_type, display_name, affiliation, organization_name, contact_name, role, website, email, email_hash,
     status, verification_method, verification_token_hash, verification_expires_at, management_token_hash, management_created_at,
     duplicate_flags_json, abuse_flags_json, website_domain_match, created_at, updated_at
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_email', 'email', ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_email', 'email', ?, ?, NULL, NULL, ?, ?, ?, ?, ?)`)
     .bind(id, campaignId, signerType, displayName, affiliation, organizationName, contactName, role, website, email, emailHash,
-      await sha256(verificationToken), expiresAt, await sha256(managementToken), now, JSON.stringify(duplicateFlags), JSON.stringify(abuseFlags), websiteDomainMatch == null ? null : (websiteDomainMatch ? 1 : 0), now, now).run()
+      await sha256(verificationToken), expiresAt, JSON.stringify(duplicateFlags), JSON.stringify(abuseFlags), websiteDomainMatch == null ? null : (websiteDomainMatch ? 1 : 0), now, now).run()
 
-  return { accepted: true, id, email, verificationToken, managementToken, expiresAt }
+  return { accepted: true, id, email, verificationToken, expiresAt }
 }
 
 export async function verifySignature(db, token) {
@@ -167,9 +169,10 @@ export async function verifySignature(db, token) {
   const now = new Date().toISOString()
   const row = await db.prepare(`SELECT * FROM campaign_signatures WHERE verification_token_hash = ? AND status = 'pending_email' LIMIT 1`).bind(tokenHash).first()
   if (!row || !row.verification_expires_at || Date.parse(row.verification_expires_at) <= Date.now()) throw httpError('This verification link is invalid or expired.', 400)
-  await db.prepare(`UPDATE campaign_signatures SET status = 'awaiting_moderation', verification_token_hash = NULL, verification_expires_at = NULL, verified_at = ?, updated_at = ? WHERE id = ? AND verification_token_hash = ?`)
-    .bind(now, now, row.id, tokenHash).run()
-  return getPrivateSignature(db, row.id)
+  const managementToken = randomSecret(32)
+  await db.prepare(`UPDATE campaign_signatures SET status = 'awaiting_moderation', verification_token_hash = NULL, verification_expires_at = NULL, verified_at = ?, management_token_hash = ?, management_created_at = ?, updated_at = ? WHERE id = ? AND verification_token_hash = ?`)
+    .bind(now, await sha256(managementToken), now, now, row.id, tokenHash).run()
+  return { ...(await getPrivateSignature(db, row.id)), managementToken }
 }
 
 export async function resendVerification(db, signatureId) {

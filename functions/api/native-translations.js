@@ -28,7 +28,9 @@ export async function onRequestGet(context) {
     const contentId = String(url.searchParams.get('contentId') || url.searchParams.get('id') || '').trim()
     const slug = String(url.searchParams.get('slug') || '').trim()
     const format = String(url.searchParams.get('format') || '').trim().toLowerCase()
-    const content = await resolveContent(db, contentId, slug)
+    let content = await resolveContent(db, contentId, slug)
+    const bundledForRequestedSlug = bundledTranslationsForSlug(slug || content?.slug)
+    if (!content && slug && bundledForRequestedSlug.length) content = { id: `bundled:${slug}`, slug, title: '' }
 
     if (!content) return json({ ok: false, error: 'content not found' }, 404)
 
@@ -37,10 +39,10 @@ export async function onRequestGet(context) {
       return json({ ok: true, bundle: buildWeblateSourceBundle(content) })
     }
 
-    const storedTranslations = await listTranslations(db, content.id, {
+    const storedTranslations = String(content.id).startsWith('bundled:') ? [] : await listTranslations(db, content.id, {
       includeUnpublished: permission.canEdit && url.searchParams.get('includeUnpublished') === '1',
     })
-    const bundledTranslations = bundledTranslationsForSlug(content.slug)
+    const bundledTranslations = bundledForRequestedSlug.length ? bundledForRequestedSlug : bundledTranslationsForSlug(content.slug)
     const merged = new Map()
     for (const item of bundledTranslations) merged.set(String(item.languageCode || '').toLowerCase(), item)
     for (const item of storedTranslations) merged.set(String(item.languageCode || '').toLowerCase(), item)
