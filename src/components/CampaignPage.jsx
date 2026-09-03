@@ -298,8 +298,13 @@ export function CampaignPage() {
       {showSection('letters') ? <section className="campaign-section campaign-section--paper" id="letters">
         <div className="campaign-shell">
           <SectionHeading sectionKey="letters" eyebrow="LETTERS" title={sectionTitle('letters')} description="Use the organizational letter or the individual template, then send it directly to the relevant institutions and decision-makers." />
-          <PieceGrid pieces={letterPieces} empty="Letter downloads are temporarily unavailable. The reporting section remains available while they are restored." />
-          <ResourceStrip resources={letterResources} />
+          <div className={isAiCampaign ? 'campaign-letter-sign-layout' : undefined}>
+            <div>
+              <PieceGrid pieces={letterPieces} empty="Letter downloads are temporarily unavailable. The reporting section remains available while they are restored." />
+              <ResourceStrip resources={letterResources} />
+            </div>
+            {isAiCampaign ? <a className="campaign-sign-letter-cta" href="#signatories"><span>ADD YOUR NAME OR ORGANIZATION</span><strong>SIGN<br />THE<br />LETTER</strong><b>↓</b></a> : null}
+          </div>
         </div>
       </section> : null}
 

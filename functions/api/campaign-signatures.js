@@ -88,11 +88,19 @@ export async function onRequestPost(context) {
       if (!result.suppressed) {
         const origin = new URL(context.request.url).origin
         const verifyUrl = `${origin}/api/campaign-signatures?action=verify&token=${encodeURIComponent(result.verificationToken)}`
-        await sendSignatureEmail(context.env, {
-          to: result.email,
-          subject: `Verify your signature: ${campaign.shortTitle || campaign.title}`,
-          text: `Thanks for signing. Verify control of this email address here:\n\n${verifyUrl}\n\nVerification does not publish your signature. After verification it goes to the Sabot moderation queue.`,
-        })
+        try {
+          await sendSignatureEmail(context.env, {
+            to: result.email,
+            subject: `Verify your signature: ${campaign.shortTitle || campaign.title}`,
+            text: `Thanks for signing. Verify control of this email address here:\n\n${verifyUrl}\n\nVerification does not publish your signature. After verification it goes to the Sabot moderation queue.`,
+          })
+        } catch (emailError) {
+          await db.prepare(`DELETE FROM campaign_signatures WHERE id = ? AND status = 'pending_email'`).bind(result.id).run().catch(() => {})
+          const error = new Error('We could not send the verification email. Please try again shortly.')
+          error.status = 503
+          error.cause = emailError
+          throw error
+        }
       }
       // Deliberately generic. Do not reveal whether this address has signed before.
       return json({ ok: true, message: 'Check the email address you submitted for a verification link.' }, 202)
@@ -191,6 +199,7 @@ function sameOrigin(request) {
 }
 function publicError(error) {
   const status = Number(error?.status || 500)
+  if (status === 503 && String(error?.message || '').includes('verification email')) return String(error.message)
   if (status >= 500) return 'The signing service is temporarily unavailable.'
   return String(error?.message || error)
 }

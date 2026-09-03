@@ -293,10 +293,12 @@ export async function sendSignatureEmail(env, { to, subject, text, html = '' }) 
     if (!response.ok) throw new Error(`email webhook returned ${response.status}`)
     return { sent: true, provider: 'webhook' }
   }
-  // MailChannels remains an optional zero-account fallback for Cloudflare deployments.
-  const response = await fetch('https://api.mailchannels.net/tx/v1/send', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ personalizations: [{ to: [{ email: to }] }], from: parseFrom(from), subject, content: [{ type: 'text/plain', value: text }, ...(html ? [{ type: 'text/html', value: html }] : [])] }) })
-  if (!response.ok) throw new Error(`email provider returned ${response.status}`)
-  return { sent: true, provider: 'mailchannels' }
+  if (String(env.SIGNATURE_EMAIL_PROVIDER || '').toLowerCase() === 'mailchannels') {
+    const response = await fetch('https://api.mailchannels.net/tx/v1/send', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ personalizations: [{ to: [{ email: to }] }], from: parseFrom(from), subject, content: [{ type: 'text/plain', value: text }, ...(html ? [{ type: 'text/html', value: html }] : [])] }) })
+    if (!response.ok) throw new Error(`email provider returned ${response.status}`)
+    return { sent: true, provider: 'mailchannels' }
+  }
+  throw new Error('signature email transport is not configured')
 }
 
 export function signaturePublicDisplay(item) {
