@@ -1,0 +1,35 @@
+name: Finish public statement plumbing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/finish-public-statement.mjs
+      - .github/workflows/finish-public-statement.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/finish-public-statement.mjs
+      - run: npm test
+      - run: npm run build
+      - name: Commit
+        run: |
+          git config user.name "ash.budding"
+          git config user.email "fawkes_rising@riseup.net"
+          git rm scripts/finish-public-statement.mjs .github/workflows/finish-public-statement.yml
+          git add functions/api/_lib/campaignSignatures.js db/campaign_signatures.sql src/components/CampaignSignaturesAdmin.jsx src/campaign-signatures.css
+          git commit -m "finish signature statement support"
+          git push origin HEAD:main
