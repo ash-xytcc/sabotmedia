@@ -1,4 +1,4 @@
-name: Add signature public statement
+name: Signature stabilization cleanup
 
 on:
   push:
@@ -30,6 +30,7 @@ jobs:
           git config user.name "ash.budding"
           git config user.email "fawkes_rising@riseup.net"
           git rm scripts/add-signature-public-statement.mjs .github/workflows/add-signature-public-statement.yml
-          git add functions/api/_lib/campaignSignatures.js db/campaign_signatures.sql src/components/CampaignSignatures.jsx src/components/CampaignSignaturesAdmin.jsx src/campaign-signatures.css
-          git commit -m "add optional signer public statements"
+          git add functions/api/_lib/campaignSignatures.js functions/api/campaign-signatures.js tests/campaign-signatures-and-translation.test.mjs
+          git commit -m "harden signature verification failures"
+          git pull --rebase origin main
           git push origin HEAD:main
