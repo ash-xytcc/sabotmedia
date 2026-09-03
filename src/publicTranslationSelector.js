@@ -26,6 +26,7 @@ const ARTICLE_TRANSLATIONS = {
 
 const SELECTOR_ATTR = 'data-sabot-language-selector'
 const LOCAL_TRANSLATION_ATTR = 'data-sabot-local-translation'
+const ORIGINAL_HERO_ATTR = 'data-sabot-original-hero'
 const translationCache = new Map()
 
 function normalizedPathname() {
@@ -180,12 +181,34 @@ function sanitizeTranslatedHtml(html) {
   return documentFragment.body.innerHTML
 }
 
+function applyTranslatedHero(body) {
+  const hero = document.querySelector('.piece-article-lead__image')
+  if (!hero) return
+  if (!hero.hasAttribute(ORIGINAL_HERO_ATTR)) {
+    hero.setAttribute(ORIGINAL_HERO_ATTR, JSON.stringify({ src: hero.getAttribute('src') || '', alt: hero.getAttribute('alt') || '' }))
+  }
+  const heroImage = safeUrl(body?.heroImage, { image: true })
+  if (heroImage) hero.setAttribute('src', heroImage)
+  if (body?.heroImageAlt) hero.setAttribute('alt', String(body.heroImageAlt))
+}
+
+function restoreOriginalHero() {
+  const hero = document.querySelector(`.piece-article-lead__image[${ORIGINAL_HERO_ATTR}]`)
+  if (!hero) return
+  try {
+    const original = JSON.parse(hero.getAttribute(ORIGINAL_HERO_ATTR) || '{}')
+    if (original.src) hero.setAttribute('src', original.src)
+    hero.setAttribute('alt', original.alt || '')
+  } catch { /* keep current image if the marker is malformed */ }
+  hero.removeAttribute(ORIGINAL_HERO_ATTR)
+}
+
 function applyLocalTranslation(translation) {
   if (!translation?.code || !translation?.translation) return false
   const body = translation.translation
   const title = String(body.title || '').trim()
   const bodyHtml = String(body.bodyHtml || '').trim()
-  const marker = `${translation.code}:${title.length}:${bodyHtml.length}`
+  const marker = `${translation.code}:${title.length}:${bodyHtml.length}:${String(body.heroImage || '').length}`
   if (document.documentElement.getAttribute(LOCAL_TRANSLATION_ATTR) === marker) return true
 
   if (title) {
@@ -198,6 +221,7 @@ function applyLocalTranslation(translation) {
   const bodyMount = document.querySelector('.piece-body__content')
   if (bodyHtml && bodyMount) bodyMount.innerHTML = sanitizeTranslatedHtml(bodyHtml)
   if (!bodyMount && bodyHtml) return false
+  applyTranslatedHero(body)
 
   document.documentElement.lang = translation.code
   document.documentElement.setAttribute(LOCAL_TRANSLATION_ATTR, marker)
@@ -206,7 +230,14 @@ function applyLocalTranslation(translation) {
 
 function configForSelectedLanguage(pathname, baseConfig, nativeData) {
   const selectedCode = String(new URLSearchParams(window.location.search).get('lang') || '').toLowerCase()
-  if (!selectedCode || selectedCode === 'en') return baseConfig
+  if (!selectedCode || selectedCode === 'en') {
+    if (document.documentElement.hasAttribute(LOCAL_TRANSLATION_ATTR)) {
+      restoreOriginalHero()
+      document.documentElement.removeAttribute(LOCAL_TRANSLATION_ATTR)
+      document.documentElement.lang = 'en'
+    }
+    return baseConfig
+  }
 
   const nativeTranslation = (nativeData?.translations || []).find((item) => String(item?.code || '').toLowerCase() === selectedCode)
   if (!nativeTranslation?.translation || !applyLocalTranslation(nativeTranslation)) return baseConfig
