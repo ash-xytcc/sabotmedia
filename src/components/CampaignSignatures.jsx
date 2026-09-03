@@ -30,6 +30,34 @@ export function CampaignSignatures({ campaign, title = 'Who has signed' }) {
   }
 
   useEffect(() => { refresh() }, [slug])
+
+  useEffect(() => {
+    function scrollToSignatories({ smooth = false } = {}) {
+      if (window.location.hash !== '#signatories') return
+      window.requestAnimationFrame(() => {
+        window.setTimeout(() => {
+          document.getElementById('signatories')?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
+        }, 0)
+      })
+    }
+
+    function handleAnchorClick(event) {
+      const anchor = event.target?.closest?.('a[href="#signatories"]')
+      if (!anchor) return
+      event.preventDefault()
+      window.history.pushState(null, '', '#signatories')
+      scrollToSignatories({ smooth: true })
+    }
+
+    scrollToSignatories()
+    document.addEventListener('click', handleAnchorClick)
+    window.addEventListener('hashchange', scrollToSignatories)
+    return () => {
+      document.removeEventListener('click', handleAnchorClick)
+      window.removeEventListener('hashchange', scrollToSignatories)
+    }
+  }, [])
+
   useEffect(() => {
     if (!manageToken) return
     loadManagedSignature(manageToken).then((result) => { setManaged(result.item); window.requestAnimationFrame(() => document.getElementById('signatories')?.scrollIntoView({ block: 'start' })) }).catch(() => setManaged(null))
