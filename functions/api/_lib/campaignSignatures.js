@@ -56,6 +56,7 @@ export async function ensureCampaignSignatureTables(db) {
     `CREATE INDEX IF NOT EXISTS idx_campaign_signatures_manage ON campaign_signatures(management_token_hash)`,
   ]
   for (const sql of statements) await db.prepare(sql).run()
+  try { await db.prepare("ALTER TABLE campaign_signatures ADD COLUMN public_statement TEXT NOT NULL DEFAULT ''").run() } catch {}
 }
 
 export async function ensureSignatureForm(db, campaign, input = {}) {
@@ -134,6 +135,7 @@ export async function submitSignature(db, campaign, input = {}, requestMeta = {}
   const role = clean(input.role, 180)
   const affiliation = clean(input.affiliation, 220)
   const website = safeWebsite(input.website)
+  const publicStatement = clean(input.publicStatement, 1200)
   if (signerType === 'individual' && !displayName) throw httpError('Display name is required.', 400)
   if (signerType === 'organization' && (!organizationName || !contactName)) throw httpError('Organization and contact name are required.', 400)
 
@@ -153,11 +155,11 @@ export async function submitSignature(db, campaign, input = {}, requestMeta = {}
   const now = new Date().toISOString()
   const expiresAt = new Date(Date.now() + VERIFY_TTL_MS).toISOString()
   await db.prepare(`INSERT INTO campaign_signatures (
-    id, campaign_id, signer_type, display_name, affiliation, organization_name, contact_name, role, website, email, email_hash,
+    id, campaign_id, signer_type, display_name, affiliation, organization_name, contact_name, role, website, public_statement, email, email_hash,
     status, verification_method, verification_token_hash, verification_expires_at, management_token_hash, management_created_at,
     duplicate_flags_json, abuse_flags_json, website_domain_match, created_at, updated_at
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_email', 'email', ?, ?, NULL, NULL, ?, ?, ?, ?, ?)`)
-    .bind(id, campaignId, signerType, displayName, affiliation, organizationName, contactName, role, website, email, emailHash,
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_email', 'email', ?, ?, NULL, NULL, ?, ?, ?, ?, ?)` )
+    .bind(id, campaignId, signerType, displayName, affiliation, organizationName, contactName, role, website, publicStatement, email, emailHash,
       await sha256(verificationToken), expiresAt, JSON.stringify(duplicateFlags), JSON.stringify(abuseFlags), websiteDomainMatch == null ? null : (websiteDomainMatch ? 1 : 0), now, now).run()
 
   return { accepted: true, id, email, verificationToken, expiresAt }
@@ -203,15 +205,16 @@ export async function updateManagedSignature(db, token, patch = {}) {
   const displayName = patch.displayName === undefined ? row.display_name : clean(patch.displayName, 180)
   const affiliation = patch.affiliation === undefined ? row.affiliation : clean(patch.affiliation, 220)
   const organizationName = patch.organizationName === undefined ? row.organization_name : clean(patch.organizationName, 220)
+  const publicStatement = patch.publicStatement === undefined ? row.public_statement : clean(patch.publicStatement, 1200)
   const now = new Date().toISOString()
-  await db.prepare(`UPDATE campaign_signatures SET display_name = ?, affiliation = ?, organization_name = ?, status = ?, revoked_at = ?, published_at = CASE WHEN ? = 'revoked' THEN NULL ELSE published_at END, management_token_hash = CASE WHEN ? = 'revoked' THEN NULL ELSE management_token_hash END, updated_at = ? WHERE id = ? AND management_token_hash = ?`)
-    .bind(displayName, affiliation, organizationName, status, revoke ? now : row.revoked_at, status, status, now, row.id, tokenHash).run()
+  await db.prepare(`UPDATE campaign_signatures SET display_name = ?, affiliation = ?, organization_name = ?, public_statement = ?, status = ?, revoked_at = ?, published_at = CASE WHEN ? = 'revoked' THEN NULL ELSE published_at END, management_token_hash = CASE WHEN ? = 'revoked' THEN NULL ELSE management_token_hash END, updated_at = ? WHERE id = ? AND management_token_hash = ?`)
+    .bind(displayName, affiliation, organizationName, publicStatement, status, revoke ? now : row.revoked_at, status, status, now, row.id, tokenHash).run()
   return getPrivateSignature(db, row.id, { includeEmail: false })
 }
 
 export async function listPublicSignatures(db, campaignId) {
   await ensureCampaignSignatureTables(db)
-  const result = await db.prepare(`SELECT id, signer_type, display_name, affiliation, organization_name, role, website, published_at, verification_method FROM campaign_signatures WHERE campaign_id = ? AND status = 'approved' ORDER BY datetime(COALESCE(published_at, created_at)) ASC`).bind(campaignId).all()
+  const result = await db.prepare(`SELECT id, signer_type, display_name, affiliation, organization_name, role, website, public_statement, published_at, verification_method FROM campaign_signatures WHERE campaign_id = ? AND status = 'approved' ORDER BY datetime(COALESCE(published_at, created_at)) ASC`).bind(campaignId).all()
   const items = (result.results || []).map(publicRow)
   const organizations = items.filter((item) => item.signerType === 'organization')
   const individuals = items.filter((item) => item.signerType === 'individual')
@@ -244,8 +247,9 @@ export async function moderateSignature(db, id, action, patch = {}) {
   const organizationName = patch.organizationName === undefined ? row.organization_name : clean(patch.organizationName, 220)
   const role = patch.role === undefined ? row.role : clean(patch.role, 180)
   const website = patch.website === undefined ? row.website : safeWebsite(patch.website)
-  await db.prepare(`UPDATE campaign_signatures SET status = ?, display_name = ?, affiliation = ?, organization_name = ?, role = ?, website = ?, moderation_note = ?, published_at = ?, revoked_at = ?, verification_token_hash = CASE WHEN ? IN ('rejected','spam','revoked') THEN NULL ELSE verification_token_hash END, updated_at = ? WHERE id = ?`)
-    .bind(nextStatus, displayName, affiliation, organizationName, role, website, clean(patch.moderationNote || row.moderation_note, 2000), nextStatus === 'approved' ? (row.published_at || now) : null, nextStatus === 'revoked' ? now : null, nextStatus, now, id).run()
+  const publicStatement = patch.publicStatement === undefined ? row.public_statement : clean(patch.publicStatement, 1200)
+  await db.prepare(`UPDATE campaign_signatures SET status = ?, display_name = ?, affiliation = ?, organization_name = ?, role = ?, website = ?, public_statement = ?, moderation_note = ?, published_at = ?, revoked_at = ?, verification_token_hash = CASE WHEN ? IN ('rejected','spam','revoked') THEN NULL ELSE verification_token_hash END, updated_at = ? WHERE id = ?`)
+    .bind(nextStatus, displayName, affiliation, organizationName, role, website, publicStatement, clean(patch.moderationNote || row.moderation_note, 2000), nextStatus === 'approved' ? (row.published_at || now) : null, nextStatus === 'revoked' ? now : null, nextStatus, now, id).run()
   return getPrivateSignature(db, id)
 }
 
@@ -261,7 +265,7 @@ export async function bulkModerateSignatures(db, ids = [], action) {
 
 export async function exportSignaturesCsv(db, campaignId) {
   const items = await listModerationQueue(db, campaignId, 'all')
-  const headers = ['id','status','signer_type','display_name','affiliation','organization_name','contact_name','role','website','email','verification_method','created_at','verified_at','published_at']
+  const headers = ['id','status','signer_type','display_name','affiliation','organization_name','contact_name','role','website','public_statement','email','verification_method','created_at','verified_at','published_at']
   const lines = [headers.join(',')]
   for (const item of items) lines.push(headers.map((key) => csvCell(item[key] ?? item[toCamel(key)] ?? '')).join(','))
   return lines.join('\n')
@@ -315,6 +319,7 @@ function publicRow(row) {
     organizationName: row.organization_name,
     role: row.role,
     website: row.website,
+    publicStatement: row.public_statement || '',
     publishedAt: row.published_at,
     verificationMethod: row.verification_method,
   }
@@ -330,6 +335,7 @@ function privateRow(row, { includeEmail = true } = {}) {
     contactName: row.contact_name,
     role: row.role,
     website: row.website,
+    publicStatement: row.public_statement || '',
     ...(includeEmail ? { email: row.email } : {}),
     status: row.status,
     verificationMethod: row.verification_method,

@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS campaign_signatures (
   contact_name TEXT NOT NULL DEFAULT '',
   role TEXT NOT NULL DEFAULT '',
   website TEXT NOT NULL DEFAULT '',
+  public_statement TEXT NOT NULL DEFAULT '',
   email TEXT NOT NULL,
   email_hash TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending_email',
