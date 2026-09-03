@@ -1,0 +1,35 @@
+name: Apply signing form fixes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/fix-signing-ui-and-mail-errors.mjs
+      - .github/workflows/fix-signing-ui-and-mail-errors.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: node scripts/fix-signing-ui-and-mail-errors.mjs
+      - run: npm test
+      - run: npm run build
+      - name: Commit fixes
+        run: |
+          git config user.name "ash.budding"
+          git config user.email "fawkes_rising@riseup.net"
+          git rm scripts/fix-signing-ui-and-mail-errors.mjs .github/workflows/fix-signing-ui-and-mail-errors.yml
+          git add src/components/CampaignPage.jsx src/campaign-signatures.css functions/api/campaign-signatures.js functions/api/_lib/campaignSignatures.js
+          git commit -m "fix public signing flow"
+          git push origin HEAD:main
