@@ -4,7 +4,23 @@ async function request(url, options = {}) {
   if (!response.ok || !data?.ok) throw new Error(data?.error || `request failed: ${response.status}`)
   return data
 }
-function contributorSessionHeader(session) { return session ? { 'x-sabot-contributor-session': session } : {} }
+const CONTRIBUTOR_SESSION_COOKIE = 'sabot_contributor_session'
+function readContributorSessionCookie() {
+  if (typeof document === 'undefined') return ''
+  const prefix = `${CONTRIBUTOR_SESSION_COOKIE}=`
+  const match = String(document.cookie || '').split(';').map((part) => part.trim()).find((part) => part.startsWith(prefix))
+  return match ? decodeURIComponent(match.slice(prefix.length)) : ''
+}
+export function persistContributorSession(session, maxAgeSeconds = 30 * 24 * 60 * 60) {
+  if (typeof document === 'undefined' || !session) return
+  document.cookie = `${CONTRIBUTOR_SESSION_COOKIE}=${encodeURIComponent(session)}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Strict; Secure`
+}
+export function clearContributorSessionCookie() {
+  if (typeof document === 'undefined') return
+  document.cookie = `${CONTRIBUTOR_SESSION_COOKIE}=; Path=/; Max-Age=0; SameSite=Strict; Secure`
+}
+function effectiveContributorSession(session = '') { return String(session || '').trim() || readContributorSessionCookie() }
+function contributorSessionHeader(session) { const value = effectiveContributorSession(session); return value ? { 'x-sabot-contributor-session': value } : {} }
 export function loadCorrespondence(campaign, session = '', admin = false) { return request(`/api/campaign-correspondence?campaign=${encodeURIComponent(campaign)}${admin ? '&view=admin' : ''}`, { headers: contributorSessionHeader(session) }) }
 export function authenticateContributor(token, pin) { return request('/api/campaign-contributor-auth', { method: 'POST', body: JSON.stringify({ token, pin }) }) }
 export function sendMessage(campaign, message, session = '', publish = false) { return request('/api/campaign-correspondence', { method: 'POST', headers: contributorSessionHeader(session), body: JSON.stringify({ action: publish ? 'publish-message' : 'message', campaign, ...message }) }) }
@@ -22,7 +38,8 @@ export async function uploadCampaignArchiveMedia(file) {
 export async function uploadContributorMedia(file, session, onProgress) {
   const body = new FormData(); body.append('file', file)
   return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest(); xhr.open('POST', '/api/campaign-contributor-media'); xhr.setRequestHeader('x-sabot-contributor-session', session); xhr.setRequestHeader('accept', 'application/json')
+    const activeSession = effectiveContributorSession(session)
+    const xhr = new XMLHttpRequest(); xhr.open('POST', '/api/campaign-contributor-media'); if (activeSession) xhr.setRequestHeader('x-sabot-contributor-session', activeSession); xhr.setRequestHeader('accept', 'application/json')
     xhr.upload.onprogress = (event) => { if (event.lengthComputable) onProgress?.(Math.round((event.loaded / event.total) * 100)) }
     xhr.onerror = () => reject(new Error('Upload interrupted. Tap retry when your connection returns.'))
     xhr.onload = () => { let data; try { data = JSON.parse(xhr.responseText) } catch {} if (xhr.status >= 200 && xhr.status < 300 && data?.ok) resolve(data); else reject(new Error(data?.error || `upload failed: ${xhr.status}`)) }
