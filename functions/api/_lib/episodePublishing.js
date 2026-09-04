@@ -1,5 +1,6 @@
 const DESTINATIONS = new Set(['website', 'podcastRss', 'youtube', 'peertube'])
 const JOB_STATUSES = new Set(['queued', 'processing', 'published', 'failed', 'retrying', 'cancelled'])
+const STALE_JOB_MINUTES = 30
 
 export async function ensureEpisodePublishingTables(db) {
   await db.prepare(`
@@ -183,16 +184,29 @@ export async function retryDestination(db, episodeId, destination) {
   }
 
   const job = await db.prepare(`
-    SELECT id FROM episode_publish_jobs
+    SELECT id, depends_on_id FROM episode_publish_jobs
     WHERE episode_id = ? AND destination = ? AND status IN ('failed', 'cancelled')
     ORDER BY datetime(updated_at) DESC LIMIT 1
   `).bind(episodeId, destination).first()
   if (!job?.id) throw new Error(`no failed ${destination} job is available to retry`)
 
   const now = new Date().toISOString()
+  if (job.depends_on_id) {
+    const dependency = await db.prepare(`
+      SELECT id, status FROM episode_publish_jobs WHERE id = ? LIMIT 1
+    `).bind(job.depends_on_id).first()
+    if (dependency?.id && ['failed', 'cancelled'].includes(String(dependency.status || ''))) {
+      await db.prepare(`
+        UPDATE episode_publish_jobs
+        SET status = 'retrying', attempts = 0, available_at = ?, locked_at = '', last_error = '', updated_at = ?
+        WHERE id = ?
+      `).bind(now, now, dependency.id).run()
+    }
+  }
+
   await db.prepare(`
     UPDATE episode_publish_jobs
-    SET status = 'retrying', available_at = ?, locked_at = '', last_error = '', updated_at = ?
+    SET status = 'retrying', attempts = 0, available_at = ?, locked_at = '', last_error = '', updated_at = ?
     WHERE id = ?
   `).bind(now, now, job.id).run()
   return markDestination(db, episodeId, destination, { status: 'retrying', lastError: '' })
@@ -200,6 +214,7 @@ export async function retryDestination(db, episodeId, destination) {
 
 export async function claimNextEpisodeJob(db, options = {}) {
   await ensureEpisodePublishingTables(db)
+  await requeueStaleEpisodeJobs(db)
   const destination = clean(options.destination, 40)
   const now = new Date().toISOString()
   const clauses = ["j.status IN ('queued', 'retrying')", 'datetime(j.available_at) <= datetime(?)', 'j.attempts < j.max_attempts']
@@ -234,6 +249,18 @@ export async function claimNextEpisodeJob(db, options = {}) {
     ...rowToJob({ ...row, status: 'processing', attempts: Number(row.attempts || 0) + 1, locked_at: lockedAt, updated_at: lockedAt }),
     payload: parseJson(row.payload_json),
   }
+}
+
+export async function requeueStaleEpisodeJobs(db, minutes = STALE_JOB_MINUTES) {
+  await ensureEpisodePublishingTables(db)
+  const safeMinutes = Math.max(5, Math.min(24 * 60, Number(minutes || STALE_JOB_MINUTES) || STALE_JOB_MINUTES))
+  const cutoff = new Date(Date.now() - safeMinutes * 60_000).toISOString()
+  const now = new Date().toISOString()
+  await db.prepare(`
+    UPDATE episode_publish_jobs
+    SET status = 'retrying', locked_at = '', available_at = ?, last_error = 'Worker lease expired; automatically requeued.', updated_at = ?
+    WHERE status = 'processing' AND locked_at != '' AND datetime(locked_at) < datetime(?) AND attempts < max_attempts
+  `).bind(now, now, cutoff).run()
 }
 
 export async function finishEpisodeJob(db, jobId, result = {}) {
@@ -286,11 +313,11 @@ export function buildEpisodeJobPayload(episode = {}, show = {}, override = {}) {
     episodeNumber: String(episode.podcastEpisodeNumber || ''),
     season: String(episode.podcastSeason || ''),
     transcript: String(episode.podcastTranscript || ''),
-    explicit: Boolean(canonicalAudio?.podcastExplicit),
+    explicit: episode.podcastExplicit == null ? Boolean(canonicalAudio?.podcastExplicit) : Boolean(episode.podcastExplicit),
     hosts: Array.isArray(canonicalAudio?.hosts) ? canonicalAudio.hosts : [],
     audio: {
-      mediaId: String(canonicalAudio?.mediaId || canonicalAudio?.id || ''),
-      storageKey: String(canonicalAudio?.storageKey || ''),
+      mediaId: String(canonicalAudio?.mediaId || canonicalAudio?.id || episode.podcastAudioMediaId || ''),
+      storageKey: String(canonicalAudio?.storageKey || episode.podcastAudioStorageKey || ''),
       url: audioUrl,
       mimeType: String(canonicalAudio?.mimeType || episode.podcastMimeType || 'audio/mpeg'),
       size: Number(canonicalAudio?.size || episode.podcastFileSize || 0) || 0,
