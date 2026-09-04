@@ -276,6 +276,7 @@ export function PodcastSettingsPage() {
             <label><span>Category</span><input value={settings.category} onChange={(e) => update('category', e.target.value)} placeholder="News" /></label>
             <label><span>Owner name</span><input value={settings.ownerName} onChange={(e) => update('ownerName', e.target.value)} autoComplete="name" /></label>
             <label><span>Owner email</span><input type="email" value={settings.ownerEmail} onChange={(e) => update('ownerEmail', e.target.value)} autoComplete="email" /><small>Podcast directories may expose or use this address for ownership verification.</small></label>
+            <label><span>Copyright</span><input value={settings.copyright || ''} onChange={(e) => update('copyright', e.target.value)} placeholder="© Sabot Media" /></label>
             <label><span>Audio host URL/base</span><input type="url" value={settings.audioHostBaseUrl} onChange={(e) => update('audioHostBaseUrl', e.target.value)} placeholder="https://media.sabot.media/podcasts/" /></label>
             <label><span><input type="checkbox" checked={Boolean(settings.explicit)} onChange={(e) => update('explicit', e.target.checked)} /> Explicit show</span></label>
           </div>
