@@ -6,6 +6,7 @@ export async function onRequest(context) {
   if (!response.ok || context.request.method === 'HEAD') return response
   let html = await response.text()
   if (!html.includes('foia-desk.js')) html = html.replace('</body>', '  <script src="./foia-desk.js" defer></script>\n</body>')
+  if (!html.includes('pdf-highlights.js')) html = html.replace('</body>', '  <script src="./pdf-highlights.js" defer></script>\n</body>')
   const headers = new Headers(response.headers)
   headers.set('content-type', 'text/html; charset=utf-8')
   headers.set('cache-control', 'public, max-age=60, s-maxage=180')
