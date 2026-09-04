@@ -188,7 +188,7 @@ async function uploadPeerTubeJob(job) {
   const payload = job.payload || {}
   const platform = payload.platform?.peertube || {}
   const base = requiredValue(platform.baseUrl || process.env.PEERTUBE_BASE_URL, 'PeerTube base URL').replace(/\/$/, '')
-  const token = requiredEnv('PEERTUBE_ACCESS_TOKEN')
+  const token = await peerTubeAccessToken()
   const channelId = Number(payload.override?.channelId || platform.channelId || process.env.PEERTUBE_CHANNEL_ID || 0)
   if (!channelId) throw new Error('PeerTube channel id is required in Publishing Connections or PEERTUBE_CHANNEL_ID')
   const dir = await mkdtemp(join(tmpdir(), 'sabot-peertube-'))
@@ -280,7 +280,7 @@ async function syncPeerTubeMetadata(job) {
   if (!remoteId) throw new Error('PeerTube metadata sync has no remote video id')
   const platform = payload.platform?.peertube || {}
   const base = requiredValue(platform.baseUrl || process.env.PEERTUBE_BASE_URL, 'PeerTube base URL').replace(/\/$/, '')
-  const token = requiredEnv('PEERTUBE_ACCESS_TOKEN')
+  const token = await peerTubeAccessToken()
   const form = new FormData()
   form.append('name', truncate(payload.title || 'Untitled episode', 120))
   form.append('description', truncate(payload.description || '', 10000))
@@ -335,6 +335,16 @@ async function uploadFileInChunks({ url, filePath, size, contentType, headers = 
 }
 
 async function googleAccessToken() {
+  try {
+    const connected = await siteRequest('/api/episode-worker-credentials', { destination: 'youtube' })
+    if (connected.accessToken) return connected.accessToken
+  } catch (siteError) {
+    const localReady = String(process.env.YOUTUBE_REFRESH_TOKEN || '').trim()
+      && String(process.env.YOUTUBE_CLIENT_ID || '').trim()
+      && String(process.env.YOUTUBE_CLIENT_SECRET || '').trim()
+    if (!localReady) throw siteError
+  }
+
   const refreshToken = requiredEnv('YOUTUBE_REFRESH_TOKEN')
   const clientId = requiredEnv('YOUTUBE_CLIENT_ID')
   const clientSecret = requiredEnv('YOUTUBE_CLIENT_SECRET')
@@ -352,6 +362,20 @@ async function googleAccessToken() {
   const data = await response.json().catch(() => null)
   if (!response.ok || !data?.access_token) throw new Error(data?.error_description || data?.error || `YouTube token refresh failed: ${response.status}`)
   return data.access_token
+}
+
+async function peerTubeAccessToken() {
+  try {
+    const connected = await siteRequest('/api/episode-worker-credentials', { destination: 'peertube' })
+    if (connected.accessToken) return connected.accessToken
+  } catch (siteError) {
+    const fallback = String(process.env.PEERTUBE_ACCESS_TOKEN || '').trim()
+    if (!fallback) throw siteError
+    return fallback
+  }
+  const fallback = String(process.env.PEERTUBE_ACCESS_TOKEN || '').trim()
+  if (fallback) return fallback
+  throw new Error('PeerTube access token is not configured')
 }
 
 async function claimJob() {
