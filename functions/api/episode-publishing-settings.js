@@ -5,6 +5,7 @@ import {
   readEpisodePublishingSettings,
   writeEpisodePublishingSettings,
 } from './_lib/episodePublishingSettings.js'
+import { readEpisodeCredentialFlags } from './_lib/episodeCredentials.js'
 
 export async function onRequestOptions(context) {
   const permission = await resolvePublicSitePermission(context)
@@ -18,11 +19,12 @@ export async function onRequestGet(context) {
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('episode publishing settings')
     const result = await readEpisodePublishingSettings(db)
+    const credentialFlags = await readEpisodeCredentialFlags(db, context.env || {})
     return json({
       ok: true,
       mode: 'd1',
       ...result,
-      connections: episodePublishingConnectionSummary(context.env || {}, result.settings),
+      connections: episodePublishingConnectionSummary(context.env || {}, result.settings, credentialFlags),
     })
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
@@ -37,11 +39,12 @@ export async function onRequestPost(context) {
     if (!db) return databaseUnavailable('episode publishing settings')
     const body = await context.request.json().catch(() => ({}))
     const result = await writeEpisodePublishingSettings(db, body?.settings || body || {})
+    const credentialFlags = await readEpisodeCredentialFlags(db, context.env || {})
     return json({
       ok: true,
       mode: 'd1',
       ...result,
-      connections: episodePublishingConnectionSummary(context.env || {}, result.settings),
+      connections: episodePublishingConnectionSummary(context.env || {}, result.settings, credentialFlags),
     })
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 400)
