@@ -1,0 +1,13 @@
+{
+  "name": "sabotpress-media-worker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node worker.mjs",
+    "once": "node worker.mjs --once"
+  }
+}
