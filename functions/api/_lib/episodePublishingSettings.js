@@ -1,4 +1,5 @@
 export const EPISODE_PUBLISHING_SETTINGS_KEY = 'episode-publishing-settings-v1'
+export const EPISODE_WORKER_HEARTBEAT_KEY = 'episode-worker-heartbeat-v1'
 
 export const EPISODE_PUBLISHING_DEFAULTS = Object.freeze({
   youtube: {
@@ -53,7 +54,32 @@ export async function writeEpisodePublishingSettings(db, input = {}) {
   return { settings, updatedAt }
 }
 
-export function episodePublishingConnectionSummary(env = {}, settings = EPISODE_PUBLISHING_DEFAULTS, credentialFlags = {}) {
+export async function recordEpisodeWorkerHeartbeat(db) {
+  await ensureEpisodePublishingSettingsTable(db)
+  const lastSeenAt = new Date().toISOString()
+  await db.prepare(`INSERT INTO site_settings (setting_key, value_json, updated_at)
+    VALUES (?, ?, ?)
+    ON CONFLICT(setting_key) DO UPDATE SET value_json = excluded.value_json, updated_at = excluded.updated_at`)
+    .bind(EPISODE_WORKER_HEARTBEAT_KEY, JSON.stringify({ lastSeenAt }), lastSeenAt)
+    .run()
+  return { lastSeenAt, active: true }
+}
+
+export async function readEpisodeWorkerHeartbeat(db) {
+  await ensureEpisodePublishingSettingsTable(db)
+  const row = await db.prepare('SELECT value_json, updated_at FROM site_settings WHERE setting_key = ? LIMIT 1')
+    .bind(EPISODE_WORKER_HEARTBEAT_KEY)
+    .first()
+  const value = parseObject(row?.value_json)
+  const lastSeenAt = String(value?.lastSeenAt || row?.updated_at || '')
+  const lastSeenMs = new Date(lastSeenAt).getTime()
+  return {
+    lastSeenAt,
+    active: Number.isFinite(lastSeenMs) && (Date.now() - lastSeenMs) < 90_000,
+  }
+}
+
+export function episodePublishingConnectionSummary(env = {}, settings = EPISODE_PUBLISHING_DEFAULTS, credentialFlags = {}, workerHeartbeat = {}) {
   const youtubeClientConfigured = Boolean(
     String(env.YOUTUBE_CLIENT_ID || '').trim()
     && String(env.YOUTUBE_CLIENT_SECRET || '').trim()
@@ -62,6 +88,8 @@ export function episodePublishingConnectionSummary(env = {}, settings = EPISODE_
   return {
     worker: {
       configured: Boolean(String(env.EPISODE_WORKER_TOKEN || '').trim()),
+      active: workerHeartbeat.active === true,
+      lastSeenAt: String(workerHeartbeat.lastSeenAt || ''),
     },
     youtube: {
       configured: Boolean(youtubeClientConfigured && (String(env.YOUTUBE_REFRESH_TOKEN || '').trim() || credentialFlags.youtube)),
