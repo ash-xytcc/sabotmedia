@@ -98,9 +98,11 @@ function normalizeBodyNodes(nodes = []) {
     if (!isMeaningfulElement(node)) continue
     const tag = node.nodeType === 1 ? String(node.tagName || '').toLowerCase() : 'text'
     const text = (node.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase()
-    const imgSrc = node.nodeType === 1 ? (node.getAttribute('src') || node.querySelector?.('img')?.getAttribute('src') || '') : ''
+    const mediaSrc = node.nodeType === 1
+      ? (node.getAttribute('src') || node.querySelector?.('img, audio, video, iframe, source[src]')?.getAttribute('src') || '')
+      : ''
     const href = node.nodeType === 1 ? (node.getAttribute('href') || node.querySelector?.('a[href]')?.getAttribute('href') || '') : ''
-    const signature = `${tag}|${imgSrc}|${href}|${text}`
+    const signature = `${tag}|${mediaSrc}|${href}|${text}`
     if (signature && signature === previousSignature) continue
     previousSignature = signature
     normalized.push(node)
@@ -132,6 +134,75 @@ function renderAudioNode(node, mode, key, captionHtml = '') {
         aria-label={label || 'Audio player'}
         style={{ width: '100%' }}
       />
+      {captionHtml ? (
+        <figcaption
+          className="post-body__caption"
+          dangerouslySetInnerHTML={{ __html: captionHtml }}
+        />
+      ) : null}
+    </figure>
+  )
+}
+
+function renderVideoNode(node, mode, key, captionHtml = '') {
+  const src = normalizeMediaSrc(node?.getAttribute?.('src') || node?.querySelector?.('source[src]')?.getAttribute('src') || '')
+  if (!src) return null
+  const poster = normalizeMediaSrc(node?.getAttribute?.('poster') || '')
+  const label = String(
+    node?.getAttribute?.('aria-label')
+    || node?.getAttribute?.('data-media-title')
+    || node?.getAttribute?.('title')
+    || 'Video player'
+  ).trim()
+
+  return (
+    <figure
+      key={key}
+      className={`post-body__figure post-body__figure--video${mode === 'experience' ? ' post-body__figure--experience' : ''}`}
+    >
+      <video
+        className="post-body__video"
+        controls
+        preload="metadata"
+        playsInline
+        src={src}
+        poster={poster || undefined}
+        aria-label={label || 'Video player'}
+        style={{ display: 'block', width: '100%', height: 'auto' }}
+      />
+      {captionHtml ? (
+        <figcaption
+          className="post-body__caption"
+          dangerouslySetInnerHTML={{ __html: captionHtml }}
+        />
+      ) : null}
+    </figure>
+  )
+}
+
+function renderIframeNode(node, mode, key, captionHtml = '') {
+  const src = normalizeMediaSrc(node?.getAttribute?.('src') || '')
+  if (!src) return null
+  const title = String(node?.getAttribute?.('title') || 'Embedded content').trim() || 'Embedded content'
+  const requestedHeight = Number.parseInt(node?.getAttribute?.('height') || '', 10)
+  const height = Number.isFinite(requestedHeight) ? Math.min(1400, Math.max(240, requestedHeight)) : 560
+
+  return (
+    <figure
+      key={key}
+      className={`post-body__figure post-body__figure--embed${mode === 'experience' ? ' post-body__figure--experience' : ''}`}
+    >
+      <div className={`post-body__embed${mode === 'experience' ? ' post-body__embed--experience' : ''}`}>
+        <iframe
+          src={src}
+          title={title}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          allowFullScreen
+          width="100%"
+          height={height}
+        />
+      </div>
       {captionHtml ? (
         <figcaption
           className="post-body__caption"
@@ -205,10 +276,14 @@ function renderNode(node, mode, key) {
       )
 
     case 'figure': {
-      const audio = node.querySelector('audio')
       const caption = node.querySelector('figcaption')
       const captionHtml = caption?.innerHTML || ''
+      const audio = node.querySelector('audio')
       if (audio) return renderAudioNode(audio, mode, key, captionHtml)
+      const video = node.querySelector('video')
+      if (video) return renderVideoNode(video, mode, key, captionHtml)
+      const iframe = node.querySelector('iframe')
+      if (iframe) return renderIframeNode(iframe, mode, key, captionHtml)
 
       const img = node.querySelector('img')
       const src = img?.getAttribute('src') || ''
@@ -273,23 +348,13 @@ function renderNode(node, mode, key) {
       )
 
     case 'iframe':
-      return (
-        <div
-          key={key}
-          className={`post-body__embed${mode === 'experience' ? ' post-body__embed--experience' : ''}`}
-          dangerouslySetInnerHTML={{ __html: node.outerHTML }}
-        />
-      )
+      return renderIframeNode(node, mode, key)
 
     case 'audio':
       return renderAudioNode(node, mode, key)
 
     case 'video':
-      return (
-        <figure key={key} className={`post-body__figure${mode === 'experience' ? ' post-body__figure--experience' : ''}`}>
-          <div className="post-body__embed" dangerouslySetInnerHTML={{ __html: node.outerHTML }} />
-        </figure>
-      )
+      return renderVideoNode(node, mode, key)
 
     case 'div':
     case 'section':
