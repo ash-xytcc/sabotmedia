@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process'
-import { mkdtemp, open, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { createReadStream } from 'node:fs'
+import { mkdtemp, open, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 
@@ -113,16 +114,18 @@ async function renderWithFfmpeg({ audioPath, artPath, hasArtwork, outputPath, te
 }
 
 async function uploadRenderedMedia(job, outputPath) {
-  const bytes = await readFile(outputPath)
-  const form = new FormData()
-  form.append('file', new Blob([bytes], { type: 'video/mp4' }), `${job.episodeId}.mp4`)
-  form.append('episodeId', job.episodeId)
-  form.append('jobId', job.id)
-  form.append('mimeType', 'video/mp4')
+  const fileStat = await stat(outputPath)
   const response = await fetch(`${siteUrl}/api/episode-worker-media`, {
     method: 'POST',
-    headers: workerHeaders(false),
-    body: form,
+    headers: {
+      ...workerHeaders(false),
+      'content-type': 'video/mp4',
+      'content-length': String(fileStat.size),
+      'x-episode-id': String(job.episodeId || ''),
+      'x-job-id': String(job.id || ''),
+    },
+    body: createReadStream(outputPath),
+    duplex: 'half',
   })
   const data = await response.json().catch(() => null)
   if (!response.ok || !data?.ok || !data.media?.url) throw new Error(data?.error || `render media upload failed: ${response.status}`)
