@@ -11,16 +11,6 @@ function cleanUrl(value = '', image = false) {
   return /^https?:\/\//i.test(url) ? url : ''
 }
 
-function isBold(element) {
-  const weight = String(element?.style?.fontWeight || '').toLowerCase()
-  const numeric = Number.parseInt(weight, 10)
-  return weight === 'bold' || weight === 'bolder' || (Number.isFinite(numeric) && numeric >= 600)
-}
-
-function isItalic(element) {
-  return /^(italic|oblique)$/i.test(String(element?.style?.fontStyle || ''))
-}
-
 function cleanChildren(source, output) {
   const fragment = output.createDocumentFragment()
   for (const child of Array.from(source.childNodes || [])) {
@@ -28,14 +18,6 @@ function cleanChildren(source, output) {
     if (clean) fragment.append(clean)
   }
   return fragment
-}
-
-function wrap(fragment, tag, output) {
-  const element = output.createElement(tag)
-  element.append(fragment)
-  const next = output.createDocumentFragment()
-  next.append(element)
-  return next
 }
 
 function cleanNode(node, output) {
@@ -46,10 +28,7 @@ function cleanNode(node, output) {
   const sourceTag = String(node.tagName || '').toLowerCase()
   if (DROP_TAGS.has(sourceTag)) return null
 
-  let children = cleanChildren(node, output)
-  if (isBold(node) && !['b', 'strong'].includes(sourceTag)) children = wrap(children, 'strong', output)
-  if (isItalic(node) && !['i', 'em'].includes(sourceTag)) children = wrap(children, 'em', output)
-
+  const children = cleanChildren(node, output)
   const tag = sourceTag === 'b' ? 'strong' : sourceTag === 'i' ? 'em' : sourceTag
   if (tag === 'span' || tag === 'font' || !SAFE_TAGS.has(tag)) return children
 
