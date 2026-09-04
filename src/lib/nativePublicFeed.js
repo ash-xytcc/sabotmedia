@@ -1,6 +1,6 @@
-import { getImportedImage } from './getImportedImage'
-import { loadNativeCollection, slugify } from './nativePublicContent'
-import { classicEditorBodyToHtml } from './classicEditorBody'
+import { getImportedImage } from './getImportedImage.js'
+import { loadNativeCollection, slugify } from './nativePublicContent.js'
+import { classicEditorBodyToHtml } from './classicEditorBody.js'
 
 const PREVIEW_STORAGE_PREFIX = 'sabot-native-preview-v1:'
 
