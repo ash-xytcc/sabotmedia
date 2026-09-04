@@ -45,7 +45,7 @@
 .intro-copy { max-width: 900px; }
 .intro h1 {
   max-width: 100%;
-  font-size: clamp(44px, 6.2vw, 82px);
+  font-size: clamp(44px, 5.35vw, 72px);
   overflow-wrap: normal;
   word-break: normal;
 }
@@ -119,8 +119,8 @@
 .document-wall {
   margin: 34px 0 6px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: 1fr;
+  gap: 18px;
 }
 .document-peek {
   border: 1px solid #a89d8b;
@@ -143,7 +143,7 @@
 .document-peek iframe {
   display: block;
   width: 100%;
-  height: 430px;
+  height: clamp(620px, 74vh, 900px);
   border: 0;
   background: #ddd6ca;
 }
@@ -182,29 +182,32 @@ body.focus-chain .updates,
 body.focus-chain .media-dossier { opacity: .25; transition: opacity .18s ease; }
 body.focus-chain .chain-section { background: #fffaf0; box-shadow: 0 0 0 100vmax #fffaf0; clip-path: inset(0 -100vmax); }
 
-@media (max-width: 1180px) {
+/* Browser zoom can make a 1130px screenshot behave like a much wider CSS viewport. Stack the helper panel earlier so the headline never runs under it. */
+@media (max-width: 1500px) {
   .intro-grid { grid-template-columns: 1fr; align-items: start; }
-  .intro-copy { max-width: none; }
-  .intro h1 { max-width: 970px; font-size: clamp(48px, 8.3vw, 88px); }
-  .how-to { max-width: 760px; align-self: start; }
+  .intro-copy { max-width: 1040px; }
+  .intro h1 { max-width: 1040px; font-size: clamp(46px, 6.3vw, 82px); }
+  .how-to { max-width: 760px; align-self: start; margin-top: 8px; }
   .how-to h2 { max-width: 620px; }
 }
 
 @media (max-width: 860px) {
+  .intro h1 { font-size: clamp(42px, 9vw, 72px); }
   .media-dossier__grid { grid-template-columns: 1fr 1fr; }
   .person-card:first-child { grid-column: 1 / -1; min-height: 410px; }
-  .document-wall { grid-template-columns: 1fr; }
   .reader-tools { position: static; flex-direction: row; flex-wrap: wrap; width: min(100% - 28px, 1240px); margin: 12px auto 0; }
   .reader-tools button { flex: 1 1 130px; }
+  .document-peek iframe { height: 620px; }
 }
 
 @media (max-width: 600px) {
   .intro::after { width: 400px; right: -225px; top: 58px; height: 92px; }
   .intro-grid::after { display: none; }
+  .intro h1 { font-size: clamp(38px, 11vw, 58px); overflow-wrap: anywhere; }
   .media-dossier__grid { grid-template-columns: 1fr; }
   .person-card:first-child { grid-column: auto; }
   .person-card { min-height: 330px; }
-  .document-peek iframe { height: 360px; }
+  .document-peek iframe { height: 520px; }
 }
 
 @media print {
