@@ -136,3 +136,161 @@
   .investigation-upstream,
   .source-lineage { break-inside: avoid; }
 }
+
+/* Desktop scale pass: keep article copy readable, shrink the display/UI layer so
+   the investigation is composed for normal 100% browser zoom instead of poster scale. */
+@media screen and (min-width: 921px) {
+  :root { --max: 1160px; }
+
+  body .intro {
+    padding: 48px 0 44px;
+  }
+  body .intro h1 {
+    font-size: clamp(40px, 4.6vw, 68px);
+    line-height: .94;
+  }
+  body .dek {
+    max-width: 800px;
+    margin-top: 22px;
+    font-size: clamp(18px, 1.55vw, 22px);
+  }
+  body .intro-actions,
+  body .tip-actions { margin-top: 22px; }
+  body .button {
+    min-height: 40px;
+    padding: 8px 14px;
+  }
+  body .how-to { padding: 20px; }
+  body .how-to h2 { font-size: clamp(21px, 1.7vw, 25px); }
+
+  body .quick-read { padding: 30px 0; }
+  body .quick-grid { gap: 38px; }
+  body .quick-grid h2,
+  body .section-head h2,
+  body .help h2,
+  body .updates h2 {
+    font-size: clamp(27px, 3.1vw, 40px);
+  }
+
+  body .chain-section { padding: 52px 0 56px; }
+  body .section-head { gap: 28px; margin-bottom: 24px; }
+  body .chain-node {
+    flex-basis: 170px;
+    min-height: 150px;
+    padding: 15px 15px 42px;
+  }
+  body .chain-node strong {
+    margin: 18px 0 8px;
+    font-size: 20px;
+  }
+  body .chain-arrow { flex-basis: 22px; font-size: 24px; }
+
+  body .claim-ledger { padding: 46px 0; }
+  body .ledger-row { gap: 16px; padding: 14px 8px; }
+
+  body .reading-layout {
+    grid-template-columns: 205px minmax(0, 760px);
+    gap: 52px;
+    padding-top: 54px;
+    padding-bottom: 64px;
+  }
+  body .story-section {
+    padding-bottom: 54px;
+    margin-bottom: 54px;
+  }
+  body .story-section header {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  body .story-section h2 { font-size: clamp(30px, 3.3vw, 44px); }
+  body .section-number { font-size: 30px; }
+  body .story-section > p:first-of-type::first-letter { font-size: 54px; }
+  body .feature-section::before { bottom: 54px; }
+  body blockquote { margin: 28px 0; padding: 20px 0 20px 22px; border-left-width: 6px; }
+  body blockquote p { font-size: 24px; }
+  body blockquote.big-quote p { font-size: clamp(28px, 3.3vw, 42px); }
+  body .missing { padding: 32px; margin-left: -32px; margin-right: -32px; }
+
+  body .help { padding: 56px 0; }
+  body .help-grid { gap: 52px; }
+  body .foia-tracker { padding: 20px; }
+  body .foia-tracker h3 { font-size: 23px; }
+
+  body .investigation-context { padding: clamp(2.5rem, 5vw, 4.5rem) 0; }
+  body .investigation-context__basics article,
+  body .investigation-upstream__events article { padding: 16px; }
+  body .investigation-upstream { padding: 38px 0 42px; }
+  body .source-lineage {
+    margin: clamp(1.6rem, 3.5vw, 3rem) auto;
+    padding: clamp(1.2rem, 2.8vw, 2rem);
+  }
+
+  body .people-dossiers { padding: 54px 0 60px; }
+  body .people-dossiers .section-head { margin-bottom: 22px; }
+  body .people-chain-map { margin-bottom: 28px; }
+  body .people-dossier-grid { gap: 14px; }
+  body .people-dossiers .person-dossier__top {
+    grid-template-columns: 104px minmax(0, 1fr);
+    min-height: 136px;
+  }
+  body .people-dossiers .person-dossier__portrait img { min-height: 136px; }
+  body .people-dossiers .person-dossier__portrait { font-size: 32px; }
+  body .people-dossiers .person-dossier__identity { padding: 15px 17px 16px; }
+  body .people-dossiers .person-dossier__identity h3 { font-size: clamp(22px, 2.35vw, 30px); }
+  body .people-dossiers .person-dossier__why { padding: 15px 17px 16px; }
+  body .people-dossiers .person-dossier > details > summary { padding: 12px 17px; }
+  body .people-dossiers .person-dossier__body { padding: 17px; }
+
+  body .media-dossier { padding: 54px 0 60px; }
+  body .person-card { min-height: 320px; }
+  body .person-card__copy { padding: 18px; }
+  body .person-card__copy h3 { font-size: 24px; }
+
+  body .role-strip a {
+    min-height: 300px;
+    padding: 18px;
+  }
+  body .role-strip strong { font-size: 24px; }
+  body .evidence-gallery { padding: 54px 0 60px; }
+  body .evidence-doc__viewer { height: clamp(580px, 68vh, 820px); }
+  body .evidence-doc__meta strong { font-size: 18px; }
+
+  body .foia-desk { padding: 56px 0; }
+  body .foia-desk__summary { margin: 22px 0 28px; }
+  body .foia-stat { padding: 15px; }
+  body .foia-stat strong { font-size: 28px; }
+  body .foia-request__head { gap: 18px; padding: 17px; }
+  body .foia-request h3 { font-size: 21px; }
+  body .foia-request__meta { padding: 0 17px 15px; }
+  body .foia-request summary { padding: 12px 17px; }
+  body .foia-request__body { padding: 3px 17px 17px; }
+}
+
+@media screen and (min-width: 1101px) {
+  body .intro-grid {
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, .72fr);
+    gap: 42px;
+    align-items: end;
+  }
+  body .intro-copy { max-width: 800px; }
+  body .how-to {
+    max-width: 340px;
+    margin-top: 0;
+    align-self: end;
+  }
+}
+
+@media screen and (min-width: 921px) and (max-width: 1100px) {
+  body .intro-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  body .intro-copy { max-width: 860px; }
+  body .how-to {
+    max-width: 700px;
+    margin-top: 0;
+    align-self: start;
+  }
+}
