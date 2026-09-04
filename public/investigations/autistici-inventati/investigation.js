@@ -43,7 +43,7 @@
             <figcaption class="person-card__copy"><span>STATE DEPARTMENT</span><h3>Marco Rubio</h3><p>The president said Rubio would handle the international-designation issue; State later created the foreign predicates in the chain.</p><a href="#predicates">Go to the evidence →</a></figcaption>
           </figure>
           <figure class="person-card">
-            <img loading="lazy" src="https://www.whitehouse.gov/wp-content/uploads/2025/09/P20250925JB-0568.jpg?w=1200" alt="President Donald Trump in the Oval Office on September 25, 2025." />
+            <img loading="lazy" src="https://www.whitehouse.gov/wp-content/uploads/2025/06/President-Donald-Trump-Official-Presidential-Portrait.png" alt="Official presidential portrait of Donald Trump." />
             <figcaption class="person-card__copy"><span>POLICY SHIFT</span><h3>Donald Trump</h3><p>The administration's September 2025 policy expanded the target set toward networks, services and support infrastructure.</p><a href="#policy-shift">Go to the evidence →</a></figcaption>
           </figure>
         </div>
