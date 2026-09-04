@@ -148,6 +148,28 @@ function getSemanticReleaseKey(item) {
   return `release:${day}:${title}`
 }
 
+function getKnownLegacyReleaseKey(item) {
+  const title = normalizeReleaseTitle(item?.title)
+  if (!title) return ''
+
+  if (title === 'aberdeen and the non profit industrial complex') {
+    return 'known-release:mn:aberdeen-non-profit-industrial-complex'
+  }
+
+  if (title === 'we re back here s what you missed' || title === 'were back heres what you missed') {
+    return 'known-release:mn:were-back-heres-what-you-missed'
+  }
+
+  if (
+    title === 'discussion with the blackflower collective' ||
+    title === 'discussions with the blackflower collective'
+  ) {
+    return 'known-release:mn:blackflower-collective-discussion'
+  }
+
+  return ''
+}
+
 function getPublicPieceMergeKeys(item) {
   const values = [
     ['slug', item?.slug],
@@ -159,6 +181,8 @@ function getPublicPieceMergeKeys(item) {
     .filter((key) => !key.endsWith(':'))
   const semantic = getSemanticReleaseKey(item)
   if (semantic) keys.push(semantic)
+  const knownLegacyRelease = getKnownLegacyReleaseKey(item)
+  if (knownLegacyRelease) keys.push(knownLegacyRelease)
   return keys
 }
 
