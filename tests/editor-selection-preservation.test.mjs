@@ -13,6 +13,7 @@ test('visual editor toolbar stores stable text offsets before opening the link p
   assert.match(runtime, /insertLinkAtSavedOffsets\(href\)/)
   assert.match(runtime, /stopImmediatePropagation/)
   assert.match(main, /adminEditorSelectionTools\.js/)
+  assert.doesNotMatch(main, /import '\.\/adminEditorLinkTools\.js'/)
 })
 
 test('visual editor exposes working undo redo bold italic and link keyboard shortcuts', () => {
