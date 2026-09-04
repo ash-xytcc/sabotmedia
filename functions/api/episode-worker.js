@@ -6,6 +6,7 @@ import {
   finishEpisodeJob,
   markDestination,
 } from './_lib/episodePublishing.js'
+import { recordEpisodeWorkerHeartbeat } from './_lib/episodePublishingSettings.js'
 
 export async function onRequestOptions() {
   return new Response(null, {
@@ -26,6 +27,7 @@ export async function onRequestPost(context) {
     if (!db) return databaseUnavailable('episode worker')
     await ensureEpisodePublishingTables(db)
     await ensureJobResultTable(db)
+    await recordEpisodeWorkerHeartbeat(db)
 
     const body = await context.request.json().catch(() => ({}))
     const action = String(body?.action || '').trim()
