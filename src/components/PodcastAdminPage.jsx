@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { EpisodePublisherPage } from './EpisodePublisherPage'
 import { EpisodePublishingSettingsPage } from './EpisodePublishingSettingsPage'
+import { PodcastFeedTools } from './PodcastFeedTools'
 import { loadNativeCollection, upsertNativeEntryWithMeta } from '../lib/nativePublicContent'
 import { loadPodcastShowsAsync, podcastFeedUrl } from '../lib/podcastSettings'
 import { adminRoutes } from '../routing/routes'
@@ -165,7 +166,9 @@ function PodcastAdminIndexPage() {
                       <td><strong>{show.podcastTitle || 'Untitled podcast'}</strong>{show.id === defaultShowId ? <div className="description">Default / legacy feed</div> : null}</td>
                       <td>{episodes.length}</td>
                       <td>{show.sourceFeedUrl ? <a href={show.sourceFeedUrl} target="_blank" rel="noreferrer">Source feed</a> : '—'}</td>
-                      <td>{feedUrl ? <a href={feedUrl} target="_blank" rel="noreferrer">{feedUrl}</a> : '—'}</td>
+                      <td>
+                        {feedUrl ? <><code>{feedUrl}</code><PodcastFeedTools feedUrl={feedUrl} /></> : '—'}
+                      </td>
                       <td>{toDisplayDate(show.sourceFeedLastSyncedAt || show.updatedAt)}</td>
                       <td><div className="wp-row-actions"><Link to={`${adminRoutes.podcastSettings}?show=${encodeURIComponent(show.id || show.slug)}`}>Manage / Import</Link></div></td>
                     </tr>
@@ -182,6 +185,7 @@ function PodcastAdminIndexPage() {
         {showGroups.map(({ show, episodes }) => {
           const showDisplay = showTitleDisplayValue(episodes)
           const showSavingKey = `show:${show.id || show.slug}`
+          const feedUrl = show.rssFeedUrl || podcastFeedUrl(show.slug || show.id)
           return (
             <section className="wp-meta-box" key={`episodes-${show.id || show.slug}`}>
               <div className="wp-screen-header podcast-show-episode-header">
@@ -205,7 +209,7 @@ function PodcastAdminIndexPage() {
                   </label>
                   <div className="review-card__actions">
                     <Link className="button" to={`${adminRoutes.podcastSettings}?show=${encodeURIComponent(show.id || show.slug)}`}>Import / Settings</Link>
-                    <a className="button" href={show.rssFeedUrl || podcastFeedUrl(show.slug || show.id)} target="_blank" rel="noreferrer">Open RSS</a>
+                    <a className="button" href={feedUrl} target="_blank" rel="noreferrer">Open RSS</a>
                   </div>
                 </div>
               </div>
