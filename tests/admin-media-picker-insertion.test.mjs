@@ -4,9 +4,11 @@ import test from 'node:test'
 
 const runtime = fs.readFileSync(new URL('../src/adminFileMediaInsert.js', import.meta.url), 'utf8')
 
-test('body media picker captures the editor selection before the modal steals focus', () => {
+test('body media picker bookmarks the editor caret before the modal steals focus', () => {
   assert.match(runtime, /native-content-editor__add-media/)
-  assert.match(runtime, /captureEditorSelection\(\)/)
+  assert.match(runtime, /captureEditorSelection\(\{ withMarker: true \}\)/)
+  assert.match(runtime, /CARET_MARKER_ATTR = 'data-sabot-media-caret'/)
+  assert.match(runtime, /range\.setStartBefore\(caretMarker\)/)
   assert.match(runtime, /pendingBodyMediaPick = true/)
   assert.match(runtime, /savedVisualRange = range\.cloneRange\(\)/)
 })
