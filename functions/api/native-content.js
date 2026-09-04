@@ -156,6 +156,10 @@ async function handleWrite(context) {
     if (existing && !String(item.slug || '').trim()) {
       item.slug = existing.slug
     }
+    if (existing && isPermanentEpisodeIdentity(existing)) {
+      item.sourceExternalId = existing.sourceExternalId
+      item.sourcePostId = existing.sourcePostId || existing.sourceExternalId
+    }
     if (existing) {
       await saveRevisionSnapshot(db, existing, `before:${revisionNote}`)
     }
@@ -187,6 +191,13 @@ async function handleWrite(context) {
       error: String(error?.message || error),
     }, 400)
   }
+}
+
+function isPermanentEpisodeIdentity(item) {
+  if (String(item?.contentType || '') !== 'podcast') return false
+  const guid = String(item?.sourceExternalId || '').trim()
+  if (!guid) return false
+  return String(item?.sourceKind || '') === 'manual-episode' || guid.startsWith('sabot-episode-')
 }
 
 export function publicNativeItem(item) {
