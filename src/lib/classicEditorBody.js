@@ -30,6 +30,18 @@ function sanitizeUrl(url = '', { allowFragments = true } = {}) {
   }
 }
 
+function sanitizeMediaMetadata(node) {
+  const attrs = []
+  const mediaId = String(node.getAttribute('data-media-id') || '').trim()
+  const mediaTitle = String(node.getAttribute('data-media-title') || '').trim()
+  const mediaMime = String(node.getAttribute('data-media-mime') || '').trim().toLowerCase()
+
+  if (mediaId) attrs.push(`data-media-id="${escapeAttr(mediaId)}"`)
+  if (mediaTitle) attrs.push(`data-media-title="${escapeAttr(mediaTitle)}"`)
+  if (/^[a-z0-9.+-]+\/[a-z0-9.+-]+$/i.test(mediaMime)) attrs.push(`data-media-mime="${escapeAttr(mediaMime)}"`)
+  return attrs.length ? ` ${attrs.join(' ')}` : ''
+}
+
 function inlineMarkdownToHtml(text = '') {
   let html = escapeHtml(text)
 
@@ -162,6 +174,26 @@ function sanitizeNode(node) {
     return `<img src="${escapeAttr(src)}" alt="${alt}" />`
   }
 
+  if (tag === 'source') {
+    const src = sanitizeUrl(node.getAttribute('src') || '', { allowFragments: false })
+    if (!src) return ''
+    const type = String(node.getAttribute('type') || '').trim().toLowerCase()
+    const typeAttr = /^[a-z0-9.+-]+\/[a-z0-9.+-]+$/i.test(type) ? ` type="${escapeAttr(type)}"` : ''
+    return `<source src="${escapeAttr(src)}"${typeAttr} />`
+  }
+
+  if (tag === 'audio') {
+    const src = sanitizeUrl(node.getAttribute('src') || '', { allowFragments: false })
+    const hasSafeSource = /<source\b/i.test(children)
+    if (!src && !hasSafeSource) return ''
+    const preloadValue = String(node.getAttribute('preload') || 'metadata').toLowerCase()
+    const preload = ['none', 'metadata', 'auto'].includes(preloadValue) ? preloadValue : 'metadata'
+    const ariaLabel = String(node.getAttribute('aria-label') || node.getAttribute('title') || '').trim()
+    const srcAttr = src ? ` src="${escapeAttr(src)}"` : ''
+    const labelAttr = ariaLabel ? ` aria-label="${escapeAttr(ariaLabel)}"` : ''
+    return `<audio controls preload="${preload}"${srcAttr}${labelAttr}${sanitizeMediaMetadata(node)}>${children}</audio>`
+  }
+
   if (tag === 'div') {
     const style = String(node.getAttribute('style') || '').toLowerCase()
     const align = style.match(/text-align\s*:\s*(left|center|right)/)
@@ -172,7 +204,11 @@ function sanitizeNode(node) {
     return `<div>${children}</div>`
   }
 
-  const allowed = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'blockquote', 'figure', 'figcaption', 'br', 'hr'])
+  if (tag === 'figure') {
+    return `<figure${sanitizeMediaMetadata(node)}>${children}</figure>`
+  }
+
+  const allowed = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'blockquote', 'figcaption', 'br', 'hr'])
   if (!allowed.has(tag)) return children
 
   if (tag === 'br' || tag === 'hr') return `<${tag} />`
