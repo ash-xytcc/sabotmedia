@@ -25,6 +25,19 @@ export function normalizeEmbedUrl(value = '') {
   }
 }
 
+function mediaIdFromSabotUrl(value = '') {
+  try {
+    const parsed = new URL(String(value || ''), 'https://sabot.invalid')
+    const key = String(parsed.searchParams.get('key') || '')
+    if (!key.startsWith('media/')) return ''
+    const filename = key.split('/').pop() || ''
+    const match = filename.match(/^(media-[a-z0-9-]+?)-[^/]+$/i)
+    return match?.[1] || ''
+  } catch {
+    return ''
+  }
+}
+
 export function iframeSourceFromInput(value = '') {
   const raw = String(value || '').trim()
   if (!raw) return ''
@@ -46,7 +59,7 @@ export function buildMediaEmbed(media = {}) {
   const caption = String(media.caption || '')
   const mime = String(media.mimeType || '').toLowerCase()
   const type = String(media.mediaType || '').toLowerCase()
-  const mediaId = String(media.id || media.assetId || '').trim()
+  const mediaId = String(media.id || media.assetId || media.mediaId || mediaIdFromSabotUrl(url) || '').trim()
   const lowerUrl = url.toLowerCase().split(/[?#]/)[0]
   const escapedUrl = escapeAttribute(url)
   const escapedTitle = escapeText(title)
