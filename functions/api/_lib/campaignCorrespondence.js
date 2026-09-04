@@ -113,12 +113,29 @@ export async function createMessage(db, campaignId, input = {}, actor = {}) {
   if (!body && !mediaUrl) throw new Error('write a message or attach media')
   const visibility = input.visibility === 'public' && (actor.isEditor || (actor.permissions?.directPublish && actor.publicationConfirmed)) ? 'public' : 'private'
   const publicationConfirmed = visibility === 'public' && (actor.isEditor || actor.publicationConfirmed) ? 1 : 0
+  const originSource = clean(input.originSource, 40)
+  const originId = clean(input.originId, 160)
+  const originUrl = clean(input.originUrl, 2000)
+
+  if (input.reuseSocial && originSource && originId) {
+    const existing = await db.prepare(`SELECT m.*, c.display_name, c.byline FROM campaign_messages m LEFT JOIN campaign_contributors c ON c.id = m.contributor_id WHERE m.campaign_id = ? AND m.origin_source = ? AND m.origin_id = ? LIMIT 1`).bind(campaignId, originSource, originId).first()
+    if (existing) return messageRow(existing)
+  }
+
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
   const publishedAt = actor.isEditor && input.originalPublishedAt && !Number.isNaN(Date.parse(input.originalPublishedAt)) ? new Date(input.originalPublishedAt).toISOString() : now
-  await db.prepare(`INSERT INTO campaign_messages (id, campaign_id, contributor_id, sender_role, body, media_url, media_type, visibility, status, reply_to_id, reuse_social, reuse_original, origin_source, origin_id, origin_url, original_published_at, publication_confirmed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-    id, campaignId, actor.contributorId || null, actor.isEditor ? 'editor' : 'contributor', body, mediaUrl, clean(input.mediaType, 40), visibility, clean(input.replyToId, 80) || null, input.reuseSocial ? 1 : 0, input.reuseOriginal ? 1 : 0, clean(input.originSource, 40), clean(input.originId, 160), clean(input.originUrl, 2000), publishedAt, publicationConfirmed, publishedAt, now,
-  ).run()
+  try {
+    await db.prepare(`INSERT INTO campaign_messages (id, campaign_id, contributor_id, sender_role, body, media_url, media_type, visibility, status, reply_to_id, reuse_social, reuse_original, origin_source, origin_id, origin_url, original_published_at, publication_confirmed, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'sent', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+      id, campaignId, actor.contributorId || null, actor.isEditor ? 'editor' : 'contributor', body, mediaUrl, clean(input.mediaType, 40), visibility, clean(input.replyToId, 80) || null, input.reuseSocial ? 1 : 0, input.reuseOriginal ? 1 : 0, originSource, originId, originUrl, publishedAt, publicationConfirmed, publishedAt, now,
+    ).run()
+  } catch (error) {
+    if (input.reuseSocial && originSource && originId) {
+      const existing = await db.prepare(`SELECT m.*, c.display_name, c.byline FROM campaign_messages m LEFT JOIN campaign_contributors c ON c.id = m.contributor_id WHERE m.campaign_id = ? AND m.origin_source = ? AND m.origin_id = ? LIMIT 1`).bind(campaignId, originSource, originId).first()
+      if (existing) return messageRow(existing)
+    }
+    throw error
+  }
   return (await listMessages(db, campaignId)).find((item) => item.id === id)
 }
 
