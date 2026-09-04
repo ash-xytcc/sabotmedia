@@ -77,18 +77,32 @@ function getVisualSelection(visual) {
   }
 }
 
+function cloneSavedSelection(selection) {
+  if (!selection) return null
+  if (selection.mode === 'visual' && selection.range?.cloneRange) {
+    return { ...selection, range: selection.range.cloneRange() }
+  }
+  return { ...selection }
+}
+
 let savedSelection = null
+let linkSessionSelection = null
+
+function linkPanelIsOpen() {
+  return Boolean(document.querySelector('.native-link-tool.is-open'))
+}
 
 function rememberSelection() {
-  if (!isEditorRoute()) return
+  if (!isEditorRoute() || linkPanelIsOpen()) return savedSelection
   const { visual, textarea } = editorElements()
   const active = document.activeElement
   if (textarea && active === textarea) {
     savedSelection = getTextSelection(textarea)
-    return
+    return savedSelection
   }
   const visualSelection = getVisualSelection(visual)
   if (visualSelection) savedSelection = visualSelection
+  return savedSelection
 }
 
 function setNativeTextValue(textarea, value) {
@@ -97,10 +111,10 @@ function setNativeTextValue(textarea, value) {
   else textarea.value = value
 }
 
-function insertIntoTextarea(markdown) {
+function insertIntoTextarea(markdown, frozenSelection = linkSessionSelection || savedSelection) {
   const { textarea } = editorElements()
   if (!textarea) return false
-  const selection = savedSelection?.mode === 'text' ? savedSelection : getTextSelection(textarea)
+  const selection = frozenSelection?.mode === 'text' ? frozenSelection : getTextSelection(textarea)
   const start = selection?.start ?? textarea.value.length
   const end = selection?.end ?? textarea.value.length
   const next = `${textarea.value.slice(0, start)}${markdown}${textarea.value.slice(end)}`
@@ -111,20 +125,22 @@ function insertIntoTextarea(markdown) {
   textarea.selectionEnd = cursor
   textarea.dispatchEvent(new Event('input', { bubbles: true }))
   textarea.dispatchEvent(new Event('change', { bubbles: true }))
+  savedSelection = getTextSelection(textarea)
   return true
 }
 
-function insertIntoVisual(markup) {
+function insertIntoVisual(markup, frozenSelection = linkSessionSelection || savedSelection) {
   const { visual } = editorElements()
   if (!visual) return false
-  visual.focus()
   const selection = window.getSelection?.()
-  let range = savedSelection?.mode === 'visual' ? savedSelection.range : getVisualSelection(visual)?.range
+  let range = frozenSelection?.mode === 'visual' ? frozenSelection.range?.cloneRange?.() : null
   if (!range || !visual.contains(range.commonAncestorContainer)) {
-    range = document.createRange()
-    range.selectNodeContents(visual)
-    range.collapse(false)
+    const current = getVisualSelection(visual)
+    range = current?.range || null
   }
+  if (!range || !visual.contains(range.commonAncestorContainer)) return false
+
+  visual.focus()
   selection.removeAllRanges()
   selection.addRange(range)
   range.deleteContents()
@@ -137,32 +153,34 @@ function insertIntoVisual(markup) {
     nextRange.collapse(true)
     selection.removeAllRanges()
     selection.addRange(nextRange)
+    savedSelection = {
+      mode: 'visual',
+      range: nextRange.cloneRange(),
+      text: '',
+    }
   }
   visual.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertHTML', data: markup }))
-  visual.dispatchEvent(new Event('blur', { bubbles: true }))
   return true
 }
 
-function selectedTextFallback() {
-  rememberSelection()
-  return String(savedSelection?.text || '').trim()
+function selectedTextFallback(selection = linkSessionSelection || savedSelection) {
+  return String(selection?.text || '').trim()
 }
 
-function insertLink({ url, label }) {
+function insertLink({ url, label, selection = linkSessionSelection || savedSelection }) {
   const href = normalizeHref(url)
   const text = String(label || href || 'link').trim()
   if (!href || !text) return false
 
-  const active = document.activeElement
   const { visual, textarea } = editorElements()
-  const isTextMode = Boolean(textarea && (active === textarea || !visual || savedSelection?.mode === 'text'))
+  const isTextMode = Boolean(selection?.mode === 'text' || (!visual && textarea))
 
   if (isTextMode) {
-    return insertIntoTextarea(`[${text}](${href})`)
+    return insertIntoTextarea(`[${text}](${href})`, selection)
   }
 
   const markup = `<a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer">${escapeHtmlText(text)}</a>`
-  return insertIntoVisual(markup)
+  return insertIntoVisual(markup, selection)
 }
 
 function closePanels(root = document) {
@@ -199,14 +217,19 @@ function createLinkTool() {
 
   toggle.addEventListener('mousedown', (event) => {
     event.preventDefault()
-    rememberSelection()
+    const captured = rememberSelection()
+    linkSessionSelection = cloneSavedSelection(captured)
   })
 
   toggle.addEventListener('click', () => {
     const isOpen = wrap.classList.contains('is-open')
     closePanels()
-    if (isOpen) return
-    textInput.value = selectedTextFallback()
+    if (isOpen) {
+      linkSessionSelection = null
+      return
+    }
+    if (!linkSessionSelection) linkSessionSelection = cloneSavedSelection(rememberSelection())
+    textInput.value = selectedTextFallback(linkSessionSelection)
     urlInput.value = ''
     wrap.classList.add('is-open')
     panel.hidden = false
@@ -216,15 +239,22 @@ function createLinkTool() {
   cancelButton.addEventListener('click', () => {
     wrap.classList.remove('is-open')
     panel.hidden = true
+    linkSessionSelection = null
   })
 
   insertButton.addEventListener('click', () => {
-    const ok = insertLink({ url: urlInput.value, label: textInput.value || selectedTextFallback() })
+    const frozenSelection = cloneSavedSelection(linkSessionSelection)
+    const ok = insertLink({
+      url: urlInput.value,
+      label: textInput.value || selectedTextFallback(frozenSelection),
+      selection: frozenSelection,
+    })
     if (ok) {
       wrap.classList.remove('is-open')
       panel.hidden = true
       textInput.value = ''
       urlInput.value = ''
+      linkSessionSelection = null
     }
   })
 
