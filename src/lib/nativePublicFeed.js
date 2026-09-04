@@ -97,6 +97,8 @@ export function mergeNativeAndImportedPieces(importedPieces = [], nativePieces =
   const indexByKey = new Map()
 
   function add(item) {
+    if (isKnownStaleMolotovNewsletter(item)) return
+
     const keys = getPublicPieceMergeKeys(item)
     const existingIndex = keys
       .map((key) => indexByKey.get(key))
@@ -132,6 +134,38 @@ function normalizeReleaseTitle(value) {
     .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function normalizeProjectIdentity(item) {
+  return [
+    item?.primaryProject,
+    item?.primaryProjectSlug,
+    item?.project,
+    item?.projectName,
+    ...(Array.isArray(item?.projects) ? item.projects : []),
+  ]
+    .map((value) => String(value || '').toLowerCase())
+    .join(' ')
+}
+
+function isKnownStaleMolotovNewsletter(item) {
+  const rawType = String(item?.type || item?.contentType || '').toLowerCase()
+  if (!rawType.includes('newsletter')) return false
+
+  const projectIdentity = normalizeProjectIdentity(item)
+  const title = normalizeReleaseTitle(item?.title)
+  const molotovIdentity =
+    projectIdentity.includes('molotov') ||
+    String(item?.featuredImage || item?.heroImage || item?.imageUrl || '').toLowerCase().includes('molotov')
+
+  if (!molotovIdentity) return false
+
+  return new Set([
+    'the problem with good cops',
+    'food not bombs round table',
+    'we re back here s what you missed',
+    'were back heres what you missed',
+  ]).has(title)
 }
 
 function releaseDay(item) {
