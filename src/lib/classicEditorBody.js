@@ -42,6 +42,21 @@ function sanitizeMediaMetadata(node) {
   return attrs.length ? ` ${attrs.join(' ')}` : ''
 }
 
+function sanitizeFigureClass(node) {
+  const allowed = new Set([
+    'sabot-embed',
+    'sabot-embed--audio',
+    'sabot-embed--video',
+    'sabot-embed--pdf',
+    'sabot-embed--iframe',
+  ])
+  const classes = String(node.getAttribute('class') || '')
+    .split(/\s+/)
+    .map((value) => value.trim())
+    .filter((value) => allowed.has(value))
+  return classes.length ? ` class="${classes.map(escapeAttr).join(' ')}"` : ''
+}
+
 function inlineMarkdownToHtml(text = '') {
   let html = escapeHtml(text)
 
@@ -156,7 +171,7 @@ function sanitizeNode(node) {
   const tag = String(node.tagName || '').toLowerCase()
   const children = Array.from(node.childNodes || []).map((child) => sanitizeNode(child)).join('')
 
-  if (tag === 'script' || tag === 'style' || tag === 'iframe' || tag === 'object' || tag === 'embed') {
+  if (tag === 'script' || tag === 'style' || tag === 'object' || tag === 'embed') {
     return ''
   }
 
@@ -194,6 +209,30 @@ function sanitizeNode(node) {
     return `<audio controls preload="${preload}"${srcAttr}${labelAttr}${sanitizeMediaMetadata(node)}>${children}</audio>`
   }
 
+  if (tag === 'video') {
+    const src = sanitizeUrl(node.getAttribute('src') || '', { allowFragments: false })
+    const hasSafeSource = /<source\b/i.test(children)
+    if (!src && !hasSafeSource) return ''
+    const preloadValue = String(node.getAttribute('preload') || 'metadata').toLowerCase()
+    const preload = ['none', 'metadata', 'auto'].includes(preloadValue) ? preloadValue : 'metadata'
+    const ariaLabel = String(node.getAttribute('aria-label') || node.getAttribute('title') || '').trim()
+    const poster = sanitizeUrl(node.getAttribute('poster') || '', { allowFragments: false })
+    const srcAttr = src ? ` src="${escapeAttr(src)}"` : ''
+    const labelAttr = ariaLabel ? ` aria-label="${escapeAttr(ariaLabel)}"` : ''
+    const posterAttr = poster ? ` poster="${escapeAttr(poster)}"` : ''
+    return `<video controls preload="${preload}" playsinline${srcAttr}${posterAttr}${labelAttr}${sanitizeMediaMetadata(node)}>${children}</video>`
+  }
+
+  if (tag === 'iframe') {
+    const src = sanitizeUrl(node.getAttribute('src') || '', { allowFragments: false })
+    if (!src) return ''
+    const title = String(node.getAttribute('title') || 'Embedded content').trim().slice(0, 240)
+    const loading = String(node.getAttribute('loading') || 'lazy').toLowerCase() === 'eager' ? 'eager' : 'lazy'
+    const requestedHeight = Number.parseInt(node.getAttribute('height') || '', 10)
+    const height = Number.isFinite(requestedHeight) ? Math.min(1400, Math.max(240, requestedHeight)) : 560
+    return `<iframe src="${escapeAttr(src)}" title="${escapeAttr(title || 'Embedded content')}" loading="${loading}" referrerpolicy="no-referrer" allowfullscreen width="100%" height="${height}"></iframe>`
+  }
+
   if (tag === 'div') {
     const style = String(node.getAttribute('style') || '').toLowerCase()
     const align = style.match(/text-align\s*:\s*(left|center|right)/)
@@ -205,7 +244,7 @@ function sanitizeNode(node) {
   }
 
   if (tag === 'figure') {
-    return `<figure${sanitizeMediaMetadata(node)}>${children}</figure>`
+    return `<figure${sanitizeFigureClass(node)}${sanitizeMediaMetadata(node)}>${children}</figure>`
   }
 
   const allowed = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'b', 'em', 'i', 'ul', 'ol', 'li', 'blockquote', 'figcaption', 'br', 'hr'])
