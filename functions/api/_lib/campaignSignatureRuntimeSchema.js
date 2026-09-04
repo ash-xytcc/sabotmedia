@@ -22,8 +22,8 @@ const REQUIRED_SIGNATURE_COLUMNS = [
   ['duplicate_flags_json', "TEXT NOT NULL DEFAULT '[]'"],
   ['abuse_flags_json', "TEXT NOT NULL DEFAULT '[]'"],
   ['website_domain_match', 'INTEGER'],
-  ['created_at', "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"],
-  ['updated_at', "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"],
+  ['created_at', "TEXT NOT NULL DEFAULT ''"],
+  ['updated_at', "TEXT NOT NULL DEFAULT ''"],
 ]
 
 export async function ensureCampaignSignatureRuntimeSchema(db) {
@@ -37,6 +37,8 @@ export async function ensureCampaignSignatureRuntimeSchema(db) {
     await db.prepare(`ALTER TABLE campaign_signatures ADD COLUMN ${name} ${definition}`).run()
   }
 
+  await db.prepare("UPDATE campaign_signatures SET created_at = CURRENT_TIMESTAMP WHERE created_at = '' OR created_at IS NULL").run()
+  await db.prepare("UPDATE campaign_signatures SET updated_at = CURRENT_TIMESTAMP WHERE updated_at = '' OR updated_at IS NULL").run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaign_signatures_campaign_status ON campaign_signatures(campaign_id, status, created_at DESC)').run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaign_signatures_email_hash ON campaign_signatures(campaign_id, email_hash, created_at DESC)').run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaign_signatures_verify ON campaign_signatures(verification_token_hash)').run()
