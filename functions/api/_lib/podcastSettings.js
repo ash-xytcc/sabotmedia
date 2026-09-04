@@ -1,4 +1,5 @@
 import { listNativeEntries } from './nativePublicContent.js'
+import { podcastEntryBelongsToShow } from '../../../shared/podcastShowMembership.js'
 
 export const PODCAST_SETTING_KEY = 'podcast-settings-v1'
 export const PODCAST_SHOWS_SETTING_KEY = 'podcast-shows-v1'
@@ -148,10 +149,7 @@ export function podcastShowSourceUrls(show = {}) {
 }
 
 export function podcastShowOwnsEntry(show, entry) {
-  if (!show || !entry || entry.contentType !== 'podcast') return false
-  const sourceUrl = cleanUrl(entry.sourceUrl)
-  if (!sourceUrl) return false
-  return podcastShowSourceUrls(show).includes(sourceUrl)
+  return podcastEntryBelongsToShow(entry, show)
 }
 
 async function migrateLegacyPodcastSettings(db) {
