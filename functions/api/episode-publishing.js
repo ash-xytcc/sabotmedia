@@ -10,6 +10,7 @@ import {
   normalizeDestinationList,
   retryDestination,
 } from './_lib/episodePublishing.js'
+import { readEpisodePublishingSettings } from './_lib/episodePublishingSettings.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 
 export async function onRequestOptions(context) {
@@ -51,6 +52,7 @@ export async function onRequestPost(context) {
 
     const registry = await readPodcastShows(db)
     const show = registry.shows.find((candidate) => podcastShowOwnsEntry(candidate, episode)) || null
+    const publishingConfig = (await readEpisodePublishingSettings(db)).settings
 
     if (action === 'retry') {
       const destination = String(body.destination || '').trim()
@@ -74,11 +76,10 @@ export async function onRequestPost(context) {
         destination,
         jobType: 'sync_metadata',
         idempotencyKey: `${episode.id}:${destination}:metadata:${episode.updatedAt || Date.now()}`,
-        payload: {
-          ...buildEpisodeJobPayload(episode, show || {}, override),
+        payload: jobPayload(episode, show, destination, override, publishingConfig, {
           remoteId: current.remoteId,
           remoteUrl: current.remoteUrl,
-        },
+        }),
       })
       const nextState = await listEpisodePublishingState(db, episode.id)
       await audit(context, db, 'episode.publish.metadata_sync', episode, { destination })
@@ -110,16 +111,16 @@ export async function onRequestPost(context) {
 
     const videoDestinations = destinations.filter((destination) => destination === 'youtube' || destination === 'peertube')
     if (videoDestinations.length) {
-      const audioUrl = episode.podcastRssEnclosureUrl || episode.podcastAudioUrl || ''
+      const canonicalAudio = findCanonicalAudio(episode)
+      const audioUrl = episode.podcastRssEnclosureUrl || episode.podcastAudioUrl || canonicalAudio?.url || ''
       if (!audioUrl) return json({ ok: false, error: 'episode audio is required before video destinations can be queued' }, 400)
 
-      const renderPayload = buildEpisodeJobPayload(episode, show || {}, {})
       const renderJob = await enqueueJob(db, {
         episodeId: episode.id,
         destination: 'video',
         jobType: 'render_video',
         idempotencyKey: `${episode.id}:video:render:v1`,
-        payload: renderPayload,
+        payload: jobPayload(episode, show, 'video', {}, publishingConfig),
       })
 
       for (const destination of videoDestinations) {
@@ -133,7 +134,7 @@ export async function onRequestPost(context) {
           jobType: 'upload_video',
           idempotencyKey: `${episode.id}:${destination}:upload:v1`,
           dependsOnId: renderJob.id,
-          payload: buildEpisodeJobPayload(episode, show || {}, override),
+          payload: jobPayload(episode, show, destination, override, publishingConfig),
         })
       }
     }
@@ -144,6 +145,31 @@ export async function onRequestPost(context) {
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
   }
+}
+
+function jobPayload(episode, show, destination, override, settings, extra = {}) {
+  const base = buildEpisodeJobPayload(episode, show || {}, override)
+  return {
+    ...base,
+    ...extra,
+    videoTemplate: settings?.videoTemplate || {},
+    platform: {
+      youtube: {
+        categoryId: override?.categoryId || settings?.youtube?.categoryId || '22',
+        privacy: override?.privacy || settings?.youtube?.privacy || 'public',
+      },
+      peertube: {
+        baseUrl: settings?.peertube?.baseUrl || '',
+        channelId: override?.channelId || settings?.peertube?.channelId || '',
+        privacy: override?.privacy || settings?.peertube?.privacy || 'public',
+      },
+      destination,
+    },
+  }
+}
+
+function findCanonicalAudio(episode = {}) {
+  return (Array.isArray(episode.relatedAssets) ? episode.relatedAssets : []).find((asset) => String(asset?.role || '').toLowerCase() === 'canonical-audio') || null
 }
 
 async function audit(context, db, action, episode, detail) {
