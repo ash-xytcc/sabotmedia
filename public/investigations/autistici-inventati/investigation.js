@@ -9,6 +9,11 @@
   enhancementSheet.href = './investigation-enhancements.css'
   document.head.appendChild(enhancementSheet)
 
+  const peopleScript = document.createElement('script')
+  peopleScript.src = './people-dossiers.js'
+  peopleScript.defer = true
+  document.head.appendChild(peopleScript)
+
   const introActions = document.querySelector('.intro-actions')
   if (introActions) {
     const pdfButton = document.createElement('button')
