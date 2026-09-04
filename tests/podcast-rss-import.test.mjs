@@ -5,6 +5,10 @@ import { parsePodcastRss, validatePodcastFeedUrl } from '../functions/api/_lib/p
 import { buildPodcastFeedXml } from '../functions/rss/podcast.xml.js'
 
 const importApi = fs.readFileSync(new URL('../functions/api/podcast-import.js', import.meta.url), 'utf8')
+const importService = fs.readFileSync(new URL('../functions/api/_lib/podcastImportService.js', import.meta.url), 'utf8')
+const refreshApi = fs.readFileSync(new URL('../functions/api/podcast-source-refresh.js', import.meta.url), 'utf8')
+const sources = fs.readFileSync(new URL('../functions/api/_lib/sabotPodcastSources.js', import.meta.url), 'utf8')
+const refreshWorkflow = fs.readFileSync(new URL('../.github/workflows/podcast-source-refresh.yml', import.meta.url), 'utf8')
 const settingsPage = fs.readFileSync(new URL('../src/components/PodcastSettingsPage.jsx', import.meta.url), 'utf8')
 const feedAdmin = fs.readFileSync(new URL('../src/components/FeedSettingsAdminPage.jsx', import.meta.url), 'utf8')
 const feedManifest = fs.readFileSync(new URL('../functions/api/feed-manifest.js', import.meta.url), 'utf8')
@@ -60,15 +64,28 @@ test('podcast source fetch validation rejects local and private network URLs', (
 
 test('podcast import endpoint is D1 authoritative, permission checked, duplicate aware, and show scoped', () => {
   assert.match(importApi, /publishing:write/)
-  assert.match(importApi, /listNativeEntries\(db, \{ includeFuture: true \}\)/)
-  assert.match(importApi, /sourceKind: 'podcast-rss'/)
-  assert.match(importApi, /sourceExternalId: episode\.guid/)
-  assert.match(importApi, /rss-resync/)
-  assert.match(importApi, /MAX_IMPORT_EPISODES = 250/)
-  assert.match(importApi, /requestedShowId/)
-  assert.match(importApi, /entryBelongsToShowImport/)
-  assert.match(importApi, /upsertPodcastShow/)
-  assert.doesNotMatch(importApi, /localStorage/)
+  assert.match(importApi, /importPodcastSource/)
+  assert.match(importService, /listNativeEntries\(db, \{ includeFuture: true \}\)/)
+  assert.match(importService, /sourceKind: 'podcast-rss'/)
+  assert.match(importService, /sourceExternalId: episode\.guid/)
+  assert.match(importService, /rss-resync/)
+  assert.match(importService, /MAX_IMPORT_EPISODES = 250/)
+  assert.match(importService, /entryBelongsToShowImport/)
+  assert.match(importService, /upsertPodcastShow/)
+  assert.match(importService, /primaryProject: show\.podcastTitle/)
+  assert.match(importService, /primaryProjectSlug: show\.slug/)
+  assert.doesNotMatch(importApi + importService, /localStorage/)
+})
+
+test('fixed Sabot podcast sources refresh whole authoritative feeds on a bounded schedule', () => {
+  assert.match(sources, /feeds\.acast\.com\/public\/shows\/sabot-media-molotov/)
+  assert.match(sources, /feeds\.acast\.com\/public\/shows\/the-child-and-its-enemies/)
+  assert.match(refreshApi, /selectedKeys: null/)
+  assert.match(refreshApi, /syncExisting: true/)
+  assert.match(refreshApi, /MIN_REFRESH_INTERVAL_MS/)
+  assert.match(refreshApi, /findPodcastShow/)
+  assert.match(refreshWorkflow, /schedule:/)
+  assert.match(refreshWorkflow, /podcast-source-refresh\?refresh=1/)
 })
 
 test('podcast settings UI supports preview, selective import, repeatable resync, and separate shows', () => {
