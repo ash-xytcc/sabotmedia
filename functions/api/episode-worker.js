@@ -36,6 +36,9 @@ export async function onRequestPost(context) {
       const dependencyResult = job.dependsOnId ? await readJobResult(db, job.dependsOnId) : null
       if (job.destination === 'youtube' || job.destination === 'peertube') {
         await markDestination(db, job.episodeId, job.destination, { status: 'processing', lastError: '' })
+        if (job.jobType === 'upload_video') {
+          await updatePublicVideoStatus(db, job.episodeId, job.destination, { status: 'processing', lastError: '' })
+        }
       }
       return json({ ok: true, job: { ...job, dependencyResult } })
     }
@@ -47,8 +50,15 @@ export async function onRequestPost(context) {
       await writeJobResult(db, jobId, result)
       const job = await finishEpisodeJob(db, jobId, result)
 
-      if (result.ok && (job.destination === 'youtube' || job.destination === 'peertube') && result.remoteUrl) {
-        await attachPublishedVideo(db, job, result)
+      if (job.destination === 'youtube' || job.destination === 'peertube') {
+        if (result.ok && result.remoteUrl) {
+          await attachPublishedVideo(db, job, result)
+        } else if (!result.ok && job.jobType === 'upload_video') {
+          await updatePublicVideoStatus(db, job.episodeId, job.destination, {
+            status: 'failed',
+            lastError: result.error || 'Video upload failed.',
+          })
+        }
       }
       if (!result.ok && job.jobType === 'render_video') {
         await failDependentVideoJobs(db, job.id, result.error || 'Video render failed.')
@@ -74,9 +84,35 @@ async function attachPublishedVideo(db, job, result) {
     type: 'video',
     destination: job.destination,
     title: `${job.destination === 'youtube' ? 'YouTube' : 'PeerTube'} video`,
+    status: 'published',
     remoteId: String(result.remoteId || ''),
     url: String(result.remoteUrl || ''),
+    lastError: '',
     publishedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  })
+  await upsertNativeEntry(db, { ...episode, relatedAssets })
+}
+
+async function updatePublicVideoStatus(db, episodeId, destination, patch = {}) {
+  const episode = await getExistingNativeEntry(db, episodeId)
+  if (!episode) return
+  const existing = (Array.isArray(episode.relatedAssets) ? episode.relatedAssets : [])
+    .find((asset) => String(asset?.role || '') === 'published-video' && String(asset?.destination || '') === destination)
+  const relatedAssets = (Array.isArray(episode.relatedAssets) ? episode.relatedAssets : [])
+    .filter((asset) => !(String(asset?.role || '') === 'published-video' && String(asset?.destination || '') === destination))
+  relatedAssets.push({
+    role: 'published-video',
+    kind: 'video',
+    type: 'video',
+    destination,
+    title: `${destination === 'youtube' ? 'YouTube' : 'PeerTube'} video`,
+    status: String(patch.status || existing?.status || 'queued'),
+    remoteId: String(patch.remoteId || existing?.remoteId || ''),
+    url: safeUrl(patch.remoteUrl || existing?.url || ''),
+    lastError: String(patch.lastError || '').slice(0, 500),
+    publishedAt: String(existing?.publishedAt || ''),
+    updatedAt: new Date().toISOString(),
   })
   await upsertNativeEntry(db, { ...episode, relatedAssets })
 }
@@ -94,6 +130,7 @@ async function failDependentVideoJobs(db, renderJobId, error) {
     `).bind(String(error || 'Video render failed.'), now, row.id).run()
     if (row.destination === 'youtube' || row.destination === 'peertube') {
       await markDestination(db, row.episode_id, row.destination, { status: 'failed', lastError: error })
+      await updatePublicVideoStatus(db, row.episode_id, row.destination, { status: 'failed', lastError: error })
     }
   }
 }
