@@ -31,6 +31,18 @@ function normalizeHref(href = '') {
   return value
 }
 
+function normalizeMediaSrc(src = '') {
+  const value = String(src || '').trim()
+  if (!value) return ''
+  if (value.startsWith('/')) return value
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : ''
+  } catch {
+    return ''
+  }
+}
+
 function isBlockedPublicHref(href = '') {
   const value = String(href || '').trim().toLowerCase()
   if (!value) return true
@@ -97,6 +109,39 @@ function normalizeBodyNodes(nodes = []) {
   return normalized
 }
 
+function renderAudioNode(node, mode, key, captionHtml = '') {
+  const src = normalizeMediaSrc(node?.getAttribute?.('src') || node?.querySelector?.('source[src]')?.getAttribute('src') || '')
+  if (!src) return null
+  const label = String(
+    node?.getAttribute?.('aria-label')
+    || node?.getAttribute?.('data-media-title')
+    || node?.getAttribute?.('title')
+    || 'Audio player'
+  ).trim()
+
+  return (
+    <figure
+      key={key}
+      className={`post-body__figure post-body__figure--audio${mode === 'experience' ? ' post-body__figure--experience' : ''}`}
+    >
+      <audio
+        className="post-body__audio"
+        controls
+        preload="metadata"
+        src={src}
+        aria-label={label || 'Audio player'}
+        style={{ width: '100%' }}
+      />
+      {captionHtml ? (
+        <figcaption
+          className="post-body__caption"
+          dangerouslySetInnerHTML={{ __html: captionHtml }}
+        />
+      ) : null}
+    </figure>
+  )
+}
+
 function renderNode(node, mode, key) {
   if (!node) return null
 
@@ -160,11 +205,14 @@ function renderNode(node, mode, key) {
       )
 
     case 'figure': {
-      const img = node.querySelector('img')
+      const audio = node.querySelector('audio')
       const caption = node.querySelector('figcaption')
+      const captionHtml = caption?.innerHTML || ''
+      if (audio) return renderAudioNode(audio, mode, key, captionHtml)
+
+      const img = node.querySelector('img')
       const src = img?.getAttribute('src') || ''
       const alt = img?.getAttribute('alt') || ''
-      const captionHtml = caption?.innerHTML || ''
       if (!src) return null
 
       return (
@@ -233,8 +281,10 @@ function renderNode(node, mode, key) {
         />
       )
 
-    case 'video':
     case 'audio':
+      return renderAudioNode(node, mode, key)
+
+    case 'video':
       return (
         <figure key={key} className={`post-body__figure${mode === 'experience' ? ' post-body__figure--experience' : ''}`}>
           <div className="post-body__embed" dangerouslySetInnerHTML={{ __html: node.outerHTML }} />
