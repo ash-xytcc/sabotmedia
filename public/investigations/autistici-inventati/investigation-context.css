@@ -97,6 +97,26 @@
 }
 .investigation-context__actions a:first-child { background: #211e1a; color: white; }
 
+/* Hudson and Kyle already have full dossier cards; these restore the portrait layer
+   that was lost when the campaign primer was moved off this page. */
+.people-dossiers .person-dossier:nth-child(4) .person-dossier__portrait,
+.people-dossiers .person-dossier:nth-child(5) .person-dossier__portrait {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  color: transparent;
+  text-shadow: none;
+}
+
+.people-dossiers .person-dossier:nth-child(4) .person-dossier__portrait {
+  background-image: url('https://www.thecollegefix.com/wp-content/uploads/2023/06/Hudson-Crozier-Headshot-2023-180x200.jpg');
+}
+
+.people-dossiers .person-dossier:nth-child(5) .person-dossier__portrait {
+  background-image: url('https://hugh.cdn.rumble.cloud/s/s8/1/V/D/v/J/VDvJr.qR4e-small-Securing-America-with-Kyle-.jpg');
+  background-position: center 32%;
+}
+
 @media (max-width: 920px) {
   .investigation-context__basics,
   .investigation-upstream__events { grid-template-columns: repeat(2, minmax(0, 1fr)); }
