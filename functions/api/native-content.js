@@ -46,7 +46,7 @@ export async function onRequestGet(context) {
       return json({
         ok: true,
         mode: 'd1',
-        item,
+        item: permission.canEdit ? item : publicNativeItem(item),
       })
     }
 
@@ -60,7 +60,7 @@ export async function onRequestGet(context) {
     return json({
       ok: true,
       mode: 'd1',
-      items,
+      items: permission.canEdit ? items : items.map(publicNativeItem),
     })
   } catch (error) {
     return json({
@@ -189,12 +189,41 @@ async function handleWrite(context) {
   }
 }
 
+export function publicNativeItem(item) {
+  if (!item || typeof item !== 'object') return item || null
+  const {
+    sourceNotes,
+    transcriptNotes,
+    workflowState,
+    ...safe
+  } = item
+  return {
+    ...safe,
+    relatedAssets: Array.isArray(item.relatedAssets) ? item.relatedAssets.map(publicRelatedAsset) : [],
+  }
+}
+
+function publicRelatedAsset(asset) {
+  if (!asset || typeof asset !== 'object') return null
+  const {
+    storageKey,
+    customMetadata,
+    contributorId,
+    campaignId,
+    privateUrl,
+    internalNotes,
+    ...safe
+  } = asset
+  return safe
+}
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
     status,
     headers: {
       'content-type': 'application/json; charset=utf-8',
       'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff',
     },
   })
 }
