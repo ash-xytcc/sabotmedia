@@ -81,6 +81,16 @@ function mediaFromAsset(asset, fallback = {}) {
   }
 }
 
+function mediaKind(media = {}) {
+  const type = String(media.mediaType || media.kind || '').toLowerCase()
+  const mime = String(media.mimeType || '').toLowerCase()
+  const url = String(media.url || '').toLowerCase().split(/[?#]/)[0]
+  if (type === 'audio' || mime.startsWith('audio/') || /\.(mp3|m4a|aac|ogg|oga|wav|flac)$/.test(url)) return 'audio'
+  if (type === 'image' || type === 'svg' || mime.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif|svg)$/.test(url)) return 'image'
+  if (type === 'video' || mime.startsWith('video/') || /\.(mp4|m4v|mov|ogv|webm)$/.test(url)) return 'video'
+  return type || 'file'
+}
+
 function relatedAsset(entry, role) {
   return (Array.isArray(entry?.relatedAssets) ? entry.relatedAssets : []).find((asset) => String(asset?.role || '').toLowerCase() === role) || null
 }
@@ -326,8 +336,8 @@ export function EpisodePublisherPage() {
       pushNotice('Select at least one publish destination.', 'error')
       return
     }
-    if (!audio?.url) {
-      pushNotice('Choose or upload the finished episode audio first.', 'error')
+    if (!audio?.url || mediaKind(audio) !== 'audio') {
+      pushNotice('Choose a real audio file for the finished episode first.', 'error')
       return
     }
     try {
@@ -444,8 +454,8 @@ export function EpisodePublisherPage() {
                     <label><span>Title override</span><input value={overrides[destination].title} onChange={(event) => updateOverride(destination, 'title', event.target.value)} placeholder={draft.title || 'Use canonical title'} /></label>
                     <label><span>Description override</span><textarea rows="5" value={overrides[destination].description} onChange={(event) => updateOverride(destination, 'description', event.target.value)} placeholder="Use canonical description" /></label>
                     <label><span>Tags override</span><input value={overrides[destination].tags} onChange={(event) => updateOverride(destination, 'tags', event.target.value)} placeholder={tagInput || 'Use canonical tags'} /></label>
-                    <label><span>Privacy / visibility</span><input value={overrides[destination].privacy} onChange={(event) => updateOverride(destination, 'privacy', event.target.value)} placeholder={destination === 'youtube' ? 'public' : 'public'} /></label>
-                    <label><span>Channel / category ID override</span><input value={overrides[destination].channelId || overrides[destination].categoryId} onChange={(event) => updateOverride(destination, destination === 'youtube' ? 'categoryId' : 'channelId', event.target.value)} /></label>
+                    <label><span>Privacy / visibility</span><input value={overrides[destination].privacy} onChange={(event) => updateOverride(destination, 'privacy', event.target.value)} placeholder="public" /></label>
+                    <label><span>{destination === 'youtube' ? 'Category ID override' : 'Channel ID override'}</span><input value={destination === 'youtube' ? overrides[destination].categoryId : overrides[destination].channelId} onChange={(event) => updateOverride(destination, destination === 'youtube' ? 'categoryId' : 'channelId', event.target.value)} /></label>
                   </div>
                   {publishStates[destination]?.status === 'published' ? <button className="button" type="button" onClick={() => handleMetadataSync(destination)}>Sync metadata to {DESTINATION_LABELS[destination]}</button> : null}
                 </details>
@@ -495,6 +505,7 @@ export function EpisodePublisherPage() {
               <code>{draft.sourceExternalId || 'created on save'}</code>
               {draft.status === 'published' && draft.slug ? <p><Link to={`/post/${draft.slug}`} target="_blank">Open episode page</Link></p> : null}
               {selectedShow?.rssFeedUrl ? <p><a href={selectedShow.rssFeedUrl} target="_blank" rel="noreferrer">Open show RSS</a></p> : null}
+              {!selectedShow && defaultShowId ? <p className="description">Default show: {defaultShowId}</p> : null}
             </section>
           </aside>
         </section>
@@ -504,8 +515,21 @@ export function EpisodePublisherPage() {
           title={openMediaFor === 'audio' ? 'Choose Episode Audio' : 'Choose Episode Artwork'}
           onClose={() => setOpenMediaFor('')}
           onPick={(media) => {
-            if (openMediaFor === 'audio') setAudio(mediaFromAsset(media))
-            if (openMediaFor === 'artwork') setArtwork(mediaFromAsset(media))
+            const kind = mediaKind(media)
+            if (openMediaFor === 'audio') {
+              if (kind !== 'audio') {
+                pushNotice(`That is ${kind || 'not audio'}. Choose an audio file for the episode.`, 'error')
+                return
+              }
+              setAudio(mediaFromAsset(media))
+            }
+            if (openMediaFor === 'artwork') {
+              if (kind !== 'image') {
+                pushNotice(`That is ${kind || 'not an image'}. Choose an image for episode artwork.`, 'error')
+                return
+              }
+              setArtwork(mediaFromAsset(media))
+            }
             setOpenMediaFor('')
           }}
         />
