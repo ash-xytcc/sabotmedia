@@ -47,19 +47,20 @@ export function buildPodcastFeedXml({ requestUrl, items = [], settings = {}, sel
   const category = String(settings.category || 'News').trim() || 'News'
   const ownerName = String(settings.ownerName || '').trim()
   const ownerEmail = String(settings.ownerEmail || '').trim()
+  const copyright = String(settings.copyright || '').trim()
   const explicit = settings.explicit ? 'yes' : 'no'
   const body = items.map((item) => itemXml(item, origin, { author, coverArt, explicit })).join('\n')
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>${escapeXml(title)}</title>
     <description>${escapeXml(description)}</description>
     <link>${escapeXml(websiteUrl)}</link>
     <atom:link href="${escapeXml(selfUrl)}" rel="self" type="application/rss+xml" />
     <language>${escapeXml(language)}</language>
-    <lastBuildDate>${escapeXml(new Date().toUTCString())}</lastBuildDate>
-    <generator>SabotPress AudioLab</generator>
+${copyright ? `    <copyright>${escapeXml(copyright)}</copyright>\n` : ''}    <lastBuildDate>${escapeXml(new Date().toUTCString())}</lastBuildDate>
+    <generator>SabotPress</generator>
     <itunes:author>${escapeXml(author)}</itunes:author>
     <itunes:summary>${escapeXml(description)}</itunes:summary>
     <itunes:explicit>${escapeXml(explicit)}</itunes:explicit>
@@ -99,11 +100,12 @@ function itemXml(item, origin, channel = {}) {
   const episodeType = String(item.podcastEpisodeType || delivery?.podcastEpisodeType || '').trim()
   const coverArt = safeAbsoluteUrl(item.podcastCoverImage || item.featuredImage || item.heroImage || channel.coverArt, origin)
   const guid = String(item.sourceExternalId || delivery?.podcastGuid || item.id || link).trim()
+  const bodyHtml = String(item.bodyHtml || item.body || '').trim()
 
   return `    <item>
       <title>${escapeXml(item.title || 'Untitled episode')}</title>
       <description>${escapeXml(description)}</description>
-      <link>${escapeXml(link)}</link>
+${bodyHtml ? `      <content:encoded><![CDATA[${safeCdata(bodyHtml)}]]></content:encoded>\n` : ''}      <link>${escapeXml(link)}</link>
       <guid isPermaLink="false">${escapeXml(guid)}</guid>
       <pubDate>${escapeXml(pubDate)}</pubDate>
       <enclosure url="${escapeXml(audioUrl)}" type="${escapeXml(mimeType)}" length="${escapeXml(String(size || 0))}" />
@@ -158,7 +160,7 @@ function getAudioAsset(item = {}) {
 function isPublicAudioUrl(value = '') {
   const raw = String(value || '').trim()
   if (!raw || raw.startsWith('audiolab-local://')) return false
-  return /^https?:\/\//i.test(raw) || raw.startsWith('/api/audiolab/media')
+  return /^https?:\/\//i.test(raw) || raw.startsWith('/api/audiolab/media') || raw.startsWith('/api/media/files')
 }
 
 function absolutize(value = '', origin = '') {
@@ -185,6 +187,10 @@ function safeDate(value) {
 
 function stripHtml(value = '') {
   return String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function safeCdata(value = '') {
+  return String(value || '').replace(/\]\]>/g, ']]]]><![CDATA[>')
 }
 
 function escapeXml(value = '') {
