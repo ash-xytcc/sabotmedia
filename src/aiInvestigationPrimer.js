@@ -274,7 +274,10 @@ function ensurePrimer() {
 
   const holder = document.getElementById(PRIMER_ID)
   const cta = holder?.querySelector('.ai-investigation-cta__actions')
-  if (cta) cta.innerHTML = articleCta()
+  const article = findInvestigationArticle()
+  const desiredHref = article?.getAttribute('href') || '#reporting'
+  const currentHref = cta?.querySelector('a')?.getAttribute('href') || ''
+  if (cta && currentHref !== desiredHref) cta.innerHTML = articleCta()
   return true
 }
 
