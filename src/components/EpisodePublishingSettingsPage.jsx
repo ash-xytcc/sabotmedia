@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { loadEpisodePublishingSettings, saveEpisodePublishingSettings } from '../lib/episodePublishingSettingsApi'
+import { clearPeerTubeCredential, clearYouTubeCredential, savePeerTubeCredential } from '../lib/episodePublishingCredentialsApi'
 import { adminRoutes } from '../routing/routes'
 
 const DEFAULTS = {
@@ -25,11 +26,20 @@ function connectionLabel(value) {
 }
 
 export function EpisodePublishingSettingsPage() {
+  const [searchParams] = useSearchParams()
   const [settings, setSettings] = useState(DEFAULTS)
-  const [connections, setConnections] = useState({ worker: {}, youtube: {}, peertube: {} })
+  const [connections, setConnections] = useState({ worker: {}, youtube: {}, peertube: {}, credentialStore: {} })
+  const [peerTubeToken, setPeerTubeToken] = useState('')
   const [state, setState] = useState('loading')
   const [error, setError] = useState('')
   const { pushNotice } = useAdminNotices()
+
+  async function reload() {
+    const data = await loadEpisodePublishingSettings()
+    setSettings(data.settings || DEFAULTS)
+    setConnections(data.connections || {})
+    return data
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -47,6 +57,13 @@ export function EpisodePublishingSettingsPage() {
       })
     return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    const youtube = searchParams.get('youtube')
+    if (youtube === 'connected') pushNotice('YouTube connected.', 'success')
+    if (youtube === 'cancelled') pushNotice('YouTube connection was cancelled.', 'info')
+    if (youtube === 'error') pushNotice(`YouTube connection failed: ${searchParams.get('reason') || 'unknown error'}`, 'error')
+  }, [searchParams, pushNotice])
 
   function update(section, field, value) {
     setSettings((current) => ({
@@ -71,13 +88,48 @@ export function EpisodePublishingSettingsPage() {
     }
   }
 
+  async function savePeerTubeToken() {
+    const token = peerTubeToken.trim()
+    if (!token) {
+      pushNotice('Paste the PeerTube access token first.', 'error')
+      return
+    }
+    try {
+      setState('saving')
+      await savePeerTubeCredential(token)
+      setPeerTubeToken('')
+      await reload()
+      setState('ready')
+      pushNotice('PeerTube token saved encrypted on the server.', 'success')
+    } catch (nextError) {
+      setState('error')
+      pushNotice(`PeerTube connection failed: ${String(nextError?.message || nextError)}`, 'error')
+    }
+  }
+
+  async function disconnect(destination) {
+    try {
+      setState('saving')
+      if (destination === 'youtube') await clearYouTubeCredential()
+      if (destination === 'peertube') await clearPeerTubeCredential()
+      await reload()
+      setState('ready')
+      pushNotice(`${destination === 'youtube' ? 'YouTube' : 'PeerTube'} saved credential removed.`, 'success')
+    } catch (nextError) {
+      setState('error')
+      pushNotice(`Could not remove credential: ${String(nextError?.message || nextError)}`, 'error')
+    }
+  }
+
+  const youtubeConnectUrl = `/api/episode-youtube-auth-start?returnTo=${encodeURIComponent('/wp-admin/podcasts?publishing=settings')}`
+
   return (
     <AdminFrame>
       <main className="page wp-admin-screen episode-publishing-settings-page">
         <div className="wp-screen-header">
           <div>
             <h1>Episode Publishing</h1>
-            <p className="description">Defaults for YouTube, PeerTube and generated podcast video. Access tokens and OAuth secrets stay in server or worker environment configuration and are never returned to the browser.</p>
+            <p className="description">Connect publishing accounts and set defaults for YouTube, PeerTube and generated podcast video. Saved tokens are encrypted server-side and never returned to the browser.</p>
           </div>
           <div className="review-card__actions">
             <Link className="button" to={adminRoutes.podcasts}>Back to Podcasts</Link>
@@ -89,6 +141,9 @@ export function EpisodePublishingSettingsPage() {
 
         <section className="wp-meta-box">
           <h2>Connections</h2>
+          {!connections.credentialStore?.configured ? (
+            <div className="notice notice-warning"><p><strong>Encrypted credential storage is not enabled.</strong> Set <code>EPISODE_CREDENTIALS_KEY</code> on the site before connecting accounts from this screen. Existing environment-managed credentials still work.</p></div>
+          ) : null}
           <div className="episode-connection-grid">
             <ConnectionCard
               title="Media worker"
@@ -99,17 +154,29 @@ export function EpisodePublishingSettingsPage() {
             <ConnectionCard
               title="YouTube"
               configured={connections.youtube?.configured}
-              description="Uses the YouTube Data API from the media worker."
-              required="YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET and YOUTUBE_REFRESH_TOKEN on the worker/site environment"
-            />
+              description="OAuth connection for the YouTube Data API. Upload and metadata permissions are requested from Google; the refresh token stays encrypted on the site."
+              required={connections.youtube?.clientConfigured ? 'OAuth client is configured.' : 'YOUTUBE_CLIENT_ID and YOUTUBE_CLIENT_SECRET are required on the site.'}
+            >
+              {connections.youtube?.canConnect ? <a className="button button--primary" href={youtubeConnectUrl}>{connections.youtube?.configured ? 'Reconnect YouTube' : 'Connect YouTube'}</a> : null}
+              {connections.youtube?.configured ? <button className="button" type="button" onClick={() => disconnect('youtube')}>Remove saved YouTube credential</button> : null}
+            </ConnectionCard>
             <ConnectionCard
               title="PeerTube"
               configured={connections.peertube?.configured}
               description="Uses the configured PeerTube instance and channel with a server-side bearer token."
-              required="PEERTUBE_ACCESS_TOKEN plus instance and channel below"
-            />
+              required="Instance URL + channel ID below, plus an account access token."
+            >
+              {connections.peertube?.canConnect ? (
+                <label>
+                  <span>Access token</span>
+                  <input type="password" value={peerTubeToken} onChange={(event) => setPeerTubeToken(event.target.value)} autoComplete="off" placeholder={connections.peertube?.tokenConfigured ? 'Token already saved' : 'Paste PeerTube token'} />
+                </label>
+              ) : null}
+              {connections.peertube?.canConnect ? <button className="button button--primary" type="button" onClick={savePeerTubeToken}>Save PeerTube token</button> : null}
+              {connections.peertube?.tokenConfigured ? <button className="button" type="button" onClick={() => disconnect('peertube')}>Remove saved PeerTube credential</button> : null}
+            </ConnectionCard>
           </div>
-          <p className="description">Connection status is intentionally boolean. Secret values are not readable from this screen after deployment.</p>
+          <p className="description">Connection status exposes only booleans. Token values are write-only from this screen.</p>
         </section>
 
         <section className="wp-meta-box">
@@ -174,13 +241,14 @@ export function EpisodePublishingSettingsPage() {
   )
 }
 
-function ConnectionCard({ title, configured, description, required }) {
+function ConnectionCard({ title, configured, description, required, children = null }) {
   return (
     <article className={`review-card episode-connection-card${configured ? ' is-connected' : ' is-missing'}`}>
       <h3>{title}</h3>
       <strong>{connectionLabel({ configured })}</strong>
       <p>{description}</p>
       <small>{required}</small>
+      {children ? <div className="review-card__actions">{children}</div> : null}
     </article>
   )
 }
