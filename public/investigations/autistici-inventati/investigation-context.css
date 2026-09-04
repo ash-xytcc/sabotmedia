@@ -114,7 +114,7 @@
 
 .people-dossiers .person-dossier:nth-child(5) .person-dossier__portrait {
   background-image: url('https://hugh.cdn.rumble.cloud/s/s8/1/V/D/v/J/VDvJr.qR4e-small-Securing-America-with-Kyle-.jpg');
-  background-position: center 32%;
+  background-position: 65% 32%;
 }
 
 @media (max-width: 920px) {
