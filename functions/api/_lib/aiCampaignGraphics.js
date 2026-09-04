@@ -1,5 +1,35 @@
 const BASE = '/campaigns/autistici-inventati/graphics'
 
+const sept4Quotes = [
+  {
+    id: 'sept4-quote-ngo-fto',
+    title: 'Designate Antifa',
+    imageUrl: `${BASE}/quote-ngo-fto.webp?v=20260904-1`,
+    alt: 'Cream, black, and red Sabot Media campaign graphic with a close-up photo of a man on the right. Quote reads: “And I think, maybe, perhaps the State Department should designate Antifa, its international arm as a foreign terrorist organization, FTO.” Attributed on the graphic to Andy Ngo, White House, Oct. 8, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer urges readers to “Read / Share / Preserve / Organize.”',
+    caption: 'Campaign quote card using an Oct. 8, 2025 statement attributed on the graphic to Andy Ngo.',
+    downloadUrl: `${BASE}/quote-ngo-fto.webp`,
+    sourceUrl: '',
+  },
+  {
+    id: 'sept4-quote-shideler-job-one',
+    title: 'Job One',
+    imageUrl: `${BASE}/quote-shideler-job-one.webp?v=20260904-1`,
+    alt: 'Black, red, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large red quote reads: “Going after organizations like this that provide material support would be job one.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”',
+    caption: 'Campaign quote card using an Oct. 16, 2025 statement attributed on the graphic to Kyle Shideler.',
+    downloadUrl: `${BASE}/quote-shideler-job-one.webp`,
+    sourceUrl: '',
+  },
+  {
+    id: 'sept4-quote-shideler-otherwise-lawful',
+    title: 'Otherwise Lawful',
+    imageUrl: `${BASE}/quote-shideler-otherwise-lawful.webp?v=20260904-1`,
+    alt: 'Red, black, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large quote reads: “They would probably really struggle to go after these kinds of entities, since the services they provide are otherwise lawful.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”',
+    caption: 'Campaign quote card using the “otherwise lawful” Oct. 16, 2025 statement attributed on the graphic to Kyle Shideler.',
+    downloadUrl: `${BASE}/quote-shideler-otherwise-lawful.webp`,
+    sourceUrl: '',
+  },
+]
+
 const rows = [
   ['section-230-hypocrisy', 'One Rule for Big Tech', 'Black, red, cream and pink vertical campaign graphic reading “One rule for Big Tech. Another for movement infrastructure. The hypocrisy of Section 230.” Marked urgent for the A/I campaign on August 30, 2026, with “Read / share / preserve / organize” along the bottom.', 'One rule for Big Tech. Another for movement infrastructure. Corporate platforms are protected from automatic liability for their users, while the United States collapses the distinction between A/I and what users publish. Infrastructure is not authorship. Read and share the full argument.', 'https://kolektiva.social/@AberdeenLocal1312/117184117978084213'],
   ['book-download-card', 'Ten Years of Hacking and Media Activism', 'Red, black, pink and green book-download card for The Kaos Ten Years of Hacking and Media Activism, with Hacklabs, Genova, Plan B and Noblogs listed.', 'Download and share the free Kaos book on A/I, hacklabs and radical media infrastructure.'],
@@ -26,7 +56,7 @@ const rows = [
   ['web-banner', 'Do Not Let A/I Disappear Banner', 'Wide black campaign banner reading “Do not let A/I disappear” beside a Welcome to A/I browser screenshot.', 'A wide campaign banner for websites and social headers.'],
 ]
 
-export const AI_CAMPAIGN_GRAPHICS = rows.map(([slug, title, alt, caption, sourceUrl], index) => ({
+const legacyGraphics = rows.map(([slug, title, alt, caption, sourceUrl], index) => ({
   id: `built-in-${index + 1}`,
   title,
   imageUrl: `${BASE}/${slug}.webp?v=20260829-2`,
@@ -35,3 +65,5 @@ export const AI_CAMPAIGN_GRAPHICS = rows.map(([slug, title, alt, caption, source
   downloadUrl: `${BASE}/originals/${slug}.png`,
   sourceUrl: sourceUrl || '',
 }))
+
+export const AI_CAMPAIGN_GRAPHICS = [...sept4Quotes, ...legacyGraphics]
