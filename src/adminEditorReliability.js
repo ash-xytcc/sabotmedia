@@ -111,7 +111,8 @@ function updateEditorStats() {
   const readable = readableTextFromEditor().replace(/\s+/g, ' ').trim()
   const words = countWords(readable)
   const characters = readable.length
-  stats.textContent = `${formatNumber(words)} ${words === 1 ? 'word' : 'words'} · ${formatNumber(characters)} ${characters === 1 ? 'character' : 'characters'}`
+  const nextText = `${formatNumber(words)} ${words === 1 ? 'word' : 'words'} · ${formatNumber(characters)} ${characters === 1 ? 'character' : 'characters'}`
+  if (stats.textContent !== nextText) stats.textContent = nextText
 }
 
 function ensureMarkdownControls() {
