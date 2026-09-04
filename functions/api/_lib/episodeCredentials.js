@@ -15,7 +15,7 @@ export async function readEpisodeCredentialFlags(db, env = {}) {
   return {
     encryptionConfigured: Boolean(credentialSecret(env)),
     youtube: Boolean(String(env.YOUTUBE_REFRESH_TOKEN || '').trim() || stored.youtubeRefreshToken),
-    peertube: Boolean(String(env.PEERTUBE_ACCESS_TOKEN || '').trim() || stored.peertubeAccessToken),
+    peertube: Boolean(String(env.PEERTUBE_ACCESS_TOKEN || '').trim() || stored.peertubeAccessToken || stored.peertubeRefreshToken),
   }
 }
 
@@ -37,10 +37,34 @@ export async function storePeerTubeAccessToken(db, env, accessToken) {
   await writeStoredCredentials(db, stored)
 }
 
+export async function storePeerTubeSession(db, env, session = {}) {
+  const accessToken = String(session.accessToken || '').trim()
+  const refreshToken = String(session.refreshToken || '').trim()
+  const baseUrl = String(session.baseUrl || '').trim().replace(/\/$/, '')
+  if (!accessToken || !refreshToken) throw new Error('PeerTube token response is incomplete')
+  if (!baseUrl) throw new Error('PeerTube base URL is missing')
+
+  const stored = await readStoredCredentials(db)
+  const secret = requiredCredentialSecret(env)
+  stored.peertubeAccessToken = await encryptSecret(accessToken, secret)
+  stored.peertubeRefreshToken = await encryptSecret(refreshToken, secret)
+  stored.peertubeBaseUrl = baseUrl
+  stored.peertubeAccessTokenExpiresAt = expiresAt(session.expiresIn)
+  stored.peertubeRefreshTokenExpiresAt = expiresAt(session.refreshTokenExpiresIn)
+  stored.updatedAt = new Date().toISOString()
+  await writeStoredCredentials(db, stored)
+}
+
 export async function clearEpisodeCredential(db, field) {
   const stored = await readStoredCredentials(db)
   if (field === 'youtube') stored.youtubeRefreshToken = ''
-  if (field === 'peertube') stored.peertubeAccessToken = ''
+  if (field === 'peertube') {
+    stored.peertubeAccessToken = ''
+    stored.peertubeRefreshToken = ''
+    stored.peertubeBaseUrl = ''
+    stored.peertubeAccessTokenExpiresAt = ''
+    stored.peertubeRefreshTokenExpiresAt = ''
+  }
   stored.updatedAt = new Date().toISOString()
   await writeStoredCredentials(db, stored)
 }
@@ -54,11 +78,33 @@ export async function readYouTubeRefreshToken(db, env = {}) {
 }
 
 export async function readPeerTubeAccessToken(db, env = {}) {
+  const session = await readPeerTubeSession(db, env)
+  return session.accessToken
+}
+
+export async function readPeerTubeSession(db, env = {}) {
   const fromEnv = String(env.PEERTUBE_ACCESS_TOKEN || '').trim()
-  if (fromEnv) return fromEnv
+  if (fromEnv) {
+    return {
+      accessToken: fromEnv,
+      refreshToken: '',
+      baseUrl: String(env.PEERTUBE_BASE_URL || '').trim().replace(/\/$/, ''),
+      accessTokenExpiresAt: '',
+      refreshTokenExpiresAt: '',
+      environmentManaged: true,
+    }
+  }
+
   const stored = await readStoredCredentials(db)
-  if (!stored.peertubeAccessToken) return ''
-  return decryptSecret(stored.peertubeAccessToken, requiredCredentialSecret(env))
+  const secret = requiredCredentialSecret(env)
+  return {
+    accessToken: stored.peertubeAccessToken ? await decryptSecret(stored.peertubeAccessToken, secret) : '',
+    refreshToken: stored.peertubeRefreshToken ? await decryptSecret(stored.peertubeRefreshToken, secret) : '',
+    baseUrl: stored.peertubeBaseUrl,
+    accessTokenExpiresAt: stored.peertubeAccessTokenExpiresAt,
+    refreshTokenExpiresAt: stored.peertubeRefreshTokenExpiresAt,
+    environmentManaged: false,
+  }
 }
 
 export async function createYouTubeOAuthState(db, returnTo = '') {
@@ -93,6 +139,10 @@ async function readStoredCredentials(db) {
   return {
     youtubeRefreshToken: String(value?.youtubeRefreshToken || ''),
     peertubeAccessToken: String(value?.peertubeAccessToken || ''),
+    peertubeRefreshToken: String(value?.peertubeRefreshToken || ''),
+    peertubeBaseUrl: String(value?.peertubeBaseUrl || ''),
+    peertubeAccessTokenExpiresAt: String(value?.peertubeAccessTokenExpiresAt || ''),
+    peertubeRefreshTokenExpiresAt: String(value?.peertubeRefreshTokenExpiresAt || ''),
     updatedAt: String(value?.updatedAt || ''),
   }
 }
@@ -141,6 +191,11 @@ function requiredCredentialSecret(env = {}) {
   const value = credentialSecret(env)
   if (!value) throw new Error('EPISODE_CREDENTIALS_KEY is required for credentials saved through Sabot settings')
   return value
+}
+
+function expiresAt(seconds) {
+  const amount = Number(seconds || 0)
+  return Number.isFinite(amount) && amount > 0 ? new Date(Date.now() + amount * 1000).toISOString() : ''
 }
 
 function randomToken() {
