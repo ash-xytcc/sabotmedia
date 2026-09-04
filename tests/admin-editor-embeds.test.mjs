@@ -47,6 +47,34 @@ test('video URLs are inferred when the picker has incomplete metadata', () => {
   assert.doesNotMatch(html, /<audio controls/)
 })
 
+test('direct video URLs pasted into Embed become video players', () => {
+  const html = buildIframeEmbed('https://example.org/video/field-report.mp4')
+  assert.match(html, /sabot-embed--video/)
+  assert.match(html, /<video controls/)
+  assert.doesNotMatch(html, /<iframe/)
+})
+
+test('Sabot media URLs use filename and storage key hints to identify video', () => {
+  const html = buildIframeEmbed('/api/media/files?key=media%2Fvideo%2Fmedia-abc-field-report.mp4&filename=field-report.mp4')
+  assert.match(html, /sabot-embed--video/)
+  assert.match(html, /<video controls/)
+  assert.match(html, /field-report\.mp4/)
+})
+
+test('YouTube watch links are converted to an embeddable privacy-enhanced player', () => {
+  const watch = buildIframeEmbed('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+  assert.match(watch, /https:\/\/www\.youtube-nocookie\.com\/embed\/dQw4w9WgXcQ/)
+  assert.doesNotMatch(watch, /youtube\.com\/watch/)
+
+  const short = buildIframeEmbed('https://youtu.be/dQw4w9WgXcQ')
+  assert.match(short, /youtube-nocookie\.com\/embed\/dQw4w9WgXcQ/)
+})
+
+test('PeerTube watch links are converted to the instance embed endpoint', () => {
+  const html = buildIframeEmbed('https://video.example.org/w/abcDEF123')
+  assert.match(html, /src="https:\/\/video\.example\.org\/videos\/embed\/abcDEF123"/)
+})
+
 test('pdf media becomes a full-width readable inline document with a link fallback', () => {
   const html = buildMediaEmbed({ url: 'https://example.org/zine.pdf', title: 'Zine' })
   assert.match(html, /sabot-embed--pdf/)
