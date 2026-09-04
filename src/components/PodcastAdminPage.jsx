@@ -4,24 +4,12 @@ import { AdminFrame } from './AdminRail'
 import { loadNativeCollection, upsertNativeEntryWithMeta } from '../lib/nativePublicContent'
 import { loadPodcastShowsAsync, podcastFeedUrl } from '../lib/podcastSettings'
 import { adminRoutes } from '../routing/routes'
+import { podcastEntryBelongsToShow } from '../../shared/podcastShowMembership'
 
 function toDisplayDate(value) {
   const d = new Date(String(value || ''))
   if (!Number.isFinite(d.getTime())) return '—'
   return d.toLocaleDateString()
-}
-
-function showSourceUrls(show) {
-  return [...new Set([
-    ...(Array.isArray(show?.sourceFeedUrls) ? show.sourceFeedUrls : []),
-    show?.sourceFeedUrl,
-    show?.sourceFeedResolvedUrl,
-  ].map((value) => String(value || '').trim()).filter(Boolean))]
-}
-
-function episodeBelongsToShow(episode, show) {
-  const sourceUrl = String(episode?.sourceUrl || '').trim()
-  return Boolean(sourceUrl && showSourceUrls(show).includes(sourceUrl))
 }
 
 function podcastTitleDisplayValue(episode) {
@@ -77,7 +65,7 @@ export function PodcastAdminPage() {
   const showGroups = useMemo(
     () => shows.map((show) => ({
       show,
-      episodes: podcastEpisodes.filter((episode) => episodeBelongsToShow(episode, show)),
+      episodes: podcastEpisodes.filter((episode) => podcastEntryBelongsToShow(episode, show)),
     })),
     [shows, podcastEpisodes]
   )
@@ -188,7 +176,7 @@ export function PodcastAdminPage() {
               <div className="wp-screen-header podcast-show-episode-header">
                 <div>
                   <h2>{show.podcastTitle || 'Untitled podcast'} Episodes</h2>
-                  <p className="description">{episodes.length} episode{episodes.length === 1 ? '' : 's'} assigned from this show's source feed. Set one default for the whole show, then override individual episodes only when their artwork differs.</p>
+                  <p className="description">{episodes.length} episode{episodes.length === 1 ? '' : 's'} assigned to this show by source feed or explicit podcast project assignment. Set one default for the whole show, then override individual episodes only when their artwork differs.</p>
                 </div>
                 <div className="podcast-show-display-control">
                   <label>
@@ -254,7 +242,7 @@ export function PodcastAdminPage() {
                         </td>
                       </tr>
                     )) : (
-                      <tr><td colSpan={8}>No episodes imported for this show yet.</td></tr>
+                      <tr><td colSpan={8}>No episodes assigned to this show yet.</td></tr>
                     )}
                   </tbody>
                 </table>
