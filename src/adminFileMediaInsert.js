@@ -4,6 +4,7 @@ const VISUAL_EDITOR_SELECTOR = '.native-content-editor__visual[contenteditable="
 const TEXT_EDITOR_SELECTOR = '.native-content-editor__textarea'
 let savedVisualRange = null
 let savedTextSelection = null
+let pendingBodyMediaPick = false
 
 function isAdminPostEditor() {
   if (typeof window === 'undefined') return false
@@ -30,25 +31,68 @@ function rememberTextSelection(event) {
   }
 }
 
+function captureEditorSelection() {
+  rememberVisualSelection()
+  const textarea = document.querySelector(TEXT_EDITOR_SELECTOR)
+  if (textarea && document.activeElement === textarea) {
+    savedTextSelection = {
+      element: textarea,
+      start: textarea.selectionStart ?? textarea.value.length,
+      end: textarea.selectionEnd ?? textarea.value.length,
+    }
+  }
+}
+
 document.addEventListener('selectionchange', rememberVisualSelection)
 document.addEventListener('keyup', rememberTextSelection, true)
 document.addEventListener('mouseup', rememberTextSelection, true)
 document.addEventListener('focusin', rememberTextSelection, true)
 document.addEventListener('input', rememberTextSelection, true)
 
-function selectedMediaButton() {
-  return document.querySelector('.wp-media-modal .wp-media-item.is-selected')
+function selectedReactMediaData() {
+  const modal = document.querySelector('.media-picker-modal')
+  if (!modal) return null
+  const selectedTile = modal.querySelector('.media-library-tile.is-selected')
+  if (!selectedTile) return null
+
+  const title = selectedTile.querySelector('.media-library-tile__meta strong')?.textContent?.trim() || 'Media'
+  const typeLabel = selectedTile.querySelector('.media-library-tile__meta small')?.textContent?.trim() || ''
+  const mediaType = typeLabel.split('·')[0].trim().toLowerCase()
+  const details = modal.querySelector('.media-attachment-details')
+  const publicUrlLabel = [...(details?.querySelectorAll('label') || [])]
+    .find((label) => label.querySelector('span')?.textContent?.trim().toLowerCase() === 'public url')
+  const url = publicUrlLabel?.querySelector('input')?.value?.trim() || ''
+  const captionLabel = [...(details?.querySelectorAll('label') || [])]
+    .find((label) => label.querySelector('span')?.textContent?.trim().toLowerCase() === 'caption / link text')
+  const caption = captionLabel?.querySelector('textarea')?.value?.trim() || ''
+  const altLabel = [...(details?.querySelectorAll('label') || [])]
+    .find((label) => label.querySelector('span')?.textContent?.trim().toLowerCase() === 'alt text')
+  const alt = altLabel?.querySelector('input')?.value?.trim() || ''
+  const facts = [...(details?.querySelectorAll('.media-attachment-details__facts span') || [])]
+    .map((node) => node.textContent?.trim() || '')
+  const mimeType = facts
+    .flatMap((value) => value.split('·').map((part) => part.trim()))
+    .find((value) => /^[a-z0-9.+-]+\/[a-z0-9.+-]+$/i.test(value)) || ''
+
+  if (!url) return null
+  return { url, title, alt, caption, mediaType, mimeType }
+}
+
+function selectedLegacyMediaData() {
+  const button = document.querySelector('.wp-media-modal .wp-media-item.is-selected')
+  if (!button) return null
+  const url = button.getAttribute('data-media-url') || ''
+  if (!url) return null
+  return {
+    url,
+    title: button.getAttribute('data-media-title') || 'Media',
+    mediaType: (button.getAttribute('data-media-type') || '').toLowerCase(),
+    mimeType: (button.getAttribute('data-media-mime') || '').toLowerCase(),
+  }
 }
 
 function selectedMediaData() {
-  const button = selectedMediaButton()
-  if (!button) return null
-  const url = button.getAttribute('data-media-url') || ''
-  const title = button.getAttribute('data-media-title') || 'Download file'
-  const mediaType = (button.getAttribute('data-media-type') || '').toLowerCase()
-  const mimeType = (button.getAttribute('data-media-mime') || '').toLowerCase()
-  if (!url) return null
-  return { url, title, mediaType, mimeType }
+  return selectedReactMediaData() || selectedLegacyMediaData()
 }
 
 function restoreVisualSelection(editor) {
@@ -59,10 +103,6 @@ function restoreVisualSelection(editor) {
     selection.addRange(savedVisualRange)
     return savedVisualRange
   }
-  if (selection.rangeCount) {
-    const current = selection.getRangeAt(0)
-    if (editor.contains(current.commonAncestorContainer)) return current
-  }
   return null
 }
 
@@ -70,30 +110,25 @@ function insertHtmlIntoVisualEditor(markup) {
   const editor = document.querySelector(VISUAL_EDITOR_SELECTOR)
   if (!editor || !markup) return false
   const selection = window.getSelection?.()
-  const range = restoreVisualSelection(editor)
+  let range = restoreVisualSelection(editor)
 
-  if (range) {
-    range.deleteContents()
-    const fragment = range.createContextualFragment(markup)
-    const lastNode = fragment.lastChild
-    range.insertNode(fragment)
-    if (lastNode && selection) {
-      const nextRange = document.createRange()
-      nextRange.setStartAfter(lastNode)
-      nextRange.collapse(true)
-      selection.removeAllRanges()
-      selection.addRange(nextRange)
-      savedVisualRange = nextRange.cloneRange()
-    }
-  } else {
-    editor.insertAdjacentHTML('beforeend', markup)
+  if (!range) {
+    range = document.createRange()
+    range.selectNodeContents(editor)
+    range.collapse(false)
+  }
+
+  range.deleteContents()
+  const fragment = range.createContextualFragment(markup)
+  const lastNode = fragment.lastChild
+  range.insertNode(fragment)
+
+  if (lastNode && selection) {
     const nextRange = document.createRange()
-    nextRange.selectNodeContents(editor)
-    nextRange.collapse(false)
-    if (selection) {
-      selection.removeAllRanges()
-      selection.addRange(nextRange)
-    }
+    nextRange.setStartAfter(lastNode)
+    nextRange.collapse(true)
+    selection.removeAllRanges()
+    selection.addRange(nextRange)
     savedVisualRange = nextRange.cloneRange()
   }
 
@@ -120,13 +155,15 @@ function insertTextIntoTextarea(markup) {
   const prefix = start > 0 && textarea.value[start - 1] !== '\n' ? '\n' : ''
   const suffix = end < textarea.value.length && textarea.value[end] !== '\n' ? '\n' : ''
   const inserted = `${prefix}${markup}${suffix}`
-  textarea.value = `${textarea.value.slice(0, start)}${inserted}${textarea.value.slice(end)}`
+  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
+  const nextValue = `${textarea.value.slice(0, start)}${inserted}${textarea.value.slice(end)}`
+  if (setter) setter.call(textarea, nextValue)
+  else textarea.value = nextValue
   const cursor = start + inserted.length
   textarea.selectionStart = cursor
   textarea.selectionEnd = cursor
   savedTextSelection = { element: textarea, start: cursor, end: cursor }
   textarea.dispatchEvent(new Event('input', { bubbles: true }))
-  textarea.dispatchEvent(new Event('change', { bubbles: true }))
   textarea.focus()
   return true
 }
@@ -137,23 +174,43 @@ function insertMarkup(markup) {
   return insertTextIntoTextarea(markup)
 }
 
-function closeMediaModal() {
-  const closeButton = [...document.querySelectorAll('.wp-media-modal .button')].find((button) => button.textContent?.trim().toLowerCase() === 'close')
+function closeReactMediaModal() {
+  const modal = document.querySelector('.media-picker-modal')
+  if (!modal) return
+  const closeButton = [...modal.querySelectorAll('button')]
+    .find((button) => button.textContent?.trim().toLowerCase() === 'close')
   closeButton?.click()
 }
 
-function handleSelectClick(event) {
+function handlePointerDown(event) {
   if (!isAdminPostEditor()) return
   const button = event.target?.closest?.('button')
-  if (!button || button.textContent?.trim().toLowerCase() !== 'select') return
-  if (!button.closest('.wp-media-modal')) return
+  if (!button) return
+  const label = button.textContent?.trim().toLowerCase() || ''
+
+  if (button.classList.contains('native-content-editor__add-media') || label === 'add media') {
+    captureEditorSelection()
+    pendingBodyMediaPick = true
+    return
+  }
+
+  if (label === 'choose from media') pendingBodyMediaPick = false
+}
+
+function handleSelectClick(event) {
+  if (!isAdminPostEditor() || !pendingBodyMediaPick) return
+  const button = event.target?.closest?.('button')
+  if (!button) return
+  const label = button.textContent?.trim().toLowerCase() || ''
+  const reactModal = button.closest('.media-picker-modal')
+  const legacyModal = button.closest('.wp-media-modal')
+  const isUseSelected = reactModal && label === 'use selected media'
+  const isLegacySelect = legacyModal && label === 'select'
+  if (!isUseSelected && !isLegacySelect) return
 
   const media = selectedMediaData()
   if (!media) return
-
-  const details = button.closest('.wp-media-modal__details')
-  const caption = details?.querySelector('textarea')?.value?.trim?.() || ''
-  const markup = buildMediaEmbed({ ...media, caption })
+  const markup = buildMediaEmbed(media)
   if (!markup) return
 
   event.preventDefault()
@@ -161,7 +218,20 @@ function handleSelectClick(event) {
   if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation()
 
   insertMarkup(markup)
-  closeMediaModal()
+  pendingBodyMediaPick = false
+  if (reactModal) closeReactMediaModal()
+  else {
+    const closeButton = [...legacyModal.querySelectorAll('button')]
+      .find((candidate) => candidate.textContent?.trim().toLowerCase() === 'close')
+    closeButton?.click()
+  }
+}
+
+function handleModalClose(event) {
+  const button = event.target?.closest?.('button')
+  if (!button?.closest?.('.media-picker-modal, .wp-media-modal')) return
+  const label = button.textContent?.trim().toLowerCase() || ''
+  if (label === 'close' || label === 'cancel') pendingBodyMediaPick = false
 }
 
 function addEmbedButton() {
@@ -174,7 +244,10 @@ function addEmbedButton() {
   button.dataset.sabotEmbedButton = '1'
   button.textContent = 'embed'
   button.title = 'Embed an iframe or URL at the cursor'
-  button.addEventListener('mousedown', (event) => event.preventDefault())
+  button.addEventListener('mousedown', (event) => {
+    captureEditorSelection()
+    event.preventDefault()
+  })
   button.addEventListener('click', () => {
     const raw = window.prompt('Paste an iframe embed code or URL')
     if (!raw) return
@@ -188,7 +261,9 @@ function addEmbedButton() {
   toolbar.appendChild(button)
 }
 
+document.addEventListener('mousedown', handlePointerDown, true)
 window.addEventListener('click', handleSelectClick, true)
+window.addEventListener('click', handleModalClose, true)
 
 const observer = new MutationObserver(addEmbedButton)
 observer.observe(document.documentElement, { childList: true, subtree: true })
