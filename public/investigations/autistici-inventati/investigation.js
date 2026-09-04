@@ -9,6 +9,11 @@
   enhancementSheet.href = './investigation-enhancements.css'
   document.head.appendChild(enhancementSheet)
 
+  const contextSheet = document.createElement('link')
+  contextSheet.rel = 'stylesheet'
+  contextSheet.href = './investigation-context.css'
+  document.head.appendChild(contextSheet)
+
   const introActions = document.querySelector('.intro-actions')
   if (introActions) {
     const pdfButton = document.createElement('button')
@@ -21,6 +26,47 @@
 
   const quickRead = document.querySelector('.quick-read')
   if (quickRead) {
+    const context = document.createElement('section')
+    context.className = 'investigation-context'
+    context.id = 'read-first'
+    context.innerHTML = `
+      <div class="wrap">
+        <div class="section-head investigation-context__intro">
+          <div>
+            <p class="eyebrow">READ THIS FIRST</p>
+            <h2>Four distinctions that keep the evidence straight.</h2>
+          </div>
+          <p class="section-intro">The campaign page does not need a second copy of this investigation. This reader is the place where the legal distinctions, source lineage and policy sequence are explained in full.</p>
+        </div>
+        <div class="investigation-context__basics" aria-label="Four important distinctions">
+          <article><span>01 · DESIGNATION</span><h3>A/I is an SDGT, not an FTO</h3><p>A/I was sanctioned under Executive Order 13224 as a Specially Designated Global Terrorist. It was not itself designated as a Foreign Terrorist Organization. The distinction matters because foreign-group designations can still become predicates in a later support case.</p></article>
+          <article><span>02 · LEGAL HOOK</span><h3>The public theory is services</h3><p>The government’s public case focuses on hosting, communications and other infrastructure or support. The public finding does not say A/I itself carried out a shooting, bombing or sabotage.</p></article>
+          <article><span>03 · SOURCE LANGUAGE</span><h3>“Antifa” is their framing</h3><p>This page tracks how officials and outside advocates use the term because their definitions shaped the policy process. Reporting their framing is not the same as adopting it as our own factual category.</p></article>
+          <article><span>04 · CAUSATION</span><h3>Sequence is not proof of cause</h3><p>Some handoffs are documented directly. Others are chronological or inferential. Where the public record does not show that one event caused another, the page labels that gap instead of quietly upgrading it into fact.</p></article>
+        </div>
+        <p class="investigation-context__note"><strong>What we are not claiming:</strong> the public record does not currently prove a secret agreement among the people named here or identify who made the decisive internal referral to OFAC. That missing bureaucratic handoff is the central unresolved question.</p>
+        <div class="investigation-context__actions"><a href="#chain">Follow the documented chain ↓</a><a href="#claim-ledger">See what is proven / not proven</a></div>
+      </div>`
+    quickRead.insertAdjacentElement('beforebegin', context)
+
+    const upstream = document.createElement('section')
+    upstream.className = 'investigation-upstream'
+    upstream.id = 'upstream-context'
+    upstream.innerHTML = `
+      <div class="wrap">
+        <div class="section-head">
+          <div><p class="eyebrow">BEFORE A/I APPEARS BY NAME</p><h2>The upstream policy context</h2></div>
+          <p class="section-intro">The existing chain below starts with the administration’s formal policy shift. These four earlier or adjacent events explain why that shift did not appear in a vacuum, without pretending they prove a direct causal line to the August 2026 sanction.</p>
+        </div>
+        <div class="investigation-upstream__events">
+          <article><time>SEP 10, 2025</time><h3>Charlie Kirk is assassinated</h3><p>The killing becomes an explicit reference point in the administration’s later counterterrorism framing of political violence.</p></article>
+          <article><time>SEP 16</time><h3>Shideler attributes the killing to “Antifa”</h3><p>Shideler publishes an article making that argument. It is his characterization, not an independently established finding of organizational responsibility.</p><a href="https://thefederalist.com/2025/09/16/antifa-is-responsible-for-charlie-kirks-assassination/" target="_blank" rel="noreferrer">Read the article ↗</a></article>
+          <article><time>SEP 17</time><h3>A dismantlement roadmap appears</h3><p>Shideler proposes intelligence work, foreign designations, Treasury sanctions and international cooperation against far-left networks, including a piecemeal designation strategy.</p><a href="https://americanmind.org/memo/how-to-dismantle-far-left-extremist-networks/" target="_blank" rel="noreferrer">Read the roadmap ↗</a></article>
+          <article><time>OCT 9</time><h3>Schmitt writes Rubio</h3><p>One day after the White House roundtable, Sen. Eric Schmitt formally urges Rubio to pursue foreign designations of networks, organizations and financiers alleged to enable Antifa operations.</p><a href="https://www.schmitt.senate.gov/wp-content/uploads/2025/10/10.9.2025-Letter-to-Sec.-Rubio.pdf" target="_blank" rel="noreferrer">Read the letter ↗</a></article>
+        </div>
+      </div>`
+    quickRead.insertAdjacentElement('afterend', upstream)
+
     const dossier = document.createElement('section')
     dossier.className = 'media-dossier'
     dossier.id = 'people-and-documents'
@@ -53,6 +99,20 @@
         </div>
       </div>`
     quickRead.insertAdjacentElement('afterend', dossier)
+  }
+
+  const claimLedger = document.getElementById('claim-ledger')
+  if (claimLedger) {
+    const lineage = document.createElement('aside')
+    lineage.className = 'source-lineage wrap'
+    lineage.id = 'source-lineage'
+    lineage.innerHTML = `
+      <p>SOURCE LINEAGE</p>
+      <h2>The Crozier → Shideler → Congress feedback loop</h2>
+      <p>On October 16, Hudson Crozier’s Daily Caller investigation quoted Kyle Shideler as an expert explaining the legal importance of foreign terrorist designations for reaching service providers such as A/I. Twelve days later, Shideler named A/I and NoBlogs in Senate testimony and cited Crozier’s article.</p>
+      <p>That does not show Crozier’s reporting was fabricated, and his article contained evidence beyond Shideler. It does mean the apparent layers of corroboration are not fully independent. A source helped interpret reporting, then cited the resulting reporting when presenting the same target to Congress.</p>
+      <div class="source-lineage__links"><a href="https://dailycaller.com/2025/10/16/foreign-tech-group-police-antifa/" target="_blank" rel="noreferrer">Crozier report ↗</a><a href="https://www.judiciary.senate.gov/imo/media/doc/4a3850cc-9186-4271-fe98-9caebcd5b632/2025-10-28-PM_Testimony_Shideler.pdf" target="_blank" rel="noreferrer">Shideler testimony ↗</a></div>`
+    claimLedger.insertAdjacentElement('afterend', lineage)
   }
 
   const peopleScript = document.createElement('script')
