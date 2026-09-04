@@ -1,3 +1,5 @@
+@import url('./investigation-evidence.css');
+
 /* Additional reader polish and media layer. Kept separate so the investigation can evolve without bloating the base sheet. */
 .intro-grid,
 .intro-copy,
