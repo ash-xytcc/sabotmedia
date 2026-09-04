@@ -62,7 +62,7 @@ export function normalizeNativePublicPiece(item) {
     richBody: Array.isArray(item.richBody) ? item.richBody : [],
     sourceKind: 'native',
     sourcePostType: 'native',
-    sourcePostId: item.id,
+    sourcePostId: item.sourcePostId || item.sourceExternalId || item.id,
     featuredImage: image,
     featuredTitleDisplay: item.featuredTitleDisplay || '',
     heroImage: image,
@@ -85,7 +85,7 @@ export async function loadPublishedNativePieces() {
   const visiblePieces = previewPiece
     ? [
         previewPiece,
-        ...publishedPieces.filter((item) => getPublicPieceMergeKey(item) !== getPublicPieceMergeKey(previewPiece)),
+        ...publishedPieces.filter((item) => !publicPiecesShareIdentity(item, previewPiece)),
       ]
     : publishedPieces
 
@@ -93,23 +93,48 @@ export async function loadPublishedNativePieces() {
 }
 
 export function mergeNativeAndImportedPieces(importedPieces = [], nativePieces = []) {
-  const byKey = new Map()
+  const merged = []
+  const indexByKey = new Map()
 
-  for (const item of importedPieces || []) {
-    byKey.set(getPublicPieceMergeKey(item), item)
+  function add(item) {
+    const keys = getPublicPieceMergeKeys(item)
+    const existingIndex = keys
+      .map((key) => indexByKey.get(key))
+      .find((index) => Number.isInteger(index))
+
+    if (Number.isInteger(existingIndex)) {
+      merged[existingIndex] = item
+      for (const key of keys) indexByKey.set(key, existingIndex)
+      return
+    }
+
+    const nextIndex = merged.length
+    merged.push(item)
+    for (const key of keys) indexByKey.set(key, nextIndex)
   }
 
-  for (const item of nativePieces || []) {
-    byKey.set(getPublicPieceMergeKey(item), item)
-  }
+  for (const item of importedPieces || []) add(item)
+  for (const item of nativePieces || []) add(item)
 
-  return [...byKey.values()]
+  return merged
     .filter((item) => item?.hidden !== true)
     .sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0) - new Date(a.publishedAt || a.updatedAt || 0))
 }
 
-function getPublicPieceMergeKey(item) {
-  return String(item?.slug || item?.sourcePostId || item?.id || '').trim().toLowerCase()
+function getPublicPieceMergeKeys(item) {
+  const values = [
+    ['slug', item?.slug],
+    ['source', item?.sourcePostId || item?.sourceExternalId],
+    ['id', item?.id],
+  ]
+  return values
+    .map(([kind, value]) => `${kind}:${String(value || '').trim().toLowerCase()}`)
+    .filter((key) => !key.endsWith(':'))
+}
+
+function publicPiecesShareIdentity(a, b) {
+  const left = new Set(getPublicPieceMergeKeys(a))
+  return getPublicPieceMergeKeys(b).some((key) => left.has(key))
 }
 
 function loadPreviewSnapshotForCurrentRoute() {
