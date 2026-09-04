@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
+import { EpisodePublisherPage } from './EpisodePublisherPage'
 import { loadNativeCollection, upsertNativeEntryWithMeta } from '../lib/nativePublicContent'
 import { loadPodcastShowsAsync, podcastFeedUrl } from '../lib/podcastSettings'
 import { adminRoutes } from '../routing/routes'
@@ -23,6 +24,12 @@ function showTitleDisplayValue(episodes = []) {
 }
 
 export function PodcastAdminPage() {
+  const [searchParams] = useSearchParams()
+  if (searchParams.has('episode')) return <EpisodePublisherPage />
+  return <PodcastAdminIndexPage />
+}
+
+function PodcastAdminIndexPage() {
   const [nativeItems, setNativeItems] = useState([])
   const [shows, setShows] = useState([])
   const [defaultShowId, setDefaultShowId] = useState('')
@@ -122,9 +129,10 @@ export function PodcastAdminPage() {
             <p className="description">Each podcast is its own show with its own metadata, source RSS archive, episodes, and canonical Sabot RSS feed.</p>
           </div>
           <div className="review-card__actions">
+            <Link className="button button--primary" to={`${adminRoutes.podcasts}?episode=new`}>New Episode</Link>
             <Link className="button" to={adminRoutes.podcastSettings}>Podcast Settings / Import RSS</Link>
             <a className="button" href="/feeds/podcasts/all.xml" target="_blank" rel="noreferrer">Open Default RSS Feed</a>
-            <Link className="button button--primary" to={`${adminRoutes.podcastSettings}?new=1`}>Add Podcast</Link>
+            <Link className="button" to={`${adminRoutes.podcastSettings}?new=1`}>Add Podcast</Link>
           </div>
         </div>
 
@@ -237,6 +245,7 @@ export function PodcastAdminPage() {
                         <td>
                           <div className="wp-row-actions">
                             {episode.slug ? <Link to={`/post/${episode.slug}`} target="_blank" rel="noreferrer">View</Link> : null}
+                            <Link to={`${adminRoutes.podcasts}?episode=${encodeURIComponent(episode.id)}`}>Episode Publisher</Link>
                             <Link to={`${adminRoutes.nativeBridge}?edit=${episode.id}`}>Full edit</Link>
                           </div>
                         </td>
