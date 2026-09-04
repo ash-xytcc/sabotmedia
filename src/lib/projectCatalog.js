@@ -340,6 +340,16 @@ export function resolveArchiveProject(piece, type = 'article') {
   const candidates = collectProjectCandidates(piece)
   const effectiveType = looksLikePodcastPiece(piece, type) ? 'podcast' : type
 
+  // Once an imported piece has been edited into native content, its explicit podcast
+  // project is authoritative. Incidental mentions in the title/body must not undo an
+  // editor correction after save.
+  if (piece?.sourceKind === 'native' && effectiveType === 'podcast') {
+    for (const candidate of candidates) {
+      const canonical = findPublicProject(candidate)
+      if (canonical?.format === 'podcast') return canonical
+    }
+  }
+
   // Direct show/title/source/artwork identity and the opening copy outrank legacy taxonomy.
   // This catches TCAIE episodes whose guest-only titles were imported under Molotov and
   // old Molotov entries filed under newsletter/reporting categories.
