@@ -2,6 +2,7 @@
   const body = document.body
   const toast = document.getElementById('toast')
   const receiptsToggle = document.getElementById('receipts-toggle')
+  const proxyPdf = (source, page) => `/api/investigation-document?source=${encodeURIComponent(source)}#page=${page}&zoom=page-width`
 
   const enhancementSheet = document.createElement('link')
   enhancementSheet.rel = 'stylesheet'
@@ -35,30 +36,15 @@
         <div class="media-dossier__grid">
           <figure class="person-card">
             <img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Andy%20Ngo%20by%20Gage%20Skidmore.jpg?width=900" alt="Andy Ngo speaking at a public event." />
-            <figcaption class="person-card__copy">
-              <span>WHITE HOUSE PROPOSAL</span>
-              <h3>Andy Ngo</h3>
-              <p>Proposed a foreign-terrorist designation route during the October 8, 2025 White House roundtable.</p>
-              <a href="#white-house">Go to the evidence →</a>
-            </figcaption>
+            <figcaption class="person-card__copy"><span>WHITE HOUSE PROPOSAL</span><h3>Andy Ngo</h3><p>Proposed a foreign-terrorist designation route during the October 8, 2025 White House roundtable.</p><a href="#white-house">Go to the evidence →</a></figcaption>
           </figure>
           <figure class="person-card">
             <img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Official%20Portrait%20of%20Secretary%20Rubio%20Headshot.jpg?width=800" alt="Official portrait of U.S. Secretary of State Marco Rubio." />
-            <figcaption class="person-card__copy">
-              <span>STATE DEPARTMENT</span>
-              <h3>Marco Rubio</h3>
-              <p>The president said Rubio would handle the international-designation issue; State later created the foreign predicates in the chain.</p>
-              <a href="#predicates">Go to the evidence →</a>
-            </figcaption>
+            <figcaption class="person-card__copy"><span>STATE DEPARTMENT</span><h3>Marco Rubio</h3><p>The president said Rubio would handle the international-designation issue; State later created the foreign predicates in the chain.</p><a href="#predicates">Go to the evidence →</a></figcaption>
           </figure>
           <figure class="person-card">
             <img loading="lazy" src="https://www.whitehouse.gov/wp-content/uploads/2025/09/P20250925JB-0568.jpg?w=1200" alt="President Donald Trump in the Oval Office on September 25, 2025." />
-            <figcaption class="person-card__copy">
-              <span>POLICY SHIFT</span>
-              <h3>Donald Trump</h3>
-              <p>The administration's September 2025 policy expanded the target set toward networks, services and support infrastructure.</p>
-              <a href="#policy-shift">Go to the evidence →</a>
-            </figcaption>
+            <figcaption class="person-card__copy"><span>POLICY SHIFT</span><h3>Donald Trump</h3><p>The administration's September 2025 policy expanded the target set toward networks, services and support infrastructure.</p><a href="#policy-shift">Go to the evidence →</a></figcaption>
           </figure>
         </div>
         <div class="role-strip" aria-label="Other central figures">
@@ -69,43 +55,62 @@
     quickRead.insertAdjacentElement('afterend', dossier)
   }
 
+  const docs = [
+    {
+      title: 'Ngo proposes the FTO route',
+      meta: 'GOVINFO · PAGE 7',
+      source: 'govinfo-transcript',
+      page: 7,
+      alt: 'GovInfo transcript page showing Andy Ngo foreign terrorist organization proposal',
+      note: 'Near the end of Ngo’s remarks, the official transcript records his suggestion that State designate Antifa’s international arm as an FTO.',
+      original: 'https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=7',
+    },
+    {
+      title: '“Marco will take care of it”',
+      meta: 'GOVINFO · PAGE 24',
+      source: 'govinfo-transcript',
+      page: 24,
+      alt: 'GovInfo transcript page with Trump response about Marco Rubio',
+      note: 'Later in the same event, the idea is raised again and Trump says, “Let’s get it done” and that Marco would handle it.',
+      original: 'https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=24',
+    },
+    {
+      title: 'A/I named in testimony',
+      meta: 'SENATE JUDICIARY · PAGE 5',
+      source: 'senate-shideler',
+      page: 5,
+      alt: 'Senate testimony page naming Autistici Inventati and citing Hudson Crozier',
+      note: 'The page names NoBlogs and A/I directly. Footnote 11 cites Crozier’s Oct. 16 article.',
+      original: 'https://www.judiciary.senate.gov/imo/media/doc/4a3850cc-9186-4271-fe98-9caebcd5b632/2025-10-28-PM_Testimony_Shideler.pdf#page=5',
+    },
+    {
+      title: 'The operative legal hook',
+      meta: 'FEDERAL REGISTER · PAGE 2',
+      source: 'ofac-notice',
+      page: 2,
+      alt: 'Federal Register page showing the OFAC designation basis for Autistici Inventati',
+      note: 'The notice identifies A/I as “Data processing, hosting and related activities” and applies E.O. 13224’s material-support/services provision.',
+      original: 'https://public-inspection.federalregister.gov/2026-17724.pdf#page=2',
+    },
+  ]
+
   const evidenceGallery = document.createElement('section')
   evidenceGallery.className = 'evidence-gallery band'
   evidenceGallery.id = 'document-excerpts'
   evidenceGallery.innerHTML = `
     <div class="wrap">
       <div class="section-head">
-        <div>
-          <p class="eyebrow">DOCUMENT EXCERPTS</p>
-          <h2>Read the pages, not just our summary.</h2>
-        </div>
-        <p class="section-intro">Each viewer opens the exact page where a key part of the chain appears. Use “expand” for a full-screen reader or open the original PDF directly.</p>
+        <div><p class="eyebrow">DOCUMENT EXCERPTS</p><h2>Read the pages, not just our summary.</h2></div>
+        <p class="section-intro">These readers use a same-origin Sabot document endpoint so agencies that block third-party framing do not leave a dead box. The original government PDF is always linked directly.</p>
       </div>
       <div class="evidence-gallery__grid">
-        <article class="evidence-doc" data-doc-title="Ngo proposes the FTO route" data-doc-url="https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=7&view=FitH">
-          <div class="evidence-doc__meta"><span>GOVINFO · PAGE 7</span><strong>Ngo proposes the FTO route</strong></div>
-          <div class="evidence-doc__viewer"><iframe loading="lazy" title="GovInfo transcript page showing Andy Ngo foreign terrorist organization proposal" src="https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=7&view=FitH"></iframe></div>
-          <p>Near the end of Ngo’s remarks, the official transcript records his suggestion that State designate Antifa’s international arm as an FTO.</p>
-          <div class="evidence-doc__actions"><button type="button" class="doc-expand">Expand</button><a href="https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=7" target="_blank" rel="noreferrer">Open source ↗</a></div>
-        </article>
-        <article class="evidence-doc" data-doc-title="Trump says Marco will take care of it" data-doc-url="https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=24&view=FitH">
-          <div class="evidence-doc__meta"><span>GOVINFO · PAGE 24</span><strong>“Marco will take care of it”</strong></div>
-          <div class="evidence-doc__viewer"><iframe loading="lazy" title="GovInfo transcript page with Trump response about Marco Rubio" src="https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=24&view=FitH"></iframe></div>
-          <p>Later in the same event, the idea is raised again and Trump says, “Let’s get it done” and that Marco would handle it.</p>
-          <div class="evidence-doc__actions"><button type="button" class="doc-expand">Expand</button><a href="https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=24" target="_blank" rel="noreferrer">Open source ↗</a></div>
-        </article>
-        <article class="evidence-doc" data-doc-title="Shideler names A/I in Senate testimony" data-doc-url="https://www.judiciary.senate.gov/imo/media/doc/4a3850cc-9186-4271-fe98-9caebcd5b632/2025-10-28-PM_Testimony_Shideler.pdf#page=5&view=FitH">
-          <div class="evidence-doc__meta"><span>SENATE JUDICIARY · PAGE 5</span><strong>A/I named in testimony</strong></div>
-          <div class="evidence-doc__viewer"><iframe loading="lazy" title="Senate testimony page naming Autistici Inventati and citing Hudson Crozier" src="https://www.judiciary.senate.gov/imo/media/doc/4a3850cc-9186-4271-fe98-9caebcd5b632/2025-10-28-PM_Testimony_Shideler.pdf#page=5&view=FitH"></iframe></div>
-          <p>The page names NoBlogs and A/I directly. Footnote 11 cites Crozier’s Oct. 16 article.</p>
-          <div class="evidence-doc__actions"><button type="button" class="doc-expand">Expand</button><a href="https://www.judiciary.senate.gov/imo/media/doc/4a3850cc-9186-4271-fe98-9caebcd5b632/2025-10-28-PM_Testimony_Shideler.pdf#page=5" target="_blank" rel="noreferrer">Open source ↗</a></div>
-        </article>
-        <article class="evidence-doc" data-doc-title="OFAC support-and-services finding" data-doc-url="https://public-inspection.federalregister.gov/2026-17724.pdf#page=2&view=FitH">
-          <div class="evidence-doc__meta"><span>FEDERAL REGISTER · PAGE 2</span><strong>The operative legal hook</strong></div>
-          <div class="evidence-doc__viewer"><iframe loading="lazy" title="Federal Register page showing the OFAC designation basis for Autistici Inventati" src="https://public-inspection.federalregister.gov/2026-17724.pdf#page=2&view=FitH"></iframe></div>
-          <p>The notice identifies A/I as “Data processing, hosting and related activities” and applies E.O. 13224’s material-support/services provision.</p>
-          <div class="evidence-doc__actions"><button type="button" class="doc-expand">Expand</button><a href="https://public-inspection.federalregister.gov/2026-17724.pdf#page=2" target="_blank" rel="noreferrer">Open source ↗</a></div>
-        </article>
+        ${docs.map((doc) => `
+          <article class="evidence-doc" data-doc-title="${escapeAttr(doc.title)}" data-doc-url="${proxyPdf(doc.source, doc.page)}">
+            <div class="evidence-doc__meta"><span>${escapeHtml(doc.meta)}</span><strong>${escapeHtml(doc.title)}</strong></div>
+            <div class="evidence-doc__viewer"><iframe loading="lazy" title="${escapeAttr(doc.alt)}" src="${proxyPdf(doc.source, doc.page)}"></iframe></div>
+            <p>${escapeHtml(doc.note)}</p>
+            <div class="evidence-doc__actions"><button type="button" class="doc-expand">Expand</button><a href="${escapeAttr(doc.original)}" target="_blank" rel="noreferrer">Open source ↗</a></div>
+          </article>`).join('')}
       </div>
     </div>`
   document.getElementById('chain')?.insertAdjacentElement('afterend', evidenceGallery)
@@ -114,7 +119,7 @@
     const map = {
       '#policy-shift': '2 sources', '#white-house': '2 transcript pages', '#portland-bridge': '3 sources',
       '#job-one': '1 key interview', '#senate': '1 testimony + citation', '#predicates': '2 official records',
-      '#missing-file': 'OPEN', '#ofac': '3 official records', '#cascade': '3 downstream records'
+      '#missing-file': 'OPEN', '#ofac': '3 official records', '#cascade': '3 downstream records',
     }
     const label = map[node.getAttribute('href')]
     if (!label) return
@@ -130,12 +135,12 @@
     wall.className = 'document-wall'
     wall.innerHTML = `
       <article class="document-peek">
-        <div class="document-peek__bar"><span>Senate testimony · exact A/I page</span><a href="https://www.judiciary.senate.gov/imo/media/doc/4a3850cc-9186-4271-fe98-9caebcd5b632/2025-10-28-PM_Testimony_Shideler.pdf#page=5" target="_blank" rel="noreferrer">Open PDF ↗</a></div>
-        <iframe loading="lazy" title="Kyle Shideler Senate testimony page five" src="https://www.judiciary.senate.gov/imo/media/doc/4a3850cc-9186-4271-fe98-9caebcd5b632/2025-10-28-PM_Testimony_Shideler.pdf#page=5&view=FitH"></iframe>
+        <div class="document-peek__bar"><span>Senate testimony · exact A/I page</span><a href="${docs[2].original}" target="_blank" rel="noreferrer">Open PDF ↗</a></div>
+        <iframe loading="lazy" title="Kyle Shideler Senate testimony page five" src="${proxyPdf('senate-shideler', 5)}"></iframe>
       </article>
       <article class="document-peek">
-        <div class="document-peek__bar"><span>OFAC notice · exact A/I page</span><a href="https://public-inspection.federalregister.gov/2026-17724.pdf#page=2" target="_blank" rel="noreferrer">Open PDF ↗</a></div>
-        <iframe loading="lazy" title="Federal Register OFAC notice page two" src="https://public-inspection.federalregister.gov/2026-17724.pdf#page=2&view=FitH"></iframe>
+        <div class="document-peek__bar"><span>OFAC notice · exact A/I page</span><a href="${docs[3].original}" target="_blank" rel="noreferrer">Open PDF ↗</a></div>
+        <iframe loading="lazy" title="Federal Register OFAC notice page two" src="${proxyPdf('ofac-notice', 2)}"></iframe>
       </article>`
     senateSection.querySelector('.receipt')?.insertAdjacentElement('beforebegin', wall)
   }
@@ -148,9 +153,8 @@
   document.querySelectorAll('.doc-expand').forEach((button) => {
     button.addEventListener('click', () => {
       const card = button.closest('.evidence-doc')
-      const frame = modal.querySelector('iframe')
       modal.querySelector('strong').textContent = card?.dataset.docTitle || 'Document'
-      frame.src = card?.dataset.docUrl || ''
+      modal.querySelector('iframe').src = card?.dataset.docUrl || ''
       modal.showModal()
     })
   })
@@ -161,11 +165,7 @@
   const tools = document.createElement('div')
   tools.className = 'reader-tools'
   tools.setAttribute('aria-label', 'Reader tools')
-  tools.innerHTML = `
-    <button type="button" data-reader="receipts">Receipts</button>
-    <button type="button" data-reader="chain">Focus chain</button>
-    <button type="button" data-reader="docs">Documents</button>
-    <button type="button" data-reader="pdf">PDF / Print</button>`
+  tools.innerHTML = `<button type="button" data-reader="receipts">Receipts</button><button type="button" data-reader="chain">Focus chain</button><button type="button" data-reader="docs">Documents</button><button type="button" data-reader="pdf">PDF / Print</button>`
   document.body.appendChild(tools)
 
   const receipts = Array.from(document.querySelectorAll('details.receipt'))
@@ -237,4 +237,9 @@
   })
 
   if (window.location.hash) window.setTimeout(() => document.querySelector(window.location.hash)?.scrollIntoView({ block: 'start' }), 80)
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]))
+  }
+  function escapeAttr(value) { return escapeHtml(value).replace(/`/g, '&#96;') }
 })()
