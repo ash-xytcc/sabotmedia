@@ -1,3 +1,7 @@
+export async function connectPeerTubeCredential({ baseUrl, username, password, otp = '' }) {
+  return credentialRequest({ action: 'connectPeerTube', baseUrl, username, password, otp })
+}
+
 export async function savePeerTubeCredential(accessToken) {
   return credentialRequest({ action: 'setPeerTubeToken', accessToken })
 }
