@@ -46,10 +46,16 @@ export function buildMediaEmbed(media = {}) {
   const caption = String(media.caption || '')
   const mime = String(media.mimeType || '').toLowerCase()
   const type = String(media.mediaType || '').toLowerCase()
+  const mediaId = String(media.id || media.assetId || '').trim()
   const lowerUrl = url.toLowerCase().split(/[?#]/)[0]
   const escapedUrl = escapeAttribute(url)
   const escapedTitle = escapeText(title)
   const escapedCaption = escapeText(caption)
+  const mediaMetadata = [
+    mediaId ? ` data-media-id="${escapeAttribute(mediaId)}"` : '',
+    title ? ` data-media-title="${escapeAttribute(title)}"` : '',
+    mime ? ` data-media-mime="${escapeAttribute(mime)}"` : '',
+  ].join('')
 
   if (type === 'image' || type === 'svg' || mime.startsWith('image/')) {
     const image = `<img src="${escapedUrl}" alt="${escapeAttribute(alt)}" style="max-width:100%;height:auto;" />`
@@ -59,7 +65,7 @@ export function buildMediaEmbed(media = {}) {
   }
 
   if (type === 'audio' || mime.startsWith('audio/') || /\.(mp3|m4a|aac|ogg|oga|wav|webm)$/.test(lowerUrl)) {
-    return `<figure class="sabot-embed sabot-embed--audio" style="width:100%;max-width:100%;"><audio controls preload="metadata" src="${escapedUrl}" style="width:100%;"></audio>${caption ? `<figcaption>${escapedCaption}</figcaption>` : ''}</figure><p><br /></p>`
+    return `<figure class="sabot-embed sabot-embed--audio" style="width:100%;max-width:100%;"${mediaMetadata}><audio controls preload="metadata" src="${escapedUrl}" aria-label="${escapeAttribute(title || 'Audio player')}" style="width:100%;"${mediaMetadata}></audio>${caption ? `<figcaption>${escapedCaption}</figcaption>` : ''}</figure><p><br /></p>`
   }
 
   if (mime === 'application/pdf' || lowerUrl.endsWith('.pdf')) {
