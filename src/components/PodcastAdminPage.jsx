@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { EpisodePublisherPage } from './EpisodePublisherPage'
+import { EpisodePublishingSettingsPage } from './EpisodePublishingSettingsPage'
 import { loadNativeCollection, upsertNativeEntryWithMeta } from '../lib/nativePublicContent'
 import { loadPodcastShowsAsync, podcastFeedUrl } from '../lib/podcastSettings'
 import { adminRoutes } from '../routing/routes'
@@ -25,6 +26,7 @@ function showTitleDisplayValue(episodes = []) {
 
 export function PodcastAdminPage() {
   const [searchParams] = useSearchParams()
+  if (searchParams.get('publishing') === 'settings') return <EpisodePublishingSettingsPage />
   if (searchParams.has('episode')) return <EpisodePublisherPage />
   return <PodcastAdminIndexPage />
 }
@@ -130,6 +132,7 @@ function PodcastAdminIndexPage() {
           </div>
           <div className="review-card__actions">
             <Link className="button button--primary" to={`${adminRoutes.podcasts}?episode=new`}>New Episode</Link>
+            <Link className="button" to={`${adminRoutes.podcasts}?publishing=settings`}>Publishing Connections</Link>
             <Link className="button" to={adminRoutes.podcastSettings}>Podcast Settings / Import RSS</Link>
             <a className="button" href="/feeds/podcasts/all.xml" target="_blank" rel="noreferrer">Open Default RSS Feed</a>
             <Link className="button" to={`${adminRoutes.podcastSettings}?new=1`}>Add Podcast</Link>
