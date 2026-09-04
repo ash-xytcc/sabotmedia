@@ -29,6 +29,7 @@ import {
 
 const MODE_STORAGE_KEY = 'sabot.postMode'
 const PREVIEW_STORAGE_PREFIX = 'sabot-native-preview-v1:'
+const ACTIVE_VIDEO_STATUSES = new Set(['queued', 'processing', 'retrying'])
 
 function getPreferredMode(searchParams) {
   const explicit = searchParams.get('mode')
@@ -59,6 +60,12 @@ function isPublicPiece(piece) {
   if (['draft', 'pending', 'private', 'trash', 'auto-draft'].includes(status)) return false
   if (piece.hidden === true) return false
   return true
+}
+
+function podcastVideoAssets(piece = {}) {
+  return (Array.isArray(piece.relatedAssets) ? piece.relatedAssets : [])
+    .filter((asset) => String(asset?.role || '') === 'published-video')
+    .filter((asset) => ['youtube', 'peertube'].includes(String(asset?.destination || '')))
 }
 
 function loadPreviewPiece(previewId = '', routeSlug = '') {
@@ -232,6 +239,29 @@ export function PiecePage({ pieces = [] }) {
       window.localStorage.setItem(MODE_STORAGE_KEY, mode)
     }
   }, [mode])
+
+  useEffect(() => {
+    if (!piece || piece.isPreviewSnapshot) return undefined
+    const contentType = String(piece.contentType || piece.type || '').toLowerCase()
+    if (contentType !== 'podcast') return undefined
+    const active = podcastVideoAssets(piece).some((asset) => ACTIVE_VIDEO_STATUSES.has(String(asset?.status || '').toLowerCase()))
+    if (!active) return undefined
+
+    let cancelled = false
+    const refresh = async () => {
+      try {
+        const loaded = await loadPublishedNativePieces()
+        if (!cancelled) setNativePieces(Array.isArray(loaded) ? loaded : [])
+      } catch {
+        // The current canonical episode remains usable if one refresh fails.
+      }
+    }
+    const timer = window.setInterval(refresh, 8000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [piece?.id, piece?.contentType, piece?.type, piece?.relatedAssets, piece?.isPreviewSnapshot])
 
   const index = useMemo(
     () => orderedPieces.findIndex((item) => item?.slug === slug),
@@ -450,6 +480,10 @@ export function PiecePage({ pieces = [] }) {
 function ArticleEnhancementSections({ piece, enhancements, relatedArticles, relatedCollections, relatedPublications }) {
   const relatedPrintLinks = Array.isArray(piece?.relatedPrintLinks) ? piece.relatedPrintLinks : []
   const assetDownloads = (piece?.relatedAssets || []).filter((asset) => asset?.url && /download|pdf|audio|image|asset/i.test(`${asset.kind || ''} ${asset.type || ''}`))
+  const videoDestinations = podcastVideoAssets(piece).filter((asset) => {
+    const status = String(asset?.status || '').toLowerCase()
+    return status === 'published' || ACTIVE_VIDEO_STATUSES.has(status)
+  })
   const downloads = [
     ...enhancements.downloads,
     ...relatedPrintLinks.map((item, index) => ({ id: `print-${index}`, title: item.title || item.label || 'Print asset', url: item.url || item.href || '', type: item.type || 'Print' })),
@@ -458,6 +492,7 @@ function ArticleEnhancementSections({ piece, enhancements, relatedArticles, rela
   const transcript = piece?.podcastTranscript || piece?.fullTranscript || ''
   const showAny =
     downloads.length ||
+    videoDestinations.length ||
     enhancements.footnotes.length ||
     enhancements.sources.length ||
     enhancements.timeline.length ||
@@ -476,6 +511,33 @@ function ArticleEnhancementSections({ piece, enhancements, relatedArticles, rela
           <summary>Transcript</summary>
           <div className="public-transcript__body">{transcript}</div>
         </details>
+      ) : null}
+
+      {videoDestinations.length ? (
+        <section className="public-experience-panel public-podcast-video-links" aria-live="polite">
+          <h2>Watch</h2>
+          <div className="public-download-grid">
+            {videoDestinations.map((video) => {
+              const destination = String(video.destination || '')
+              const label = destination === 'youtube' ? 'YouTube' : 'PeerTube'
+              const status = String(video.status || '').toLowerCase()
+              if (status === 'published' && video.url) {
+                return (
+                  <a className="public-download-card" href={video.url} key={destination} target="_blank" rel="noopener noreferrer">
+                    <strong>Watch on {label}</strong>
+                    <span>Published</span>
+                  </a>
+                )
+              }
+              return (
+                <article className="public-download-card" key={destination} aria-label={`${label} video processing`}>
+                  <strong>{label}</strong>
+                  <span>Processing</span>
+                </article>
+              )
+            })}
+          </div>
+        </section>
       ) : null}
 
       {downloads.length ? (
