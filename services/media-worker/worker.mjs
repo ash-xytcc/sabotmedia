@@ -1,6 +1,5 @@
 import { spawn } from 'node:child_process'
-import { createReadStream } from 'node:fs'
-import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdtemp, open, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 
@@ -140,8 +139,9 @@ async function uploadYouTubeJob(job) {
     const fileStat = await stat(videoPath)
     const accessToken = await googleAccessToken()
     const payload = job.payload || {}
-    const categoryId = String(payload.override?.categoryId || process.env.YOUTUBE_CATEGORY_ID || '22')
-    const privacyStatus = normalizeYouTubePrivacy(payload.override?.privacy || process.env.YOUTUBE_PRIVACY || 'public')
+    const platform = payload.platform?.youtube || {}
+    const categoryId = String(payload.override?.categoryId || platform.categoryId || process.env.YOUTUBE_CATEGORY_ID || '22')
+    const privacyStatus = normalizeYouTubePrivacy(payload.override?.privacy || platform.privacy || process.env.YOUTUBE_PRIVACY || 'public')
     const metadata = {
       snippet: {
         title: truncate(payload.title || 'Untitled episode', 100),
@@ -185,11 +185,12 @@ async function uploadYouTubeJob(job) {
 async function uploadPeerTubeJob(job) {
   const videoUrl = job.dependencyResult?.renderedVideoUrl
   if (!videoUrl) throw new Error('PeerTube upload is waiting for a rendered video URL')
-  const base = requiredEnv('PEERTUBE_BASE_URL').replace(/\/$/, '')
-  const token = requiredEnv('PEERTUBE_ACCESS_TOKEN')
   const payload = job.payload || {}
-  const channelId = Number(payload.override?.channelId || process.env.PEERTUBE_CHANNEL_ID || 0)
-  if (!channelId) throw new Error('PEERTUBE_CHANNEL_ID or a PeerTube channel override is required')
+  const platform = payload.platform?.peertube || {}
+  const base = requiredValue(platform.baseUrl || process.env.PEERTUBE_BASE_URL, 'PeerTube base URL').replace(/\/$/, '')
+  const token = requiredEnv('PEERTUBE_ACCESS_TOKEN')
+  const channelId = Number(payload.override?.channelId || platform.channelId || process.env.PEERTUBE_CHANNEL_ID || 0)
+  if (!channelId) throw new Error('PeerTube channel id is required in Publishing Connections or PEERTUBE_CHANNEL_ID')
   const dir = await mkdtemp(join(tmpdir(), 'sabot-peertube-'))
   try {
     const videoPath = join(dir, 'episode.mp4')
@@ -200,7 +201,7 @@ async function uploadPeerTubeJob(job) {
       filename: `${slug(payload.title || job.episodeId)}.mp4`,
       name: truncate(payload.title || 'Untitled episode', 120),
       description: truncate(payload.description || '', 10000),
-      privacy: normalizePeerTubePrivacy(payload.override?.privacy || process.env.PEERTUBE_PRIVACY || 'public'),
+      privacy: normalizePeerTubePrivacy(payload.override?.privacy || platform.privacy || process.env.PEERTUBE_PRIVACY || 'public'),
       tags: normalizePeerTubeTags(payload.tags),
       waitTranscoding: false,
       originallyPublishedAt: payload.publishAt || undefined,
@@ -225,7 +226,7 @@ async function uploadPeerTubeJob(job) {
       size: fileStat.size,
       contentType: 'application/octet-stream',
       headers: { authorization: `Bearer ${token}` },
-      finalStatuses: new Set([200]),
+      finalStatuses: new Set([200, 201]),
       retryStatus: 308,
     })
     const video = uploaded.json?.video || uploaded.json || {}
@@ -249,6 +250,7 @@ async function syncYouTubeMetadata(job) {
   const currentData = await currentResponse.json().catch(() => null)
   const current = currentData?.items?.[0]
   if (!currentResponse.ok || !current) throw new Error(`Could not read YouTube video ${remoteId}`)
+  const platform = payload.platform?.youtube || {}
   const body = {
     id: remoteId,
     snippet: {
@@ -256,11 +258,11 @@ async function syncYouTubeMetadata(job) {
       title: truncate(payload.title || current.snippet.title, 100),
       description: truncate(payload.description || current.snippet.description || '', 5000),
       tags: normalizeYouTubeTags(payload.tags?.length ? payload.tags : current.snippet.tags || []),
-      categoryId: String(payload.override?.categoryId || current.snippet.categoryId || process.env.YOUTUBE_CATEGORY_ID || '22'),
+      categoryId: String(payload.override?.categoryId || platform.categoryId || current.snippet.categoryId || process.env.YOUTUBE_CATEGORY_ID || '22'),
     },
     status: {
       ...current.status,
-      privacyStatus: normalizeYouTubePrivacy(payload.override?.privacy || current.status?.privacyStatus || 'public'),
+      privacyStatus: normalizeYouTubePrivacy(payload.override?.privacy || platform.privacy || current.status?.privacyStatus || 'public'),
     },
   }
   const response = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet,status', {
@@ -276,12 +278,13 @@ async function syncPeerTubeMetadata(job) {
   const payload = job.payload || {}
   const remoteId = String(payload.remoteId || '')
   if (!remoteId) throw new Error('PeerTube metadata sync has no remote video id')
-  const base = requiredEnv('PEERTUBE_BASE_URL').replace(/\/$/, '')
+  const platform = payload.platform?.peertube || {}
+  const base = requiredValue(platform.baseUrl || process.env.PEERTUBE_BASE_URL, 'PeerTube base URL').replace(/\/$/, '')
   const token = requiredEnv('PEERTUBE_ACCESS_TOKEN')
   const form = new FormData()
   form.append('name', truncate(payload.title || 'Untitled episode', 120))
   form.append('description', truncate(payload.description || '', 10000))
-  form.append('privacy', String(normalizePeerTubePrivacy(payload.override?.privacy || process.env.PEERTUBE_PRIVACY || 'public')))
+  form.append('privacy', String(normalizePeerTubePrivacy(payload.override?.privacy || platform.privacy || process.env.PEERTUBE_PRIVACY || 'public')))
   for (const tag of normalizePeerTubeTags(payload.tags)) form.append('tags', tag)
   const response = await fetch(`${base}/api/v1/videos/${encodeURIComponent(remoteId)}`, {
     method: 'PUT',
@@ -293,32 +296,40 @@ async function syncPeerTubeMetadata(job) {
 }
 
 async function uploadFileInChunks({ url, filePath, size, contentType, headers = {}, finalStatuses, retryStatus }) {
-  const bytes = await readFile(filePath)
   const chunkSize = Math.max(256 * 1024, Number(process.env.UPLOAD_CHUNK_BYTES || 8 * 1024 * 1024))
+  const handle = await open(filePath, 'r')
   let offset = 0
   let lastJson = null
-  while (offset < size) {
-    const endExclusive = Math.min(size, offset + chunkSize)
-    const chunk = bytes.subarray(offset, endExclusive)
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers: {
-        ...headers,
-        'content-type': contentType,
-        'content-length': String(chunk.byteLength),
-        'content-range': `bytes ${offset}-${endExclusive - 1}/${size}`,
-      },
-      body: chunk,
-    })
-    if (finalStatuses.has(response.status)) {
-      lastJson = await response.json().catch(() => ({}))
-      offset = size
-      break
+  try {
+    while (offset < size) {
+      const length = Math.min(chunkSize, size - offset)
+      const chunk = Buffer.allocUnsafe(length)
+      const { bytesRead } = await handle.read(chunk, 0, length, offset)
+      if (!bytesRead) throw new Error(`resumable upload could not read file at byte ${offset}`)
+      const body = bytesRead === chunk.length ? chunk : chunk.subarray(0, bytesRead)
+      const endExclusive = offset + bytesRead
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          ...headers,
+          'content-type': contentType,
+          'content-length': String(bytesRead),
+          'content-range': `bytes ${offset}-${endExclusive - 1}/${size}`,
+        },
+        body,
+      })
+      if (finalStatuses.has(response.status)) {
+        lastJson = await response.json().catch(() => ({}))
+        offset = size
+        break
+      }
+      if (response.status !== retryStatus) throw new Error(`resumable upload failed: ${response.status} ${await response.text()}`)
+      const range = response.headers.get('range') || ''
+      const match = range.match(/bytes=\d+-(\d+)/i)
+      offset = match ? Number(match[1]) + 1 : endExclusive
     }
-    if (response.status !== retryStatus) throw new Error(`resumable upload failed: ${response.status} ${await response.text()}`)
-    const range = response.headers.get('range') || ''
-    const match = range.match(/bytes=\d+-(\d+)/i)
-    offset = match ? Number(match[1]) + 1 : endExclusive
+  } finally {
+    await handle.close()
   }
   return { json: lastJson || {} }
 }
@@ -383,6 +394,7 @@ function resolveTemplate(payload = {}) {
   const showId = String(payload.showId || '')
   const base = map.default && typeof map.default === 'object' ? map.default : {}
   const specific = map[showId] && typeof map[showId] === 'object' ? map[showId] : {}
+  const saved = payload.videoTemplate && typeof payload.videoTemplate === 'object' ? payload.videoTemplate : {}
   return {
     width: 1920,
     height: 1080,
@@ -395,6 +407,8 @@ function resolveTemplate(payload = {}) {
     fontFile: process.env.VIDEO_FONT_FILE || '',
     ...base,
     ...specific,
+    ...saved,
+    fontFile: process.env.VIDEO_FONT_FILE || specific.fontFile || base.fontFile || '',
   }
 }
 
@@ -456,6 +470,12 @@ function requiredEnv(name) {
   const value = String(process.env[name] || '').trim()
   if (!value) throw new Error(`${name} is required`)
   return value
+}
+
+function requiredValue(value, label) {
+  const clean = String(value || '').trim()
+  if (!clean) throw new Error(`${label} is required`)
+  return clean
 }
 
 function sleep(ms) {
