@@ -15,6 +15,8 @@ const GENERIC_PROJECT_KEYS = new Set([
   'newsletters',
   'print',
   'audio',
+  // Legacy catch-all taxonomy. It was never a useful public archive shelf.
+  'al1312',
 ])
 
 export const PUBLICATION_IDENTITY = {
@@ -120,16 +122,6 @@ export const PUBLIC_PROJECTS = [
     logoUrl: '',
   },
   {
-    name: 'AL1312',
-    slug: 'al1312',
-    format: 'project',
-    featured: false,
-    aliases: ['al1312'],
-    signals: ['al1312'],
-    description: 'A legacy project preserved in the Sabot archive.',
-    logoUrl: '',
-  },
-  {
     name: 'Zines and Comics',
     slug: 'zines-and-comics',
     format: 'archive',
@@ -179,7 +171,7 @@ function flattenIdentityValues(values = []) {
     .flatMap((value) => (Array.isArray(value) ? value : [value]))
     .map((value) => {
       if (!value || typeof value !== 'object') return value
-      return value.name || value.title || value.slug || value.label || ''
+      return value.name || value.title || value.slug || value.label || value.url || ''
     })
     .map((value) => String(value || '').trim())
     .filter(Boolean)
@@ -210,6 +202,10 @@ function collectDirectIdentityText(piece) {
     piece?.podcastTitle,
     piece?.showTitle,
     piece?.seriesTitle,
+    piece?.featuredImage,
+    piece?.heroImage,
+    piece?.imageUrl,
+    piece?.relatedAssets,
   ]).join(' ').toLowerCase()
 }
 
@@ -251,6 +247,15 @@ function countOccurrences(text, needle) {
     offset = match + target.length
   }
   return count
+}
+
+function looksLikePodcastPiece(piece, type) {
+  if (['podcast', 'audio'].includes(String(type || '').toLowerCase())) return true
+  const text = [
+    collectDirectIdentityText(piece),
+    collectIntroIdentityText(piece),
+  ].join(' ')
+  return /\bpodcast\b|download and subscribe:\s*rss|wherever you get your podcast|channel zero podcast network|\bacast\b|\bspotify\b|\bitunes\b|\biheart\b/i.test(text)
 }
 
 function projectAllowedForType(project, type) {
@@ -333,11 +338,29 @@ export function fallbackProjectForType(type) {
 
 export function resolveArchiveProject(piece, type = 'article') {
   const candidates = collectProjectCandidates(piece)
+  const effectiveType = looksLikePodcastPiece(piece, type) ? 'podcast' : type
 
-  // Direct show/title/source identity and the opening copy outrank legacy taxonomy.
-  // This catches TCAIE episodes whose guest-only titles were imported under Molotov.
-  const strongIdentityProject = bestProjectForIdentity(piece, type)
+  // Direct show/title/source/artwork identity and the opening copy outrank legacy taxonomy.
+  // This catches TCAIE episodes whose guest-only titles were imported under Molotov and
+  // old Molotov entries filed under newsletter/reporting categories.
+  const strongIdentityProject = bestProjectForIdentity(piece, effectiveType)
   if (strongIdentityProject) return strongIdentityProject
+
+  // AL1312 was a legacy catch-all, not a real archive project. Every podcast-like item
+  // that survived under that bucket belongs with Molotov Now! unless a stronger show
+  // identity above already identified TCAIE.
+  if (effectiveType === 'podcast' && candidates.some((candidate) => normalizeProjectKey(candidate) === 'al1312')) {
+    return findPublicProject('Molotov Now!')
+  }
+
+  // Same deal for podcast posts that were historically filed under The Communique.
+  // Genuine newsletters stay put because this only applies to podcast-like content.
+  if (effectiveType === 'podcast' && candidates.some((candidate) => {
+    const key = normalizeProjectKey(candidate)
+    return key === 'the communique' || key === 'communique'
+  })) {
+    return findPublicProject('Molotov Now!')
+  }
 
   for (const candidate of candidates) {
     const canonical = findPublicProject(candidate)
@@ -347,10 +370,10 @@ export function resolveArchiveProject(piece, type = 'article') {
   // Only use incidental full-body mentions when there is no canonical project metadata.
   // That prevents a guest mentioning another Sabot show halfway through an interview from
   // re-filing the entire piece under that show.
-  const bodyIdentityProject = bestProjectForIdentity(piece, type, { includeBody: true })
+  const bodyIdentityProject = bestProjectForIdentity(piece, effectiveType, { includeBody: true })
   if (bodyIdentityProject) return bodyIdentityProject
 
-  const weakIdentityProject = projectFromWeakIdentity(piece, type)
+  const weakIdentityProject = projectFromWeakIdentity(piece, effectiveType)
   if (weakIdentityProject) return weakIdentityProject
 
   const explicit = candidates.find((candidate) => !isGenericProject(candidate))
@@ -358,7 +381,7 @@ export function resolveArchiveProject(piece, type = 'article') {
     return {
       name: explicit,
       slug: toProjectSlug(explicit),
-      format: String(type || 'project'),
+      format: String(effectiveType || 'project'),
       featured: false,
       aliases: [],
       signals: [],
@@ -368,7 +391,7 @@ export function resolveArchiveProject(piece, type = 'article') {
     }
   }
 
-  return fallbackProjectForType(type)
+  return fallbackProjectForType(effectiveType)
 }
 
 export function buildArchiveProjectOptions(items = []) {
