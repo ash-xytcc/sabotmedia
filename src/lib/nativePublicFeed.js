@@ -121,15 +121,45 @@ export function mergeNativeAndImportedPieces(importedPieces = [], nativePieces =
     .sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0) - new Date(a.publishedAt || a.updatedAt || 0))
 }
 
+function normalizeReleaseTitle(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[’‘]/g, "'")
+    .replace(/\b(?:season\s*\d+\s*)?episode\s*#?\s*\d+\b/g, ' ')
+    .replace(/\bs\d+\s*[-–—]?\s*e\d+\b/g, ' ')
+    .replace(/\bep\.?\s*#?\s*\d+\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function releaseDay(item) {
+  const raw = item?.publishedAt || item?.date || item?.updatedAt || ''
+  const date = new Date(raw)
+  if (!Number.isFinite(date.getTime())) return ''
+  return date.toISOString().slice(0, 10)
+}
+
+function getSemanticReleaseKey(item) {
+  const title = normalizeReleaseTitle(item?.title)
+  const day = releaseDay(item)
+  if (!title || title.length < 8 || !day) return ''
+  return `release:${day}:${title}`
+}
+
 function getPublicPieceMergeKeys(item) {
   const values = [
     ['slug', item?.slug],
     ['source', item?.sourcePostId || item?.sourceExternalId],
     ['id', item?.id],
   ]
-  return values
+  const keys = values
     .map(([kind, value]) => `${kind}:${String(value || '').trim().toLowerCase()}`)
     .filter((key) => !key.endsWith(':'))
+  const semantic = getSemanticReleaseKey(item)
+  if (semantic) keys.push(semantic)
+  return keys
 }
 
 function publicPiecesShareIdentity(a, b) {
