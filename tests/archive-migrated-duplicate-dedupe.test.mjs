@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mergeNativeAndImportedPieces } from '../src/lib/nativePublicFeed.js'
+import { mergeNativeAndImportedPieces } from '../src/lib/publicPieceMerge.js'
 
 test('native edited podcast replaces stale imported newsletter copy of the same release', () => {
   const imported = [{
