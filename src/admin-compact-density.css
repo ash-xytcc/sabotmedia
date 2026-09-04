@@ -1,0 +1,253 @@
+/* Smaller admin defaults without browser zoom tricks. Public pages are untouched. */
+.admin-frame {
+  grid-template-columns: 154px minmax(0, 1fr) !important;
+  font-size: 12px !important;
+}
+
+.admin-frame.admin-frame--rail-collapsed {
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+}
+
+.admin-frame__main {
+  padding: 14px clamp(10px, 1.8vw, 22px) 28px !important;
+}
+
+.admin-frame .wp-admin-screen {
+  max-width: 1480px !important;
+}
+
+.admin-frame .wp-screen-header {
+  gap: 10px !important;
+  margin-bottom: 13px !important;
+}
+
+.admin-frame .wp-screen-header h1 {
+  margin-bottom: 3px !important;
+  font-size: 19px !important;
+}
+
+.admin-frame .description {
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+}
+
+.admin-frame .wp-meta-box,
+.admin-frame .newsroom-panel,
+.admin-frame .wp-dashboard-section {
+  padding: 11px !important;
+}
+
+.admin-frame .wp-meta-box h2,
+.admin-frame .newsroom-panel h2,
+.admin-frame .wp-dashboard-section h2,
+.admin-frame h3 {
+  margin-bottom: 8px !important;
+  font-size: 13px !important;
+}
+
+.admin-frame h3 {
+  font-size: 12px !important;
+}
+
+.admin-frame input,
+.admin-frame select,
+.admin-frame textarea {
+  min-height: 30px !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  padding: 5px 7px !important;
+}
+
+.admin-frame textarea {
+  min-height: 76px !important;
+}
+
+.admin-frame .button,
+.admin-frame button.button,
+.admin-frame a.button {
+  min-height: 28px !important;
+  gap: 4px !important;
+  font-size: 11.5px !important;
+  padding: 5px 8px !important;
+}
+
+.admin-frame .native-content-editor__field,
+.admin-frame .wp-settings-form label {
+  gap: 4px !important;
+  font-size: 11.5px !important;
+}
+
+.admin-frame .native-content-editor__field > span,
+.admin-frame .wp-settings-form label > span {
+  font-size: 10.5px !important;
+}
+
+.admin-frame .admin-rail {
+  padding: 4px 0 9px !important;
+}
+
+.admin-frame .admin-rail__controls {
+  min-height: 34px !important;
+  padding: 0 4px 4px !important;
+  margin-bottom: 3px !important;
+}
+
+.admin-frame .admin-rail__toggle {
+  min-height: 28px !important;
+  grid-template-columns: 24px minmax(0, 1fr) !important;
+  gap: 5px !important;
+  padding: 3px 5px !important;
+}
+
+.admin-frame .admin-rail__toggle > span:first-child {
+  font-size: 15px !important;
+}
+
+.admin-frame .admin-rail__toggle-label {
+  font-size: 10px !important;
+}
+
+.admin-frame .admin-rail__nav {
+  gap: 1px !important;
+  padding: 0 4px !important;
+}
+
+.admin-frame .admin-rail__link,
+.admin-frame .admin-rail__group-toggle {
+  min-height: 30px !important;
+  grid-template-columns: 24px minmax(0, 1fr) 12px !important;
+  gap: 4px !important;
+  padding: 3px 5px !important;
+}
+
+.admin-frame .admin-rail__link--primary {
+  grid-template-columns: 24px minmax(0, 1fr) !important;
+}
+
+.admin-frame .admin-rail__icon {
+  width: 24px !important;
+  min-width: 24px !important;
+  height: 23px !important;
+  font-size: 12px !important;
+}
+
+.admin-frame .admin-rail__text {
+  font-size: 11px !important;
+}
+
+.admin-frame .admin-rail__chevron {
+  font-size: 14px !important;
+}
+
+.admin-frame .admin-rail__subnav {
+  margin: 1px 0 3px 29px !important;
+  padding-left: 5px !important;
+}
+
+.admin-frame .admin-rail__sublink {
+  padding: 5px 6px !important;
+  font-size: 10.5px !important;
+}
+
+.admin-frame:has(.wp-edit-screen) {
+  grid-template-columns: 154px minmax(0, 1fr) !important;
+}
+
+.admin-frame:has(.wp-edit-screen) .admin-rail {
+  min-width: 154px !important;
+}
+
+.admin-frame .native-bridge-layout {
+  gap: 12px !important;
+}
+
+.admin-frame .native-bridge-sidebar {
+  gap: 9px !important;
+}
+
+.admin-frame .native-content-editor__chrome {
+  font-size: 11px !important;
+}
+
+.admin-frame .native-content-editor__media-row {
+  gap: 6px !important;
+}
+
+.admin-frame .native-content-editor__toolbar,
+.admin-frame .wp-classic-toolbar__row {
+  gap: 3px !important;
+}
+
+.admin-frame .wp-classic-toolbar__button,
+.admin-frame .wp-classic-toolbar__fullscreen {
+  min-width: 28px !important;
+  min-height: 27px !important;
+  height: 27px !important;
+  padding: 0 6px !important;
+  font-size: 11px !important;
+}
+
+.admin-frame .wp-classic-toolbar__format {
+  min-height: 27px !important;
+  height: 27px !important;
+  font-size: 11px !important;
+  padding-block: 2px !important;
+}
+
+.admin-frame .native-content-editor__visual {
+  padding: 22px 26px !important;
+}
+
+.admin-frame .native-content-editor__stats {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 24px;
+  margin-top: 3px;
+  padding: 4px 7px;
+  border: 1px solid #dcdcde;
+  background: #f6f7f7;
+  color: #50575e;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+}
+
+.admin-frame .native-content-editor__markdown-input[hidden] {
+  display: none !important;
+}
+
+.admin-frame .newsroom-stat-grid {
+  gap: 9px !important;
+  margin-bottom: 11px !important;
+}
+
+.admin-frame .newsroom-stat-grid .review-summary-card {
+  min-height: 82px !important;
+  gap: 4px !important;
+  padding: 11px !important;
+}
+
+.admin-frame .newsroom-stat-grid strong,
+.admin-frame .review-summary-card strong {
+  font-size: 24px !important;
+}
+
+.admin-frame .newsroom-grid,
+.admin-frame .collection-admin-layout,
+.admin-frame .publication-builder-layout,
+.admin-frame .collection-piece-assignment,
+.admin-frame .publication-piece-picker {
+  gap: 11px !important;
+}
+
+@media (max-width: 980px) {
+  .admin-frame,
+  .admin-frame.admin-frame--rail-collapsed,
+  .admin-frame:has(.wp-edit-screen) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .admin-frame:has(.wp-edit-screen) .admin-rail {
+    min-width: 0 !important;
+  }
+}
