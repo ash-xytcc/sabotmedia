@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { podcastEntryBelongsToShow } from '../shared/podcastShowMembership.js'
-import { mergeNativeAndImportedPieces } from '../src/lib/nativePublicFeed.js'
+import { mergeNativeAndImportedPieces } from '../src/lib/publicPieceMerge.js'
 import { podcastShowOwnsEntry } from '../functions/api/_lib/podcastSettings.js'
 
 const molotov = {
