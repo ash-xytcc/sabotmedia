@@ -2,6 +2,7 @@
   "name": "Sabot Media",
   "short_name": "Sabot",
   "description": "Sabot Media archive and public publishing site.",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
