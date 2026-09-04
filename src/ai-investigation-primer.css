@@ -1,217 +1,59 @@
-[data-campaign="autistici-inventati"] #ai-investigation-primer {
-  display: contents;
-}
-
-[data-campaign="autistici-inventati"] .campaign-section--investigation {
-  border-top: 0;
-  background: #f0ede4;
+[data-campaign="autistici-inventati"] .ai-investigation-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(1rem, 3vw, 2rem);
+  align-items: end;
+  margin: 0 0 clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid rgba(24, 23, 19, .35);
+  border-top: 7px solid #181713;
+  background: #f4f0e6;
   color: #181713;
 }
 
-[data-campaign="autistici-inventati"] .ai-investigation {
-  display: grid;
-  gap: clamp(2.5rem, 6vw, 5.5rem);
-}
-
-[data-campaign="autistici-inventati"] .ai-investigation__intro {
-  max-width: 980px;
-  padding-top: clamp(1rem, 2vw, 2rem);
-}
-
-[data-campaign="autistici-inventati"] .ai-investigation__eyebrow,
-[data-campaign="autistici-inventati"] .ai-investigation__section-head > p:first-child,
-[data-campaign="autistici-inventati"] .ai-investigation-cta > p:first-child,
-[data-campaign="autistici-inventati"] .ai-investigation__source-loop > p:first-child {
-  margin: 0 0 .75rem;
-  font: 800 .76rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+[data-campaign="autistici-inventati"] .ai-investigation-entry span {
+  display: block;
+  margin-bottom: .6rem;
+  font: 900 .72rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: .12em;
-  text-transform: uppercase;
 }
 
-[data-campaign="autistici-inventati"] .ai-investigation__intro h2 {
-  max-width: 18ch;
-  margin: 0 0 1.5rem;
-  font-size: clamp(2.25rem, 6vw, 5.4rem);
-  line-height: .94;
-  letter-spacing: -.04em;
-  text-wrap: balance;
+[data-campaign="autistici-inventati"] .ai-investigation-entry h3 {
+  max-width: 24ch;
+  margin: 0 0 .65rem;
+  font-size: clamp(1.65rem, 3vw, 2.8rem);
+  line-height: .98;
+  letter-spacing: -.025em;
 }
 
-[data-campaign="autistici-inventati"] .ai-investigation__intro > p:not(.ai-investigation__eyebrow) {
-  max-width: 76ch;
-  margin: 0 0 1rem;
-  font-size: clamp(1.05rem, 1.4vw, 1.28rem);
-  line-height: 1.62;
-}
-
-[data-campaign="autistici-inventati"] .ai-investigation__intro aside {
-  max-width: 820px;
-  margin-top: 1.6rem;
-  padding: 1.1rem 1.25rem;
-  border-left: 5px solid currentColor;
-  background: rgba(255,255,255,.55);
-  font-size: .98rem;
+[data-campaign="autistici-inventati"] .ai-investigation-entry p {
+  max-width: 78ch;
+  margin: 0;
   line-height: 1.55;
 }
 
-[data-campaign="autistici-inventati"] .ai-investigation__basics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  border: 1px solid rgba(24,23,19,.3);
-}
-
-[data-campaign="autistici-inventati"] .ai-investigation__basics article {
-  min-width: 0;
-  padding: 1.35rem;
-  border-right: 1px solid rgba(24,23,19,.3);
-}
-
-[data-campaign="autistici-inventati"] .ai-investigation__basics article:last-child { border-right: 0; }
-[data-campaign="autistici-inventati"] .ai-investigation__basics span {
-  display: block;
-  margin-bottom: .7rem;
-  font: 800 .68rem/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: .1em;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__basics h3 { margin: 0 0 .65rem; font-size: 1.08rem; line-height: 1.15; }
-[data-campaign="autistici-inventati"] .ai-investigation__basics p { margin: 0; font-size: .92rem; line-height: 1.5; }
-
-[data-campaign="autistici-inventati"] .ai-investigation__section-head {
-  max-width: 820px;
-  margin-bottom: 1.6rem;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__section-head h3,
-[data-campaign="autistici-inventati"] .ai-investigation__source-loop h3,
-[data-campaign="autistici-inventati"] .ai-investigation-cta h3 {
-  margin: 0 0 .65rem;
-  font-size: clamp(1.75rem, 3vw, 3rem);
-  line-height: 1;
-  letter-spacing: -.025em;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__section-head > p:last-child { margin: 0; max-width: 70ch; line-height: 1.55; }
-
-[data-campaign="autistici-inventati"] .ai-investigation__people-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1px;
-  background: rgba(24,23,19,.25);
-  border: 1px solid rgba(24,23,19,.25);
-}
-[data-campaign="autistici-inventati"] .ai-investigation__people-grid article {
-  min-width: 0;
-  padding: 1.25rem;
-  background: #f8f5ec;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__people-grid article > span {
-  font: 800 .75rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__people-grid h4 { margin: 1rem 0 .25rem; font-size: 1.35rem; line-height: 1; overflow-wrap: anywhere; }
-[data-campaign="autistici-inventati"] .ai-investigation__people-grid .ai-investigation__role { margin: 0 0 .85rem; font-size: .76rem; font-weight: 800; line-height: 1.3; text-transform: uppercase; }
-[data-campaign="autistici-inventati"] .ai-investigation__people-grid p:not(.ai-investigation__role) { font-size: .88rem; line-height: 1.5; }
-[data-campaign="autistici-inventati"] .ai-investigation__people-grid a { display: inline-block; margin-top: .35rem; font-size: .83rem; font-weight: 800; }
-
-[data-campaign="autistici-inventati"] .ai-investigation__timeline {
-  border-top: 2px solid currentColor;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__timeline article {
-  display: grid;
-  grid-template-columns: minmax(115px, .55fr) 3fr;
-  gap: clamp(1rem, 3vw, 3rem);
-  padding: 1.3rem 0;
-  border-bottom: 1px solid rgba(24,23,19,.28);
-}
-[data-campaign="autistici-inventati"] .ai-investigation__timeline time {
-  font: 900 .82rem/1.25 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: .06em;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__timeline h4 { margin: 0 0 .4rem; font-size: 1.18rem; line-height: 1.15; }
-[data-campaign="autistici-inventati"] .ai-investigation__timeline p { max-width: 78ch; margin: 0 0 .55rem; line-height: 1.5; }
-[data-campaign="autistici-inventati"] .ai-investigation__timeline a { font-size: .82rem; font-weight: 800; }
-
-[data-campaign="autistici-inventati"] .ai-investigation__source-loop {
-  padding: clamp(1.5rem, 4vw, 3rem);
-  border: 2px solid currentColor;
-  background: #e3dfd3;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__source-loop > p:not(:first-child) { max-width: 78ch; line-height: 1.6; }
-[data-campaign="autistici-inventati"] .ai-investigation__source-loop > div { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; margin-top: 1rem; }
-[data-campaign="autistici-inventati"] .ai-investigation__source-loop a { font-weight: 800; }
-
-[data-campaign="autistici-inventati"] .ai-investigation__proof-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__proof-grid article { padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid currentColor; background: #f8f5ec; }
-[data-campaign="autistici-inventati"] .ai-investigation__proof-grid h4 { margin: 0 0 1rem; font-size: 1.35rem; }
-[data-campaign="autistici-inventati"] .ai-investigation__proof-grid ul { margin: 0; padding-left: 1.25rem; }
-[data-campaign="autistici-inventati"] .ai-investigation__proof-grid li { margin: 0 0 .72rem; line-height: 1.45; }
-[data-campaign="autistici-inventati"] .ai-investigation__proof-grid .is-proven { border-top-width: 7px; }
-[data-campaign="autistici-inventati"] .ai-investigation__proof-grid .is-open { border-top-width: 7px; border-top-style: double; }
-
-[data-campaign="autistici-inventati"] .ai-investigation-cta {
-  padding: clamp(1.6rem, 5vw, 4rem);
+[data-campaign="autistici-inventati"] .ai-investigation-entry > a {
+  display: inline-block;
+  padding: .85rem 1rem;
   background: #181713;
   color: #f8f5ec;
-}
-[data-campaign="autistici-inventati"] .ai-investigation-cta > p:not(:first-child) { max-width: 70ch; font-size: 1.05rem; line-height: 1.55; }
-[data-campaign="autistici-inventati"] .ai-investigation-cta__actions { display: flex; align-items: center; flex-wrap: wrap; gap: .8rem 1.25rem; margin-top: 1.5rem; }
-[data-campaign="autistici-inventati"] .ai-investigation-cta__button {
-  display: inline-block;
-  padding: .9rem 1.1rem;
-  background: #f8f5ec;
-  color: #181713;
   font-weight: 900;
   text-decoration: none;
-}
-[data-campaign="autistici-inventati"] .ai-investigation-cta small { max-width: 42ch; opacity: .8; line-height: 1.35; }
-
-[data-campaign="autistici-inventati"] .ai-investigation__records ol {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: .7rem 1.6rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  counter-reset: records;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__records li {
-  counter-increment: records;
-  display: grid;
-  grid-template-columns: 2.4rem 1fr;
-  gap: .8rem;
-  padding: .85rem 0;
-  border-top: 1px solid rgba(24,23,19,.3);
-  line-height: 1.45;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__records li::before {
-  content: counter(records, decimal-leading-zero);
-  font: 900 .78rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-[data-campaign="autistici-inventati"] .ai-investigation__records-note {
-  margin: 1.6rem 0 0;
-  padding-top: 1rem;
-  border-top: 2px solid currentColor;
-  line-height: 1.5;
+  white-space: nowrap;
 }
 
-@media (max-width: 1050px) {
-  [data-campaign="autistici-inventati"] .ai-investigation__basics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  [data-campaign="autistici-inventati"] .ai-investigation__basics article:nth-child(2) { border-right: 0; }
-  [data-campaign="autistici-inventati"] .ai-investigation__basics article:nth-child(-n+2) { border-bottom: 1px solid rgba(24,23,19,.3); }
-  [data-campaign="autistici-inventati"] .ai-investigation__people-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+[data-campaign="autistici-inventati"] .ai-investigation-entry > a:hover,
+[data-campaign="autistici-inventati"] .ai-investigation-entry > a:focus-visible {
+  background: #a51d20;
 }
 
-@media (max-width: 700px) {
-  [data-campaign="autistici-inventati"] .ai-investigation { gap: 3.2rem; }
-  [data-campaign="autistici-inventati"] .ai-investigation__intro h2 { max-width: none; font-size: clamp(2.2rem, 12vw, 3.6rem); }
-  [data-campaign="autistici-inventati"] .ai-investigation__basics,
-  [data-campaign="autistici-inventati"] .ai-investigation__people-grid,
-  [data-campaign="autistici-inventati"] .ai-investigation__proof-grid,
-  [data-campaign="autistici-inventati"] .ai-investigation__records ol { grid-template-columns: 1fr; }
-  [data-campaign="autistici-inventati"] .ai-investigation__basics article { border-right: 0; border-bottom: 1px solid rgba(24,23,19,.3); }
-  [data-campaign="autistici-inventati"] .ai-investigation__basics article:last-child { border-bottom: 0; }
-  [data-campaign="autistici-inventati"] .ai-investigation__timeline article { grid-template-columns: 1fr; gap: .45rem; }
-  [data-campaign="autistici-inventati"] .ai-investigation__timeline time { font-size: .74rem; }
-  [data-campaign="autistici-inventati"] .ai-investigation__source-loop { padding: 1.25rem; }
+@media (max-width: 760px) {
+  [data-campaign="autistici-inventati"] .ai-investigation-entry {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  [data-campaign="autistici-inventati"] .ai-investigation-entry > a {
+    width: fit-content;
+    white-space: normal;
+  }
 }
