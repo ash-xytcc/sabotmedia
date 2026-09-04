@@ -11,15 +11,19 @@ export async function onRequestGet(context) {
   if (!sourceUrl) return text('unknown investigation document', 404)
 
   try {
+    const range = context.request.headers.get('range') || ''
+    const requestHeaders = {
+      accept: 'application/pdf',
+      'user-agent': 'Sabot Media investigation reader',
+    }
+    if (range) requestHeaders.range = range
+
     const upstream = await fetch(sourceUrl, {
-      headers: {
-        accept: 'application/pdf',
-        'user-agent': 'Sabot Media investigation reader',
-      },
-      cf: { cacheTtl: 3600, cacheEverything: true },
+      headers: requestHeaders,
+      cf: range ? undefined : { cacheTtl: 3600, cacheEverything: true },
     })
 
-    if (!upstream.ok || !upstream.body) return text('source document unavailable', 502)
+    if (![200, 206].includes(upstream.status) || !upstream.body) return text('source document unavailable', 502)
 
     const headers = new Headers()
     headers.set('content-type', 'application/pdf')
@@ -27,18 +31,42 @@ export async function onRequestGet(context) {
     headers.set('cache-control', 'public, max-age=3600, s-maxage=86400')
     headers.set('x-content-type-options', 'nosniff')
     headers.set('referrer-policy', 'no-referrer')
-    const length = upstream.headers.get('content-length')
-    if (length) headers.set('content-length', length)
 
-    return new Response(upstream.body, { status: 200, headers })
+    for (const name of ['content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified']) {
+      const value = upstream.headers.get(name)
+      if (value) headers.set(name, value)
+    }
+    if (!headers.has('accept-ranges')) headers.set('accept-ranges', 'bytes')
+
+    return new Response(upstream.body, { status: upstream.status, headers })
   } catch (error) {
     return text(`source document unavailable: ${String(error?.message || error)}`, 502)
   }
 }
 
 export async function onRequestHead(context) {
-  const response = await onRequestGet(context)
-  return new Response(null, { status: response.status, headers: response.headers })
+  const url = new URL(context.request.url)
+  const source = String(url.searchParams.get('source') || '').trim()
+  const sourceUrl = ALLOWED_SOURCES.get(source)
+  if (!sourceUrl) return text('unknown investigation document', 404)
+
+  try {
+    const upstream = await fetch(sourceUrl, { method: 'HEAD', headers: { accept: 'application/pdf' } })
+    if (!upstream.ok) return text('source document unavailable', 502)
+    const headers = new Headers({
+      'content-type': 'application/pdf',
+      'content-disposition': `inline; filename="${filenameFor(source)}"`,
+      'cache-control': 'public, max-age=3600, s-maxage=86400',
+      'x-content-type-options': 'nosniff',
+      'referrer-policy': 'no-referrer',
+      'accept-ranges': upstream.headers.get('accept-ranges') || 'bytes',
+    })
+    const length = upstream.headers.get('content-length')
+    if (length) headers.set('content-length', length)
+    return new Response(null, { status: 200, headers })
+  } catch (error) {
+    return text(`source document unavailable: ${String(error?.message || error)}`, 502)
+  }
 }
 
 function filenameFor(source) {
