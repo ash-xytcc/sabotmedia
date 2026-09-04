@@ -1,6 +1,6 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
-import { getExistingNativeEntry } from './_lib/nativePublicContent.js'
+import { getExistingNativeEntry, upsertNativeEntry } from './_lib/nativePublicContent.js'
 import { podcastShowOwnsEntry, readPodcastShows } from './_lib/podcastSettings.js'
 import {
   buildEpisodeJobPayload,
@@ -58,6 +58,7 @@ export async function onRequestPost(context) {
       const destination = String(body.destination || '').trim()
       if (!['youtube', 'peertube'].includes(destination)) return json({ ok: false, error: 'retry supports youtube or peertube' }, 400)
       await retryDestination(db, episode.id, destination)
+      await updatePublicVideoDestination(db, episode, destination, { status: 'retrying', lastError: '' })
       const state = await listEpisodePublishingState(db, episode.id)
       await audit(context, db, 'episode.publish.retry', episode, { destination })
       return json({ ok: true, mode: 'd1', episodeId: episode.id, ...state })
@@ -123,6 +124,7 @@ export async function onRequestPost(context) {
         payload: jobPayload(episode, show, 'video', {}, publishingConfig),
       })
 
+      let publicEpisode = episode
       for (const destination of videoDestinations) {
         const currentState = (await listEpisodePublishingState(db, episode.id)).destinations.find((item) => item.destination === destination)
         if (currentState?.status === 'published' && (currentState.remoteId || currentState.remoteUrl)) continue
@@ -136,6 +138,7 @@ export async function onRequestPost(context) {
           dependsOnId: renderJob.id,
           payload: jobPayload(episode, show, destination, override, publishingConfig),
         })
+        publicEpisode = await updatePublicVideoDestination(db, publicEpisode, destination, { status: 'queued', lastError: '' })
       }
     }
 
@@ -166,6 +169,25 @@ function jobPayload(episode, show, destination, override, settings, extra = {}) 
       destination,
     },
   }
+}
+
+async function updatePublicVideoDestination(db, episode, destination, patch = {}) {
+  const label = destination === 'youtube' ? 'YouTube' : 'PeerTube'
+  const relatedAssets = (Array.isArray(episode?.relatedAssets) ? episode.relatedAssets : [])
+    .filter((asset) => !(String(asset?.role || '') === 'published-video' && String(asset?.destination || '') === destination))
+  relatedAssets.push({
+    role: 'published-video',
+    kind: 'video',
+    type: 'video',
+    destination,
+    title: `${label} video`,
+    status: String(patch.status || 'queued'),
+    remoteId: String(patch.remoteId || ''),
+    url: safePublicUrl(patch.remoteUrl),
+    lastError: String(patch.lastError || '').slice(0, 500),
+    updatedAt: new Date().toISOString(),
+  })
+  return upsertNativeEntry(db, { ...episode, relatedAssets })
 }
 
 function findCanonicalAudio(episode = {}) {
@@ -204,6 +226,13 @@ function absolutize(value, origin) {
   if (/^https?:\/\//i.test(raw)) return raw
   if (raw.startsWith('/')) return `${origin}${raw}`
   return raw
+}
+
+function safePublicUrl(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  if (raw.startsWith('/')) return raw
+  return /^https?:\/\//i.test(raw) ? raw.slice(0, 3000) : ''
 }
 
 function json(data, status = 200) {
