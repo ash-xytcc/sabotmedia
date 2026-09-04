@@ -39,9 +39,9 @@ export async function onRequestOptions() {
   return new Response(null, {
     status: 204,
     headers: {
-      allow: 'GET,POST,OPTIONS',
-      'access-control-allow-methods': 'GET,POST,OPTIONS',
-      'access-control-allow-headers': 'content-type',
+      allow: 'GET,HEAD,POST,OPTIONS',
+      'access-control-allow-methods': 'GET,HEAD,POST,OPTIONS',
+      'access-control-allow-headers': 'content-type,range',
     },
   })
 }
@@ -154,46 +154,98 @@ export async function onRequestPost(context) {
   }
 }
 
+export async function onRequestHead(context) {
+  try {
+    const resolved = await resolveStoredMedia(context)
+    if (resolved.response) return resolved.response
+    return new Response(null, {
+      status: 200,
+      headers: buildMediaHeaders({
+        context,
+        contentType: resolved.contentType,
+        size: resolved.size,
+        storageKey: resolved.storageKey,
+      }),
+    })
+  } catch (error) {
+    return text(String(error?.message || error), 500)
+  }
+}
+
 export async function onRequestGet(context) {
   try {
-    const storage = getMediaBucket(context)
-    if (!storage?.bucket) return text(`Media storage binding ${CANONICAL_MEDIA_BINDING} missing`, 503)
+    const resolved = await resolveStoredMedia(context)
+    if (resolved.response) return resolved.response
 
-    const url = new URL(context.request.url)
-    const storageKey = String(url.searchParams.get('key') || '').trim()
-    if (!storageKey || storageKey.includes('..') || !(storageKey.startsWith('media/uploads/') || storageKey.startsWith('media/campaign-contributors/') || storageKey.startsWith('media/campaign-instagram/'))) {
-      return text('missing or invalid media key', 400)
-    }
-
-    const head = await storage.bucket.head(storageKey)
-    if (!head) return text('media not found', 404)
-
-    const contentType = head.httpMetadata?.contentType || head.customMetadata?.contentType || guessContentType(storageKey)
-    const size = Number(head.size || 0)
     const rangeHeader = context.request.headers.get('range') || ''
-    const range = parseRange(rangeHeader, size)
+    const range = parseRange(rangeHeader, resolved.size)
     const object = range
-      ? await storage.bucket.get(storageKey, { range: { offset: range.start, length: range.end - range.start + 1 } })
-      : await storage.bucket.get(storageKey)
+      ? await resolved.storage.bucket.get(resolved.storageKey, { range: { offset: range.start, length: range.end - range.start + 1 } })
+      : await resolved.storage.bucket.get(resolved.storageKey)
     if (!object?.body) return text('media not found', 404)
 
-    const headers = new Headers()
-    headers.set('content-type', contentType)
-    headers.set('accept-ranges', 'bytes')
-    headers.set('cache-control', 'public, max-age=31536000, immutable')
-    headers.set('content-disposition', `${shouldRenderInline(contentType) ? 'inline' : 'attachment'}; filename="${sanitizeFilename(url.searchParams.get('filename') || storageKey.split('/').pop() || 'download')}"`)
+    const headers = buildMediaHeaders({
+      context,
+      contentType: resolved.contentType,
+      size: resolved.size,
+      storageKey: resolved.storageKey,
+      range,
+    })
 
     if (range) {
-      headers.set('content-range', `bytes ${range.start}-${range.end}/${size}`)
-      headers.set('content-length', String(range.end - range.start + 1))
       return new Response(object.body, { status: 206, headers })
     }
 
-    if (size) headers.set('content-length', String(size))
     return new Response(object.body, { status: 200, headers })
   } catch (error) {
     return text(String(error?.message || error), 500)
   }
+}
+
+async function resolveStoredMedia(context) {
+  const storage = getMediaBucket(context)
+  if (!storage?.bucket) return { response: text(`Media storage binding ${CANONICAL_MEDIA_BINDING} missing`, 503) }
+
+  const url = new URL(context.request.url)
+  const storageKey = String(url.searchParams.get('key') || '').trim()
+  if (!storageKey || storageKey.includes('..') || !isAllowedStorageKey(storageKey)) {
+    return { response: text('missing or invalid media key', 400) }
+  }
+
+  const head = await storage.bucket.head(storageKey)
+  if (!head) return { response: text('media not found', 404) }
+
+  return {
+    storage,
+    storageKey,
+    contentType: head.httpMetadata?.contentType || head.customMetadata?.contentType || guessContentType(storageKey),
+    size: Number(head.size || 0),
+  }
+}
+
+function isAllowedStorageKey(storageKey) {
+  return storageKey.startsWith('media/uploads/')
+    || storageKey.startsWith('media/generated/')
+    || storageKey.startsWith('media/campaign-contributors/')
+    || storageKey.startsWith('media/campaign-instagram/')
+}
+
+function buildMediaHeaders({ context, contentType, size, storageKey, range = null }) {
+  const url = new URL(context.request.url)
+  const headers = new Headers()
+  headers.set('content-type', contentType)
+  headers.set('accept-ranges', 'bytes')
+  headers.set('cache-control', 'public, max-age=31536000, immutable')
+  headers.set('x-content-type-options', 'nosniff')
+  headers.set('content-disposition', `${shouldRenderInline(contentType) ? 'inline' : 'attachment'}; filename="${sanitizeFilename(url.searchParams.get('filename') || storageKey.split('/').pop() || 'download')}"`)
+
+  if (range) {
+    headers.set('content-range', `bytes ${range.start}-${range.end}/${size}`)
+    headers.set('content-length', String(range.end - range.start + 1))
+  } else if (size) {
+    headers.set('content-length', String(size))
+  }
+  return headers
 }
 
 export function detectMediaStorageBinding(env = {}) {
