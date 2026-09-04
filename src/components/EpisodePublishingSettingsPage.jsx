@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { WpAdminNotices, useAdminNotices } from './WpAdminNotices'
 import { loadEpisodePublishingSettings, saveEpisodePublishingSettings } from '../lib/episodePublishingSettingsApi'
-import { clearPeerTubeCredential, clearYouTubeCredential, savePeerTubeCredential } from '../lib/episodePublishingCredentialsApi'
+import { clearPeerTubeCredential, clearYouTubeCredential, connectPeerTubeCredential } from '../lib/episodePublishingCredentialsApi'
 import { adminRoutes } from '../routing/routes'
 
 const DEFAULTS = {
@@ -29,7 +29,7 @@ export function EpisodePublishingSettingsPage() {
   const [searchParams] = useSearchParams()
   const [settings, setSettings] = useState(DEFAULTS)
   const [connections, setConnections] = useState({ worker: {}, youtube: {}, peertube: {}, credentialStore: {} })
-  const [peerTubeToken, setPeerTubeToken] = useState('')
+  const [peerTubeLogin, setPeerTubeLogin] = useState({ username: '', password: '', otp: '' })
   const [state, setState] = useState('loading')
   const [error, setError] = useState('')
   const { pushNotice } = useAdminNotices()
@@ -72,6 +72,10 @@ export function EpisodePublishingSettingsPage() {
     }))
   }
 
+  function updatePeerTubeLogin(field, value) {
+    setPeerTubeLogin((current) => ({ ...current, [field]: value }))
+  }
+
   async function save() {
     try {
       setState('saving')
@@ -88,22 +92,37 @@ export function EpisodePublishingSettingsPage() {
     }
   }
 
-  async function savePeerTubeToken() {
-    const token = peerTubeToken.trim()
-    if (!token) {
-      pushNotice('Paste the PeerTube access token first.', 'error')
+  async function connectPeerTube() {
+    const baseUrl = String(settings.peertube?.baseUrl || '').trim()
+    const username = peerTubeLogin.username.trim()
+    const password = peerTubeLogin.password
+    if (!baseUrl) {
+      pushNotice('Enter the PeerTube instance URL first.', 'error')
+      return
+    }
+    if (!username || !password) {
+      pushNotice('Enter the PeerTube username and password first.', 'error')
       return
     }
     try {
       setState('saving')
-      await savePeerTubeCredential(token)
-      setPeerTubeToken('')
+      setError('')
+      await saveEpisodePublishingSettings(settings)
+      await connectPeerTubeCredential({
+        baseUrl,
+        username,
+        password,
+        otp: peerTubeLogin.otp.trim(),
+      })
+      setPeerTubeLogin((current) => ({ ...current, password: '', otp: '' }))
       await reload()
       setState('ready')
-      pushNotice('PeerTube token saved encrypted on the server.', 'success')
+      pushNotice('PeerTube connected. Access and refresh tokens are stored encrypted; the password was not saved.', 'success')
     } catch (nextError) {
       setState('error')
-      pushNotice(`PeerTube connection failed: ${String(nextError?.message || nextError)}`, 'error')
+      const message = String(nextError?.message || nextError)
+      setError(message)
+      pushNotice(`PeerTube connection failed: ${message}`, 'error')
     }
   }
 
@@ -163,16 +182,26 @@ export function EpisodePublishingSettingsPage() {
             <ConnectionCard
               title="PeerTube"
               configured={connections.peertube?.configured}
-              description="Uses the configured PeerTube instance and channel with a server-side bearer token."
-              required="Instance URL + channel ID below, plus an account access token."
+              description="Connects directly to the PeerTube instance below. Your password is used once to obtain an access + refresh token pair and is never stored by Sabot."
+              required="Instance URL + channel ID below, plus the PeerTube account login."
             >
               {connections.peertube?.canConnect ? (
-                <label>
-                  <span>Access token</span>
-                  <input type="password" value={peerTubeToken} onChange={(event) => setPeerTubeToken(event.target.value)} autoComplete="off" placeholder={connections.peertube?.tokenConfigured ? 'Token already saved' : 'Paste PeerTube token'} />
-                </label>
+                <>
+                  <label>
+                    <span>PeerTube username</span>
+                    <input value={peerTubeLogin.username} onChange={(event) => updatePeerTubeLogin('username', event.target.value)} autoComplete="username" placeholder="username" />
+                  </label>
+                  <label>
+                    <span>PeerTube password</span>
+                    <input type="password" value={peerTubeLogin.password} onChange={(event) => updatePeerTubeLogin('password', event.target.value)} autoComplete="current-password" placeholder="Used once; never stored" />
+                  </label>
+                  <label>
+                    <span>2FA code <small>(only if enabled)</small></span>
+                    <input value={peerTubeLogin.otp} onChange={(event) => updatePeerTubeLogin('otp', event.target.value)} inputMode="numeric" autoComplete="one-time-code" placeholder="123456" />
+                  </label>
+                  <button className="button button--primary" type="button" onClick={connectPeerTube} disabled={state === 'saving'}>{connections.peertube?.tokenConfigured ? 'Reconnect PeerTube' : 'Connect PeerTube'}</button>
+                </>
               ) : null}
-              {connections.peertube?.canConnect ? <button className="button button--primary" type="button" onClick={savePeerTubeToken}>Save PeerTube token</button> : null}
               {connections.peertube?.tokenConfigured ? <button className="button" type="button" onClick={() => disconnect('peertube')}>Remove saved PeerTube credential</button> : null}
             </ConnectionCard>
           </div>
