@@ -12,7 +12,18 @@ export const ADMIN_PREFIXES = [
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 const PAGE_METHODS = new Set(['GET', 'HEAD'])
-const PUBLIC_AUTH_API_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/analytics/collect', '/api/campaign-contributor-auth', '/api/campaign-correspondence', '/api/campaign-contributor-media'])
+const PUBLIC_AUTH_API_PATHS = new Set([
+  '/api/login',
+  '/api/logout',
+  '/api/session',
+  '/api/analytics/collect',
+  '/api/campaign-contributor-auth',
+  '/api/campaign-correspondence',
+  '/api/campaign-contributor-media',
+  '/api/episode-worker',
+  '/api/episode-worker-credentials',
+  '/api/episode-worker-media',
+])
 const PUBLIC_SPA_EXACT_PATHS = new Set([
   '/', '/archive', '/search', '/about', '/security', '/contact', '/submit', '/support', '/press', '/feeds',
   '/collections', '/publications', '/updates', '/projects', '/aberdeen-local-1312-gallery', '/login', '/wp-login', '/logout',
