@@ -3,6 +3,7 @@ import fs from 'node:fs'
 import test from 'node:test'
 
 const credentialsSource = fs.readFileSync(new URL('../functions/api/_lib/episodeCredentials.js', import.meta.url), 'utf8')
+const publishingCredentialsSource = fs.readFileSync(new URL('../functions/api/episode-publishing-credentials.js', import.meta.url), 'utf8')
 const youtubeStartSource = fs.readFileSync(new URL('../functions/api/episode-youtube-auth-start.js', import.meta.url), 'utf8')
 const youtubeCallbackSource = fs.readFileSync(new URL('../functions/api/episode-youtube-auth-callback.js', import.meta.url), 'utf8')
 const workerCredentialsSource = fs.readFileSync(new URL('../functions/api/episode-worker-credentials.js', import.meta.url), 'utf8')
@@ -26,9 +27,20 @@ test('youtube settings use an OAuth authorization code flow with offline access'
   assert.match(youtubeCallbackSource, /storeYouTubeRefreshToken/)
 })
 
+test('peertube connection stores refreshable credentials without storing the password', () => {
+  assert.match(publishingCredentialsSource, /oauth-clients\/local/)
+  assert.match(publishingCredentialsSource, /grant_type: 'password'/)
+  assert.match(publishingCredentialsSource, /storePeerTubeSession/)
+  assert.match(credentialsSource, /peertubeRefreshToken/)
+  assert.match(workerCredentialsSource, /grant_type: 'refresh_token'/)
+  assert.match(workerCredentialsSource, /storePeerTubeSession/)
+})
+
 test('browser connection screen is write-only for platform secrets', () => {
   assert.match(settingsPageSource, /type="password"/)
   assert.match(settingsPageSource, /Connect YouTube/)
+  assert.match(settingsPageSource, /Connect PeerTube/)
+  assert.match(settingsPageSource, /password was not saved/)
   assert.doesNotMatch(settingsPageSource, /refreshToken/)
   assert.doesNotMatch(settingsPageSource, /accessToken\s*\}/)
 })
@@ -36,7 +48,7 @@ test('browser connection screen is write-only for platform secrets', () => {
 test('worker retrieves site-managed platform credentials over the authenticated worker channel', () => {
   assert.match(workerCredentialsSource, /EPISODE_WORKER_TOKEN/)
   assert.match(workerCredentialsSource, /readYouTubeRefreshToken/)
-  assert.match(workerCredentialsSource, /readPeerTubeAccessToken/)
+  assert.match(workerCredentialsSource, /readPeerTubeSession/)
   assert.match(workerSource, /\/api\/episode-worker-credentials/)
 })
 
