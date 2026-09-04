@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { authenticateContributor, deleteCorrespondenceMessage, loadCorrespondence, patchCorrespondence, sendMessage, uploadContributorMedia } from '../lib/campaignCorrespondenceApi'
+import { authenticateContributor, clearContributorSessionCookie, deleteCorrespondenceMessage, loadCorrespondence, patchCorrespondence, persistContributorSession, sendMessage, uploadContributorMedia } from '../lib/campaignCorrespondenceApi'
 
 export function CampaignContributorPage() {
   const { slug } = useParams()
@@ -10,27 +10,27 @@ export function CampaignContributorPage() {
   const storageKey = `sabot-contributor-session:${slug}`
   const [session, setSession] = useState(() => localStorage.getItem(storageKey) || '')
   const [pin, setPin] = useState('')
-  const [state, setState] = useState({ loading: Boolean(session), error: '', data: null })
+  const [state, setState] = useState({ loading: Boolean(session || sharedPost), error: '', data: null })
 
   async function load(activeSession = session) {
-    try { setState((s) => ({ ...s, loading: true, error: '' })); const data = await loadCorrespondence(slug, activeSession); if (!data.contributor) throw new Error('Access expired. Enter the PIN again.'); setState({ loading: false, error: '', data }) }
-    catch (error) { localStorage.removeItem(storageKey); setSession(''); setState({ loading: false, error: String(error.message || error), data: null }) }
+    try { setState((s) => ({ ...s, loading: true, error: '' })); const data = await loadCorrespondence(slug, activeSession); if (!data.contributor) throw new Error(sharedPost ? 'This device is not linked to the private contributor room yet. Open the private contributor link once, enter the PIN, then use Share → Sabot again.' : 'Access expired. Enter the PIN again.'); setState({ loading: false, error: '', data }) }
+    catch (error) { localStorage.removeItem(storageKey); clearContributorSessionCookie(); setSession(''); setState({ loading: false, error: String(error.message || error), data: null }) }
   }
   function appendMessage(item) { if (!item) return; setState((current) => current.data ? ({ ...current, data: { ...current.data, messages: [...current.data.messages.filter((message) => message.id !== item.id), item] } }) : current) }
   function replaceMessage(item) { if (!item) return; setState((current) => current.data ? ({ ...current, data: { ...current.data, messages: current.data.messages.map((message) => message.id === item.id ? item : message) } }) : current) }
   function removeMessage(id) { setState((current) => current.data ? ({ ...current, data: { ...current.data, messages: current.data.messages.filter((message) => message.id !== id) } }) : current) }
-  useEffect(() => { if (session) load(session) }, [])
+  useEffect(() => { if (session) { persistContributorSession(session); load(session) } else if (sharedPost) load('') }, [])
 
   if (preview) return <ContributorRoom data={previewData(slug)} session="" reload={() => {}} preview />
 
   async function unlock(event) {
     event.preventDefault()
-    if (!token) { setState({ loading: false, error: 'This private link is incomplete. Ask Sabot Media for a new link.', data: null }); return }
-    try { setState((s) => ({ ...s, loading: true, error: '' })); const data = await authenticateContributor(token, pin); localStorage.setItem(storageKey, data.session); setSession(data.session); setState({ loading: false, error: '', data: { campaign: data.campaign, contributor: data.contributor, messages: data.messages || [] } }) }
+    if (!token) { setState({ loading: false, error: sharedPost ? 'This device needs to be linked once before Share → Sabot can open the private room. Open your private contributor link on this device, enter the PIN, then share the Instagram post again.' : 'This private link is incomplete. Ask Sabot Media for a new link.', data: null }); return }
+    try { setState((s) => ({ ...s, loading: true, error: '' })); const data = await authenticateContributor(token, pin); localStorage.setItem(storageKey, data.session); persistContributorSession(data.session); setSession(data.session); setState({ loading: false, error: '', data: { campaign: data.campaign, contributor: data.contributor, messages: data.messages || [] } }) }
     catch (error) { setState({ loading: false, error: String(error.message || error), data: null }) }
   }
 
-  if (!state.data) return <main className="contributor-page"><section className="contributor-lock"><div className="contributor-mark">SABOT × FIELD</div><h1>{sharedPost ? 'Share to Sabot Archive' : 'Private campaign conversation'}</h1><p>{sharedPost ? 'Your shared post is ready. Enter the same short campaign PIN to review it before anything is archived or published.' : 'Enter the short PIN that came with this private link.'}</p><form onSubmit={unlock}><label htmlFor="contributor-pin">PIN</label><input id="contributor-pin" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" value={pin} onChange={(e) => setPin(e.target.value)} autoFocus /><button disabled={state.loading}>{state.loading ? 'Opening…' : 'Open conversation'}</button></form>{state.error ? <p role="alert" className="contributor-error">{state.error}</p> : null}<small>This page does not reveal when you are online. The private key stays after # in your link so it is not sent in ordinary page requests.</small></section></main>
+  if (!state.data) return <main className="contributor-page"><section className="contributor-lock"><div className="contributor-mark">SABOT × FIELD</div><h1>{sharedPost ? 'Share to Sabot Archive' : 'Private campaign conversation'}</h1><p>{sharedPost ? 'Your shared post is ready. If this device has already been linked, Sabot will open the contributor room automatically. Otherwise open the private contributor link once and enter the campaign PIN.' : 'Enter the short PIN that came with this private link.'}</p><form onSubmit={unlock}><label htmlFor="contributor-pin">PIN</label><input id="contributor-pin" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" value={pin} onChange={(e) => setPin(e.target.value)} autoFocus /><button disabled={state.loading}>{state.loading ? 'Opening…' : 'Open conversation'}</button></form>{state.error ? <p role="alert" className="contributor-error">{state.error}</p> : null}<small>This page does not reveal when you are online. The private key stays after # in your link so it is not sent in ordinary page requests.</small></section></main>
 
   return <ContributorRoom data={state.data} session={session} onMessage={appendMessage} onMessageChange={replaceMessage} onMessageDelete={removeMessage} sharedPost={sharedPost} />
 }
