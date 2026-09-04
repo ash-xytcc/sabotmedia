@@ -10,6 +10,7 @@ const podcastAdmin = fs.readFileSync(new URL('../src/components/PodcastAdminPage
 const podcastSettingsPage = fs.readFileSync(new URL('../src/components/PodcastSettingsPage.jsx', import.meta.url), 'utf8')
 const podcastSettingsBackend = fs.readFileSync(new URL('../functions/api/_lib/podcastSettings.js', import.meta.url), 'utf8')
 const podcastImport = fs.readFileSync(new URL('../functions/api/podcast-import.js', import.meta.url), 'utf8')
+const podcastImportService = fs.readFileSync(new URL('../functions/api/_lib/podcastImportService.js', import.meta.url), 'utf8')
 const podcastFeeds = fs.readFileSync(new URL('../functions/feeds/[[path]].js', import.meta.url), 'utf8')
 const middleware = fs.readFileSync(new URL('../functions/_middleware.js', import.meta.url), 'utf8')
 
@@ -50,7 +51,9 @@ test('podcast backend persists a show registry and scopes imports by source feed
   assert.match(podcastSettingsBackend, /upsertPodcastShow/)
   assert.match(podcastSettingsBackend, /sourceFeedUrls/)
   assert.match(podcastImport, /requestedShowId/)
-  assert.match(podcastImport, /entryBelongsToShowImport/)
+  assert.match(podcastImport, /importPodcastSource/)
+  assert.match(podcastImportService, /entryBelongsToShowImport/)
+  assert.match(podcastImportService, /sourceKind: 'podcast-rss'/)
   assert.match(podcastImport, /entityType: 'podcast_show'/)
 })
 
