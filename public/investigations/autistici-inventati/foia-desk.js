@@ -36,7 +36,7 @@
       ${items.length ? items.map(card).join('') : '<p class="foia-desk__empty">No public requests are listed yet.</p>'}
       <div class="foia-desk__note"><strong>Why exact request text may be hidden before filing:</strong> Sabot may publish the scope while a request is still being drafted, then publish the exact text, tracking number, correspondence, and released records once appropriate. Internal editor notes are never shown here.</div>
       ${fallback ? '<p class="foia-desk__fallback-note">The live database docket is not available yet, so this page is showing the initial public scopes bundled with the investigation. Filing dates and tracking numbers remain blank because none have been supplied.</p>' : ''}
-      <a class="foia-admin-link" href="/wp-admin/foia">Editors: open FOIA Desk →</a>`
+      <a class="foia-admin-link" href="/records-desk/editor">Editors: open FOIA Desk →</a>`
   }
 
   function card(r) {
