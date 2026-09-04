@@ -53,24 +53,32 @@ export async function writeEpisodePublishingSettings(db, input = {}) {
   return { settings, updatedAt }
 }
 
-export function episodePublishingConnectionSummary(env = {}, settings = EPISODE_PUBLISHING_DEFAULTS) {
+export function episodePublishingConnectionSummary(env = {}, settings = EPISODE_PUBLISHING_DEFAULTS, credentialFlags = {}) {
+  const youtubeClientConfigured = Boolean(
+    String(env.YOUTUBE_CLIENT_ID || '').trim()
+    && String(env.YOUTUBE_CLIENT_SECRET || '').trim()
+  )
+  const encryptedStoreReady = credentialFlags.encryptionConfigured === true
   return {
     worker: {
       configured: Boolean(String(env.EPISODE_WORKER_TOKEN || '').trim()),
     },
     youtube: {
-      configured: Boolean(
-        String(env.YOUTUBE_CLIENT_ID || '').trim()
-        && String(env.YOUTUBE_CLIENT_SECRET || '').trim()
-        && String(env.YOUTUBE_REFRESH_TOKEN || '').trim()
-      ),
+      configured: Boolean(youtubeClientConfigured && (String(env.YOUTUBE_REFRESH_TOKEN || '').trim() || credentialFlags.youtube)),
+      canConnect: Boolean(youtubeClientConfigured && encryptedStoreReady),
+      clientConfigured: youtubeClientConfigured,
     },
     peertube: {
       configured: Boolean(
-        String(env.PEERTUBE_ACCESS_TOKEN || '').trim()
+        (String(env.PEERTUBE_ACCESS_TOKEN || '').trim() || credentialFlags.peertube)
         && String(settings?.peertube?.baseUrl || '').trim()
         && String(settings?.peertube?.channelId || '').trim()
       ),
+      tokenConfigured: Boolean(String(env.PEERTUBE_ACCESS_TOKEN || '').trim() || credentialFlags.peertube),
+      canConnect: encryptedStoreReady,
+    },
+    credentialStore: {
+      configured: encryptedStoreReady,
     },
   }
 }
