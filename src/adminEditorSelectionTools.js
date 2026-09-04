@@ -1,30 +1,41 @@
 const TOOLBAR_BUTTON_SELECTOR = '.native-content-editor__toolbar button'
 const VISUAL_EDITOR_SELECTOR = '.native-content-editor__visual[contenteditable]'
 let savedVisualRange = null
+let pendingToolbarRange = null
+let selectionLocked = false
 
 function getEditor() {
   return document.querySelector(VISUAL_EDITOR_SELECTOR)
 }
 
+function rangeBelongsToEditor(range, editor = getEditor()) {
+  return Boolean(editor && range && editor.contains(range.commonAncestorContainer))
+}
+
 function rememberVisualSelection() {
+  if (selectionLocked) return savedVisualRange
   const editor = getEditor()
   const selection = window.getSelection?.()
   if (!editor || !selection?.rangeCount) return null
   const range = selection.getRangeAt(0)
-  if (!editor.contains(range.commonAncestorContainer)) return null
+  if (!rangeBelongsToEditor(range, editor)) return null
   savedVisualRange = range.cloneRange()
   return savedVisualRange
 }
 
-function restoreVisualSelection() {
+function restoreRange(range) {
   const editor = getEditor()
   const selection = window.getSelection?.()
-  if (!editor || !selection || !savedVisualRange) return null
-  if (!editor.contains(savedVisualRange.commonAncestorContainer)) return null
+  if (!editor || !selection || !rangeBelongsToEditor(range, editor)) return null
   editor.focus()
   selection.removeAllRanges()
-  selection.addRange(savedVisualRange)
-  return savedVisualRange
+  selection.addRange(range)
+  savedVisualRange = range.cloneRange()
+  return range
+}
+
+function restoreVisualSelection() {
+  return restoreRange(savedVisualRange)
 }
 
 function syncEditor(editor, inputType = 'formatBold') {
@@ -35,11 +46,13 @@ function syncEditor(editor, inputType = 'formatBold') {
   editor.dispatchEvent(inputEvent)
 }
 
-function runCommand(command, value = null, inputType = 'formatBold') {
+function runCommand(command, value = null, inputType = 'formatBold', explicitRange = null) {
   const editor = getEditor()
   if (!editor) return false
-  restoreVisualSelection()
+  if (explicitRange) restoreRange(explicitRange)
+  else restoreVisualSelection()
   document.execCommand(command, false, value)
+  selectionLocked = false
   rememberVisualSelection()
   syncEditor(editor, inputType)
   return true
@@ -48,9 +61,13 @@ function runCommand(command, value = null, inputType = 'formatBold') {
 function preserveVisualSelection(event) {
   const button = event.target?.closest?.(TOOLBAR_BUTTON_SELECTOR)
   if (!button) return
-  if (!rememberVisualSelection()) return
+  const range = rememberVisualSelection()
+  if (!range) return
 
-  // Keep the contentEditable selection alive until the toolbar action runs.
+  // Snapshot the exact pre-click range. The URL prompt can move the browser's
+  // live selection, so link creation must not rely on whatever selection exists
+  // after the prompt closes.
+  pendingToolbarRange = range.cloneRange()
   event.preventDefault()
 }
 
@@ -60,15 +77,22 @@ function handleToolbarLink(event) {
   const label = button.textContent?.trim().toLowerCase() || ''
   if (label !== 'link') return
   const editor = getEditor()
-  if (!editor || !savedVisualRange) return
+  const linkRange = pendingToolbarRange?.cloneRange?.() || savedVisualRange?.cloneRange?.()
+  pendingToolbarRange = null
+  if (!editor || !rangeBelongsToEditor(linkRange, editor)) return
 
   event.preventDefault()
   event.stopPropagation()
   if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation()
 
+  selectionLocked = true
   const href = window.prompt('Enter URL for link', 'https://')
-  if (!href) return
-  runCommand('createLink', href, 'createLink')
+  if (!href) {
+    selectionLocked = false
+    restoreRange(linkRange)
+    return
+  }
+  runCommand('createLink', href, 'createLink', linkRange)
 }
 
 function handleEditorShortcut(event) {
@@ -101,10 +125,16 @@ function handleEditorShortcut(event) {
   }
   if (key === 'k') {
     event.preventDefault()
-    rememberVisualSelection()
+    const linkRange = rememberVisualSelection()?.cloneRange?.()
+    if (!linkRange) return
+    selectionLocked = true
     const href = window.prompt('Enter URL for link', 'https://')
-    if (!href) return
-    runCommand('createLink', href, 'createLink')
+    if (!href) {
+      selectionLocked = false
+      restoreRange(linkRange)
+      return
+    }
+    runCommand('createLink', href, 'createLink', linkRange)
   }
 }
 
