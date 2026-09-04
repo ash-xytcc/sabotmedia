@@ -77,13 +77,17 @@ export function buildMediaEmbed(media = {}) {
       : `${image}<p><br /></p>`
   }
 
-  if (type === 'audio' || mime.startsWith('audio/') || /\.(mp3|m4a|aac|ogg|oga|wav|webm)$/.test(lowerUrl)) {
+  if (type === 'video' || mime.startsWith('video/') || /\.(mp4|m4v|mov|ogv|webm)$/.test(lowerUrl)) {
+    return `<figure class="sabot-embed sabot-embed--video" style="width:100%;max-width:100%;"${mediaMetadata}><video controls preload="metadata" playsinline src="${escapedUrl}" aria-label="${escapeAttribute(title || 'Video player')}" style="display:block;width:100%;height:auto;"${mediaMetadata}></video>${caption ? `<figcaption>${escapedCaption}</figcaption>` : ''}</figure><p><br /></p>`
+  }
+
+  if (type === 'audio' || mime.startsWith('audio/') || /\.(mp3|m4a|aac|ogg|oga|wav|flac)$/.test(lowerUrl)) {
     return `<figure class="sabot-embed sabot-embed--audio" style="width:100%;max-width:100%;"${mediaMetadata}><audio controls preload="metadata" src="${escapedUrl}" aria-label="${escapeAttribute(title || 'Audio player')}" style="width:100%;"${mediaMetadata}></audio>${caption ? `<figcaption>${escapedCaption}</figcaption>` : ''}</figure><p><br /></p>`
   }
 
   if (mime === 'application/pdf' || lowerUrl.endsWith('.pdf')) {
     const label = escapedCaption || escapedTitle || 'Open PDF'
-    return `<figure class="sabot-embed sabot-embed--pdf" style="width:100%;max-width:100%;"><iframe src="${escapedUrl}" title="${escapeAttribute(title || 'PDF document')}" loading="lazy" width="100%" height="720" style="display:block;width:100%;min-height:65vh;max-height:80vh;border:1px solid #999;background:#fff;"></iframe><figcaption><a href="${escapedUrl}" target="_blank" rel="noopener noreferrer">${label}</a></figcaption></figure><p><br /></p>`
+    return `<figure class="sabot-embed sabot-embed--pdf" style="width:100%;max-width:100%;"><iframe src="${escapedUrl}" title="${escapeAttribute(title || 'PDF document')}" loading="lazy" referrerpolicy="no-referrer" width="100%" height="720" style="display:block;width:100%;min-height:65vh;max-height:80vh;border:1px solid #999;background:#fff;"></iframe><figcaption><a href="${escapedUrl}" target="_blank" rel="noopener noreferrer">${label}</a></figcaption></figure><p><br /></p>`
   }
 
   return `<p><a href="${escapedUrl}" target="_blank" rel="noopener noreferrer">${escapedCaption || escapedTitle}</a></p><p><br /></p>`
