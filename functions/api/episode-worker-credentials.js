@@ -1,5 +1,5 @@
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
-import { readPeerTubeAccessToken, readYouTubeRefreshToken } from './_lib/episodeCredentials.js'
+import { readPeerTubeSession, readYouTubeRefreshToken, storePeerTubeSession } from './_lib/episodeCredentials.js'
 
 export async function onRequestPost(context) {
   try {
@@ -31,14 +31,85 @@ export async function onRequestPost(context) {
     }
 
     if (destination === 'peertube') {
-      const accessToken = await readPeerTubeAccessToken(db, context.env || {})
-      if (!accessToken) return json({ ok: false, error: 'PeerTube is not connected on the site' }, 409)
-      return json({ ok: true, destination, accessToken })
+      const session = await readPeerTubeSession(db, context.env || {})
+      if (!session.accessToken && !session.refreshToken) return json({ ok: false, error: 'PeerTube is not connected on the site' }, 409)
+      const requestedBase = normalizeOrigin(body?.baseUrl)
+      const sessionBase = normalizeOrigin(session.baseUrl)
+      if (requestedBase && sessionBase && requestedBase !== sessionBase) {
+        return json({ ok: false, error: 'PeerTube credential belongs to a different instance' }, 409)
+      }
+      if (session.environmentManaged || accessTokenStillFresh(session.accessTokenExpiresAt) || !session.refreshToken) {
+        return json({ ok: true, destination, accessToken: session.accessToken })
+      }
+
+      const baseUrl = requestedBase || sessionBase
+      if (!baseUrl) return json({ ok: false, error: 'PeerTube instance URL is missing from the saved connection' }, 409)
+      if (tokenExpired(session.refreshTokenExpiresAt)) return json({ ok: false, error: 'PeerTube refresh token expired; reconnect PeerTube in Publishing Connections' }, 409)
+
+      const refreshed = await refreshPeerTubeSession(baseUrl, session.refreshToken)
+      await storePeerTubeSession(db, context.env || {}, {
+        baseUrl,
+        accessToken: refreshed.access_token,
+        refreshToken: refreshed.refresh_token || session.refreshToken,
+        expiresIn: refreshed.expires_in,
+        refreshTokenExpiresIn: refreshed.refresh_token_expires_in,
+      })
+      return json({ ok: true, destination, accessToken: refreshed.access_token, expiresIn: Number(refreshed.expires_in || 0) || 0 })
     }
 
     return json({ ok: false, error: `unsupported destination: ${destination || 'missing'}` }, 400)
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 500)
+  }
+}
+
+async function refreshPeerTubeSession(baseUrl, refreshToken) {
+  const clientResponse = await fetch(`${baseUrl}/api/v1/oauth-clients/local`, {
+    headers: { accept: 'application/json' },
+    redirect: 'error',
+  })
+  const client = await clientResponse.json().catch(() => null)
+  if (!clientResponse.ok || !client?.client_id || !client?.client_secret) {
+    throw new Error(`Could not read PeerTube OAuth client: ${clientResponse.status}`)
+  }
+
+  const response = await fetch(`${baseUrl}/api/v1/users/token`, {
+    method: 'POST',
+    redirect: 'error',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: String(client.client_id),
+      client_secret: String(client.client_secret),
+      grant_type: 'refresh_token',
+      refresh_token: String(refreshToken),
+    }),
+  })
+  const token = await response.json().catch(() => null)
+  if (!response.ok || !token?.access_token) {
+    throw new Error(token?.detail || token?.error_description || token?.error || `PeerTube token refresh failed: ${response.status}`)
+  }
+  return token
+}
+
+function accessTokenStillFresh(value) {
+  const expires = new Date(String(value || '')).getTime()
+  return Number.isFinite(expires) && expires > Date.now() + 60_000
+}
+
+function tokenExpired(value) {
+  const expires = new Date(String(value || '')).getTime()
+  return Number.isFinite(expires) && expires <= Date.now()
+}
+
+function normalizeOrigin(value) {
+  try {
+    const parsed = new URL(String(value || '').trim())
+    return parsed.protocol === 'https:' ? parsed.origin : ''
+  } catch {
+    return ''
   }
 }
 
