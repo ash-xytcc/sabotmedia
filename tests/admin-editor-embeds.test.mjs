@@ -7,6 +7,21 @@ test('audio media becomes an inline player', () => {
   assert.match(html, /<audio controls/)
   assert.match(html, /episode\.mp3/)
   assert.match(html, /width:100%/)
+  assert.match(html, /aria-label="Episode"/)
+})
+
+test('audio player keeps known media metadata without arbitrary attributes', () => {
+  const html = buildMediaEmbed({
+    id: 'media-episode-42',
+    url: '/media/episode-42.mp3',
+    title: 'Episode 42',
+    mediaType: 'audio',
+    mimeType: 'audio/mpeg',
+  })
+  assert.match(html, /data-media-id="media-episode-42"/)
+  assert.match(html, /data-media-title="Episode 42"/)
+  assert.match(html, /data-media-mime="audio\/mpeg"/)
+  assert.match(html, /src="\/media\/episode-42\.mp3"/)
 })
 
 test('pdf media becomes a full-width readable inline document with a link fallback', () => {
@@ -39,4 +54,5 @@ test('iframe input is reduced to a safe src and rebuilt at a usable width', () =
 
 test('javascript embed URLs are rejected', () => {
   assert.equal(buildIframeEmbed('javascript:alert(1)'), '')
+  assert.equal(buildMediaEmbed({ url: 'javascript:alert(1)', mediaType: 'audio' }), '')
 })
