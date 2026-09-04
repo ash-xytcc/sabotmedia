@@ -47,6 +47,26 @@ test('Molotov artwork identity outranks a stale Harbor Rat category', () => {
   assert.equal(project.slug, 'molotov-now')
 })
 
+test('saved native podcast project beats incidental legacy text', () => {
+  for (const title of [
+    'We Are Everywhere: A Trans Response to Christian Nationalists',
+    'Solitude VS Isolation, Relationships As Anarchy',
+    'Where Do We Go? A Fight For Our Lives',
+  ]) {
+    const project = resolveArchiveProject({
+      title,
+      type: 'podcast',
+      contentType: 'podcast',
+      primaryProject: 'Molotov Now!',
+      primaryProjectSlug: 'molotov-now',
+      sourceKind: 'native',
+      excerpt: 'The Harbor Rat Report and The Communique are discussed in this episode.',
+    }, 'podcast')
+
+    assert.equal(project.slug, 'molotov-now', title)
+  }
+})
+
 test('real Communique newsletters remain in The Communique', () => {
   const project = resolveArchiveProject({
     title: 'The Communique Volume 18',
