@@ -39,4 +39,12 @@ SHA-256 of preservation ZIP:
 
 ## Reporting significance
 
-This entry documents the public sequence without treating the post as evidence that the State Department or another agency has taken action. Its significance is that Ngo explicitly directed the allegation to a federal agency while characterizing Sabot Media’s reporting as support for a sanctioned entity. It should be read alongside the investigation’s earlier records concerning Ngo, Shideler and advocacy aimed at U.S. government action.
+This entry documents the public sequence without treating the post as evidence that the State Department or another agency has taken action. Its significance is that Ngo explicitly directed the allegation to a federal agency while characterizing Sabot Media’s reporting as support for a sanctioned entity.
+
+It should now be read as the third step in a documented post-publication trail:
+
+- Aug. 28: Shideler’s Federalist article uses a Sabot campaign graphic and closely corresponding Sabot material without naming Sabot in the surrounding text. See `2026-08-28-shideler-federalist-sabot-material.md`.
+- Aug. 30–Sept. 1: Crozier explicitly quotes and links Sabot in the Washington Examiner, followed by a Sept. 1 X post supplied as linking the site. See `2026-09-01-crozier-x-sabot-link.md`.
+- Sept. 5: Shideler names Sabot as leading a campaign “in support of” A/I; Ngo quote-posts that claim, accuses Sabot of “providing support,” and tags the State Department.
+
+The sequence is evidence of a publication and framing trail. It is not, without additional evidence, proof of private coordination or government action.
