@@ -89,3 +89,8 @@ export function InvestigationsIndexPage() {
     </main>
   )
 }
+
+export function AutisticiInventatiInvestigationPage() {
+  if (typeof window !== 'undefined') window.location.replace(AI_INVESTIGATION_URL)
+  return <main className="page"><p>Opening investigation…</p></main>
+}
