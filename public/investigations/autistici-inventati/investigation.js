@@ -14,6 +14,25 @@
   contextSheet.href = './investigation-context.css'
   document.head.appendChild(contextSheet)
 
+  function loadPdfHighlights() {
+    if (document.querySelector('script[src="./pdf-highlights.js"]')) return
+    const pdfScript = document.createElement('script')
+    pdfScript.src = './pdf-highlights.js'
+    pdfScript.async = false
+    document.head.appendChild(pdfScript)
+  }
+
+  if (!document.querySelector('script[src="./public-updates.js"]')) {
+    const publicUpdatesScript = document.createElement('script')
+    publicUpdatesScript.src = './public-updates.js'
+    publicUpdatesScript.async = false
+    publicUpdatesScript.addEventListener('load', loadPdfHighlights, { once: true })
+    publicUpdatesScript.addEventListener('error', loadPdfHighlights, { once: true })
+    document.head.appendChild(publicUpdatesScript)
+  } else {
+    loadPdfHighlights()
+  }
+
   const introActions = document.querySelector('.intro-actions')
   if (introActions) {
     const pdfButton = document.createElement('button')
