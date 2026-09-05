@@ -4,6 +4,7 @@ import { PublicationFooter } from './PublicationFooter'
 import { EditableText } from './EditableText'
 
 const INVESTIGATION_URL = 'https://sabot.media/investigations'
+const AI_INVESTIGATION_URL = '/investigations/autistici-inventati/'
 
 export function InvestigationsIndexPage() {
   async function shareHub() {
@@ -54,17 +55,17 @@ export function InvestigationsIndexPage() {
 
           <div className="campaign-directory__grid">
             <article className="campaign-directory-card campaign-directory-card--active" data-investigation="autistici-inventati">
-              <Link className="campaign-directory-card__art" to="/investigations/autistici-inventati" aria-label="Open the Autistici/Inventati investigation">
+              <a className="campaign-directory-card__art" href={AI_INVESTIGATION_URL} aria-label="Open the Autistici/Inventati investigation">
                 <span>01</span>
                 <strong aria-hidden="true">A/I</strong>
-              </Link>
+              </a>
               <div className="campaign-directory-card__body">
                 <div className="campaign-directory-card__status">
                   <span className="campaign-directory-card__lifecycle is-active">Published</span>
                   <span>investigation</span>
                 </div>
                 <p className="campaign-directory-card__age">Published September 4, 2026 · source trail remains open</p>
-                <h2><Link to="/investigations/autistici-inventati">How the A/I designation moved from advocacy into U.S. policy</Link></h2>
+                <h2><a href={AI_INVESTIGATION_URL}>How the A/I designation moved from advocacy into U.S. policy</a></h2>
                 <p>Follow the decision tree from the post-assassination push against “Antifa” through outside advocates, the White House, Congress, and counterterrorism policy before Autistici/Inventati was designated.</p>
                 <div className="campaign-directory-card__inside">
                   <strong>Inside this investigation</strong>
@@ -76,72 +77,12 @@ export function InvestigationsIndexPage() {
                   </ul>
                 </div>
                 <div className="campaign-directory-card__actions">
-                  <Link className="campaign-button campaign-button--dark" to="/investigations/autistici-inventati">Open investigation →</Link>
+                  <a className="campaign-button campaign-button--dark" href={AI_INVESTIGATION_URL}>Open investigation →</a>
                   <Link to="/post/kirk-to-ai">Read the article →</Link>
                 </div>
               </div>
             </article>
           </div>
-        </div>
-      </section>
-      <PublicationFooter />
-    </main>
-  )
-}
-
-export function AutisticiInventatiInvestigationPage() {
-  return (
-    <main className="page campaign-page campaign-directory investigation-directory">
-      <PublicationTopbar />
-      <header className="campaign-directory__hero">
-        <div className="campaign-shell campaign-directory__hero-grid">
-          <div>
-            <p className="campaign-kicker">SABOT MEDIA · INVESTIGATION</p>
-            <h1>From Kirk to A/I</h1>
-          </div>
-          <div className="campaign-directory__intro">
-            <p>This page is the reporting map behind Sabot’s investigation of how a post-assassination campaign against “Antifa” moved through outside advocates, the White House, Congress, and U.S. counterterrorism policy before the August 26, 2026 designation of Autistici/Inventati.</p>
-            <div className="campaign-directory__share">
-              <Link className="campaign-button campaign-button--dark" to="/post/kirk-to-ai">Read the full investigation →</Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <section className="campaign-directory__body">
-        <div className="campaign-shell">
-          <div className="campaign-directory__summary">
-            <div><strong>Aug. 26</strong><span>A/I designated</span></div>
-            <div><strong>25 years</strong><span>A/I infrastructure history</span></div>
-            <p>The finished article is the narrative. This page is the map: the sequence of public claims, policy steps, actors, records, and archived material used to understand how the designation happened.</p>
-          </div>
-
-          <div className="campaign-directory__grid">
-            <article className="campaign-directory-card campaign-directory-card--active">
-              <div className="campaign-directory-card__body">
-                <div className="campaign-directory-card__status"><span>Start here</span><span>longform</span></div>
-                <h2><Link to="/post/kirk-to-ai">Read: From Kirk to A/I</Link></h2>
-                <p>The complete reported story, including the chronology, sourcing, institutional handoffs, and what the available record can and cannot establish.</p>
-                <div className="campaign-directory-card__actions">
-                  <Link className="campaign-button campaign-button--dark" to="/post/kirk-to-ai">Read the article →</Link>
-                </div>
-              </div>
-            </article>
-
-            <article className="campaign-directory-card campaign-directory-card--active">
-              <div className="campaign-directory-card__body">
-                <div className="campaign-directory-card__status"><span>Related</span><span>campaign</span></div>
-                <h2><Link to="/campaigns/autistici-inventati">A/I campaign hub</Link></h2>
-                <p>Open letters, interviews, updates, source material, infrastructure information, and public-action resources connected to the designation.</p>
-                <div className="campaign-directory-card__actions">
-                  <Link to="/campaigns/autistici-inventati">Open campaign →</Link>
-                  <Link to="/campaigns/autistici-inventati/coverage">Coverage archive →</Link>
-                </div>
-              </div>
-            </article>
-          </div>
-
-          <p className="campaign-reader-note"><Link to="/investigations">← All investigations</Link></p>
         </div>
       </section>
       <PublicationFooter />
