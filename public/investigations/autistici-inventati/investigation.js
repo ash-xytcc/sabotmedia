@@ -2,7 +2,12 @@
   const body = document.body
   const toast = document.getElementById('toast')
   const receiptsToggle = document.getElementById('receipts-toggle')
-  const proxyPdf = (source, page) => `/api/investigation-document?source=${encodeURIComponent(source)}#page=${page}&zoom=page-width`
+  const localDocuments = {
+    'govinfo-transcript': './documents/white-house-antifa-roundtable-transcript.pdf',
+    'senate-shideler': './documents/shideler-senate-testimony.pdf',
+    'ofac-notice': './documents/ofac-2026-17724.pdf',
+  }
+  const proxyPdf = (source, page) => `${localDocuments[source]}#page=${page}&zoom=page-width`
 
   const enhancementSheet = document.createElement('link')
   enhancementSheet.rel = 'stylesheet'
@@ -184,7 +189,7 @@
     <div class="wrap">
       <div class="section-head">
         <div><p class="eyebrow">DOCUMENT EXCERPTS</p><h2>Read the pages, not just our summary.</h2></div>
-        <p class="section-intro">These readers use a same-origin Sabot document endpoint so agencies that block third-party framing do not leave a dead box. The original government PDF is always linked directly.</p>
+        <p class="section-intro">These readers use preservation copies hosted by Sabot so an agency outage cannot leave a dead box. The original government PDF is always linked directly.</p>
       </div>
       <div class="evidence-gallery__grid">
         ${docs.map((doc) => `

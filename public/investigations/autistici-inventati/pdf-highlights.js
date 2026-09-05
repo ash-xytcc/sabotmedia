@@ -1,6 +1,6 @@
 (() => {
-  const PDFJS_URL = '/api/pdfjs?asset=main'
-  const PDFJS_WORKER_URL = '/api/pdfjs?asset=worker'
+  const PDFJS_URL = '/vendor/pdfjs/pdf.min.mjs'
+  const PDFJS_WORKER_URL = '/vendor/pdfjs/pdf.worker.min.mjs'
 
   const highlights = {
     'govinfo-transcript:7': {
@@ -172,12 +172,17 @@
   function parseDocumentTarget(iframe) {
     try {
       const url = new URL(iframe.getAttribute('src') || '', window.location.href)
-      if (!url.pathname.endsWith('/api/investigation-document')) return null
-      const source = url.searchParams.get('source') || ''
+      const sourceByFilename = {
+        'white-house-antifa-roundtable-transcript.pdf': 'govinfo-transcript',
+        'shideler-senate-testimony.pdf': 'senate-shideler',
+        'ofac-2026-17724.pdf': 'ofac-notice',
+      }
+      const filename = url.pathname.split('/').pop() || ''
+      const source = sourceByFilename[filename] || url.searchParams.get('source') || ''
       const hash = new URLSearchParams(url.hash.replace(/^#/, ''))
       const page = Number(hash.get('page') || 1)
       if (!source || !Number.isFinite(page)) return null
-      return { source, page, key: `${source}:${page}` }
+      return { source, page, key: `${source}:${page}`, url: `${url.pathname}${url.search}` }
     } catch {
       return null
     }
@@ -318,8 +323,7 @@
     host.insertBefore(reader, iframe)
 
     try {
-      const sourceUrl = `/api/investigation-document?source=${encodeURIComponent(target.source)}`
-      const task = pdfjsLib.getDocument({ url: sourceUrl, disableAutoFetch: false, disableStream: false })
+      const task = pdfjsLib.getDocument({ url: target.url, disableAutoFetch: false, disableStream: false })
       const pdf = await task.promise
       const page = await pdf.getPage(target.page)
       const baseViewport = page.getViewport({ scale: 1 })
