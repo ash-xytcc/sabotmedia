@@ -2,7 +2,6 @@
   "version": 1,
   "include": [
     "/api/*",
-    "/",
     "/post/*",
     "/piece/*",
     "/campaigns",
@@ -15,9 +14,6 @@
     "/admin/*",
     "/wp-admin",
     "/wp-admin/*",
-    "/login",
-    "/wp-login",
-    "/logout",
     "/records-desk/*"
   ],
   "exclude": []
