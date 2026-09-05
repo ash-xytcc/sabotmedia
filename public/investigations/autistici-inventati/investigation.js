@@ -189,7 +189,7 @@
     <div class="wrap">
       <div class="section-head">
         <div><p class="eyebrow">DOCUMENT EXCERPTS</p><h2>Read the pages, not just our summary.</h2></div>
-        <p class="section-intro">These readers use preservation copies hosted by Sabot so an agency outage cannot leave a dead box. The original government PDF is always linked directly.</p>
+        <p class="section-intro">These are full preservation copies hosted by Sabot. The reader opens at the cited page, and the relevant passage is marked with a yellow editorial highlight—look for that overlay. The highlight is Sabot’s guide to the passage, not an alteration of the government document. The original PDF is always linked directly.</p>
       </div>
       <div class="evidence-gallery__grid">
         ${docs.map((doc) => `
@@ -197,7 +197,7 @@
             <div class="evidence-doc__meta"><span>${escapeHtml(doc.meta)}</span><strong>${escapeHtml(doc.title)}</strong></div>
             <div class="evidence-doc__viewer"><iframe loading="lazy" title="${escapeAttr(doc.alt)}" src="${proxyPdf(doc.source, doc.page)}"></iframe></div>
             <p>${escapeHtml(doc.note)}</p>
-            <div class="evidence-doc__actions"><button type="button" class="doc-expand">Expand</button><a href="${escapeAttr(doc.original)}" target="_blank" rel="noreferrer">Open source ↗</a></div>
+            <div class="evidence-doc__actions"><button type="button" class="doc-expand">Expand cited page</button><a href="${escapeAttr(localDocuments[doc.source])}" target="_blank" rel="noreferrer">Full Sabot copy ↗</a><a href="${escapeAttr(doc.original)}" target="_blank" rel="noreferrer">Open source ↗</a></div>
           </article>`).join('')}
       </div>
     </div>`

@@ -37,9 +37,9 @@
   style.textContent = `
     /* Keep the document gallery usable even if the auxiliary evidence stylesheet
        fails to load. These used to collapse back to near-default iframe sizing. */
-    .evidence-gallery { padding: 70px 0 78px; background: #e8dfd0; }
+    .evidence-gallery { padding: 70px 82px 78px 0; background: #e8dfd0; }
     .evidence-gallery__grid { display: grid; grid-template-columns: 1fr; gap: 28px; width: 100%; }
-    .evidence-doc { width: 100%; min-width: 0; border: 1px solid #a89d8b; background: #fffdf8; box-shadow: 8px 8px 0 rgba(21,19,16,.08); }
+    .evidence-doc { width: min(100%, 1120px); min-width: 0; border: 1px solid #a89d8b; background: #fffdf8; box-shadow: 8px 8px 0 rgba(21,19,16,.08); }
     .evidence-doc__meta { display: grid; gap: 5px; padding: 14px 15px; border-bottom: 1px solid #a89d8b; }
     .evidence-doc__meta span { color: #a51d20; font: 900 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .1em; }
     .evidence-doc__meta strong { font: 900 20px/1 Arial, Helvetica, sans-serif; text-transform: uppercase; }
@@ -81,6 +81,7 @@
     .investigation-source-trail a { color: #6e1115; font: 900 10px/1.2 Arial, Helvetica, sans-serif; text-transform: uppercase; text-underline-offset: 3px; }
 
     @media (max-width: 800px) {
+      .evidence-gallery { padding-right: 0; }
       .evidence-doc__viewer, .evidence-doc__viewer iframe, .pdf-highlight-reader { height: 680px; min-height: 680px; }
       .document-peek .pdf-highlight-reader { height: 620px; min-height: 620px; }
       .investigation-live-update__grid { grid-template-columns: 1fr; gap: 20px; }
