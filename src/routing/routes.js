@@ -7,6 +7,8 @@ export const publicRoutes = Object.freeze({
   campaign: '/campaigns/:slug',
   aiCampaign: '/campaigns/autistici-inventati',
   aiCampaignCoverage: '/campaigns/autistici-inventati/coverage',
+  investigations: '/investigations',
+  aiInvestigation: '/investigations/autistici-inventati',
   feeds: '/feeds',
   gallery: '/aberdeen-local-1312-gallery',
   project: '/project/:slug',
@@ -92,6 +94,10 @@ export function projectPath(slug) {
 
 export function campaignPath(slug) {
   return `/campaigns/${slug}`
+}
+
+export function investigationPath(slug) {
+  return `/investigations/${slug}`
 }
 
 export function printPath(slug) {
