@@ -90,6 +90,45 @@
   letter-spacing: .08em;
 }
 .evidence-doc iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+.evidence-doc__viewer--transcript {
+  display: grid;
+  min-height: 360px;
+  height: auto;
+  padding: clamp(30px, 5vw, 68px);
+  place-content: center;
+  background: #f7f2e9;
+}
+.evidence-doc__viewer--transcript::after { content: 'SOURCE TRANSCRIPT'; }
+.evidence-doc__viewer--transcript blockquote {
+  max-width: 920px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.evidence-doc__viewer--transcript blockquote p {
+  margin: 0;
+  color: #1b1815;
+  font: 900 clamp(25px, 4vw, 52px)/1.04 Arial, Helvetica, sans-serif;
+  letter-spacing: -.025em;
+}
+.evidence-doc__viewer--transcript cite {
+  display: block;
+  margin-top: 24px;
+  color: #655b51;
+  font: 800 12px/1.4 Arial, Helvetica, sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.evidence-doc__verified {
+  display: inline-flex;
+  justify-self: start;
+  margin-top: 28px;
+  padding: 6px 8px;
+  background: #e4d8c8;
+  color: #6e1115;
+  font: 900 9px/1 Arial, Helvetica, sans-serif;
+  letter-spacing: .08em;
+}
 .evidence-doc > p { margin: 0; padding: 15px 16px 8px; font-size: 14px; line-height: 1.5; }
 .evidence-doc__actions { display: flex; gap: 12px; align-items: center; padding: 8px 16px 16px; }
 .evidence-doc__actions button,
