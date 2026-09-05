@@ -12,22 +12,26 @@ function ensureStyles() {
   const style = document.createElement('style')
   style.id = 'kirk-to-ai-update-styles'
   style.textContent = `
-    #${UPDATE_ID}, #${BANK_UPDATE_ID} { margin:58px 0 24px; padding:32px 0 8px; border-top:5px solid #a51d20; color:#151310 !important; }
+    #${UPDATE_ID}, #${BANK_UPDATE_ID} { margin:58px 0 24px; padding:32px 0 8px; border-top:5px solid #a51d20; color:#f4eddf !important; }
     #${UPDATE_ID} *, #${BANK_UPDATE_ID} * { box-sizing:border-box; }
-    #${UPDATE_ID} p, #${UPDATE_ID} li, #${UPDATE_ID} h2, #${UPDATE_ID} h3, #${UPDATE_ID} strong,
-    #${BANK_UPDATE_ID} p, #${BANK_UPDATE_ID} li, #${BANK_UPDATE_ID} h2, #${BANK_UPDATE_ID} h3, #${BANK_UPDATE_ID} strong { color:#151310 !important; }
-    #${UPDATE_ID} .sabot-update-eyebrow, #${BANK_UPDATE_ID} .sabot-update-eyebrow { margin:0 0 8px; color:#a51d20 !important; font:900 10px/1 Arial,Helvetica,sans-serif; letter-spacing:.1em; text-transform:uppercase; }
+    #${UPDATE_ID} > h2, #${BANK_UPDATE_ID} > h2,
+    #${UPDATE_ID} > p:not(.sabot-update-eyebrow):not(.sabot-update-note),
+    #${BANK_UPDATE_ID} > p:not(.sabot-update-eyebrow):not(.sabot-update-note) { color:#f4eddf !important; }
+    #${UPDATE_ID} .sabot-update-eyebrow, #${BANK_UPDATE_ID} .sabot-update-eyebrow { margin:0 0 8px; color:#c92a2e !important; font:900 10px/1 Arial,Helvetica,sans-serif; letter-spacing:.1em; text-transform:uppercase; }
     #${UPDATE_ID} h2, #${BANK_UPDATE_ID} h2 { margin:0 0 18px; font:900 clamp(30px,4vw,46px)/.98 Arial,Helvetica,sans-serif; letter-spacing:-.04em; text-transform:uppercase; }
     #${UPDATE_ID} > p, #${BANK_UPDATE_ID} > p { font-size:1.05em; }
     #${UPDATE_ID} .sabot-update-trail { display:grid; gap:14px; margin:26px 0; }
     #${UPDATE_ID} .sabot-update-card, #${BANK_UPDATE_ID} .sabot-update-card { padding:17px 18px; border:1px solid #b8ac99; background:#f5eee1; color:#151310 !important; }
+    #${UPDATE_ID} .sabot-update-card h3, #${UPDATE_ID} .sabot-update-card p, #${UPDATE_ID} .sabot-update-card strong,
+    #${BANK_UPDATE_ID} .sabot-update-card h3, #${BANK_UPDATE_ID} .sabot-update-card p, #${BANK_UPDATE_ID} .sabot-update-card strong { color:#151310 !important; }
     #${UPDATE_ID} .sabot-update-card time, #${BANK_UPDATE_ID} .sabot-update-card time { display:block; margin-bottom:6px; color:#a51d20 !important; font:900 9px/1 Arial,Helvetica,sans-serif; letter-spacing:.08em; text-transform:uppercase; }
     #${UPDATE_ID} .sabot-update-card h3, #${BANK_UPDATE_ID} .sabot-update-card h3 { margin:0 0 8px; font:900 19px/1.08 Arial,Helvetica,sans-serif; text-transform:uppercase; }
-    #${UPDATE_ID} .sabot-update-card p, #${BANK_UPDATE_ID} .sabot-update-card p { margin:0 0 10px; color:#151310 !important; }
-    #${UPDATE_ID} a, #${BANK_UPDATE_ID} a { color:#6e1115 !important; font-weight:800; text-underline-offset:3px; }
+    #${UPDATE_ID} .sabot-update-card p, #${BANK_UPDATE_ID} .sabot-update-card p { margin:0 0 10px; }
+    #${UPDATE_ID} .sabot-update-card a, #${BANK_UPDATE_ID} .sabot-update-card a { color:#6e1115 !important; font-weight:800; text-underline-offset:3px; }
     #${UPDATE_ID} blockquote.sabot-update-quote, #${BANK_UPDATE_ID} blockquote.sabot-update-quote { margin:15px 0; padding:14px 17px; border-left:6px solid #a51d20; background:#eee3d4; color:#151310 !important; }
     #${UPDATE_ID} blockquote.sabot-update-quote p, #${BANK_UPDATE_ID} blockquote.sabot-update-quote p { margin:0; color:#151310 !important; font:900 18px/1.35 Arial,Helvetica,sans-serif; }
     #${UPDATE_ID} .sabot-update-note, #${BANK_UPDATE_ID} .sabot-update-note { padding:13px 15px; border:1px solid #c99d91; background:#f3dfda; color:#151310 !important; font-size:.9em; }
+    #${UPDATE_ID} .sabot-update-note strong, #${BANK_UPDATE_ID} .sabot-update-note strong { color:#151310 !important; }
     #${UPDATE_ID} .sabot-update-actions, #${BANK_UPDATE_ID} .sabot-update-actions { display:flex; flex-wrap:wrap; gap:10px; margin:22px 0 8px; }
     #${UPDATE_ID} .sabot-update-actions a, #${BANK_UPDATE_ID} .sabot-update-actions a { display:inline-block; padding:9px 11px; background:#151310; color:#fff !important; font:900 10px/1.2 Arial,Helvetica,sans-serif; text-transform:uppercase; }
     #${UPDATE_ID} .twitter-tweet { margin:14px 0 !important; }
