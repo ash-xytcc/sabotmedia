@@ -63,9 +63,7 @@ export function PublicationFooter() {
       </div>
 
       <div className="publication-footer__bottom">
-        <EditableText as="div" field={footer.bottom.field} multiline>
-          {footer.bottom.defaultText}
-        </EditableText>
+        <div>{'Ⓐ Intellectual property is bullshit - steal this website.'}</div>
         {!isChecking && !isAuthenticated ? (
           <Link className="publication-footer__login-link" to="/login">Editor login</Link>
         ) : null}
