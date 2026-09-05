@@ -203,11 +203,12 @@ function summarizeRevisionChanges(current = {}, previous = {}) {
     ['body', 'body'],
     ['status', 'status'],
     ['workflowState', 'workflow'],
+    ['showOnHomepage', 'homepage visibility'],
     ['featuredImage', 'featured image'],
     ['publishedAt', 'publication date'],
   ]
   const changed = checks
-    .filter(([key]) => String(current?.[key] || '') !== String(previous?.[key] || ''))
+    .filter(([key]) => String(current?.[key] ?? '') !== String(previous?.[key] ?? ''))
     .map(([, label]) => label)
   return changed.length ? changed.join(', ') : 'metadata snapshot'
 }
@@ -222,6 +223,7 @@ function toAutosaveFingerprint(draft, allowComments) {
     contentType: draft?.contentType || 'dispatch',
     status: draft?.status || 'draft',
     workflowState: draft?.workflowState || 'draft',
+    showOnHomepage: draft?.showOnHomepage !== false,
     publishedAt: draft?.publishedAt || '',
     author: draft?.author || '',
     scheduledFor: draft?.scheduledFor || '',
@@ -554,6 +556,7 @@ export function NativeContentBridgePage() {
       featuredImageAlt: merged.featuredImageAlt || '',
       featuredImageCaption: merged.featuredImageCaption || '',
       podcastCoverImage: merged.podcastCoverImage || merged.featuredImage || merged.heroImage || '',
+      showOnHomepage: merged.showOnHomepage !== false,
       allowComments,
     }
   }
@@ -909,6 +912,15 @@ export function NativeContentBridgePage() {
                   <option value="archived">Archived</option>
                 </select>
               </label>
+              <label className="native-content-editor__check">
+                <input
+                  type="checkbox"
+                  checked={draft.showOnHomepage !== false}
+                  onChange={(event) => setDraft((current) => ({ ...current, showOnHomepage: event.target.checked }))}
+                />
+                <span>Show on homepage</span>
+              </label>
+              <p className="description">Uncheck this to publish a public, linkable post without promoting it in the homepage feed.</p>
               {draft.status === 'scheduled' ? (
                 <label className="native-content-editor__field">
                   <span>Scheduled for</span>
@@ -1139,6 +1151,8 @@ export function NativeContentBridgePage() {
                     <dd><del>{compareRevision.draft?.title || 'Untitled'}</del><ins>{draft.title || 'Untitled'}</ins></dd>
                     <dt>Status</dt>
                     <dd><del>{compareRevision.draft?.status || 'draft'}</del><ins>{draft.status || 'draft'}</ins></dd>
+                    <dt>Homepage</dt>
+                    <dd><del>{compareRevision.draft?.showOnHomepage === false ? 'Hidden' : 'Shown'}</del><ins>{draft.showOnHomepage === false ? 'Hidden' : 'Shown'}</ins></dd>
                     <dt>Excerpt length</dt>
                     <dd><del>{String(compareRevision.draft?.excerpt || '').length}</del><ins>{String(draft.excerpt || '').length}</ins></dd>
                     <dt>Body length</dt>
