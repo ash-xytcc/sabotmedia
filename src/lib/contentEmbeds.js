@@ -95,7 +95,10 @@ export function detectContentEmbed(value) {
     return { provider: 'bluesky', url: normalizedUrl, embedUrl: '', title: 'Bluesky post', aspect: 'link' }
   }
 
-  if (/(^|\.)soundcloud\.com$/i.test(host)) return { provider: 'soundcloud', url: normalizedUrl, embedUrl: '', title: 'SoundCloud', aspect: 'link' }
+  if (/(^|\.)soundcloud\.com$/i.test(host)) {
+    return { provider: 'soundcloud', url: normalizedUrl, embedUrl: `https://w.soundcloud.com/player/?url=${encodeURIComponent(normalizedUrl)}&auto_play=false&show_artwork=true`, title: 'SoundCloud player', aspect: 'audio', height: 166 }
+  }
+
   if (/(^|\.)bandcamp\.com$/i.test(host)) return { provider: 'bandcamp', url: normalizedUrl, embedUrl: '', title: 'Bandcamp', aspect: 'link' }
 
   return null
@@ -107,13 +110,52 @@ export function isStandaloneEmbedText(value) {
   return detectContentEmbed(text)
 }
 
+function buildEmbedFigure(doc, embed) {
+  if (!embed?.embedUrl) return null
+  const figure = doc.createElement('figure')
+  figure.className = `sabot-embed sabot-embed--${embed.provider}`
+  figure.setAttribute('data-embed-provider', embed.provider)
+  figure.setAttribute('data-embed-url', embed.url)
+
+  const iframe = doc.createElement('iframe')
+  iframe.src = embed.embedUrl
+  iframe.title = embed.title
+  iframe.loading = 'lazy'
+  iframe.setAttribute('allowfullscreen', '')
+  iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin')
+  iframe.setAttribute('width', '100%')
+  iframe.setAttribute('height', String(embed.height || (embed.aspect === 'video' ? 560 : 520)))
+  figure.appendChild(iframe)
+
+  const caption = doc.createElement('figcaption')
+  const anchor = doc.createElement('a')
+  anchor.href = embed.url
+  anchor.target = '_blank'
+  anchor.rel = 'noopener noreferrer'
+  anchor.textContent = `Open original ${embed.title.toLowerCase()} ↗`
+  caption.appendChild(anchor)
+  figure.appendChild(caption)
+  return figure
+}
+
 export function expandStandaloneEmbedsInHtml(html) {
   const value = String(html || '')
   if (!value || typeof DOMParser === 'undefined') return value
 
   const doc = new DOMParser().parseFromString(value, 'text/html')
-  const candidates = Array.from(doc.body.querySelectorAll('p, div'))
 
+  // Repair official X/Twitter embed snippets whose script was correctly stripped by
+  // the article sanitizer. This also fixes older posts without requiring a resave.
+  Array.from(doc.body.querySelectorAll('blockquote.twitter-tweet')).forEach((node) => {
+    const href = Array.from(node.querySelectorAll('a[href]'))
+      .map((anchor) => anchor.getAttribute('href') || '')
+      .find((candidate) => detectContentEmbed(candidate)?.provider === 'x')
+    const embed = href ? detectContentEmbed(href) : null
+    const figure = buildEmbedFigure(doc, embed)
+    if (figure) node.replaceWith(figure)
+  })
+
+  const candidates = Array.from(doc.body.querySelectorAll('p, div'))
   candidates.forEach((node) => {
     if (node.closest('figure, blockquote, pre, code, .sabot-embed')) return
     const children = Array.from(node.children || [])
@@ -130,42 +172,20 @@ export function expandStandaloneEmbedsInHtml(html) {
     const embed = isStandaloneEmbedText(raw)
     if (!embed) return
 
-    if (!embed.embedUrl) {
-      node.className = `${node.className || ''} sabot-embed-link`.trim()
-      node.innerHTML = ''
-      const anchor = doc.createElement('a')
-      anchor.href = embed.url
-      anchor.target = '_blank'
-      anchor.rel = 'noopener noreferrer'
-      anchor.textContent = `${embed.title}: ${embed.url}`
-      node.appendChild(anchor)
+    const figure = buildEmbedFigure(doc, embed)
+    if (figure) {
+      node.replaceWith(figure)
       return
     }
 
-    const figure = doc.createElement('figure')
-    figure.className = `sabot-embed sabot-embed--${embed.provider}`
-    figure.setAttribute('data-embed-provider', embed.provider)
-    figure.setAttribute('data-embed-url', embed.url)
-
-    const iframe = doc.createElement('iframe')
-    iframe.src = embed.embedUrl
-    iframe.title = embed.title
-    iframe.loading = 'lazy'
-    iframe.setAttribute('allowfullscreen', '')
-    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin')
-    iframe.setAttribute('width', '100%')
-    iframe.setAttribute('height', String(embed.height || (embed.aspect === 'video' ? 560 : 520)))
-    figure.appendChild(iframe)
-
-    const caption = doc.createElement('figcaption')
+    node.className = `${node.className || ''} sabot-embed-link`.trim()
+    node.innerHTML = ''
     const anchor = doc.createElement('a')
     anchor.href = embed.url
     anchor.target = '_blank'
     anchor.rel = 'noopener noreferrer'
-    anchor.textContent = `Open original ${embed.title.toLowerCase()} ↗`
-    caption.appendChild(anchor)
-    figure.appendChild(caption)
-    node.replaceWith(figure)
+    anchor.textContent = `${embed.title}: ${embed.url}`
+    node.appendChild(anchor)
   })
 
   return doc.body.innerHTML
