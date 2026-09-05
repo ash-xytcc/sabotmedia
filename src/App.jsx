@@ -26,6 +26,7 @@ import { CampaignAdminPage } from './components/CampaignAdminPage'
 import { CampaignContributorPage } from './components/CampaignContributorPage'
 import { CampaignBenefitKitPage } from './components/CampaignBenefitKitPage'
 import { CampaignInstagramConnectPage } from './components/CampaignInstagramConnectPage'
+import { InvestigationsIndexPage, AutisticiInventatiInvestigationPage } from './components/InvestigationsIndexPage'
 import { FeedSettingsAdminPage } from './components/FeedSettingsAdminPage'
 import { PublicFeedsPage } from './components/PublicFeedsPage'
 import { GalleryArchivePage } from './components/GalleryArchivePage'
@@ -156,6 +157,8 @@ function RouteMeta({ pieces = [] }) {
       '/campaigns': ['Campaigns', 'Sabot Media campaign hubs gathering reporting, sources, live updates, and public action materials.'],
       '/campaigns/autistici-inventati': ['Communications Infrastructure Is Not Terrorism', 'Campaign hub for reporting, open letters, graphics, live updates, source material, and infrastructure status related to Autistici/Inventati.'],
       '/campaigns/autistici-inventati/coverage': ['A/I Campaign Coverage Archive', 'Search reporting, analysis and official dispatches related to the Autistici/Inventati designation and its consequences.'],
+      '/investigations': ['Investigations', 'Sabot Media investigation hubs gathering source trails, timelines, archived evidence, reporting notes, and finished longform reporting.'],
+      '/investigations/autistici-inventati': ['From Kirk to A/I', 'The reporting map behind Sabot Media’s investigation into the path from post-assassination anti-Antifa advocacy to the designation of Autistici/Inventati.'],
       '/feeds': ['Feeds', 'Subscribe to Sabot Media feeds for the whole archive, formats, projects, collections, and author labels.'],
       '/aberdeen-local-1312-gallery': ['Aberdeen Local 1312 Gallery', 'Historical image archive from Aberdeen Local 1312, preserved by Sabot Media.'],
       '/search': ['Search', 'Search the Sabot Media archive.'],
@@ -294,7 +297,9 @@ export default function App() {
               <Route path="/piece/:slug/print" element={<LegacyPrintRedirect />} />
               <Route path={publicRoutes.collections} element={<CollectionsIndexPage pieces={pieces} />} />
               <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
-              <Route path="/campaigns" element={<CampaignsIndexPage />} />
+              <Route path={publicRoutes.campaigns} element={<CampaignsIndexPage />} />
+              <Route path={publicRoutes.investigations} element={<InvestigationsIndexPage />} />
+              <Route path={publicRoutes.aiInvestigation} element={<AutisticiInventatiInvestigationPage />} />
               <Route path="/contribute/:slug" element={<CampaignContributorPage />} />
               <Route path="/campaigns/:slug/instagram-connect" element={<CampaignInstagramConnectPage />} />
               <Route path="/campaigns/:slug/benefit-kit" element={<CampaignBenefitKitPage />} />
