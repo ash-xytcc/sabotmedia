@@ -1,4 +1,5 @@
 import { cloneRichDoc, createEmptyRichDoc, normalizeRichDoc, makeId, serializeRichDocToPlainText } from '../lib/richNativeContent'
+import { isStandaloneEmbedText } from '../lib/contentEmbeds'
 
 function blockLabel(type) {
   if (type === 'heading') return 'heading'
@@ -13,6 +14,19 @@ export function RichNativeEditor({ value, onChange, mediaAssetsSlot }) {
 
   function updateBlock(id, patch) {
     onChange(doc.map((block) => (block.id === id ? { ...block, ...patch } : block)))
+  }
+
+  function updateTextBlock(id, text) {
+    const embed = isStandaloneEmbedText(text)
+    if (embed) {
+      onChange(doc.map((block) => (
+        block.id === id
+          ? { id: block.id, type: 'embed', url: embed.url, caption: '' }
+          : block
+      )))
+      return
+    }
+    updateBlock(id, { text })
   }
 
   function removeBlock(id) {
@@ -76,7 +90,7 @@ export function RichNativeEditor({ value, onChange, mediaAssetsSlot }) {
                 <textarea
                   className="native-content-editor__textarea native-content-editor__textarea--sm"
                   value={block.text || ''}
-                  onChange={(e) => updateBlock(block.id, { text: e.target.value })}
+                  onChange={(e) => updateTextBlock(block.id, e.target.value)}
                 />
               ) : null}
 
@@ -90,6 +104,7 @@ export function RichNativeEditor({ value, onChange, mediaAssetsSlot }) {
                     <span>caption</span>
                     <input type="text" value={block.caption || ''} onChange={(e) => updateBlock(block.id, { caption: e.target.value })} />
                   </label>
+                  {isStandaloneEmbedText(block.url) ? <small>recognized embed · renders automatically on the public post</small> : null}
                 </>
               ) : null}
 
