@@ -98,6 +98,21 @@
     quickRead.insertAdjacentElement('beforebegin', section)
   }
 
+  function addCascadeUpdate() {
+    const cascade = document.getElementById('cascade')
+    if (!cascade || cascade.querySelector('[data-bank-escalation]')) return
+    const note = document.createElement('div')
+    note.className = 'unknown-card'
+    note.dataset.bankEscalation = '2026-09-05'
+    note.innerHTML = `<p class="eyebrow">UPDATE · SEPTEMBER 5</p><h3>The banking leg escalated.</h3><p>A/I says Banca Etica told the association on Sept. 4 that it will terminate the account and that remaining donated funds will no longer be available. That moves the banking consequence from temporary suspension and probable closure to a reported termination decision with immediate operating consequences.</p><p><a href="#${BANK_UPDATE_ID}">Read the full Sept. 5 update ↑</a> · <a href="https://keepitfree.ai/announcements/banca-etica-shtus-down-a/i-funds/" target="_blank" rel="noreferrer">Primary source ↗</a></p>`
+    const evidence = cascade.querySelector('.evidence-line')
+    if (evidence) evidence.insertAdjacentElement('beforebegin', note)
+    else cascade.appendChild(note)
+
+    const chainDate = document.querySelector('.chain-node[href="#cascade"] .date')
+    if (chainDate) chainDate.textContent = 'AUG 28–SEP 5+'
+  }
+
   function updatePageMeta() {
     const updated = document.querySelector('.intro .updated')
     if (updated) updated.textContent = 'Published as an open investigation · Last updated September 5, 2026'
@@ -169,6 +184,7 @@
   function init() {
     makeBankUpdate()
     makeTrail()
+    addCascadeUpdate()
     updatePageMeta()
     addSources()
     addUpdateLog()
