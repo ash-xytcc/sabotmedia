@@ -22,7 +22,9 @@
         min-height: 100vh;
         margin: 0;
         display: grid;
+        grid-template-rows: 1fr auto;
         place-items: center;
+        gap: 28px;
         padding: 24px;
       }
       main {
@@ -38,6 +40,11 @@
       a {
         color: #d3a62c;
       }
+      footer {
+        width: min(680px, 100%);
+        border-top: 1px solid rgba(211, 166, 44, 0.28);
+        text-align: center;
+      }
     </style>
   </head>
   <body>
@@ -47,5 +54,6 @@
       <p>That Sabot Media page does not exist, moved, or was never published.</p>
       <a href="/">Go home</a>
     </main>
+    <footer><p>Ⓐ Intellectual property is bullshit - steal this website.</p></footer>
   </body>
 </html>
