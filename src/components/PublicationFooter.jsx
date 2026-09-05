@@ -55,6 +55,7 @@ export function PublicationFooter() {
                 ))
               )}
               {section.id === 'site' && SHOW_AI_CAMPAIGN_LINKS ? <EditableLink className="publication-footer__campaign-link" labelField="footer.site.campaign.label" hrefField="footer.site.campaign.href" defaultLabel="A/I Campaign" defaultHref={publicRoutes.aiCampaign} /> : null}
+              {section.id === 'site' ? <EditableLink labelField="footer.site.investigations.label" hrefField="footer.site.investigations.href" defaultLabel="Investigations" defaultHref={publicRoutes.investigations} /> : null}
               {section.id === 'site' ? <EditableLink labelField="footer.site.gallery.label" hrefField="footer.site.gallery.href" defaultLabel="Gallery" defaultHref="/aberdeen-local-1312-gallery" /> : null}
             </nav>
           </div>
