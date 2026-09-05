@@ -57,7 +57,11 @@ function CampaignCard({ campaign, index }) {
       <h2><Link to={href}>{campaign.title}</Link></h2>
       <p>{directoryDescription(campaign)}</p>
       <div className="campaign-directory-card__inside"><strong>Inside this campaign</strong><ul>{directoryFeatures(campaign).map((feature) => <li key={feature}>{feature}</li>)}</ul></div>
-      <div className="campaign-directory-card__actions"><Link className="campaign-button campaign-button--dark" to={href}>Open campaign →</Link>{campaign.donation?.url ? <a href={campaign.donation.url} target="_blank" rel="noreferrer">{campaign.donation.label || 'Donate'} ↗</a> : null}</div>
+      <div className="campaign-directory-card__actions">
+        <Link className="campaign-button campaign-button--dark" to={href}>Open campaign →</Link>
+        {campaign.slug === 'autistici-inventati' ? <Link to="/investigations/autistici-inventati">Read investigation →</Link> : null}
+        {campaign.donation?.url ? <a href={campaign.donation.url} target="_blank" rel="noreferrer">{campaign.donation.label || 'Donate'} ↗</a> : null}
+      </div>
     </div>
   </article>
 }
