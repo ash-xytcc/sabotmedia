@@ -2,11 +2,159 @@
   const UPDATE_ID = 'update-2026-09-05-ngo-state'
   const BANK_UPDATE_ID = 'update-2026-09-05-banca-etica'
 
+  function installUpdateStyles() {
+    if (document.getElementById('investigation-public-update-styles')) return
+    const style = document.createElement('style')
+    style.id = 'investigation-public-update-styles'
+    style.textContent = `
+      #${UPDATE_ID} .eyebrow {
+        margin-bottom: 16px;
+        font-size: clamp(16px, 1.6vw, 22px);
+        line-height: 1.05;
+        letter-spacing: .09em;
+      }
+
+      .full-report-card--with-image {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+        gap: 8px 34px;
+        align-items: center;
+        overflow: hidden;
+      }
+      .full-report-card--with-image > :not(.full-report-feature__image) {
+        grid-column: 1;
+      }
+      .full-report-card--with-image #full-report-title {
+        margin: 0 0 8px;
+        font: 900 clamp(30px, 4vw, 50px)/.95 Arial, Helvetica, sans-serif;
+        letter-spacing: -.035em;
+        text-transform: uppercase;
+      }
+      .full-report-feature__image {
+        grid-column: 2;
+        grid-row: 1 / span 4;
+        display: block;
+        align-self: stretch;
+        min-height: 230px;
+        max-height: 320px;
+        overflow: hidden;
+        border: 1px solid #5d5145;
+        background: #28231e;
+      }
+      .full-report-feature__image img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        min-height: 230px;
+        object-fit: cover;
+        transition: transform .2s ease, filter .2s ease;
+      }
+      .full-report-feature__image:hover img,
+      .full-report-feature__image:focus-visible img {
+        transform: scale(1.02);
+        filter: contrast(1.04);
+      }
+
+      @media (max-width: 760px) {
+        .full-report-card--with-image {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+        .full-report-card--with-image > :not(.full-report-feature__image),
+        .full-report-feature__image {
+          grid-column: 1;
+        }
+        .full-report-feature__image {
+          grid-row: auto;
+          min-height: 210px;
+          max-height: none;
+        }
+        .full-report-feature__image img { min-height: 210px; }
+      }
+    `
+    document.head.appendChild(style)
+  }
+
   function promoteFullReport() {
     const intro = document.querySelector('.intro')
     const fullReport = document.getElementById('full-report-title')?.closest('section')
     if (!intro || !fullReport) return
     intro.insertAdjacentElement('afterend', fullReport)
+  }
+
+  async function resolveFullReportImage() {
+    try {
+      const response = await fetch('/api/native-content?includeFuture=1', {
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        const article = Array.isArray(data?.items)
+          ? data.items.find((item) => String(item?.slug || '') === 'kirk-to-ai')
+          : null
+        const src = article?.featuredImage || article?.heroImage || article?.imageUrl || article?.image || ''
+        if (src) {
+          return {
+            src,
+            alt: article?.featuredImageAlt || article?.title || 'From Kirk to A/I',
+          }
+        }
+      }
+    } catch {
+      // Try the WordPress compatibility feed below.
+    }
+
+    try {
+      const response = await fetch('/wp-json/wp/v2/posts?slug=kirk-to-ai&_embed=1', {
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      })
+      if (!response.ok) return null
+      const posts = await response.json()
+      const post = Array.isArray(posts) ? posts[0] : null
+      const media = post?._embedded?.['wp:featuredmedia']?.[0]
+      const src = media?.source_url ||
+        media?.media_details?.sizes?.large?.source_url ||
+        media?.media_details?.sizes?.medium_large?.source_url ||
+        media?.media_details?.sizes?.full?.source_url ||
+        ''
+      if (!src) return null
+      return {
+        src,
+        alt: media?.alt_text || post?.title?.rendered || 'From Kirk to A/I',
+      }
+    } catch {
+      return null
+    }
+  }
+
+  async function addFullReportImage() {
+    const title = document.getElementById('full-report-title')
+    const card = title?.closest('.unknown-card')
+    if (!card || card.querySelector('.full-report-feature__image')) return
+
+    const image = await resolveFullReportImage()
+    if (!image?.src) return
+
+    const link = document.createElement('a')
+    link.className = 'full-report-feature__image'
+    link.href = '/post/kirk-to-ai'
+    link.setAttribute('aria-label', 'Read From Kirk to A/I')
+
+    const img = document.createElement('img')
+    img.src = image.src
+    img.alt = image.alt
+    img.loading = 'eager'
+    img.decoding = 'async'
+    img.addEventListener('error', () => {
+      link.remove()
+      card.classList.remove('full-report-card--with-image')
+    }, { once: true })
+
+    link.appendChild(img)
+    card.appendChild(link)
+    card.classList.add('full-report-card--with-image')
   }
 
   function makeBankUpdate() {
@@ -189,7 +337,9 @@
   }
 
   function init() {
+    installUpdateStyles()
     promoteFullReport()
+    addFullReportImage()
     makeBankUpdate()
     makeTrail()
     addCascadeUpdate()
