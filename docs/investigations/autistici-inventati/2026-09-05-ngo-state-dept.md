@@ -9,6 +9,7 @@ Sabot Media disputes those characterizations. The post is relevant to this inves
 - X post: https://x.com/MrAndyNgo/status/2095928475731325130
 - Account: Andy Ngo, @MrAndyNgo
 - Observed/preserved: Sept. 5, 2026, shortly after 1:27 a.m. Pacific time
+- Contemporaneous corroboration: a third-party profile mirror indexed the same post text and quote-post relationship at preservation time
 
 ## Transcription
 
@@ -24,7 +25,9 @@ The screenshot also contains images of Sabot Media graphics embedded in Shideler
 
 ## Preservation record
 
-The original screenshot supplied at the time of reporting was retained byte-for-byte without editing. A preservation bundle was created containing the original screenshot, source URL, transcription, metadata, SHA-256 records and this reporting note. A copy of the ZIP archive was also saved to the Sabot Media investigation evidence folder in ChatGPT Library.
+The original screenshot supplied at the time of reporting was retained byte-for-byte without editing. A preservation bundle was created containing the original screenshot, source URL, transcription, metadata, SHA-256 records and this reporting note. A copy of the ZIP archive and reporting note were saved to the Sabot Media investigation evidence folder in ChatGPT Library.
+
+The original X URL returned HTTP 403 to automated retrieval at preservation time. That limitation is recorded rather than papered over. A contemporaneous third-party mirror was used only as corroboration of the visible post text and quote-post relationship, not as a replacement for the original source.
 
 SHA-256 of original screenshot:
 
@@ -32,7 +35,7 @@ SHA-256 of original screenshot:
 
 SHA-256 of preservation ZIP:
 
-`df38dc7afa6ce8c620ec6ad299ae5a9803b7c9144c1181541d8293268ae31572`
+`27bca915ab69ab2ccc3eff80a4a95ee70b4914bc6b5cc15dc7c42b028df4d148`
 
 ## Reporting significance
 
