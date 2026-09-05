@@ -1,5 +1,37 @@
 (() => {
   const UPDATE_ID = 'update-2026-09-05-ngo-state'
+  const BANK_UPDATE_ID = 'update-2026-09-05-banca-etica'
+
+  function makeBankUpdate() {
+    if (document.getElementById(BANK_UPDATE_ID)) return
+    const quickRead = document.querySelector('.quick-read')
+    if (!quickRead) return
+
+    const section = document.createElement('section')
+    section.className = 'investigation-live-update'
+    section.id = BANK_UPDATE_ID
+    section.setAttribute('aria-labelledby', `${BANK_UPDATE_ID}-title`)
+    section.innerHTML = `
+      <div class="wrap investigation-live-update__grid">
+        <div>
+          <p class="eyebrow">NEW DEVELOPMENT · SEPTEMBER 5, 2026</p>
+          <h2 id="${BANK_UPDATE_ID}-title">A/I says Banca Etica will close the account and make donated funds unavailable.</h2>
+        </div>
+        <div class="investigation-live-update__copy">
+          <p>Autistici/Inventati says Banca Etica told the AI ODV association during a September 4 video call that the bank will unilaterally terminate its account and that funds still in the account, including donations from individuals, organizations and collectives, will no longer be available to the association.</p>
+          <p>This is a significant escalation from Banca Etica's earlier public statement. The bank had said it temporarily suspended the account, was consulting banking associations and Italy's economy ministry, and was trying to determine whether it could avoid closure while warning that closure was probable. A/I now says that process has ended in a termination decision.</p>
+          <p>A/I says the loss of access prevents it from meeting administrative obligations, paying service providers and delivering services, and that the association intends to pursue legal action to challenge the decision and regain access to donated funds.</p>
+          <p>This sharpens the investigation's “cascade” finding. The U.S. action did not have to contain an instruction to physically seize A/I's servers. According to the public record, registry, payment and banking chokepoints have each transmitted the sanctions pressure into practical disruption.</p>
+          <p class="investigation-live-update__note"><strong>Source-status note:</strong> the Sept. 5 termination account is A/I's public statement about the Sept. 4 meeting. The latest Banca Etica statement available to Sabot still describes temporary suspension, efforts to avoid closure and the possibility of later closure; it does not yet describe the Sept. 4 meeting outcome.</p>
+          <div class="investigation-live-update__actions">
+            <a href="https://keepitfree.ai/announcements/banca-etica-shtus-down-a/i-funds/" target="_blank" rel="noreferrer">Read A/I's Sept. 5 release ↗</a>
+            <a href="https://www.bancaetica.it/area-stampa/autistici-inventati-banca-etica-condanna-uso-improprio-ofac-valutazioni-per-non-chiudere-il-conto/" target="_blank" rel="noreferrer">Read Banca Etica's earlier statement ↗</a>
+            <a href="./log/#2026-09-05-banca-etica">Open preservation record →</a>
+          </div>
+        </div>
+      </div>`
+    quickRead.insertAdjacentElement('beforebegin', section)
+  }
 
   function makeTrail() {
     if (document.getElementById(UPDATE_ID)) return
@@ -71,6 +103,12 @@
     if (updated) updated.textContent = 'Published as an open investigation · Last updated September 5, 2026'
 
     const nav = document.querySelector('.story-nav')
+    if (nav && !nav.querySelector(`a[href="#${BANK_UPDATE_ID}"]`)) {
+      const link = document.createElement('a')
+      link.href = `#${BANK_UPDATE_ID}`
+      link.textContent = 'NEW · Banca Etica termination'
+      nav.insertBefore(link, nav.querySelector('a') || null)
+    }
     if (nav && !nav.querySelector(`a[href="#${UPDATE_ID}"]`)) {
       const link = document.createElement('a')
       link.href = `#${UPDATE_ID}`
@@ -101,6 +139,8 @@
   }
 
   function addSources() {
+    addSource('https://keepitfree.ai/announcements/banca-etica-shtus-down-a/i-funds/', 'SEP 5 · 2026', 'A/I says Banca Etica will terminate account and funds are unavailable', 'Autistici/Inventati')
+    addSource('https://www.bancaetica.it/area-stampa/autistici-inventati-banca-etica-condanna-uso-improprio-ofac-valutazioni-per-non-chiudere-il-conto/', 'AUG 28–SEP 1 · 2026', 'Banca Etica statement on suspension and closure risk', 'Banca Etica')
     addSource('https://thefederalist.com/2026/08/28/antifa-networks-panic-after-trump-administration-just-sanctioned-their-servers/', 'AUG 28 · 2026', 'Shideler uses Sabot campaign material', 'The Federalist')
     addSource('https://www.washingtonexaminer.com/news/investigations/4702739/leftist-network-terrorists-plain-sight/', 'AUG 30 · 2026', 'Crozier names, links and quotes Sabot', 'Washington Examiner')
     addSource('https://x.com/Hudson_Crozier/status/2094825698288390355', 'SEP 1 · 2026', 'Crozier links Sabot on X', 'X / @Hudson_Crozier')
@@ -118,6 +158,7 @@
   }
 
   function addUpdateLog() {
+    addLogItem('A/I reported that Banca Etica told the association on Sept. 4 it will terminate the account and that remaining donated funds will no longer be available, escalating the banking leg of the sanctions cascade from suspension and probable closure to a reported termination decision.')
     addLogItem('Published a public evidence log so preservation records, source links and social-media developments are accessible and shareable from the investigation itself.')
     addLogItem('Added the Aug. 28–Sept. 5 post-publication source trail: Shideler’s use of matching Sabot campaign material, Crozier’s Examiner attribution and X link, Shideler’s Sept. 5 post, and Ngo’s State Department tag and support allegation.')
     addLogItem('Recorded the Washington Examiner source-access discrepancy observed Sept. 5: a non-subscriber rendered view stopped before the Sabot section while the later text remained present in page source.')
@@ -126,12 +167,13 @@
   }
 
   function init() {
+    makeBankUpdate()
     makeTrail()
     updatePageMeta()
     addSources()
     addUpdateLog()
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true })
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once:true })
   else init()
 })()
