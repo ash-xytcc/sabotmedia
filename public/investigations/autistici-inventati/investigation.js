@@ -148,7 +148,7 @@
       note: 'Near the end of Ngo’s remarks, the official transcript records his suggestion that State designate Antifa’s international arm as an FTO.',
       excerpt: 'I think the DOJ could look at Federal conspiracy charges. The State of California and San Diego County last year broke up an antifa cell in San Diego. And I think maybe perhaps the State Department should designate antifa—its international arm as a foreign terrorist organization, FTO.',
       speaker: 'Andy Ngo, White House roundtable, October 8, 2025',
-      original: 'https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=7',
+      original: 'https://www.govinfo.gov/content/pkg/DCPD-202500989/html/DCPD-202500989.htm',
     },
     {
       title: '“Marco will take care of it”',
@@ -159,7 +159,7 @@
       note: 'Later in the same event, the idea is raised again and Trump says, “Let’s get it done” and that Marco would handle it.',
       excerpt: 'Let’s get it done. Marco will take care of it.',
       speaker: 'President Donald Trump, White House roundtable, October 8, 2025',
-      original: 'https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=24',
+      original: 'https://www.govinfo.gov/content/pkg/DCPD-202500989/html/DCPD-202500989.htm',
     },
     {
       title: 'A/I named in testimony',
