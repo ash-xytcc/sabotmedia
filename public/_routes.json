@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "include": [
+    "/api/*",
+    "/feed/*",
+    "/feeds/*",
+    "/rss/*",
+    "/podcast.xml",
+    "/campaigns/*",
+    "/investigations/autistici-inventati",
+    "/investigations/autistici-inventati/*",
+    "/records-desk/*",
+    "/wp-admin/*"
+  ],
+  "exclude": []
+}
