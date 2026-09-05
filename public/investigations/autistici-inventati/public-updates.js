@@ -362,16 +362,17 @@
     addSource('./log/', 'SEP 5 · 2026', 'Public evidence and preservation log', 'Sabot Media')
   }
 
-  function addLogItem(text) {
+  function addLogItem(text, label = 'SEP 5 · 2026', datetime = '2026-09-05') {
     const list = document.querySelector('#updates .update-list')
     if (!list || [...list.querySelectorAll('p')].some((p) => p.textContent === text)) return
     const item = document.createElement('div')
-    item.innerHTML = `<time datetime="2026-09-05">SEP 5 · 2026</time><p>${text}</p>`
+    item.innerHTML = `<time datetime="${escapeAttr(datetime)}">${escapeHtml(label)}</time><p>${text}</p>`
     list.prepend(item)
   }
 
   function addUpdateLog() {
-    addLogItem('Added the European response record: 21 ECR MEPs’ priority written question P-003407/2026, the Sept. 5 academic and cultural appeal, and EDRi’s Sept. 3 statement. The parliamentary filing is identified as a question by its signatories, not a finding or Commission endorsement.')
+    addLogItem('More than 70 academics, researchers, writers and cultural workers published an appeal urging Italian and EU institutions to resist treating the U.S. designation as an Italian or European judicial determination. Added alongside EDRi’s Sept. 3 digital-rights statement.', 'SEP 5 · 2026', '2026-09-05')
+    addLogItem('Twenty-one ECR MEPs filed priority written question P-003407/2026 concerning Paolo De Rosa, Autistici/Inventati and Italy’s Democratic Party. This records the filing as an action by its signatories—not a Parliament finding, Commission investigation result or EU endorsement.', 'SEP 1 · 2026', '2026-09-01')
     addLogItem('A/I reported that Banca Etica told the association on Sept. 4 it will terminate the account and that remaining donated funds will no longer be available, escalating the banking leg of the sanctions cascade from suspension and probable closure to a reported termination decision.')
     addLogItem('Published a public evidence log so preservation records, source links and social-media developments are accessible and shareable from the investigation itself.')
     addLogItem('Added the Aug. 28–Sept. 5 post-publication source trail: Shideler’s use of matching Sabot campaign material, Crozier’s Examiner attribution and X link, Shideler’s Sept. 5 post, and Ngo’s State Department tag and support allegation.')
