@@ -146,6 +146,8 @@
       page: 7,
       alt: 'GovInfo transcript page showing Andy Ngo foreign terrorist organization proposal',
       note: 'Near the end of Ngo’s remarks, the official transcript records his suggestion that State designate Antifa’s international arm as an FTO.',
+      excerpt: 'I think the DOJ could look at Federal conspiracy charges. The State of California and San Diego County last year broke up an antifa cell in San Diego. And I think maybe perhaps the State Department should designate antifa—its international arm as a foreign terrorist organization, FTO.',
+      speaker: 'Andy Ngo, White House roundtable, October 8, 2025',
       original: 'https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=7',
     },
     {
@@ -155,6 +157,8 @@
       page: 24,
       alt: 'GovInfo transcript page with Trump response about Marco Rubio',
       note: 'Later in the same event, the idea is raised again and Trump says, “Let’s get it done” and that Marco would handle it.',
+      excerpt: 'Let’s get it done. Marco will take care of it.',
+      speaker: 'President Donald Trump, White House roundtable, October 8, 2025',
       original: 'https://www.govinfo.gov/content/pkg/DCPD-202500989/pdf/DCPD-202500989.pdf#page=24',
     },
     {
@@ -184,15 +188,17 @@
     <div class="wrap">
       <div class="section-head">
         <div><p class="eyebrow">DOCUMENT EXCERPTS</p><h2>Read the pages, not just our summary.</h2></div>
-        <p class="section-intro">These readers use a same-origin Sabot document endpoint so agencies that block third-party framing do not leave a dead box. The original government PDF is always linked directly.</p>
+        <p class="section-intro">Government pages that can be rendered reliably appear in the document reader. GovInfo pages that reject proxied PDF requests are presented as verified transcript excerpts instead of broken embeds. Every item links to the original government source.</p>
       </div>
       <div class="evidence-gallery__grid">
         ${docs.map((doc) => `
-          <article class="evidence-doc" data-doc-title="${escapeAttr(doc.title)}" data-doc-url="${proxyPdf(doc.source, doc.page)}">
+          <article class="evidence-doc" data-doc-title="${escapeAttr(doc.title)}"${doc.excerpt ? '' : ` data-doc-url="${proxyPdf(doc.source, doc.page)}"`}>
             <div class="evidence-doc__meta"><span>${escapeHtml(doc.meta)}</span><strong>${escapeHtml(doc.title)}</strong></div>
-            <div class="evidence-doc__viewer"><iframe loading="lazy" title="${escapeAttr(doc.alt)}" src="${proxyPdf(doc.source, doc.page)}"></iframe></div>
+            ${doc.excerpt
+              ? `<div class="evidence-doc__viewer evidence-doc__viewer--transcript"><blockquote><p>“${escapeHtml(doc.excerpt)}”</p><cite>${escapeHtml(doc.speaker)}</cite></blockquote><span class="evidence-doc__verified">VERIFIED GOVINFO TRANSCRIPT</span></div>`
+              : `<div class="evidence-doc__viewer"><iframe loading="lazy" title="${escapeAttr(doc.alt)}" src="${proxyPdf(doc.source, doc.page)}"></iframe></div>`}
             <p>${escapeHtml(doc.note)}</p>
-            <div class="evidence-doc__actions"><button type="button" class="doc-expand">Expand</button><a href="${escapeAttr(doc.original)}" target="_blank" rel="noreferrer">Open source ↗</a></div>
+            <div class="evidence-doc__actions">${doc.excerpt ? '' : '<button type="button" class="doc-expand">Expand</button>'}<a href="${escapeAttr(doc.original)}" target="_blank" rel="noreferrer">Open source ↗</a></div>
           </article>`).join('')}
       </div>
     </div>`
