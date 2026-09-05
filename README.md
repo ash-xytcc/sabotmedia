@@ -63,3 +63,7 @@ Drop the actual font files into `src/assets/fonts/` and uncomment the `@font-fac
 ## Next sane step
 
 Get this into your repo, run the importer against the XML export, and prove the public shell with the imported archive before building anything fancier.
+
+## Production deployment
+
+Cloudflare Pages must deploy the repository-level `functions/` directory alongside the Vite `dist/` output. The live editor, authentication, database-backed posts, and public publishing APIs depend on those Pages Functions and the `BF_DB` D1 binding.
