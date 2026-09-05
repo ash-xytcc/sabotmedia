@@ -132,6 +132,7 @@ export function normalizeNativeEntry(input) {
     status,
     workflowState,
     target: normalizeEnum(raw.target, ['general', 'home', 'press', 'projects']) || 'general',
+    showOnHomepage: normalizeBoolean(raw.showOnHomepage, true),
     title: String(raw.title || ''),
     slug: slugify(raw.slug || raw.title || raw.id || ''),
     excerpt: String(raw.excerpt || ''),
