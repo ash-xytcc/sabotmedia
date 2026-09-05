@@ -140,8 +140,11 @@ export function NativeUpdatesPage({ pieces = [], featured = null, latest = [] })
         const visible = await loadPublishedNativePieces()
         if (cancelled) return
 
-        setNativeItems((visible || []).filter((item) => item?.slug).map(normalizeNativeItem))
-        setState(visible.length ? 'loaded' : 'archive-fallback')
+        const homepageVisible = (visible || [])
+          .filter((item) => item?.slug && item.showOnHomepage !== false)
+          .map(normalizeNativeItem)
+        setNativeItems(homepageVisible)
+        setState(homepageVisible.length ? 'loaded' : 'archive-fallback')
       } catch (err) {
         if (cancelled) return
         setNativeItems([])
