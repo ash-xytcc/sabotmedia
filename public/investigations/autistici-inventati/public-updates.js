@@ -366,7 +366,12 @@
     const list = document.querySelector('#updates .update-list')
     if (!list || [...list.querySelectorAll('p')].some((p) => p.textContent === text)) return
     const item = document.createElement('div')
-    item.innerHTML = `<time datetime="${escapeAttr(datetime)}">${escapeHtml(label)}</time><p>${text}</p>`
+    const time = document.createElement('time')
+    const copy = document.createElement('p')
+    time.dateTime = datetime
+    time.textContent = label
+    copy.textContent = text
+    item.append(time, copy)
     list.prepend(item)
   }
 
