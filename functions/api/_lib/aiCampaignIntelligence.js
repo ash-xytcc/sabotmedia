@@ -25,7 +25,16 @@ export async function loadLiveAiIntelligence(requestUrl, fetcher = fetch) {
   const settled = await Promise.allSettled(jobs.map((job) => job.run()))
   const sources = []
   const errors = []
-  const updates = []
+  const updates = [{
+    id: 'sabot-foia-filed-2026-09-05',
+    date: '2026-09-05T07:00:00Z',
+    title: 'NEW: Five federal records requests filed',
+    body: 'Sabot filed three requests with the State Department, one with Treasury/OFAC, and one with the FBI seeking the missing referral and targeting records behind the Autistici/Inventati designation. The investigation page now carries the live public-records docket.',
+    url: new URL('/investigations/autistici-inventati/#foia-desk', origin).toString(),
+    pinned: true,
+    automated: false,
+    source: 'Sabot Media investigation',
+  }]
   const coverage = []
 
   settled.forEach((result, index) => {
