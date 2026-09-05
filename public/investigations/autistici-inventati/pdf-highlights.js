@@ -73,6 +73,12 @@
     .investigation-live-update__actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
     .investigation-live-update__actions a { color: #6e1115; font: 900 10px/1.2 Arial, Helvetica, sans-serif; text-transform: uppercase; text-underline-offset: 3px; }
     .investigation-live-update__note { padding: 12px 14px; border: 1px solid #c99d91; background: rgba(255,255,255,.45); font-size: 13px; }
+    .investigation-source-trail { display: grid; gap: 10px; margin: 20px 0 24px; }
+    .investigation-source-trail article { padding: 14px 16px; border: 1px solid #c99d91; background: rgba(255,255,255,.58); }
+    .investigation-source-trail time { display: block; margin-bottom: 5px; color: #a51d20; font: 900 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .investigation-source-trail h3 { margin: 0 0 7px; font: 900 18px/1.05 Arial, Helvetica, sans-serif; text-transform: uppercase; }
+    .investigation-source-trail p { margin: 0 0 8px; font-size: 14px; line-height: 1.5; }
+    .investigation-source-trail a { color: #6e1115; font: 900 10px/1.2 Arial, Helvetica, sans-serif; text-transform: uppercase; text-underline-offset: 3px; }
 
     @media (max-width: 800px) {
       .evidence-doc__viewer, .evidence-doc__viewer iframe, .pdf-highlight-reader { height: 680px; min-height: 680px; }
@@ -105,17 +111,38 @@
     update.innerHTML = `
       <div class="wrap investigation-live-update__grid">
         <div>
-          <p class="eyebrow">NEW DEVELOPMENT · SEPTEMBER 5, 2026</p>
-          <h2 id="update-2026-09-05-title">Ngo turns the “support” allegation toward Sabot and tags State.</h2>
+          <p class="eyebrow">POST-PUBLICATION TRAIL · AUG. 28–SEPT. 5, 2026</p>
+          <h2 id="update-2026-09-05-title">They were already reading Sabot. Then they named it and tagged State.</h2>
         </div>
         <div class="investigation-live-update__copy">
-          <p>After publication of this investigation, Andy Ngo publicly tagged the U.S. State Department and accused Sabot Media of “providing support” to Autistici/Inventati, calling Sabot A/I’s “U.S. propaganda wing.”</p>
-          <blockquote><p>“.@StateDept, here is a U.S.-based group providing support to banned international terrorist entity A/I. Sabot media is functioning as A/I’s U.S. propaganda wing.”</p></blockquote>
-          <p>The post quote-posted Kyle Shideler, who described Sabot as a Washington-based anarchist and Antifa collective “leading the media campaign in support of” A/I and said Sabot blamed him and Ngo for A/I’s current situation.</p>
-          <p>This is relevant to the reporting trail because it is a new, public example of the same framing this investigation is documenting: an outside advocate characterizing activity as support for a designated entity and directing that characterization toward an executive agency.</p>
-          <p class="investigation-live-update__note"><strong>What this does not establish:</strong> the X post is evidence of Ngo’s public appeal to the State Department. It is not evidence that State, Treasury, DOJ or any other agency has opened an inquiry or taken action against Sabot Media.</p>
+          <p>The public trail now reaches back before the Sept. 5 posts. Kyle Shideler and Hudson Crozier were already using, quoting or linking Sabot’s A/I reporting before Shideler and Andy Ngo publicly characterized Sabot itself as part of an A/I support campaign.</p>
+          <div class="investigation-source-trail" aria-label="Post-publication source trail involving Sabot Media">
+            <article>
+              <time>AUGUST 28 · KYLE SHIDELER / THE FEDERALIST</time>
+              <h3>Shideler uses a Sabot campaign graphic without naming Sabot in the surrounding text.</h3>
+              <p>The Federalist article embeds the “BUILT FOR / TARGETED NOW” Plan R* graphic matching Sabot’s campaign material and describes it only as a recent post circulating among “Antifa and anarchist accounts.” The article then paraphrases the same “world around it” analysis and reproduces the substance of Sabot’s sanctions-law caution list.</p>
+              <p>The limited claim here is sourcing and sequence: the article visibly uses the graphic and corresponding material. It does not establish where Shideler first encountered it or why Sabot was not named.</p>
+              <a href="https://thefederalist.com/2026/08/28/antifa-networks-panic-after-trump-administration-just-sanctioned-their-servers/" target="_blank" rel="noreferrer">Open Federalist article ↗</a>
+            </article>
+            <article>
+              <time>AUGUST 30–SEPTEMBER 1 · HUDSON CROZIER</time>
+              <h3>Crozier explicitly quotes and links Sabot, then links Sabot again on X.</h3>
+              <p>In an Aug. 30 Washington Examiner investigation, Crozier identifies the NoBlogs website “Sabot Media,” links an archived copy of Sabot’s article and quotes its explanation of Plan R* and the sanctions regime. A Sept. 1 X post supplied to Sabot also links the site; X blocked automated retrieval of that post at preservation time, so the post text is not reconstructed here.</p>
+              <p>This matters because Crozier is already part of the documented source lineage in this investigation: his October 2025 reporting quoted Shideler, and Shideler later cited Crozier’s report in Senate testimony naming A/I and NoBlogs.</p>
+              <a href="https://www.washingtonexaminer.com/news/investigations/4702739/leftist-network-terrorists-plain-sight/" target="_blank" rel="noreferrer">Open Crozier article ↗</a>
+              <span aria-hidden="true"> · </span><a href="https://x.com/Hudson_Crozier/status/2094825698288390355" target="_blank" rel="noreferrer">Open Sept. 1 X post ↗</a>
+            </article>
+            <article>
+              <time>SEPTEMBER 5 · ANDY NGO / KYLE SHIDELER</time>
+              <h3>Ngo turns the “support” allegation toward Sabot and tags State.</h3>
+              <p>Andy Ngo publicly tagged the U.S. State Department and accused Sabot Media of “providing support” to Autistici/Inventati, calling Sabot A/I’s “U.S. propaganda wing.” The post quote-posted Shideler, who described Sabot as a Washington-based anarchist and Antifa collective “leading the media campaign in support of” A/I.</p>
+              <blockquote><p>“.@StateDept, here is a U.S.-based group providing support to banned international terrorist entity A/I. Sabot media is functioning as A/I’s U.S. propaganda wing.”</p></blockquote>
+              <a href="https://x.com/MrAndyNgo/status/2095928475731325130" target="_blank" rel="noreferrer">Open Ngo post on X ↗</a>
+            </article>
+          </div>
+          <p>This sequence is relevant to the reporting trail because it documents a progression from consuming and reproducing Sabot’s reporting, to naming Sabot as an actor in the A/I controversy, to directing an allegation about Sabot toward an executive agency.</p>
+          <p class="investigation-live-update__note"><strong>What this does not establish:</strong> none of these publications or posts proves coordination among the people involved, and Ngo tagging the State Department is not evidence that State, Treasury, DOJ or any other agency has opened an inquiry or taken action against Sabot Media.</p>
           <div class="investigation-live-update__actions">
-            <a href="https://x.com/MrAndyNgo/status/2095928475731325130" target="_blank" rel="noreferrer">Open Ngo post on X ↗</a>
             <a href="#source-library">Go to source library ↓</a>
           </div>
         </div>
@@ -129,7 +156,7 @@
     if (nav && !nav.querySelector('a[href="#update-2026-09-05-ngo-state"]')) {
       const link = document.createElement('a')
       link.href = '#update-2026-09-05-ngo-state'
-      link.textContent = 'NEW · Ngo tags State about Sabot'
+      link.textContent = 'NEW · Sabot enters the source trail'
       nav.insertBefore(link, nav.querySelector('a') || null)
     }
 
@@ -137,7 +164,7 @@
     if (updates && !updates.querySelector('[data-update="2026-09-05-ngo-state"]')) {
       const item = document.createElement('li')
       item.dataset.update = '2026-09-05-ngo-state'
-      item.innerHTML = '<strong>September 5, 2026:</strong> Added Ngo’s public allegation that Sabot was “providing support” to A/I and his direct tag to the State Department, with a clear note that the post does not establish agency action.'
+      item.innerHTML = '<strong>September 5, 2026:</strong> Added the Aug. 28–Sept. 5 source trail showing Shideler’s use of Sabot material, Crozier’s direct link and quotation of Sabot, and Ngo’s later allegation directed to the State Department.'
       updates.prepend(item)
     }
   }
