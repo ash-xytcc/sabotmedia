@@ -38,7 +38,9 @@ const AI_SEEDS = [
     agencyName: 'U.S. Department of State', agencyAbbreviation: 'State',
     agencyComponentName: 'Office of Information Programs and Services (A/GIS/IPS)',
     officialFilingUrl: 'https://pal.foia.state.gov/app/Home.aspx',
-    dateRange: 'September 1, 2025 through January 31, 2026', status: 'Drafting', sortOrder: 10,
+    dateRange: 'September 1, 2025 through January 31, 2026', status: 'Filed', sortOrder: 10,
+    filedDate: '2026-09-05', trackingNumber: '',
+    publicNotes: 'Filed by email with the State Department FOIA office on September 5, 2026. Awaiting agency tracking number.',
   },
   {
     id: 'pr-ai-state-roundtable-2025', investigationKey: 'autistici-inventati',
@@ -49,7 +51,9 @@ const AI_SEEDS = [
     agencyName: 'U.S. Department of State', agencyAbbreviation: 'State',
     agencyComponentName: 'Office of Information Programs and Services (A/GIS/IPS)',
     officialFilingUrl: 'https://pal.foia.state.gov/app/Home.aspx',
-    dateRange: 'October 1, 2025 through March 31, 2026', status: 'Drafting', sortOrder: 20,
+    dateRange: 'October 1, 2025 through March 31, 2026', status: 'Filed', sortOrder: 20,
+    filedDate: '2026-09-05', trackingNumber: '',
+    publicNotes: 'Filed by email with the State Department FOIA office on September 5, 2026. Awaiting agency tracking number.',
   },
   {
     id: 'pr-ai-state-crozier-rubio-2025', investigationKey: 'autistici-inventati',
@@ -60,7 +64,9 @@ const AI_SEEDS = [
     agencyName: 'U.S. Department of State', agencyAbbreviation: 'State',
     agencyComponentName: 'Office of Information Programs and Services (A/GIS/IPS)',
     officialFilingUrl: 'https://pal.foia.state.gov/app/Home.aspx',
-    dateRange: 'December 1, 2025 through March 31, 2026', status: 'Drafting', sortOrder: 30,
+    dateRange: 'December 1, 2025 through March 31, 2026', status: 'Filed', sortOrder: 30,
+    filedDate: '2026-09-05', trackingNumber: '',
+    publicNotes: 'Filed by email with the State Department FOIA office on September 5, 2026. Awaiting agency tracking number.',
   },
   {
     id: 'pr-ai-ofac-origin', investigationKey: 'autistici-inventati',
@@ -71,7 +77,9 @@ const AI_SEEDS = [
     agencyName: 'U.S. Department of the Treasury', agencyAbbreviation: 'Treasury',
     agencyComponentName: 'Departmental Offices — Office of Privacy, Transparency, and Records (records including OFAC)',
     officialFilingUrl: 'https://home.treasury.gov/footer/freedom-of-information-act/submit-a-request',
-    dateRange: 'January 1, 2025 through August 26, 2026', status: 'Drafting', sortOrder: 40,
+    dateRange: 'January 1, 2025 through August 26, 2026', status: 'Filed', sortOrder: 40,
+    filedDate: '2026-09-05', trackingNumber: '',
+    publicNotes: 'Filed by email with the Treasury FOIA office on September 5, 2026. Awaiting agency tracking number.',
   },
   {
     id: 'pr-ai-dhs-fbi-infrastructure', investigationKey: 'autistici-inventati',
@@ -82,7 +90,9 @@ const AI_SEEDS = [
     agencyName: 'Federal Bureau of Investigation', agencyAbbreviation: 'FBI',
     agencyComponentName: 'Record/Information Dissemination Section (RIDS), Information Management Division',
     officialFilingUrl: 'https://efoia.fbi.gov/',
-    dateRange: 'January 1, 2024 through August 26, 2026', status: 'Drafting', sortOrder: 50,
+    dateRange: 'January 1, 2024 through August 26, 2026', status: 'Filed', sortOrder: 50,
+    filedDate: '2026-09-05', trackingNumber: '054e3e0',
+    publicNotes: 'Filed through FBI eFOIPA on September 5, 2026. Electronic Tracking Number (ETN): 054e3e0. Awaiting the assigned FOIPA request number.',
   },
 ]
 
@@ -93,8 +103,8 @@ export async function ensurePublicRecordsSchema(db) {
   const insert = db.prepare(`INSERT OR IGNORE INTO public_record_requests
     (id, investigation_key, internal_title, public_title, why_it_matters, records_sought, agency_name, agency_abbreviation,
      agency_component_name, official_filing_url, request_text, request_text_public, date_range, preferred_format,
-     fee_waiver_language, expedited_processing_language, status, is_public, sort_order)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+     fee_waiver_language, expedited_processing_language, date_filed, tracking_number, status, public_notes, is_public, sort_order)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
 
   const backfill = db.prepare(`UPDATE public_record_requests SET
     agency_component_name = CASE WHEN TRIM(agency_component_name) = '' THEN ? ELSE agency_component_name END,
@@ -104,7 +114,10 @@ export async function ensurePublicRecordsSchema(db) {
     preferred_format = CASE WHEN TRIM(preferred_format) = '' THEN ? ELSE preferred_format END,
     fee_waiver_language = CASE WHEN TRIM(fee_waiver_language) = '' THEN ? ELSE fee_waiver_language END,
     expedited_processing_language = CASE WHEN TRIM(expedited_processing_language) = '' THEN ? ELSE expedited_processing_language END,
-    status = CASE WHEN status = 'Researching' THEN ? ELSE status END,
+    date_filed = CASE WHEN date_filed IS NULL OR TRIM(date_filed) = '' THEN ? ELSE date_filed END,
+    tracking_number = CASE WHEN TRIM(tracking_number) = '' AND TRIM(?) <> '' THEN ? ELSE tracking_number END,
+    status = CASE WHEN status IN ('Researching','Drafting','Ready to file') THEN ? ELSE status END,
+    public_notes = CASE WHEN TRIM(public_notes) = '' THEN ? ELSE public_notes END,
     updated_at = CURRENT_TIMESTAMP
     WHERE id = ?`)
 
@@ -114,11 +127,13 @@ export async function ensurePublicRecordsSchema(db) {
     await insert.bind(
       seed.id, seed.investigationKey, seed.internalTitle, seed.publicTitle, seed.whyItMatters, seed.recordsSought,
       seed.agencyName, seed.agencyAbbreviation, seed.agencyComponentName, seed.officialFilingUrl, text, 0,
-      seed.dateRange, preferred, FEE_WAIVER, EXPEDITED, seed.status, 1, seed.sortOrder,
+      seed.dateRange, preferred, FEE_WAIVER, EXPEDITED, seed.filedDate || null, seed.trackingNumber || '', seed.status,
+      seed.publicNotes || '', 1, seed.sortOrder,
     ).run()
     await backfill.bind(
       seed.agencyComponentName, seed.officialFilingUrl, text, seed.dateRange, preferred,
-      FEE_WAIVER, EXPEDITED, seed.status, seed.id,
+      FEE_WAIVER, EXPEDITED, seed.filedDate || null, seed.trackingNumber || '', seed.trackingNumber || '',
+      seed.status, seed.publicNotes || '', seed.id,
     ).run()
   }
 }
