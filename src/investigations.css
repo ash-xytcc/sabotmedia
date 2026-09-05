@@ -1,0 +1,49 @@
+/* Investigations directory uses the campaign visual system, but its long
+   single-word title needs a wider text column and a tighter display scale. */
+.investigation-directory .campaign-directory__hero-grid {
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: end;
+}
+
+.investigation-directory .campaign-directory__hero-grid > div:first-child {
+  min-width: 0;
+}
+
+.investigation-directory .campaign-directory__hero-grid h1 {
+  width: 100%;
+  max-width: 100%;
+  font-size: clamp(3.25rem, 5vw, 4.5rem);
+  line-height: 0.88;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+}
+
+.investigation-directory .campaign-directory__intro {
+  min-width: 0;
+}
+
+@media (max-width: 1050px) {
+  .investigation-directory .campaign-directory__hero-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .investigation-directory .campaign-directory__hero-grid h1 {
+    font-size: clamp(3rem, 9vw, 5rem);
+    white-space: normal;
+    overflow-wrap: normal;
+  }
+
+  .investigation-directory .campaign-directory__intro {
+    width: min(100%, 720px);
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .investigation-directory .campaign-directory__hero-grid h1 {
+    font-size: clamp(2.65rem, 10.5vw, 3.6rem);
+    letter-spacing: -0.045em;
+  }
+}
