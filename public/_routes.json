@@ -1,5 +1,24 @@
 {
   "version": 1,
-  "include": ["/*"],
+  "include": [
+    "/api/*",
+    "/",
+    "/post/*",
+    "/piece/*",
+    "/campaigns",
+    "/campaigns/*",
+    "/feed/*",
+    "/feeds/*",
+    "/rss/*",
+    "/podcast.xml",
+    "/admin",
+    "/admin/*",
+    "/wp-admin",
+    "/wp-admin/*",
+    "/login",
+    "/wp-login",
+    "/logout",
+    "/records-desk/*"
+  ],
   "exclude": []
 }
