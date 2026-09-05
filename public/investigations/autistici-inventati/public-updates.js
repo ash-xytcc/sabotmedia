@@ -2,6 +2,13 @@
   const UPDATE_ID = 'update-2026-09-05-ngo-state'
   const BANK_UPDATE_ID = 'update-2026-09-05-banca-etica'
 
+  function promoteFullReport() {
+    const intro = document.querySelector('.intro')
+    const fullReport = document.getElementById('full-report-title')?.closest('section')
+    if (!intro || !fullReport) return
+    intro.insertAdjacentElement('afterend', fullReport)
+  }
+
   function makeBankUpdate() {
     if (document.getElementById(BANK_UPDATE_ID)) return
     const quickRead = document.querySelector('.quick-read')
@@ -35,8 +42,8 @@
 
   function makeTrail() {
     if (document.getElementById(UPDATE_ID)) return
-    const quickRead = document.querySelector('.quick-read')
-    if (!quickRead) return
+    const updates = document.getElementById('updates')
+    if (!updates) return
 
     const section = document.createElement('section')
     section.className = 'investigation-live-update'
@@ -95,7 +102,7 @@
           </div>
         </div>
       </div>`
-    quickRead.insertAdjacentElement('beforebegin', section)
+    updates.insertAdjacentElement('beforebegin', section)
   }
 
   function addCascadeUpdate() {
@@ -182,6 +189,7 @@
   }
 
   function init() {
+    promoteFullReport()
     makeBankUpdate()
     makeTrail()
     addCascadeUpdate()
