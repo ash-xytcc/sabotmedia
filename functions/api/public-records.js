@@ -1,6 +1,7 @@
 import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 import { inferActorFromRequest, writeAuditLog } from './_lib/auditLog.js'
+import { ensurePublicRecordsSchema } from './_lib/publicRecordsRuntimeSchema.js'
 
 const STATUSES = new Set(['Researching','Drafting','Ready to file','Filed','Acknowledged','Processing','Clarification requested','Fee issue','Partial release','Records released','Denied','Appealed','Closed'])
 const DOCUMENT_KINDS = new Set(['acknowledgement','clarification','fee_notice','correspondence','denial','appeal','appeal_decision','release','responsive_record','other'])
@@ -9,6 +10,7 @@ export async function onRequestGet(context) {
   try {
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('public-records desk')
+    await ensurePublicRecordsSchema(db)
     const url = new URL(context.request.url)
     const investigationKey = cleanKey(url.searchParams.get('investigation') || '')
     if (!investigationKey) return json({ ok: false, error: 'investigation is required' }, 400)
@@ -25,6 +27,7 @@ export async function onRequestPost(context) {
     if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('public-records desk')
+    await ensurePublicRecordsSchema(db)
     const body = await context.request.json()
     if (body.action === 'request') {
       const item = await createRequest(db, body)
@@ -46,6 +49,7 @@ export async function onRequestPatch(context) {
     if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('public-records desk')
+    await ensurePublicRecordsSchema(db)
     const body = await context.request.json()
     if (body.action === 'request') {
       const item = await updateRequest(db, body)
@@ -67,6 +71,7 @@ export async function onRequestDelete(context) {
     if (!permission.canEdit) return json({ ok: false, error: 'editor access required' }, 403)
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('public-records desk')
+    await ensurePublicRecordsSchema(db)
     const body = await context.request.json()
     if (body.action === 'document' && body.id) {
       await db.prepare('DELETE FROM public_record_documents WHERE id = ?').bind(cleanText(body.id, 120)).run()
@@ -202,25 +207,26 @@ function serializeRequest(row, docs = [], publicOnly = false) {
     preferredFormat: row.preferred_format, feeWaiverLanguage: row.request_text_public ? row.fee_waiver_language : '', expeditedProcessingLanguage: row.request_text_public ? row.expedited_processing_language : '',
     dateFiled: row.date_filed || '', trackingNumber: row.tracking_number || '', status: row.status, publicNotes: row.public_notes || '', isPublic: Boolean(row.is_public), lastUpdated: row.updated_at, documents: docs.map(serializeDocument)
   }
-  if (!publicOnly) Object.assign(item, { internalTitle: row.internal_title, internalNotes: row.internal_notes, requestText: row.request_text, requestForm: parseJson(row.request_form_json) })
+  if (!publicOnly) Object.assign(item, { internalTitle: row.internal_title, internalNotes: row.internal_notes, requestText: row.request_text, requestForm: parseJson(row.request_form_json), feeWaiverLanguage: row.fee_waiver_language, expeditedProcessingLanguage: row.expedited_processing_language, sortOrder: row.sort_order })
   return item
 }
-function serializeDocument(row) { return row ? { id: row.id, requestId: row.request_id, documentKind: row.document_kind, title: row.title, agencyName: row.agency_name, receivedDate: row.received_date || '', description: row.description, fileUrl: row.file_url, mimeType: row.mime_type, originalFilename: row.original_filename, publicNotes: row.public_notes, whatWeLearned: row.what_we_learned, isPublic: Boolean(row.is_public), lastUpdated: row.updated_at } : null }
-function summarize(items) { const count = (s) => items.filter((x) => s.includes(x.status)).length; return { total: items.length, filed: count(['Filed','Acknowledged','Processing','Clarification requested','Fee issue','Partial release','Records released','Denied','Appealed','Closed']), processing: count(['Acknowledged','Processing','Clarification requested','Fee issue']), readyToFile: count(['Ready to file']), recordsReleased: count(['Partial release','Records released']) } }
-function validStatus(v) { if (!STATUSES.has(v)) throw bad(`invalid status: ${v}`); return v }
-function validDocumentKind(v) { if (!DOCUMENT_KINDS.has(v)) throw bad(`invalid document kind: ${v}`); return v }
-function validateOfficialUrl(value, jurisdiction = 'federal') { if (!value) return ''; let u; try { u = new URL(value) } catch { throw bad('official filing URL is invalid') } if (u.protocol !== 'https:' || u.username || u.password) throw bad('official filing URL must be HTTPS without embedded credentials'); const host = u.hostname.toLowerCase(); if (isPrivateHost(host)) throw bad('official filing URL host is not allowed'); if (String(jurisdiction).toLowerCase() === 'federal' && !(host.endsWith('.gov') || host === 'foia.gov' || host.endsWith('.foia.gov'))) throw bad('federal filing URLs must use an official .gov host'); return u.toString() }
-function validateDocumentUrl(value) { if (!value) throw bad('fileUrl is required'); let u; try { u = new URL(value, 'https://sabot.media') } catch { throw bad('document URL is invalid') } if (u.protocol !== 'https:' || u.username || u.password || isPrivateHost(u.hostname.toLowerCase())) throw bad('document URL must be a safe HTTPS URL'); return u.toString() }
-function isPrivateHost(host) { return host === 'localhost' || host === '127.0.0.1' || host === '::1' || /^10\.|^192\.168\.|^172\.(1[6-9]|2\d|3[01])\./.test(host) }
-function cleanKey(v) { return String(v || '').trim().toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120) }
-function cleanText(v, max=1000) { return String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').trim().slice(0,max) }
-function cleanLong(v, max=50000) { return cleanText(v,max) }
-function boolInt(v) { return v === true || v === 1 || v === '1' ? 1 : 0 }
-function numberInt(v) { const n = Number(v); return Number.isFinite(n) ? Math.trunc(n) : 0 }
-function nullableDate(v) { const s = cleanText(v,40); if (!s) return null; return s }
-function safeJson(v) { try { return JSON.stringify(v && typeof v === 'object' ? v : {}) } catch { return '{}' } }
-function parseJson(v) { try { return JSON.parse(v || '{}') } catch { return {} } }
-function createId(prefix) { return `${prefix}-${typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2,10)}`}` }
-function bad(message,status=400){ const e=new Error(message); e.status=status; return e }
-async function audit(context,db,action,entityType,entityId,detail){ try { await writeAuditLog(db,{ action, entityType, entityId, actor: inferActorFromRequest(context.request), detail }) } catch {} }
-function json(value,status=200){ return new Response(JSON.stringify(value,null,2),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','referrer-policy':'no-referrer'}}) }
+function serializeDocument(row) { return { id: row.id, requestId: row.request_id, documentKind: row.document_kind, title: row.title, agencyName: row.agency_name, receivedDate: row.received_date || '', description: row.description, fileUrl: row.file_url, mimeType: row.mime_type, originalFilename: row.original_filename, publicNotes: row.public_notes, internalNotes: row.internal_notes, whatWeLearned: row.what_we_learned, isPublic: Boolean(row.is_public), sortOrder: row.sort_order } }
+
+function summarize(items) { return items.reduce((acc, item) => { acc.total++; acc.byStatus[item.status] = (acc.byStatus[item.status] || 0) + 1; if (item.documents?.length) acc.withDocuments++; return acc }, { total:0, withDocuments:0, byStatus:{} }) }
+async function audit(context, db, action, type, id, details) { try { await writeAuditLog(db, { ...(await inferActorFromRequest(context.request, context.env)), action, entityType:type, entityId:id, details }) } catch {} }
+function validStatus(v) { const x = cleanText(v, 80); if (!STATUSES.has(x)) throw bad('invalid status'); return x }
+function validDocumentKind(v) { const x = cleanText(v, 80); if (!DOCUMENT_KINDS.has(x)) throw bad('invalid document kind'); return x }
+function validateOfficialUrl(value, jurisdictionType) { const v = cleanText(value, 2000); if (!v) return ''; let u; try { u = new URL(v) } catch { throw bad('invalid official filing URL') } if (u.protocol !== 'https:') throw bad('official filing URL must use https'); if (jurisdictionType === 'federal' && !isOfficialFederalHost(u.hostname)) throw bad('federal filing URL must use a .gov host or FOIAonline-compatible federal host'); return u.toString() }
+function isOfficialFederalHost(host) { const h=host.toLowerCase(); return h.endsWith('.gov') || h==='foia.gov' || h.endsWith('.foia.gov') || h==='foiapal.gov' || h.endsWith('.foiapal.gov') }
+function validateDocumentUrl(value) { const v=cleanText(value,2000); let u; try{u=new URL(v, 'https://sabot.media')}catch{throw bad('invalid document URL')} if(u.protocol!=='https:'&&u.origin!=='https://sabot.media')throw bad('document URL must be https'); return v }
+function safeJson(value) { try { return JSON.stringify(value && typeof value === 'object' ? value : {}) } catch { return '{}' } }
+function parseJson(value) { try { return JSON.parse(value || '{}') } catch { return {} } }
+function cleanKey(value) { return String(value || '').trim().toLowerCase().replace(/[^a-z0-9_-]+/g,'-').slice(0,120) }
+function cleanText(value,max=10000){return String(value??'').replace(/\u0000/g,'').trim().slice(0,max)}
+function cleanLong(value,max=60000){return cleanText(value,max)}
+function boolInt(v){return v?1:0}
+function numberInt(v){const n=Number(v);return Number.isFinite(n)?Math.trunc(n):0}
+function nullableDate(v){const x=cleanText(v,40);return /^\d{4}-\d{2}-\d{2}$/.test(x)?x:null}
+function createId(prefix){return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`}
+function bad(message,status=400){const e=new Error(message);e.status=status;return e}
+function json(data,status=200){return new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json','cache-control':'no-store'}})}
