@@ -1,6 +1,7 @@
 (() => {
   const UPDATE_ID = 'update-2026-09-05-ngo-state'
   const BANK_UPDATE_ID = 'update-2026-09-05-banca-etica'
+  const EUROPE_UPDATE_ID = 'update-2026-09-05-european-response'
 
   function installUpdateStyles() {
     if (document.getElementById('investigation-public-update-styles')) return
@@ -253,6 +254,39 @@
     updates.insertAdjacentElement('beforebegin', section)
   }
 
+  function makeEuropeanResponse() {
+    if (document.getElementById(EUROPE_UPDATE_ID)) return
+    const updates = document.getElementById('updates')
+    if (!updates) return
+
+    const section = document.createElement('section')
+    section.className = 'investigation-live-update'
+    section.id = EUROPE_UPDATE_ID
+    section.setAttribute('aria-labelledby', `${EUROPE_UPDATE_ID}-title`)
+    section.innerHTML = `
+      <div class="wrap investigation-live-update__grid">
+        <div>
+          <p class="eyebrow">EUROPEAN RESPONSE · SEPTEMBER 1–5, 2026</p>
+          <h2 id="${EUROPE_UPDATE_ID}-title">The designation enters the European Parliament—and organized opposition widens.</h2>
+        </div>
+        <div class="investigation-live-update__copy">
+          <h3>Twenty-one ECR lawmakers put A/I into the European Parliament's formal record.</h3>
+          <p>On September 1, 21 members of the European Conservatives and Reformists group filed priority written question P-003407/2026, titled “Paolo De Rosa's links with the Autistici/Inventati hacker group and Italy's Democratic Party.” The filing asks the European Commission to respond, carrying the political campaign around A/I and a named person associated with its infrastructure into a formal EU parliamentary process.</p>
+          <p class="investigation-live-update__note"><strong>What the filing proves—and what it does not:</strong> the question is an official parliamentary action by its signatories. It is not a finding by the European Parliament, an investigation result, or an endorsement of the question's framing by the European Commission. No Commission answer was posted when Sabot checked the record on September 5.</p>
+          <h3>Academics and cultural workers answer the guilt-by-association campaign.</h3>
+          <p>On September 5, more than 70 academics, researchers, writers and cultural workers published an appeal calling on Italy and the European Union to prevent a unilateral U.S. executive designation from automatically restricting the communications, digital services and financial relationships of an organization operating lawfully in Europe.</p>
+          <p>The appeal explicitly connects the designation to the campaign against Paolo De Rosa and warns that proximity to independent digital infrastructure is being turned into insinuations of complicity, subversion or terrorism. It follows European Digital Rights' September 3 statement describing the action against A/I as an attack on independent infrastructure, EU intermediary-liability rules and European democratic sovereignty.</p>
+          <p>Together, the filings show two competing attempts to define the European meaning of the U.S. action: one extends suspicion from A/I to people and political relationships around it; the other rejects treating an American administrative designation as though it were already an Italian or European judicial determination.</p>
+          <div class="investigation-live-update__actions">
+            <a href="https://www.europarl.europa.eu/doceo/document/P-10-2026-003407_EN.html" target="_blank" rel="noreferrer">Open Parliament question P-003407/2026 ↗</a>
+            <a href="https://www.che-fare.com/articoli/lantifascismo-non-e-terrorismo" target="_blank" rel="noreferrer">Read the Sept. 5 appeal and signatories ↗</a>
+            <a href="https://edri.org/our-work/edri-solidarity-statement-autistici-inventati/" target="_blank" rel="noreferrer">Read EDRi's Sept. 3 statement ↗</a>
+          </div>
+        </div>
+      </div>`
+    updates.insertAdjacentElement('beforebegin', section)
+  }
+
   function addCascadeUpdate() {
     const cascade = document.getElementById('cascade')
     if (!cascade || cascade.querySelector('[data-bank-escalation]')) return
@@ -277,6 +311,12 @@
       const link = document.createElement('a')
       link.href = `#${BANK_UPDATE_ID}`
       link.textContent = 'NEW · Banca Etica termination'
+      nav.insertBefore(link, nav.querySelector('a') || null)
+    }
+    if (nav && !nav.querySelector(`a[href="#${EUROPE_UPDATE_ID}"]`)) {
+      const link = document.createElement('a')
+      link.href = `#${EUROPE_UPDATE_ID}`
+      link.textContent = 'NEW · European response'
       nav.insertBefore(link, nav.querySelector('a') || null)
     }
     if (nav && !nav.querySelector(`a[href="#${UPDATE_ID}"]`)) {
@@ -309,6 +349,9 @@
   }
 
   function addSources() {
+    addSource('https://www.europarl.europa.eu/doceo/document/P-10-2026-003407_EN.html', 'SEP 1 · 2026', 'Priority question P-003407/2026 on Paolo De Rosa and A/I', 'European Parliament')
+    addSource('https://edri.org/our-work/edri-solidarity-statement-autistici-inventati/', 'SEP 3 · 2026', 'European Digital Rights statement on the A/I designation', 'EDRi')
+    addSource('https://www.che-fare.com/articoli/lantifascismo-non-e-terrorismo', 'SEP 5 · 2026', 'Academic and cultural appeal against the criminalization of antifascism', 'cheFare / original signatories')
     addSource('https://keepitfree.ai/announcements/banca-etica-shtus-down-a/i-funds/', 'SEP 5 · 2026', 'A/I says Banca Etica will terminate account and funds are unavailable', 'Autistici/Inventati')
     addSource('https://www.bancaetica.it/area-stampa/autistici-inventati-banca-etica-condanna-uso-improprio-ofac-valutazioni-per-non-chiudere-il-conto/', 'AUG 28–SEP 1 · 2026', 'Banca Etica statement on suspension and closure risk', 'Banca Etica')
     addSource('https://thefederalist.com/2026/08/28/antifa-networks-panic-after-trump-administration-just-sanctioned-their-servers/', 'AUG 28 · 2026', 'Shideler uses Sabot campaign material', 'The Federalist')
@@ -328,6 +371,7 @@
   }
 
   function addUpdateLog() {
+    addLogItem('Added the European response record: 21 ECR MEPs’ priority written question P-003407/2026, the Sept. 5 academic and cultural appeal, and EDRi’s Sept. 3 statement. The parliamentary filing is identified as a question by its signatories, not a finding or Commission endorsement.')
     addLogItem('A/I reported that Banca Etica told the association on Sept. 4 it will terminate the account and that remaining donated funds will no longer be available, escalating the banking leg of the sanctions cascade from suspension and probable closure to a reported termination decision.')
     addLogItem('Published a public evidence log so preservation records, source links and social-media developments are accessible and shareable from the investigation itself.')
     addLogItem('Added the Aug. 28–Sept. 5 post-publication source trail: Shideler’s use of matching Sabot campaign material, Crozier’s Examiner attribution and X link, Shideler’s Sept. 5 post, and Ngo’s State Department tag and support allegation.')
@@ -342,6 +386,7 @@
     addFullReportImage()
     makeBankUpdate()
     makeTrail()
+    makeEuropeanResponse()
     addCascadeUpdate()
     updatePageMeta()
     addSources()
