@@ -9,6 +9,7 @@ const admin = fs.readFileSync(new URL('../src/components/CampaignAdminPage.jsx',
 const page = fs.readFileSync(new URL('../src/components/CampaignPage.jsx', import.meta.url), 'utf8')
 const directory = fs.readFileSync(new URL('../src/components/CampaignsIndexPage.jsx', import.meta.url), 'utf8')
 const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
+const routes = fs.readFileSync(new URL('../src/routing/routes.js', import.meta.url), 'utf8')
 const endpoint = fs.readFileSync(new URL('../functions/api/campaigns.js', import.meta.url), 'utf8')
 const socialEndpoint = fs.readFileSync(new URL('../functions/api/campaign-social.js', import.meta.url), 'utf8')
 const middleware = fs.readFileSync(new URL('../functions/_middleware.js', import.meta.url), 'utf8')
@@ -57,8 +58,9 @@ test('campaign lifecycle controls protect the seeded A/I identity', () => {
 })
 
 test('campaign directory and campaign-specific metadata are public', () => {
-  assert.match(app, /path="\/campaigns" element=\{<CampaignsIndexPage \/>\}/)
-  assert.doesNotMatch(app, /path="\/campaigns" element=\{<Navigate/)
+  assert.match(routes, /campaigns:\s*['"]\/campaigns['"]/)
+  assert.match(app, /path=\{publicRoutes\.campaigns\} element=\{<CampaignsIndexPage \/>\}/)
+  assert.doesNotMatch(app, /path=\{publicRoutes\.campaigns\} element=\{<Navigate/)
   assert.match(directory, /loadCampaigns\(\)/)
   assert.match(page, /setDocumentMeta/)
   assert.match(middleware, /renderPublicCampaign/)
