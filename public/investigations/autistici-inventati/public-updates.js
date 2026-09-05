@@ -218,7 +218,7 @@
               <h3>Crozier explicitly names, links and quotes Sabot.</h3>
               <p>In the Examiner's “Surviving sanctions” section, Crozier identifies the NoBlogs website “Sabot Media,” links an archived copy of Sabot's reporting and quotes its discussion of A/I's infrastructure resilience and the pressure sanctions can place on banks, hosts, registrars, infrastructure providers and supporters.</p>
               <p><strong>Source-access note:</strong> on Sept. 5, Sabot observed a non-subscriber browser rendering of the same URL ending before this later section beside a subscription module, while the later text remained present in the page source. We record the access discrepancy without inferring editorial intent.</p>
-              <a href="https://www.washingtonexaminer.com/news/investigations/4702739/leftist-network-terrorists-plain-sight/" target="_blank" rel="noreferrer">Open Examiner article ↗</a>
+              <a href="/post/washington-examiner-on-sabot-media-and-a-i">Open Sabot preservation copy →</a>
             </article>
             <article>
               <time>SEPTEMBER 1 · HUDSON CROZIER / X</time>
@@ -312,7 +312,7 @@
     addSource('https://keepitfree.ai/announcements/banca-etica-shtus-down-a/i-funds/', 'SEP 5 · 2026', 'A/I says Banca Etica will terminate account and funds are unavailable', 'Autistici/Inventati')
     addSource('https://www.bancaetica.it/area-stampa/autistici-inventati-banca-etica-condanna-uso-improprio-ofac-valutazioni-per-non-chiudere-il-conto/', 'AUG 28–SEP 1 · 2026', 'Banca Etica statement on suspension and closure risk', 'Banca Etica')
     addSource('https://thefederalist.com/2026/08/28/antifa-networks-panic-after-trump-administration-just-sanctioned-their-servers/', 'AUG 28 · 2026', 'Shideler uses Sabot campaign material', 'The Federalist')
-    addSource('https://www.washingtonexaminer.com/news/investigations/4702739/leftist-network-terrorists-plain-sight/', 'AUG 30 · 2026', 'Crozier names, links and quotes Sabot', 'Washington Examiner')
+    addSource('/post/washington-examiner-on-sabot-media-and-a-i', 'AUG 30 · 2026', 'Crozier names, links and quotes Sabot', 'Sabot preservation / Washington Examiner')
     addSource('https://x.com/Hudson_Crozier/status/2094825698288390355', 'SEP 1 · 2026', 'Crozier links Sabot on X', 'X / @Hudson_Crozier')
     addSource('https://x.com/ShidelerK/status/2095927734664847775', 'SEP 5 · 2026', 'Shideler post about Sabot', 'X / @ShidelerK')
     addSource('https://x.com/MrAndyNgo/status/2095928475731325130', 'SEP 5 · 2026', 'Ngo tags State and alleges Sabot support', 'X / @MrAndyNgo')
