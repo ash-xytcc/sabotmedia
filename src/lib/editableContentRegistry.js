@@ -20,7 +20,7 @@ export const editableContentRegistry = {
     },
     bottom: {
       field: 'footer.bottom.body',
-      defaultText: 'Read online, search the archive, or open a print-friendly article view.',
+      defaultText: 'Ⓐ Intellectual property is bullshit - steal this website.',
     },
     sections: [
       {
