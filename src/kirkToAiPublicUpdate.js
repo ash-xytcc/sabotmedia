@@ -94,7 +94,7 @@ function buildUpdate() {
         <h3>Crozier explicitly names, links and quotes Sabot.</h3>
         <p>In a later “Surviving sanctions” section, Crozier identifies the NoBlogs website “Sabot Media,” links an archived copy of our reporting and quotes our discussion of A/I's infrastructure resilience and the wider pressure sanctions can place on banks, hosts, registrars, infrastructure providers and supporters.</p>
         <p>On September 5, Sabot also observed a non-subscriber browser rendering of the Examiner article that stopped before this section beside a subscription module, even though the later text remained present in the page source. We are recording that access quirk because it initially made the Sabot reference appear absent, not because it proves any editorial intent.</p>
-        <p><a href="https://www.washingtonexaminer.com/news/investigations/4702739/leftist-network-terrorists-plain-sight/" target="_blank" rel="noreferrer">Read the Examiner article ↗</a></p>
+        <p><a href="/post/washington-examiner-on-sabot-media-and-a-i">Read Sabot's full preservation article →</a></p>
       </article>
 
       <article class="sabot-update-card">
