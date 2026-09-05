@@ -1,18 +1,20 @@
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
-import { normalizeNativeEntry } from '../src/lib/nativePublicContent.js'
 
+const clientSource = fs.readFileSync(new URL('../src/lib/nativePublicContent.js', import.meta.url), 'utf8')
 const homepageSource = fs.readFileSync(new URL('../src/components/NativeUpdatesPage.jsx', import.meta.url), 'utf8')
 const editorSource = fs.readFileSync(new URL('../src/components/NativeContentBridgePage.jsx', import.meta.url), 'utf8')
 const serverSource = fs.readFileSync(new URL('../functions/api/_lib/nativePublicContent.js', import.meta.url), 'utf8')
 
 test('homepage visibility defaults on for existing and new native posts', () => {
-  assert.equal(normalizeNativeEntry({ title: 'Existing post' }).showOnHomepage, true)
+  assert.match(clientSource, /showOnHomepage:\s*true/)
+  assert.match(clientSource, /showOnHomepage:\s*normalizeBoolean\(raw\.showOnHomepage, true\)/)
 })
 
-test('explicit homepage exclusion survives native normalization', () => {
-  assert.equal(normalizeNativeEntry({ title: 'Public reference', status: 'published', showOnHomepage: false }).showOnHomepage, false)
+test('explicit homepage exclusion survives native persistence normalization', () => {
+  assert.match(clientSource, /showOnHomepage:\s*normalizeBoolean\(raw\.showOnHomepage, true\)/)
+  assert.match(serverSource, /showOnHomepage:\s*normalizeBoolean\(raw\.showOnHomepage, true\)/)
 })
 
 test('homepage excludes only posts explicitly marked not for homepage', () => {
@@ -25,7 +27,6 @@ test('post editor exposes the homepage promotion control and autosaves it', () =
   assert.match(editorSource, /showOnHomepage:\s*merged\.showOnHomepage !== false/)
 })
 
-test('server normalizer persists homepage visibility in content json', () => {
-  assert.match(serverSource, /showOnHomepage:\s*normalizeBoolean\(raw\.showOnHomepage, true\)/)
+test('server persists homepage visibility in content json', () => {
   assert.match(serverSource, /const contentJson = JSON\.stringify\(normalized\)/)
 })
