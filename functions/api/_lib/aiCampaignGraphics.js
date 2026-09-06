@@ -66,4 +66,11 @@ const legacyGraphics = rows.map(([slug, title, alt, caption, sourceUrl], index) 
   sourceUrl: sourceUrl || '',
 }))
 
-export const AI_CAMPAIGN_GRAPHICS = [...sept4Quotes, ...legacyGraphics]
+const campaignKitGraphics = legacyGraphics.filter((item) => !item.imageUrl.includes('/featured-image.'))
+
+export const AI_CAMPAIGN_GRAPHICS_SEED = [...sept4Quotes, ...campaignKitGraphics]
+
+// Public campaign reads now use the persisted campaign graphics. Keep this
+// compatibility export empty so the old public decorator does not inject a
+// second transient copy ahead of editor-managed graphics.
+export const AI_CAMPAIGN_GRAPHICS = []

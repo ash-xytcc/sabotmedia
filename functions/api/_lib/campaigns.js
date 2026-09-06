@@ -1,3 +1,5 @@
+import { AI_CAMPAIGN_GRAPHICS_SEED } from './aiCampaignGraphics.js'
+
 const CAMPAIGN_SCHEMA_VERSION = 5
 export const AI_CAMPAIGN_SLUG = 'autistici-inventati'
 export const AI_CAMPAIGN_ID = 'campaign-autistici-inventati'
@@ -98,7 +100,7 @@ export function defaultAiCampaign() {
     ],
     resources: [],
     social: [],
-    graphics: [],
+    graphics: AI_CAMPAIGN_GRAPHICS_SEED,
     coverage: [],
     signatories: [],
     sources: [],
@@ -156,12 +158,27 @@ export async function ensureAiCampaign(db) {
   const existingById = await getCampaign(db, AI_CAMPAIGN_ID)
   const existing = existingById || await getCampaign(db, AI_CAMPAIGN_SLUG)
   if (existing) {
-    if (existing.id === AI_CAMPAIGN_ID && existing.slug !== AI_CAMPAIGN_SLUG) {
-      return upsertCampaign(db, { ...existing, slug: AI_CAMPAIGN_SLUG })
+    let next = existing
+    let changed = false
+
+    if (next.id === AI_CAMPAIGN_ID && next.slug !== AI_CAMPAIGN_SLUG) {
+      next = { ...next, slug: AI_CAMPAIGN_SLUG }
+      changed = true
     }
-    const legacyDeadline = existing.deadline === '2026-09-25T23:59:59.000Z' || existing.deadline === '2026-09-25T23:59:59Z'
-    if (legacyDeadline) return upsertCampaign(db, { ...existing, deadline: AI_CAMPAIGN_DEADLINE, deadlineTimeZone: 'America/New_York' })
-    return existing
+
+    const legacyDeadline = next.deadline === '2026-09-25T23:59:59.000Z' || next.deadline === '2026-09-25T23:59:59Z'
+    if (legacyDeadline) {
+      next = { ...next, deadline: AI_CAMPAIGN_DEADLINE, deadlineTimeZone: 'America/New_York' }
+      changed = true
+    }
+
+    const graphics = mergeAiCampaignGraphics(next.graphics)
+    if (graphics.length !== (next.graphics || []).length) {
+      next = { ...next, graphics }
+      changed = true
+    }
+
+    return changed ? upsertCampaign(db, next) : existing
   }
   const seeded = defaultAiCampaign()
   await upsertCampaign(db, seeded)
@@ -307,7 +324,7 @@ export function normalizeCampaign(input = {}) {
     updates: normalizeRows(input.updates, ['date', 'title', 'body', 'url'], { booleanFields: ['pinned'] }),
     resources: normalizeRows(input.resources, ['type', 'title', 'description', 'href', 'label', 'imageUrl']),
     social: normalizeRows(input.social, ['platform', 'date', 'account', 'excerpt', 'url', 'imageUrl', 'language', 'languageCode']),
-    graphics: normalizeRows(input.graphics, ['title', 'imageUrl', 'alt', 'caption', 'downloadUrl']),
+    graphics: normalizeRows(input.graphics, ['title', 'imageUrl', 'alt', 'caption', 'downloadUrl', 'sourceUrl']),
     coverage: normalizeRows(input.coverage, ['date', 'outlet', 'title', 'translatedTitle', 'language', 'languageCode', 'url', 'summary']),
     signatories: normalizeRows(input.signatories, ['name', 'location', 'statement', 'url']),
     sources: normalizeRows(input.sources, ['title', 'publisher', 'url', 'note']),
@@ -415,6 +432,30 @@ function normalizeRows(value, fields, options = {}) {
     for (const field of booleanFields) next[field] = Boolean(row[field])
     return next
   })
+}
+
+function mergeAiCampaignGraphics(value) {
+  const current = Array.isArray(value) ? [...value] : []
+  const seenIds = new Set(current.map((item) => String(item?.id || '')).filter(Boolean))
+  const seenUrls = new Set(current.map((item) => graphicUrlKey(item?.imageUrl)).filter(Boolean))
+
+  for (const item of AI_CAMPAIGN_GRAPHICS_SEED) {
+    const id = String(item?.id || '')
+    const url = graphicUrlKey(item?.imageUrl)
+    if ((id && seenIds.has(id)) || (url && seenUrls.has(url))) continue
+    current.push(item)
+    if (id) seenIds.add(id)
+    if (url) seenUrls.add(url)
+  }
+
+  return current
+}
+
+function graphicUrlKey(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  try { return new URL(raw, 'https://sabot.media').pathname }
+  catch { return raw.split('?')[0] }
 }
 
 function normalizeStrings(value) {

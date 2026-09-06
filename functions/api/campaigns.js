@@ -43,8 +43,8 @@ export async function onRequestGet(context) {
     if (slug || id) {
       const item = await getCampaign(db, slug || id)
       if (!item || (!includeDrafts && item.status !== 'published')) return json({ ok: true, mode: 'd1', item: null })
-      // Public reads get live social + the bundled campaign art pack. Admin reads
-      // stay persistence-only so transient network content can never be saved back
+      // Public reads get live social + campaign decoration. Admin reads stay
+      // persistence-only so transient network content can never be saved back
       // into D1 by accident.
       let signatories
       let posts = []
@@ -127,7 +127,7 @@ async function handleWrite(context) {
     const body = await context.request.json()
     const incoming = body?.item || body || {}
     if (!String(incoming.title || '').trim()) return json({ ok: false, error: 'missing campaign title' }, 400)
-    const item = normalizeCampaign(incoming)
+    let item = normalizeCampaign(incoming)
 
     if (!item.title || !item.slug) return json({ ok: false, error: 'missing campaign title or slug' }, 400)
     if (incoming.deadline && !Number.isFinite(new Date(incoming.deadline).getTime())) return json({ ok: false, error: 'invalid campaign deadline' }, 400)
@@ -139,6 +139,9 @@ async function handleWrite(context) {
     }
     if (!protectedAiCampaign && item.slug === AI_CAMPAIGN_SLUG) {
       return json({ ok: false, error: 'the A/I campaign URL slug is reserved' }, 400)
+    }
+    if (protectedAiCampaign && existing) {
+      item = normalizeCampaign({ ...item, graphics: prependNewGraphics(item.graphics, existing.graphics) })
     }
     if (existing) await saveCampaignRevision(db, existing, 'before:save')
     const saved = await upsertCampaign(db, item)
@@ -163,6 +166,29 @@ async function handleWrite(context) {
   } catch (error) {
     return json({ ok: false, error: String(error?.message || error) }, 400)
   }
+}
+
+function prependNewGraphics(incoming = [], existing = []) {
+  const existingIds = new Set(existing.map((item) => String(item?.id || '')).filter(Boolean))
+  const existingUrls = new Set(existing.map((item) => graphicUrlKey(item?.imageUrl)).filter(Boolean))
+  const fresh = []
+  const rest = []
+
+  for (const graphic of incoming) {
+    const id = String(graphic?.id || '')
+    const url = graphicUrlKey(graphic?.imageUrl)
+    const isNew = (!id || !existingIds.has(id)) && (!url || !existingUrls.has(url))
+    ;(isNew ? fresh : rest).push(graphic)
+  }
+
+  return [...fresh.reverse(), ...rest]
+}
+
+function graphicUrlKey(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  try { return new URL(raw, 'https://sabot.media').pathname }
+  catch { return raw.split('?')[0] }
 }
 
 function json(data, status = 200) {

@@ -121,7 +121,7 @@ export function CampaignPage() {
   const campaignPieces = useMemo(() => findCampaignPieces(pieces, campaign), [pieces, campaign])
   const letterPieces = campaignPieces.filter((piece) => /letter/i.test(String(piece.title || '')))
   const reportingPieces = campaignPieces.filter((piece) => !letterPieces.includes(piece))
-  const graphics = useMemo(() => mergeGraphics(campaign?.graphics || [], campaignPieces), [campaign, campaignPieces])
+  const graphics = useMemo(() => campaign?.graphics || [], [campaign])
   const updates = useMemo(() => sortByDate(campaign?.updates || [], false), [campaign])
   const coverage = useMemo(() => selectHubCoverage(campaign?.coverage || []), [campaign])
   const featuredCoverage = coverage.filter((item) => item.editorialStatus === 'featured')
@@ -651,24 +651,6 @@ function findCampaignPieces(pieces, campaign) {
     const title = String(piece.title || '').toLowerCase()
     return /autistici(?:\s*\/\s*|\s+)?inventati/.test(title) || (/communications infrastructure/.test(title) && /terrorism|sanction|designation/.test(title))
   }).sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0) - new Date(a.publishedAt || a.updatedAt || 0))
-}
-
-function mergeGraphics(configured, pieces) {
-  const output = []
-  const seen = new Set()
-  for (const item of configured || []) {
-    const url = String(item.imageUrl || '').trim()
-    if (!url || seen.has(url)) continue
-    seen.add(url)
-    output.push(item)
-  }
-  for (const piece of pieces || []) {
-    const url = String(piece.featuredImage || piece.heroImage || piece.imageUrl || '').trim()
-    if (!url || seen.has(url)) continue
-    seen.add(url)
-    output.push({ id: `piece-${piece.id || piece.slug}`, title: piece.title, imageUrl: url, alt: piece.featuredImageAlt || '', caption: piece.featuredImageCaption || '', downloadUrl: url })
-  }
-  return output
 }
 
 function sortByDate(items, descending = true) {
