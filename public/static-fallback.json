@@ -5822,6 +5822,18 @@
             "body": "Reporting, public letters, journalist outreach, graphics, and direct advocacy begin circulating."
           },
           {
+            "id": "timeline-banca-etica",
+            "date": "2026-09-04",
+            "title": "Banca Etica moves to close A/I’s account",
+            "body": "On September 4, Banca Etica tells AI ODV it will unilaterally terminate the association’s bank account and that the donated funds remaining in it will not be available to the association. A/I says the decision leaves it unable to meet administrative obligations, pay service providers, or continue providing services."
+          },
+          {
+            "id": "timeline-shutdown",
+            "date": "2026-09-06",
+            "title": "A/I announces it is shutting down",
+            "body": "A/I announces that the collective is shutting down and will discontinue all services shortly. It says continuing to operate under the current political and financial pressure would endanger users and the communities around it."
+          },
+          {
             "id": "timeline-deadline",
             "date": "2026-09-25",
             "title": "September 25 deadline",
@@ -5883,7 +5895,7 @@
           "signatoriesUrl": ""
         },
         "createdAt": "2026-08-28T21:30:00Z",
-        "updatedAt": "2026-09-06T17:58:45.251Z"
+        "updatedAt": "2026-09-06T20:58:02.275Z"
       },
       {
         "id": "campaign-food-not-bombs-gaza",
@@ -6500,6 +6512,27 @@
         ],
         "social": [
           {
+            "id": "mastodon-117225929817429464",
+            "platform": "MASTODON",
+            "date": "2026-09-06T20:15:35.746Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "A/I may be ending. The story is nowhere near over. For twenty-five years, # AutisticiInventati showed what it could mean for movements to build and control their own communications infrastructure. Its loss should not send everyone searching for the next single service to replace it. It should send us looking in a hundred directions. In Boise, the Boise Autonomous Solidarity Hub is experimenting with one of them. @ BASH has put a small independent publication on NomadNet, a system running over Reticulum rather than relying solely on the conventional web. It has articles, archives, submissions and contact functions, reachable through a cryptographic network destination instead of an ordinary domain. 99a904b9ab830b7baa9d5115eb8854d7:/page/index.mu That is not the answer. That's what makes it interesting. Other projects are trying other things: cooperative infrastructure, self-managed servers, RSS, mirrors, print, radio, downloadable archives, federated publishing and networks that barely resemble the commercial web at all. We don't need to find another A/I. We need to understand how to build a thousand different pieces of what made A/I possible. Sabot is beginning a living guide to autonomous media and infrastructure, aimed especially at small and rural projects: how to publish, archive, distribute, host, mirror and keep going when a platform, host, domain, provider or collective disappears. Coming Soon: BECOME THE THOUSAND SERVERS A living guide to autonomous publishing, infrastructure and survival Follow the people experimenting. Follow small radical media. Preserve what matters. Then build something.",
+            "excerpt": "A/I may be ending. The story is nowhere near over. For twenty-five years, # AutisticiInventati showed what it could mean for movements to build and control their own communications infrastructure. Its loss should not send everyone searching for the next single service to replace it. It should send us looking in a hundred directions. In Boise, the Boise Autonomous Solidarity Hub is experimenting with one of them. @ BASH has put a small independent publication on NomadNet, a system running over Reticulum rather than relying solely on the conventional web. It has articles, archives, submissions and contact functions, reachable through a cryptographic network destination instead of an ordinary domain. 99a904b9ab830b7baa9d5115eb8854d7:/page/index.mu That is not the answer. That's what makes it interesting. Other projects are trying other things: cooperative infrastructure, self-managed servers, RSS, mirrors, print, radio, downloadable archives, federated publishing and networks that barely resemble the commercial web at all. We don't need to find another A/I. We need to understand how to build a thousand different pieces of what made A/I possible. Sabot is beginning a living guide to autonomous media and infrastructure, aimed especially at small and rural projects: how to publish, archive, distribute, host, mirror and keep going when a platform, host, domain, provider or collective disappears. Coming Soon: BECOME THE THOUSAND SERVERS A living guide to autonomous publishing, infrastructure and survival Follow the people experimenting. Follow small radical media. Preserve what matters. Then build something.",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117225929817429464",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/225/928/292/670/200/original/5cf2fb7e2a75b88e.png",
+                "alt": "Alt text: Poster-style graphic on a black background reading, “A/I IS ENDING. SO WHAT DO WE BUILD NOW?” in large cream and red block letters. In the center is a screenshot-like view of the Boise Autonomous Solidarity Hub, or BASH, showing its colorful pixel-art logo and simple text-based NomadNet site. Along the left are the phrases “Publish local,” “Mirror everything,” “Learn the tools,” “Support independent media,” and “Build together.” Text on the right says one collective can be shut down, but a thousand projects cannot, and calls for people to control their own communications. Mountain, forest, radio-tower, and DIY zine-style illustrations frame the page. Across the bottom, large text reads, “WE DON’T NEED ANOTHER A/I. WE NEED A THOUSAND SERVERS,” followed by a note that Sabot is building a living guide to autonomous media and infrastructure, especially for small and rural projects."
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/225/928/292/670/200/original/5cf2fb7e2a75b88e.png",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
+          },
+          {
             "id": "mastodon-117225616590095746",
             "platform": "MASTODON",
             "date": "2026-09-06T18:55:56.271Z",
@@ -6777,48 +6810,6 @@
               }
             ],
             "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/201/287/558/581/161/original/e1d82ca261e39f47.png",
-            "language": "English",
-            "languageCode": "en",
-            "contentWarning": "",
-            "sourcePriority": 2
-          },
-          {
-            "id": "mastodon-117201273920319064",
-            "platform": "MASTODON",
-            "date": "2026-09-02T11:45:16.611Z",
-            "account": "Sabot Media",
-            "handle": "@AberdeenLocal1312",
-            "text": "NEW ZINE: THE SERVER CALLED PARANOIA Comrades with The BlackWave Collective in Italy have transformed Sabot Media’s reporting on Autistici/Inventati into a beautiful 21-page English-language zine. It traces A/I’s history from a recycled server assembled in a Milan hacklab to the U.S. government’s attempt to make an entire communications collective economically and technologically untouchable. This is what movement media can become when it moves: reporting passed between comrades, translated, redesigned, printed and carried into places an algorithm cannot reach. The standard reading PDF is available now through our Autistici/Inventati campaign page: https:// sabot.media/campaigns/autistic i-inventati A properly imposed version for folding and printing as a physical zine is coming tomorrow. Text by Sabot Media. Layout and design by The BlackWave Collective. Download it. Read it. Print it. Pass it along. Communications infrastructure is not terrorism. Sabot Media is an independent publication and is not affiliated with or acting on behalf of A/I. # AutisticiInventati # Zines # IndependentMedia # DigitalRights # InternetFreedom # Antifascism",
-            "excerpt": "NEW ZINE: THE SERVER CALLED PARANOIA Comrades with The BlackWave Collective in Italy have transformed Sabot Media’s reporting on Autistici/Inventati into a beautiful 21-page English-language zine. It traces A/I’s history from a recycled server assembled in a Milan hacklab to the U.S. government’s attempt to make an entire communications collective economically and technologically untouchable. This is what movement media can become when it moves: reporting passed between comrades, translated, redesigned, printed and carried into places an algorithm cannot reach. The standard reading PDF is available now through our Autistici/Inventati campaign page: https:// sabot.media/campaigns/autistic i-inventati A properly imposed version for folding and printing as a physical zine is coming tomorrow. Text by Sabot Media. Layout and design by The BlackWave Collective. Download it. Read it. Print it. Pass it along. Communications infrastructure is not terrorism. Sabot Media is an independent publication and is not affiliated with or acting on behalf of A/I. # AutisticiInventati # Zines # IndependentMedia # DigitalRights # InternetFreedom # Antifascism",
-            "url": "https://kolektiva.social/@AberdeenLocal1312/117201273920319064",
-            "images": [
-              {
-                "url": "https://kolektiva.social/system/media_attachments/files/117/201/254/139/169/638/original/3099e6439aef59c6.png",
-                "alt": "Black-and-white poster titled “The Server Called Paranoia.” An astronaut holding a server stands inside an open box filled with computers and network equipment, surrounded by curling octopus tentacles. Text below reads: “Defend Autistici/Inventati before September 25.”\n"
-              }
-            ],
-            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/201/254/139/169/638/original/3099e6439aef59c6.png",
-            "language": "English",
-            "languageCode": "en",
-            "contentWarning": "",
-            "sourcePriority": 2
-          },
-          {
-            "id": "mastodon-117200347944837468",
-            "platform": "MASTODON",
-            "date": "2026-09-02T07:49:47.345Z",
-            "account": "Sabot Media",
-            "handle": "@AberdeenLocal1312",
-            "text": "New official campaign hub for tracking stories, press releases, and technical updates directly from # AutisticiInventati for the most up to date # News https:// keepitfree.ai/ also, for redundancy's sake, here is our own stab at a campaign hub along those same lines https:// sabot.media/campaigns/autistic i-inventati",
-            "excerpt": "New official campaign hub for tracking stories, press releases, and technical updates directly from # AutisticiInventati for the most up to date # News https:// keepitfree.ai/ also, for redundancy's sake, here is our own stab at a campaign hub along those same lines https:// sabot.media/campaigns/autistic i-inventati",
-            "url": "https://kolektiva.social/@AberdeenLocal1312/117200347944837468",
-            "images": [
-              {
-                "url": "https://kolektiva.social/system/media_attachments/files/117/200/336/337/114/976/original/a83984dcb52e12fc.png",
-                "alt": "Keep the Internet free\n\nWe are not terrorists. Autistici.org is an infrastructure of dissent\n\nAnnouncements Technical Updates Press coverage Solidarity\n\nEnglish Italiano\n\nOn August 26, 2026, the United States placed the Italian collective Autistici/Inventati on its terrorism\nsanctions list, accusing it of providing online services to violent groups. Since 2001 the collective has\noffered free email, hosting and other tools to activists, and it rejects the accusations entirely. Two days\nlater its website disappeared from the internet — not because the machines were switched off, but\nbecause the address that leads people to them stopped working.\n\nFollow the case here. Join the campaign for a free internet.\n"
-              }
-            ],
-            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/200/336/337/114/976/original/a83984dcb52e12fc.png",
             "language": "English",
             "languageCode": "en",
             "contentWarning": "",
@@ -7184,6 +7175,38 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-aql50p",
+            "date": "2026-09-06T12:58:00.000Z",
+            "outlet": "Il Fatto Quotidiano",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Il collettivo italiano sanzionato da Trump chiude, Autistici/Inventati: “Temiamo conseguenze penali e finanziarie per le nostre comunità”",
+            "translatedTitle": "",
+            "url": "https://www.ilfattoquotidiano.it/2026/09/06/autistici-inventati-sanzioni-trump-chiusura-notizie/8498485",
+            "imageUrl": "",
+            "summary": "25 anni di attività finiti per le sanzioni Trump: A/I teme conseguenze penali e finanziarie per le sue comunità.",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-fm9nvf",
+            "date": "2026-09-06T12:25:00.000Z",
+            "outlet": "NRC",
+            "language": "",
+            "languageCode": "",
+            "title": "Italiaanse internetdienstverlener stopt nadat de VS het op de terreurlijst plaatsten. ‘Te gevaarlijk voor onze gebruikers’",
+            "translatedTitle": "",
+            "url": "https://www.nrc.nl/nieuws/2026/09/06/italiaanse-internetdienstverlener-stopt-nadat-de-vs-het-op-de-terreurlijst-zette-te-gevaarlijk-voor-onze-gebruikers-a4936005",
+            "imageUrl": "",
+            "summary": "Het collectief achter de Italiaanse internetdienstverlener Autistici/Inventati heeft besloten te stoppen. De organisatie staat sinds 26 augustus op de Amerikaanse terreurlijst en dat maakt het vrijwel ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-uip9jw",
             "date": "2026-09-06T12:08:00.000Z",
             "outlet": "Radio Onda d'Urto",
@@ -7280,34 +7303,18 @@
             "editorialStatus": "automatic"
           },
           {
-            "id": "coverage-aql50p",
-            "date": "2026-09-05T22:58:00.000Z",
-            "outlet": "Il Fatto Quotidiano",
+            "id": "coverage-1ak1fho",
+            "date": "2026-09-05T17:00:00.000Z",
+            "outlet": "PeaceLink",
             "language": "Italian",
             "languageCode": "it",
-            "title": "Il collettivo italiano sanzionato da Trump chiude, Autistici/Inventati: “Temiamo conseguenze penali e finanziarie per le nostre comunità”",
+            "title": "A/I chiude dopo 25 anni",
             "translatedTitle": "",
-            "url": "https://www.ilfattoquotidiano.it/2026/09/06/autistici-inventati-sanzioni-trump-chiusura-notizie/8498485",
+            "url": "https://www.peacelink.it/cybercultura/a/51569.html",
             "imageUrl": "",
-            "summary": "25 anni di attività finiti per le sanzioni Trump: A/I teme conseguenze penali e finanziarie per le sue comunità.",
+            "summary": "CyberCultura - La storia di una resistenza digitale - Il collettivo Autistici/Inventati sospende i servizi dopo le sanzioni statunitensi. PeaceLink aveva espresso solidarietà e denunciato l'uso politi ...",
             "discoverySource": "live-discovery",
-            "relevanceScore": 105,
-            "featured": false,
-            "editorialStatus": "automatic"
-          },
-          {
-            "id": "coverage-fm9nvf",
-            "date": "2026-09-05T22:25:00.000Z",
-            "outlet": "NRC",
-            "language": "",
-            "languageCode": "",
-            "title": "Italiaanse internetdienstverlener stopt nadat de VS het op de terreurlijst plaatsten. ‘Te gevaarlijk voor onze gebruikers’",
-            "translatedTitle": "",
-            "url": "https://www.nrc.nl/nieuws/2026/09/06/italiaanse-internetdienstverlener-stopt-nadat-de-vs-het-op-de-terreurlijst-zette-te-gevaarlijk-voor-onze-gebruikers-a4936005",
-            "imageUrl": "",
-            "summary": "Het collectief achter de Italiaanse internetdienstverlener Autistici/Inventati heeft besloten te stoppen. De organisatie staat sinds 26 augustus op de Amerikaanse terreurlijst en dat maakt het vrijwel ...",
-            "discoverySource": "live-discovery",
-            "relevanceScore": 50,
+            "relevanceScore": 62,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -8911,6 +8918,18 @@
             "date": "2026-08-28",
             "title": "Public campaign launched",
             "body": "Reporting, public letters, journalist outreach, graphics, and direct advocacy begin circulating."
+          },
+          {
+            "id": "timeline-banca-etica",
+            "date": "2026-09-04",
+            "title": "Banca Etica moves to close A/I’s account",
+            "body": "On September 4, Banca Etica tells AI ODV it will unilaterally terminate the association’s bank account and that the donated funds remaining in it will not be available to the association. A/I says the decision leaves it unable to meet administrative obligations, pay service providers, or continue providing services."
+          },
+          {
+            "id": "timeline-shutdown",
+            "date": "2026-09-06",
+            "title": "A/I announces it is shutting down",
+            "body": "A/I announces that the collective is shutting down and will discontinue all services shortly. It says continuing to operate under the current political and financial pressure would endanger users and the communities around it."
           }
         ],
         "faq": [
@@ -8968,7 +8987,7 @@
           "signatoriesUrl": ""
         },
         "createdAt": "2026-08-28T21:30:00Z",
-        "updatedAt": "2026-09-06T17:58:45.251Z",
+        "updatedAt": "2026-09-06T20:58:02.275Z",
         "individualLetter": {
           "resourceId": "resource-individual-letter-pdf",
           "title": "Write to officials in your own voice",
@@ -9008,7 +9027,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-06T19:34:37.022Z",
+        "socialCheckedAt": "2026-09-06T21:39:52.547Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9036,12 +9055,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 1
+            "count": 5
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-06T19:34:38.668Z",
-        "coverageArchiveCount": 90
+        "intelligenceCheckedAt": "2026-09-06T21:39:53.709Z",
+        "coverageArchiveCount": 91
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9243,7 +9262,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-06T19:34:47.116Z",
+        "automationCheckedAt": "2026-09-06T21:40:00.209Z",
         "coverageArchiveCount": 0
       }
     }
