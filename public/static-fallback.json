@@ -13,7 +13,7 @@
         "title": "Nineteen Days Before the Deadline, Autistici/Inventati Is Shutting Down",
         "slug": "ai-shuts-down",
         "excerpt": "",
-        "body": "<h5><strong style=\"font-size: 1.65em;\">The Italian communications collective survived raids, surveillance and server seizures for 25 years. Eleven days after the United States designated it a global terrorist organization, A/I says the risk to its users has become too great to continue.</strong></h5><p>Autistici/Inventati is shutting down. On September 6, eleven days after the United States placed the Italian technology collective on its terrorism sanctions list, A/I announced that the collective itself will close and that the email, blogging, hosting and communications services it has provided for a quarter century will soon be discontinued. “A/I is shutting down,” the collective wrote. “The Autistici/Inventati collective is shutting down and will soon discontinue all of the services we provide.” The announcement turns what had been a developing fight over sanctions, infrastructure and political speech into something considerably more concrete. Twenty-five years of independent communications infrastructure are being dismantled.</p><p>And A/I says plainly why. The collective said continuing to operate now risks exposing its users, collaborators and communities to legal and financial consequences simply because they interact with an organization the United States has designated a Specially Designated Global Terrorist. “The possibility that our work may cause legal and financial consequences to those who are close to us,” A/I wrote, “leaves us no choice.” The shutdown comes nineteen days before the expiration of the temporary wind-down period the U.S. Treasury Department created when it sanctioned A/I. That deadline is September 25. A/I did not make it there.</p><h3><strong>Eleven days</strong></h3><p>On August 26, the Treasury Department’s Office of Foreign Assets Control added Autistici/Inventati to its Specially Designated Nationals and Blocked Persons List under Executive Order 13224. Treasury accused A/I of supplying “specialized digital architecture, tools, and services” to what the department described as Antifa cells and other violent far-left organizations. Treasury Secretary Scott Bessent said the government would bring the “full weight” of its economic tools against what it called their enablers and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, one of the organizations named in that announcement said it could no longer safely exist.</p><p>The United States did not issue an order instructing Autistici/Inventati to turn off its servers. That distinction matters. It also does remarkably little to soften what happened. Economic sanctions operate through banks, registrars, payment processors, hosting companies and other intermediaries that suddenly have their own reasons to sever ordinary relationships with a designated entity. Washington does not necessarily need to seize a server when it can make everybody touching the server afraid to keep touching it.</p><p>A/I's September 6 announcement describes precisely that pressure. The collective says the danger now extends beyond itself to users and people who merely “have something to do with us.” Every additional relationship becomes another possible point of exposure. In other words, the pressure does not stop at the sanctioned organization. It radiates outward until isolation becomes the rational response.</p><h3><strong>The wind-down that wasn't</strong></h3><p>OFAC simultaneously issued Counter Terrorism General License 36 when it designated A/I, temporarily authorizing transactions ordinarily necessary to wind down relationships involving the collective. The authorization runs through September 25. On paper, that provided roughly one month for an orderly retreat. Reality moved considerably faster.</p><p>Within days of the designation, autistici.org became unreachable through ordinary DNS resolution. A/I continued trying to keep its infrastructure accessible and its users informed. Now, in announcing its closure, the collective itself warns that similar disruptions may happen again without warning before users can complete their migrations. It says instructions for backing up blogs, mailboxes and websites are coming, but it cannot guarantee what parts of its infrastructure will remain reachable in the meantime.</p><p>This is what “wind-down” looks like outside Treasury's vocabulary. People scrambling to recover years of email. Blogs needing emergency backups. Websites looking for somewhere else to live. Administrators spending their remaining time evacuating an infrastructure instead of maintaining it. The machinery is administrative. The consequences aren't.</p><h3><strong>From “we will resist” to shutdown</strong></h3><p>A/I's own description of the last eleven days is worth dwelling on. When the designation arrived, the collective says it intended to resist for as long as resistance remained possible. It had spent years maintaining what it calls “free, privacy-friendly, autonomous and politically committed infrastructure.” But by September 6, it concluded that continuing to provide those services was incompatible with protecting the people who used them.</p><p>“Every day we stayed online after August 26, 2026, has been a victory,” A/I wrote. But it would not demand martyrdom from itself or its users. Continuing to operate, it said, now endangered the same communities the infrastructure was created to protect. “Under these circumstances, we are no longer able to maintain our original mission,” the collective concluded.</p><p>That distinction is crucial. A/I is not announcing that its technology failed. Its servers did not collectively explode. Twenty-five years of technical knowledge did not suddenly evaporate. It is shutting down because maintaining the infrastructure has itself become dangerous.</p><h3><strong>What is disappearing</strong></h3><p>Autistici/Inventati began in 2001 out of Italy's hacklab, autonomous media and radical technology cultures. Over twenty-five years it built and maintained noncommercial communications infrastructure including email, mailing lists, websites, chat systems, publishing tools and Noblogs. Its model was deliberately unlike the corporate Internet: collect as little information as possible, refuse to turn communication into a commodity, and give politically active communities infrastructure that did not require Google, Meta or Microsoft to sit between them and one another.</p><p>That philosophy repeatedly brought A/I into conflict with authorities. It survived surveillance, server seizures and infrastructure compromise. Those experiences helped produce Plan R*, a distributed architecture built around the assumption that servers themselves could be seized or compromised.</p><p>A quarter century of engineering around hostile machines and hostile governments ultimately encountered another attack surface: the financial and legal relationships surrounding the machines.</p><p>You can distribute servers. Distributing the international banking system is trickier.</p><h3><strong>So who's next?</strong></h3><p>That is no longer a hysterical question.</p><p>Treasury's case against A/I matters because the department did not describe an organization whose principal public function was carrying out attacks. It repeatedly described infrastructure: digital architecture, technological tools, communications and services. The government says providing that infrastructure to particular organizations made A/I a sanctionable enabler.</p><p>Take that theory seriously for a moment and an uncomfortable amount of the Internet comes into view.</p><p>Autonomous email providers. Privacy-oriented hosting collectives. Federated social networks. VPN providers. Encrypted messaging services. Domain registrars willing to host controversial organizations. Independent media infrastructure. Donation processors. File-sharing systems. Organizations maintaining Tor relays or other privacy infrastructure. Any service whose users include movements the executive branch decides to characterize as terrorist-linked suddenly has reason to ask where infrastructure ends and “support” begins.</p><p>Services closer to A/I's political and technical model would obviously face that uncertainty first. A small autonomous host does not have Meta's legal department, billions of dollars, armies of lobbyists or enough market power to make half of Washington answer the phone. That disparity is part of the story. A sanctions architecture does not strike every intermediary equally. It lands hardest on the infrastructure least capable of surviving the compliance panic it creates.</p><p>But Meta is useful precisely because it exposes the problem with the principle.</p><p>People accused or convicted of terrorism have used Facebook. Extremist organizations have attempted to organize through Instagram. Federal prosecutions routinely describe defendants communicating through mainstream platforms. DOJ itself recently described alleged conspirators using Signal, SimpleX, Discord, TikTok and Instagram while planning an attack. Nobody seriously argues that the existence of those communications automatically turns every company carrying them into a terrorist organization.</p><p>Why not?</p><p>Because until now we have generally understood that <strong>providing infrastructure is not the same thing as adopting every purpose of every person using it.</strong></p><p>A postal service carries letters without becoming part of every conspiracy described inside an envelope. A telephone company transmits conversations without becoming a participant in every crime discussed over the phone. A hosting provider can carry a website without authoring it. An encrypted messenger can transmit a conversation without knowing what it says.</p><p>The Internet depends on those distinctions.</p><p>The A/I designation puts pressure directly on them.</p><p>And once the executive branch can characterize politically committed technological infrastructure as an “enabler,” the practical question becomes less <em>can this logic reach another provider?</em> than <em>which providers will the government choose to apply it to?</em></p><p>That is where the Trump administration's wider campaign against “Antifa” becomes impossible to separate from this story. The White House says Trump directed the federal government to “hunt down, disrupt, and dismantle” what it calls the Antifa network. DOJ has increasingly used terrorism language in prosecutions involving alleged Antifa-affiliated defendants. Treasury has now extended that campaign beyond people accused of violence and into the communications infrastructure the government says supports them.</p><p>That is an escalation.</p><h3><strong>Could they really do this to Meta?</strong></h3><p>Not in the simple sense that a president can wake up annoyed with Mark Zuckerberg, scribble “terrorist” on a napkin and switch Facebook off before breakfast. American companies have constitutional protections, statutory rights, enormous resources and avenues for judicial review. Different terrorism authorities also operate under different legal frameworks. Pretending all of those constraints disappear would make the argument easier to knock down.</p><p>The more disturbing point is that <strong>A/I demonstrates how much damage can occur before the underlying theory receives meaningful judicial scrutiny.</strong></p><p>Designation comes first. Compliance departments react. Banks become nervous. Registrars reconsider relationships. Payment processors calculate risk. Vendors leave. Users flee because they cannot afford to discover whether merely interacting with the sanctioned service creates a problem for them. By the time lawyers begin arguing about the limits of executive authority, the infrastructure may already be dead.</p><p>A/I lasted eleven days.</p><p>That is the precedent worth examining.</p><p>Not “Trump can delete any website.”</p><p>Something considerably more plausible: the executive branch possesses economic tools powerful enough to make a targeted piece of infrastructure poisonous to much of the commercial system around it, and therefore potentially nonviable, without having to physically confiscate the infrastructure or obtain a criminal conviction against the people running it first.</p><p>For a company the size of Meta, resistance could involve years of litigation.</p><p>For a volunteer-run autonomous service, there may be nothing left to litigate over by then.</p><h3><strong>Infrastructure becomes evidence</strong></h3><p>This is why the designation raises a question considerably larger than one Italian collective: when does providing communications infrastructure become material support?</p><p>The government argues that A/I's provision of technological services crossed that line. A/I rejects that characterization and has repeatedly emphasized the distinction between maintaining infrastructure and controlling the actions of everyone who uses it.</p><p>That disagreement is now considerably less theoretical.</p><p>The provider is closing.</p><p>Infrastructure is not politically neutral in some mystical sense, and A/I never pretended to be. It openly describes itself as politically committed. But political commitment and operational responsibility are different things. If that difference collapses, an extraordinarily powerful mechanism appears: a government does not necessarily have to show that infrastructure operators planned a particular illegal act if their infrastructure can instead be characterized as part of the ecosystem surrounding people accused of committing one.</p><p>Then the designation itself starts doing the work.</p><h3><strong>The chilling effect now has a body count of services</strong></h3><p>Sanctions arrive wrapped in institutional language: designation, compliance, wind-down, blocked property, secondary sanctions, risk management. The words are clean enough to make the mechanism sound nearly bloodless.</p><p>Then people lose email accounts.</p><p>Blogs accumulated over decades need emergency backups.</p><p>Organizations scramble to migrate websites.</p><p>Domains disappear.</p><p>Financial relationships become liabilities.</p><p>Volunteers spend nights trying to preserve data instead of running services.</p><p>People who have nothing to do with violence begin wondering whether keeping an account, accepting a donation, hosting a domain or sending an email exposes them to consequences they do not understand.</p><p>And eventually the people maintaining the infrastructure decide that keeping it alive presents too much risk to everybody around them.</p><p>That is the material effect.</p><p>A/I's shutdown is therefore not merely another development in the story of its designation.</p><p><strong>It is evidence of what the designation does.</strong></p><h3><strong>A deadline Washington didn't need</strong></h3><p>When OFAC issued General License 36, September 25 appeared to be the important date. Sabot's reporting has followed that deadline because it represented the endpoint of Treasury's temporary authorization for winding down certain transactions involving A/I.</p><p>September 25 may now be less important than September 6.</p><p>The pressure worked faster than the calendar.</p><p>The designation came August 26. Infrastructure disruption followed. Legal and financial risk spread outward toward users and anyone maintaining relationships with A/I. Eleven days later, and nineteen days before Treasury's wind-down period expires, the collective concluded that remaining online was too dangerous.</p><p>Treasury Secretary Scott Bessent said on August 26 that the government would bring the full weight of its economic tools against the organizations it identified and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, Autistici/Inventati announced that it was eliminating itself.</p><p>The government did not have to send agents into a server room.</p><p>It did not have to obtain a criminal conviction against A/I's administrators.</p><p>It did not even have to wait for its own September 25 deadline.</p><p>The ecosystem around the infrastructure did the rest.</p><p>There will be technical questions in the coming days. A/I says it will publish instructions explaining how users can preserve blogs, mailboxes and websites, while warning that further disruptions may arrive without notice. Those instructions matter. So does preserving a record of what happened here.</p><p>Because twenty-five years from now, the significant fact will not simply be that a strange Italian hacker collective once ran an email service called Autistici/Inventati.</p><p>It will be that in 2026 the United States placed autonomous communications infrastructure on a terrorism blacklist; the legal, technical and financial risks spread outward from that designation; and eleven days later the people who had spent twenty-five years building that infrastructure concluded that the only way to protect their users was to destroy it.</p><p>A/I ended its announcement with a request: get away from the computer. Go outside. Struggle. Hug one another. Keep smiling.</p><p>“We are stopping,” the collective wrote, “but the Resistance and ideas do not stop.”</p><p>The ideas may survive.</p><p>The infrastructure won't.</p><p>And every autonomous service watching what happened now knows exactly how quickly the distance between <strong>designated</strong> and <strong>gone</strong> can collapse.</p>",
+        "body": "<h5><strong>The Italian communications collective survived raids, surveillance and server seizures for 25 years. Eleven days after the United States designated it a global terrorist organization, A/I says the risk to its users has become too great to continue.</strong></h5><p>Autistici/Inventati is shutting down. On September 6, eleven days after the United States placed the Italian technology collective on its terrorism sanctions list, A/I announced that the collective itself will close and that the email, blogging, hosting and communications services it has provided for a quarter century will soon be discontinued. “A/I is shutting down,” the collective wrote. “The Autistici/Inventati collective is shutting down and will soon discontinue all of the services we provide.” The announcement turns what had been a developing fight over sanctions, infrastructure and political speech into something considerably more concrete. Twenty-five years of independent communications infrastructure are being dismantled.</p><p>And A/I says plainly why. The collective said continuing to operate now risks exposing its users, collaborators and communities to legal and financial consequences simply because they interact with an organization the United States has designated a Specially Designated Global Terrorist. “The possibility that our work may cause legal and financial consequences to those who are close to us,” A/I wrote, “leaves us no choice.” The shutdown comes nineteen days before the expiration of the temporary wind-down period the U.S. Treasury Department created when it sanctioned A/I. That deadline is September 25. A/I did not make it there.</p><h3><strong>Eleven days</strong></h3><p>On August 26, the Treasury Department’s Office of Foreign Assets Control added Autistici/Inventati to its Specially Designated Nationals and Blocked Persons List under Executive Order 13224. Treasury accused A/I of supplying “specialized digital architecture, tools, and services” to what the department described as Antifa cells and other violent far-left organizations. Treasury Secretary Scott Bessent said the government would bring the “full weight” of its economic tools against what it called their enablers and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, one of the organizations named in that announcement said it could no longer safely exist.</p><p>The United States did not issue an order instructing Autistici/Inventati to turn off its servers. That distinction matters. It also does remarkably little to soften what happened. Economic sanctions operate through banks, registrars, payment processors, hosting companies and other intermediaries that suddenly have their own reasons to sever ordinary relationships with a designated entity. Washington does not necessarily need to seize a server when it can make everybody touching the server afraid to keep touching it.</p><p>A/I's September 6 announcement describes precisely that pressure. The collective says the danger now extends beyond itself to users and people who merely “have something to do with us.” Every additional relationship becomes another possible point of exposure. In other words, the pressure does not stop at the sanctioned organization. It radiates outward until isolation becomes the rational response.</p><h3><strong>The wind-down that wasn't</strong></h3><p>OFAC simultaneously issued Counter Terrorism General License 36 when it designated A/I, temporarily authorizing transactions ordinarily necessary to wind down relationships involving the collective. The authorization runs through September 25. On paper, that provided roughly one month for an orderly retreat. Reality moved considerably faster.</p><p>Within days of the designation, autistici.org became unreachable through ordinary DNS resolution. A/I continued trying to keep its infrastructure accessible and its users informed. Now, in announcing its closure, the collective itself warns that similar disruptions may happen again without warning before users can complete their migrations. It says instructions for backing up blogs, mailboxes and websites are coming, but it cannot guarantee what parts of its infrastructure will remain reachable in the meantime.</p><p>This is what “wind-down” looks like outside Treasury's vocabulary. People scrambling to recover years of email. Blogs needing emergency backups. Websites looking for somewhere else to live. Administrators spending their remaining time evacuating an infrastructure instead of maintaining it. The machinery is administrative. The consequences aren't.</p><h3><strong>From “we will resist” to shutdown</strong></h3><p>A/I's own description of the last eleven days is worth dwelling on. When the designation arrived, the collective says it intended to resist for as long as resistance remained possible. It had spent years maintaining what it calls “free, privacy-friendly, autonomous and politically committed infrastructure.” But by September 6, it concluded that continuing to provide those services was incompatible with protecting the people who used them.</p><p>“Every day we stayed online after August 26, 2026, has been a victory,” A/I wrote. But it would not demand martyrdom from itself or its users. Continuing to operate, it said, now endangered the same communities the infrastructure was created to protect. “Under these circumstances, we are no longer able to maintain our original mission,” the collective concluded.</p><p>That distinction is crucial. A/I is not announcing that its technology failed. Its servers did not collectively explode. Twenty-five years of technical knowledge did not suddenly evaporate. It is shutting down because maintaining the infrastructure has itself become dangerous.</p><h3><strong>What is disappearing</strong></h3><p>Autistici/Inventati began in 2001 out of Italy's hacklab, autonomous media and radical technology cultures. Over twenty-five years it built and maintained noncommercial communications infrastructure including email, mailing lists, websites, chat systems, publishing tools and Noblogs. Its model was deliberately unlike the corporate Internet: collect as little information as possible, refuse to turn communication into a commodity, and give politically active communities infrastructure that did not require Google, Meta or Microsoft to sit between them and one another.</p><p>That philosophy repeatedly brought A/I into conflict with authorities. It survived surveillance, server seizures and infrastructure compromise. Those experiences helped produce Plan R*, a distributed architecture built around the assumption that servers themselves could be seized or compromised.</p><p>A quarter century of engineering around hostile machines and hostile governments ultimately encountered another attack surface: the financial and legal relationships surrounding the machines.</p><p>You can distribute servers. Distributing the international banking system is trickier.</p><h3><strong>So who's next?</strong></h3><p>That is no longer a hysterical question.</p><p>Treasury's case against A/I matters because the department did not describe an organization whose principal public function was carrying out attacks. It repeatedly described infrastructure: digital architecture, technological tools, communications and services. The government says providing that infrastructure to particular organizations made A/I a sanctionable enabler.</p><p>Take that theory seriously for a moment and an uncomfortable amount of the Internet comes into view.</p><p>Autonomous email providers. Privacy-oriented hosting collectives. Federated social networks. VPN providers. Encrypted messaging services. Domain registrars willing to host controversial organizations. Independent media infrastructure. Donation processors. File-sharing systems. Organizations maintaining Tor relays or other privacy infrastructure. Any service whose users include movements the executive branch decides to characterize as terrorist-linked suddenly has reason to ask where infrastructure ends and “support” begins.</p><p>Services closer to A/I's political and technical model would obviously face that uncertainty first. A small autonomous host does not have Meta's legal department, billions of dollars, armies of lobbyists or enough market power to make half of Washington answer the phone. That disparity is part of the story. A sanctions architecture does not strike every intermediary equally. It lands hardest on the infrastructure least capable of surviving the compliance panic it creates.</p><p>But Meta is useful precisely because it exposes the problem with the principle.</p><p>People accused or convicted of terrorism have used Facebook. Extremist organizations have attempted to organize through Instagram. Federal prosecutions routinely describe defendants communicating through mainstream platforms. DOJ itself recently described alleged conspirators using Signal, SimpleX, Discord, TikTok and Instagram while planning an attack. Nobody seriously argues that the existence of those communications automatically turns every company carrying them into a terrorist organization.</p><p>Why not?</p><p>Because until now we have generally understood that <strong>providing infrastructure is not the same thing as adopting every purpose of every person using it.</strong></p><p>A postal service carries letters without becoming part of every conspiracy described inside an envelope. A telephone company transmits conversations without becoming a participant in every crime discussed over the phone. A hosting provider can carry a website without authoring it. An encrypted messenger can transmit a conversation without knowing what it says.</p><p>The Internet depends on those distinctions.</p><p>The A/I designation puts pressure directly on them.</p><p>And once the executive branch can characterize politically committed technological infrastructure as an “enabler,” the practical question becomes less <em>can this logic reach another provider?</em> than <em>which providers will the government choose to apply it to?</em></p><p>That is where the Trump administration's wider campaign against “Antifa” becomes impossible to separate from this story. The White House says Trump directed the federal government to “hunt down, disrupt, and dismantle” what it calls the Antifa network. DOJ has increasingly used terrorism language in prosecutions involving alleged Antifa-affiliated defendants. Treasury has now extended that campaign beyond people accused of violence and into the communications infrastructure the government says supports them.</p><p>That is an escalation.</p><h3><strong>Could they really do this to Meta?</strong></h3><p>Not in the simple sense that a president can wake up annoyed with Mark Zuckerberg, scribble “terrorist” on a napkin and switch Facebook off before breakfast. American companies have constitutional protections, statutory rights, enormous resources and avenues for judicial review. Different terrorism authorities also operate under different legal frameworks. Pretending all of those constraints disappear would make the argument easier to knock down.</p><p>The more disturbing point is that <strong>A/I demonstrates how much damage can occur before the underlying theory receives meaningful judicial scrutiny.</strong></p><p>Designation comes first. Compliance departments react. Banks become nervous. Registrars reconsider relationships. Payment processors calculate risk. Vendors leave. Users flee because they cannot afford to discover whether merely interacting with the sanctioned service creates a problem for them. By the time lawyers begin arguing about the limits of executive authority, the infrastructure may already be dead.</p><p>A/I lasted eleven days.</p><p>That is the precedent worth examining.</p><p>Not “Trump can delete any website.”</p><p>Something considerably more plausible: the executive branch possesses economic tools powerful enough to make a targeted piece of infrastructure poisonous to much of the commercial system around it, and therefore potentially nonviable, without having to physically confiscate the infrastructure or obtain a criminal conviction against the people running it first.</p><p>For a company the size of Meta, resistance could involve years of litigation.</p><p>For a volunteer-run autonomous service, there may be nothing left to litigate over by then.</p><h3><strong>Infrastructure becomes evidence</strong></h3><p>This is why the designation raises a question considerably larger than one Italian collective: when does providing communications infrastructure become material support?</p><p>The government argues that A/I's provision of technological services crossed that line. A/I rejects that characterization and has repeatedly emphasized the distinction between maintaining infrastructure and controlling the actions of everyone who uses it.</p><p>That disagreement is now considerably less theoretical.</p><p>The provider is closing.</p><p>Infrastructure is not politically neutral in some mystical sense, and A/I never pretended to be. It openly describes itself as politically committed. But political commitment and operational responsibility are different things. If that difference collapses, an extraordinarily powerful mechanism appears: a government does not necessarily have to show that infrastructure operators planned a particular illegal act if their infrastructure can instead be characterized as part of the ecosystem surrounding people accused of committing one.</p><p>Then the designation itself starts doing the work.</p><h3><strong>The chilling effect now has a body count of services</strong></h3><p>Sanctions arrive wrapped in institutional language: designation, compliance, wind-down, blocked property, secondary sanctions, risk management. The words are clean enough to make the mechanism sound nearly bloodless.</p><p>Then people lose email accounts.</p><p>Blogs accumulated over decades need emergency backups.</p><p>Organizations scramble to migrate websites.</p><p>Domains disappear.</p><p>Financial relationships become liabilities.</p><p>Volunteers spend nights trying to preserve data instead of running services.</p><p>People who have nothing to do with violence begin wondering whether keeping an account, accepting a donation, hosting a domain or sending an email exposes them to consequences they do not understand.</p><p>And eventually the people maintaining the infrastructure decide that keeping it alive presents too much risk to everybody around them.</p><p>That is the material effect.</p><p>A/I's shutdown is therefore not merely another development in the story of its designation.</p><p><strong>It is evidence of what the designation does.</strong></p><h3><strong>A deadline Washington didn't need</strong></h3><p>When OFAC issued General License 36, September 25 appeared to be the important date. Sabot's reporting has followed that deadline because it represented the endpoint of Treasury's temporary authorization for winding down certain transactions involving A/I.</p><p>September 25 may now be less important than September 6.</p><p>The pressure worked faster than the calendar.</p><p>The designation came August 26. Infrastructure disruption followed. Legal and financial risk spread outward toward users and anyone maintaining relationships with A/I. Eleven days later, and nineteen days before Treasury's wind-down period expires, the collective concluded that remaining online was too dangerous.</p><p>Treasury Secretary Scott Bessent said on August 26 that the government would bring the full weight of its economic tools against the organizations it identified and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, Autistici/Inventati announced that it was eliminating itself.</p><p>The government did not have to send agents into a server room.</p><p>It did not have to obtain a criminal conviction against A/I's administrators.</p><p>It did not even have to wait for its own September 25 deadline.</p><h3><strong>Become the thousand servers</strong></h3><p>There will be technical questions in the coming days. A/I says it will publish instructions explaining how users can preserve blogs, mailboxes and websites, while warning that further disruptions may arrive without notice. Those instructions matter. So does preserving a record of what happened here.</p><p>But preservation cannot be the end of the response.</p><p>For too long, autonomous infrastructure has been treated as a specialist concern, something for the nerds in the basement while everybody else gets on with the supposedly more important work of organizing, publishing, feeding people, defending communities and building movements.</p><p>That distinction has become untenable.</p><p>If you organize people, you need to understand where your communications live. If you publish radical journalism, you need to know who controls your infrastructure. If you run a mutual-aid project, legal-defense fund, abolitionist organization, labor project or community space, somebody in your world needs to understand domains, backups, servers, encryption and what happens when the corporation providing those things decides that keeping you as a customer has become inconvenient.</p><p>Not everybody needs to become a systems administrator. But autonomous movements cannot continue outsourcing almost all of their technical existence to a handful of exhausted collectives and enormous corporations and then discover the architecture underneath them only when somebody starts pulling plugs.</p><p>A/I spent twenty-five years building one answer to that problem.</p><p>Now we need a thousand.</p><p>A thousand servers does not literally mean a thousand identical machines humming under anarchists' kitchen tables, although there are worse uses for a kitchen table. It means redundancy. Federation. Shared knowledge. Community hosting. Independent email. Mirrors. Backups. Small providers. Regional infrastructure. People teaching other people how the machinery works until the disappearance of any single project cannot take an entire piece of movement infrastructure with it.</p><p>It means making technical knowledge ordinary movement knowledge.</p><p>Learn how to run a server. Then teach somebody else.</p><p>Learn how DNS works. Learn what actually happens when you type a domain into a browser. Learn where your organization's email lives, who controls the account, where the backups are and how you would move tomorrow if you had to. Build a little server for a community project. Join an existing autonomous technology collective. Start one where none exists. Federate with others. Document what you learn so the next person does not have to begin from zero.</p><p>Then go forth and multiply.</p><p>Because the lesson of A/I is not that autonomous infrastructure failed.</p><p>It is that there was not enough of it.</p><p>If one autonomous project can be isolated, there should be ten more behind it. If ten can be isolated, there should be a hundred. No single domain, bank, hosting provider, administrator or collective should become a point at which twenty-five years of infrastructure can be made to disappear.</p><p><strong>We need to become the thousand servers.</strong></p><p>And this cannot remain a conversation confined to people who know what an MX record is.</p><p>People working at every level of political organizing need to start thinking seriously about what fascism looks like when it arrives through institutions rather than street theater. It does not always arrive wearing a uniform. Sometimes it arrives as a designation. A compliance memo. A bank deciding that an account presents too much risk. A service provider deciding that a customer has become radioactive. A domain that stops resolving. A perfectly respectable piece of paperwork that causes everyone downstream to quietly close a door.</p><p>That is part of what authoritarian power looks like in a networked society.</p><p>It is here.</p><p>That statement should not require theatrical predictions about some future moment when fascism finally announces itself with sufficient clarity that everyone can agree to begin resisting it. Waiting for that moment is a spectacularly bad infrastructure strategy. The mechanisms are already visible. A government identifies an enemy, expands the category of people and institutions surrounding that enemy, applies extraordinary powers to the resulting network, and allows fear and private compliance to magnify the effect.</p><p>A/I is what that process looks like when it reaches the server room.</p><p>And people operating in higher spheres of journalism, organizing, law, philanthropy, academia and civil society need to understand what the technical people have been trying to explain for years: <strong>infrastructure is political power.</strong></p><p>Who owns the server matters.</p><p>Who controls the domain matters.</p><p>Who processes the money matters.</p><p>Who can terminate the account matters.</p><p>Who knows how to rebuild it somewhere else matters.</p><p>Autonomy that exists only at the level of rhetoric is not autonomy. If every meeting is organized through corporate infrastructure, every document lives on somebody else's cloud, every donation passes through a handful of processors and every publication depends on a domain and host that can disappear when a compliance department gets nervous, then enormous portions of our supposedly independent political life remain contingent on permission.</p><p>A/I's closure should therefore produce grief. Twenty-five years of collective labor deserves grief.</p><p>It should also produce replication.</p><p>Take what worked. Study what failed. Preserve the documentation. Fork the software. Teach the skills. Build relationships between autonomous hosts before the emergency instead of during it. Make infrastructure literacy part of organizer literacy.</p><p>Do not build the next A/I.</p><p>Build enough of them that there can never again be only one.</p><p>Because twenty-five years from now, the significant fact should not simply be that an Italian hacker collective once ran an email service called Autistici/Inventati, until the United States placed it on a terrorism blacklist and the legal, technical and financial consequences made continuing too dangerous.</p><p>The significant fact should be what happened afterward.</p><p>A/I ended its announcement with a request: get away from the computer. Go outside. Struggle. Hug one another. Keep smiling.</p><p>“We are stopping,” the collective wrote, “but the Resistance and ideas do not stop.”</p><p>Then that is the assignment.</p><p><strong>Become the thousand servers.</strong></p>",
         "richBody": [],
         "author": "",
         "sourceType": "manual",
@@ -22,7 +22,7 @@
         "sourceUrl": "",
         "sourceExternalId": "",
         "sourcePostId": "",
-        "bodyHtml": "<h5><strong>The Italian communications collective survived raids, surveillance and server seizures for 25 years. Eleven days after the United States designated it a global terrorist organization, A/I says the risk to its users has become too great to continue.</strong></h5><p>Autistici/Inventati is shutting down. On September 6, eleven days after the United States placed the Italian technology collective on its terrorism sanctions list, A/I announced that the collective itself will close and that the email, blogging, hosting and communications services it has provided for a quarter century will soon be discontinued. “A/I is shutting down,” the collective wrote. “The Autistici/Inventati collective is shutting down and will soon discontinue all of the services we provide.” The announcement turns what had been a developing fight over sanctions, infrastructure and political speech into something considerably more concrete. Twenty-five years of independent communications infrastructure are being dismantled.</p><p>And A/I says plainly why. The collective said continuing to operate now risks exposing its users, collaborators and communities to legal and financial consequences simply because they interact with an organization the United States has designated a Specially Designated Global Terrorist. “The possibility that our work may cause legal and financial consequences to those who are close to us,” A/I wrote, “leaves us no choice.” The shutdown comes nineteen days before the expiration of the temporary wind-down period the U.S. Treasury Department created when it sanctioned A/I. That deadline is September 25. A/I did not make it there.</p><h3><strong>Eleven days</strong></h3><p>On August 26, the Treasury Department’s Office of Foreign Assets Control added Autistici/Inventati to its Specially Designated Nationals and Blocked Persons List under Executive Order 13224. Treasury accused A/I of supplying “specialized digital architecture, tools, and services” to what the department described as Antifa cells and other violent far-left organizations. Treasury Secretary Scott Bessent said the government would bring the “full weight” of its economic tools against what it called their enablers and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, one of the organizations named in that announcement said it could no longer safely exist.</p><p>The United States did not issue an order instructing Autistici/Inventati to turn off its servers. That distinction matters. It also does remarkably little to soften what happened. Economic sanctions operate through banks, registrars, payment processors, hosting companies and other intermediaries that suddenly have their own reasons to sever ordinary relationships with a designated entity. Washington does not necessarily need to seize a server when it can make everybody touching the server afraid to keep touching it.</p><p>A/I's September 6 announcement describes precisely that pressure. The collective says the danger now extends beyond itself to users and people who merely “have something to do with us.” Every additional relationship becomes another possible point of exposure. In other words, the pressure does not stop at the sanctioned organization. It radiates outward until isolation becomes the rational response.</p><h3><strong>The wind-down that wasn't</strong></h3><p>OFAC simultaneously issued Counter Terrorism General License 36 when it designated A/I, temporarily authorizing transactions ordinarily necessary to wind down relationships involving the collective. The authorization runs through September 25. On paper, that provided roughly one month for an orderly retreat. Reality moved considerably faster.</p><p>Within days of the designation, autistici.org became unreachable through ordinary DNS resolution. A/I continued trying to keep its infrastructure accessible and its users informed. Now, in announcing its closure, the collective itself warns that similar disruptions may happen again without warning before users can complete their migrations. It says instructions for backing up blogs, mailboxes and websites are coming, but it cannot guarantee what parts of its infrastructure will remain reachable in the meantime.</p><p>This is what “wind-down” looks like outside Treasury's vocabulary. People scrambling to recover years of email. Blogs needing emergency backups. Websites looking for somewhere else to live. Administrators spending their remaining time evacuating an infrastructure instead of maintaining it. The machinery is administrative. The consequences aren't.</p><h3><strong>From “we will resist” to shutdown</strong></h3><p>A/I's own description of the last eleven days is worth dwelling on. When the designation arrived, the collective says it intended to resist for as long as resistance remained possible. It had spent years maintaining what it calls “free, privacy-friendly, autonomous and politically committed infrastructure.” But by September 6, it concluded that continuing to provide those services was incompatible with protecting the people who used them.</p><p>“Every day we stayed online after August 26, 2026, has been a victory,” A/I wrote. But it would not demand martyrdom from itself or its users. Continuing to operate, it said, now endangered the same communities the infrastructure was created to protect. “Under these circumstances, we are no longer able to maintain our original mission,” the collective concluded.</p><p>That distinction is crucial. A/I is not announcing that its technology failed. Its servers did not collectively explode. Twenty-five years of technical knowledge did not suddenly evaporate. It is shutting down because maintaining the infrastructure has itself become dangerous.</p><h3><strong>What is disappearing</strong></h3><p>Autistici/Inventati began in 2001 out of Italy's hacklab, autonomous media and radical technology cultures. Over twenty-five years it built and maintained noncommercial communications infrastructure including email, mailing lists, websites, chat systems, publishing tools and Noblogs. Its model was deliberately unlike the corporate Internet: collect as little information as possible, refuse to turn communication into a commodity, and give politically active communities infrastructure that did not require Google, Meta or Microsoft to sit between them and one another.</p><p>That philosophy repeatedly brought A/I into conflict with authorities. It survived surveillance, server seizures and infrastructure compromise. Those experiences helped produce Plan R*, a distributed architecture built around the assumption that servers themselves could be seized or compromised.</p><p>A quarter century of engineering around hostile machines and hostile governments ultimately encountered another attack surface: the financial and legal relationships surrounding the machines.</p><p>You can distribute servers. Distributing the international banking system is trickier.</p><h3><strong>So who's next?</strong></h3><p>That is no longer a hysterical question.</p><p>Treasury's case against A/I matters because the department did not describe an organization whose principal public function was carrying out attacks. It repeatedly described infrastructure: digital architecture, technological tools, communications and services. The government says providing that infrastructure to particular organizations made A/I a sanctionable enabler.</p><p>Take that theory seriously for a moment and an uncomfortable amount of the Internet comes into view.</p><p>Autonomous email providers. Privacy-oriented hosting collectives. Federated social networks. VPN providers. Encrypted messaging services. Domain registrars willing to host controversial organizations. Independent media infrastructure. Donation processors. File-sharing systems. Organizations maintaining Tor relays or other privacy infrastructure. Any service whose users include movements the executive branch decides to characterize as terrorist-linked suddenly has reason to ask where infrastructure ends and “support” begins.</p><p>Services closer to A/I's political and technical model would obviously face that uncertainty first. A small autonomous host does not have Meta's legal department, billions of dollars, armies of lobbyists or enough market power to make half of Washington answer the phone. That disparity is part of the story. A sanctions architecture does not strike every intermediary equally. It lands hardest on the infrastructure least capable of surviving the compliance panic it creates.</p><p>But Meta is useful precisely because it exposes the problem with the principle.</p><p>People accused or convicted of terrorism have used Facebook. Extremist organizations have attempted to organize through Instagram. Federal prosecutions routinely describe defendants communicating through mainstream platforms. DOJ itself recently described alleged conspirators using Signal, SimpleX, Discord, TikTok and Instagram while planning an attack. Nobody seriously argues that the existence of those communications automatically turns every company carrying them into a terrorist organization.</p><p>Why not?</p><p>Because until now we have generally understood that <strong>providing infrastructure is not the same thing as adopting every purpose of every person using it.</strong></p><p>A postal service carries letters without becoming part of every conspiracy described inside an envelope. A telephone company transmits conversations without becoming a participant in every crime discussed over the phone. A hosting provider can carry a website without authoring it. An encrypted messenger can transmit a conversation without knowing what it says.</p><p>The Internet depends on those distinctions.</p><p>The A/I designation puts pressure directly on them.</p><p>And once the executive branch can characterize politically committed technological infrastructure as an “enabler,” the practical question becomes less <em>can this logic reach another provider?</em> than <em>which providers will the government choose to apply it to?</em></p><p>That is where the Trump administration's wider campaign against “Antifa” becomes impossible to separate from this story. The White House says Trump directed the federal government to “hunt down, disrupt, and dismantle” what it calls the Antifa network. DOJ has increasingly used terrorism language in prosecutions involving alleged Antifa-affiliated defendants. Treasury has now extended that campaign beyond people accused of violence and into the communications infrastructure the government says supports them.</p><p>That is an escalation.</p><h3><strong>Could they really do this to Meta?</strong></h3><p>Not in the simple sense that a president can wake up annoyed with Mark Zuckerberg, scribble “terrorist” on a napkin and switch Facebook off before breakfast. American companies have constitutional protections, statutory rights, enormous resources and avenues for judicial review. Different terrorism authorities also operate under different legal frameworks. Pretending all of those constraints disappear would make the argument easier to knock down.</p><p>The more disturbing point is that <strong>A/I demonstrates how much damage can occur before the underlying theory receives meaningful judicial scrutiny.</strong></p><p>Designation comes first. Compliance departments react. Banks become nervous. Registrars reconsider relationships. Payment processors calculate risk. Vendors leave. Users flee because they cannot afford to discover whether merely interacting with the sanctioned service creates a problem for them. By the time lawyers begin arguing about the limits of executive authority, the infrastructure may already be dead.</p><p>A/I lasted eleven days.</p><p>That is the precedent worth examining.</p><p>Not “Trump can delete any website.”</p><p>Something considerably more plausible: the executive branch possesses economic tools powerful enough to make a targeted piece of infrastructure poisonous to much of the commercial system around it, and therefore potentially nonviable, without having to physically confiscate the infrastructure or obtain a criminal conviction against the people running it first.</p><p>For a company the size of Meta, resistance could involve years of litigation.</p><p>For a volunteer-run autonomous service, there may be nothing left to litigate over by then.</p><h3><strong>Infrastructure becomes evidence</strong></h3><p>This is why the designation raises a question considerably larger than one Italian collective: when does providing communications infrastructure become material support?</p><p>The government argues that A/I's provision of technological services crossed that line. A/I rejects that characterization and has repeatedly emphasized the distinction between maintaining infrastructure and controlling the actions of everyone who uses it.</p><p>That disagreement is now considerably less theoretical.</p><p>The provider is closing.</p><p>Infrastructure is not politically neutral in some mystical sense, and A/I never pretended to be. It openly describes itself as politically committed. But political commitment and operational responsibility are different things. If that difference collapses, an extraordinarily powerful mechanism appears: a government does not necessarily have to show that infrastructure operators planned a particular illegal act if their infrastructure can instead be characterized as part of the ecosystem surrounding people accused of committing one.</p><p>Then the designation itself starts doing the work.</p><h3><strong>The chilling effect now has a body count of services</strong></h3><p>Sanctions arrive wrapped in institutional language: designation, compliance, wind-down, blocked property, secondary sanctions, risk management. The words are clean enough to make the mechanism sound nearly bloodless.</p><p>Then people lose email accounts.</p><p>Blogs accumulated over decades need emergency backups.</p><p>Organizations scramble to migrate websites.</p><p>Domains disappear.</p><p>Financial relationships become liabilities.</p><p>Volunteers spend nights trying to preserve data instead of running services.</p><p>People who have nothing to do with violence begin wondering whether keeping an account, accepting a donation, hosting a domain or sending an email exposes them to consequences they do not understand.</p><p>And eventually the people maintaining the infrastructure decide that keeping it alive presents too much risk to everybody around them.</p><p>That is the material effect.</p><p>A/I's shutdown is therefore not merely another development in the story of its designation.</p><p><strong>It is evidence of what the designation does.</strong></p><h3><strong>A deadline Washington didn't need</strong></h3><p>When OFAC issued General License 36, September 25 appeared to be the important date. Sabot's reporting has followed that deadline because it represented the endpoint of Treasury's temporary authorization for winding down certain transactions involving A/I.</p><p>September 25 may now be less important than September 6.</p><p>The pressure worked faster than the calendar.</p><p>The designation came August 26. Infrastructure disruption followed. Legal and financial risk spread outward toward users and anyone maintaining relationships with A/I. Eleven days later, and nineteen days before Treasury's wind-down period expires, the collective concluded that remaining online was too dangerous.</p><p>Treasury Secretary Scott Bessent said on August 26 that the government would bring the full weight of its economic tools against the organizations it identified and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, Autistici/Inventati announced that it was eliminating itself.</p><p>The government did not have to send agents into a server room.</p><p>It did not have to obtain a criminal conviction against A/I's administrators.</p><p>It did not even have to wait for its own September 25 deadline.</p><p>The ecosystem around the infrastructure did the rest.</p><p>There will be technical questions in the coming days. A/I says it will publish instructions explaining how users can preserve blogs, mailboxes and websites, while warning that further disruptions may arrive without notice. Those instructions matter. So does preserving a record of what happened here.</p><p>Because twenty-five years from now, the significant fact will not simply be that a strange Italian hacker collective once ran an email service called Autistici/Inventati.</p><p>It will be that in 2026 the United States placed autonomous communications infrastructure on a terrorism blacklist; the legal, technical and financial risks spread outward from that designation; and eleven days later the people who had spent twenty-five years building that infrastructure concluded that the only way to protect their users was to destroy it.</p><p>A/I ended its announcement with a request: get away from the computer. Go outside. Struggle. Hug one another. Keep smiling.</p><p>“We are stopping,” the collective wrote, “but the Resistance and ideas do not stop.”</p><p>The ideas may survive.</p><p>The infrastructure won't.</p><p>And every autonomous service watching what happened now knows exactly how quickly the distance between <strong>designated</strong> and <strong>gone</strong> can collapse.</p>",
+        "bodyHtml": "<h5><strong>The Italian communications collective survived raids, surveillance and server seizures for 25 years. Eleven days after the United States designated it a global terrorist organization, A/I says the risk to its users has become too great to continue.</strong></h5><p>Autistici/Inventati is shutting down. On September 6, eleven days after the United States placed the Italian technology collective on its terrorism sanctions list, A/I announced that the collective itself will close and that the email, blogging, hosting and communications services it has provided for a quarter century will soon be discontinued. “A/I is shutting down,” the collective wrote. “The Autistici/Inventati collective is shutting down and will soon discontinue all of the services we provide.” The announcement turns what had been a developing fight over sanctions, infrastructure and political speech into something considerably more concrete. Twenty-five years of independent communications infrastructure are being dismantled.</p><p>And A/I says plainly why. The collective said continuing to operate now risks exposing its users, collaborators and communities to legal and financial consequences simply because they interact with an organization the United States has designated a Specially Designated Global Terrorist. “The possibility that our work may cause legal and financial consequences to those who are close to us,” A/I wrote, “leaves us no choice.” The shutdown comes nineteen days before the expiration of the temporary wind-down period the U.S. Treasury Department created when it sanctioned A/I. That deadline is September 25. A/I did not make it there.</p><h3><strong>Eleven days</strong></h3><p>On August 26, the Treasury Department’s Office of Foreign Assets Control added Autistici/Inventati to its Specially Designated Nationals and Blocked Persons List under Executive Order 13224. Treasury accused A/I of supplying “specialized digital architecture, tools, and services” to what the department described as Antifa cells and other violent far-left organizations. Treasury Secretary Scott Bessent said the government would bring the “full weight” of its economic tools against what it called their enablers and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, one of the organizations named in that announcement said it could no longer safely exist.</p><p>The United States did not issue an order instructing Autistici/Inventati to turn off its servers. That distinction matters. It also does remarkably little to soften what happened. Economic sanctions operate through banks, registrars, payment processors, hosting companies and other intermediaries that suddenly have their own reasons to sever ordinary relationships with a designated entity. Washington does not necessarily need to seize a server when it can make everybody touching the server afraid to keep touching it.</p><p>A/I's September 6 announcement describes precisely that pressure. The collective says the danger now extends beyond itself to users and people who merely “have something to do with us.” Every additional relationship becomes another possible point of exposure. In other words, the pressure does not stop at the sanctioned organization. It radiates outward until isolation becomes the rational response.</p><h3><strong>The wind-down that wasn't</strong></h3><p>OFAC simultaneously issued Counter Terrorism General License 36 when it designated A/I, temporarily authorizing transactions ordinarily necessary to wind down relationships involving the collective. The authorization runs through September 25. On paper, that provided roughly one month for an orderly retreat. Reality moved considerably faster.</p><p>Within days of the designation, autistici.org became unreachable through ordinary DNS resolution. A/I continued trying to keep its infrastructure accessible and its users informed. Now, in announcing its closure, the collective itself warns that similar disruptions may happen again without warning before users can complete their migrations. It says instructions for backing up blogs, mailboxes and websites are coming, but it cannot guarantee what parts of its infrastructure will remain reachable in the meantime.</p><p>This is what “wind-down” looks like outside Treasury's vocabulary. People scrambling to recover years of email. Blogs needing emergency backups. Websites looking for somewhere else to live. Administrators spending their remaining time evacuating an infrastructure instead of maintaining it. The machinery is administrative. The consequences aren't.</p><h3><strong>From “we will resist” to shutdown</strong></h3><p>A/I's own description of the last eleven days is worth dwelling on. When the designation arrived, the collective says it intended to resist for as long as resistance remained possible. It had spent years maintaining what it calls “free, privacy-friendly, autonomous and politically committed infrastructure.” But by September 6, it concluded that continuing to provide those services was incompatible with protecting the people who used them.</p><p>“Every day we stayed online after August 26, 2026, has been a victory,” A/I wrote. But it would not demand martyrdom from itself or its users. Continuing to operate, it said, now endangered the same communities the infrastructure was created to protect. “Under these circumstances, we are no longer able to maintain our original mission,” the collective concluded.</p><p>That distinction is crucial. A/I is not announcing that its technology failed. Its servers did not collectively explode. Twenty-five years of technical knowledge did not suddenly evaporate. It is shutting down because maintaining the infrastructure has itself become dangerous.</p><h3><strong>What is disappearing</strong></h3><p>Autistici/Inventati began in 2001 out of Italy's hacklab, autonomous media and radical technology cultures. Over twenty-five years it built and maintained noncommercial communications infrastructure including email, mailing lists, websites, chat systems, publishing tools and Noblogs. Its model was deliberately unlike the corporate Internet: collect as little information as possible, refuse to turn communication into a commodity, and give politically active communities infrastructure that did not require Google, Meta or Microsoft to sit between them and one another.</p><p>That philosophy repeatedly brought A/I into conflict with authorities. It survived surveillance, server seizures and infrastructure compromise. Those experiences helped produce Plan R*, a distributed architecture built around the assumption that servers themselves could be seized or compromised.</p><p>A quarter century of engineering around hostile machines and hostile governments ultimately encountered another attack surface: the financial and legal relationships surrounding the machines.</p><p>You can distribute servers. Distributing the international banking system is trickier.</p><h3><strong>So who's next?</strong></h3><p>That is no longer a hysterical question.</p><p>Treasury's case against A/I matters because the department did not describe an organization whose principal public function was carrying out attacks. It repeatedly described infrastructure: digital architecture, technological tools, communications and services. The government says providing that infrastructure to particular organizations made A/I a sanctionable enabler.</p><p>Take that theory seriously for a moment and an uncomfortable amount of the Internet comes into view.</p><p>Autonomous email providers. Privacy-oriented hosting collectives. Federated social networks. VPN providers. Encrypted messaging services. Domain registrars willing to host controversial organizations. Independent media infrastructure. Donation processors. File-sharing systems. Organizations maintaining Tor relays or other privacy infrastructure. Any service whose users include movements the executive branch decides to characterize as terrorist-linked suddenly has reason to ask where infrastructure ends and “support” begins.</p><p>Services closer to A/I's political and technical model would obviously face that uncertainty first. A small autonomous host does not have Meta's legal department, billions of dollars, armies of lobbyists or enough market power to make half of Washington answer the phone. That disparity is part of the story. A sanctions architecture does not strike every intermediary equally. It lands hardest on the infrastructure least capable of surviving the compliance panic it creates.</p><p>But Meta is useful precisely because it exposes the problem with the principle.</p><p>People accused or convicted of terrorism have used Facebook. Extremist organizations have attempted to organize through Instagram. Federal prosecutions routinely describe defendants communicating through mainstream platforms. DOJ itself recently described alleged conspirators using Signal, SimpleX, Discord, TikTok and Instagram while planning an attack. Nobody seriously argues that the existence of those communications automatically turns every company carrying them into a terrorist organization.</p><p>Why not?</p><p>Because until now we have generally understood that <strong>providing infrastructure is not the same thing as adopting every purpose of every person using it.</strong></p><p>A postal service carries letters without becoming part of every conspiracy described inside an envelope. A telephone company transmits conversations without becoming a participant in every crime discussed over the phone. A hosting provider can carry a website without authoring it. An encrypted messenger can transmit a conversation without knowing what it says.</p><p>The Internet depends on those distinctions.</p><p>The A/I designation puts pressure directly on them.</p><p>And once the executive branch can characterize politically committed technological infrastructure as an “enabler,” the practical question becomes less <em>can this logic reach another provider?</em> than <em>which providers will the government choose to apply it to?</em></p><p>That is where the Trump administration's wider campaign against “Antifa” becomes impossible to separate from this story. The White House says Trump directed the federal government to “hunt down, disrupt, and dismantle” what it calls the Antifa network. DOJ has increasingly used terrorism language in prosecutions involving alleged Antifa-affiliated defendants. Treasury has now extended that campaign beyond people accused of violence and into the communications infrastructure the government says supports them.</p><p>That is an escalation.</p><h3><strong>Could they really do this to Meta?</strong></h3><p>Not in the simple sense that a president can wake up annoyed with Mark Zuckerberg, scribble “terrorist” on a napkin and switch Facebook off before breakfast. American companies have constitutional protections, statutory rights, enormous resources and avenues for judicial review. Different terrorism authorities also operate under different legal frameworks. Pretending all of those constraints disappear would make the argument easier to knock down.</p><p>The more disturbing point is that <strong>A/I demonstrates how much damage can occur before the underlying theory receives meaningful judicial scrutiny.</strong></p><p>Designation comes first. Compliance departments react. Banks become nervous. Registrars reconsider relationships. Payment processors calculate risk. Vendors leave. Users flee because they cannot afford to discover whether merely interacting with the sanctioned service creates a problem for them. By the time lawyers begin arguing about the limits of executive authority, the infrastructure may already be dead.</p><p>A/I lasted eleven days.</p><p>That is the precedent worth examining.</p><p>Not “Trump can delete any website.”</p><p>Something considerably more plausible: the executive branch possesses economic tools powerful enough to make a targeted piece of infrastructure poisonous to much of the commercial system around it, and therefore potentially nonviable, without having to physically confiscate the infrastructure or obtain a criminal conviction against the people running it first.</p><p>For a company the size of Meta, resistance could involve years of litigation.</p><p>For a volunteer-run autonomous service, there may be nothing left to litigate over by then.</p><h3><strong>Infrastructure becomes evidence</strong></h3><p>This is why the designation raises a question considerably larger than one Italian collective: when does providing communications infrastructure become material support?</p><p>The government argues that A/I's provision of technological services crossed that line. A/I rejects that characterization and has repeatedly emphasized the distinction between maintaining infrastructure and controlling the actions of everyone who uses it.</p><p>That disagreement is now considerably less theoretical.</p><p>The provider is closing.</p><p>Infrastructure is not politically neutral in some mystical sense, and A/I never pretended to be. It openly describes itself as politically committed. But political commitment and operational responsibility are different things. If that difference collapses, an extraordinarily powerful mechanism appears: a government does not necessarily have to show that infrastructure operators planned a particular illegal act if their infrastructure can instead be characterized as part of the ecosystem surrounding people accused of committing one.</p><p>Then the designation itself starts doing the work.</p><h3><strong>The chilling effect now has a body count of services</strong></h3><p>Sanctions arrive wrapped in institutional language: designation, compliance, wind-down, blocked property, secondary sanctions, risk management. The words are clean enough to make the mechanism sound nearly bloodless.</p><p>Then people lose email accounts.</p><p>Blogs accumulated over decades need emergency backups.</p><p>Organizations scramble to migrate websites.</p><p>Domains disappear.</p><p>Financial relationships become liabilities.</p><p>Volunteers spend nights trying to preserve data instead of running services.</p><p>People who have nothing to do with violence begin wondering whether keeping an account, accepting a donation, hosting a domain or sending an email exposes them to consequences they do not understand.</p><p>And eventually the people maintaining the infrastructure decide that keeping it alive presents too much risk to everybody around them.</p><p>That is the material effect.</p><p>A/I's shutdown is therefore not merely another development in the story of its designation.</p><p><strong>It is evidence of what the designation does.</strong></p><h3><strong>A deadline Washington didn't need</strong></h3><p>When OFAC issued General License 36, September 25 appeared to be the important date. Sabot's reporting has followed that deadline because it represented the endpoint of Treasury's temporary authorization for winding down certain transactions involving A/I.</p><p>September 25 may now be less important than September 6.</p><p>The pressure worked faster than the calendar.</p><p>The designation came August 26. Infrastructure disruption followed. Legal and financial risk spread outward toward users and anyone maintaining relationships with A/I. Eleven days later, and nineteen days before Treasury's wind-down period expires, the collective concluded that remaining online was too dangerous.</p><p>Treasury Secretary Scott Bessent said on August 26 that the government would bring the full weight of its economic tools against the organizations it identified and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, Autistici/Inventati announced that it was eliminating itself.</p><p>The government did not have to send agents into a server room.</p><p>It did not have to obtain a criminal conviction against A/I's administrators.</p><p>It did not even have to wait for its own September 25 deadline.</p><h3><strong>Become the thousand servers</strong></h3><p>There will be technical questions in the coming days. A/I says it will publish instructions explaining how users can preserve blogs, mailboxes and websites, while warning that further disruptions may arrive without notice. Those instructions matter. So does preserving a record of what happened here.</p><p>But preservation cannot be the end of the response.</p><p>For too long, autonomous infrastructure has been treated as a specialist concern, something for the nerds in the basement while everybody else gets on with the supposedly more important work of organizing, publishing, feeding people, defending communities and building movements.</p><p>That distinction has become untenable.</p><p>If you organize people, you need to understand where your communications live. If you publish radical journalism, you need to know who controls your infrastructure. If you run a mutual-aid project, legal-defense fund, abolitionist organization, labor project or community space, somebody in your world needs to understand domains, backups, servers, encryption and what happens when the corporation providing those things decides that keeping you as a customer has become inconvenient.</p><p>Not everybody needs to become a systems administrator. But autonomous movements cannot continue outsourcing almost all of their technical existence to a handful of exhausted collectives and enormous corporations and then discover the architecture underneath them only when somebody starts pulling plugs.</p><p>A/I spent twenty-five years building one answer to that problem.</p><p>Now we need a thousand.</p><p>A thousand servers does not literally mean a thousand identical machines humming under anarchists' kitchen tables, although there are worse uses for a kitchen table. It means redundancy. Federation. Shared knowledge. Community hosting. Independent email. Mirrors. Backups. Small providers. Regional infrastructure. People teaching other people how the machinery works until the disappearance of any single project cannot take an entire piece of movement infrastructure with it.</p><p>It means making technical knowledge ordinary movement knowledge.</p><p>Learn how to run a server. Then teach somebody else.</p><p>Learn how DNS works. Learn what actually happens when you type a domain into a browser. Learn where your organization's email lives, who controls the account, where the backups are and how you would move tomorrow if you had to. Build a little server for a community project. Join an existing autonomous technology collective. Start one where none exists. Federate with others. Document what you learn so the next person does not have to begin from zero.</p><p>Then go forth and multiply.</p><p>Because the lesson of A/I is not that autonomous infrastructure failed.</p><p>It is that there was not enough of it.</p><p>If one autonomous project can be isolated, there should be ten more behind it. If ten can be isolated, there should be a hundred. No single domain, bank, hosting provider, administrator or collective should become a point at which twenty-five years of infrastructure can be made to disappear.</p><p><strong>We need to become the thousand servers.</strong></p><p>And this cannot remain a conversation confined to people who know what an MX record is.</p><p>People working at every level of political organizing need to start thinking seriously about what fascism looks like when it arrives through institutions rather than street theater. It does not always arrive wearing a uniform. Sometimes it arrives as a designation. A compliance memo. A bank deciding that an account presents too much risk. A service provider deciding that a customer has become radioactive. A domain that stops resolving. A perfectly respectable piece of paperwork that causes everyone downstream to quietly close a door.</p><p>That is part of what authoritarian power looks like in a networked society.</p><p>It is here.</p><p>That statement should not require theatrical predictions about some future moment when fascism finally announces itself with sufficient clarity that everyone can agree to begin resisting it. Waiting for that moment is a spectacularly bad infrastructure strategy. The mechanisms are already visible. A government identifies an enemy, expands the category of people and institutions surrounding that enemy, applies extraordinary powers to the resulting network, and allows fear and private compliance to magnify the effect.</p><p>A/I is what that process looks like when it reaches the server room.</p><p>And people operating in higher spheres of journalism, organizing, law, philanthropy, academia and civil society need to understand what the technical people have been trying to explain for years: <strong>infrastructure is political power.</strong></p><p>Who owns the server matters.</p><p>Who controls the domain matters.</p><p>Who processes the money matters.</p><p>Who can terminate the account matters.</p><p>Who knows how to rebuild it somewhere else matters.</p><p>Autonomy that exists only at the level of rhetoric is not autonomy. If every meeting is organized through corporate infrastructure, every document lives on somebody else's cloud, every donation passes through a handful of processors and every publication depends on a domain and host that can disappear when a compliance department gets nervous, then enormous portions of our supposedly independent political life remain contingent on permission.</p><p>A/I's closure should therefore produce grief. Twenty-five years of collective labor deserves grief.</p><p>It should also produce replication.</p><p>Take what worked. Study what failed. Preserve the documentation. Fork the software. Teach the skills. Build relationships between autonomous hosts before the emergency instead of during it. Make infrastructure literacy part of organizer literacy.</p><p>Do not build the next A/I.</p><p>Build enough of them that there can never again be only one.</p><p>Because twenty-five years from now, the significant fact should not simply be that an Italian hacker collective once ran an email service called Autistici/Inventati, until the United States placed it on a terrorism blacklist and the legal, technical and financial consequences made continuing too dangerous.</p><p>The significant fact should be what happened afterward.</p><p>A/I ended its announcement with a request: get away from the computer. Go outside. Struggle. Hug one another. Keep smiling.</p><p>“We are stopping,” the collective wrote, “but the Resistance and ideas do not stop.”</p><p>Then that is the assignment.</p><p><strong>Become the thousand servers.</strong></p>",
         "heroImage": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-05cd0c31-b894-4c2c-8f15-1767b6bacd3e-featured-image-ai.png&filename=featured-image-ai.png",
         "featuredImage": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-05cd0c31-b894-4c2c-8f15-1767b6bacd3e-featured-image-ai.png&filename=featured-image-ai.png",
         "featuredImageTitle": "featured image ai",
@@ -79,7 +79,7 @@
         ],
         "tags": [],
         "createdAt": "2026-09-06T09:10:55.911Z",
-        "updatedAt": "2026-09-06T17:35:15.283Z",
+        "updatedAt": "2026-09-06T17:47:42.462Z",
         "publishedAt": "2026-09-06T17:35:14.595Z",
         "scheduledFor": ""
       },
@@ -5563,11 +5563,246 @@
         "graphics": [
           {
             "id": "row-ev08u1zs",
-            "title": "Support A/I Web Logo",
+            "title": "Subvertising.org Profile Photo",
             "imageUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png",
             "alt": "Black square logo with a white outlined heart containing a red asterisk, beside the white letters “A/I.”",
             "caption": "from @subvertising.org on Mastodon.",
-            "downloadUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png"
+            "downloadUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "row-aztnfwvj",
+            "title": "Subvertising.org Web Banner",
+            "imageUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-1f095835-e913-442e-a4c3-63de388dc0e0-6303f2a5-8dd3-452b-9cec-061dab1e68d8.png&filename=6303f2a5-8dd3-452b-9cec-061dab1e68d8.png",
+            "alt": "Black banner reading “WE ♥ A/I” in large white letters, with a white outlined heart containing a red asterisk-like symbol.",
+            "caption": "from @subvertising.org on Mastodon.",
+            "downloadUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-1f095835-e913-442e-a4c3-63de388dc0e0-6303f2a5-8dd3-452b-9cec-061dab1e68d8.png&filename=6303f2a5-8dd3-452b-9cec-061dab1e68d8.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "sept4-quote-ngo-fto",
+            "title": "Designate Antifa",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-ngo-fto.webp?v=20260904-1",
+            "alt": "Cream, black, and red Sabot Media campaign graphic with a close-up photo of a man on the right. Quote reads: “And I think, maybe, perhaps the State Department should designate Antifa, its international arm as a foreign terrorist organization, FTO.” Attributed on the graphic to Andy Ngo, White House, Oct. 8, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer urges readers to “Read / Share / Preserve / Organize.”",
+            "caption": "Campaign quote card using an Oct. 8, 2025 statement attributed on the graphic to Andy Ngo.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/quote-ngo-fto.webp",
+            "sourceUrl": ""
+          },
+          {
+            "id": "sept4-quote-shideler-job-one",
+            "title": "Job One",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-shideler-job-one.webp?v=20260904-1",
+            "alt": "Black, red, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large red quote reads: “Going after organizations like this that provide material support would be job one.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”",
+            "caption": "Campaign quote card using an Oct. 16, 2025 statement attributed on the graphic to Kyle Shideler.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/quote-shideler-job-one.webp",
+            "sourceUrl": ""
+          },
+          {
+            "id": "sept4-quote-shideler-otherwise-lawful",
+            "title": "Otherwise Lawful",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-shideler-otherwise-lawful.webp?v=20260904-1",
+            "alt": "Red, black, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large quote reads: “They would probably really struggle to go after these kinds of entities, since the services they provide are otherwise lawful.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”",
+            "caption": "Campaign quote card using the “otherwise lawful” Oct. 16, 2025 statement attributed on the graphic to Kyle Shideler.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/quote-shideler-otherwise-lawful.webp",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-1",
+            "title": "One Rule for Big Tech",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/section-230-hypocrisy.webp?v=20260829-2",
+            "alt": "Black, red, cream and pink vertical campaign graphic reading “One rule for Big Tech. Another for movement infrastructure. The hypocrisy of Section 230.” Marked urgent for the A/I campaign on August 30, 2026, with “Read / share / preserve / organize” along the bottom.",
+            "caption": "One rule for Big Tech. Another for movement infrastructure. Corporate platforms are protected from automatic liability for their users, while the United States collapses the distinction between A/I and what users publish. Infrastructure is not authorship. Read and share the full argument.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/section-230-hypocrisy.png",
+            "sourceUrl": "https://kolektiva.social/@AberdeenLocal1312/117184117978084213"
+          },
+          {
+            "id": "built-in-2",
+            "title": "Ten Years of Hacking and Media Activism",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/book-download-card.webp?v=20260829-2",
+            "alt": "Red, black, pink and green book-download card for The Kaos Ten Years of Hacking and Media Activism, with Hacklabs, Genova, Plan B and Noblogs listed.",
+            "caption": "Download and share the free Kaos book on A/I, hacklabs and radical media infrastructure.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/book-download-card.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-3",
+            "title": "The Server Called Paranoia",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-1.webp?v=20260829-2",
+            "alt": "Red and black campaign card reading “The server called Paranoia” above a server icon and text saying the U.S. is trying to make Autistici/Inventati untouchable.",
+            "caption": "Before September 25: read, share, preserve and organize.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-1.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-4",
+            "title": "Immediate Answer Is Solidarity",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-2.webp?v=20260829-2",
+            "alt": "Black campaign card reading “The immediate answer is solidarity” with six red action boxes: read, share, preserve, document, organize and pressure.",
+            "caption": "Six immediate ways to defend resistant communications infrastructure.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-2.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-5",
+            "title": "Save Public Noblogs",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-3.webp?v=20260829-2",
+            "alt": "Pink and black campaign card reading “Save public Noblogs” beside a browser-window illustration and a preservation checklist.",
+            "caption": "Preserve public pages and media without accessing private accounts or bypassing security.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-3.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-6",
+            "title": "Do and Do Not",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-4.webp?v=20260829-2",
+            "alt": "Paper-textured campaign checklist contrasting useful actions such as reporting and preserving public material with prohibited actions such as rerouting funds or bypassing access.",
+            "caption": "Act independently and legally; do not create new sanctions risks.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-4.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-7",
+            "title": "Noblogs: 25 Years",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-5.webp?v=20260829-2",
+            "alt": "Red, black and paper campaign card reading “Noblogs: 25 years of resistant communication” with email, Noblogs, servers and knowledge listed.",
+            "caption": "A quarter century of noncommercial movement infrastructure.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-5.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-8",
+            "title": "Repression Became Architecture",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-6.webp?v=20260829-2",
+            "alt": "Paper-textured timeline from Paranoia Goes Online in 2001 through U.S. designation in 2026, titled “Repression became architecture.”",
+            "caption": "A short history of attacks, seizures and resilient rebuilding.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-6.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-9",
+            "title": "The Government Case",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-7.webp?v=20260829-2",
+            "alt": "Black and red campaign card explaining that A/I provided digital infrastructure used by radical movements and that the designation targets infrastructure itself.",
+            "caption": "The government’s theory collapses providers into the conduct of users.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-7.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-10",
+            "title": "A/I Public Statement: Allegations",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-8.webp?v=20260829-2",
+            "alt": "Black quote card reproducing A/I’s denial of allegations in the included statements and identifying A/I as digital self-defense infrastructure.",
+            "caption": "A/I responds in its own words.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-8.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-11",
+            "title": "A/I Public Statement: We Will Not Back Down",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-9.webp?v=20260829-2",
+            "alt": "Black quote card reading “We will not back down, we will keep doing what we have been doing all these years,” attributed to Autistici/Inventati.",
+            "caption": "A/I’s public response to the designation.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-9.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-12",
+            "title": "A/I Public Statement: Antifascism",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-10.webp?v=20260829-2",
+            "alt": "Black quote card reading “Antifascism and anticapitalism are not terrorism. Protesting is not terrorism.”",
+            "caption": "Political opposition and protest are not terrorism.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-10.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-13",
+            "title": "September 25 Deadline",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-11.webp?v=20260829-2",
+            "alt": "Black and red deadline card showing 09 25 and 12:01 a.m. Eastern, when the temporary wind-down period ends.",
+            "caption": "The deadline affects banks, hosts, certificates, providers and users.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-11.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-14",
+            "title": "Built For, Targeted Now",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-12.webp?v=20260829-2",
+            "alt": "Paper-textured comparison card listing infrastructure built for server seizure, hostile providers, hardware loss and censorship against present threats to banking, donations, domains, bandwidth and global access.",
+            "caption": "A network can replace a machine; it cannot replace the world around it.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-12.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-16",
+            "title": "The First Server Was Called Paranoia",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-1.webp?v=20260829-2",
+            "alt": "Black quote card reading “The first server was called Paranoia. The network it created was called solidarity,” beside a white network diagram.",
+            "caption": "The network it created was called solidarity.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/quote-1.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-17",
+            "title": "September 25 Is Not Silence",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-2.webp?v=20260829-2",
+            "alt": "Red and black quote card reading “September 25 is not a deadline for silence. It is a deadline for organization.”",
+            "caption": "Turn the deadline into organization.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/quote-2.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-18",
+            "title": "Infrastructure Is Not Every Message",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-3.webp?v=20260829-2",
+            "alt": "Black quote card reading “Providing infrastructure is not the same as authoring everything transmitted through it,” with a two-way arrow.",
+            "caption": "Political affinity is not operational control.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/quote-3.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-19",
+            "title": "Build Something Harder to Destroy",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-4.webp?v=20260829-2",
+            "alt": "Red and black quote card reading “Disclose what happened. Repair the damage. Share the lesson. Build something harder to destroy.”",
+            "caption": "Repair, document and build resilient systems.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/quote-4.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-20",
+            "title": "The U.S. Designated A/I",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/story-1.webp?v=20260829-2",
+            "alt": "Vertical red and black story card reading “The U.S. designated A/I,” describing a volunteer communications collective being treated as terrorist infrastructure.",
+            "caption": "A concise story-format introduction to the designation.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/story-1.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-21",
+            "title": "September 25 Story Card",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/story-2.webp?v=20260829-2",
+            "alt": "Vertical red story card reading “September 25” above a calendar illustration and text warning that the wind-down period ends.",
+            "caption": "Share the campaign deadline in story format.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/story-2.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-22",
+            "title": "Do Not Let A/I Disappear",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/story-3.webp?v=20260829-2",
+            "alt": "Vertical red and black story card reading “Do not let A/I disappear” above a Welcome to A/I browser screenshot.",
+            "caption": "Read, share, preserve public archives and organize independently.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/story-3.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "built-in-23",
+            "title": "Do Not Let A/I Disappear Banner",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/web-banner.webp?v=20260829-2",
+            "alt": "Wide black campaign banner reading “Do not let A/I disappear” beside a Welcome to A/I browser screenshot.",
+            "caption": "A wide campaign banner for websites and social headers.",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/web-banner.png",
+            "sourceUrl": ""
           }
         ],
         "coverage": [],
@@ -5648,7 +5883,7 @@
           "signatoriesUrl": ""
         },
         "createdAt": "2026-08-28T21:30:00Z",
-        "updatedAt": "2026-09-06T17:20:58.301Z"
+        "updatedAt": "2026-09-06T17:58:45.251Z"
       },
       {
         "id": "campaign-food-not-bombs-gaza",
@@ -6046,6 +6281,56 @@
             "source": "Sabot Media publishing"
           },
           {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-banchetto-al-festival-antirazzista-abba-vive",
+            "date": "2026-09-06T16:30:00.000Z",
+            "title": "Banchetto al festival antirazzista Abba Vive",
+            "body": "Ci vediamo al festival abba vive per poter avere un luogo fisico in cui scambiarci informazioni per scambiarci le nuove configurazione dei server mail di autistici, guida per backuppare i noblogs e aggiornamenti vari. Il banchetto sarà riconoscibile dalla presenza del volantino dell&rsquo;evento stampato. A presto &lt;3",
+            "url": "https://keepitfree.ai/it/events/banchetto-al-festival-antirazzista-abba-vive/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-noblogs-https-cavallette-noblogs-org-2026-09-10098",
+            "date": "2026-09-06T13:27:37.000Z",
+            "title": "A/I Chiude, Restare Umani &#8211; A/I Shuts Down, Stay Human",
+            "body": "[IT] Non appena abbiamo scoperto di essere finite sulla lista delle organizzazioni terroristiche globali, abbiamo scritto, dichiarato e promesso che avremmo cercato di resistere fino a che fosse stato possibile, che non ci saremmo arrese finché avessimo intravisto delle possibilità legali. Abbiamo mantenuto e difeso con orgoglio un’infrastruttura libera, ri…",
+            "url": "https://cavallette.noblogs.org/2026/09/10098",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-a-i-chiude-restare-umani",
+            "date": "2026-09-06T13:16:00.000Z",
+            "title": "A/I chiude - Restare Umani",
+            "body": "Non appena abbiamo scoperto di essere finite sulla lista delle organizzazioni terroristiche globali, abbiamo scritto, dichiarato e promesso che avremmo cercato di resistere fino a che fosse stato possibile, che non ci saremmo arrese finché avessimo intravisto delle possibilità legali. Abbiamo mantenuto e difeso con orgoglio un&rsquo;infrastruttura libera, r…",
+            "url": "https://keepitfree.ai/it/announcements/a/i-chiude-restare-umani/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-noblogs-https-cavallette-noblogs-org-2026-09-10097",
+            "date": "2026-09-05T10:58:59.000Z",
+            "title": "Banca Etica sequestra i fondi di A/I / Banca Etica shuts down A/I funds",
+            "body": "[IT] Venerdì 4 settembre Banca Etica ci ha comunicato in una riunione che eserciterà l’opzione di rescissione unilaterale dal contratto con l’Associazione AI ODV e che i fondi attualmente presenti sul conto frutto delle donazioni di migliaia di persone, associazioni e collettivi non saranno nella disponibilità dell’Associazione. Al di là delle molte parole…",
+            "url": "https://cavallette.noblogs.org/2026/09/10097",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-noblogs-https-cavallette-noblogs-org-2026-09-10096",
+            "date": "2026-09-05T10:53:12.000Z",
+            "title": "Presentiamo keepitfree.ai / Announcing keepitfree.ai",
+            "body": "[IT] Dal 26 agosto, quando il Dipartimento del Tesoro statunitense, tramite OFAC, ci ha sanzionato come “Specially Designated Global Terrorist” (SDGT), sono successe tante cose, tanto si è mosso. Ed è solo l’inizio. Il 28 agosto il dominio autistici.org è sparito dalla faccia del globo terracqueo. Tutto questo, è bene sottolinearlo ogni volta, nonostante A/…",
+            "url": "https://cavallette.noblogs.org/2026/09/10096",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
             "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-banca-etica-sequestra-i-fondi-di-a-i",
             "date": "2026-09-05T09:15:00.000Z",
             "title": "Banca etica sequestra i fondi di A/I",
@@ -6064,6 +6349,36 @@
             "pinned": true,
             "automated": false,
             "source": "Sabot Media investigation"
+          },
+          {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-assemblea-pubblica-di-aggiornamento",
+            "date": "2026-09-02T19:00:00.000Z",
+            "title": "Assemblea pubblica di aggiornamento",
+            "body": "Ci incontriamo Mercoledì 2 Settembre al Circolo Anarchico Berneri per una assemblea di aggiornamento e confronto sulla vicenda accaduta al collettivo A/I. Il circolo è accessibile solo tramite scale L&rsquo;EVENTO SARA&rsquo; ANCHE IN DIRETTA STREAMING SU RadioSpore &ndash;&gt; https://radiospore.oziosi.org/",
+            "url": "https://keepitfree.ai/it/events/assemblea-pubblica-di-aggiornamento/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-technical-updates-domande-frequenti-agosto-2026",
+            "date": "2026-09-02T11:11:00.000Z",
+            "title": "Domande frequenti (agosto 2026)",
+            "body": "Qui di seguito trovi delle domande che ci fanno spesso in questo periodo, dove proviamo a rispondere punto per punto. La posta è raggiungibile? Sì, la posta si può raggiungere via webmail qui https://www.inventati.org, o via POP/IMAP usando i nuovi parametri di connessione (che hanno i server nuovi da usare). Il dominio autistici.org non è piu disponibile…",
+            "url": "https://keepitfree.ai/it/technical-updates/domande-frequenti-agosto-2026/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-presentiamo-https-keepitfree-ai",
+            "date": "2026-09-02T11:00:00.000Z",
+            "title": "Presentiamo https://keepitfree.ai",
+            "body": "Dal 26 agosto, quando il Dipartimento del Tesoro statunitense, tramite OFAC, ci ha sanzionato come &ldquo;Specially Designated Global Terrorist&rdquo; (SDGT), sono successe tante cose, tanto si è mosso. Ed è solo l&rsquo;inizio. Il 28 agosto il dominio autistici.org è sparito dalla faccia del globo terracqueo. Tutto questo, è bene sottolinearlo ogni volta,…",
+            "url": "https://keepitfree.ai/it/announcements/presentiamo-https/keepitfree.ai/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
           },
           {
             "id": "official-ai-noblogs-https-cavallette-noblogs-org-2026-09-10095",
@@ -6096,6 +6411,56 @@
             "source": "Autistici/Inventati"
           },
           {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-teniamo-internet-libera",
+            "date": "2026-08-30T14:29:00.000Z",
+            "title": "⌦ Teniamo Internet libera!",
+            "body": "«La struttura del potere si comporta come un ragno che tesse la sua ragnatela per catturare gli insetti e immobilizzarli; ma quegli stessi insetti, muovendosi lungo i fili della stessa rete, possono usarla dal basso come uno strumento per mettersi in connessione tra loro, comunicare e organizzare la propria liberazione.» Aldo Braibanti C’era un sogno, all’i…",
+            "url": "https://keepitfree.ai/it/announcements/teniamo-internet-libera/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-noblogs-https-cavallette-noblogs-org-2026-08-10094",
+            "date": "2026-08-30T11:58:33.000Z",
+            "title": "Your mail isn&#8217;t lost: info on how to get it back &#8211; No, non hai perso tutta la mail: ecco come accedere alla tua posta",
+            "body": "[EN] Some hours ago the domain autistici.org became unreachable. Together with it, we also lost the mail server address mail.autistici.org and of course you won&#8217;t be able to receive any further emails on your @autistici.org email account. But not all is lost! If you have an @autistici.org email address, we will soon restore your mail address on a new…",
+            "url": "https://cavallette.noblogs.org/2026/08/10094",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-technical-updates-aggiornamento-sullo-stato-di-noblogs",
+            "date": "2026-08-29T13:26:00.000Z",
+            "title": "Aggiornamento sullo stato di Noblogs",
+            "body": "l 28 agosto 2026 qualcuno è riuscito ad avere accesso come utente privilegiato alla piattaforma noblogs.org, sfruttando una vulnerabilità del software che usiamo per fornire la piattaforma. L’accesso è durato per circa due ore, durante le quali è stata cambiata la homepage di noblogs.org e non possiamo escludere che l’autore possa aver avuto accesso al data…",
+            "url": "https://keepitfree.ai/it/technical-updates/aggiornamento-sullo-stato-di-noblogs/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-noblogs-https-cavallette-noblogs-org-2026-08-10092",
+            "date": "2026-08-29T12:25:42.000Z",
+            "title": "Aggiornamento situazione Noblogs / Noblogs status update",
+            "body": "[IT] Il 28 agosto 2026 qualcuno è riuscito ad avere accesso come utente privilegiato alla piattaforma noblogs.org, sfruttando una vulnerabilità del software che usiamo per fornire la piattaforma. L&#8217;accesso è durato per circa due ore, durante le quali è stata cambiata la homepage di noblogs.org e non possiamo escludere che l&#8217;autore possa aver avu…",
+            "url": "https://cavallette.noblogs.org/2026/08/10092",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-technical-updates-il-servizio-di-posta-c3-a8-di-nuovo-attivo",
+            "date": "2026-08-28T11:00:00.000Z",
+            "title": "Il servizio di posta è di nuovo attivo",
+            "body": "Il servizio di posta funziona di nuovo. Ecco le istruzioni su come accedere alla tua casella: Se hai una mail @autistici.org, stiamo spostando la tua casella su un nuovo dominio (seguiranno aggiornamenti). Nel frattempo non potrai inviare o ricevere nuove mail, ma potrai comunque accedere al tuo account. Una volta dentro, troverai tutto il tuo archivio. Per…",
+            "url": "https://keepitfree.ai/it/technical-updates/il-servizio-di-posta-%C3%A8-di-nuovo-attivo/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
             "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-cartella-stampa",
             "date": "2026-08-28T07:00:00.000Z",
             "title": "Cartella stampa",
@@ -6104,66 +6469,6 @@
             "pinned": false,
             "automated": true,
             "source": "Autistici/Inventati"
-          },
-          {
-            "id": "official-ai-noblogs-https-cavallette-noblogs-org-2026-08-10083",
-            "date": "2026-08-27T11:17:15.000Z",
-            "title": "[REPOST] The Server Called Paranoia: Defend Autistici/Inventati Before September 25",
-            "body": "Ripubblichiamo (in inglese) un bel post di Sabot Media che ripercorre la nostra storia e la collega a quanto sta avvenendo con la nostra iscrizione nella lista delle organizzazioni globali terroristiche da parte dell&#8217;amministrazione americana. Ringraziamo Sabot Media perché ha fatto un lavoro eccellente e che ci aiuta a rispamiare tempo ed energie per…",
-            "url": "https://cavallette.noblogs.org/2026/08/10083",
-            "pinned": false,
-            "automated": true,
-            "source": "Autistici/Inventati"
-          },
-          {
-            "id": "official-social-mastodon-117224324379772923",
-            "date": "2026-09-06T13:27:18.707Z",
-            "title": "A/I public campaign update",
-            "body": "A/I shuts down - Stay Human https:// keepitfree.ai/announcements/a/ i-shuts-down-stay-human/ # AutisticiInventati # KeepItFree",
-            "url": "https://mastodon.bida.im/@cavallette/117224324379772923",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117224322591039006",
-            "date": "2026-09-06T13:26:51.412Z",
-            "title": "A/I public campaign update",
-            "body": "A/I chiude - Restare Umani https:// keepitfree.ai/it/announcements /a/i-chiude-restare-umani/ # KeepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117224322591039006",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117217910870345934",
-            "date": "2026-09-05T10:16:16.317Z",
-            "title": "A/I public campaign update",
-            "body": "Banca Etica shuts down A/I funds - Press Release https:// keepitfree.ai/announcements/ba nca-etica-shuts-down-a/i-funds/ # KeepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117217910870345934",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117217808552800773",
-            "date": "2026-09-05T09:50:15.075Z",
-            "title": "A/I public campaign update",
-            "body": "Banca Etica sequestra i fondi di A/I - Comunicato stampa https:// keepitfree.ai/it/announcements /banca-etica-sequestra-i-fondi-di-a/i/ # keepITFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117217808552800773",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117211507147880529",
-            "date": "2026-09-04T07:07:43.270Z",
-            "title": "A/I public campaign update",
-            "body": "Poi in giro per la rete si trovano questi commenti, e all'improvviso tutto ha anche più senso. Grazie @ filo_sottile https://www. wumingfoundation.com/giap/2026 /09/come-si-e-arrivati-allattacco-usa-contro-autistici-inventati/#comment-49728 https:// filosottile.noblogs.org/ # KeepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117211507147880529",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
           },
           {
             "id": "update-launch",
@@ -6195,84 +6500,79 @@
         ],
         "social": [
           {
-            "id": "mastodon-117224324379772923",
+            "id": "mastodon-117225616590095746",
             "platform": "MASTODON",
-            "date": "2026-09-06T13:27:18.707Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "A/I shuts down - Stay Human https:// keepitfree.ai/announcements/a/ i-shuts-down-stay-human/ # AutisticiInventati # KeepItFree",
-            "excerpt": "A/I shuts down - Stay Human https:// keepitfree.ai/announcements/a/ i-shuts-down-stay-human/ # AutisticiInventati # KeepItFree",
-            "url": "https://mastodon.bida.im/@cavallette/117224324379772923",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
+            "date": "2026-09-06T18:55:56.271Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "Really didn't think this would be our final interview with the # AutisticiInventati Collective, but it would appear that it will be. Give it a listen and hold their words in your heart (and your repo) going forward. https:// sabot.media/post/resistance",
+            "excerpt": "Really didn't think this would be our final interview with the # AutisticiInventati Collective, but it would appear that it will be. Give it a listen and hold their words in your heart (and your repo) going forward. https:// sabot.media/post/resistance",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117225616590095746",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/225/610/135/438/795/original/13d16cea450f9245.png",
+                "alt": "Black red and cream graphic announcing a special episode of Molotov Now! featuring an interview with the A/I Collective "
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/225/610/135/438/795/original/13d16cea450f9245.png",
+            "language": "English",
+            "languageCode": "en",
             "contentWarning": "",
-            "sourcePriority": 0
+            "sourcePriority": 2
           },
           {
-            "id": "mastodon-117224322591039006",
+            "id": "mastodon-117225408838155109",
             "platform": "MASTODON",
-            "date": "2026-09-06T13:26:51.412Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "A/I chiude - Restare Umani https:// keepitfree.ai/it/announcements /a/i-chiude-restare-umani/ # KeepItFree # AutisticiInventati",
-            "excerpt": "A/I chiude - Restare Umani https:// keepitfree.ai/it/announcements /a/i-chiude-restare-umani/ # KeepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117224322591039006",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
+            "date": "2026-09-06T18:03:06.232Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "Use these graphics by @ subvertising to show your solidarity with the Autistici/Inventati Collective. May they be gone, but not forgotten. Graphics hosted for download on our campaign page at https:// sabot.media/campaigns/autistic i-inventati # AutisticiInventati",
+            "excerpt": "Use these graphics by @ subvertising to show your solidarity with the Autistici/Inventati Collective. May they be gone, but not forgotten. Graphics hosted for download on our campaign page at https:// sabot.media/campaigns/autistic i-inventati # AutisticiInventati",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117225408838155109",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/225/393/551/814/879/original/7b664277c6636ab9.png",
+                "alt": "Black square graphic with a white outlined heart containing a red asterisk-like symbol beside the white letters “A/I.”"
+              },
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/225/393/912/452/038/original/6540e2c5395b1de3.png",
+                "alt": "Black banner reading “WE ♥ A/I” in large white letters, with a white outlined heart containing a red asterisk-like symbol."
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/225/393/551/814/879/original/7b664277c6636ab9.png",
+            "language": "English",
+            "languageCode": "en",
             "contentWarning": "",
-            "sourcePriority": 0
+            "sourcePriority": 2
           },
           {
-            "id": "mastodon-117217910870345934",
+            "id": "mastodon-117225366413311344",
             "platform": "MASTODON",
-            "date": "2026-09-05T10:16:16.317Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Banca Etica shuts down A/I funds - Press Release https:// keepitfree.ai/announcements/ba nca-etica-shuts-down-a/i-funds/ # KeepItFree # AutisticiInventati",
-            "excerpt": "Banca Etica shuts down A/I funds - Press Release https:// keepitfree.ai/announcements/ba nca-etica-shuts-down-a/i-funds/ # KeepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117217910870345934",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
+            "date": "2026-09-06T17:52:18.889Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "Nineteen days before the U.S. sanctions deadline, Autistici/Inventati is shutting down. For twenty-five years, A/I built infrastructure for people who understood that privacy, autonomy and resistance require more than good intentions. Now a government order has made keeping that infrastructure alive untenable. There is grief in this. There should also be fury. Because fascism does not arrive only as boots in the street. Sometimes it arrives as a designation, a compliance deadline, a terrified service provider, a bank account that suddenly stops working. Bureaucracy has always been one of authoritarianism’s favorite costumes. The paperwork looks terribly respectable while the walls close in. And this cannot remain a problem for “the nerds.” People organizing in every sphere need to understand what autonomous infrastructure means, why it matters, and what happens when we leave it to a tiny number of exhausted technical collectives to keep the lights on for everyone else. We need to become the thousand servers. Now. If one autonomous project can be isolated, there should be ten more behind it. A hundred. A thousand. This should be the moment radical hosting, federated services, community servers, privacy infrastructure and collectively controlled networks begin flourishing, not retreating. Build them in basements, social centers, infoshops, collectives, cooperatives and wherever else people can keep a machine humming and a cable plugged into the wall. The lesson cannot be that autonomous infrastructure was too dangerous to maintain. The lesson has to be that we did not have nearly enough of it. We ❤️ A/I. We are heartbroken to see it end this way. And we refuse to treat its shutdown as the end of the idea it spent twenty-five years proving was possible. Use the logo and banner provided by @ subvertising to keep their memory alive. Let's not forget this by next week! Goodbye, A/I. Not farewell. Read our full report: https:// sabot.media/post/ai-shuts-down campaign page: https:// sabot.media/campaigns/autistic i-inventati # AutisticiInventati # Antifa # DigitalRights # Privacy # MutualAid # AutonomousInfrastructure # Fediverse # SelfHosting # RadicalTech # NoBlogs # SabotMedia",
+            "excerpt": "Nineteen days before the U.S. sanctions deadline, Autistici/Inventati is shutting down. For twenty-five years, A/I built infrastructure for people who understood that privacy, autonomy and resistance require more than good intentions. Now a government order has made keeping that infrastructure alive untenable. There is grief in this. There should also be fury. Because fascism does not arrive only as boots in the street. Sometimes it arrives as a designation, a compliance deadline, a terrified service provider, a bank account that suddenly stops working. Bureaucracy has always been one of authoritarianism’s favorite costumes. The paperwork looks terribly respectable while the walls close in. And this cannot remain a problem for “the nerds.” People organizing in every sphere need to understand what autonomous infrastructure means, why it matters, and what happens when we leave it to a tiny number of exhausted technical collectives to keep the lights on for everyone else. We need to become the thousand servers. Now. If one autonomous project can be isolated, there should be ten more behind it. A hundred. A thousand. This should be the moment radical hosting, federated services, community servers, privacy infrastructure and collectively controlled networks begin flourishing, not retreating. Build them in basements, social centers, infoshops, collectives, cooperatives and wherever else people can keep a machine humming and a cable plugged into the wall. The lesson cannot be that autonomous infrastructure was too dangerous to maintain. The lesson has to be that we did not have nearly enough of it. We ❤️ A/I. We are heartbroken to see it end this way. And we refuse to treat its shutdown as the end of the idea it spent twenty-five years proving was possible. Use the logo and banner provided by @ subvertising to keep their memory alive. Let's not forget this by next week! Goodbye, A/I. Not farewell. Read our full report: https:// sabot.media/post/ai-shuts-down campaign page: https:// sabot.media/campaigns/autistic i-inventati # AutisticiInventati # Antifa # DigitalRights # Privacy # MutualAid # AutonomousInfrastructure # Fediverse # SelfHosting # RadicalTech # NoBlogs # SabotMedia",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117225366413311344",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/225/314/540/716/729/original/90a40ee6783b4ea9.png",
+                "alt": "Alt text: Featured article graphic on a pale cream background. A red label at upper left reads “GOODBYE A/I.” Large black text says, “NINETEEN DAYS BEFORE THE DEADLINE, AUTISTICI/INVENTATI IS SHUTTING DOWN.” At upper right is a cropped NoBlogs “Welcome to A/I” graphic beside a large black calendar icon. A red footer reads “INDEPENDENTLY PUBLISHED / NOT AFFILIATED WITH A/I,” with the sabot.media logo and “FULL ARTICLE + FREE +KAOS BOOK.”"
+              },
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/225/350/875/065/674/original/7b6dc33f3c630b7f.png",
+                "alt": "Black square graphic with a white outlined heart containing a red asterisk-like symbol beside the white letters “A/I.”"
+              },
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/225/351/287/247/086/original/1aa6563fde037f84.png",
+                "alt": "Black banner reading “WE ♥ A/I” in large white letters, with a white outlined heart containing a red asterisk-like symbol."
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/225/314/540/716/729/original/90a40ee6783b4ea9.png",
+            "language": "English",
+            "languageCode": "en",
             "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117217808552800773",
-            "platform": "MASTODON",
-            "date": "2026-09-05T09:50:15.075Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Banca Etica sequestra i fondi di A/I - Comunicato stampa https:// keepitfree.ai/it/announcements /banca-etica-sequestra-i-fondi-di-a/i/ # keepITFree # AutisticiInventati",
-            "excerpt": "Banca Etica sequestra i fondi di A/I - Comunicato stampa https:// keepitfree.ai/it/announcements /banca-etica-sequestra-i-fondi-di-a/i/ # keepITFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117217808552800773",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117211507147880529",
-            "platform": "MASTODON",
-            "date": "2026-09-04T07:07:43.270Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Poi in giro per la rete si trovano questi commenti, e all'improvviso tutto ha anche più senso. Grazie @ filo_sottile https://www. wumingfoundation.com/giap/2026 /09/come-si-e-arrivati-allattacco-usa-contro-autistici-inventati/#comment-49728 https:// filosottile.noblogs.org/ # KeepItFree # AutisticiInventati",
-            "excerpt": "Poi in giro per la rete si trovano questi commenti, e all'improvviso tutto ha anche più senso. Grazie @ filo_sottile https://www. wumingfoundation.com/giap/2026 /09/come-si-e-arrivati-allattacco-usa-contro-autistici-inventati/#comment-49728 https:// filosottile.noblogs.org/ # KeepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117211507147880529",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
+            "sourcePriority": 2
           },
           {
             "id": "mastodon-117224972818195789",
@@ -6502,250 +6802,272 @@
             "languageCode": "en",
             "contentWarning": "",
             "sourcePriority": 2
+          },
+          {
+            "id": "mastodon-117200347944837468",
+            "platform": "MASTODON",
+            "date": "2026-09-02T07:49:47.345Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "New official campaign hub for tracking stories, press releases, and technical updates directly from # AutisticiInventati for the most up to date # News https:// keepitfree.ai/ also, for redundancy's sake, here is our own stab at a campaign hub along those same lines https:// sabot.media/campaigns/autistic i-inventati",
+            "excerpt": "New official campaign hub for tracking stories, press releases, and technical updates directly from # AutisticiInventati for the most up to date # News https:// keepitfree.ai/ also, for redundancy's sake, here is our own stab at a campaign hub along those same lines https:// sabot.media/campaigns/autistic i-inventati",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117200347944837468",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/200/336/337/114/976/original/a83984dcb52e12fc.png",
+                "alt": "Keep the Internet free\n\nWe are not terrorists. Autistici.org is an infrastructure of dissent\n\nAnnouncements Technical Updates Press coverage Solidarity\n\nEnglish Italiano\n\nOn August 26, 2026, the United States placed the Italian collective Autistici/Inventati on its terrorism\nsanctions list, accusing it of providing online services to violent groups. Since 2001 the collective has\noffered free email, hosting and other tools to activists, and it rejects the accusations entirely. Two days\nlater its website disappeared from the internet — not because the machines were switched off, but\nbecause the address that leads people to them stopped working.\n\nFollow the case here. Join the campaign for a free internet.\n"
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/200/336/337/114/976/original/a83984dcb52e12fc.png",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
           }
         ],
         "graphics": [
           {
+            "id": "row-ev08u1zs",
+            "title": "Subvertising.org Profile Photo",
+            "imageUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png",
+            "alt": "Black square logo with a white outlined heart containing a red asterisk, beside the white letters “A/I.”",
+            "caption": "from @subvertising.org on Mastodon.",
+            "downloadUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png",
+            "sourceUrl": ""
+          },
+          {
+            "id": "row-aztnfwvj",
+            "title": "Subvertising.org Web Banner",
+            "imageUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-1f095835-e913-442e-a4c3-63de388dc0e0-6303f2a5-8dd3-452b-9cec-061dab1e68d8.png&filename=6303f2a5-8dd3-452b-9cec-061dab1e68d8.png",
+            "alt": "Black banner reading “WE ♥ A/I” in large white letters, with a white outlined heart containing a red asterisk-like symbol.",
+            "caption": "from @subvertising.org on Mastodon.",
+            "downloadUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-1f095835-e913-442e-a4c3-63de388dc0e0-6303f2a5-8dd3-452b-9cec-061dab1e68d8.png&filename=6303f2a5-8dd3-452b-9cec-061dab1e68d8.png",
+            "sourceUrl": ""
+          },
+          {
             "id": "sept4-quote-ngo-fto",
             "title": "Designate Antifa",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-ngo-fto.webp?v=20260904-1",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-ngo-fto.webp?v=20260904-1",
             "alt": "Cream, black, and red Sabot Media campaign graphic with a close-up photo of a man on the right. Quote reads: “And I think, maybe, perhaps the State Department should designate Antifa, its international arm as a foreign terrorist organization, FTO.” Attributed on the graphic to Andy Ngo, White House, Oct. 8, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer urges readers to “Read / Share / Preserve / Organize.”",
             "caption": "Campaign quote card using an Oct. 8, 2025 statement attributed on the graphic to Andy Ngo.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-ngo-fto.webp",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/quote-ngo-fto.webp",
             "sourceUrl": ""
           },
           {
             "id": "sept4-quote-shideler-job-one",
             "title": "Job One",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-shideler-job-one.webp?v=20260904-1",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-shideler-job-one.webp?v=20260904-1",
             "alt": "Black, red, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large red quote reads: “Going after organizations like this that provide material support would be job one.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”",
             "caption": "Campaign quote card using an Oct. 16, 2025 statement attributed on the graphic to Kyle Shideler.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-shideler-job-one.webp",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/quote-shideler-job-one.webp",
             "sourceUrl": ""
           },
           {
             "id": "sept4-quote-shideler-otherwise-lawful",
             "title": "Otherwise Lawful",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-shideler-otherwise-lawful.webp?v=20260904-1",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-shideler-otherwise-lawful.webp?v=20260904-1",
             "alt": "Red, black, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large quote reads: “They would probably really struggle to go after these kinds of entities, since the services they provide are otherwise lawful.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”",
             "caption": "Campaign quote card using the “otherwise lawful” Oct. 16, 2025 statement attributed on the graphic to Kyle Shideler.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-shideler-otherwise-lawful.webp",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/quote-shideler-otherwise-lawful.webp",
             "sourceUrl": ""
           },
           {
             "id": "built-in-1",
             "title": "One Rule for Big Tech",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/section-230-hypocrisy.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/section-230-hypocrisy.webp?v=20260829-2",
             "alt": "Black, red, cream and pink vertical campaign graphic reading “One rule for Big Tech. Another for movement infrastructure. The hypocrisy of Section 230.” Marked urgent for the A/I campaign on August 30, 2026, with “Read / share / preserve / organize” along the bottom.",
             "caption": "One rule for Big Tech. Another for movement infrastructure. Corporate platforms are protected from automatic liability for their users, while the United States collapses the distinction between A/I and what users publish. Infrastructure is not authorship. Read and share the full argument.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/section-230-hypocrisy.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/section-230-hypocrisy.png",
             "sourceUrl": "https://kolektiva.social/@AberdeenLocal1312/117184117978084213"
           },
           {
             "id": "built-in-2",
             "title": "Ten Years of Hacking and Media Activism",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/book-download-card.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/book-download-card.webp?v=20260829-2",
             "alt": "Red, black, pink and green book-download card for The Kaos Ten Years of Hacking and Media Activism, with Hacklabs, Genova, Plan B and Noblogs listed.",
             "caption": "Download and share the free Kaos book on A/I, hacklabs and radical media infrastructure.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/book-download-card.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/book-download-card.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-3",
             "title": "The Server Called Paranoia",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-1.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-1.webp?v=20260829-2",
             "alt": "Red and black campaign card reading “The server called Paranoia” above a server icon and text saying the U.S. is trying to make Autistici/Inventati untouchable.",
             "caption": "Before September 25: read, share, preserve and organize.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-1.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-1.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-4",
             "title": "Immediate Answer Is Solidarity",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-2.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-2.webp?v=20260829-2",
             "alt": "Black campaign card reading “The immediate answer is solidarity” with six red action boxes: read, share, preserve, document, organize and pressure.",
             "caption": "Six immediate ways to defend resistant communications infrastructure.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-2.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-2.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-5",
             "title": "Save Public Noblogs",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-3.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-3.webp?v=20260829-2",
             "alt": "Pink and black campaign card reading “Save public Noblogs” beside a browser-window illustration and a preservation checklist.",
             "caption": "Preserve public pages and media without accessing private accounts or bypassing security.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-3.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-3.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-6",
             "title": "Do and Do Not",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-4.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-4.webp?v=20260829-2",
             "alt": "Paper-textured campaign checklist contrasting useful actions such as reporting and preserving public material with prohibited actions such as rerouting funds or bypassing access.",
             "caption": "Act independently and legally; do not create new sanctions risks.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-4.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-4.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-7",
             "title": "Noblogs: 25 Years",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-5.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-5.webp?v=20260829-2",
             "alt": "Red, black and paper campaign card reading “Noblogs: 25 years of resistant communication” with email, Noblogs, servers and knowledge listed.",
             "caption": "A quarter century of noncommercial movement infrastructure.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-5.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-5.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-8",
             "title": "Repression Became Architecture",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-6.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-6.webp?v=20260829-2",
             "alt": "Paper-textured timeline from Paranoia Goes Online in 2001 through U.S. designation in 2026, titled “Repression became architecture.”",
             "caption": "A short history of attacks, seizures and resilient rebuilding.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-6.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-6.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-9",
             "title": "The Government Case",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-7.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-7.webp?v=20260829-2",
             "alt": "Black and red campaign card explaining that A/I provided digital infrastructure used by radical movements and that the designation targets infrastructure itself.",
             "caption": "The government’s theory collapses providers into the conduct of users.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-7.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-7.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-10",
             "title": "A/I Public Statement: Allegations",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-8.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-8.webp?v=20260829-2",
             "alt": "Black quote card reproducing A/I’s denial of allegations in the included statements and identifying A/I as digital self-defense infrastructure.",
             "caption": "A/I responds in its own words.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-8.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-8.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-11",
             "title": "A/I Public Statement: We Will Not Back Down",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-9.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-9.webp?v=20260829-2",
             "alt": "Black quote card reading “We will not back down, we will keep doing what we have been doing all these years,” attributed to Autistici/Inventati.",
             "caption": "A/I’s public response to the designation.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-9.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-9.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-12",
             "title": "A/I Public Statement: Antifascism",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-10.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-10.webp?v=20260829-2",
             "alt": "Black quote card reading “Antifascism and anticapitalism are not terrorism. Protesting is not terrorism.”",
             "caption": "Political opposition and protest are not terrorism.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-10.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-10.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-13",
             "title": "September 25 Deadline",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-11.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-11.webp?v=20260829-2",
             "alt": "Black and red deadline card showing 09 25 and 12:01 a.m. Eastern, when the temporary wind-down period ends.",
             "caption": "The deadline affects banks, hosts, certificates, providers and users.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-11.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-11.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-14",
             "title": "Built For, Targeted Now",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/carousel-12.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/carousel-12.webp?v=20260829-2",
             "alt": "Paper-textured comparison card listing infrastructure built for server seizure, hostile providers, hardware loss and censorship against present threats to banking, donations, domains, bandwidth and global access.",
             "caption": "A network can replace a machine; it cannot replace the world around it.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/carousel-12.png",
-            "sourceUrl": ""
-          },
-          {
-            "id": "built-in-15",
-            "title": "Campaign Featured Image",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/featured-image.webp?v=20260829-2",
-            "alt": "Wide red, black and paper banner reading “The server called Paranoia: Defend Autistici/Inventati” with Noblogs and Welcome to A/I browser marks.",
-            "caption": "Communications infrastructure is not terrorism.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/featured-image.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/carousel-12.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-16",
             "title": "The First Server Was Called Paranoia",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-1.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-1.webp?v=20260829-2",
             "alt": "Black quote card reading “The first server was called Paranoia. The network it created was called solidarity,” beside a white network diagram.",
             "caption": "The network it created was called solidarity.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/quote-1.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/quote-1.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-17",
             "title": "September 25 Is Not Silence",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-2.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-2.webp?v=20260829-2",
             "alt": "Red and black quote card reading “September 25 is not a deadline for silence. It is a deadline for organization.”",
             "caption": "Turn the deadline into organization.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/quote-2.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/quote-2.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-18",
             "title": "Infrastructure Is Not Every Message",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-3.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-3.webp?v=20260829-2",
             "alt": "Black quote card reading “Providing infrastructure is not the same as authoring everything transmitted through it,” with a two-way arrow.",
             "caption": "Political affinity is not operational control.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/quote-3.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/quote-3.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-19",
             "title": "Build Something Harder to Destroy",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/quote-4.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/quote-4.webp?v=20260829-2",
             "alt": "Red and black quote card reading “Disclose what happened. Repair the damage. Share the lesson. Build something harder to destroy.”",
             "caption": "Repair, document and build resilient systems.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/quote-4.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/quote-4.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-20",
             "title": "The U.S. Designated A/I",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/story-1.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/story-1.webp?v=20260829-2",
             "alt": "Vertical red and black story card reading “The U.S. designated A/I,” describing a volunteer communications collective being treated as terrorist infrastructure.",
             "caption": "A concise story-format introduction to the designation.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/story-1.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/story-1.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-21",
             "title": "September 25 Story Card",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/story-2.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/story-2.webp?v=20260829-2",
             "alt": "Vertical red story card reading “September 25” above a calendar illustration and text warning that the wind-down period ends.",
             "caption": "Share the campaign deadline in story format.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/story-2.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/story-2.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-22",
             "title": "Do Not Let A/I Disappear",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/story-3.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/story-3.webp?v=20260829-2",
             "alt": "Vertical red and black story card reading “Do not let A/I disappear” above a Welcome to A/I browser screenshot.",
             "caption": "Read, share, preserve public archives and organize independently.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/story-3.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/story-3.png",
             "sourceUrl": ""
           },
           {
             "id": "built-in-23",
             "title": "Do Not Let A/I Disappear Banner",
-            "imageUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/web-banner.webp?v=20260829-2",
+            "imageUrl": "/campaigns/autistici-inventati/graphics/web-banner.webp?v=20260829-2",
             "alt": "Wide black campaign banner reading “Do not let A/I disappear” beside a Welcome to A/I browser screenshot.",
             "caption": "A wide campaign banner for websites and social headers.",
-            "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/web-banner.png",
+            "downloadUrl": "/campaigns/autistici-inventati/graphics/originals/web-banner.png",
             "sourceUrl": ""
-          },
-          {
-            "id": "row-ev08u1zs",
-            "title": "Support A/I Web Logo",
-            "imageUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png",
-            "alt": "Black square logo with a white outlined heart containing a red asterisk, beside the white letters “A/I.”",
-            "caption": "from @subvertising.org on Mastodon.",
-            "downloadUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png"
           }
         ],
         "coverage": [
@@ -6814,6 +7136,102 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-i1q9rj",
+            "date": "2026-09-06T16:30:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "",
+            "languageCode": "",
+            "title": "Banchetto al festival antirazzista Abba Vive",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/events/banchetto-al-festival-antirazzista-abba-vive",
+            "imageUrl": "",
+            "summary": "Ci vediamo al festival abba vive per poter avere un luogo fisico in cui scambiarci informazioni per scambiarci le nuove configurazione dei server mail di autistici, guida per backuppare i noblogs e aggiornamenti vari. Il banchetto sarà riconoscibile dalla presenza del volantino dell&rsquo;evento stampato. A presto &lt…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 18,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-19tph9b",
+            "date": "2026-09-06T13:27:37.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "A/I Chiude, Restare Umani – A/I Shuts Down, Stay Human",
+            "translatedTitle": "",
+            "url": "https://cavallette.noblogs.org/2026/09/10098",
+            "imageUrl": "",
+            "summary": "[IT] Non appena abbiamo scoperto di essere finite sulla lista delle organizzazioni terroristiche globali, abbiamo scritto, dichiarato e promesso che avremmo cercato di resistere fino a che fosse stato possibile, che non ci saremmo arrese finché avessimo intravisto delle possibilità legali. Abbiamo mantenuto e difeso c…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 30,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-p7611q",
+            "date": "2026-09-06T13:16:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "",
+            "languageCode": "",
+            "title": "A/I chiude - Restare Umani",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/announcements/a/i-chiude-restare-umani",
+            "imageUrl": "",
+            "summary": "Non appena abbiamo scoperto di essere finite sulla lista delle organizzazioni terroristiche globali, abbiamo scritto, dichiarato e promesso che avremmo cercato di resistere fino a che fosse stato possibile, che non ci saremmo arrese finché avessimo intravisto delle possibilità legali. Abbiamo mantenuto e difeso con or…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 12,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-uip9jw",
+            "date": "2026-09-06T12:08:00.000Z",
+            "outlet": "Radio Onda d'Urto",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "AUTISTICI/INVENTATI CHIUDE DOPO L’ATTACCO USA: “RESTARE UMANI”",
+            "translatedTitle": "",
+            "url": "https://www.radiondadurto.org/2026/09/06/autistici-inventati-chiude-dopo-lattacco-usa-restare-umani",
+            "imageUrl": "",
+            "summary": "Il Collettivo informatico Autistici/Inventati, al centro della durissima repressione scatenata direttamente dal Dipartimento di Stato Usa, chiude la propria storia di libertà digitale, lunga un quarto ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-oas6na",
+            "date": "2026-09-06T11:33:00.000Z",
+            "outlet": "Italianismo",
+            "language": "",
+            "languageCode": "",
+            "title": "Coletivo italiano sancionado pelos EUA encerra atividades após 25 anos",
+            "translatedTitle": "",
+            "url": "https://italianismo.com.br/flash/coletivo-italiano-sancionado-pelos-eua-encerra-atividades-apos-25-anos",
+            "imageUrl": "",
+            "summary": "Autistici/Inventati desliga serviços após sanções do Tesouro dos EUA, bloqueio do domínio e conta no PayPal suspensa.",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1dfn943",
+            "date": "2026-09-06T11:25:00.000Z",
+            "outlet": "il manifesto",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Chiude la piattaforma Autistici/Inventati: troppo forte la stretta statunitense",
+            "translatedTitle": "",
+            "url": "https://ilmanifesto.it/chiude-la-piattaforma-autistici-inventati-troppo-forte-la-stretta-statunitense",
+            "imageUrl": "",
+            "summary": "Le pressioni determinate dalle sanzioni statunitensi contro il gruppo, definito «terrorista» senza alcuna prova, ha portato alla decisione di sospendere tutti i servizi. L’assenza del sostegno politic ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1oiput2",
             "date": "2026-09-06T10:29:00.000Z",
             "outlet": "Il Post",
@@ -6826,6 +7244,22 @@
             "summary": "Il collettivo italiano Autistici/Inventati, a cui il 26 agosto erano state imposte delle sanzioni dal dipartimento del Tesoro degli Stati Uniti, ha annunciato la propria chiusura. Ha scritto che «in q ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1k99wgn",
+            "date": "2026-09-06T10:10:00.000Z",
+            "outlet": "Torino Cronaca",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati chiude. Stop ai server con settemila siti “antifa”. Ora risponda De Rosa",
+            "translatedTitle": "",
+            "url": "https://www.torinocronaca.it/news/cronaca/690804/autistici-inventati-chiude-stop-ai-server-con-settemila-siti-antifa-ora-risponda-de-rosa.html",
+            "imageUrl": "",
+            "summary": "Paolo De Rosa, conosciuto nell’ambiente hacker anche come Phasa, oggi è funzionario della Commissione europea e si occupa di dossier legati all’identità digitale. Prima era passato dal Team per la tra ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -6846,18 +7280,34 @@
             "editorialStatus": "automatic"
           },
           {
-            "id": "coverage-1k99wgn",
-            "date": "2026-09-05T20:08:00.000Z",
-            "outlet": "Torino Cronaca",
+            "id": "coverage-aql50p",
+            "date": "2026-09-05T22:58:00.000Z",
+            "outlet": "Il Fatto Quotidiano",
             "language": "Italian",
             "languageCode": "it",
-            "title": "Autistici/Inventati chiude. Stop ai server con settemila siti “antifa”. Ora risponda De Rosa",
+            "title": "Il collettivo italiano sanzionato da Trump chiude, Autistici/Inventati: “Temiamo conseguenze penali e finanziarie per le nostre comunità”",
             "translatedTitle": "",
-            "url": "https://www.torinocronaca.it/news/cronaca/690804/autistici-inventati-chiude-stop-ai-server-con-settemila-siti-antifa-ora-risponda-de-rosa.html",
+            "url": "https://www.ilfattoquotidiano.it/2026/09/06/autistici-inventati-sanzioni-trump-chiusura-notizie/8498485",
             "imageUrl": "",
-            "summary": "Paolo De Rosa, conosciuto nell’ambiente hacker anche come Phasa, oggi è funzionario della Commissione europea e si occupa di dossier legati all’identità digitale. Prima era passato dal Team per la tra ...",
+            "summary": "25 anni di attività finiti per le sanzioni Trump: A/I teme conseguenze penali e finanziarie per le sue comunità.",
             "discoverySource": "live-discovery",
-            "relevanceScore": 80,
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-fm9nvf",
+            "date": "2026-09-05T22:25:00.000Z",
+            "outlet": "NRC",
+            "language": "",
+            "languageCode": "",
+            "title": "Italiaanse internetdienstverlener stopt nadat de VS het op de terreurlijst plaatsten. ‘Te gevaarlijk voor onze gebruikers’",
+            "translatedTitle": "",
+            "url": "https://www.nrc.nl/nieuws/2026/09/06/italiaanse-internetdienstverlener-stopt-nadat-de-vs-het-op-de-terreurlijst-zette-te-gevaarlijk-voor-onze-gebruikers-a4936005",
+            "imageUrl": "",
+            "summary": "Het collectief achter de Italiaanse internetdienstverlener Autistici/Inventati heeft besloten te stoppen. De organisatie staat sinds 26 augustus op de Amerikaanse terreurlijst en dat maakt het vrijwel ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -6874,6 +7324,38 @@
             "summary": "Per risalire alla designazione di autistici/inventati come organizzazione terroristica occorre fare un passo indietro. 10 settembre di un anno fa a Orem, nello Utah, quando viene ucciso Charlie Kirk, ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1b7nhq6",
+            "date": "2026-09-05T10:58:59.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Banca Etica sequestra i fondi di A/I / Banca Etica shuts down A/I funds",
+            "translatedTitle": "",
+            "url": "https://cavallette.noblogs.org/2026/09/10097",
+            "imageUrl": "",
+            "summary": "[IT] Venerdì 4 settembre Banca Etica ci ha comunicato in una riunione che eserciterà l’opzione di rescissione unilaterale dal contratto con l’Associazione AI ODV e che i fondi attualmente presenti sul conto frutto delle donazioni di migliaia di persone, associazioni e collettivi non saranno nella disponibilità dell’As…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 18,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1bhn3f5",
+            "date": "2026-09-05T10:53:12.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Presentiamo keepitfree.ai / Announcing keepitfree.ai",
+            "translatedTitle": "",
+            "url": "https://cavallette.noblogs.org/2026/09/10096",
+            "imageUrl": "",
+            "summary": "[IT] Dal 26 agosto, quando il Dipartimento del Tesoro statunitense, tramite OFAC, ci ha sanzionato come “Specially Designated Global Terrorist” (SDGT), sono successe tante cose, tanto si è mosso. Ed è solo l’inizio. Il 28 agosto il dominio autistici.org è sparito dalla faccia del globo terracqueo. Tutto questo, è bene…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 30,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -7198,6 +7680,38 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-6v38z",
+            "date": "2026-09-02T19:00:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Assemblea pubblica di aggiornamento",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/events/assemblea-pubblica-di-aggiornamento",
+            "imageUrl": "",
+            "summary": "Ci incontriamo Mercoledì 2 Settembre al Circolo Anarchico Berneri per una assemblea di aggiornamento e confronto sulla vicenda accaduta al collettivo A/I. Il circolo è accessibile solo tramite scale L&rsquo;EVENTO SARA&rsquo; ANCHE IN DIRETTA STREAMING SU RadioSpore &ndash;> https://radiospore.oziosi.org/",
+            "discoverySource": "official-ai",
+            "relevanceScore": 0,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-ixakuv",
+            "date": "2026-09-02T11:11:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "",
+            "languageCode": "",
+            "title": "Domande frequenti (agosto 2026)",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/technical-updates/domande-frequenti-agosto-2026",
+            "imageUrl": "",
+            "summary": "Qui di seguito trovi delle domande che ci fanno spesso in questo periodo, dove proviamo a rispondere punto per punto. La posta è raggiungibile? Sì, la posta si può raggiungere via webmail qui https://www.inventati.org , o via POP/IMAP usando i nuovi parametri di connessione (che hanno i server nuovi da usare). Il domi…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 0,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-ui0341",
             "date": "2026-09-02T11:02:00.000Z",
             "outlet": "Radio Onda d'Urto",
@@ -7210,6 +7724,22 @@
             "summary": "Sulle pagine de Il manifesto, stamattina, il presidente di Banca Etica ha chiarito la posizione di contrarietà dell’istituto rispetto alla decisione del governo statunitense, denunciando però il ricat ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-16weyye",
+            "date": "2026-09-02T11:00:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "",
+            "languageCode": "",
+            "title": "Presentiamo https://keepitfree.ai",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/announcements/presentiamo-https/keepitfree.ai",
+            "imageUrl": "",
+            "summary": "Dal 26 agosto, quando il Dipartimento del Tesoro statunitense, tramite OFAC, ci ha sanzionato come &ldquo;Specially Designated Global Terrorist&rdquo; (SDGT), sono successe tante cose, tanto si è mosso. Ed è solo l&rsquo;inizio. Il 28 agosto il dominio autistici.org è sparito dalla faccia del globo terracqueo. Tutto q…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 12,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -7694,6 +8224,38 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-1yn6hrx",
+            "date": "2026-08-30T14:29:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "⌦ Teniamo Internet libera!",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/announcements/teniamo-internet-libera",
+            "imageUrl": "",
+            "summary": "«La struttura del potere si comporta come un ragno che tesse la sua ragnatela per catturare gli insetti e immobilizzarli; ma quegli stessi insetti, muovendosi lungo i fili della stessa rete, possono usarla dal basso come uno strumento per mettersi in connessione tra loro, comunicare e organizzare la propria liberazion…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 0,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-12g85t8",
+            "date": "2026-08-30T11:58:33.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "",
+            "languageCode": "",
+            "title": "Your mail isn’t lost: info on how to get it back – No, non hai perso tutta la mail: ecco come accedere alla tua posta",
+            "translatedTitle": "",
+            "url": "https://cavallette.noblogs.org/2026/08/10094",
+            "imageUrl": "",
+            "summary": "[EN] Some hours ago the domain autistici.org became unreachable. Together with it, we also lost the mail server address mail.autistici.org and of course you won’t be able to receive any further emails on your @autistici.org email account. But not all is lost! If you have an @autistici.org email address , we will…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 18,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1dtib7p",
             "date": "2026-08-30T05:51:00.000Z",
             "outlet": "Il Giornale d'Italia",
@@ -7738,6 +8300,38 @@
             "summary": "Rifondazione Comunista e Giovani Comunisti esprimono solidarietà al Collettivo A/I dopo l'inserimento nella lista dei terroristi globali stilata dal ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1lfifs2",
+            "date": "2026-08-29T13:26:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "",
+            "languageCode": "",
+            "title": "Aggiornamento sullo stato di Noblogs",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/technical-updates/aggiornamento-sullo-stato-di-noblogs",
+            "imageUrl": "",
+            "summary": "l 28 agosto 2026 qualcuno è riuscito ad avere accesso come utente privilegiato alla piattaforma noblogs.org, sfruttando una vulnerabilità del software che usiamo per fornire la piattaforma. L’accesso è durato per circa due ore, durante le quali è stata cambiata la homepage di noblogs.org e non possiamo escludere che l…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 35,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-11w8yfa",
+            "date": "2026-08-29T12:25:42.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "",
+            "languageCode": "",
+            "title": "Aggiornamento situazione Noblogs / Noblogs status update",
+            "translatedTitle": "",
+            "url": "https://cavallette.noblogs.org/2026/08/10092",
+            "imageUrl": "",
+            "summary": "[IT] Il 28 agosto 2026 qualcuno è riuscito ad avere accesso come utente privilegiato alla piattaforma noblogs.org, sfruttando una vulnerabilità del software che usiamo per fornire la piattaforma. L’accesso è durato per circa due ore, durante le quali è stata cambiata la homepage di noblogs.org e non possiamo esc…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 35,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -7806,6 +8400,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-ql9inx",
+            "date": "2026-08-28T11:00:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "",
+            "languageCode": "",
+            "title": "Il servizio di posta è di nuovo attivo",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/technical-updates/il-servizio-di-posta-%C3%A8-di-nuovo-attivo",
+            "imageUrl": "",
+            "summary": "Il servizio di posta funziona di nuovo. Ecco le istruzioni su come accedere alla tua casella: Se hai una mail @autistici.org, stiamo spostando la tua casella su un nuovo dominio (seguiranno aggiornamenti). Nel frattempo non potrai inviare o ricevere nuove mail, ma potrai comunque accedere al tuo account. Una volta den…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 0,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1t4wfos",
             "date": "2026-08-28T07:54:00.000Z",
             "outlet": "BizPac Review",
@@ -7851,6 +8461,22 @@
             "discoverySource": "editorial",
             "relevanceScore": 125,
             "featured": true,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-jvi6d4",
+            "date": "2026-08-26T10:00:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Dichiarazione del collettivo A/I sulle sanzioni del governo USA",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/announcements/dichiarazione-sanzioni-usa",
+            "imageUrl": "",
+            "summary": "Oggi abbiamo appreso che il governo degli Stati Uniti ha deciso di inserire un piccolo collettivo di volontari e attivisti digitali italiani nell’elenco delle organizzazioni terroristiche mondiali meritevoli di sanzioni, come si può leggere nelle dichiarazioni del Dipartimento del Tesoro , in quelle del Dipartimento d…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 25,
+            "featured": false,
             "editorialStatus": "automatic"
           },
           {
@@ -8342,7 +8968,7 @@
           "signatoriesUrl": ""
         },
         "createdAt": "2026-08-28T21:30:00Z",
-        "updatedAt": "2026-09-06T17:20:58.301Z",
+        "updatedAt": "2026-09-06T17:58:45.251Z",
         "individualLetter": {
           "resourceId": "resource-individual-letter-pdf",
           "title": "Write to officials in your own voice",
@@ -8382,21 +9008,28 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-06T17:46:04.810Z",
+        "socialCheckedAt": "2026-09-06T19:34:37.022Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
             "label": "A/I Keep It Free dispatches",
             "url": "https://keepitfree.ai/it/index.xml",
             "ok": true,
-            "count": 4
+            "count": 13
           },
           {
             "id": "official-ai-noblogs",
             "label": "A/I legacy NoBlogs dispatches",
             "url": "https://cavallette.noblogs.org/feed/",
             "ok": true,
-            "count": 4
+            "count": 9
+          },
+          {
+            "id": "official-ai-mastodon",
+            "label": "A/I official Mastodon dispatches",
+            "url": "https://mastodon.bida.im/@cavallette.rss",
+            "ok": true,
+            "count": 0
           },
           {
             "id": "bing-news",
@@ -8407,8 +9040,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-06T17:46:04.692Z",
-        "coverageArchiveCount": 71
+        "intelligenceCheckedAt": "2026-09-06T19:34:38.668Z",
+        "coverageArchiveCount": 90
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -8610,7 +9243,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-06T17:46:12.385Z",
+        "automationCheckedAt": "2026-09-06T19:34:47.116Z",
         "coverageArchiveCount": 0
       }
     }
