@@ -4,11 +4,9 @@ const VISUAL_EDITOR_SELECTOR = '.native-content-editor__visual[contenteditable="
 const TEXT_EDITOR_SELECTOR = '.native-content-editor__textarea'
 const TOOLBAR_SELECTOR = '.native-content-editor__toolbar'
 
-let visualBookmark = null
-let textBookmark = null
-let pendingBodyMediaPick = false
 let mediaBookmark = null
 let linkBookmark = null
+let pendingBodyMediaPick = false
 
 function isAdminPostEditor() {
   if (typeof window === 'undefined') return false
@@ -23,26 +21,12 @@ function textEditor() {
   return document.querySelector(TEXT_EDITOR_SELECTOR)
 }
 
-function rangeInsideEditor(range, editor = visualEditor()) {
-  return Boolean(
-    editor
-    && range
-    && range.startContainer?.isConnected
-    && range.endContainer?.isConnected
-    && editor.contains(range.startContainer)
-    && editor.contains(range.endContainer)
-  )
-}
-
-function textOffset(root, container, offset) {
-  const range = document.createRange()
-  range.selectNodeContents(root)
-  try {
-    range.setEnd(container, offset)
-  } catch {
-    return null
-  }
-  return range.toString().length
+function selectionRange(editor) {
+  const selection = window.getSelection && window.getSelection()
+  if (!editor || !selection || !selection.rangeCount) return null
+  const range = selection.getRangeAt(0)
+  if (!editor.contains(range.startContainer) || !editor.contains(range.endContainer)) return null
+  return range
 }
 
 function topLevelChild(node, editor) {
@@ -53,53 +37,81 @@ function topLevelChild(node, editor) {
   return current.parentElement === editor ? current : null
 }
 
-function offsetInsideBlock(block, container, offset) {
-  if (!block || !container) return null
+function textOffset(root, container, offset) {
   const range = document.createRange()
-  range.selectNodeContents(block)
+  range.selectNodeContents(root)
   try {
     range.setEnd(container, offset)
-  } catch {
+  } catch (error) {
     return null
   }
   return range.toString().length
 }
 
-function captureVisualBookmark() {
-  const editor = visualEditor()
-  const selection = window.getSelection?.()
-  if (!editor || !selection?.rangeCount) return visualBookmark
-  const range = selection.getRangeAt(0)
-  if (!rangeInsideEditor(range, editor)) return visualBookmark
+function isEmptyBlock(node) {
+  if (!node || node.nodeType !== Node.ELEMENT_NODE) return false
+  if (String(node.textContent || '').replace(/\u200b/g, '').trim()) return false
+  return !node.querySelector('img, audio, video, iframe, figure, hr')
+}
 
+function captureVisualMediaBookmark() {
+  const editor = visualEditor()
+  const range = selectionRange(editor)
+  if (!editor || !range) return null
+
+  const collapsed = range.cloneRange()
+  collapsed.collapse(false)
+
+  if (collapsed.startContainer === editor) {
+    return {
+      kind: 'visual',
+      boundaryIndex: collapsed.startOffset,
+      textOffset: textOffset(editor, collapsed.startContainer, collapsed.startOffset) || 0,
+    }
+  }
+
+  const block = topLevelChild(collapsed.startContainer, editor)
+  const children = Array.from(editor.childNodes)
+  const blockIndex = block ? children.indexOf(block) : -1
+  const globalOffset = textOffset(editor, collapsed.startContainer, collapsed.startOffset)
+
+  if (blockIndex < 0) {
+    return {
+      kind: 'visual',
+      boundaryIndex: children.length,
+      textOffset: Number.isFinite(globalOffset) ? globalOffset : 0,
+    }
+  }
+
+  return {
+    kind: 'visual',
+    boundaryIndex: isEmptyBlock(block) ? blockIndex : blockIndex + 1,
+    textOffset: Number.isFinite(globalOffset) ? globalOffset : 0,
+    blockText: String(block.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 120),
+  }
+}
+
+function captureVisualLinkBookmark() {
+  const editor = visualEditor()
+  const range = selectionRange(editor)
+  if (!editor || !range) return null
   const start = textOffset(editor, range.startContainer, range.startOffset)
   const end = textOffset(editor, range.endContainer, range.endOffset)
-  const endBlock = topLevelChild(range.endContainer, editor)
-  const children = Array.from(editor.childNodes)
-  const blockIndex = endBlock ? children.indexOf(endBlock) : -1
-  const blockOffset = endBlock ? offsetInsideBlock(endBlock, range.endContainer, range.endOffset) : null
-
-  visualBookmark = {
-    start: Number.isFinite(start) ? start : 0,
-    end: Number.isFinite(end) ? end : Number.isFinite(start) ? start : 0,
-    collapsed: range.collapsed,
-    blockIndex,
-    blockOffset: Number.isFinite(blockOffset) ? blockOffset : null,
-  }
-  return visualBookmark
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null
+  return { kind: 'visual-link', start: start, end: end }
 }
 
-function captureTextBookmark(event) {
-  const textarea = event?.target?.closest?.(TEXT_EDITOR_SELECTOR) || textEditor()
-  if (!textarea || document.activeElement !== textarea) return textBookmark
-  textBookmark = {
-    start: textarea.selectionStart ?? textarea.value.length,
-    end: textarea.selectionEnd ?? textarea.value.length,
+function captureTextBookmark() {
+  const textarea = textEditor()
+  if (!textarea) return null
+  return {
+    kind: 'text',
+    start: textarea.selectionStart == null ? textarea.value.length : textarea.selectionStart,
+    end: textarea.selectionEnd == null ? textarea.value.length : textarea.selectionEnd,
   }
-  return textBookmark
 }
 
-function rangeFromTextOffsets(editor, startOffset, endOffset = startOffset) {
+function rangeFromTextOffsets(editor, startOffset, endOffset) {
   const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT)
   let node = walker.nextNode()
   let consumed = 0
@@ -109,7 +121,7 @@ function rangeFromTextOffsets(editor, startOffset, endOffset = startOffset) {
   let end = 0
 
   while (node) {
-    const length = node.nodeValue?.length || 0
+    const length = node.nodeValue ? node.nodeValue.length : 0
     if (!startNode && startOffset <= consumed + length) {
       startNode = node
       start = Math.max(0, Math.min(length, startOffset - consumed))
@@ -138,291 +150,157 @@ function rangeFromTextOffsets(editor, startOffset, endOffset = startOffset) {
   return range
 }
 
-function restoreVisualRange(bookmark = visualBookmark) {
-  const editor = visualEditor()
-  if (!editor || !bookmark) return null
-  return rangeFromTextOffsets(editor, bookmark.start ?? 0, bookmark.end ?? bookmark.start ?? 0)
-}
-
-function dispatchCanonicalSync(editor, inputType = 'insertHTML') {
+function dispatchEditorSync(editor, inputType) {
   if (!editor) return
-  const inputEvent = typeof InputEvent === 'function'
-    ? new InputEvent('input', { bubbles: true, inputType })
-    : new Event('input', { bubbles: true })
+  let inputEvent
+  if (typeof InputEvent === 'function') inputEvent = new InputEvent('input', { bubbles: true, inputType: inputType || 'insertHTML' })
+  else inputEvent = new Event('input', { bubbles: true })
   editor.dispatchEvent(inputEvent)
-  const focusout = typeof FocusEvent === 'function'
-    ? new FocusEvent('focusout', { bubbles: true, relatedTarget: null })
-    : new Event('focusout', { bubbles: true })
-  editor.dispatchEvent(focusout)
+
+  let focusEvent
+  if (typeof FocusEvent === 'function') focusEvent = new FocusEvent('focusout', { bubbles: true, relatedTarget: null })
+  else focusEvent = new Event('focusout', { bubbles: true })
+  editor.dispatchEvent(focusEvent)
 }
 
-function placeCaret(range, editor) {
-  const selection = window.getSelection?.()
-  if (!selection || !range) return
+function placeCaretAtStart(editor, node) {
+  if (!editor || !node) return
+  const selection = window.getSelection && window.getSelection()
+  if (!selection) return
+  const range = document.createRange()
+  range.selectNodeContents(node)
+  range.collapse(true)
   selection.removeAllRanges()
   selection.addRange(range)
-  editor?.focus?.({ preventScroll: true })
-  captureVisualBookmark()
+  if (editor.focus) editor.focus({ preventScroll: true })
 }
 
-function insertVisualLink(href, bookmark = linkBookmark || visualBookmark) {
-  const editor = visualEditor()
-  if (!editor || !href) return false
-  const range = restoreVisualRange(bookmark)
-  if (!range) return false
+function createFragment(markup) {
+  const template = document.createElement('template')
+  template.innerHTML = String(markup || '').trim()
+  const fragment = template.content
+  const figures = fragment.querySelectorAll('figure.sabot-embed')
+  for (const figure of figures) figure.setAttribute('contenteditable', 'false')
+  return fragment
+}
 
+function resolveBoundaryIndex(editor, bookmark) {
+  const children = Array.from(editor.childNodes)
+  let index = bookmark && Number.isInteger(bookmark.boundaryIndex) ? bookmark.boundaryIndex : children.length
+  index = Math.max(0, Math.min(children.length, index))
+
+  if (bookmark && bookmark.blockText && index > 0) {
+    const expected = bookmark.blockText
+    const before = children[index - 1]
+    const actual = String(before && before.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 120)
+    if (actual !== expected) {
+      const match = children.findIndex(function (child) {
+        return String(child && child.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 120) === expected
+      })
+      if (match >= 0) index = isEmptyBlock(children[match]) ? match : match + 1
+    }
+  }
+
+  return index
+}
+
+function insertVisualMarkup(markup, bookmark) {
+  const editor = visualEditor()
+  if (!editor || !markup) return false
+  const fragment = createFragment(markup)
+  const insertedNodes = Array.from(fragment.childNodes)
+  if (!insertedNodes.length) return false
+
+  const boundaryIndex = resolveBoundaryIndex(editor, bookmark)
+  const reference = editor.childNodes[boundaryIndex] || null
+  if (reference) editor.insertBefore(fragment, reference)
+  else editor.appendChild(fragment)
+
+  let landing = null
+  for (const node of insertedNodes) {
+    if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'P' && isEmptyBlock(node)) landing = node
+  }
+  if (!landing) {
+    landing = document.createElement('p')
+    landing.appendChild(document.createElement('br'))
+    const last = insertedNodes[insertedNodes.length - 1]
+    if (last && last.parentNode) last.parentNode.insertBefore(landing, last.nextSibling)
+    else editor.appendChild(landing)
+  }
+
+  placeCaretAtStart(editor, landing)
+  dispatchEditorSync(editor, 'insertHTML')
+  return true
+}
+
+function setTextareaValue(textarea, value) {
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')
+  if (descriptor && descriptor.set) descriptor.set.call(textarea, value)
+  else textarea.value = value
+  textarea.dispatchEvent(new Event('input', { bubbles: true }))
+}
+
+function insertTextMarkup(markup, bookmark) {
+  const textarea = textEditor()
+  if (!textarea || !markup) return false
+  const start = bookmark && Number.isInteger(bookmark.start) ? bookmark.start : textarea.value.length
+  const end = bookmark && Number.isInteger(bookmark.end) ? bookmark.end : start
+  const prefix = start > 0 && textarea.value[start - 1] !== '\n' ? '\n' : ''
+  const suffix = end < textarea.value.length && textarea.value[end] !== '\n' ? '\n' : ''
+  const inserted = prefix + markup + suffix
+  setTextareaValue(textarea, textarea.value.slice(0, start) + inserted + textarea.value.slice(end))
+  const cursor = start + inserted.length
+  textarea.selectionStart = cursor
+  textarea.selectionEnd = cursor
+  textarea.focus()
+  return true
+}
+
+function insertMediaMarkup(markup) {
+  if (mediaBookmark && mediaBookmark.kind === 'text') return insertTextMarkup(markup, mediaBookmark)
+  return insertVisualMarkup(markup, mediaBookmark)
+}
+
+function insertVisualLink(href, bookmark) {
+  const editor = visualEditor()
+  if (!editor || !href || !bookmark) return false
+  const range = rangeFromTextOffsets(editor, bookmark.start, bookmark.end)
   const anchor = document.createElement('a')
   anchor.href = href
   anchor.target = '_blank'
   anchor.rel = 'noopener noreferrer'
 
-  try {
-    if (range.collapsed) {
-      anchor.textContent = href
-      range.insertNode(anchor)
-    } else {
-      const fragment = range.extractContents()
-      anchor.append(fragment)
-      range.insertNode(anchor)
-    }
-  } catch {
-    placeCaret(range, editor)
-    document.execCommand('createLink', false, href)
-    dispatchCanonicalSync(editor, 'insertLink')
-    return true
-  }
+  if (range.collapsed) anchor.textContent = href
+  else anchor.appendChild(range.extractContents())
+  range.insertNode(anchor)
 
-  const after = document.createRange()
-  after.setStartAfter(anchor)
-  after.collapse(true)
-  placeCaret(after, editor)
-  dispatchCanonicalSync(editor, 'insertLink')
+  const selection = window.getSelection && window.getSelection()
+  if (selection) {
+    const after = document.createRange()
+    after.setStartAfter(anchor)
+    after.collapse(true)
+    selection.removeAllRanges()
+    selection.addRange(after)
+  }
+  if (editor.focus) editor.focus({ preventScroll: true })
+  dispatchEditorSync(editor, 'insertLink')
   return true
 }
 
-function insertTextLink(href) {
+function insertTextLink(href, bookmark) {
   const textarea = textEditor()
-  if (!textarea || !href) return false
-  const bookmark = textBookmark || {
-    start: textarea.selectionStart ?? textarea.value.length,
-    end: textarea.selectionEnd ?? textarea.value.length,
-  }
+  if (!textarea || !href || !bookmark) return false
   const start = bookmark.start
   const end = bookmark.end
   const selected = textarea.value.slice(start, end)
   const label = selected || href
-  const markup = `[${label}](${href})`
-  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
-  const nextValue = `${textarea.value.slice(0, start)}${markup}${textarea.value.slice(end)}`
-  if (setter) setter.call(textarea, nextValue)
-  else textarea.value = nextValue
+  const markup = '[' + label + '](' + href + ')'
+  setTextareaValue(textarea, textarea.value.slice(0, start) + markup + textarea.value.slice(end))
   const cursor = start + markup.length
   textarea.selectionStart = cursor
   textarea.selectionEnd = cursor
-  textarea.dispatchEvent(new Event('input', { bubbles: true }))
   textarea.focus()
-  textBookmark = { start: cursor, end: cursor }
   return true
-}
-
-function fragmentMeaningful(fragment) {
-  if (!fragment) return false
-  if (String(fragment.textContent || '').replace(/\u200b/g, '').trim()) return true
-  return Boolean(fragment.querySelector?.('img, audio, video, iframe, hr, figure, br'))
-}
-
-function isEmptyLandingParagraph(node) {
-  if (!(node instanceof Element) || node.tagName !== 'P') return false
-  const text = String(node.textContent || '').replace(/\u200b/g, '').trim()
-  if (text) return false
-  return !node.querySelector('img, audio, video, iframe, a')
-}
-
-function fragmentFromMarkup(markup) {
-  const template = document.createElement('template')
-  template.innerHTML = String(markup || '').trim()
-  const fragment = template.content
-  const last = fragment.lastElementChild
-  if (isEmptyLandingParagraph(last)) last.remove()
-  fragment.querySelectorAll('figure.sabot-embed').forEach((figure) => figure.setAttribute('contenteditable', 'false'))
-  return fragment
-}
-
-function insertFragmentBefore(referenceNode, fragment) {
-  const parent = referenceNode?.parentNode
-  if (!parent) return []
-  const nodes = Array.from(fragment.childNodes)
-  parent.insertBefore(fragment, referenceNode)
-  return nodes
-}
-
-function appendFragment(parent, fragment) {
-  const nodes = Array.from(fragment.childNodes)
-  parent.appendChild(fragment)
-  return nodes
-}
-
-function makeLandingParagraph() {
-  const p = document.createElement('p')
-  p.appendChild(document.createElement('br'))
-  return p
-}
-
-function setCaretAtStart(node, editor) {
-  if (!node) return
-  const range = document.createRange()
-  range.selectNodeContents(node)
-  range.collapse(true)
-  placeCaret(range, editor)
-}
-
-function insertVisualMarkupAtBookmark(markup, bookmark = mediaBookmark || visualBookmark) {
-  const editor = visualEditor()
-  if (!editor || !markup) return false
-
-  const fragment = fragmentFromMarkup(markup)
-  if (!fragment.childNodes.length) return false
-
-  let range = restoreVisualRange(bookmark)
-  if (!range) {
-    const nodes = appendFragment(editor, fragment)
-    const landing = makeLandingParagraph()
-    editor.appendChild(landing)
-    setCaretAtStart(landing, editor)
-    dispatchCanonicalSync(editor)
-    return Boolean(nodes.length)
-  }
-
-  range.collapse(false)
-
-  const mediaAncestor = range.startContainer.nodeType === Node.ELEMENT_NODE
-    ? range.startContainer.closest?.('figure.sabot-embed')
-    : range.startContainer.parentElement?.closest?.('figure.sabot-embed')
-  if (mediaAncestor && editor.contains(mediaAncestor)) {
-    const nodes = Array.from(fragment.childNodes)
-    mediaAncestor.after(fragment)
-    const landing = makeLandingParagraph()
-    const last = nodes[nodes.length - 1] || mediaAncestor
-    last.after(landing)
-    setCaretAtStart(landing, editor)
-    dispatchCanonicalSync(editor)
-    return true
-  }
-
-  if (range.startContainer === editor) {
-    const reference = editor.childNodes[range.startOffset] || null
-    const nodes = reference ? insertFragmentBefore(reference, fragment) : appendFragment(editor, fragment)
-    let landing = null
-    if (reference instanceof Element && isEmptyLandingParagraph(reference)) landing = reference
-    if (!landing) {
-      landing = makeLandingParagraph()
-      const last = nodes[nodes.length - 1]
-      if (last?.parentNode) last.after(landing)
-      else editor.appendChild(landing)
-    }
-    setCaretAtStart(landing, editor)
-    dispatchCanonicalSync(editor)
-    return true
-  }
-
-  const block = topLevelChild(range.startContainer, editor)
-  if (!block) {
-    appendFragment(editor, fragment)
-    const landing = makeLandingParagraph()
-    editor.appendChild(landing)
-    setCaretAtStart(landing, editor)
-    dispatchCanonicalSync(editor)
-    return true
-  }
-
-  if (block.matches?.('figure.sabot-embed, ul, ol, table')) {
-    const nodes = Array.from(fragment.childNodes)
-    block.after(fragment)
-    const landing = makeLandingParagraph()
-    const last = nodes[nodes.length - 1] || block
-    last.after(landing)
-    setCaretAtStart(landing, editor)
-    dispatchCanonicalSync(editor)
-    return true
-  }
-
-  const splitTags = new Set(['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'PRE'])
-  if (!splitTags.has(block.tagName)) {
-    const nodes = Array.from(fragment.childNodes)
-    block.after(fragment)
-    const landing = makeLandingParagraph()
-    const last = nodes[nodes.length - 1] || block
-    last.after(landing)
-    setCaretAtStart(landing, editor)
-    dispatchCanonicalSync(editor)
-    return true
-  }
-
-  const beforeRange = document.createRange()
-  beforeRange.selectNodeContents(block)
-  beforeRange.setEnd(range.startContainer, range.startOffset)
-  const afterRange = document.createRange()
-  afterRange.selectNodeContents(block)
-  afterRange.setStart(range.startContainer, range.startOffset)
-  const beforeContents = beforeRange.cloneContents()
-  const afterContents = afterRange.cloneContents()
-  const beforeBlock = block.cloneNode(false)
-  const afterBlock = block.cloneNode(false)
-  beforeBlock.removeAttribute('contenteditable')
-  afterBlock.removeAttribute('contenteditable')
-  beforeBlock.appendChild(beforeContents)
-  afterBlock.appendChild(afterContents)
-
-  const parent = block.parentNode
-  if (!parent) return false
-  if (fragmentMeaningful(beforeBlock)) parent.insertBefore(beforeBlock, block)
-  const insertedNodes = Array.from(fragment.childNodes)
-  parent.insertBefore(fragment, block)
-  const hasAfter = fragmentMeaningful(afterBlock)
-  if (hasAfter) parent.insertBefore(afterBlock, block)
-  block.remove()
-
-  if (hasAfter) {
-    setCaretAtStart(afterBlock, editor)
-  } else {
-    const landing = makeLandingParagraph()
-    const last = insertedNodes[insertedNodes.length - 1]
-    if (last?.parentNode) last.after(landing)
-    else editor.appendChild(landing)
-    setCaretAtStart(landing, editor)
-  }
-  dispatchCanonicalSync(editor)
-  return true
-}
-
-function insertTextMarkupAtBookmark(markup) {
-  const textarea = textEditor()
-  if (!textarea || !markup) return false
-  const bookmark = mediaBookmark || textBookmark || {
-    start: textarea.selectionStart ?? textarea.value.length,
-    end: textarea.selectionEnd ?? textarea.value.length,
-  }
-  const start = bookmark.start
-  const end = bookmark.end
-  const prefix = start > 0 && textarea.value[start - 1] !== '\n' ? '\n' : ''
-  const suffix = end < textarea.value.length && textarea.value[end] !== '\n' ? '\n' : ''
-  const inserted = `${prefix}${markup}${suffix}`
-  const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set
-  const nextValue = `${textarea.value.slice(0, start)}${inserted}${textarea.value.slice(end)}`
-  if (setter) setter.call(textarea, nextValue)
-  else textarea.value = nextValue
-  const cursor = start + inserted.length
-  textarea.selectionStart = cursor
-  textarea.selectionEnd = cursor
-  textarea.dispatchEvent(new Event('input', { bubbles: true }))
-  textarea.focus()
-  textBookmark = { start: cursor, end: cursor }
-  return true
-}
-
-function insertMarkupAtBookmark(markup) {
-  if (visualEditor()) return insertVisualMarkupAtBookmark(markup)
-  return insertTextMarkupAtBookmark(markup)
 }
 
 function selectedReactMediaData() {
@@ -430,99 +308,126 @@ function selectedReactMediaData() {
   if (!modal) return null
   const selectedTile = modal.querySelector('.media-library-tile.is-selected')
   if (!selectedTile) return null
-  const title = selectedTile.querySelector('.media-library-tile__meta strong')?.textContent?.trim() || 'Media'
-  const typeLabel = selectedTile.querySelector('.media-library-tile__meta small')?.textContent?.trim() || ''
+
+  const titleNode = selectedTile.querySelector('.media-library-tile__meta strong')
+  const typeNode = selectedTile.querySelector('.media-library-tile__meta small')
+  const title = titleNode ? titleNode.textContent.trim() : 'Media'
+  const typeLabel = typeNode ? typeNode.textContent.trim() : ''
   const mediaType = typeLabel.split('·')[0].trim().toLowerCase()
   const details = modal.querySelector('.media-attachment-details')
-  const labels = [...(details?.querySelectorAll('label') || [])]
-  const field = (name) => labels.find((label) => label.querySelector('span')?.textContent?.trim().toLowerCase() === name)
-  const url = field('public url')?.querySelector('input')?.value?.trim() || ''
-  const caption = field('caption / link text')?.querySelector('textarea')?.value?.trim() || ''
-  const alt = field('alt text')?.querySelector('input')?.value?.trim() || ''
-  const facts = [...(details?.querySelectorAll('.media-attachment-details__facts span') || [])]
-    .map((node) => node.textContent?.trim() || '')
-  const mimeType = facts
-    .flatMap((value) => value.split('·').map((part) => part.trim()))
-    .find((value) => /^[a-z0-9.+-]+\/[a-z0-9.+-]+$/i.test(value)) || ''
+  const labels = Array.from(details ? details.querySelectorAll('label') : [])
+
+  function field(name) {
+    return labels.find(function (label) {
+      const span = label.querySelector('span')
+      return span && span.textContent.trim().toLowerCase() === name
+    })
+  }
+
+  const urlField = field('public url')
+  const captionField = field('caption / link text')
+  const altField = field('alt text')
+  const urlInput = urlField && urlField.querySelector('input')
+  const captionInput = captionField && captionField.querySelector('textarea')
+  const altInput = altField && altField.querySelector('input')
+  const url = urlInput ? urlInput.value.trim() : ''
+  const caption = captionInput ? captionInput.value.trim() : ''
+  const alt = altInput ? altInput.value.trim() : ''
+  const facts = Array.from(details ? details.querySelectorAll('.media-attachment-details__facts span') : [])
+    .map(function (node) { return node.textContent ? node.textContent.trim() : '' })
+  const parts = []
+  for (const fact of facts) {
+    for (const part of fact.split('·')) parts.push(part.trim())
+  }
+  const mimeType = parts.find(function (value) { return /^[a-z0-9.+-]+\/[a-z0-9.+-]+$/i.test(value) }) || ''
+
   if (!url) return null
-  return { url, title, alt, caption, mediaType, mimeType }
+  return { url: url, title: title, alt: alt, caption: caption, mediaType: mediaType, mimeType: mimeType }
 }
 
-function closeReactMediaModal() {
+function closeMediaModal() {
   const modal = document.querySelector('.media-picker-modal')
-  const closeButton = [...(modal?.querySelectorAll('button') || [])]
-    .find((button) => button.textContent?.trim().toLowerCase() === 'close')
-  closeButton?.click()
+  if (!modal) return
+  const buttons = Array.from(modal.querySelectorAll('button'))
+  const close = buttons.find(function (button) { return button.textContent.trim().toLowerCase() === 'close' })
+  if (close) close.click()
 }
 
-function toolbarAction(button) {
-  return button?.textContent?.trim().toLowerCase() || ''
+function buttonLabel(button) {
+  return button && button.textContent ? button.textContent.trim().toLowerCase() : ''
 }
 
-function handlePointerDown(event) {
+function handleMouseDown(event) {
   if (!isAdminPostEditor()) return
-  const button = event.target?.closest?.('button')
+  const button = event.target && event.target.closest ? event.target.closest('button') : null
   if (!button) return
-  const action = toolbarAction(button)
+  const label = buttonLabel(button)
 
-  if (button.classList.contains('native-content-editor__add-media') || action === 'add media') {
-    mediaBookmark = visualEditor() ? captureVisualBookmark() : captureTextBookmark()
+  if (button.classList.contains('native-content-editor__add-media') || label === 'add media') {
+    mediaBookmark = visualEditor() ? captureVisualMediaBookmark() : captureTextBookmark()
     pendingBodyMediaPick = true
-    event.stopImmediatePropagation?.()
+    event.preventDefault()
     return
   }
 
-  if (button.closest(TOOLBAR_SELECTOR) && action === 'link') {
-    linkBookmark = visualEditor() ? captureVisualBookmark() : captureTextBookmark()
+  if (button.closest(TOOLBAR_SELECTOR) && label === 'link') {
+    linkBookmark = visualEditor() ? captureVisualLinkBookmark() : captureTextBookmark()
     event.preventDefault()
-    event.stopImmediatePropagation?.()
+    event.stopImmediatePropagation()
     return
   }
 
-  if (button.hasAttribute('data-sabot-embed-button') || (button.closest(TOOLBAR_SELECTOR) && action === 'embed')) {
-    mediaBookmark = visualEditor() ? captureVisualBookmark() : captureTextBookmark()
+  if (button.hasAttribute('data-sabot-embed-button') || (button.closest(TOOLBAR_SELECTOR) && label === 'embed')) {
+    mediaBookmark = visualEditor() ? captureVisualMediaBookmark() : captureTextBookmark()
     event.preventDefault()
-    event.stopImmediatePropagation?.()
+    event.stopImmediatePropagation()
   }
 }
 
 function handleClick(event) {
   if (!isAdminPostEditor()) return
-  const button = event.target?.closest?.('button')
+  const button = event.target && event.target.closest ? event.target.closest('button') : null
   if (!button) return
-  const action = toolbarAction(button)
+  const label = buttonLabel(button)
 
-  if (button.closest(TOOLBAR_SELECTOR) && action === 'link') {
+  if (button.closest(TOOLBAR_SELECTOR) && label === 'link') {
     event.preventDefault()
     event.stopPropagation()
-    event.stopImmediatePropagation?.()
+    event.stopImmediatePropagation()
     const href = window.prompt('Enter URL for link', 'https://')
-    if (!href) return
-    if (visualEditor()) insertVisualLink(href, linkBookmark)
-    else insertTextLink(href)
+    if (!href) {
+      linkBookmark = null
+      return
+    }
+    if (linkBookmark && linkBookmark.kind === 'text') insertTextLink(href, linkBookmark)
+    else insertVisualLink(href, linkBookmark)
     linkBookmark = null
     return
   }
 
-  if (button.hasAttribute('data-sabot-embed-button') || (button.closest(TOOLBAR_SELECTOR) && action === 'embed')) {
+  if (button.hasAttribute('data-sabot-embed-button') || (button.closest(TOOLBAR_SELECTOR) && label === 'embed')) {
     event.preventDefault()
     event.stopPropagation()
-    event.stopImmediatePropagation?.()
+    event.stopImmediatePropagation()
     const raw = window.prompt('Paste an iframe embed code or URL')
-    if (!raw) return
+    if (!raw) {
+      mediaBookmark = null
+      return
+    }
     const markup = buildIframeEmbed(raw)
     if (!markup) {
+      mediaBookmark = null
       window.alert('That embed needs an http(s) or site-relative URL.')
       return
     }
-    insertMarkupAtBookmark(markup)
+    insertMediaMarkup(markup)
     mediaBookmark = null
     return
   }
 
   if (!pendingBodyMediaPick) return
-  const reactModal = button.closest('.media-picker-modal')
-  if (!reactModal || action !== 'use selected media') return
+  const modal = button.closest('.media-picker-modal')
+  if (!modal || label !== 'use selected media') return
   const media = selectedReactMediaData()
   if (!media) return
   const markup = buildMediaEmbed(media)
@@ -530,61 +435,48 @@ function handleClick(event) {
 
   event.preventDefault()
   event.stopPropagation()
-  event.stopImmediatePropagation?.()
-  insertMarkupAtBookmark(markup)
+  event.stopImmediatePropagation()
+  insertMediaMarkup(markup)
   pendingBodyMediaPick = false
   mediaBookmark = null
-  closeReactMediaModal()
+  closeMediaModal()
 }
 
-function handleKeydown(event) {
+function handleKeyDown(event) {
   if (!isAdminPostEditor()) return
-  const editor = event.target?.closest?.(VISUAL_EDITOR_SELECTOR)
-  const textarea = event.target?.closest?.(TEXT_EDITOR_SELECTOR)
-  if (!editor && !textarea) return
   if (!(event.ctrlKey || event.metaKey) || event.altKey || String(event.key || '').toLowerCase() !== 'k') return
+  const editor = event.target && event.target.closest ? event.target.closest(VISUAL_EDITOR_SELECTOR) : null
+  const textarea = event.target && event.target.closest ? event.target.closest(TEXT_EDITOR_SELECTOR) : null
+  if (!editor && !textarea) return
 
   event.preventDefault()
   event.stopPropagation()
-  event.stopImmediatePropagation?.()
-  if (editor) linkBookmark = captureVisualBookmark()
-  else linkBookmark = captureTextBookmark(event)
+  event.stopImmediatePropagation()
+  linkBookmark = editor ? captureVisualLinkBookmark() : captureTextBookmark()
   const href = window.prompt('Enter URL for link', 'https://')
-  if (!href) return
+  if (!href) {
+    linkBookmark = null
+    return
+  }
   if (editor) insertVisualLink(href, linkBookmark)
-  else insertTextLink(href)
+  else insertTextLink(href, linkBookmark)
   linkBookmark = null
 }
 
-function handleSelectionChange() {
-  if (!isAdminPostEditor()) return
-  captureVisualBookmark()
-}
-
-function handleTextSelection(event) {
-  if (!isAdminPostEditor()) return
-  if (event.target?.matches?.(TEXT_EDITOR_SELECTOR)) captureTextBookmark(event)
-}
-
 function handleModalClose(event) {
-  const button = event.target?.closest?.('button')
-  if (!button?.closest?.('.media-picker-modal')) return
-  const action = toolbarAction(button)
-  if (action === 'close' || action === 'cancel') {
+  const button = event.target && event.target.closest ? event.target.closest('button') : null
+  if (!button || !button.closest('.media-picker-modal')) return
+  const label = buttonLabel(button)
+  if (label === 'close' || label === 'cancel') {
     pendingBodyMediaPick = false
     mediaBookmark = null
   }
 }
 
 function boot() {
-  document.addEventListener('selectionchange', handleSelectionChange)
-  document.addEventListener('keyup', handleTextSelection, true)
-  document.addEventListener('mouseup', handleTextSelection, true)
-  document.addEventListener('focusin', handleTextSelection, true)
-  document.addEventListener('input', handleTextSelection, true)
-  document.addEventListener('mousedown', handlePointerDown, true)
+  document.addEventListener('mousedown', handleMouseDown, true)
   document.addEventListener('click', handleClick, true)
-  document.addEventListener('keydown', handleKeydown, true)
+  document.addEventListener('keydown', handleKeyDown, true)
   document.addEventListener('click', handleModalClose, true)
 }
 
