@@ -3,7 +3,10 @@ import { fetchBoundedText } from './safeRemoteFeed.js'
 
 const CAMPAIGN_START_MS = Date.parse('2026-08-26T00:00:00Z')
 const CACHE_TTL_SECONDS = 600
-const OFFICIAL_AI_FEED = 'https://cavallette.noblogs.org/feed/'
+const OFFICIAL_AI_FEEDS = [
+  { id: 'keepitfree', label: 'A/I Keep It Free dispatches', url: 'https://keepitfree.ai/it/index.xml' },
+  { id: 'noblogs', label: 'A/I legacy NoBlogs dispatches', url: 'https://cavallette.noblogs.org/feed/' },
+]
 const BING_NEWS_ENDPOINT = 'https://www.bing.com/news/search'
 const AI_NAME = /autistici(?:\s*\/\s*|\s+)?inventati/i
 const NOBLOGS = /\bnoblogs(?:\.org)?\b/i
@@ -11,7 +14,7 @@ const CASE_SIGNAL = /designat|sanction|terroris|ofac|serverhold|communications i
 
 export async function loadLiveAiIntelligence(requestUrl, fetcher = fetch) {
   const origin = new URL(requestUrl).origin
-  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-intelligence-v3`)
+  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-intelligence-v4`)
   const cache = globalThis.caches?.default
   if (cache) {
     const cached = await cache.match(cacheKey)
@@ -19,7 +22,12 @@ export async function loadLiveAiIntelligence(requestUrl, fetcher = fetch) {
   }
 
   const jobs = [
-    { id: 'official-ai', label: 'A/I official dispatches', url: OFFICIAL_AI_FEED, run: () => fetchOfficialAiDispatches(fetcher) },
+    ...OFFICIAL_AI_FEEDS.map((feed) => ({
+      id: `official-ai-${feed.id}`,
+      label: feed.label,
+      url: feed.url,
+      run: () => fetchOfficialAiDispatches(feed, fetcher),
+    })),
     { id: 'bing-news', label: 'International news coverage', url: 'https://www.bing.com/news', run: () => fetchBingNewsCoverage(fetcher) },
   ]
   const settled = await Promise.allSettled(jobs.map((job) => job.run()))
@@ -130,8 +138,8 @@ export function mergeCampaignUpdates(...groups) {
   })
 }
 
-async function fetchOfficialAiDispatches(fetcher) {
-  const { text: xml } = await fetchBoundedText(OFFICIAL_AI_FEED, feedOptions(fetcher))
+async function fetchOfficialAiDispatches(feed, fetcher) {
+  const { text: xml } = await fetchBoundedText(feed.url, feedOptions(fetcher))
   const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
   const parsed = parser.parse(xml)
   const channel = parsed?.rss?.channel || parsed?.feed || {}
@@ -146,7 +154,7 @@ async function fetchOfficialAiDispatches(fetcher) {
 
   return {
     updates: items.map((item) => ({
-      id: `official-ai-${slugify(item.url || item.title)}`,
+      id: `official-ai-${feed.id}-${slugify(item.url || item.title)}`,
       date: item.date,
       title: item.title,
       body: summarize(item.description || 'New official communication from Autistici/Inventati.', 360),
@@ -156,7 +164,7 @@ async function fetchOfficialAiDispatches(fetcher) {
       source: 'Autistici/Inventati',
     })),
     coverage: items.map((item) => ({
-      id: `coverage-official-ai-${slugify(item.url || item.title)}`,
+      id: `coverage-official-ai-${feed.id}-${slugify(item.url || item.title)}`,
       date: item.date,
       outlet: 'Autistici/Inventati',
       language: inferLanguage(item.title, item.description),
@@ -238,7 +246,7 @@ function normalizeDate(value) {
 
 function inferLanguage(...values) {
   const text = values.join(' ').toLowerCase()
-  return /\b(?:gli|della|collettivo|comunicato|sanzioni|servizi|stati uniti|terroristi)\b/.test(text) ? 'Italian' : ''
+  return /\b(?:gli|della|collettivo|comunicato|sanzioni|servizi|stati uniti|terroristi|banca|fondi|riunione|associazione)\b/.test(text) ? 'Italian' : ''
 }
 
 function safeHttpUrl(value) {
