@@ -288,7 +288,13 @@ function renderNode(node, mode, key) {
       const img = node.querySelector('img')
       const src = img?.getAttribute('src') || ''
       const alt = img?.getAttribute('alt') || ''
-      if (!src) return null
+      if (!src) {
+        return (
+          <div key={key} className="post-body__block post-body__block--figure-fallback">
+            {renderChildren(Array.from(node.childNodes || []), mode, `${key}-fallback`)}
+          </div>
+        )
+      }
 
       return (
         <figure
