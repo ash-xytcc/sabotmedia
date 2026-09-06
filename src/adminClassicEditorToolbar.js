@@ -284,7 +284,6 @@ function createToolbar() {
 
   root.querySelector('.wp-classic-toolbar__format')?.addEventListener('change', (event) => {
     runAction('format', event.target.value)
-    event.target.value = 'p'
   })
 
   root.addEventListener('click', (event) => {
