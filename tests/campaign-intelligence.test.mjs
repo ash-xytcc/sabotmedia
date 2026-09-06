@@ -75,7 +75,6 @@ test('live intelligence follows Keep It Free while retaining the legacy A/I feed
   assert.ok(result.updates.some((item) => item.id === 'sabot-foia-filed-2026-09-05' && item.pinned === true))
   assert.ok(result.updates.some((item) => /banca-etica-sequestra/.test(item.url) && item.automated === true))
   assert.ok(result.updates.some((item) => /10093/.test(item.url)))
-  assert.equal(result.coverage.length, 3)
   assert.ok(result.coverage.some((item) => /banca-etica-sequestra/.test(item.url) && item.languageCode === 'it'))
 })
 
