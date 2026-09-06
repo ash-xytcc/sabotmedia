@@ -5871,7 +5871,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-06T12:49:48.936Z",
+        "automationCheckedAt": "2026-09-06T15:49:50.863Z",
         "coverageArchiveCount": 0
       },
       "autistici-inventati": {
@@ -6140,6 +6140,26 @@
             "source": "Autistici/Inventati"
           },
           {
+            "id": "official-social-mastodon-117224324379772923",
+            "date": "2026-09-06T13:27:18.707Z",
+            "title": "A/I public campaign update",
+            "body": "A/I shuts down - Stay Human https:// keepitfree.ai/announcements/a/ i-shuts-down-stay-human/ # AutisticiInventati # KeepItFree",
+            "url": "https://mastodon.bida.im/@cavallette/117224324379772923",
+            "pinned": false,
+            "automated": true,
+            "source": "A/I official Mastodon"
+          },
+          {
+            "id": "official-social-mastodon-117224322591039006",
+            "date": "2026-09-06T13:26:51.412Z",
+            "title": "A/I public campaign update",
+            "body": "A/I chiude - Restare Umani https:// keepitfree.ai/it/announcements /a/i-chiude-restare-umani/ # KeepItFree # AutisticiInventati",
+            "url": "https://mastodon.bida.im/@cavallette/117224322591039006",
+            "pinned": false,
+            "automated": true,
+            "source": "A/I official Mastodon"
+          },
+          {
             "id": "official-social-mastodon-117217910870345934",
             "date": "2026-09-05T10:16:16.317Z",
             "title": "A/I public campaign update",
@@ -6210,46 +6230,6 @@
             "source": "A/I official Mastodon"
           },
           {
-            "id": "official-social-mastodon-117200311877992246",
-            "date": "2026-09-02T07:40:37.006Z",
-            "title": "A/I public campaign update",
-            "body": "Banca Etica suspends A/I bank account - Autistici/Inventati Press Release # BancaEtica # KeepItFree # USvsAI https:// keepitfree.ai/announcements/ba nca-etica-temporarily-suspends-a/i-bank-account/",
-            "url": "https://mastodon.bida.im/@cavallette/117200311877992246",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117200308650266551",
-            "date": "2026-09-02T07:39:47.755Z",
-            "title": "A/I public campaign update",
-            "body": "Banca Etica limita l'operatività del conto dell'Associazione AI ODV - Comunicato stampa Autistici/Inventati # BancaEtica # KeepItFree # USvsAI https:// keepitfree.ai/it/announcements /banca-etica-limita-loperativit%C3%A0-del-conto-dellassociazione-ai-odv/",
-            "url": "https://mastodon.bida.im/@cavallette/117200308650266551",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117195209200245775",
-            "date": "2026-09-01T10:02:56.325Z",
-            "title": "A/I public campaign update",
-            "body": "We still remind all users with @autistici.org mailbox find all their emails by logging in at https:// accounts.inventati.org If you need to immediately resume the full use of the email box, you can login and in the appropriate panel section create an alias on another domain of A/I. With aliases you can send and receive. If you have any doubts or had the 2fa",
-            "url": "https://mastodon.bida.im/@cavallette/117195209200245775",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117195201671190118",
-            "date": "2026-09-01T10:01:01.438Z",
-            "title": "A/I public campaign update",
-            "body": "Ricordiamo ancora a tutte le utenti con casella di posta @autistici.org che trovano tutte le loro email facendo login su https:// accounts.inventati.org Se avete necessità di riprendere immediatamente l'uso della casella email in invio e ricezione, potete fare login e nell'apposita sezione del pannello crearvi un alias su un altro dominio di A/I. Se avete du",
-            "url": "https://mastodon.bida.im/@cavallette/117195201671190118",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
             "id": "update-launch",
             "date": "2026-08-28T21:30:00Z",
             "title": "Campaign hub launched",
@@ -6278,6 +6258,38 @@
           }
         ],
         "social": [
+          {
+            "id": "mastodon-117224324379772923",
+            "platform": "MASTODON",
+            "date": "2026-09-06T13:27:18.707Z",
+            "account": "cavallette",
+            "handle": "@cavallette",
+            "text": "A/I shuts down - Stay Human https:// keepitfree.ai/announcements/a/ i-shuts-down-stay-human/ # AutisticiInventati # KeepItFree",
+            "excerpt": "A/I shuts down - Stay Human https:// keepitfree.ai/announcements/a/ i-shuts-down-stay-human/ # AutisticiInventati # KeepItFree",
+            "url": "https://mastodon.bida.im/@cavallette/117224324379772923",
+            "images": [],
+            "imageUrl": "",
+            "language": "Italian",
+            "languageCode": "it",
+            "contentWarning": "",
+            "sourcePriority": 0
+          },
+          {
+            "id": "mastodon-117224322591039006",
+            "platform": "MASTODON",
+            "date": "2026-09-06T13:26:51.412Z",
+            "account": "cavallette",
+            "handle": "@cavallette",
+            "text": "A/I chiude - Restare Umani https:// keepitfree.ai/it/announcements /a/i-chiude-restare-umani/ # KeepItFree # AutisticiInventati",
+            "excerpt": "A/I chiude - Restare Umani https:// keepitfree.ai/it/announcements /a/i-chiude-restare-umani/ # KeepItFree # AutisticiInventati",
+            "url": "https://mastodon.bida.im/@cavallette/117224322591039006",
+            "images": [],
+            "imageUrl": "",
+            "language": "Italian",
+            "languageCode": "it",
+            "contentWarning": "",
+            "sourcePriority": 0
+          },
           {
             "id": "mastodon-117217910870345934",
             "platform": "MASTODON",
@@ -6396,80 +6408,6 @@
             "sourcePriority": 0
           },
           {
-            "id": "mastodon-117200311877992246",
-            "platform": "MASTODON",
-            "date": "2026-09-02T07:40:37.006Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Banca Etica suspends A/I bank account - Autistici/Inventati Press Release # BancaEtica # KeepItFree # USvsAI https:// keepitfree.ai/announcements/ba nca-etica-temporarily-suspends-a/i-bank-account/",
-            "excerpt": "Banca Etica suspends A/I bank account - Autistici/Inventati Press Release # BancaEtica # KeepItFree # USvsAI https:// keepitfree.ai/announcements/ba nca-etica-temporarily-suspends-a/i-bank-account/",
-            "url": "https://mastodon.bida.im/@cavallette/117200311877992246",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117200308650266551",
-            "platform": "MASTODON",
-            "date": "2026-09-02T07:39:47.755Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Banca Etica limita l'operatività del conto dell'Associazione AI ODV - Comunicato stampa Autistici/Inventati # BancaEtica # KeepItFree # USvsAI https:// keepitfree.ai/it/announcements /banca-etica-limita-loperativit%C3%A0-del-conto-dellassociazione-ai-odv/",
-            "excerpt": "Banca Etica limita l'operatività del conto dell'Associazione AI ODV - Comunicato stampa Autistici/Inventati # BancaEtica # KeepItFree # USvsAI https:// keepitfree.ai/it/announcements /banca-etica-limita-loperativit%C3%A0-del-conto-dellassociazione-ai-odv/",
-            "url": "https://mastodon.bida.im/@cavallette/117200308650266551",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117195209200245775",
-            "platform": "MASTODON",
-            "date": "2026-09-01T10:02:56.325Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "We still remind all users with @autistici.org mailbox find all their emails by logging in at https:// accounts.inventati.org If you need to immediately resume the full use of the email box, you can login and in the appropriate panel section create an alias on another domain of A/I. With aliases you can send and receive. If you have any doubts or had the 2fa (double authentication factor) active then go to read our updated FAQs. https://www. inventati.org/docs/faq/faq_202 608 Help us reach all users with this message. Thank you # AutisticiInventati # AICrackdown2026 # AIvsUS # autistici # inventati",
-            "excerpt": "We still remind all users with @autistici.org mailbox find all their emails by logging in at https:// accounts.inventati.org If you need to immediately resume the full use of the email box, you can login and in the appropriate panel section create an alias on another domain of A/I. With aliases you can send and receive. If you have any doubts or had the 2fa (double authentication factor) active then go to read our updated FAQs. https://www. inventati.org/docs/faq/faq_202 608 Help us reach all users with this message. Thank you # AutisticiInventati # AICrackdown2026 # AIvsUS # autistici # inventati",
-            "url": "https://mastodon.bida.im/@cavallette/117195209200245775",
-            "images": [
-              {
-                "url": "https://mastodon.bida.im/system/media_attachments/files/117/195/207/521/979/468/original/5368d5d86d38229e.png",
-                "alt": "red asterisk and login form: name password, imageof the login page of accounts.inventati.org"
-              }
-            ],
-            "imageUrl": "https://mastodon.bida.im/system/media_attachments/files/117/195/207/521/979/468/original/5368d5d86d38229e.png",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117195201671190118",
-            "platform": "MASTODON",
-            "date": "2026-09-01T10:01:01.438Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Ricordiamo ancora a tutte le utenti con casella di posta @autistici.org che trovano tutte le loro email facendo login su https:// accounts.inventati.org Se avete necessità di riprendere immediatamente l'uso della casella email in invio e ricezione, potete fare login e nell'apposita sezione del pannello crearvi un alias su un altro dominio di A/I. Se avete dubbi o avevate la 2fa (doppio fattore di autenticazione) attivo allora andate a leggere le nostre FAQ aggiornate. https://www. inventati.org/docs/faq/faq_202 608 Aiutateci a raggiungere tutte le utenti con questo messaggio. grazie # AutisticiInventati # AICrackdown2026 # AIvsUS # autistici # inventati",
-            "excerpt": "Ricordiamo ancora a tutte le utenti con casella di posta @autistici.org che trovano tutte le loro email facendo login su https:// accounts.inventati.org Se avete necessità di riprendere immediatamente l'uso della casella email in invio e ricezione, potete fare login e nell'apposita sezione del pannello crearvi un alias su un altro dominio di A/I. Se avete dubbi o avevate la 2fa (doppio fattore di autenticazione) attivo allora andate a leggere le nostre FAQ aggiornate. https://www. inventati.org/docs/faq/faq_202 608 Aiutateci a raggiungere tutte le utenti con questo messaggio. grazie # AutisticiInventati # AICrackdown2026 # AIvsUS # autistici # inventati",
-            "url": "https://mastodon.bida.im/@cavallette/117195201671190118",
-            "images": [
-              {
-                "url": "https://mastodon.bida.im/system/media_attachments/files/117/195/187/286/646/668/original/741fa55f883a7482.png",
-                "alt": "asterisco rosso e form con nome e pasw, login di accounts.inventati.org"
-              }
-            ],
-            "imageUrl": "https://mastodon.bida.im/system/media_attachments/files/117/195/187/286/646/668/original/741fa55f883a7482.png",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
             "id": "mastodon-117217939866990301",
             "platform": "MASTODON",
             "date": "2026-09-05T10:23:38.772Z",
@@ -6564,6 +6502,56 @@
             "url": "https://kolektiva.social/@AberdeenLocal1312/117214475626310554",
             "images": [],
             "imageUrl": "",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
+          },
+          {
+            "id": "mastodon-117212957945601882",
+            "platform": "MASTODON",
+            "date": "2026-09-04T13:16:40.689Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "Three quotes. One very clear trajectory. Designate the movement. Recast infrastructure as “material support.” Then go after the services and networks that keep people connected, even when those services are otherwise lawful. That is what makes the Autistici/Inventati case bigger than one collective. Read. Share. Preserve. Organize. https:// sabot.media/",
+            "excerpt": "Three quotes. One very clear trajectory. Designate the movement. Recast infrastructure as “material support.” Then go after the services and networks that keep people connected, even when those services are otherwise lawful. That is what makes the Autistici/Inventati case bigger than one collective. Read. Share. Preserve. Organize. https:// sabot.media/",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117212957945601882",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/212/926/735/499/850/original/c771edd300609ac8.png",
+                "alt": "Cream, black, and red Sabot Media campaign graphic with a close-up photo of a man on the right. Quote reads: “And I think, maybe, perhaps the State Department should designate Antifa, its international arm as a foreign terrorist organization, FTO.” Attributed on the graphic to Andy Ngo, White House, Oct. 8, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer urges readers to “Read / Share / Preserve / Organize.”"
+              },
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/212/926/719/924/856/original/7b8bfc5200ac5794.png",
+                "alt": "Red, black, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large quote reads: “They would probably really struggle to go after these kinds of entities, since the services they provide are otherwise lawful.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”"
+              },
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/212/926/732/282/958/original/1fabe04e309f58f4.png",
+                "alt": "Black, red, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large red quote reads: “Going after organizations like this that provide material support would be job one.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”"
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/212/926/735/499/850/original/c771edd300609ac8.png",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
+          },
+          {
+            "id": "mastodon-117212259262588749",
+            "platform": "MASTODON",
+            "date": "2026-09-04T10:18:59.627Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "URGENT: We’re opening a new investigation into the Aug. 26 designation of Autistici/Inventati. The question: how did the U.S. government get there? We’re tracing the decision tree through records, timelines, agency actions, source documents, and the gaps still left unanswered.",
+            "excerpt": "URGENT: We’re opening a new investigation into the Aug. 26 designation of Autistici/Inventati. The question: how did the U.S. government get there? We’re tracing the decision tree through records, timelines, agency actions, source documents, and the gaps still left unanswered.",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117212259262588749",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/212/253/230/792/187/original/758528ecd70a2ad5.png",
+                "alt": "Alt text: Red, black, and cream campaign graphic reading, “Coming Soon: Investigation: How did the US govt get to Aug 26?” Below: “Tracing the decision tree behind the designation of Autistici/Inventati.” Footer reads, “Read / Share / Preserve / Organize,” with sabot.media branding and a note that the publisher is not affiliated with A/I."
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/212/253/230/792/187/original/758528ecd70a2ad5.png",
             "language": "English",
             "languageCode": "en",
             "contentWarning": "",
@@ -6870,6 +6858,38 @@
             "relevanceScore": 43,
             "featured": false,
             "editorialStatus": "featured"
+          },
+          {
+            "id": "coverage-16jx93",
+            "date": "2026-09-06T07:25:00.000Z",
+            "outlet": "GLOBALINFO",
+            "language": "",
+            "languageCode": "",
+            "title": "Teken de oproep „Communicatie-infrastructuur is geen terrorisme“",
+            "translatedTitle": "",
+            "url": "https://www.globalinfo.nl/nieuws/teken-de-oproep-communicatie-infrastructuur-is-geen-terrorisme",
+            "imageUrl": "",
+            "summary": "Help Autistici/Inventati en het recht op het opbouwen van veerkrachtige communicatie verdedigen. (Zie ook deze verklaring van EDRI, onder andere getekend door Nederlands Bits of Freedom) Op 26 augustu ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 75,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1k99wgn",
+            "date": "2026-09-05T20:08:00.000Z",
+            "outlet": "Torino Cronaca",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati chiude. Stop ai server con settemila siti “antifa”. Ora risponda De Rosa",
+            "translatedTitle": "",
+            "url": "https://www.torinocronaca.it/news/cronaca/690804/autistici-inventati-chiude-stop-ai-server-con-settemila-siti-antifa-ora-risponda-de-rosa.html",
+            "imageUrl": "",
+            "summary": "Paolo De Rosa, conosciuto nell’ambiente hacker anche come Phasa, oggi è funzionario della Commissione europea e si occupa di dossier legati all’identità digitale. Prima era passato dal Team per la tra ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
           },
           {
             "id": "coverage-17hdtr1",
@@ -8221,7 +8241,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-06T12:49:56.684Z",
+        "socialCheckedAt": "2026-09-06T15:49:57.675Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -8242,12 +8262,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 0
+            "count": 1
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-06T12:49:57.826Z",
-        "coverageArchiveCount": 68
+        "intelligenceCheckedAt": "2026-09-06T15:49:58.071Z",
+        "coverageArchiveCount": 70
       }
     }
   },
