@@ -1,6 +1,7 @@
 const TOOLBAR_BUTTON_SELECTOR = '.native-content-editor__toolbar button'
 const VISUAL_EDITOR_SELECTOR = '.native-content-editor__visual[contenteditable]'
 let savedVisualRange = null
+let savedLinkRange = null
 let savedLinkOffsets = null
 
 function getEditor() {
@@ -8,15 +9,27 @@ function getEditor() {
 }
 
 function rangeBelongsToEditor(range, editor = getEditor()) {
-  return Boolean(editor && range && editor.contains(range.commonAncestorContainer))
+  return Boolean(
+    editor
+    && range
+    && range.startContainer?.isConnected
+    && range.endContainer?.isConnected
+    && editor.contains(range.startContainer)
+    && editor.contains(range.endContainer)
+  )
+}
+
+function currentEditorRange(editor = getEditor()) {
+  const selection = window.getSelection?.()
+  if (!editor || !selection?.rangeCount) return null
+  const range = selection.getRangeAt(0)
+  return rangeBelongsToEditor(range, editor) ? range : null
 }
 
 function rememberVisualSelection() {
   const editor = getEditor()
-  const selection = window.getSelection?.()
-  if (!editor || !selection?.rangeCount) return null
-  const range = selection.getRangeAt(0)
-  if (!rangeBelongsToEditor(range, editor)) return null
+  const range = currentEditorRange(editor)
+  if (!range) return null
   savedVisualRange = range.cloneRange()
   return savedVisualRange
 }
@@ -32,20 +45,21 @@ function textOffsetFromEditorStart(editor, container, offset) {
   return range.toString().length
 }
 
-function captureLinkOffsets() {
+function captureLinkSelection() {
   const editor = getEditor()
-  const selection = window.getSelection?.()
-  if (!editor || !selection?.rangeCount) return null
-  const range = selection.getRangeAt(0)
-  if (!rangeBelongsToEditor(range, editor)) return null
+  if (!editor) return null
+
+  const range = currentEditorRange(editor)
+    || (rangeBelongsToEditor(savedVisualRange, editor) ? savedVisualRange : null)
+  if (!range) return null
 
   const start = textOffsetFromEditorStart(editor, range.startContainer, range.startOffset)
   const end = textOffsetFromEditorStart(editor, range.endContainer, range.endOffset)
-  if (!Number.isFinite(start) || !Number.isFinite(end)) return null
 
-  savedLinkOffsets = { start, end }
+  savedLinkRange = range.cloneRange()
   savedVisualRange = range.cloneRange()
-  return savedLinkOffsets
+  savedLinkOffsets = Number.isFinite(start) && Number.isFinite(end) ? { start, end } : null
+  return savedLinkRange
 }
 
 function rangeFromTextOffsets(editor, startOffset, endOffset) {
@@ -73,9 +87,8 @@ function rangeFromTextOffsets(editor, startOffset, endOffset) {
   }
 
   if (!startNode) {
-    const fallback = editor.lastChild || editor
     const range = document.createRange()
-    range.selectNodeContents(fallback)
+    range.selectNodeContents(editor)
     range.collapse(false)
     return range
   }
@@ -101,8 +114,8 @@ function syncEditor(editor, inputType = 'formatBold') {
 function restoreVisualSelection() {
   const editor = getEditor()
   const selection = window.getSelection?.()
-  if (!editor || !selection || !savedVisualRange || !rangeBelongsToEditor(savedVisualRange, editor)) return null
-  editor.focus()
+  if (!editor || !selection || !rangeBelongsToEditor(savedVisualRange, editor)) return null
+  editor.focus({ preventScroll: true })
   selection.removeAllRanges()
   selection.addRange(savedVisualRange)
   return savedVisualRange
@@ -118,13 +131,30 @@ function runCommand(command, value = null, inputType = 'formatBold') {
   return true
 }
 
-function insertLinkAtSavedOffsets(href) {
+function getSavedLinkRange(editor) {
+  if (rangeBelongsToEditor(savedLinkRange, editor)) return savedLinkRange.cloneRange()
+  if (savedLinkOffsets && Number.isFinite(savedLinkOffsets.start) && Number.isFinite(savedLinkOffsets.end)) {
+    return rangeFromTextOffsets(editor, savedLinkOffsets.start, savedLinkOffsets.end)
+  }
+  if (rangeBelongsToEditor(savedVisualRange, editor)) return savedVisualRange.cloneRange()
+
+  const fallback = document.createRange()
+  fallback.selectNodeContents(editor)
+  fallback.collapse(false)
+  return fallback
+}
+
+function clearSavedLinkSelection() {
+  savedLinkRange = null
+  savedLinkOffsets = null
+}
+
+function insertLinkAtSavedSelection(href) {
   const editor = getEditor()
   const selection = window.getSelection?.()
-  const offsets = savedLinkOffsets
-  if (!editor || !selection || !offsets || !href) return false
+  if (!editor || !selection || !href) return false
 
-  const range = rangeFromTextOffsets(editor, offsets.start, offsets.end)
+  const range = getSavedLinkRange(editor)
   const anchor = document.createElement('a')
   anchor.href = href
   anchor.target = '_blank'
@@ -140,8 +170,8 @@ function insertLinkAtSavedOffsets(href) {
   selection.removeAllRanges()
   selection.addRange(after)
   savedVisualRange = after.cloneRange()
-  savedLinkOffsets = null
-  editor.focus()
+  clearSavedLinkSelection()
+  editor.focus({ preventScroll: true })
   syncEditor(editor, 'insertLink')
   return true
 }
@@ -154,7 +184,7 @@ function preserveVisualSelection(event) {
   const button = event.target?.closest?.(TOOLBAR_BUTTON_SELECTOR)
   if (!button) return
   if (toolbarAction(button) === 'link') {
-    if (captureLinkOffsets()) event.preventDefault()
+    if (captureLinkSelection()) event.preventDefault()
     return
   }
   if (!rememberVisualSelection()) return
@@ -163,7 +193,7 @@ function preserveVisualSelection(event) {
 
 function handleToolbarLink(event) {
   const button = event.target?.closest?.(TOOLBAR_BUTTON_SELECTOR)
-  if (!button || toolbarAction(button) !== 'link' || !savedLinkOffsets) return
+  if (!button || toolbarAction(button) !== 'link' || (!savedLinkRange && !savedLinkOffsets)) return
 
   event.preventDefault()
   event.stopPropagation()
@@ -171,10 +201,10 @@ function handleToolbarLink(event) {
 
   const href = window.prompt('Enter URL for link', 'https://')
   if (!href) {
-    savedLinkOffsets = null
+    clearSavedLinkSelection()
     return
   }
-  insertLinkAtSavedOffsets(href)
+  insertLinkAtSavedSelection(href)
 }
 
 function handleEditorShortcut(event) {
@@ -207,17 +237,26 @@ function handleEditorShortcut(event) {
   }
   if (key === 'k') {
     event.preventDefault()
-    if (!captureLinkOffsets()) return
+    if (!captureLinkSelection()) return
     const href = window.prompt('Enter URL for link', 'https://')
     if (!href) {
-      savedLinkOffsets = null
+      clearSavedLinkSelection()
       return
     }
-    insertLinkAtSavedOffsets(href)
+    insertLinkAtSavedSelection(href)
   }
 }
 
+function handleEditorInteraction(event) {
+  const editor = event.target?.closest?.(VISUAL_EDITOR_SELECTOR)
+  if (!editor) return
+  rememberVisualSelection()
+}
+
 document.addEventListener('selectionchange', rememberVisualSelection)
+document.addEventListener('mouseup', handleEditorInteraction, true)
+document.addEventListener('keyup', handleEditorInteraction, true)
+document.addEventListener('beforeinput', handleEditorInteraction, true)
 document.addEventListener('mousedown', preserveVisualSelection, true)
 document.addEventListener('click', handleToolbarLink, true)
 document.addEventListener('keydown', handleEditorShortcut, true)
