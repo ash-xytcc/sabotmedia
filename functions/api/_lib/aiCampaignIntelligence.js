@@ -4,8 +4,9 @@ import { fetchBoundedText } from './safeRemoteFeed.js'
 const CAMPAIGN_START_MS = Date.parse('2026-08-26T00:00:00Z')
 const CACHE_TTL_SECONDS = 600
 const OFFICIAL_AI_FEEDS = [
-  { id: 'keepitfree', label: 'A/I Keep It Free dispatches', url: 'https://keepitfree.ai/it/index.xml' },
-  { id: 'noblogs', label: 'A/I legacy NoBlogs dispatches', url: 'https://cavallette.noblogs.org/feed/' },
+  { id: 'keepitfree', label: 'A/I Keep It Free dispatches', url: 'https://keepitfree.ai/it/index.xml', trusted: true },
+  { id: 'noblogs', label: 'A/I legacy NoBlogs dispatches', url: 'https://cavallette.noblogs.org/feed/', trusted: true },
+  { id: 'mastodon', label: 'A/I official Mastodon dispatches', url: 'https://mastodon.bida.im/@cavallette.rss', trusted: true },
 ]
 const BING_NEWS_ENDPOINT = 'https://www.bing.com/news/search'
 const AI_NAME = /autistici(?:\s*\/\s*|\s+)?inventati/i
@@ -14,7 +15,7 @@ const CASE_SIGNAL = /designat|sanction|terroris|ofac|serverhold|communications i
 
 export async function loadLiveAiIntelligence(requestUrl, fetcher = fetch) {
   const origin = new URL(requestUrl).origin
-  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-intelligence-v4`)
+  const cacheKey = new Request(`${origin}/__campaign-cache/autistici-inventati-intelligence-v5`)
   const cache = globalThis.caches?.default
   if (cache) {
     const cached = await cache.match(cacheKey)
@@ -150,7 +151,7 @@ async function fetchOfficialAiDispatches(feed, fetcher) {
     const title = cleanText(item.title)
     const description = cleanText(item['content:encoded'] || item.description || item.summary || item.content || '')
     return { title, description, url, date }
-  }).filter(isCampaignCoverageCandidate)
+  }).filter((item) => isOfficialCampaignDispatch(item, feed))
 
   return {
     updates: items.map((item) => ({
@@ -175,6 +176,12 @@ async function fetchOfficialAiDispatches(feed, fetcher) {
       automated: true,
     })),
   }
+}
+
+function isOfficialCampaignDispatch(item, feed) {
+  const publishedAt = parseDate(item.date)
+  if (!publishedAt || publishedAt < CAMPAIGN_START_MS || !item.url || !item.title) return false
+  return feed.trusted === true || isCampaignCoverageCandidate(item)
 }
 
 async function fetchBingNewsCoverage(fetcher) {
