@@ -4,6 +4,166 @@
   "nativeContent": {
     "items": [
       {
+        "id": "native-y7hi0va0",
+        "schemaVersion": 3,
+        "contentType": "dispatch",
+        "status": "published",
+        "target": "general",
+        "showOnHomepage": true,
+        "title": "Nineteen Days Before the Deadline, Autistici/Inventati Is Shutting Down",
+        "slug": "ai-shuts-down",
+        "excerpt": "",
+        "body": "<h5><strong style=\"font-size: 1.65em;\">The Italian communications collective survived raids, surveillance and server seizures for 25 years. Eleven days after the United States designated it a global terrorist organization, A/I says the risk to its users has become too great to continue.</strong></h5><p>Autistici/Inventati is shutting down. On September 6, eleven days after the United States placed the Italian technology collective on its terrorism sanctions list, A/I announced that the collective itself will close and that the email, blogging, hosting and communications services it has provided for a quarter century will soon be discontinued. “A/I is shutting down,” the collective wrote. “The Autistici/Inventati collective is shutting down and will soon discontinue all of the services we provide.” The announcement turns what had been a developing fight over sanctions, infrastructure and political speech into something considerably more concrete. Twenty-five years of independent communications infrastructure are being dismantled.</p><p>And A/I says plainly why. The collective said continuing to operate now risks exposing its users, collaborators and communities to legal and financial consequences simply because they interact with an organization the United States has designated a Specially Designated Global Terrorist. “The possibility that our work may cause legal and financial consequences to those who are close to us,” A/I wrote, “leaves us no choice.” The shutdown comes nineteen days before the expiration of the temporary wind-down period the U.S. Treasury Department created when it sanctioned A/I. That deadline is September 25. A/I did not make it there.</p><h3><strong>Eleven days</strong></h3><p>On August 26, the Treasury Department’s Office of Foreign Assets Control added Autistici/Inventati to its Specially Designated Nationals and Blocked Persons List under Executive Order 13224. Treasury accused A/I of supplying “specialized digital architecture, tools, and services” to what the department described as Antifa cells and other violent far-left organizations. Treasury Secretary Scott Bessent said the government would bring the “full weight” of its economic tools against what it called their enablers and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, one of the organizations named in that announcement said it could no longer safely exist.</p><p>The United States did not issue an order instructing Autistici/Inventati to turn off its servers. That distinction matters. It also does remarkably little to soften what happened. Economic sanctions operate through banks, registrars, payment processors, hosting companies and other intermediaries that suddenly have their own reasons to sever ordinary relationships with a designated entity. Washington does not necessarily need to seize a server when it can make everybody touching the server afraid to keep touching it.</p><p>A/I's September 6 announcement describes precisely that pressure. The collective says the danger now extends beyond itself to users and people who merely “have something to do with us.” Every additional relationship becomes another possible point of exposure. In other words, the pressure does not stop at the sanctioned organization. It radiates outward until isolation becomes the rational response.</p><h3><strong>The wind-down that wasn't</strong></h3><p>OFAC simultaneously issued Counter Terrorism General License 36 when it designated A/I, temporarily authorizing transactions ordinarily necessary to wind down relationships involving the collective. The authorization runs through September 25. On paper, that provided roughly one month for an orderly retreat. Reality moved considerably faster.</p><p>Within days of the designation, autistici.org became unreachable through ordinary DNS resolution. A/I continued trying to keep its infrastructure accessible and its users informed. Now, in announcing its closure, the collective itself warns that similar disruptions may happen again without warning before users can complete their migrations. It says instructions for backing up blogs, mailboxes and websites are coming, but it cannot guarantee what parts of its infrastructure will remain reachable in the meantime.</p><p>This is what “wind-down” looks like outside Treasury's vocabulary. People scrambling to recover years of email. Blogs needing emergency backups. Websites looking for somewhere else to live. Administrators spending their remaining time evacuating an infrastructure instead of maintaining it. The machinery is administrative. The consequences aren't.</p><h3><strong>From “we will resist” to shutdown</strong></h3><p>A/I's own description of the last eleven days is worth dwelling on. When the designation arrived, the collective says it intended to resist for as long as resistance remained possible. It had spent years maintaining what it calls “free, privacy-friendly, autonomous and politically committed infrastructure.” But by September 6, it concluded that continuing to provide those services was incompatible with protecting the people who used them.</p><p>“Every day we stayed online after August 26, 2026, has been a victory,” A/I wrote. But it would not demand martyrdom from itself or its users. Continuing to operate, it said, now endangered the same communities the infrastructure was created to protect. “Under these circumstances, we are no longer able to maintain our original mission,” the collective concluded.</p><p>That distinction is crucial. A/I is not announcing that its technology failed. Its servers did not collectively explode. Twenty-five years of technical knowledge did not suddenly evaporate. It is shutting down because maintaining the infrastructure has itself become dangerous.</p><h3><strong>What is disappearing</strong></h3><p>Autistici/Inventati began in 2001 out of Italy's hacklab, autonomous media and radical technology cultures. Over twenty-five years it built and maintained noncommercial communications infrastructure including email, mailing lists, websites, chat systems, publishing tools and Noblogs. Its model was deliberately unlike the corporate Internet: collect as little information as possible, refuse to turn communication into a commodity, and give politically active communities infrastructure that did not require Google, Meta or Microsoft to sit between them and one another.</p><p>That philosophy repeatedly brought A/I into conflict with authorities. It survived surveillance, server seizures and infrastructure compromise. Those experiences helped produce Plan R*, a distributed architecture built around the assumption that servers themselves could be seized or compromised.</p><p>A quarter century of engineering around hostile machines and hostile governments ultimately encountered another attack surface: the financial and legal relationships surrounding the machines.</p><p>You can distribute servers. Distributing the international banking system is trickier.</p><h3><strong>So who's next?</strong></h3><p>That is no longer a hysterical question.</p><p>Treasury's case against A/I matters because the department did not describe an organization whose principal public function was carrying out attacks. It repeatedly described infrastructure: digital architecture, technological tools, communications and services. The government says providing that infrastructure to particular organizations made A/I a sanctionable enabler.</p><p>Take that theory seriously for a moment and an uncomfortable amount of the Internet comes into view.</p><p>Autonomous email providers. Privacy-oriented hosting collectives. Federated social networks. VPN providers. Encrypted messaging services. Domain registrars willing to host controversial organizations. Independent media infrastructure. Donation processors. File-sharing systems. Organizations maintaining Tor relays or other privacy infrastructure. Any service whose users include movements the executive branch decides to characterize as terrorist-linked suddenly has reason to ask where infrastructure ends and “support” begins.</p><p>Services closer to A/I's political and technical model would obviously face that uncertainty first. A small autonomous host does not have Meta's legal department, billions of dollars, armies of lobbyists or enough market power to make half of Washington answer the phone. That disparity is part of the story. A sanctions architecture does not strike every intermediary equally. It lands hardest on the infrastructure least capable of surviving the compliance panic it creates.</p><p>But Meta is useful precisely because it exposes the problem with the principle.</p><p>People accused or convicted of terrorism have used Facebook. Extremist organizations have attempted to organize through Instagram. Federal prosecutions routinely describe defendants communicating through mainstream platforms. DOJ itself recently described alleged conspirators using Signal, SimpleX, Discord, TikTok and Instagram while planning an attack. Nobody seriously argues that the existence of those communications automatically turns every company carrying them into a terrorist organization.</p><p>Why not?</p><p>Because until now we have generally understood that <strong>providing infrastructure is not the same thing as adopting every purpose of every person using it.</strong></p><p>A postal service carries letters without becoming part of every conspiracy described inside an envelope. A telephone company transmits conversations without becoming a participant in every crime discussed over the phone. A hosting provider can carry a website without authoring it. An encrypted messenger can transmit a conversation without knowing what it says.</p><p>The Internet depends on those distinctions.</p><p>The A/I designation puts pressure directly on them.</p><p>And once the executive branch can characterize politically committed technological infrastructure as an “enabler,” the practical question becomes less <em>can this logic reach another provider?</em> than <em>which providers will the government choose to apply it to?</em></p><p>That is where the Trump administration's wider campaign against “Antifa” becomes impossible to separate from this story. The White House says Trump directed the federal government to “hunt down, disrupt, and dismantle” what it calls the Antifa network. DOJ has increasingly used terrorism language in prosecutions involving alleged Antifa-affiliated defendants. Treasury has now extended that campaign beyond people accused of violence and into the communications infrastructure the government says supports them.</p><p>That is an escalation.</p><h3><strong>Could they really do this to Meta?</strong></h3><p>Not in the simple sense that a president can wake up annoyed with Mark Zuckerberg, scribble “terrorist” on a napkin and switch Facebook off before breakfast. American companies have constitutional protections, statutory rights, enormous resources and avenues for judicial review. Different terrorism authorities also operate under different legal frameworks. Pretending all of those constraints disappear would make the argument easier to knock down.</p><p>The more disturbing point is that <strong>A/I demonstrates how much damage can occur before the underlying theory receives meaningful judicial scrutiny.</strong></p><p>Designation comes first. Compliance departments react. Banks become nervous. Registrars reconsider relationships. Payment processors calculate risk. Vendors leave. Users flee because they cannot afford to discover whether merely interacting with the sanctioned service creates a problem for them. By the time lawyers begin arguing about the limits of executive authority, the infrastructure may already be dead.</p><p>A/I lasted eleven days.</p><p>That is the precedent worth examining.</p><p>Not “Trump can delete any website.”</p><p>Something considerably more plausible: the executive branch possesses economic tools powerful enough to make a targeted piece of infrastructure poisonous to much of the commercial system around it, and therefore potentially nonviable, without having to physically confiscate the infrastructure or obtain a criminal conviction against the people running it first.</p><p>For a company the size of Meta, resistance could involve years of litigation.</p><p>For a volunteer-run autonomous service, there may be nothing left to litigate over by then.</p><h3><strong>Infrastructure becomes evidence</strong></h3><p>This is why the designation raises a question considerably larger than one Italian collective: when does providing communications infrastructure become material support?</p><p>The government argues that A/I's provision of technological services crossed that line. A/I rejects that characterization and has repeatedly emphasized the distinction between maintaining infrastructure and controlling the actions of everyone who uses it.</p><p>That disagreement is now considerably less theoretical.</p><p>The provider is closing.</p><p>Infrastructure is not politically neutral in some mystical sense, and A/I never pretended to be. It openly describes itself as politically committed. But political commitment and operational responsibility are different things. If that difference collapses, an extraordinarily powerful mechanism appears: a government does not necessarily have to show that infrastructure operators planned a particular illegal act if their infrastructure can instead be characterized as part of the ecosystem surrounding people accused of committing one.</p><p>Then the designation itself starts doing the work.</p><h3><strong>The chilling effect now has a body count of services</strong></h3><p>Sanctions arrive wrapped in institutional language: designation, compliance, wind-down, blocked property, secondary sanctions, risk management. The words are clean enough to make the mechanism sound nearly bloodless.</p><p>Then people lose email accounts.</p><p>Blogs accumulated over decades need emergency backups.</p><p>Organizations scramble to migrate websites.</p><p>Domains disappear.</p><p>Financial relationships become liabilities.</p><p>Volunteers spend nights trying to preserve data instead of running services.</p><p>People who have nothing to do with violence begin wondering whether keeping an account, accepting a donation, hosting a domain or sending an email exposes them to consequences they do not understand.</p><p>And eventually the people maintaining the infrastructure decide that keeping it alive presents too much risk to everybody around them.</p><p>That is the material effect.</p><p>A/I's shutdown is therefore not merely another development in the story of its designation.</p><p><strong>It is evidence of what the designation does.</strong></p><h3><strong>A deadline Washington didn't need</strong></h3><p>When OFAC issued General License 36, September 25 appeared to be the important date. Sabot's reporting has followed that deadline because it represented the endpoint of Treasury's temporary authorization for winding down certain transactions involving A/I.</p><p>September 25 may now be less important than September 6.</p><p>The pressure worked faster than the calendar.</p><p>The designation came August 26. Infrastructure disruption followed. Legal and financial risk spread outward toward users and anyone maintaining relationships with A/I. Eleven days later, and nineteen days before Treasury's wind-down period expires, the collective concluded that remaining online was too dangerous.</p><p>Treasury Secretary Scott Bessent said on August 26 that the government would bring the full weight of its economic tools against the organizations it identified and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, Autistici/Inventati announced that it was eliminating itself.</p><p>The government did not have to send agents into a server room.</p><p>It did not have to obtain a criminal conviction against A/I's administrators.</p><p>It did not even have to wait for its own September 25 deadline.</p><p>The ecosystem around the infrastructure did the rest.</p><p>There will be technical questions in the coming days. A/I says it will publish instructions explaining how users can preserve blogs, mailboxes and websites, while warning that further disruptions may arrive without notice. Those instructions matter. So does preserving a record of what happened here.</p><p>Because twenty-five years from now, the significant fact will not simply be that a strange Italian hacker collective once ran an email service called Autistici/Inventati.</p><p>It will be that in 2026 the United States placed autonomous communications infrastructure on a terrorism blacklist; the legal, technical and financial risks spread outward from that designation; and eleven days later the people who had spent twenty-five years building that infrastructure concluded that the only way to protect their users was to destroy it.</p><p>A/I ended its announcement with a request: get away from the computer. Go outside. Struggle. Hug one another. Keep smiling.</p><p>“We are stopping,” the collective wrote, “but the Resistance and ideas do not stop.”</p><p>The ideas may survive.</p><p>The infrastructure won't.</p><p>And every autonomous service watching what happened now knows exactly how quickly the distance between <strong>designated</strong> and <strong>gone</strong> can collapse.</p>",
+        "richBody": [],
+        "author": "",
+        "sourceType": "manual",
+        "sourceKind": "manual",
+        "sourceLabel": "",
+        "sourceUrl": "",
+        "sourceExternalId": "",
+        "sourcePostId": "",
+        "bodyHtml": "<h5><strong>The Italian communications collective survived raids, surveillance and server seizures for 25 years. Eleven days after the United States designated it a global terrorist organization, A/I says the risk to its users has become too great to continue.</strong></h5><p>Autistici/Inventati is shutting down. On September 6, eleven days after the United States placed the Italian technology collective on its terrorism sanctions list, A/I announced that the collective itself will close and that the email, blogging, hosting and communications services it has provided for a quarter century will soon be discontinued. “A/I is shutting down,” the collective wrote. “The Autistici/Inventati collective is shutting down and will soon discontinue all of the services we provide.” The announcement turns what had been a developing fight over sanctions, infrastructure and political speech into something considerably more concrete. Twenty-five years of independent communications infrastructure are being dismantled.</p><p>And A/I says plainly why. The collective said continuing to operate now risks exposing its users, collaborators and communities to legal and financial consequences simply because they interact with an organization the United States has designated a Specially Designated Global Terrorist. “The possibility that our work may cause legal and financial consequences to those who are close to us,” A/I wrote, “leaves us no choice.” The shutdown comes nineteen days before the expiration of the temporary wind-down period the U.S. Treasury Department created when it sanctioned A/I. That deadline is September 25. A/I did not make it there.</p><h3><strong>Eleven days</strong></h3><p>On August 26, the Treasury Department’s Office of Foreign Assets Control added Autistici/Inventati to its Specially Designated Nationals and Blocked Persons List under Executive Order 13224. Treasury accused A/I of supplying “specialized digital architecture, tools, and services” to what the department described as Antifa cells and other violent far-left organizations. Treasury Secretary Scott Bessent said the government would bring the “full weight” of its economic tools against what it called their enablers and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, one of the organizations named in that announcement said it could no longer safely exist.</p><p>The United States did not issue an order instructing Autistici/Inventati to turn off its servers. That distinction matters. It also does remarkably little to soften what happened. Economic sanctions operate through banks, registrars, payment processors, hosting companies and other intermediaries that suddenly have their own reasons to sever ordinary relationships with a designated entity. Washington does not necessarily need to seize a server when it can make everybody touching the server afraid to keep touching it.</p><p>A/I's September 6 announcement describes precisely that pressure. The collective says the danger now extends beyond itself to users and people who merely “have something to do with us.” Every additional relationship becomes another possible point of exposure. In other words, the pressure does not stop at the sanctioned organization. It radiates outward until isolation becomes the rational response.</p><h3><strong>The wind-down that wasn't</strong></h3><p>OFAC simultaneously issued Counter Terrorism General License 36 when it designated A/I, temporarily authorizing transactions ordinarily necessary to wind down relationships involving the collective. The authorization runs through September 25. On paper, that provided roughly one month for an orderly retreat. Reality moved considerably faster.</p><p>Within days of the designation, autistici.org became unreachable through ordinary DNS resolution. A/I continued trying to keep its infrastructure accessible and its users informed. Now, in announcing its closure, the collective itself warns that similar disruptions may happen again without warning before users can complete their migrations. It says instructions for backing up blogs, mailboxes and websites are coming, but it cannot guarantee what parts of its infrastructure will remain reachable in the meantime.</p><p>This is what “wind-down” looks like outside Treasury's vocabulary. People scrambling to recover years of email. Blogs needing emergency backups. Websites looking for somewhere else to live. Administrators spending their remaining time evacuating an infrastructure instead of maintaining it. The machinery is administrative. The consequences aren't.</p><h3><strong>From “we will resist” to shutdown</strong></h3><p>A/I's own description of the last eleven days is worth dwelling on. When the designation arrived, the collective says it intended to resist for as long as resistance remained possible. It had spent years maintaining what it calls “free, privacy-friendly, autonomous and politically committed infrastructure.” But by September 6, it concluded that continuing to provide those services was incompatible with protecting the people who used them.</p><p>“Every day we stayed online after August 26, 2026, has been a victory,” A/I wrote. But it would not demand martyrdom from itself or its users. Continuing to operate, it said, now endangered the same communities the infrastructure was created to protect. “Under these circumstances, we are no longer able to maintain our original mission,” the collective concluded.</p><p>That distinction is crucial. A/I is not announcing that its technology failed. Its servers did not collectively explode. Twenty-five years of technical knowledge did not suddenly evaporate. It is shutting down because maintaining the infrastructure has itself become dangerous.</p><h3><strong>What is disappearing</strong></h3><p>Autistici/Inventati began in 2001 out of Italy's hacklab, autonomous media and radical technology cultures. Over twenty-five years it built and maintained noncommercial communications infrastructure including email, mailing lists, websites, chat systems, publishing tools and Noblogs. Its model was deliberately unlike the corporate Internet: collect as little information as possible, refuse to turn communication into a commodity, and give politically active communities infrastructure that did not require Google, Meta or Microsoft to sit between them and one another.</p><p>That philosophy repeatedly brought A/I into conflict with authorities. It survived surveillance, server seizures and infrastructure compromise. Those experiences helped produce Plan R*, a distributed architecture built around the assumption that servers themselves could be seized or compromised.</p><p>A quarter century of engineering around hostile machines and hostile governments ultimately encountered another attack surface: the financial and legal relationships surrounding the machines.</p><p>You can distribute servers. Distributing the international banking system is trickier.</p><h3><strong>So who's next?</strong></h3><p>That is no longer a hysterical question.</p><p>Treasury's case against A/I matters because the department did not describe an organization whose principal public function was carrying out attacks. It repeatedly described infrastructure: digital architecture, technological tools, communications and services. The government says providing that infrastructure to particular organizations made A/I a sanctionable enabler.</p><p>Take that theory seriously for a moment and an uncomfortable amount of the Internet comes into view.</p><p>Autonomous email providers. Privacy-oriented hosting collectives. Federated social networks. VPN providers. Encrypted messaging services. Domain registrars willing to host controversial organizations. Independent media infrastructure. Donation processors. File-sharing systems. Organizations maintaining Tor relays or other privacy infrastructure. Any service whose users include movements the executive branch decides to characterize as terrorist-linked suddenly has reason to ask where infrastructure ends and “support” begins.</p><p>Services closer to A/I's political and technical model would obviously face that uncertainty first. A small autonomous host does not have Meta's legal department, billions of dollars, armies of lobbyists or enough market power to make half of Washington answer the phone. That disparity is part of the story. A sanctions architecture does not strike every intermediary equally. It lands hardest on the infrastructure least capable of surviving the compliance panic it creates.</p><p>But Meta is useful precisely because it exposes the problem with the principle.</p><p>People accused or convicted of terrorism have used Facebook. Extremist organizations have attempted to organize through Instagram. Federal prosecutions routinely describe defendants communicating through mainstream platforms. DOJ itself recently described alleged conspirators using Signal, SimpleX, Discord, TikTok and Instagram while planning an attack. Nobody seriously argues that the existence of those communications automatically turns every company carrying them into a terrorist organization.</p><p>Why not?</p><p>Because until now we have generally understood that <strong>providing infrastructure is not the same thing as adopting every purpose of every person using it.</strong></p><p>A postal service carries letters without becoming part of every conspiracy described inside an envelope. A telephone company transmits conversations without becoming a participant in every crime discussed over the phone. A hosting provider can carry a website without authoring it. An encrypted messenger can transmit a conversation without knowing what it says.</p><p>The Internet depends on those distinctions.</p><p>The A/I designation puts pressure directly on them.</p><p>And once the executive branch can characterize politically committed technological infrastructure as an “enabler,” the practical question becomes less <em>can this logic reach another provider?</em> than <em>which providers will the government choose to apply it to?</em></p><p>That is where the Trump administration's wider campaign against “Antifa” becomes impossible to separate from this story. The White House says Trump directed the federal government to “hunt down, disrupt, and dismantle” what it calls the Antifa network. DOJ has increasingly used terrorism language in prosecutions involving alleged Antifa-affiliated defendants. Treasury has now extended that campaign beyond people accused of violence and into the communications infrastructure the government says supports them.</p><p>That is an escalation.</p><h3><strong>Could they really do this to Meta?</strong></h3><p>Not in the simple sense that a president can wake up annoyed with Mark Zuckerberg, scribble “terrorist” on a napkin and switch Facebook off before breakfast. American companies have constitutional protections, statutory rights, enormous resources and avenues for judicial review. Different terrorism authorities also operate under different legal frameworks. Pretending all of those constraints disappear would make the argument easier to knock down.</p><p>The more disturbing point is that <strong>A/I demonstrates how much damage can occur before the underlying theory receives meaningful judicial scrutiny.</strong></p><p>Designation comes first. Compliance departments react. Banks become nervous. Registrars reconsider relationships. Payment processors calculate risk. Vendors leave. Users flee because they cannot afford to discover whether merely interacting with the sanctioned service creates a problem for them. By the time lawyers begin arguing about the limits of executive authority, the infrastructure may already be dead.</p><p>A/I lasted eleven days.</p><p>That is the precedent worth examining.</p><p>Not “Trump can delete any website.”</p><p>Something considerably more plausible: the executive branch possesses economic tools powerful enough to make a targeted piece of infrastructure poisonous to much of the commercial system around it, and therefore potentially nonviable, without having to physically confiscate the infrastructure or obtain a criminal conviction against the people running it first.</p><p>For a company the size of Meta, resistance could involve years of litigation.</p><p>For a volunteer-run autonomous service, there may be nothing left to litigate over by then.</p><h3><strong>Infrastructure becomes evidence</strong></h3><p>This is why the designation raises a question considerably larger than one Italian collective: when does providing communications infrastructure become material support?</p><p>The government argues that A/I's provision of technological services crossed that line. A/I rejects that characterization and has repeatedly emphasized the distinction between maintaining infrastructure and controlling the actions of everyone who uses it.</p><p>That disagreement is now considerably less theoretical.</p><p>The provider is closing.</p><p>Infrastructure is not politically neutral in some mystical sense, and A/I never pretended to be. It openly describes itself as politically committed. But political commitment and operational responsibility are different things. If that difference collapses, an extraordinarily powerful mechanism appears: a government does not necessarily have to show that infrastructure operators planned a particular illegal act if their infrastructure can instead be characterized as part of the ecosystem surrounding people accused of committing one.</p><p>Then the designation itself starts doing the work.</p><h3><strong>The chilling effect now has a body count of services</strong></h3><p>Sanctions arrive wrapped in institutional language: designation, compliance, wind-down, blocked property, secondary sanctions, risk management. The words are clean enough to make the mechanism sound nearly bloodless.</p><p>Then people lose email accounts.</p><p>Blogs accumulated over decades need emergency backups.</p><p>Organizations scramble to migrate websites.</p><p>Domains disappear.</p><p>Financial relationships become liabilities.</p><p>Volunteers spend nights trying to preserve data instead of running services.</p><p>People who have nothing to do with violence begin wondering whether keeping an account, accepting a donation, hosting a domain or sending an email exposes them to consequences they do not understand.</p><p>And eventually the people maintaining the infrastructure decide that keeping it alive presents too much risk to everybody around them.</p><p>That is the material effect.</p><p>A/I's shutdown is therefore not merely another development in the story of its designation.</p><p><strong>It is evidence of what the designation does.</strong></p><h3><strong>A deadline Washington didn't need</strong></h3><p>When OFAC issued General License 36, September 25 appeared to be the important date. Sabot's reporting has followed that deadline because it represented the endpoint of Treasury's temporary authorization for winding down certain transactions involving A/I.</p><p>September 25 may now be less important than September 6.</p><p>The pressure worked faster than the calendar.</p><p>The designation came August 26. Infrastructure disruption followed. Legal and financial risk spread outward toward users and anyone maintaining relationships with A/I. Eleven days later, and nineteen days before Treasury's wind-down period expires, the collective concluded that remaining online was too dangerous.</p><p>Treasury Secretary Scott Bessent said on August 26 that the government would bring the full weight of its economic tools against the organizations it identified and continue cutting their financial lifelines “until they are eliminated.”</p><p>Eleven days later, Autistici/Inventati announced that it was eliminating itself.</p><p>The government did not have to send agents into a server room.</p><p>It did not have to obtain a criminal conviction against A/I's administrators.</p><p>It did not even have to wait for its own September 25 deadline.</p><p>The ecosystem around the infrastructure did the rest.</p><p>There will be technical questions in the coming days. A/I says it will publish instructions explaining how users can preserve blogs, mailboxes and websites, while warning that further disruptions may arrive without notice. Those instructions matter. So does preserving a record of what happened here.</p><p>Because twenty-five years from now, the significant fact will not simply be that a strange Italian hacker collective once ran an email service called Autistici/Inventati.</p><p>It will be that in 2026 the United States placed autonomous communications infrastructure on a terrorism blacklist; the legal, technical and financial risks spread outward from that designation; and eleven days later the people who had spent twenty-five years building that infrastructure concluded that the only way to protect their users was to destroy it.</p><p>A/I ended its announcement with a request: get away from the computer. Go outside. Struggle. Hug one another. Keep smiling.</p><p>“We are stopping,” the collective wrote, “but the Resistance and ideas do not stop.”</p><p>The ideas may survive.</p><p>The infrastructure won't.</p><p>And every autonomous service watching what happened now knows exactly how quickly the distance between <strong>designated</strong> and <strong>gone</strong> can collapse.</p>",
+        "heroImage": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-05cd0c31-b894-4c2c-8f15-1767b6bacd3e-featured-image-ai.png&filename=featured-image-ai.png",
+        "featuredImage": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-05cd0c31-b894-4c2c-8f15-1767b6bacd3e-featured-image-ai.png&filename=featured-image-ai.png",
+        "featuredImageTitle": "featured image ai",
+        "featuredTitleDisplay": "below",
+        "featuredImageAlt": "",
+        "featuredImageCaption": "",
+        "audioSummary": "",
+        "transcriptExcerpt": "",
+        "hasPrintAssets": false,
+        "transcriptionStatus": "none",
+        "audioSourceUrl": "",
+        "podcastAudioUrl": "",
+        "podcastRssEnclosureUrl": "",
+        "podcastDuration": "",
+        "podcastEpisodeNumber": "",
+        "podcastSeason": "",
+        "podcastTranscript": "",
+        "podcastSummary": "",
+        "podcastCoverImage": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-05cd0c31-b894-4c2c-8f15-1767b6bacd3e-featured-image-ai.png&filename=featured-image-ai.png",
+        "podcastMimeType": "",
+        "podcastFileSize": "",
+        "podcastExplicit": false,
+        "podcastCredits": "",
+        "podcastLicense": "",
+        "podcastMarkers": [],
+        "podcastTranscriptCues": [],
+        "podcastAudioMediaId": "",
+        "podcastAudioStorageKey": "",
+        "podcastMasterAudioUrl": "",
+        "podcastDeliveryAudioUrl": "",
+        "podcastDeliveryStatus": "",
+        "fullTranscript": "",
+        "relatedAssets": [],
+        "relatedPrintLinks": [],
+        "seoTitle": "",
+        "seoDescription": "",
+        "allowComments": true,
+        "enableReadMode": true,
+        "enableExperienceMode": true,
+        "enablePrintMode": true,
+        "defaultMode": "read",
+        "heroStyle": "default",
+        "categories": [
+          "The Harbor Rat Report",
+          "General"
+        ],
+        "projects": [
+          "The Harbor Rat Report",
+          "General"
+        ],
+        "collections": [],
+        "campaigns": [
+          "autistici-inventati"
+        ],
+        "tags": [],
+        "createdAt": "2026-09-06T09:10:55.911Z",
+        "updatedAt": "2026-09-06T17:35:15.283Z",
+        "publishedAt": "2026-09-06T17:35:14.595Z",
+        "scheduledFor": ""
+      },
+      {
+        "id": "native-f8ex3r6z",
+        "schemaVersion": 3,
+        "contentType": "dispatch",
+        "status": "published",
+        "target": "general",
+        "showOnHomepage": true,
+        "title": "Open Letter: Communications Infrastructure Is Not Terrorism",
+        "slug": "open-letter-ai",
+        "excerpt": "",
+        "body": "<h2>Defend Autistici/Inventati and the right to build resistant communication</h2><div>On August 26, 2026, the United States designated the Italian volunteer technology collective Autistici/Inventati as a Specially Designated Global Terrorist and placed it on the Specially Designated Nationals list under Executive Order 13224. A temporary authorization covering certain wind-down transactions ends at 12:01 a.m. Eastern on September 25.&nbsp;</div><div><br>Autistici/Inventati has provided noncommercial email, websites, mailing lists, Noblogs and other communications services since 2001. It emerged from Italian hacklabs, autonomous media and social movements. Its infrastructure was built in response to censorship, covert surveillance and server seizures. It minimizes identifying data, uses distributed systems and treats privacy as a condition of political participation rather than a product.</div><div><br>The United States' public announcements point to material and organizations that allegedly used A/I infrastructure. They do not publicly show that A/I planned the cited actions, selected targets, directed users or authored hosted material. The designation therefore raises a question extending far beyond one collective: can maintaining privacy-preserving communications infrastructure for disfavored movements itself be treated as terrorism?</div><div><br>That theory threatens independent hosts, encrypted communications services, radical libraries, movement archives, publishers and small volunteer projects everywhere. It invites banks, registrars, hosting companies and technology providers to sever relationships first and ask legal questions later. It turns data minimization into suspicion, privacy into concealment and infrastructure into guilt by association.</div><div><br>Large commercial platforms are ordinarily distinguished from the speech and conduct of their users through intermediary-liability principles, including Section 230 in the United States. Those protections are not absolute and do not override sanctions law. That is precisely why this designation is so consequential: executive sanctions power can impose economic isolation without resolving the ordinary question of whether a provider is legally responsible for third-party material in court.</div><div><br>Autistici/Inventati is not politically neutral, and neither are many of the publications, libraries, unions and civil-liberties organizations that may sign this letter. Political affinity, however, is not operational control. Providing an email account, publishing platform or server is not the same act as planning everything a user may later say or do.</div><div><br>We therefore call for:</div><div><br><b>The immediate revocation or prompt, transparent review of the designation</b>, with publication of the factual and legal basis sufficient for meaningful public scrutiny and challenge.</div><div><br><b>A clear distinction between providing communications infrastructure and directing the conduct of its users. </b>Privacy, encryption, pseudonymity and refusal to retain unnecessary identifying data must not be treated as evidence of terrorism.</div><div><br><b>Protection for independent reporting, research, archiving and public advocacy.</b> Journalists, libraries, researchers and community archivists must be able to document this history without being treated as extensions of a designated entity.</div><div><br><b>Resistance to institutional over-compliance.</b> Banks, registrars, hosts, certificate providers and technology companies should disclose relevant restrictions, provide notice where lawful and avoid suppressing material or relationships beyond what the law actually requires.</div><div><br><b>A public response from digital-rights, free-expression and civil-liberties institutions. </b>The targeting of autonomous infrastructure cannot be allowed to become a precedent through silence.</div><div><br>We do not ask every signer to endorse every A/I user, publication or political position. We ask signers to defend a foundational distinction: communications infrastructure is not identical to the speech or conduct transmitted through it.<br><br></div><div>The purpose of economic designation is isolation. Our answer is independent, informed and disciplined solidarity: preserve the public record, examine the government's claims, resist over-compliance and defend the ability of movements to communicate without surrendering themselves to corporate or state surveillance.<br><br></div><div>Signed,</div><div><br></div><div>Sabot Media&nbsp;&nbsp;- USA<br>We Will Free Us&nbsp;&nbsp;- USA<br>Grounded Futures Podcast - USA<br>The Final Straw Radio - USA<br>Dirty Hands Collective - CO<br>BASH - Boise Autonomous Solidarity Hub - ID<br>Chehalis River Mutual Aid Network - WA<br>The Blackflower Collective - WA</div><div><div>Haymarket Customs, USA</div><div>Eric Gallager - NH</div>Anarkism.info - Sweden</div><div>Impremta Col·lectiva de Can Batlló - Catalonia</div>Institute for Anarchist Studies - USA<div>PicaHack - Spain&nbsp;</div><div>Osservatorio Nessuno OdV - Italy</div><div>La Quadrature du Net - France</div><div>Firestorm Books - USA&nbsp;</div><div>zeolia - France</div><div>Picasoft - France</div><div>Free Knowledge Institute -&nbsp;Amsterdam, Netherlands</div><div>Osservatorio Nessuno OdV - Italy</div><div>The YunoHost Project - Undisclosed&nbsp;</div>French Data Network (FDN) - France&nbsp;<div>Hefka Games - France</div><div>PicaHack - Spain</div><div>Your Local Pirates -&nbsp;The Netherlands</div><div>Tachanka! - Global</div><div>Government Information Watch - USA</div><div>Whistleblower &amp; Source Protection Program (WHISPeR) at ExposeFacts - USA</div><div>AFA NL - The Netherlands</div><div>Toulouse Anti-Cruauté - France</div><div>Hadoly - France</div><div>CHATONS collective - France says:</div><blockquote>We're hosting a French translation of the letter here: https://www.chatons.org/node/7617</blockquote><div>Infini - France says :&nbsp;</div><blockquote>Per un internet emancipatore, neutro, Libero e solidale.</blockquote><div>BMorePunk - USA&nbsp; says:</div><blockquote>BMorePunk stands in solidarity with A/I. Publishing the speech of others\n is not terrorism. Independent hosting collectives must all take a \nunited stand against this outrageous injustice. An injury to one is an \ninjury to all.</blockquote><div>Restore The Fourth - USA says:</div><div><div><blockquote>Privacy, encryption, pseudonymity and refusal to retain unnecessary identifying data are not evidence of terrorism. They are only evidence of human beings communicating, organizing and thriving without the State peering over their shoulder. Warrantless data-gathering partnerships between corporations and the State have the power to extinguish any real dissent. We all desperately need means of organizing and communication that are neither controlled by Big Tech, nor readily monitored by governments.</blockquote>Nubo -&nbsp;Belgium</div><div><blockquote>Their published statement of support can be found here: Dutch version\n        (<a href=\"https://nubo.coop/nl/news/2026-09-02-autistici/\" target=\"_blank\" rel=\"noopener noreferrer\">https://nubo.coop/nl/news/2026-09-02-autistici/</a>) and French\n        version (<a href=\"https://nubo.coop/fr/news/2026-09-02-autistici/\" target=\"_blank\" rel=\"noopener noreferrer\">https://nubo.coop/fr/news/2026-09-02-autistici/</a>)</blockquote></div><div>Tactic asbl - Belgium&nbsp;<a href=\"https://nubo.coop/nl/news/2026-09-02-autistici/)\" target=\"_blank\" rel=\"noopener noreferrer\">Read their statement of support</a></div><div>Domaine Public - Belgium&nbsp;<a href=\"https://nubo.coop/nl/news/2026-09-02-autistici/)\" target=\"_blank\" rel=\"noopener noreferrer\">Read their statement of support</a></div><div>Free Knowledge Institute -&nbsp;Netherlands says:</div><blockquote>In these times of authoritarianism aligning with BigTech, we see more clearly now how civil society is threatened. How important it is to be solidary and weave networks of support for self organised communication infrastructures. We want to see A/I collectives in every city and region. This is why we're building up the Democratic Tech Fund, a collective funding methodology to strengthen bottom-up social capacity in the commons.</blockquote><div>Framasoft - France says:</div><blockquote>A/I’s work to represent and embody a free internet has been exemplary, and has been for years. Their vision for building a decentralized and solidarity-based internet serves as an inspiration for non-capitalist popular education organizations like ours. Support Autistici/Inventati.</blockquote><blockquote>Blog post by&nbsp;<a href=\"https://framablog.org/2026/08/31/autistici-inventati-designe-organisation-terroriste-internationale-par-les-etats-unis/\" target=\"_blank\" rel=\"noopener noreferrer\">Framasoft</a></blockquote><div><div>May First Movement Technology -&nbsp;US/Mexico says:</div><blockquote>Speak out. Support Autistici. Support independent, movement-aligned technology and defend our ability to communicate, organize, and build community power outside the claws of Big Tech.</blockquote><div>Minnesota Association of Criminal Defense Lawyers - USA&nbsp;says:</div><blockquote>MACDL supports free speech, dissent, and the right to communicate without being compelled to include the US government in our communications. The Fourth Amendment was created to keep the government out of our private affairs. This illegal action also implicates the right to remain silent.</blockquote><div>Bonfire Networks - Belgium says:</div><blockquote>A/I's mission has always been clear, and for more than twenty years it has inspired generations of hackers and activists in Italy and around the world: \"Socializzare saperi senza fondare poteri.\" Sharing knowledge without establishing power. That is what the US is attacking, and that is what is at stake today. The premise of these sanctions, that whoever provides communications infrastructure answers for whatever anyone does with it, would criminalise and shut down most Big Tech platforms tomorrow if applied equally. Instead it is aimed at grassroots services who refuse to surveil their users. We condemn these sanctions, and we stand firmly with solidarity tech like A/I. Antifascism and anticapitalism are not terrorism.</blockquote><div>Ukrudt.net -&nbsp;Sydfyn says:<p></p><blockquote>As both users, supporters, and kin of Autistici/Inventati - sharing the cause of running autonomous infrastructure with a similar ethos (anti-capitalist, anti-militarist, feminist, fighting against repression on the internet for initiatives under political pressure) and built on FLOSS (Free/Libre Open Source Software) - we accuse the US government of censorship and digital repression, and stand in full solidarity with Autistici/Inventati. We will continue caring for our own infrastructure and working for the sprouting of autonomous, anti-capitalist, and anti-fascist server kinships, and we see the US designation ofAutistici/Inventati as a direct attack on our cause. We urge all actors to pressure the US government to lift it’s sanctions on Autistici/Inventati.</blockquote>Geeks For Social Change - UK says:<blockquote>Corporations are currently attempting to conspire with governments to entirely eliminate the independent web and have our lives be entirely mediated by billionaires. This censorship of A/I is a dangerous step towards making it impossible to voice political dissent online and must be stopped.</blockquote>#MilkTeaAlliance Calendar Team - SE Asia says:<br><blockquote>Many of our allies &amp; friends in South East Asia use Autistici/Inventati services to protect themselves from state suppression of their speech, often other platforms will comply with takedown requests from authoritarian regimes and the platform provided by Autistici/Inventati are a lifeline. The sanctions by the US are a threat to their ability to speak freely to the world. Moreover the sanctions are unjustified as Autistici/Inventati are merely a infrastructure provider, they have done nothing wrong that any other email provider, blog host or social media platform has not also done.</blockquote>Datenpunks e.V. - Germany says:<br><blockquote>Indyhosters and tech collectives like Autistici/Inventati play an important role in democratic societies: By providing tracking-free online services, they show that privacy-preserving communication is possible even though Big Tech and some governments want us to believe otherwise. In doing so, volunteer-run collectives such as A/I protect marginalized communities from surveillance capitalism and authoritarian governments. Everyone who cares about human rights should support them.</blockquote>Jeremy Beausoleil Smith - OR says:<br><blockquote>This fascistic attack on our freedom of speech is unacceptable and must be undone. This is a targeted act of suppression against anyone standing up to Trump and his administration’s attempts to destroy our Democracy. The United States government is setting a dangerous precedent that will allow for further censorship and erosion of our Civil Rights. I oppose expansion of the surveillance state locally here in Portland, the United States, and globally. We deserve a future free from unfettered government and corporate surveillance.</blockquote></div><div><br><b>Sign on<br></b>Organizations may request to&nbsp;<a href=\"https://bit.ly/sabotopenletter\" target=\"_blank\" rel=\"noopener noreferrer\">Sign the Open Letter<br></a>The public signatory list will display the organization name, website, country and optional public statement. Contact details used for verification will not be published.</div><div><br><b>Independence disclosure<br></b>This letter is an independent initiative of Sabot Media and We Will Free Us. The publishers and signatories do not represent, speak for, coordinate with or claim affiliation with Autistici/Inventati.</div><div><br>---------------------------------------------------------------------------<br><br></div><div>Letter for individuals to send to government officials:</div><div><br><b><strong>Individual Letter Template<br></strong></b>Personalize this before sending it. Add why independent communications infrastructure matters to you and address it to a specific official, institution, provider or civil-liberties organization.</div><div><br><b><strong>Suggested subject lines<br></strong></b>Respond publicly to the designation of Autistici/Inventati<br>Communications infrastructure is not terrorism<br>Protect independent hosting, publishing and movement archives</div><div><br><b><strong>Letter<br></strong></b>Dear [NAME OR INSTITUTION],</div><div>I am writing about the United States' August 26 designation of the Italian communications collective Autistici/Inventati and the wider consequences for independent digital infrastructure.<br>A/I has provided noncommercial email, websites, mailing lists, Noblogs and other communications services since 2001. The government's public announcements focus on material and organizations that allegedly used A/I infrastructure, but do not publicly show that the collective planned the cited actions, selected targets, directed users or authored hosted material.<br>This creates a dangerous precedent. If infrastructure providers can be economically isolated because controversial movements use their services, the consequences may extend to independent hosts, encrypted communications projects, libraries, archives, publishers and privacy-preserving services everywhere.<br>I ask you to:<br>Examine and respond publicly to the designation.<br>Defend the distinction between providing infrastructure and directing user conduct.<br>Oppose institutional over-compliance that suppresses lawful reporting, research, archiving or communication.<br>Support transparent review and meaningful public scrutiny of the government's factual and legal basis.<br>[ADD TWO OR THREE PERSONAL SENTENCES HERE.]<br>Background and primary sources are available at: <a href=\"https://sabot.media/post/the-server-called-paranoia\" target=\"_blank\" rel=\"noopener noreferrer\">https://sabot.media/post/the-server-called-paranoia<br></a>Sincerely,<br>[YOUR NAME]<br>[CITY / REGION, OPTIONAL]</div><div><br><b>Who should receive this letter?</b></div><div><br>Sending one letter is useful. Sending personalized copies to several officials is better. Change the greeting for each recipient, add one or two sentences explaining why this matters to you, and submit every copy separately.<br>If you live in the United States<br>Send the letter to these four recipients first:<ol><li><b><strong>Your U.S. representative:</strong></b> Find their official website and contact form at <a href=\"https://www.house.gov/representatives/find-your-representative\" target=\"_blank\" rel=\"noopener noreferrer\">house.gov/representatives/find-your-representative</a>.</li></ol><ol><li><b><strong>Both of your U.S. senators:</strong></b> Select your state at <a href=\"https://www.senate.gov/senators/senators-contact.htm\" target=\"_blank\" rel=\"noopener noreferrer\">senate.gov/senators/senators-contact.htm</a>. Most Senate offices use individual contact forms instead of public email addresses.</li></ol><ol><li><b><strong>The U.S. Treasury Department and Office of Foreign Assets Control:</strong></b> OFAC administers the sanctions designation. Use the official contact routes at <a href=\"https://ofac.treasury.gov/contact-ofac\" target=\"_blank\" rel=\"noopener noreferrer\">ofac.treasury.gov/contact-ofac</a> and <a href=\"https://home.treasury.gov/utility/contact\" target=\"_blank\" rel=\"noopener noreferrer\">home.treasury.gov/utility/contact</a>. Ask that your message be recorded as opposition to the designation of Autistici/Inventati and forwarded to the officials responsible for Executive Order 13224 designations.</li></ol>You can also send copies to:<ul><li><b><strong>The U.S. State Department:</strong></b> <a href=\"https://register.state.gov/contactus/\" target=\"_blank\" rel=\"noopener noreferrer\">register.state.gov/contactus</a></li></ul><ul><li><b><strong>The White House:</strong></b> <a href=\"https://www.whitehouse.gov/contact/\" target=\"_blank\" rel=\"noopener noreferrer\">whitehouse.gov/contact</a></li></ul><ul><li><b><strong>The House Foreign Affairs Committee:</strong></b> <a href=\"https://foreignaffairs.house.gov/contact/\" target=\"_blank\" rel=\"noopener noreferrer\">foreignaffairs.house.gov/contact</a></li></ul><ul><li><b><strong>The Senate Foreign Relations Committee:</strong></b> <a href=\"https://www.foreign.senate.gov/contact\" target=\"_blank\" rel=\"noopener noreferrer\">foreign.senate.gov/contact</a></li></ul>If an online form limits the message length, remove the background paragraphs but preserve your demand: disclose the evidence, reverse the designation, and protect communications providers from being treated as responsible for everything their users publish.<br>You can also call the U.S. Capitol Switchboard at <b><strong>202-224-3121</strong></b> and ask to be connected to your representative or either senator. Tell the staff member that you are a constituent and want the office to oppose the designation of Autistici/Inventati.<br>If you live in the European Union<br>Send the letter to:<ol><li><b><strong>Your national representatives and foreign ministry.</strong></b></li></ol><ol><li><b><strong>Your Members of the European Parliament:</strong></b> Find their profiles and direct contact information at <a href=\"https://www.europarl.europa.eu/meps/en/home\" target=\"_blank\" rel=\"noopener noreferrer\">europarl.europa.eu/meps/en/home</a>.</li></ol><ol><li><b><strong>The European Parliament:</strong></b> Submit a public inquiry at <a href=\"https://www.europarl.europa.eu/forms/en/ask-ep\" target=\"_blank\" rel=\"noopener noreferrer\">europarl.europa.eu/forms/en/ask-ep</a>.</li></ol><ol><li><b><strong>The European Commission sanctions office:</strong></b> <a href=\"mailto:relex-sanctions@ec.europa.eu\"><b><strong>relex-sanctions@ec.europa.eu</strong></b></a></li></ol>Ask European officials what they will do to protect European organizations, banks, hosts, registrars and users from extraterritorial U.S. pressure and sanctions over-compliance.<br>Because A/I is based in Italy, you can also send the letter to the Italian Ministry of Foreign Affairs:<ul><li>Public Information Office: <a href=\"mailto:urp@esteri.it\"><b><strong>urp@esteri.it</strong></b></a></li></ul><ul><li>Office of the Foreign Minister: <a href=\"mailto:gabinetto@esteri.it\"><b><strong>gabinetto@esteri.it</strong></b></a></li></ul><ul><li>Ministry contact page: <a href=\"https://www.esteri.it/en/ministero/contatti/\" target=\"_blank\" rel=\"noopener noreferrer\">esteri.it/en/ministero/contatti</a></li></ul>Ask the Italian government to state publicly whether it will defend an Italian volunteer communications project from extraterritorial economic isolation.<br>If you live elsewhere<br>Send the letter to:<ul><li>Your national representative or parliament member.</li></ul><ul><li>Your country’s foreign ministry.</li></ul><ul><li>Your country’s embassy in Washington, D.C.</li></ul><ul><li>The Italian embassy or consulate serving your country.</li></ul><ul><li>Any national authority responsible for sanctions, banking or digital rights.</li></ul>Ask whether your government will allow domestic banks and technology providers to cut off a lawful European communications collective solely because of a unilateral U.S. designation.</div><div><br><b>Make your letter count</b></div><div><br>Use your own name and location. Add a sentence explaining whether you are a writer, publisher, journalist, technologist, librarian, researcher, organizer or ordinary internet user concerned about this precedent. Ask for a written response and save whatever you receive.<br>Do not send one mass email with every recipient exposed in the address field. Send individual copies, use the official contact form when required, and keep a record of whom you contacted.<br>This letter campaign is an independent solidarity effort. Sabot Media and We Will Free Us are not affiliated with and do not represent Autistici/Inventati.<img src=\"https://sabot.media/api/media/files?key=media%2Fuploads%2Fpdf%2Fmedia-2cf1a0f0-7328-4db6-80e6-da8fa4fd0996-Individual_Letter_Defend_Autistici_Inventati.pdf&amp;filename=Individual_Letter_Defend_Autistici_Inventati.pdf\" alt=\"\"><p></p></div><div><p><br></p><br></div></div></div>",
+        "richBody": [],
+        "author": "",
+        "sourceType": "manual",
+        "sourceKind": "manual",
+        "sourceLabel": "",
+        "sourceUrl": "",
+        "sourceExternalId": "",
+        "sourcePostId": "",
+        "bodyHtml": "<h2>Defend Autistici/Inventati and the right to build resistant communication</h2><div>On August 26, 2026, the United States designated the Italian volunteer technology collective Autistici/Inventati as a Specially Designated Global Terrorist and placed it on the Specially Designated Nationals list under Executive Order 13224. A temporary authorization covering certain wind-down transactions ends at 12:01 a.m. Eastern on September 25. </div><div><br />Autistici/Inventati has provided noncommercial email, websites, mailing lists, Noblogs and other communications services since 2001. It emerged from Italian hacklabs, autonomous media and social movements. Its infrastructure was built in response to censorship, covert surveillance and server seizures. It minimizes identifying data, uses distributed systems and treats privacy as a condition of political participation rather than a product.</div><div><br />The United States' public announcements point to material and organizations that allegedly used A/I infrastructure. They do not publicly show that A/I planned the cited actions, selected targets, directed users or authored hosted material. The designation therefore raises a question extending far beyond one collective: can maintaining privacy-preserving communications infrastructure for disfavored movements itself be treated as terrorism?</div><div><br />That theory threatens independent hosts, encrypted communications services, radical libraries, movement archives, publishers and small volunteer projects everywhere. It invites banks, registrars, hosting companies and technology providers to sever relationships first and ask legal questions later. It turns data minimization into suspicion, privacy into concealment and infrastructure into guilt by association.</div><div><br />Large commercial platforms are ordinarily distinguished from the speech and conduct of their users through intermediary-liability principles, including Section 230 in the United States. Those protections are not absolute and do not override sanctions law. That is precisely why this designation is so consequential: executive sanctions power can impose economic isolation without resolving the ordinary question of whether a provider is legally responsible for third-party material in court.</div><div><br />Autistici/Inventati is not politically neutral, and neither are many of the publications, libraries, unions and civil-liberties organizations that may sign this letter. Political affinity, however, is not operational control. Providing an email account, publishing platform or server is not the same act as planning everything a user may later say or do.</div><div><br />We therefore call for:</div><div><br /><b>The immediate revocation or prompt, transparent review of the designation</b>, with publication of the factual and legal basis sufficient for meaningful public scrutiny and challenge.</div><div><br /><b>A clear distinction between providing communications infrastructure and directing the conduct of its users. </b>Privacy, encryption, pseudonymity and refusal to retain unnecessary identifying data must not be treated as evidence of terrorism.</div><div><br /><b>Protection for independent reporting, research, archiving and public advocacy.</b> Journalists, libraries, researchers and community archivists must be able to document this history without being treated as extensions of a designated entity.</div><div><br /><b>Resistance to institutional over-compliance.</b> Banks, registrars, hosts, certificate providers and technology companies should disclose relevant restrictions, provide notice where lawful and avoid suppressing material or relationships beyond what the law actually requires.</div><div><br /><b>A public response from digital-rights, free-expression and civil-liberties institutions. </b>The targeting of autonomous infrastructure cannot be allowed to become a precedent through silence.</div><div><br />We do not ask every signer to endorse every A/I user, publication or political position. We ask signers to defend a foundational distinction: communications infrastructure is not identical to the speech or conduct transmitted through it.<br /><br /></div><div>The purpose of economic designation is isolation. Our answer is independent, informed and disciplined solidarity: preserve the public record, examine the government's claims, resist over-compliance and defend the ability of movements to communicate without surrendering themselves to corporate or state surveillance.<br /><br /></div><div>Signed,</div><div><br /></div><div>Sabot Media  - USA<br />We Will Free Us  - USA<br />Grounded Futures Podcast - USA<br />The Final Straw Radio - USA<br />Dirty Hands Collective - CO<br />BASH - Boise Autonomous Solidarity Hub - ID<br />Chehalis River Mutual Aid Network - WA<br />The Blackflower Collective - WA</div><div><div>Haymarket Customs, USA</div><div>Eric Gallager - NH</div>Anarkism.info - Sweden</div><div>Impremta Col·lectiva de Can Batlló - Catalonia</div>Institute for Anarchist Studies - USA<div>PicaHack - Spain </div><div>Osservatorio Nessuno OdV - Italy</div><div>La Quadrature du Net - France</div><div>Firestorm Books - USA </div><div>zeolia - France</div><div>Picasoft - France</div><div>Free Knowledge Institute - Amsterdam, Netherlands</div><div>Osservatorio Nessuno OdV - Italy</div><div>The YunoHost Project - Undisclosed </div>French Data Network (FDN) - France <div>Hefka Games - France</div><div>PicaHack - Spain</div><div>Your Local Pirates - The Netherlands</div><div>Tachanka! - Global</div><div>Government Information Watch - USA</div><div>Whistleblower &amp; Source Protection Program (WHISPeR) at ExposeFacts - USA</div><div>AFA NL - The Netherlands</div><div>Toulouse Anti-Cruauté - France</div><div>Hadoly - France</div><div>CHATONS collective - France says:</div><blockquote>We're hosting a French translation of the letter here: https://www.chatons.org/node/7617</blockquote><div>Infini - France says : </div><blockquote>Per un internet emancipatore, neutro, Libero e solidale.</blockquote><div>BMorePunk - USA  says:</div><blockquote>BMorePunk stands in solidarity with A/I. Publishing the speech of others\n is not terrorism. Independent hosting collectives must all take a \nunited stand against this outrageous injustice. An injury to one is an \ninjury to all.</blockquote><div>Restore The Fourth - USA says:</div><div><div><blockquote>Privacy, encryption, pseudonymity and refusal to retain unnecessary identifying data are not evidence of terrorism. They are only evidence of human beings communicating, organizing and thriving without the State peering over their shoulder. Warrantless data-gathering partnerships between corporations and the State have the power to extinguish any real dissent. We all desperately need means of organizing and communication that are neither controlled by Big Tech, nor readily monitored by governments.</blockquote>Nubo - Belgium</div><div><blockquote>Their published statement of support can be found here: Dutch version\n        (<a href=\"https://nubo.coop/nl/news/2026-09-02-autistici/\" target=\"_blank\" rel=\"noopener noreferrer\">https://nubo.coop/nl/news/2026-09-02-autistici/</a>) and French\n        version (<a href=\"https://nubo.coop/fr/news/2026-09-02-autistici/\" target=\"_blank\" rel=\"noopener noreferrer\">https://nubo.coop/fr/news/2026-09-02-autistici/</a>)</blockquote></div><div>Tactic asbl - Belgium <a href=\"https://nubo.coop/nl/news/2026-09-02-autistici/)\" target=\"_blank\" rel=\"noopener noreferrer\">Read their statement of support</a></div><div>Domaine Public - Belgium <a href=\"https://nubo.coop/nl/news/2026-09-02-autistici/)\" target=\"_blank\" rel=\"noopener noreferrer\">Read their statement of support</a></div><div>Free Knowledge Institute - Netherlands says:</div><blockquote>In these times of authoritarianism aligning with BigTech, we see more clearly now how civil society is threatened. How important it is to be solidary and weave networks of support for self organised communication infrastructures. We want to see A/I collectives in every city and region. This is why we're building up the Democratic Tech Fund, a collective funding methodology to strengthen bottom-up social capacity in the commons.</blockquote><div>Framasoft - France says:</div><blockquote>A/I’s work to represent and embody a free internet has been exemplary, and has been for years. Their vision for building a decentralized and solidarity-based internet serves as an inspiration for non-capitalist popular education organizations like ours. Support Autistici/Inventati.</blockquote><blockquote>Blog post by <a href=\"https://framablog.org/2026/08/31/autistici-inventati-designe-organisation-terroriste-internationale-par-les-etats-unis/\" target=\"_blank\" rel=\"noopener noreferrer\">Framasoft</a></blockquote><div><div>May First Movement Technology - US/Mexico says:</div><blockquote>Speak out. Support Autistici. Support independent, movement-aligned technology and defend our ability to communicate, organize, and build community power outside the claws of Big Tech.</blockquote><div>Minnesota Association of Criminal Defense Lawyers - USA says:</div><blockquote>MACDL supports free speech, dissent, and the right to communicate without being compelled to include the US government in our communications. The Fourth Amendment was created to keep the government out of our private affairs. This illegal action also implicates the right to remain silent.</blockquote><div>Bonfire Networks - Belgium says:</div><blockquote>A/I's mission has always been clear, and for more than twenty years it has inspired generations of hackers and activists in Italy and around the world: \"Socializzare saperi senza fondare poteri.\" Sharing knowledge without establishing power. That is what the US is attacking, and that is what is at stake today. The premise of these sanctions, that whoever provides communications infrastructure answers for whatever anyone does with it, would criminalise and shut down most Big Tech platforms tomorrow if applied equally. Instead it is aimed at grassroots services who refuse to surveil their users. We condemn these sanctions, and we stand firmly with solidarity tech like A/I. Antifascism and anticapitalism are not terrorism.</blockquote><div>Ukrudt.net - Sydfyn says:<p></p><blockquote>As both users, supporters, and kin of Autistici/Inventati - sharing the cause of running autonomous infrastructure with a similar ethos (anti-capitalist, anti-militarist, feminist, fighting against repression on the internet for initiatives under political pressure) and built on FLOSS (Free/Libre Open Source Software) - we accuse the US government of censorship and digital repression, and stand in full solidarity with Autistici/Inventati. We will continue caring for our own infrastructure and working for the sprouting of autonomous, anti-capitalist, and anti-fascist server kinships, and we see the US designation ofAutistici/Inventati as a direct attack on our cause. We urge all actors to pressure the US government to lift it’s sanctions on Autistici/Inventati.</blockquote>Geeks For Social Change - UK says:<blockquote>Corporations are currently attempting to conspire with governments to entirely eliminate the independent web and have our lives be entirely mediated by billionaires. This censorship of A/I is a dangerous step towards making it impossible to voice political dissent online and must be stopped.</blockquote>#MilkTeaAlliance Calendar Team - SE Asia says:<br /><blockquote>Many of our allies &amp; friends in South East Asia use Autistici/Inventati services to protect themselves from state suppression of their speech, often other platforms will comply with takedown requests from authoritarian regimes and the platform provided by Autistici/Inventati are a lifeline. The sanctions by the US are a threat to their ability to speak freely to the world. Moreover the sanctions are unjustified as Autistici/Inventati are merely a infrastructure provider, they have done nothing wrong that any other email provider, blog host or social media platform has not also done.</blockquote>Datenpunks e.V. - Germany says:<br /><blockquote>Indyhosters and tech collectives like Autistici/Inventati play an important role in democratic societies: By providing tracking-free online services, they show that privacy-preserving communication is possible even though Big Tech and some governments want us to believe otherwise. In doing so, volunteer-run collectives such as A/I protect marginalized communities from surveillance capitalism and authoritarian governments. Everyone who cares about human rights should support them.</blockquote>Jeremy Beausoleil Smith - OR says:<br /><blockquote>This fascistic attack on our freedom of speech is unacceptable and must be undone. This is a targeted act of suppression against anyone standing up to Trump and his administration’s attempts to destroy our Democracy. The United States government is setting a dangerous precedent that will allow for further censorship and erosion of our Civil Rights. I oppose expansion of the surveillance state locally here in Portland, the United States, and globally. We deserve a future free from unfettered government and corporate surveillance.</blockquote></div><div><br /><b>Sign on<br /></b>Organizations may request to <a href=\"https://bit.ly/sabotopenletter\" target=\"_blank\" rel=\"noopener noreferrer\">Sign the Open Letter<br /></a>The public signatory list will display the organization name, website, country and optional public statement. Contact details used for verification will not be published.</div><div><br /><b>Independence disclosure<br /></b>This letter is an independent initiative of Sabot Media and We Will Free Us. The publishers and signatories do not represent, speak for, coordinate with or claim affiliation with Autistici/Inventati.</div><div><br />---------------------------------------------------------------------------<br /><br /></div><div>Letter for individuals to send to government officials:</div><div><br /><b><strong>Individual Letter Template<br /></strong></b>Personalize this before sending it. Add why independent communications infrastructure matters to you and address it to a specific official, institution, provider or civil-liberties organization.</div><div><br /><b><strong>Suggested subject lines<br /></strong></b>Respond publicly to the designation of Autistici/Inventati<br />Communications infrastructure is not terrorism<br />Protect independent hosting, publishing and movement archives</div><div><br /><b><strong>Letter<br /></strong></b>Dear [NAME OR INSTITUTION],</div><div>I am writing about the United States' August 26 designation of the Italian communications collective Autistici/Inventati and the wider consequences for independent digital infrastructure.<br />A/I has provided noncommercial email, websites, mailing lists, Noblogs and other communications services since 2001. The government's public announcements focus on material and organizations that allegedly used A/I infrastructure, but do not publicly show that the collective planned the cited actions, selected targets, directed users or authored hosted material.<br />This creates a dangerous precedent. If infrastructure providers can be economically isolated because controversial movements use their services, the consequences may extend to independent hosts, encrypted communications projects, libraries, archives, publishers and privacy-preserving services everywhere.<br />I ask you to:<br />Examine and respond publicly to the designation.<br />Defend the distinction between providing infrastructure and directing user conduct.<br />Oppose institutional over-compliance that suppresses lawful reporting, research, archiving or communication.<br />Support transparent review and meaningful public scrutiny of the government's factual and legal basis.<br />[ADD TWO OR THREE PERSONAL SENTENCES HERE.]<br />Background and primary sources are available at: <a href=\"https://sabot.media/post/the-server-called-paranoia\" target=\"_blank\" rel=\"noopener noreferrer\">https://sabot.media/post/the-server-called-paranoia<br /></a>Sincerely,<br />[YOUR NAME]<br />[CITY / REGION, OPTIONAL]</div><div><br /><b>Who should receive this letter?</b></div><div><br />Sending one letter is useful. Sending personalized copies to several officials is better. Change the greeting for each recipient, add one or two sentences explaining why this matters to you, and submit every copy separately.<br />If you live in the United States<br />Send the letter to these four recipients first:<ol><li><b><strong>Your U.S. representative:</strong></b> Find their official website and contact form at <a href=\"https://www.house.gov/representatives/find-your-representative\" target=\"_blank\" rel=\"noopener noreferrer\">house.gov/representatives/find-your-representative</a>.</li></ol><ol><li><b><strong>Both of your U.S. senators:</strong></b> Select your state at <a href=\"https://www.senate.gov/senators/senators-contact.htm\" target=\"_blank\" rel=\"noopener noreferrer\">senate.gov/senators/senators-contact.htm</a>. Most Senate offices use individual contact forms instead of public email addresses.</li></ol><ol><li><b><strong>The U.S. Treasury Department and Office of Foreign Assets Control:</strong></b> OFAC administers the sanctions designation. Use the official contact routes at <a href=\"https://ofac.treasury.gov/contact-ofac\" target=\"_blank\" rel=\"noopener noreferrer\">ofac.treasury.gov/contact-ofac</a> and <a href=\"https://home.treasury.gov/utility/contact\" target=\"_blank\" rel=\"noopener noreferrer\">home.treasury.gov/utility/contact</a>. Ask that your message be recorded as opposition to the designation of Autistici/Inventati and forwarded to the officials responsible for Executive Order 13224 designations.</li></ol>You can also send copies to:<ul><li><b><strong>The U.S. State Department:</strong></b> <a href=\"https://register.state.gov/contactus/\" target=\"_blank\" rel=\"noopener noreferrer\">register.state.gov/contactus</a></li></ul><ul><li><b><strong>The White House:</strong></b> <a href=\"https://www.whitehouse.gov/contact/\" target=\"_blank\" rel=\"noopener noreferrer\">whitehouse.gov/contact</a></li></ul><ul><li><b><strong>The House Foreign Affairs Committee:</strong></b> <a href=\"https://foreignaffairs.house.gov/contact/\" target=\"_blank\" rel=\"noopener noreferrer\">foreignaffairs.house.gov/contact</a></li></ul><ul><li><b><strong>The Senate Foreign Relations Committee:</strong></b> <a href=\"https://www.foreign.senate.gov/contact\" target=\"_blank\" rel=\"noopener noreferrer\">foreign.senate.gov/contact</a></li></ul>If an online form limits the message length, remove the background paragraphs but preserve your demand: disclose the evidence, reverse the designation, and protect communications providers from being treated as responsible for everything their users publish.<br />You can also call the U.S. Capitol Switchboard at <b><strong>202-224-3121</strong></b> and ask to be connected to your representative or either senator. Tell the staff member that you are a constituent and want the office to oppose the designation of Autistici/Inventati.<br />If you live in the European Union<br />Send the letter to:<ol><li><b><strong>Your national representatives and foreign ministry.</strong></b></li></ol><ol><li><b><strong>Your Members of the European Parliament:</strong></b> Find their profiles and direct contact information at <a href=\"https://www.europarl.europa.eu/meps/en/home\" target=\"_blank\" rel=\"noopener noreferrer\">europarl.europa.eu/meps/en/home</a>.</li></ol><ol><li><b><strong>The European Parliament:</strong></b> Submit a public inquiry at <a href=\"https://www.europarl.europa.eu/forms/en/ask-ep\" target=\"_blank\" rel=\"noopener noreferrer\">europarl.europa.eu/forms/en/ask-ep</a>.</li></ol><ol><li><b><strong>The European Commission sanctions office:</strong></b> <a href=\"mailto:relex-sanctions@ec.europa.eu\"><b><strong>relex-sanctions@ec.europa.eu</strong></b></a></li></ol>Ask European officials what they will do to protect European organizations, banks, hosts, registrars and users from extraterritorial U.S. pressure and sanctions over-compliance.<br />Because A/I is based in Italy, you can also send the letter to the Italian Ministry of Foreign Affairs:<ul><li>Public Information Office: <a href=\"mailto:urp@esteri.it\"><b><strong>urp@esteri.it</strong></b></a></li></ul><ul><li>Office of the Foreign Minister: <a href=\"mailto:gabinetto@esteri.it\"><b><strong>gabinetto@esteri.it</strong></b></a></li></ul><ul><li>Ministry contact page: <a href=\"https://www.esteri.it/en/ministero/contatti/\" target=\"_blank\" rel=\"noopener noreferrer\">esteri.it/en/ministero/contatti</a></li></ul>Ask the Italian government to state publicly whether it will defend an Italian volunteer communications project from extraterritorial economic isolation.<br />If you live elsewhere<br />Send the letter to:<ul><li>Your national representative or parliament member.</li></ul><ul><li>Your country’s foreign ministry.</li></ul><ul><li>Your country’s embassy in Washington, D.C.</li></ul><ul><li>The Italian embassy or consulate serving your country.</li></ul><ul><li>Any national authority responsible for sanctions, banking or digital rights.</li></ul>Ask whether your government will allow domestic banks and technology providers to cut off a lawful European communications collective solely because of a unilateral U.S. designation.</div><div><br /><b>Make your letter count</b></div><div><br />Use your own name and location. Add a sentence explaining whether you are a writer, publisher, journalist, technologist, librarian, researcher, organizer or ordinary internet user concerned about this precedent. Ask for a written response and save whatever you receive.<br />Do not send one mass email with every recipient exposed in the address field. Send individual copies, use the official contact form when required, and keep a record of whom you contacted.<br />This letter campaign is an independent solidarity effort. Sabot Media and We Will Free Us are not affiliated with and do not represent Autistici/Inventati.<img src=\"https://sabot.media/api/media/files?key=media%2Fuploads%2Fpdf%2Fmedia-2cf1a0f0-7328-4db6-80e6-da8fa4fd0996-Individual_Letter_Defend_Autistici_Inventati.pdf&amp;filename=Individual_Letter_Defend_Autistici_Inventati.pdf\" alt=\"\" /><p></p></div><div><p><br /></p><br /></div></div></div>",
+        "heroImage": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-013cef3b-8063-47a0-8e09-086ae7b10d1a-featured-image-3-.png&filename=featured-image-3-.png",
+        "featuredImage": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-013cef3b-8063-47a0-8e09-086ae7b10d1a-featured-image-3-.png&filename=featured-image-3-.png",
+        "featuredImageTitle": "featured image (3)",
+        "featuredTitleDisplay": "hidden",
+        "featuredImageAlt": "",
+        "featuredImageCaption": "",
+        "audioSummary": "",
+        "transcriptExcerpt": "",
+        "hasPrintAssets": false,
+        "transcriptionStatus": "none",
+        "audioSourceUrl": "",
+        "podcastAudioUrl": "",
+        "podcastRssEnclosureUrl": "",
+        "podcastDuration": "",
+        "podcastEpisodeNumber": "",
+        "podcastSeason": "",
+        "podcastTranscript": "",
+        "podcastSummary": "",
+        "podcastCoverImage": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-681c5644-eab5-4321-9f03-c362cdbc899f-featured-image-2-.png&filename=featured-image-2-.png",
+        "podcastMimeType": "",
+        "podcastFileSize": "",
+        "podcastExplicit": false,
+        "podcastCredits": "",
+        "podcastLicense": "",
+        "podcastMarkers": [],
+        "podcastTranscriptCues": [],
+        "podcastAudioMediaId": "",
+        "podcastAudioStorageKey": "",
+        "podcastMasterAudioUrl": "",
+        "podcastDeliveryAudioUrl": "",
+        "podcastDeliveryStatus": "",
+        "fullTranscript": "",
+        "relatedAssets": [],
+        "relatedPrintLinks": [],
+        "seoTitle": "",
+        "seoDescription": "",
+        "allowComments": true,
+        "enableReadMode": true,
+        "enableExperienceMode": true,
+        "enablePrintMode": true,
+        "defaultMode": "read",
+        "heroStyle": "default",
+        "categories": [
+          "The Harbor Rat Report",
+          "General"
+        ],
+        "projects": [
+          "The Harbor Rat Report",
+          "General"
+        ],
+        "collections": [],
+        "campaigns": [
+          "autistici-inventati"
+        ],
+        "tags": [],
+        "createdAt": "2026-08-28T09:22:30.135Z",
+        "updatedAt": "2026-09-06T16:49:58.174Z",
+        "publishedAt": "2026-09-06T16:49:57.582Z",
+        "scheduledFor": ""
+      },
+      {
         "id": "native-rwddnkqj",
         "schemaVersion": 3,
         "contentType": "dispatch",
@@ -5313,6 +5473,184 @@
   "campaigns": {
     "items": [
       {
+        "id": "campaign-autistici-inventati",
+        "schemaVersion": 5,
+        "slug": "autistici-inventati",
+        "status": "published",
+        "campaignStatus": "active",
+        "lifecycleStatus": "active",
+        "campaignType": "advocacy",
+        "kicker": "BEFORE SEPT. 25",
+        "title": "Communications Infrastructure Is Not Terrorism",
+        "shortTitle": "Defend Autistici/Inventati",
+        "deck": "A living campaign hub for reporting, public letters, graphics, press coverage, social circulation, infrastructure status, and ways to act before September 25.",
+        "summary": "Sabot Media and We Will Free Us are independently documenting and opposing the treatment of resistant communications infrastructure as terrorism. This page gathers the campaign in one place and will remain as a public archive after the deadline.",
+        "deadline": "2026-09-25T04:01:00.000Z",
+        "deadlineTimeZone": "America/New_York",
+        "heroImage": "",
+        "heroAlt": "",
+        "monitorUrl": "https://kuma.accol.li/status/aimonitor",
+        "monitorLabel": "A/I infrastructure monitor",
+        "partners": [
+          "Sabot Media",
+          "We Will Free Us"
+        ],
+        "campaignKeywords": [
+          "autistici",
+          "inventati",
+          "noblogs",
+          "communications infrastructure",
+          "a/i campaign"
+        ],
+        "disclaimer": "Sabot Media and We Will Free Us are independent publishers. We are not affiliated with Autistici/Inventati and do not represent or speak on behalf of A/I. Campaign material is political advocacy and reporting, not legal advice.",
+        "donation": {
+          "url": "",
+          "label": "Donate",
+          "platform": "",
+          "recipient": "",
+          "explanation": "",
+          "lastVerifiedAt": ""
+        },
+        "correspondence": {
+          "enabled": false,
+          "publicQuestions": false,
+          "contributorLabel": "Field contributor",
+          "editorLabel": "Sabot Media",
+          "intro": ""
+        },
+        "actions": [
+          {
+            "id": "action-letter",
+            "title": "Send a letter",
+            "body": "Use the individual letter and recipient guide to contact public officials, civil-liberties groups, digital-rights organizations, and other institutions.",
+            "href": "#letters",
+            "label": "Get the letter"
+          },
+          {
+            "id": "action-reporting",
+            "title": "Read the reporting",
+            "body": "Start with the investigation and source material, then circulate the strongest factual account rather than a screenshot of a screenshot.",
+            "href": "#reporting",
+            "label": "Read the reporting"
+          },
+          {
+            "id": "action-share",
+            "title": "Circulate the campaign",
+            "body": "Download campaign graphics, copy accessible captions and alt text, and share the canonical campaign page.",
+            "href": "#graphics",
+            "label": "Get campaign graphics"
+          },
+          {
+            "id": "action-monitor",
+            "title": "Watch the infrastructure",
+            "body": "Follow the public A/I monitor and document meaningful outages or service degradation without turning ordinary blips into prophecy.",
+            "href": "#monitor",
+            "label": "Check live status"
+          }
+        ],
+        "updates": [
+          {
+            "id": "update-launch",
+            "date": "2026-08-28T21:30:00Z",
+            "title": "Campaign hub launched",
+            "body": "Sabot Media and We Will Free Us consolidated reporting, letters, graphics, infrastructure status, and campaign updates into one public page.",
+            "url": "",
+            "pinned": true
+          }
+        ],
+        "resources": [],
+        "social": [],
+        "graphics": [
+          {
+            "id": "row-ev08u1zs",
+            "title": "Support A/I Web Logo",
+            "imageUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png",
+            "alt": "Black square logo with a white outlined heart containing a red asterisk, beside the white letters “A/I.”",
+            "caption": "from @subvertising.org on Mastodon.",
+            "downloadUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png"
+          }
+        ],
+        "coverage": [],
+        "signatories": [],
+        "sources": [],
+        "timeline": [
+          {
+            "id": "timeline-designation",
+            "date": "2026-08-26",
+            "title": "Designation announced",
+            "body": "The U.S. designation and sanctions action becomes the immediate trigger for this campaign."
+          },
+          {
+            "id": "timeline-launch",
+            "date": "2026-08-28",
+            "title": "Public campaign launched",
+            "body": "Reporting, public letters, journalist outreach, graphics, and direct advocacy begin circulating."
+          },
+          {
+            "id": "timeline-deadline",
+            "date": "2026-09-25",
+            "title": "September 25 deadline",
+            "body": "The campaign is organized around the September 25 wind-down deadline and the consequences that may follow."
+          }
+        ],
+        "faq": [
+          {
+            "id": "faq-ai",
+            "question": "What is Autistici/Inventati?",
+            "answer": "A/I is an Italian volunteer technology collective that has provided noncommercial communications infrastructure, including services associated with Noblogs. The reporting linked on this page contains the fuller history and sourcing."
+          },
+          {
+            "id": "faq-why",
+            "question": "Why does this matter beyond one collective?",
+            "answer": "The campaign focuses on the distinction between communications infrastructure and the conduct of users. Privacy-preserving hosts, independent publishers, journalists, researchers, organizers, and civil-society projects all depend on that distinction remaining meaningful."
+          },
+          {
+            "id": "faq-affiliation",
+            "question": "Is Sabot Media affiliated with A/I?",
+            "answer": "No. Sabot Media and We Will Free Us are independent publishers and campaign organizers. They do not represent or speak for A/I."
+          },
+          {
+            "id": "faq-status",
+            "question": "Is the monitor operated by Sabot?",
+            "answer": "No. Sabot reads the public A/I status page at kuma.accol.li and presents a compact summary here. The original monitor remains the authoritative view of its own data."
+          }
+        ],
+        "translations": [],
+        "sectionOrder": [
+          "status",
+          "reporting",
+          "letters",
+          "act",
+          "graphics",
+          "updates",
+          "timeline",
+          "coverage",
+          "sources",
+          "faq",
+          "translations",
+          "signatories",
+          "social",
+          "donate",
+          "socialArchive",
+          "dispatches",
+          "questions",
+          "benefit"
+        ],
+        "hiddenSections": [],
+        "sectionTitles": {},
+        "automation": {
+          "enabled": false,
+          "discoverNews": false,
+          "startAt": "",
+          "blueskyActors": [],
+          "mastodonAccounts": [],
+          "coverageFeeds": [],
+          "signatoriesUrl": ""
+        },
+        "createdAt": "2026-08-28T21:30:00Z",
+        "updatedAt": "2026-09-06T17:20:58.301Z"
+      },
+      {
         "id": "campaign-food-not-bombs-gaza",
         "schemaVersion": 5,
         "slug": "food-not-bombs-gaza",
@@ -5499,381 +5837,9 @@
         },
         "createdAt": "2026-08-31T00:00:00Z",
         "updatedAt": "2026-09-01T13:27:50.530Z"
-      },
-      {
-        "id": "campaign-autistici-inventati",
-        "schemaVersion": 5,
-        "slug": "autistici-inventati",
-        "status": "published",
-        "campaignStatus": "active",
-        "lifecycleStatus": "active",
-        "campaignType": "advocacy",
-        "kicker": "BEFORE SEPT. 25",
-        "title": "Communications Infrastructure Is Not Terrorism",
-        "shortTitle": "Defend Autistici/Inventati",
-        "deck": "A living campaign hub for reporting, public letters, graphics, press coverage, social circulation, infrastructure status, and ways to act before September 25.",
-        "summary": "Sabot Media and We Will Free Us are independently documenting and opposing the treatment of resistant communications infrastructure as terrorism. This page gathers the campaign in one place and will remain as a public archive after the deadline.",
-        "deadline": "2026-09-25T04:01:00.000Z",
-        "deadlineTimeZone": "America/New_York",
-        "heroImage": "",
-        "heroAlt": "",
-        "monitorUrl": "https://kuma.accol.li/status/aimonitor",
-        "monitorLabel": "A/I infrastructure monitor",
-        "partners": [
-          "Sabot Media",
-          "We Will Free Us"
-        ],
-        "campaignKeywords": [
-          "autistici",
-          "inventati",
-          "noblogs",
-          "communications infrastructure",
-          "a/i campaign"
-        ],
-        "disclaimer": "Sabot Media and We Will Free Us are independent publishers. We are not affiliated with Autistici/Inventati and do not represent or speak on behalf of A/I. Campaign material is political advocacy and reporting, not legal advice.",
-        "donation": {
-          "url": "",
-          "label": "Donate",
-          "platform": "",
-          "recipient": "",
-          "explanation": "",
-          "lastVerifiedAt": ""
-        },
-        "correspondence": {
-          "enabled": false,
-          "publicQuestions": false,
-          "contributorLabel": "Field contributor",
-          "editorLabel": "Sabot Media",
-          "intro": ""
-        },
-        "actions": [
-          {
-            "id": "action-letter",
-            "title": "Send a letter",
-            "body": "Use the individual letter and recipient guide to contact public officials, civil-liberties groups, digital-rights organizations, and other institutions.",
-            "href": "#letters",
-            "label": "Get the letter"
-          },
-          {
-            "id": "action-reporting",
-            "title": "Read the reporting",
-            "body": "Start with the investigation and source material, then circulate the strongest factual account rather than a screenshot of a screenshot.",
-            "href": "#reporting",
-            "label": "Read the reporting"
-          },
-          {
-            "id": "action-share",
-            "title": "Circulate the campaign",
-            "body": "Download campaign graphics, copy accessible captions and alt text, and share the canonical campaign page.",
-            "href": "#graphics",
-            "label": "Get campaign graphics"
-          },
-          {
-            "id": "action-monitor",
-            "title": "Watch the infrastructure",
-            "body": "Follow the public A/I monitor and document meaningful outages or service degradation without turning ordinary blips into prophecy.",
-            "href": "#monitor",
-            "label": "Check live status"
-          }
-        ],
-        "updates": [
-          {
-            "id": "update-launch",
-            "date": "2026-08-28T21:30:00Z",
-            "title": "Campaign hub launched",
-            "body": "Sabot Media and We Will Free Us consolidated reporting, letters, graphics, infrastructure status, and campaign updates into one public page.",
-            "url": "",
-            "pinned": true
-          }
-        ],
-        "resources": [],
-        "social": [],
-        "graphics": [],
-        "coverage": [],
-        "signatories": [],
-        "sources": [],
-        "timeline": [
-          {
-            "id": "timeline-designation",
-            "date": "2026-08-26",
-            "title": "Designation announced",
-            "body": "The U.S. designation and sanctions action becomes the immediate trigger for this campaign."
-          },
-          {
-            "id": "timeline-launch",
-            "date": "2026-08-28",
-            "title": "Public campaign launched",
-            "body": "Reporting, public letters, journalist outreach, graphics, and direct advocacy begin circulating."
-          },
-          {
-            "id": "timeline-deadline",
-            "date": "2026-09-25",
-            "title": "September 25 deadline",
-            "body": "The campaign is organized around the September 25 wind-down deadline and the consequences that may follow."
-          }
-        ],
-        "faq": [
-          {
-            "id": "faq-ai",
-            "question": "What is Autistici/Inventati?",
-            "answer": "A/I is an Italian volunteer technology collective that has provided noncommercial communications infrastructure, including services associated with Noblogs. The reporting linked on this page contains the fuller history and sourcing."
-          },
-          {
-            "id": "faq-why",
-            "question": "Why does this matter beyond one collective?",
-            "answer": "The campaign focuses on the distinction between communications infrastructure and the conduct of users. Privacy-preserving hosts, independent publishers, journalists, researchers, organizers, and civil-society projects all depend on that distinction remaining meaningful."
-          },
-          {
-            "id": "faq-affiliation",
-            "question": "Is Sabot Media affiliated with A/I?",
-            "answer": "No. Sabot Media and We Will Free Us are independent publishers and campaign organizers. They do not represent or speak for A/I."
-          },
-          {
-            "id": "faq-status",
-            "question": "Is the monitor operated by Sabot?",
-            "answer": "No. Sabot reads the public A/I status page at kuma.accol.li and presents a compact summary here. The original monitor remains the authoritative view of its own data."
-          }
-        ],
-        "translations": [],
-        "sectionOrder": [
-          "status",
-          "reporting",
-          "letters",
-          "act",
-          "graphics",
-          "updates",
-          "timeline",
-          "coverage",
-          "sources",
-          "faq",
-          "translations",
-          "signatories",
-          "social",
-          "donate",
-          "socialArchive",
-          "dispatches",
-          "questions",
-          "benefit"
-        ],
-        "hiddenSections": [],
-        "sectionTitles": {},
-        "automation": {
-          "enabled": false,
-          "discoverNews": false,
-          "startAt": "",
-          "blueskyActors": [],
-          "mastodonAccounts": [],
-          "coverageFeeds": [],
-          "signatoriesUrl": ""
-        },
-        "createdAt": "2026-08-28T21:30:00Z",
-        "updatedAt": "2026-08-30T10:58:48.487Z"
       }
     ],
     "details": {
-      "food-not-bombs-gaza": {
-        "id": "campaign-food-not-bombs-gaza",
-        "schemaVersion": 5,
-        "slug": "food-not-bombs-gaza",
-        "status": "published",
-        "campaignStatus": "urgent",
-        "lifecycleStatus": "active",
-        "campaignType": "direct-aid",
-        "kicker": "DIRECT AID · DIRECT SOLIDARITY",
-        "title": "Food Not Bombs Gaza",
-        "shortTitle": "Keep the meals coming",
-        "deck": "A Palestinian-led mutual-aid project is cooking for displaced families in Gaza. Help keep the meals coming—and hear directly from the people doing the work.",
-        "summary": "Sabot Media is amplifying and preserving updates from Food Not Bombs Gaza. Donations go directly through the verified Chuffed fundraiser; Sabot takes no percentage.",
-        "deadline": "",
-        "deadlineTimeZone": "UTC",
-        "heroImage": "",
-        "heroAlt": "",
-        "monitorUrl": "",
-        "monitorLabel": "Infrastructure monitor",
-        "partners": [
-          "Food Not Bombs Gaza",
-          "Sabot Media"
-        ],
-        "campaignKeywords": [
-          "Food Not Bombs Gaza",
-          "Gaza",
-          "mutual aid",
-          "direct aid",
-          "Jamal Abu Al-Ata"
-        ],
-        "disclaimer": "Sabot Media maintains and hosts this campaign space. Donations are processed by Chuffed, not Sabot Media. Fundraiser claims are attributed to the organizers unless independently verified.",
-        "donation": {
-          "url": "https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza",
-          "label": "Send direct aid",
-          "platform": "Chuffed",
-          "recipient": "Food Not Bombs Gaza",
-          "explanation": "The campaign organizer reports that funds are transferred to Jamal Abu Al-Ata using USDT because ordinary payment access and fees are prohibitive.",
-          "lastVerifiedAt": "2026-08-31T00:00:00.000Z"
-        },
-        "correspondence": {
-          "enabled": true,
-          "publicQuestions": true,
-          "contributorLabel": "Food Not Bombs Gaza",
-          "editorLabel": "Ash / Sabot Media",
-          "intro": "This is a private conversation with Ash and Sabot Media. Send text, audio, video, or a photo whenever you have time."
-        },
-        "actions": [
-          {
-            "id": "action-donate",
-            "title": "Send direct aid",
-            "body": "Money is the immediate need. Donate through the verified fundraiser.",
-            "href": "https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza",
-            "label": "Donate on Chuffed"
-          },
-          {
-            "id": "action-benefit",
-            "title": "Organize a benefit",
-            "body": "Use the organizer toolkit to turn a show, meal, raffle, or community event into direct support.",
-            "href": "#benefit",
-            "label": "Get the toolkit"
-          },
-          {
-            "id": "action-question",
-            "title": "Ask a question",
-            "body": "Submit a respectful question. Sabot reviews and forwards selected questions without flooding Jamal’s inbox.",
-            "href": "#questions",
-            "label": "Ask Food Not Bombs Gaza"
-          },
-          {
-            "id": "action-share",
-            "title": "Share the stable link",
-            "body": "Send people here so the campaign remains reachable even if a commercial platform removes an account.",
-            "href": "#top",
-            "label": "Share this campaign"
-          }
-        ],
-        "updates": [
-          {
-            "id": "fnb-launch",
-            "date": "2026-08-31T00:00:00Z",
-            "title": "Campaign space opened",
-            "body": "Sabot Media opened this independent campaign and correspondence space for Food Not Bombs Gaza.",
-            "url": "",
-            "pinned": true
-          },
-          {
-            "id": "publication-keep-the-meals-coming",
-            "date": "2026-09-01T11:39:22.888Z",
-            "title": "Keep the Meals Coming: Food Not Bombs Gaza Builds a Lifeline in Deir al-Balah published",
-            "body": "A few months ago, a message from someone we did not know arrived in Sabot Media’s Instagram inbox. His name was Jamal Abu Al-Ata. He was writing from Gaza and asking for financial support for the mutual-aid work he was doing there. The message appeared to be…",
-            "url": "https://sabot.media/post/keep-the-meals-coming",
-            "pinned": false,
-            "automated": true,
-            "source": "Sabot Media publishing"
-          }
-        ],
-        "resources": [
-          {
-            "id": "fnb-instagram",
-            "type": "social",
-            "title": "Food Not Bombs Gaza on Instagram",
-            "description": "The project’s active public account and original source for many field updates.",
-            "href": "https://www.instagram.com/foodnotbombs_gaza/",
-            "label": "Follow @foodnotbombs_gaza",
-            "imageUrl": ""
-          }
-        ],
-        "social": [],
-        "graphics": [],
-        "coverage": [],
-        "signatories": [],
-        "sources": [
-          {
-            "id": "fnb-chuffed",
-            "title": "Send Direct Aid to Food Not Bombs Gaza",
-            "publisher": "Chuffed",
-            "url": "https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza",
-            "note": "Current donation destination and organizer account of how funds reach Gaza."
-          },
-          {
-            "id": "fnb-instagram-source",
-            "title": "@foodnotbombs_gaza",
-            "publisher": "Instagram",
-            "url": "https://www.instagram.com/foodnotbombs_gaza/",
-            "note": "Original public updates from the project."
-          }
-        ],
-        "timeline": [],
-        "faq": [
-          {
-            "id": "fnb-relationship",
-            "question": "Is Sabot Media collecting these donations?",
-            "answer": "No. Donation buttons lead to the named Chuffed fundraiser. Sabot Media takes no percentage."
-          },
-          {
-            "id": "fnb-verification",
-            "question": "What has Sabot independently checked?",
-            "answer": "Sabot identifies the source of each claim and retains links to the fundraiser and project account. Statements about spending or impact remain attributed to Food Not Bombs Gaza or the fundraiser organizer unless independently verified."
-          },
-          {
-            "id": "fnb-interview",
-            "question": "Has Sabot interviewed Jamal?",
-            "answer": "Sabot has opened an asynchronous correspondence channel so Jamal can answer in text, audio, or video as his time and connectivity permit. The campaign does not depend on his ability to respond during war and displacement."
-          }
-        ],
-        "translations": [],
-        "sectionOrder": [
-          "donate",
-          "dispatches",
-          "act",
-          "questions",
-          "benefit",
-          "reporting",
-          "updates",
-          "sources",
-          "faq",
-          "status",
-          "letters",
-          "graphics",
-          "timeline",
-          "coverage",
-          "translations",
-          "signatories",
-          "social",
-          "socialArchive"
-        ],
-        "hiddenSections": [
-          "letters",
-          "graphics",
-          "timeline",
-          "coverage",
-          "translations",
-          "signatories",
-          "status"
-        ],
-        "sectionTitles": {
-          "reporting": "Reporting and context",
-          "act": "Ways to act",
-          "updates": "Campaign log",
-          "sources": "Verification and sources",
-          "faq": "Questions about this campaign",
-          "donate": "The need is money",
-          "dispatches": "Dispatches from Gaza",
-          "questions": "Ask Food Not Bombs Gaza",
-          "benefit": "Turn your event into direct aid"
-        },
-        "automation": {
-          "enabled": true,
-          "discoverNews": true,
-          "startAt": "",
-          "blueskyActors": [],
-          "mastodonAccounts": [],
-          "coverageFeeds": [],
-          "signatoriesUrl": ""
-        },
-        "createdAt": "2026-08-31T00:00:00Z",
-        "updatedAt": "2026-09-01T13:27:50.530Z",
-        "socialSources": [],
-        "socialErrors": [],
-        "automationErrors": [],
-        "automationCheckedAt": "2026-09-06T15:49:50.863Z",
-        "coverageArchiveCount": 0
-      },
       "autistici-inventati": {
         "id": "campaign-autistici-inventati",
         "schemaVersion": 5,
@@ -6018,6 +5984,16 @@
             "url": "https://cavallette.noblogs.org/2026/08/10093",
             "pinned": true,
             "source": ""
+          },
+          {
+            "id": "publication-ai-shuts-down",
+            "date": "2026-09-06T17:35:14.595Z",
+            "title": "Nineteen Days Before the Deadline, Autistici/Inventati Is Shutting Down published",
+            "body": "The Italian communications collective survived raids, surveillance and server seizures for 25 years. Eleven days after the United States designated it a global terrorist organization, A/I says the risk to its users has become too great to continue. Autistici/…",
+            "url": "https://sabot.media/post/ai-shuts-down",
+            "pinned": false,
+            "automated": true,
+            "source": "Sabot Media publishing"
           },
           {
             "id": "publication-zine-the-server-called-paranoia-defend-autistici-inventati-before-september-25",
@@ -6190,46 +6166,6 @@
             "source": "A/I official Mastodon"
           },
           {
-            "id": "official-social-mastodon-117206297056375901",
-            "date": "2026-09-03T09:02:43.579Z",
-            "title": "A/I public campaign update",
-            "body": "Diffondiamo! - Share this: European Digital Rights (EDRi) is an association of civil and human rights organisations from across Europe. We defend your rights and freedoms in the digital environment. -- EDRi stands in solidarity with Autistici/Inventati after “terrorist” designation by the US government https:// edri.org/our-work/edri-solidar ity-statement-au",
-            "url": "https://mastodon.bida.im/@cavallette/117206297056375901",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117206269826259568",
-            "date": "2026-09-03T08:55:48.081Z",
-            "title": "A/I public campaign update",
-            "body": "Cit: \"L'unico posto dell'internet dove ci si sente a casa\"... grazie!:) Quote: \"The only place in the internet where you feel at home\"... thanks!:) https:// elenamistrello.com/2026/09/02/ solidarieta-ad-autisticiinventati/ # keepitfree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117206269826259568",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117202014681693878",
-            "date": "2026-09-02T14:53:39.727Z",
-            "title": "A/I public campaign update",
-            "body": "Presentiamo https:// keepitfree.ai Dal 26 agosto, quando il Dipartimento del Tesoro statunitense, tramite OFAC, ci ha sanzionato come “Specially Designated Global Terrorist” (SDGT), sono successe tante cose, tanto si è mosso. Ed è solo l’inizio. Abbiamo deciso di creare uno spazio unico per raccogliere quello che sta avvenendo dopo il 26 agosto, per permette",
-            "url": "https://mastodon.bida.im/@cavallette/117202014681693878",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117202011778267339",
-            "date": "2026-09-02T14:52:55.426Z",
-            "title": "A/I public campaign update",
-            "body": "Announcing https:// keepitfree.ai Many things happened since August 26, 2026, when the Office of Foreign Assets Control (OFAC) at the US Department of the Treasury included us in their list of “Specially Designated Global Terrorists” (SDGT). This is just the beginning. We have now created a dedicated space to document what has been unfolding since August 26,",
-            "url": "https://mastodon.bida.im/@cavallette/117202011778267339",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
             "id": "update-launch",
             "date": "2026-08-28T21:30:00Z",
             "title": "Campaign hub launched",
@@ -6339,73 +6275,20 @@
             "sourcePriority": 0
           },
           {
-            "id": "mastodon-117206297056375901",
+            "id": "mastodon-117224972818195789",
             "platform": "MASTODON",
-            "date": "2026-09-03T09:02:43.579Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Diffondiamo! - Share this: European Digital Rights (EDRi) is an association of civil and human rights organisations from across Europe. We defend your rights and freedoms in the digital environment. -- EDRi stands in solidarity with Autistici/Inventati after “terrorist” designation by the US government https:// edri.org/our-work/edri-solidar ity-statement-autistici-inventati/ # keepitfree # AutisticiInventati",
-            "excerpt": "Diffondiamo! - Share this: European Digital Rights (EDRi) is an association of civil and human rights organisations from across Europe. We defend your rights and freedoms in the digital environment. -- EDRi stands in solidarity with Autistici/Inventati after “terrorist” designation by the US government https:// edri.org/our-work/edri-solidar ity-statement-autistici-inventati/ # keepitfree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117206297056375901",
+            "date": "2026-09-06T16:12:13.090Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "Press release from A/I A/I shuts down - Stay human Sep 6, 2026 The day we discovered we had been designated a global terrorist organization, we promised that we would try to resist as long as this was possible, that we would not back down as long as we could see options to stand our ground. For years, we have proudly maintained and defended a free, privacy-friendly, autonomous and politically committed infrastructure. “Stay human” is not an empty phrase to us. It means, above all, that we have a responsibility to protect our users, those who build the human networks we rely, and for the communities who flooded us with messages of support and solidarity. We cannot engage in a fight or expose ourselves to manipulations that threaten the lives of these people and their loved ones, leaving them at the mercy of autocrats, fascists and agencies that take extra-legal courses of action. The possibility that our work may cause legal and financial consequences to those who are close to us - or even only have something to do with us - leaves us no choice. A/I is shutting down. The Autistici/Inventati collective is shutting down and will soon discontinue all of the services we provide. There is no easy way to announce or explain this Every day we stayed online after August 26, 2026, has been a victory, but now we are forced to stop. None of us holds eroic gestures and martyrs in high esteem, therefore we will demand no sacrifices. Not from us, not from anyone else. In this political climate, continuing to offer our services endangers our users and anyone who is part of our communities. In a world where allegations are disconnected from reality, we can only expect repression to be increasingly disproportionate. Under these circumstances, we are no longer able to maintain our original mission - offering secure and non-commercial digital tools. These 25 years have been amazing. It’s been an “incredible ride”. Now turn off your PCs, get out of your homes, struggle, hug each other and keep on smiling. We are stopping, but the Resistance and ideas do not stop. Stay human. We will soon send instructions on how to back up the content of your blogs, mailboxes and websites, along with more technical recommendations. But keep in mind that, just as the autistici.org domain was made unreachable without previous notice, in the next few days we might suffer similar issues that we may not be able to predict. Autistici/Inventati Collective",
+            "excerpt": "Press release from A/I A/I shuts down - Stay human Sep 6, 2026 The day we discovered we had been designated a global terrorist organization, we promised that we would try to resist as long as this was possible, that we would not back down as long as we could see options to stand our ground. For years, we have proudly maintained and defended a free, privacy-friendly, autonomous and politically committed infrastructure. “Stay human” is not an empty phrase to us. It means, above all, that we have a responsibility to protect our users, those who build the human networks we rely, and for the communities who flooded us with messages of support and solidarity. We cannot engage in a fight or expose ourselves to manipulations that threaten the lives of these people and their loved ones, leaving them at the mercy of autocrats, fascists and agencies that take extra-legal courses of action. The possibility that our work may cause legal and financial consequences to those who are close to us - or even only have something to do with us - leaves us no choice. A/I is shutting down. The Autistici/Inventati collective is shutting down and will soon discontinue all of the services we provide. There is no easy way to announce or explain this Every day we stayed online after August 26, 2026, has been a victory, but now we are forced to stop. None of us holds eroic gestures and martyrs in high esteem, therefore we will demand no sacrifices. Not from us, not from anyone else. In this political climate, continuing to offer our services endangers our users and anyone who is part of our communities. In a world where allegations are disconnected from reality, we can only expect repression to be increasingly disproportionate. Under these circumstances, we are no longer able to maintain our original mission - offering secure and non-commercial digital tools. These 25 years have been amazing. It’s been an “incredible ride”. Now turn off your PCs, get out of your homes, struggle, hug each other and keep on smiling. We are stopping, but the Resistance and ideas do not stop. Stay human. We will soon send instructions on how to back up the content of your blogs, mailboxes and websites, along with more technical recommendations. But keep in mind that, just as the autistici.org domain was made unreachable without previous notice, in the next few days we might suffer similar issues that we may not be able to predict. Autistici/Inventati Collective",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117224972818195789",
             "images": [],
             "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
+            "language": "English",
+            "languageCode": "en",
             "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117206269826259568",
-            "platform": "MASTODON",
-            "date": "2026-09-03T08:55:48.081Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Cit: \"L'unico posto dell'internet dove ci si sente a casa\" ... grazie! :) Quote: \"The only place in the internet where you feel at home\" ... thanks! :) https:// elenamistrello.com/2026/09/02/ solidarieta-ad-autisticiinventati/ # keepitfree # AutisticiInventati",
-            "excerpt": "Cit: \"L'unico posto dell'internet dove ci si sente a casa\" ... grazie! :) Quote: \"The only place in the internet where you feel at home\" ... thanks! :) https:// elenamistrello.com/2026/09/02/ solidarieta-ad-autisticiinventati/ # keepitfree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117206269826259568",
-            "images": [
-              {
-                "url": "https://mastodon.bida.im/system/media_attachments/files/117/206/307/535/440/358/original/997500ed8484c66d.png",
-                "alt": "tre persone che si riparano dalla tempesta con un notebook usato come tetto di una casa, con la scritta: L’unico posto dell’Internet in cui ci si sente a casa.\nSolidali con Autistici Inventati."
-              }
-            ],
-            "imageUrl": "https://mastodon.bida.im/system/media_attachments/files/117/206/307/535/440/358/original/997500ed8484c66d.png",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117202014681693878",
-            "platform": "MASTODON",
-            "date": "2026-09-02T14:53:39.727Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Presentiamo https:// keepitfree.ai Dal 26 agosto, quando il Dipartimento del Tesoro statunitense, tramite OFAC, ci ha sanzionato come “Specially Designated Global Terrorist” (SDGT), sono successe tante cose, tanto si è mosso. Ed è solo l’inizio. Abbiamo deciso di creare uno spazio unico per raccogliere quello che sta avvenendo dopo il 26 agosto, per permettere a tutta quella imprevedibile, caotica, magnifica comunità solidale di restare aggiornata più facilmente sulle conseguenze della decisione del governo USA e su quello che stiamo facendo. Leggi l'annuncio completo su https:// keepitfree.ai/it/announcements /presentiamo-https/keepitfree.ai/ # KeepItFree # AutisticiInventati",
-            "excerpt": "Presentiamo https:// keepitfree.ai Dal 26 agosto, quando il Dipartimento del Tesoro statunitense, tramite OFAC, ci ha sanzionato come “Specially Designated Global Terrorist” (SDGT), sono successe tante cose, tanto si è mosso. Ed è solo l’inizio. Abbiamo deciso di creare uno spazio unico per raccogliere quello che sta avvenendo dopo il 26 agosto, per permettere a tutta quella imprevedibile, caotica, magnifica comunità solidale di restare aggiornata più facilmente sulle conseguenze della decisione del governo USA e su quello che stiamo facendo. Leggi l'annuncio completo su https:// keepitfree.ai/it/announcements /presentiamo-https/keepitfree.ai/ # KeepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117202014681693878",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117202011778267339",
-            "platform": "MASTODON",
-            "date": "2026-09-02T14:52:55.426Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Announcing https:// keepitfree.ai Many things happened since August 26, 2026, when the Office of Foreign Assets Control (OFAC) at the US Department of the Treasury included us in their list of “Specially Designated Global Terrorists” (SDGT). This is just the beginning. We have now created a dedicated space to document what has been unfolding since August 26, to empower our unpredictable, chaotic and magnificent solidarity network by keeping it up to date with the consequences of the US government designation and our responses. Read the full announcement on https:// keepitfree.ai/announcements/an nouncing-https/keepitfree.ai/ # KeepItFree # AutisticiInventati",
-            "excerpt": "Announcing https:// keepitfree.ai Many things happened since August 26, 2026, when the Office of Foreign Assets Control (OFAC) at the US Department of the Treasury included us in their list of “Specially Designated Global Terrorists” (SDGT). This is just the beginning. We have now created a dedicated space to document what has been unfolding since August 26, to empower our unpredictable, chaotic and magnificent solidarity network by keeping it up to date with the consequences of the US government designation and our responses. Read the full announcement on https:// keepitfree.ai/announcements/an nouncing-https/keepitfree.ai/ # KeepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117202011778267339",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
+            "sourcePriority": 2
           },
           {
             "id": "mastodon-117217939866990301",
@@ -6552,6 +6435,69 @@
               }
             ],
             "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/212/253/230/792/187/original/758528ecd70a2ad5.png",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
+          },
+          {
+            "id": "mastodon-117206350144614106",
+            "platform": "MASTODON",
+            "date": "2026-09-03T09:16:13.780Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "Art from Elena Mistrello in support of # AutisticiInventati Quote: \"The only place in the internet where you feel at home\" https:// elenamistrello.com/2026/09/02/ solidarieta-ad-autisticiinventati/",
+            "excerpt": "Art from Elena Mistrello in support of # AutisticiInventati Quote: \"The only place in the internet where you feel at home\" https:// elenamistrello.com/2026/09/02/ solidarieta-ad-autisticiinventati/",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117206350144614106",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/206/310/106/870/876/original/f6864676760132cf.webp",
+                "alt": "Black-and-white illustration of three people crowded between tall server racks, tangled in a mass of cables while holding a laptop overhead. Dark storm clouds and heavy rain loom above them. The laptop is covered in activist and anti-fascist stickers, including a red-and-black flag. Grasshoppers perch around the servers and computer equipment. At the bottom, handwritten text reads “Complici e solidali con,” above the Autistici/Inventati logo."
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/206/310/106/870/876/original/f6864676760132cf.webp",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
+          },
+          {
+            "id": "mastodon-117201292302112535",
+            "platform": "MASTODON",
+            "date": "2026-09-02T11:49:57.099Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "NEW SPECIAL EPISODE OF MOLOTOV NOW: A NETWORK CALLED “RESISTANCE”: AN INTERVIEW WITH AUTISTICI/INVENTATI We turned our written interview with Autistici/Inventati into a special audio edition. Sprout reads Sabot Media’s questions, while a text-to-speech voice presents A/I’s written responses on encryption, antifascism, financial isolation, autonomous technology, international solidarity and building infrastructure beyond the reach of states and corporations. “Let us have a thousand servers, a thousand networks.” And when we asked what the network born around a server called Paranoia should be called now, A/I answered with one word: “Resistance.” Listen on all major podcast platforms, several minor ones and—most importantly—the DIY anarchist @ ChannelZeroNet Listen directly through Sabot Media: https:// sabot.media/post/resistance Music: “What Is Freedom” by Sima Lee. Sabot Media is an independent publication and is not affiliated with or acting on behalf of A/I. # AutisticiInventati # MolotovNow # ChannelZeroNetwork # DigitalRights # Antifascism # IndependentMedia",
+            "excerpt": "NEW SPECIAL EPISODE OF MOLOTOV NOW: A NETWORK CALLED “RESISTANCE”: AN INTERVIEW WITH AUTISTICI/INVENTATI We turned our written interview with Autistici/Inventati into a special audio edition. Sprout reads Sabot Media’s questions, while a text-to-speech voice presents A/I’s written responses on encryption, antifascism, financial isolation, autonomous technology, international solidarity and building infrastructure beyond the reach of states and corporations. “Let us have a thousand servers, a thousand networks.” And when we asked what the network born around a server called Paranoia should be called now, A/I answered with one word: “Resistance.” Listen on all major podcast platforms, several minor ones and—most importantly—the DIY anarchist @ ChannelZeroNet Listen directly through Sabot Media: https:// sabot.media/post/resistance Music: “What Is Freedom” by Sima Lee. Sabot Media is an independent publication and is not affiliated with or acting on behalf of A/I. # AutisticiInventati # MolotovNow # ChannelZeroNetwork # DigitalRights # Antifascism # IndependentMedia",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117201292302112535",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/201/287/558/581/161/original/e1d82ca261e39f47.png",
+                "alt": ""
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/201/287/558/581/161/original/e1d82ca261e39f47.png",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
+          },
+          {
+            "id": "mastodon-117201273920319064",
+            "platform": "MASTODON",
+            "date": "2026-09-02T11:45:16.611Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "NEW ZINE: THE SERVER CALLED PARANOIA Comrades with The BlackWave Collective in Italy have transformed Sabot Media’s reporting on Autistici/Inventati into a beautiful 21-page English-language zine. It traces A/I’s history from a recycled server assembled in a Milan hacklab to the U.S. government’s attempt to make an entire communications collective economically and technologically untouchable. This is what movement media can become when it moves: reporting passed between comrades, translated, redesigned, printed and carried into places an algorithm cannot reach. The standard reading PDF is available now through our Autistici/Inventati campaign page: https:// sabot.media/campaigns/autistic i-inventati A properly imposed version for folding and printing as a physical zine is coming tomorrow. Text by Sabot Media. Layout and design by The BlackWave Collective. Download it. Read it. Print it. Pass it along. Communications infrastructure is not terrorism. Sabot Media is an independent publication and is not affiliated with or acting on behalf of A/I. # AutisticiInventati # Zines # IndependentMedia # DigitalRights # InternetFreedom # Antifascism",
+            "excerpt": "NEW ZINE: THE SERVER CALLED PARANOIA Comrades with The BlackWave Collective in Italy have transformed Sabot Media’s reporting on Autistici/Inventati into a beautiful 21-page English-language zine. It traces A/I’s history from a recycled server assembled in a Milan hacklab to the U.S. government’s attempt to make an entire communications collective economically and technologically untouchable. This is what movement media can become when it moves: reporting passed between comrades, translated, redesigned, printed and carried into places an algorithm cannot reach. The standard reading PDF is available now through our Autistici/Inventati campaign page: https:// sabot.media/campaigns/autistic i-inventati A properly imposed version for folding and printing as a physical zine is coming tomorrow. Text by Sabot Media. Layout and design by The BlackWave Collective. Download it. Read it. Print it. Pass it along. Communications infrastructure is not terrorism. Sabot Media is an independent publication and is not affiliated with or acting on behalf of A/I. # AutisticiInventati # Zines # IndependentMedia # DigitalRights # InternetFreedom # Antifascism",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117201273920319064",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/201/254/139/169/638/original/3099e6439aef59c6.png",
+                "alt": "Black-and-white poster titled “The Server Called Paranoia.” An astronaut holding a server stands inside an open box filled with computers and network equipment, surrounded by curling octopus tentacles. Text below reads: “Defend Autistici/Inventati before September 25.”\n"
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/201/254/139/169/638/original/3099e6439aef59c6.png",
             "language": "English",
             "languageCode": "en",
             "contentWarning": "",
@@ -6792,6 +6738,14 @@
             "caption": "A wide campaign banner for websites and social headers.",
             "downloadUrl": "https://sabot.media/campaigns/autistici-inventati/graphics/originals/web-banner.png",
             "sourceUrl": ""
+          },
+          {
+            "id": "row-ev08u1zs",
+            "title": "Support A/I Web Logo",
+            "imageUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png",
+            "alt": "Black square logo with a white outlined heart containing a red asterisk, beside the white letters “A/I.”",
+            "caption": "from @subvertising.org on Mastodon.",
+            "downloadUrl": "https://sabot.media/api/media/files?key=media%2Fuploads%2Fimage%2Fmedia-ab31231d-6b97-487f-93bd-c67b5b0c2d90-4d8e74e773db63c6.png&filename=4d8e74e773db63c6.png"
           }
         ],
         "coverage": [
@@ -6858,6 +6812,22 @@
             "relevanceScore": 43,
             "featured": false,
             "editorialStatus": "featured"
+          },
+          {
+            "id": "coverage-1oiput2",
+            "date": "2026-09-06T10:29:00.000Z",
+            "outlet": "Il Post",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Il collettivo italiano Autistici/Inventati ha detto che chiuderà per via delle sanzioni imposte dagli Stati Uniti",
+            "translatedTitle": "",
+            "url": "https://www.ilpost.it/2026/09/06/il-collettivo-italiano-autistici-inventati-ha-detto-che-chiudera-per-via-delle-sanzioni-imposte-dagli-stati-uniti",
+            "imageUrl": "",
+            "summary": "Il collettivo italiano Autistici/Inventati, a cui il 26 agosto erano state imposte delle sanzioni dal dipartimento del Tesoro degli Stati Uniti, ha annunciato la propria chiusura. Ha scritto che «in q ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
           },
           {
             "id": "coverage-16jx93",
@@ -7923,67 +7893,238 @@
             "location": "USA"
           },
           {
-            "id": "signer-grounded-futures",
+            "id": "signer-grounded-futures-podcast",
             "name": "Grounded Futures Podcast",
             "location": "USA"
           },
           {
-            "id": "signer-final-straw",
+            "id": "signer-the-final-straw-radio",
             "name": "The Final Straw Radio",
             "location": "USA"
           },
           {
-            "id": "signer-dirty-hands",
+            "id": "signer-dirty-hands-collective",
             "name": "Dirty Hands Collective",
-            "location": "Colorado, USA"
+            "location": "CO"
           },
           {
-            "id": "signer-bash",
+            "id": "signer-bash-boise-autonomous-solidarity-hub",
             "name": "BASH - Boise Autonomous Solidarity Hub",
-            "location": "Idaho, USA"
+            "location": "ID"
           },
           {
-            "id": "signer-crman",
+            "id": "signer-chehalis-river-mutual-aid-network",
             "name": "Chehalis River Mutual Aid Network",
-            "location": "Washington, USA"
+            "location": "WA"
           },
           {
-            "id": "signer-blackflower",
+            "id": "signer-the-blackflower-collective",
             "name": "The Blackflower Collective",
-            "location": "Washington, USA"
-          },
-          {
-            "id": "signer-anarkism",
-            "name": "Anarkism.info",
-            "location": "Sweden"
-          },
-          {
-            "id": "signer-milk-tea-alliance",
-            "name": "#MilkTeaAlliance Calendar Team",
-            "location": "Southeast Asia",
-            "statement": "Many of our allies and friends in Southeast Asia use Autistici/Inventati services to protect themselves from state suppression of their speech. Other platforms often comply with takedown requests from authoritarian regimes, making A/I’s platform a lifeline. These U.S. sanctions threaten that speech and unjustly target an infrastructure provider."
-          },
-          {
-            "id": "signer-datenpunks",
-            "name": "Datenpunks e.V.",
-            "location": "Germany",
-            "statement": "Independent hosts and technology collectives like Autistici/Inventati show that privacy-preserving communication is possible. Volunteer-run collectives protect marginalized communities from surveillance capitalism and authoritarian governments. Everyone who cares about human rights should support them."
-          },
-          {
-            "id": "signer-eric-gallager",
-            "name": "Eric Gallager",
-            "location": "New Hampshire, USA"
-          },
-          {
-            "id": "signer-jeremy-smith",
-            "name": "Jeremy Beausoleil Smith",
-            "location": "Oregon, USA",
-            "statement": "This attack on freedom of speech must be undone. It sets a dangerous precedent for further censorship and erosion of civil rights. I oppose expansion of the surveillance state in Portland, across the United States and globally."
+            "location": "WA"
           },
           {
             "id": "signer-haymarket-customs",
             "name": "Haymarket Customs",
             "location": "USA"
+          },
+          {
+            "id": "signer-eric-gallager",
+            "name": "Eric Gallager",
+            "location": "NH"
+          },
+          {
+            "id": "signer-anarkism-info",
+            "name": "Anarkism.info",
+            "location": "Sweden"
+          },
+          {
+            "id": "signer-impremta-col-lectiva-de-can-batllo",
+            "name": "Impremta Col·lectiva de Can Batlló",
+            "location": "Catalonia"
+          },
+          {
+            "id": "signer-institute-for-anarchist-studies",
+            "name": "Institute for Anarchist Studies",
+            "location": "USA"
+          },
+          {
+            "id": "signer-picahack",
+            "name": "PicaHack",
+            "location": "Spain"
+          },
+          {
+            "id": "signer-osservatorio-nessuno-odv",
+            "name": "Osservatorio Nessuno OdV",
+            "location": "Italy"
+          },
+          {
+            "id": "signer-la-quadrature-du-net",
+            "name": "La Quadrature du Net",
+            "location": "France"
+          },
+          {
+            "id": "signer-firestorm-books",
+            "name": "Firestorm Books",
+            "location": "USA"
+          },
+          {
+            "id": "signer-zeolia",
+            "name": "zeolia",
+            "location": "France"
+          },
+          {
+            "id": "signer-picasoft",
+            "name": "Picasoft",
+            "location": "France"
+          },
+          {
+            "id": "signer-free-knowledge-institute",
+            "name": "Free Knowledge Institute",
+            "location": "Amsterdam, Netherlands"
+          },
+          {
+            "id": "signer-the-yunohost-project",
+            "name": "The YunoHost Project",
+            "location": "Undisclosed"
+          },
+          {
+            "id": "signer-french-data-network-fdn",
+            "name": "French Data Network (FDN)",
+            "location": "France"
+          },
+          {
+            "id": "signer-hefka-games",
+            "name": "Hefka Games",
+            "location": "France"
+          },
+          {
+            "id": "signer-your-local-pirates",
+            "name": "Your Local Pirates",
+            "location": "The Netherlands"
+          },
+          {
+            "id": "signer-tachanka",
+            "name": "Tachanka!",
+            "location": "Global"
+          },
+          {
+            "id": "signer-government-information-watch",
+            "name": "Government Information Watch",
+            "location": "USA"
+          },
+          {
+            "id": "signer-whistleblower-source-protection-program-whisper-at-exposefacts",
+            "name": "Whistleblower & Source Protection Program (WHISPeR) at ExposeFacts",
+            "location": "USA"
+          },
+          {
+            "id": "signer-afa-nl",
+            "name": "AFA NL",
+            "location": "The Netherlands"
+          },
+          {
+            "id": "signer-toulouse-anti-cruaute",
+            "name": "Toulouse Anti-Cruauté",
+            "location": "France"
+          },
+          {
+            "id": "signer-hadoly",
+            "name": "Hadoly",
+            "location": "France"
+          },
+          {
+            "id": "signer-chatons-collective",
+            "name": "CHATONS collective",
+            "location": "France",
+            "statement": "We're hosting a French translation of the letter here: https://www.chatons.org/node/7617"
+          },
+          {
+            "id": "signer-infini",
+            "name": "Infini",
+            "location": "France says :",
+            "statement": "Per un internet emancipatore, neutro, Libero e solidale."
+          },
+          {
+            "id": "signer-bmorepunk",
+            "name": "BMorePunk",
+            "location": "USA",
+            "statement": "BMorePunk stands in solidarity with A/I. Publishing the speech of others is not terrorism. Independent hosting collectives must all take a united stand against this outrageous injustice. An injury to one is an injury to all."
+          },
+          {
+            "id": "signer-restore-the-fourth",
+            "name": "Restore The Fourth",
+            "location": "USA",
+            "statement": "Privacy, encryption, pseudonymity and refusal to retain unnecessary identifying data are not evidence of terrorism. They are only evidence of human beings communicating, organizing and thriving without the State peering over their shoulder. Warrantless data-gathering partnerships between corporations and the State have the power to extinguish any real dissent. We all desperately need means of organizing and communication that are neither controlled by Big Tech, nor readily monitored by governments."
+          },
+          {
+            "id": "signer-nubo",
+            "name": "Nubo",
+            "location": "Belgium",
+            "statement": "Their published statement of support can be found here: Dutch version ( https://nubo.coop/nl/news/2026-09-02-autistici/ ) and French version ( https://nubo.coop/fr/news/2026-09-02-autistici/ )"
+          },
+          {
+            "id": "signer-tactic-asbl",
+            "name": "Tactic asbl",
+            "location": "Belgium Read their statement of support"
+          },
+          {
+            "id": "signer-domaine-public",
+            "name": "Domaine Public",
+            "location": "Belgium Read their statement of support"
+          },
+          {
+            "id": "signer-framasoft",
+            "name": "Framasoft",
+            "location": "France",
+            "statement": "Blog post by Framasoft"
+          },
+          {
+            "id": "signer-may-first-movement-technology",
+            "name": "May First Movement Technology",
+            "location": "US/Mexico",
+            "statement": "Speak out. Support Autistici. Support independent, movement-aligned technology and defend our ability to communicate, organize, and build community power outside the claws of Big Tech."
+          },
+          {
+            "id": "signer-minnesota-association-of-criminal-defense-lawyers",
+            "name": "Minnesota Association of Criminal Defense Lawyers",
+            "location": "USA",
+            "statement": "MACDL supports free speech, dissent, and the right to communicate without being compelled to include the US government in our communications. The Fourth Amendment was created to keep the government out of our private affairs. This illegal action also implicates the right to remain silent."
+          },
+          {
+            "id": "signer-bonfire-networks",
+            "name": "Bonfire Networks",
+            "location": "Belgium",
+            "statement": "A/I's mission has always been clear, and for more than twenty years it has inspired generations of hackers and activists in Italy and around the world: \"Socializzare saperi senza fondare poteri.\" Sharing knowledge without establishing power. That is what the US is attacking, and that is what is at stake today. The premise of these sanctions, that whoever provides communications infrastructure answers for whatever anyone does with it, would criminalise and shut down most Big Tech platforms tomorrow if applied equally. Instead it is aimed at grassroots services who refuse to surveil their users. We condemn these sanctions, and we stand firmly with solidarity tech like A/I. Antifascism and anticapitalism are not terrorism."
+          },
+          {
+            "id": "signer-ukrudt-net",
+            "name": "Ukrudt.net",
+            "location": "Sydfyn",
+            "statement": "As both users, supporters, and kin of Autistici/Inventati - sharing the cause of running autonomous infrastructure with a similar ethos (anti-capitalist, anti-militarist, feminist, fighting against repression on the internet for initiatives under political pressure) and built on FLOSS (Free/Libre Open Source Software) - we accuse the US government of censorship and digital repression, and stand in full solidarity with Autistici/Inventati. We will continue caring for our own infrastructure and working for the sprouting of autonomous, anti-capitalist, and anti-fascist server kinships, and we see the US designation ofAutistici/Inventati as a direct attack on our cause. We urge all actors to pressure the US government to lift it’s sanctions on Autistici/Inventati."
+          },
+          {
+            "id": "signer-geeks-for-social-change",
+            "name": "Geeks For Social Change",
+            "location": "UK",
+            "statement": "Corporations are currently attempting to conspire with governments to entirely eliminate the independent web and have our lives be entirely mediated by billionaires. This censorship of A/I is a dangerous step towards making it impossible to voice political dissent online and must be stopped."
+          },
+          {
+            "id": "signer-milkteaalliance-calendar-team",
+            "name": "#MilkTeaAlliance Calendar Team",
+            "location": "SE Asia",
+            "statement": "Many of our allies & friends in South East Asia use Autistici/Inventati services to protect themselves from state suppression of their speech, often other platforms will comply with takedown requests from authoritarian regimes and the platform provided by Autistici/Inventati are a lifeline. The sanctions by the US are a threat to their ability to speak freely to the world. Moreover the sanctions are unjustified as Autistici/Inventati are merely a infrastructure provider, they have done nothing wrong that any other email provider, blog host or social media platform has not also done."
+          },
+          {
+            "id": "signer-datenpunks-e-v",
+            "name": "Datenpunks e.V.",
+            "location": "Germany",
+            "statement": "Indyhosters and tech collectives like Autistici/Inventati play an important role in democratic societies: By providing tracking-free online services, they show that privacy-preserving communication is possible even though Big Tech and some governments want us to believe otherwise. In doing so, volunteer-run collectives such as A/I protect marginalized communities from surveillance capitalism and authoritarian governments. Everyone who cares about human rights should support them."
+          },
+          {
+            "id": "signer-jeremy-beausoleil-smith",
+            "name": "Jeremy Beausoleil Smith",
+            "location": "OR",
+            "statement": "This fascistic attack on our freedom of speech is unacceptable and must be undone. This is a targeted act of suppression against anyone standing up to Trump and his administration’s attempts to destroy our Democracy. The United States government is setting a dangerous precedent that will allow for further censorship and erosion of our Civil Rights. I oppose expansion of the surveillance state locally here in Portland, the United States, and globally. We deserve a future free from unfettered government and corporate surveillance."
           }
         ],
         "sources": [
@@ -8201,7 +8342,7 @@
           "signatoriesUrl": ""
         },
         "createdAt": "2026-08-28T21:30:00Z",
-        "updatedAt": "2026-08-30T10:58:48.487Z",
+        "updatedAt": "2026-09-06T17:20:58.301Z",
         "individualLetter": {
           "resourceId": "resource-individual-letter-pdf",
           "title": "Write to officials in your own voice",
@@ -8210,7 +8351,7 @@
           "href": "https://sabot.media/campaigns/autistici-inventati/resources/individual-letter-defend-autistici-inventati.pdf",
           "label": "Download the individual letter template"
         },
-        "signatoriesSource": "bundled-fallback",
+        "signatoriesSource": "published-open-letter",
         "socialSources": [
           {
             "platform": "mastodon",
@@ -8241,7 +8382,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-06T15:49:57.675Z",
+        "socialCheckedAt": "2026-09-06T17:46:04.810Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -8266,8 +8407,211 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-06T15:49:58.071Z",
-        "coverageArchiveCount": 70
+        "intelligenceCheckedAt": "2026-09-06T17:46:04.692Z",
+        "coverageArchiveCount": 71
+      },
+      "food-not-bombs-gaza": {
+        "id": "campaign-food-not-bombs-gaza",
+        "schemaVersion": 5,
+        "slug": "food-not-bombs-gaza",
+        "status": "published",
+        "campaignStatus": "urgent",
+        "lifecycleStatus": "active",
+        "campaignType": "direct-aid",
+        "kicker": "DIRECT AID · DIRECT SOLIDARITY",
+        "title": "Food Not Bombs Gaza",
+        "shortTitle": "Keep the meals coming",
+        "deck": "A Palestinian-led mutual-aid project is cooking for displaced families in Gaza. Help keep the meals coming—and hear directly from the people doing the work.",
+        "summary": "Sabot Media is amplifying and preserving updates from Food Not Bombs Gaza. Donations go directly through the verified Chuffed fundraiser; Sabot takes no percentage.",
+        "deadline": "",
+        "deadlineTimeZone": "UTC",
+        "heroImage": "",
+        "heroAlt": "",
+        "monitorUrl": "",
+        "monitorLabel": "Infrastructure monitor",
+        "partners": [
+          "Food Not Bombs Gaza",
+          "Sabot Media"
+        ],
+        "campaignKeywords": [
+          "Food Not Bombs Gaza",
+          "Gaza",
+          "mutual aid",
+          "direct aid",
+          "Jamal Abu Al-Ata"
+        ],
+        "disclaimer": "Sabot Media maintains and hosts this campaign space. Donations are processed by Chuffed, not Sabot Media. Fundraiser claims are attributed to the organizers unless independently verified.",
+        "donation": {
+          "url": "https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza",
+          "label": "Send direct aid",
+          "platform": "Chuffed",
+          "recipient": "Food Not Bombs Gaza",
+          "explanation": "The campaign organizer reports that funds are transferred to Jamal Abu Al-Ata using USDT because ordinary payment access and fees are prohibitive.",
+          "lastVerifiedAt": "2026-08-31T00:00:00.000Z"
+        },
+        "correspondence": {
+          "enabled": true,
+          "publicQuestions": true,
+          "contributorLabel": "Food Not Bombs Gaza",
+          "editorLabel": "Ash / Sabot Media",
+          "intro": "This is a private conversation with Ash and Sabot Media. Send text, audio, video, or a photo whenever you have time."
+        },
+        "actions": [
+          {
+            "id": "action-donate",
+            "title": "Send direct aid",
+            "body": "Money is the immediate need. Donate through the verified fundraiser.",
+            "href": "https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza",
+            "label": "Donate on Chuffed"
+          },
+          {
+            "id": "action-benefit",
+            "title": "Organize a benefit",
+            "body": "Use the organizer toolkit to turn a show, meal, raffle, or community event into direct support.",
+            "href": "#benefit",
+            "label": "Get the toolkit"
+          },
+          {
+            "id": "action-question",
+            "title": "Ask a question",
+            "body": "Submit a respectful question. Sabot reviews and forwards selected questions without flooding Jamal’s inbox.",
+            "href": "#questions",
+            "label": "Ask Food Not Bombs Gaza"
+          },
+          {
+            "id": "action-share",
+            "title": "Share the stable link",
+            "body": "Send people here so the campaign remains reachable even if a commercial platform removes an account.",
+            "href": "#top",
+            "label": "Share this campaign"
+          }
+        ],
+        "updates": [
+          {
+            "id": "fnb-launch",
+            "date": "2026-08-31T00:00:00Z",
+            "title": "Campaign space opened",
+            "body": "Sabot Media opened this independent campaign and correspondence space for Food Not Bombs Gaza.",
+            "url": "",
+            "pinned": true
+          },
+          {
+            "id": "publication-keep-the-meals-coming",
+            "date": "2026-09-01T11:39:22.888Z",
+            "title": "Keep the Meals Coming: Food Not Bombs Gaza Builds a Lifeline in Deir al-Balah published",
+            "body": "A few months ago, a message from someone we did not know arrived in Sabot Media’s Instagram inbox. His name was Jamal Abu Al-Ata. He was writing from Gaza and asking for financial support for the mutual-aid work he was doing there. The message appeared to be…",
+            "url": "https://sabot.media/post/keep-the-meals-coming",
+            "pinned": false,
+            "automated": true,
+            "source": "Sabot Media publishing"
+          }
+        ],
+        "resources": [
+          {
+            "id": "fnb-instagram",
+            "type": "social",
+            "title": "Food Not Bombs Gaza on Instagram",
+            "description": "The project’s active public account and original source for many field updates.",
+            "href": "https://www.instagram.com/foodnotbombs_gaza/",
+            "label": "Follow @foodnotbombs_gaza",
+            "imageUrl": ""
+          }
+        ],
+        "social": [],
+        "graphics": [],
+        "coverage": [],
+        "signatories": [],
+        "sources": [
+          {
+            "id": "fnb-chuffed",
+            "title": "Send Direct Aid to Food Not Bombs Gaza",
+            "publisher": "Chuffed",
+            "url": "https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza",
+            "note": "Current donation destination and organizer account of how funds reach Gaza."
+          },
+          {
+            "id": "fnb-instagram-source",
+            "title": "@foodnotbombs_gaza",
+            "publisher": "Instagram",
+            "url": "https://www.instagram.com/foodnotbombs_gaza/",
+            "note": "Original public updates from the project."
+          }
+        ],
+        "timeline": [],
+        "faq": [
+          {
+            "id": "fnb-relationship",
+            "question": "Is Sabot Media collecting these donations?",
+            "answer": "No. Donation buttons lead to the named Chuffed fundraiser. Sabot Media takes no percentage."
+          },
+          {
+            "id": "fnb-verification",
+            "question": "What has Sabot independently checked?",
+            "answer": "Sabot identifies the source of each claim and retains links to the fundraiser and project account. Statements about spending or impact remain attributed to Food Not Bombs Gaza or the fundraiser organizer unless independently verified."
+          },
+          {
+            "id": "fnb-interview",
+            "question": "Has Sabot interviewed Jamal?",
+            "answer": "Sabot has opened an asynchronous correspondence channel so Jamal can answer in text, audio, or video as his time and connectivity permit. The campaign does not depend on his ability to respond during war and displacement."
+          }
+        ],
+        "translations": [],
+        "sectionOrder": [
+          "donate",
+          "dispatches",
+          "act",
+          "questions",
+          "benefit",
+          "reporting",
+          "updates",
+          "sources",
+          "faq",
+          "status",
+          "letters",
+          "graphics",
+          "timeline",
+          "coverage",
+          "translations",
+          "signatories",
+          "social",
+          "socialArchive"
+        ],
+        "hiddenSections": [
+          "letters",
+          "graphics",
+          "timeline",
+          "coverage",
+          "translations",
+          "signatories",
+          "status"
+        ],
+        "sectionTitles": {
+          "reporting": "Reporting and context",
+          "act": "Ways to act",
+          "updates": "Campaign log",
+          "sources": "Verification and sources",
+          "faq": "Questions about this campaign",
+          "donate": "The need is money",
+          "dispatches": "Dispatches from Gaza",
+          "questions": "Ask Food Not Bombs Gaza",
+          "benefit": "Turn your event into direct aid"
+        },
+        "automation": {
+          "enabled": true,
+          "discoverNews": true,
+          "startAt": "",
+          "blueskyActors": [],
+          "mastodonAccounts": [],
+          "coverageFeeds": [],
+          "signatoriesUrl": ""
+        },
+        "createdAt": "2026-08-31T00:00:00Z",
+        "updatedAt": "2026-09-01T13:27:50.530Z",
+        "socialSources": [],
+        "socialErrors": [],
+        "automationErrors": [],
+        "automationCheckedAt": "2026-09-06T17:46:12.385Z",
+        "coverageArchiveCount": 0
       }
     }
   },
