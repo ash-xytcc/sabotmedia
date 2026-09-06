@@ -6,6 +6,20 @@ export const AI_CAMPAIGN_ID = 'campaign-autistici-inventati'
 export const FNB_GAZA_CAMPAIGN_SLUG = 'food-not-bombs-gaza'
 export const FNB_GAZA_CAMPAIGN_ID = 'campaign-food-not-bombs-gaza'
 export const AI_CAMPAIGN_DEADLINE = '2026-09-25T04:01:00.000Z'
+const AI_CAMPAIGN_TIMELINE_SEED = [
+  {
+    id: 'timeline-banca-etica',
+    date: '2026-09-04',
+    title: 'Banca Etica moves to close A/I’s account',
+    body: 'On September 4, Banca Etica tells AI ODV it will unilaterally terminate the association’s bank account and that the donated funds remaining in it will not be available to the association. A/I says the decision leaves it unable to meet administrative obligations, pay service providers, or continue providing services.',
+  },
+  {
+    id: 'timeline-shutdown',
+    date: '2026-09-06',
+    title: 'A/I announces it is shutting down',
+    body: 'A/I announces that the collective is shutting down and will discontinue all services shortly. It says continuing to operate under the current political and financial pressure would endanger users and the communities around it.',
+  },
+]
 export const CAMPAIGN_SECTION_KEYS = [
   'status', 'reporting', 'letters', 'act', 'graphics', 'updates', 'timeline',
   'coverage', 'sources', 'faq', 'translations', 'signatories', 'social',
@@ -107,6 +121,7 @@ export function defaultAiCampaign() {
     timeline: [
       { id: 'timeline-designation', date: '2026-08-26', title: 'Designation announced', body: 'The U.S. designation and sanctions action becomes the immediate trigger for this campaign.' },
       { id: 'timeline-launch', date: '2026-08-28', title: 'Public campaign launched', body: 'Reporting, public letters, journalist outreach, graphics, and direct advocacy begin circulating.' },
+      ...AI_CAMPAIGN_TIMELINE_SEED,
       { id: 'timeline-deadline', date: '2026-09-25', title: 'September 25 deadline', body: 'The campaign is organized around the September 25 wind-down deadline and the consequences that may follow.' },
     ],
     faq: [
@@ -175,6 +190,12 @@ export async function ensureAiCampaign(db) {
     const graphics = mergeAiCampaignGraphics(next.graphics)
     if (graphics.length !== (next.graphics || []).length) {
       next = { ...next, graphics }
+      changed = true
+    }
+
+    const timeline = mergeAiCampaignTimeline(next.timeline)
+    if (timeline.length !== (next.timeline || []).length) {
+      next = { ...next, timeline }
       changed = true
     }
 
@@ -449,6 +470,19 @@ function mergeAiCampaignGraphics(value) {
   }
 
   return current
+}
+
+function mergeAiCampaignTimeline(value) {
+  const current = Array.isArray(value) ? [...value] : []
+  const seenIds = new Set(current.map((item) => String(item?.id || '')).filter(Boolean))
+
+  for (const item of AI_CAMPAIGN_TIMELINE_SEED) {
+    if (seenIds.has(item.id)) continue
+    current.push(item)
+    seenIds.add(item.id)
+  }
+
+  return current.sort((a, b) => new Date(a?.date || 0) - new Date(b?.date || 0))
 }
 
 function graphicUrlKey(value) {
