@@ -244,6 +244,8 @@ function sanitizeNode(node) {
   }
 
   if (tag === 'figure') {
+    const hasMedia = Boolean(node.querySelector('img, audio, video, iframe'))
+    if (!hasMedia) return children
     return `<figure${sanitizeFigureClass(node)}${sanitizeMediaMetadata(node)}>${children}</figure>`
   }
 
