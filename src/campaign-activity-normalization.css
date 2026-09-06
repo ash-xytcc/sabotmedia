@@ -1,0 +1,69 @@
+/* Reporting resources should read as part of the reporting stream, not as a second card system. */
+.campaign-page #reporting > .campaign-shell > .campaign-resource-strip {
+  display: block;
+  margin-top: 0;
+  border-top: 1px solid currentColor;
+}
+
+.campaign-page #reporting > .campaign-shell > .campaign-resource-strip article {
+  display: grid;
+  grid-template-columns: 190px minmax(0, .95fr) minmax(0, 1.05fr);
+  gap: 10px 42px;
+  align-items: start;
+  padding: 24px 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+}
+
+.campaign-page #reporting > .campaign-shell > .campaign-resource-strip span {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  margin: 0;
+  color: var(--campaign-red);
+  font: 900 .72rem/1.15 var(--campaign-display);
+  letter-spacing: .065em;
+  text-transform: uppercase;
+}
+
+.campaign-page #reporting > .campaign-shell > .campaign-resource-strip h3 {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  font: 900 clamp(1.35rem, 2.2vw, 2rem)/.96 var(--campaign-display);
+  letter-spacing: -.025em;
+  text-transform: uppercase;
+}
+
+.campaign-page #reporting > .campaign-shell > .campaign-resource-strip p {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  margin: 0;
+  max-width: 48rem;
+  opacity: .78;
+  line-height: 1.45;
+}
+
+.campaign-page #reporting > .campaign-shell > .campaign-resource-strip a {
+  grid-column: 2;
+  grid-row: 2;
+  margin-top: 6px;
+  color: inherit;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .campaign-page #reporting > .campaign-shell > .campaign-resource-strip article {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 20px 0;
+  }
+
+  .campaign-page #reporting > .campaign-shell > .campaign-resource-strip span,
+  .campaign-page #reporting > .campaign-shell > .campaign-resource-strip h3,
+  .campaign-page #reporting > .campaign-shell > .campaign-resource-strip p,
+  .campaign-page #reporting > .campaign-shell > .campaign-resource-strip a {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
