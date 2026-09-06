@@ -177,7 +177,10 @@ export function CampaignAdminPage() {
   function addRow(section, fields) {
     const next = { id: rowId() }
     for (const item of fields) next[item.key] = item.type === 'checkbox' ? false : ''
-    setDraft((current) => ({ ...current, [section]: [...(current?.[section] || []), next] }))
+    setDraft((current) => {
+      const rows = current?.[section] || []
+      return { ...current, [section]: section === 'graphics' ? [next, ...rows] : [...rows, next] }
+    })
   }
   function removeRow(section, index) { setDraft((current) => ({ ...current, [section]: (current?.[section] || []).filter((_, rowIndex) => rowIndex !== index) })) }
   function moveRow(section, index, direction) {
