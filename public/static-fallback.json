@@ -7143,6 +7143,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-1rauky8",
+            "date": "2026-09-06T13:59:00.000Z",
+            "outlet": "ANSA",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Collettivo Autistici Inventati chiude tutti i suoi servizi, 'dobbiamo fermarci'",
+            "translatedTitle": "",
+            "url": "https://www.ansa.it/europa/notizie/rubriche/altrenews/2026/09/06/collettivo-autistici-inventati-chiude-tutti-i-suoi-servizi-dobbiamo-fermarci_a6e10910-54c6-4b3f-901d-f46c518c8944.html",
+            "imageUrl": "",
+            "summary": "\"A/I chiude. Il collettivo Autistici/Inventati chiude e sospenderà tutti i servizi a breve termine. Non c'è un modo facile per dirlo o per spiegarlo. (ANSA) ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-19tph9b",
             "date": "2026-09-06T13:27:37.000Z",
             "outlet": "Autistici/Inventati",
@@ -9027,7 +9043,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-06T21:39:52.547Z",
+        "socialCheckedAt": "2026-09-06T23:14:13.782Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9055,12 +9071,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 5
+            "count": 1
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-06T21:39:53.709Z",
-        "coverageArchiveCount": 91
+        "intelligenceCheckedAt": "2026-09-06T23:14:14.059Z",
+        "coverageArchiveCount": 92
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9262,7 +9278,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-06T21:40:00.209Z",
+        "automationCheckedAt": "2026-09-06T23:14:23.463Z",
         "coverageArchiveCount": 0
       }
     }
