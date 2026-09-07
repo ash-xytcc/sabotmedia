@@ -7122,6 +7122,22 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-fbodfy",
+            "date": "2026-09-07T13:53:00.000Z",
+            "outlet": "Domani",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati chiude il progetto: «L’attacco potrebbe non fermarsi alla dimensione collettiva»",
+            "translatedTitle": "",
+            "url": "https://www.editorialedomani.it/fatti/autistici-inventati-chiude-progetto-collettivo-sanzionato-usa-attacco-potrebbe-non-fermarsi-dimensione-collettiva-ul34t2t8",
+            "imageUrl": "",
+            "summary": "«La possibilità di poter essere la causa di conseguenze penali o finanziarie per qualcuno che ci è vicino, o che anche solo interagisce con noi, non ci permette altre scelte», dicono gli attivisti del ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-3n0tjf",
             "date": "2026-09-07T10:47:00.000Z",
             "outlet": "Torino Cronaca",
@@ -9406,7 +9422,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-07T20:47:43.126Z",
+        "socialCheckedAt": "2026-09-07T23:01:30.241Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9438,8 +9454,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-07T20:47:45.109Z",
-        "coverageArchiveCount": 115
+        "intelligenceCheckedAt": "2026-09-07T23:01:28.541Z",
+        "coverageArchiveCount": 116
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9641,7 +9657,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-07T20:47:54.021Z",
+        "automationCheckedAt": "2026-09-07T23:01:37.845Z",
         "coverageArchiveCount": 0
       }
     }
