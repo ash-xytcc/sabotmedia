@@ -189,7 +189,8 @@ async function renderSpaShell(context, url) {
   if ((url.pathname === '/' || url.pathname === '/archive') && context.env?.BF_DB) {
     try {
       const entries = await listNativeEntries(context.env.BF_DB, { status: 'published' })
-      fallback = renderNoScriptHome(entries.filter((entry) => entry.showOnHomepage !== false), url)
+      const visibleEntries = url.pathname === '/' ? entries.filter((entry) => entry.showOnHomepage !== false) : entries
+      fallback = renderNoScriptHome(visibleEntries, url)
     } catch {
       // Keep the generic fallback when storage is unavailable.
     }
