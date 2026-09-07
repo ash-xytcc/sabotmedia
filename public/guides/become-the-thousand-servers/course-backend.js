@@ -18,7 +18,8 @@
     if (deck) deck.textContent = course.deck || deck.textContent
     if (prose && course.intro) prose.innerHTML = paragraphs(course.intro)
 
-    const tasksSection = document.querySelector('#tasks')?.closest('.section')
+    const tasks = document.querySelector('#tasks')
+    const tasksSection = tasks?.closest('.section')
     if (tasksSection) {
       const heading = tasksSection.querySelector('h2')
       if (heading && course.taskHeading) heading.textContent = course.taskHeading
@@ -26,7 +27,7 @@
       if (!intro) {
         intro = document.createElement('p')
         intro.className = 'course-task-intro prose'
-        tasksSection.insertBefore(intro, document.querySelector('#tasks'))
+        tasksSection.insertBefore(intro, tasks)
       }
       intro.textContent = course.taskIntro || ''
     }
@@ -68,7 +69,7 @@
 
     if (Array.isArray(lesson.resources) && lesson.resources.length) {
       const resources = document.createElement('section')
-      resources.className = 'lesson-section backend-course-copy'
+      resources.className = 'lesson-section'
       resources.innerHTML = `<h2>Resources</h2><ul class="resources">${lesson.resources.map((r) => `<li><div>${r.url ? `<a href="${esc(r.url)}" target="_blank" rel="noreferrer">${esc(r.title || r.url)}</a>` : esc(r.title)}${r.note ? `<br><small>${esc(r.note)}</small>` : ''}</div></li>`).join('')}</ul>`
       wrap.appendChild(resources)
     }
@@ -87,6 +88,4 @@
     .catch(() => {})
 
   window.addEventListener('hashchange', () => window.setTimeout(apply, 0))
-  const observer = new MutationObserver(() => { if (course && lessonFromHash()) applyLesson() })
-  observer.observe(document.getElementById('main') || document.body, { childList: true, subtree: true })
 })()
