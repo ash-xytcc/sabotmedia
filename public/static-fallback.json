@@ -7122,6 +7122,22 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-3n0tjf",
+            "date": "2026-09-07T10:47:00.000Z",
+            "outlet": "Torino Cronaca",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Il Pd in corteo con i NoTav a ottobre Montaruli «Collettivo con la giacca»",
+            "translatedTitle": "",
+            "url": "https://www.torinocronaca.it/news/cronaca/691346/il-pd-in-corteo-con-i-notav-a-ottobre-montaruli-collettivo-con-la-giacca.html",
+            "imageUrl": "",
+            "summary": "Sullo sfondo, ancora il caso di Autistici/Inventati, dove Paolo De Rosa risulta esser (stato) legato a Schlein ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1a3wyck",
             "date": "2026-09-07T07:54:00.000Z",
             "outlet": "Цифровая Россия",
@@ -9390,7 +9406,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-07T17:46:08.384Z",
+        "socialCheckedAt": "2026-09-07T20:47:43.126Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9418,12 +9434,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 5
+            "count": 4
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-07T17:46:09.877Z",
-        "coverageArchiveCount": 114
+        "intelligenceCheckedAt": "2026-09-07T20:47:45.109Z",
+        "coverageArchiveCount": 115
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9625,7 +9641,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-07T17:46:18.609Z",
+        "automationCheckedAt": "2026-09-07T20:47:54.021Z",
         "coverageArchiveCount": 0
       }
     }
