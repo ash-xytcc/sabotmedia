@@ -12,8 +12,8 @@ export { AdminUsersPage as UsersAdminPage } from './AdminUsersPage'
 
 export function PagesAdminPage() {
   const location = useLocation()
-  const courseEditor = new URLSearchParams(location.search).get('course')
-  if (courseEditor === 'become-the-thousand-servers') return <CourseAdminPage />
+  const params = new URLSearchParams(location.search)
+  if (params.get('courses') === '1' || params.get('course')) return <CourseAdminPage />
 
   const samplePost = getPieces().find((piece) => piece?.slug)
   const samplePostPath = samplePost?.slug ? `/post/${samplePost.slug}` : '/archive'
@@ -28,17 +28,9 @@ export function PagesAdminPage() {
         <div className="wp-screen-header">
           <div>
             <h1>Pages</h1>
-            <p className="description">Route inventory for public surfaces. SabotPress does not currently store these as WordPress-style page records, so this screen deliberately provides navigation and the correct editor instead of pretending the rows are database objects.</p>
+            <p className="description">Route inventory for public surfaces. Courses have their own section now instead of being stuffed in here like somebody ran out of drawers.</p>
           </div>
         </div>
-        <section className="wp-meta-box">
-          <h2>Guides / Field Manuals</h2>
-          <p className="description">Living instructional material with its own structured editor.</p>
-          <div className="review-card__actions">
-            <Link className="button button--primary" to="/wp-admin/pages?course=become-the-thousand-servers">Edit Become the Thousand Servers</Link>
-            <a className="button" href="/guides/become-the-thousand-servers/" target="_blank" rel="noreferrer">View course</a>
-          </div>
-        </section>
         <section className="wp-meta-box">
           <table className="content-table wp-posts-table">
             <thead><tr><th>Title</th><th>Slug</th><th>Type</th><th>Path</th></tr></thead>
