@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
 import { AdminPublicConfigCard } from './AdminPublicConfigCard'
 import { LegacyInfoPageRecovery } from './LegacyInfoPageRecovery'
 import { RobotVoiceSettingsCard } from './RobotVoiceSettingsCard'
+import { CourseAdminPage } from './CourseAdminPage'
 import { getPieces } from '../lib/pieces'
 import { adminRoutes } from '../routing/routes'
 import { publicPageRegistry, withSiteEdit } from '../lib/publicPageRegistry'
@@ -10,6 +11,10 @@ import { publicPageRegistry, withSiteEdit } from '../lib/publicPageRegistry'
 export { AdminUsersPage as UsersAdminPage } from './AdminUsersPage'
 
 export function PagesAdminPage() {
+  const location = useLocation()
+  const courseEditor = new URLSearchParams(location.search).get('course')
+  if (courseEditor === 'become-the-thousand-servers') return <CourseAdminPage />
+
   const samplePost = getPieces().find((piece) => piece?.slug)
   const samplePostPath = samplePost?.slug ? `/post/${samplePost.slug}` : '/archive'
   const pages = [
@@ -26,6 +31,14 @@ export function PagesAdminPage() {
             <p className="description">Route inventory for public surfaces. SabotPress does not currently store these as WordPress-style page records, so this screen deliberately provides navigation and the correct editor instead of pretending the rows are database objects.</p>
           </div>
         </div>
+        <section className="wp-meta-box">
+          <h2>Guides / Field Manuals</h2>
+          <p className="description">Living instructional material with its own structured editor.</p>
+          <div className="review-card__actions">
+            <Link className="button button--primary" to="/wp-admin/pages?course=become-the-thousand-servers">Edit Become the Thousand Servers</Link>
+            <a className="button" href="/guides/become-the-thousand-servers/" target="_blank" rel="noreferrer">View course</a>
+          </div>
+        </section>
         <section className="wp-meta-box">
           <table className="content-table wp-posts-table">
             <thead><tr><th>Title</th><th>Slug</th><th>Type</th><th>Path</th></tr></thead>
