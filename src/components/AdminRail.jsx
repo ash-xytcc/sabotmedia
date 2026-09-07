@@ -7,6 +7,7 @@ import { AdminCommandPalette } from './AdminCommandPalette'
 import { useAdminAuth } from './AdminAuthContext'
 
 const RAIL_STATE_KEY = 'sabot-admin-rail-collapsed-v1'
+const COURSES_PATH = '/wp-admin/pages?courses=1'
 
 const NAV_GROUPS = [
   {
@@ -24,6 +25,7 @@ const NAV_GROUPS = [
     items: [
       { to: adminRoutes.publications, label: 'Publications' },
       { to: adminRoutes.campaigns, label: 'Campaigns', capability: 'publishing:write' },
+      { to: COURSES_PATH, label: 'Courses', capability: 'publishing:write', exactQuery: 'courses=1' },
       { to: adminRoutes.podcasts, label: 'Podcasts' },
       { to: adminRoutes.translations, label: 'Translations', capability: 'publishing:write' },
       { to: adminRoutes.feeds, label: 'Feeds & Syndication' },
@@ -72,8 +74,16 @@ function AdminBarMenu({ label, children, className = '' }) {
   )
 }
 
-function pathMatches(pathname, target) {
-  return Boolean(target && (pathname === target || pathname.startsWith(`${target}/`)))
+function itemMatches(location, item) {
+  const target = String(item?.to || '')
+  if (!target) return false
+  const [targetPath, targetQuery = ''] = target.split('?')
+  if (location.pathname !== targetPath && !location.pathname.startsWith(`${targetPath}/`)) return false
+  if (!targetQuery) return true
+  const params = new URLSearchParams(location.search)
+  const wanted = new URLSearchParams(targetQuery)
+  for (const [key, value] of wanted.entries()) if (params.get(key) !== value) return false
+  return true
 }
 
 export function AdminRail({ collapsed, onToggleCollapsed }) {
@@ -83,7 +93,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
   const [paletteOpenTick, setPaletteOpenTick] = useState(0)
   const hasCapability = (capability) => !capability || capabilities.includes('*') || capabilities.includes(capability)
   const groups = useMemo(() => NAV_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => hasCapability(item.capability)) })).filter((group) => group.items.length), [capabilities])
-  const activeGroup = groups.find((group) => group.items.some((item) => pathMatches(location.pathname, item.to)))?.id || ''
+  const activeGroup = groups.find((group) => group.items.some((item) => itemMatches(location, item)))?.id || ''
   const [openGroups, setOpenGroups] = useState(() => new Set(activeGroup ? [activeGroup] : ['content']))
   const canCreate = hasCapability('content:write') || hasCapability('media:write') || hasCapability('publishing:write')
   const canManageSite = hasCapability('site:manage')
@@ -146,6 +156,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
               {hasCapability('publishing:write') ? <Link to={adminRoutes.collections} className="wp-admin-topbar__dropdown-link">Collection</Link> : null}
               {hasCapability('publishing:write') ? <Link to={adminRoutes.campaigns} className="wp-admin-topbar__dropdown-link">Campaign</Link> : null}
               {hasCapability('publishing:write') ? <Link to={adminRoutes.publications} className="wp-admin-topbar__dropdown-link">Publication</Link> : null}
+              {hasCapability('publishing:write') ? <Link to={COURSES_PATH} className="wp-admin-topbar__dropdown-link">Course</Link> : null}
               {hasCapability('media:write') ? <Link to={adminRoutes.audiolab} className="wp-admin-topbar__dropdown-link">AudioLab Project</Link> : null}
             </AdminBarMenu>
           ) : null}
@@ -172,7 +183,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
             return (
               <div key={group.id} className={`admin-rail__group${isOpen ? ' is-open' : ''}${isGroupActive ? ' is-active' : ''}`}>
                 <button type="button" className="admin-rail__group-toggle" onClick={() => toggleGroup(group.id)} aria-expanded={isOpen && !collapsed} aria-controls={`admin-rail-group-${group.id}`} title={collapsed ? group.label : undefined}><span className="admin-rail__icon" aria-hidden="true">{group.icon}</span><span className="admin-rail__text">{group.label}</span><span className="admin-rail__chevron" aria-hidden="true">›</span></button>
-                <div id={`admin-rail-group-${group.id}`} className="admin-rail__subnav" hidden={collapsed || !isOpen}>{group.items.map((item) => <NavLink key={item.to} to={item.to} className={({ isActive }) => `admin-rail__sublink${isActive ? ' is-active' : ''}`}>{item.label}</NavLink>)}</div>
+                <div id={`admin-rail-group-${group.id}`} className="admin-rail__subnav" hidden={collapsed || !isOpen}>{group.items.map((item) => <NavLink key={item.to} to={item.to} className={() => `admin-rail__sublink${itemMatches(location, item) ? ' is-active' : ''}`}>{item.label}</NavLink>)}</div>
               </div>
             )
           })}
