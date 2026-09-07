@@ -15,7 +15,7 @@ const NAV_GROUPS = [
     items: [
       { to: adminRoutes.posts, label: 'Posts' },
       { to: adminRoutes.addNew, label: 'Add New', capability: 'content:write' },
-      { to: adminRoutes.pages, label: 'Pages' },
+      { to: adminRoutes.pages, label: 'Pages', excludeCourseQuery: true },
       { to: adminRoutes.collections, label: 'Collections' },
       { to: adminRoutes.taxonomy, label: 'Taxonomy' },
     ],
@@ -25,11 +25,16 @@ const NAV_GROUPS = [
     items: [
       { to: adminRoutes.publications, label: 'Publications' },
       { to: adminRoutes.campaigns, label: 'Campaigns', capability: 'publishing:write' },
-      { to: COURSES_PATH, label: 'Courses', capability: 'publishing:write', exactQuery: 'courses=1' },
       { to: adminRoutes.podcasts, label: 'Podcasts' },
       { to: adminRoutes.translations, label: 'Translations', capability: 'publishing:write' },
       { to: adminRoutes.feeds, label: 'Feeds & Syndication' },
       { to: adminRoutes.qa, label: 'Editorial QA' },
+    ],
+  },
+  {
+    id: 'courses', label: 'Courses', icon: '▤',
+    items: [
+      { to: COURSES_PATH, label: 'All Courses', capability: 'publishing:write' },
     ],
   },
   {
@@ -77,10 +82,11 @@ function AdminBarMenu({ label, children, className = '' }) {
 function itemMatches(location, item) {
   const target = String(item?.to || '')
   if (!target) return false
+  const params = new URLSearchParams(location.search)
+  if (item.excludeCourseQuery && (params.get('courses') === '1' || params.get('course'))) return false
   const [targetPath, targetQuery = ''] = target.split('?')
   if (location.pathname !== targetPath && !location.pathname.startsWith(`${targetPath}/`)) return false
   if (!targetQuery) return true
-  const params = new URLSearchParams(location.search)
   const wanted = new URLSearchParams(targetQuery)
   for (const [key, value] of wanted.entries()) if (params.get(key) !== value) return false
   return true
