@@ -6293,6 +6293,16 @@
             "source": "Sabot Media publishing"
           },
           {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-technical-updates-howto-tecnico-per-salvare-i-tuoi-dati-sui-servizi-a-i",
+            "date": "2026-09-08T16:23:00.000Z",
+            "title": "Howto tecnico per salvare i tuoi dati sui servizi A/I",
+            "body": "Nei prossimi 10 giorni tutti i servizi sui server Autistici/Inventati saranno spenti. Questo significa che tutte le mail smetteranno di funzionare, quindi se avete utilizzato le nostre caselle di posta per registrarvi su servizi vari online dovete al più presto cambiare queste mail. Di seguito trovate indicazioni su come esportare dati per i vari servizi pr…",
+            "url": "https://keepitfree.ai/it/technical-updates/howto-tecnico-per-salvare-i-tuoi-dati-sui-servizi-a/i/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
             "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-ai-odv-presenta-ricorso-contro-banca-etica",
             "date": "2026-09-08T12:13:00.000Z",
             "title": "AI ODV presenta ricorso contro Banca Etica",
@@ -6473,14 +6483,34 @@
             "source": "Autistici/Inventati"
           },
           {
-            "id": "official-ai-keepitfree-https-keepitfree-ai-it-technical-updates-il-servizio-di-posta-c3-a8-di-nuovo-attivo",
-            "date": "2026-08-28T11:00:00.000Z",
-            "title": "Il servizio di posta è di nuovo attivo",
-            "body": "Il servizio di posta funziona di nuovo. Ecco le istruzioni su come accedere alla tua casella: Se hai una mail @autistici.org, stiamo spostando la tua casella su un nuovo dominio (seguiranno aggiornamenti). Nel frattempo non potrai inviare o ricevere nuove mail, ma potrai comunque accedere al tuo account. Una volta dentro, troverai tutto il tuo archivio. Per…",
-            "url": "https://keepitfree.ai/it/technical-updates/il-servizio-di-posta-%C3%A8-di-nuovo-attivo/",
+            "id": "official-social-mastodon-117236457326532926",
+            "date": "2026-09-08T16:52:52.782Z",
+            "title": "A/I public campaign update",
+            "body": "Here comes the post you've all been waiting for: how to make backups of your A/I services data https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
+            "url": "https://mastodon.bida.im/@cavallette/117236457326532926",
             "pinned": false,
             "automated": true,
-            "source": "Autistici/Inventati"
+            "source": "A/I official Mastodon"
+          },
+          {
+            "id": "official-social-mastodon-117236455143449479",
+            "date": "2026-09-08T16:52:19.468Z",
+            "title": "A/I public campaign update",
+            "body": "Il post che stavate tutti aspettando. Come fare backup dei vostri dati per i vari servizi di A/I https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
+            "url": "https://mastodon.bida.im/@cavallette/117236455143449479",
+            "pinned": false,
+            "automated": true,
+            "source": "A/I official Mastodon"
+          },
+          {
+            "id": "official-social-mastodon-117236283687690596",
+            "date": "2026-09-08T16:08:43.261Z",
+            "title": "A/I public campaign update",
+            "body": "Sul Domani anche un'intervista a un avvocato US che spiega parecchie questioni (per chi ancora avesse dei dubbi) https://www. editorialedomani.it/politica/m ondo/Avvocato-center-for-Constitutional-Rights-Usa-sanzionano-Autistici-Inventati-per-colpire-antifascisti-americani-ngzettbt # AutisticiInventati # KeepITFree",
+            "url": "https://mastodon.bida.im/@cavallette/117236283687690596",
+            "pinned": false,
+            "automated": true,
+            "source": "A/I official Mastodon"
           },
           {
             "id": "update-launch",
@@ -6511,6 +6541,54 @@
           }
         ],
         "social": [
+          {
+            "id": "mastodon-117236457326532926",
+            "platform": "MASTODON",
+            "date": "2026-09-08T16:52:52.782Z",
+            "account": "cavallette",
+            "handle": "@cavallette",
+            "text": "Here comes the post you've all been waiting for: how to make backups of your A/I services data https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
+            "excerpt": "Here comes the post you've all been waiting for: how to make backups of your A/I services data https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
+            "url": "https://mastodon.bida.im/@cavallette/117236457326532926",
+            "images": [],
+            "imageUrl": "",
+            "language": "Italian",
+            "languageCode": "it",
+            "contentWarning": "",
+            "sourcePriority": 0
+          },
+          {
+            "id": "mastodon-117236455143449479",
+            "platform": "MASTODON",
+            "date": "2026-09-08T16:52:19.468Z",
+            "account": "cavallette",
+            "handle": "@cavallette",
+            "text": "Il post che stavate tutti aspettando. Come fare backup dei vostri dati per i vari servizi di A/I https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
+            "excerpt": "Il post che stavate tutti aspettando. Come fare backup dei vostri dati per i vari servizi di A/I https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
+            "url": "https://mastodon.bida.im/@cavallette/117236455143449479",
+            "images": [],
+            "imageUrl": "",
+            "language": "Italian",
+            "languageCode": "it",
+            "contentWarning": "",
+            "sourcePriority": 0
+          },
+          {
+            "id": "mastodon-117236283687690596",
+            "platform": "MASTODON",
+            "date": "2026-09-08T16:08:43.261Z",
+            "account": "cavallette",
+            "handle": "@cavallette",
+            "text": "Sul Domani anche un'intervista a un avvocato US che spiega parecchie questioni (per chi ancora avesse dei dubbi) https://www. editorialedomani.it/politica/m ondo/Avvocato-center-for-Constitutional-Rights-Usa-sanzionano-Autistici-Inventati-per-colpire-antifascisti-americani-ngzettbt # AutisticiInventati # KeepITFree",
+            "excerpt": "Sul Domani anche un'intervista a un avvocato US che spiega parecchie questioni (per chi ancora avesse dei dubbi) https://www. editorialedomani.it/politica/m ondo/Avvocato-center-for-Constitutional-Rights-Usa-sanzionano-Autistici-Inventati-per-colpire-antifascisti-americani-ngzettbt # AutisticiInventati # KeepITFree",
+            "url": "https://mastodon.bida.im/@cavallette/117236283687690596",
+            "images": [],
+            "imageUrl": "",
+            "language": "Italian",
+            "languageCode": "it",
+            "contentWarning": "",
+            "sourcePriority": 0
+          },
           {
             "id": "mastodon-117229033973331980",
             "platform": "MASTODON",
@@ -6784,27 +6862,6 @@
               }
             ],
             "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/212/253/230/792/187/original/758528ecd70a2ad5.png",
-            "language": "English",
-            "languageCode": "en",
-            "contentWarning": "",
-            "sourcePriority": 2
-          },
-          {
-            "id": "mastodon-117206350144614106",
-            "platform": "MASTODON",
-            "date": "2026-09-03T09:16:13.780Z",
-            "account": "Sabot Media",
-            "handle": "@AberdeenLocal1312",
-            "text": "Art from Elena Mistrello in support of # AutisticiInventati Quote: \"The only place in the internet where you feel at home\" https:// elenamistrello.com/2026/09/02/ solidarieta-ad-autisticiinventati/",
-            "excerpt": "Art from Elena Mistrello in support of # AutisticiInventati Quote: \"The only place in the internet where you feel at home\" https:// elenamistrello.com/2026/09/02/ solidarieta-ad-autisticiinventati/",
-            "url": "https://kolektiva.social/@AberdeenLocal1312/117206350144614106",
-            "images": [
-              {
-                "url": "https://kolektiva.social/system/media_attachments/files/117/206/310/106/870/876/original/f6864676760132cf.webp",
-                "alt": "Black-and-white illustration of three people crowded between tall server racks, tangled in a mass of cables while holding a laptop overhead. Dark storm clouds and heavy rain loom above them. The laptop is covered in activist and anti-fascist stickers, including a red-and-black flag. Grasshoppers perch around the servers and computer equipment. At the bottom, handwritten text reads “Complici e solidali con,” above the Autistici/Inventati logo."
-              }
-            ],
-            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/206/310/106/870/876/original/f6864676760132cf.webp",
             "language": "English",
             "languageCode": "en",
             "contentWarning": "",
@@ -7122,6 +7179,22 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-1snnb6y",
+            "date": "2026-09-08T16:23:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Howto tecnico per salvare i tuoi dati sui servizi A/I",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/technical-updates/howto-tecnico-per-salvare-i-tuoi-dati-sui-servizi-a/i",
+            "imageUrl": "",
+            "summary": "Nei prossimi 10 giorni tutti i servizi sui server Autistici/Inventati saranno spenti. Questo significa che tutte le mail smetteranno di funzionare, quindi se avete utilizzato le nostre caselle di posta per registrarvi su servizi vari online dovete al più presto cambiare queste mail. Di seguito trovate indicazioni su c…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 50,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1ryxkeg",
             "date": "2026-09-08T12:13:00.000Z",
             "outlet": "Autistici/Inventati",
@@ -7134,6 +7207,38 @@
             "summary": "Comunicato stampa AI ODV, 8 settembre 2026 Abbiamo depositato davanti al Tribunale di Pisa un ricorso in via d&rsquo;urgenza ex art. 700 c.p.c. contro Banca Popolare Etica, per ottenere il ripristino immediato dell&rsquo;operatività del nostro conto corrente. Il 26 agosto l&rsquo;OFAC statunitense ha inserito Autistic…",
             "discoverySource": "official-ai",
             "relevanceScore": 12,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1ifoaqf",
+            "date": "2026-09-08T10:46:20.000Z",
+            "outlet": "Washington Examiner on MSN",
+            "language": "",
+            "languageCode": "",
+            "title": "Foreign anti-police tech group announces it’s shutting down over Trump sanctions",
+            "translatedTitle": "",
+            "url": "https://www.msn.com/en-us/news/other/foreign-anti-police-tech-group-announces-it-s-shutting-down-over-trump-sanctions/ar-AA2bP5Ty",
+            "imageUrl": "",
+            "summary": "An Italy-based group is unable to keep providing digital tools to radical activists worldwide due to U.S. sanctions, the group announced on Sunday. The Autistici Inventati Collective, or A/I ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 75,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1q6xl53",
+            "date": "2026-09-08T10:30:00.000Z",
+            "outlet": "Perspektive Online",
+            "language": "",
+            "languageCode": "",
+            "title": "NoBlogs no more: Autistici/Inventati stellt Betrieb nach US-Sanktionen ein",
+            "translatedTitle": "",
+            "url": "https://perspektive-online.net/2026/09/noblogs-no-more-autistici-inventati-stellt-betrieb-nach-us-sanktionen-ein",
+            "imageUrl": "",
+            "summary": "Elf Tage nach der Terroreinstufung durch die US-Regierung kündigt das italienische Kollektiv Autistici/Inventati (A/I) an, seine Tätigkeit einzustellen. Betroffen sind unter anderem der Hostingdienst ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 115,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -7230,6 +7335,22 @@
             "summary": "di Collettivo Autistici/Inventati - Autistici/Inventati chiude e sospende tutti i servizi a breve termine. Non c’è un modo facile per dirlo. Ma nella situazione che si è determinata dopo il nostro ass ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-xj348h",
+            "date": "2026-09-07T22:20:00.000Z",
+            "outlet": "derStandard.at",
+            "language": "",
+            "languageCode": "",
+            "title": "Italienische antifaschistische Plattform muss nach Sanktionen durch US-Regierung aufgeben",
+            "translatedTitle": "",
+            "url": "https://www.derstandard.at/story/3000000338835/italienische-antifaschistische-plattform-muss-nach-sanktionen-durch-us-regierung-aufgeben",
+            "imageUrl": "",
+            "summary": "Autistici/Inventati stellte digitale Infrastruktur bereit. Die Trump-Regierung hatte Gelder der Gruppe eingefroren und auch ausländischen Instituten bei Kontakt gedroht ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9646,14 +9767,14 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-08T15:03:46.592Z",
+        "socialCheckedAt": "2026-09-08T18:32:17.904Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
             "label": "A/I Keep It Free dispatches",
             "url": "https://keepitfree.ai/it/index.xml",
             "ok": true,
-            "count": 14
+            "count": 15
           },
           {
             "id": "official-ai-noblogs",
@@ -9674,12 +9795,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 5
+            "count": 0
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-08T15:03:46.987Z",
-        "coverageArchiveCount": 130
+        "intelligenceCheckedAt": "2026-09-08T18:32:19.002Z",
+        "coverageArchiveCount": 134
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9881,7 +10002,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-08T15:03:59.275Z",
+        "automationCheckedAt": "2026-09-08T18:32:28.910Z",
         "coverageArchiveCount": 0
       }
     }
