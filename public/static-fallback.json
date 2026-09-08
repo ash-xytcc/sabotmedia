@@ -7122,6 +7122,54 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-1y9ebs3",
+            "date": "2026-09-08T02:16:00.000Z",
+            "outlet": "Il Tempo",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati, FdI all'attacco: Ue e Pd chiariscano su De Rosa",
+            "translatedTitle": "",
+            "url": "https://www.iltempo.it/attualita/2026/09/08/news/autistici-inventati-fidanza---montaruli-fdi-collettivo-hacker-commissione-ue-de-rosa-pd-49074597",
+            "imageUrl": "",
+            "summary": "Non è concluso il caso del collettivo hacker italiano Autistii/Inventati inserito dagli Usa tra i terroristi globali. Nelle scorse ore il ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-j7ws2",
+            "date": "2026-09-08T00:28:00.000Z",
+            "outlet": "Avvenire",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Chi sono gli attivisti digitali \"Autistici/Inventati\" e perché sono finiti nella lista nera degli Usa",
+            "translatedTitle": "",
+            "url": "https://www.avvenire.it/attualita/chi-sono-gli-attivisti-digitali-autisticiinventati-e-perche-sono-finiti-nella-lista-nera-degli-usa_112742",
+            "imageUrl": "",
+            "summary": "Il collettivo toscano ha interrotto i suoi servizi digitali e si è visto chiudere il conto corrente. Banca Etica: «Alto il rischio di sanzioni». I precedenti di Francesca Albanese e del giudice Guillo ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-50tprj",
+            "date": "2026-09-08T00:07:00.000Z",
+            "outlet": "volerelaluna",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati chiude – Restare Umani",
+            "translatedTitle": "",
+            "url": "https://volerelaluna.it/in-primo-piano/2026/09/08/autistici-inventati-chiude-restare-umani",
+            "imageUrl": "",
+            "summary": "di Collettivo Autistici/Inventati - Autistici/Inventati chiude e sospende tutti i servizi a breve termine. Non c’è un modo facile per dirlo. Ma nella situazione che si è determinata dopo il nostro ass ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-r6nq3s",
             "date": "2026-09-07T20:30:00.000Z",
             "outlet": "The Times of India",
@@ -7150,6 +7198,38 @@
             "summary": "Leggi su Il Fatto Quotidiano l'articolo in edicola \"Autistici/Inventati affondato dagli Usa “Così troppi rischi”\" pubblicato il 8 Settembre 2026 a firma di Alessandro Mantovani e Stefania Maurizi ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-m9yznh",
+            "date": "2026-09-07T17:00:00.000Z",
+            "outlet": "heise online",
+            "language": "",
+            "languageCode": "",
+            "title": "Classified as terrorists by the US government: Hacker collective A/I gives up",
+            "translatedTitle": "",
+            "url": "https://www.heise.de/en/news/Classified-as-terrorists-by-the-US-government-Hacker-collective-A-I-gives-up-11444622.html",
+            "imageUrl": "",
+            "summary": "Autistici/Inventati been offering free internet services since 2001, but Washington put an end to it: the group cannot overcome its classification as terrorist.",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 75,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-xu4onz",
+            "date": "2026-09-07T17:00:00.000Z",
+            "outlet": "heise online",
+            "language": "",
+            "languageCode": "",
+            "title": "Von US-Regierung als Terroristen eingestuft: Hackerkollektiv A/I gibt auf",
+            "translatedTitle": "",
+            "url": "https://www.heise.de/news/Von-US-Regierung-als-Terroristen-eingestuft-Hackerkollektiv-A-I-gibt-auf-11444557.html",
+            "imageUrl": "",
+            "summary": "Seit 2001 bietet Autistici/Inventati freie Internetdienste an, nun hat Washington das beendet: Gegen die Einstufung als terroristisch kommt die Gruppe nicht an.",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 75,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9502,7 +9582,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-08T05:54:30.968Z",
+        "socialCheckedAt": "2026-09-08T11:07:06.515Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9534,8 +9614,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-08T05:54:32.125Z",
-        "coverageArchiveCount": 121
+        "intelligenceCheckedAt": "2026-09-08T11:07:07.604Z",
+        "coverageArchiveCount": 126
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9737,7 +9817,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-08T05:54:40.041Z",
+        "automationCheckedAt": "2026-09-08T11:07:15.574Z",
         "coverageArchiveCount": 0
       }
     }
