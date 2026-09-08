@@ -6590,6 +6590,27 @@
             "sourcePriority": 0
           },
           {
+            "id": "mastodon-117237412271779070",
+            "platform": "MASTODON",
+            "date": "2026-09-08T20:55:44.090Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "NOBLOGS BACKUP LINKS INCOMING You will or have just recieved an email with a link to backup your noblogs account in full. This is from # autisticiInventati directly and can be trusted. Post confirming is here: https:// cavallette.noblogs.org/2026/09 /10099",
+            "excerpt": "NOBLOGS BACKUP LINKS INCOMING You will or have just recieved an email with a link to backup your noblogs account in full. This is from # autisticiInventati directly and can be trusted. Post confirming is here: https:// cavallette.noblogs.org/2026/09 /10099",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117237412271779070",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/237/407/906/535/630/original/7c0a14bc8c8bd9d7.png",
+                "alt": "NOBLOGS BACKUP LINKS INCOMING\n\nYou will or have just recieved an email with a link to backup your noblogs account in full. This is from #autisticiInventati directly and can be trusted. \n\nPost confirming is here: https://cavallette.noblogs.org/2026/09/10099"
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/237/407/906/535/630/original/7c0a14bc8c8bd9d7.png",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
+          },
+          {
             "id": "mastodon-117229033973331980",
             "platform": "MASTODON",
             "date": "2026-09-07T09:25:01.400Z",
@@ -6841,27 +6862,6 @@
               }
             ],
             "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/212/926/735/499/850/original/c771edd300609ac8.png",
-            "language": "English",
-            "languageCode": "en",
-            "contentWarning": "",
-            "sourcePriority": 2
-          },
-          {
-            "id": "mastodon-117212259262588749",
-            "platform": "MASTODON",
-            "date": "2026-09-04T10:18:59.627Z",
-            "account": "Sabot Media",
-            "handle": "@AberdeenLocal1312",
-            "text": "URGENT: We’re opening a new investigation into the Aug. 26 designation of Autistici/Inventati. The question: how did the U.S. government get there? We’re tracing the decision tree through records, timelines, agency actions, source documents, and the gaps still left unanswered.",
-            "excerpt": "URGENT: We’re opening a new investigation into the Aug. 26 designation of Autistici/Inventati. The question: how did the U.S. government get there? We’re tracing the decision tree through records, timelines, agency actions, source documents, and the gaps still left unanswered.",
-            "url": "https://kolektiva.social/@AberdeenLocal1312/117212259262588749",
-            "images": [
-              {
-                "url": "https://kolektiva.social/system/media_attachments/files/117/212/253/230/792/187/original/758528ecd70a2ad5.png",
-                "alt": "Alt text: Red, black, and cream campaign graphic reading, “Coming Soon: Investigation: How did the US govt get to Aug 26?” Below: “Tracing the decision tree behind the designation of Autistici/Inventati.” Footer reads, “Read / Share / Preserve / Organize,” with sabot.media branding and a note that the publisher is not affiliated with A/I."
-              }
-            ],
-            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/212/253/230/792/187/original/758528ecd70a2ad5.png",
             "language": "English",
             "languageCode": "en",
             "contentWarning": "",
@@ -7195,6 +7195,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-xj348h",
+            "date": "2026-09-08T12:20:00.000Z",
+            "outlet": "derStandard.at",
+            "language": "",
+            "languageCode": "",
+            "title": "Italienische antifaschistische Plattform muss nach Sanktionen durch US-Regierung aufgeben",
+            "translatedTitle": "",
+            "url": "https://www.derstandard.at/story/3000000338835/italienische-antifaschistische-plattform-muss-nach-sanktionen-durch-us-regierung-aufgeben",
+            "imageUrl": "",
+            "summary": "Autistici/Inventati stellte digitale Infrastruktur bereit. Die Trump-Regierung hatte Gelder der Gruppe eingefroren und auch ausländischen Instituten bei Kontakt gedroht ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1ryxkeg",
             "date": "2026-09-08T12:13:00.000Z",
             "outlet": "Autistici/Inventati",
@@ -7253,6 +7269,22 @@
             "url": "https://www.nu.nl/tweakers/6409026/italiaanse-activistische-internetprovider-stopt-na-amerikaanse-sancties.html",
             "imageUrl": "",
             "summary": "De Italiaanse internetprovider Autistici/Inventati (A/I) stopt na 25 jaar. De Amerikaanse regering zette de organisatie op een terroristenlijst. Daardoor raakte A/I onder meer haar domeinnaam en toega ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-wsyxjk",
+            "date": "2026-09-08T04:26:00.000Z",
+            "outlet": "Het Laatste Nieuws",
+            "language": "",
+            "languageCode": "",
+            "title": "Italiaanse hacktivistengroep moet internetdiensten stopzetten na Amerikaanse sancties",
+            "translatedTitle": "",
+            "url": "https://www.hln.be/internet/italiaanse-hacktivistengroep-moet-internetdiensten-stopzetten-na-amerikaanse-sancties~acfab52a",
+            "imageUrl": "",
+            "summary": "De Italiaanse hacktivistengroep Autistici/Inventati (A/I) stopt na 25 jaar. De Amerikaanse regering zette de organisatie op een terroristenlijst. Daardoor verloor A/I onder meer haar domeinnaam en toe ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 62,
             "featured": false,
@@ -7339,22 +7371,6 @@
             "editorialStatus": "automatic"
           },
           {
-            "id": "coverage-xj348h",
-            "date": "2026-09-07T22:20:00.000Z",
-            "outlet": "derStandard.at",
-            "language": "",
-            "languageCode": "",
-            "title": "Italienische antifaschistische Plattform muss nach Sanktionen durch US-Regierung aufgeben",
-            "translatedTitle": "",
-            "url": "https://www.derstandard.at/story/3000000338835/italienische-antifaschistische-plattform-muss-nach-sanktionen-durch-us-regierung-aufgeben",
-            "imageUrl": "",
-            "summary": "Autistici/Inventati stellte digitale Infrastruktur bereit. Die Trump-Regierung hatte Gelder der Gruppe eingefroren und auch ausländischen Instituten bei Kontakt gedroht ...",
-            "discoverySource": "live-discovery",
-            "relevanceScore": 50,
-            "featured": false,
-            "editorialStatus": "automatic"
-          },
-          {
             "id": "coverage-r6nq3s",
             "date": "2026-09-07T20:30:00.000Z",
             "outlet": "The Times of India",
@@ -7431,6 +7447,22 @@
             "summary": "アメリカ財務省外国資産管理局(OFAC)はイタリアのテクノロジー企業である Autistici/Inventati(A/I Collective)を「特別指定グローバルテロリスト(SDGT)」に指定しました。テロ行為の実行犯だけでなくテロ行為を可能にする技術インフラに対してもテロ対策制裁の対象としたことはA/I Collectiveの猛反発を招くとともに、物質的支援の論理を技術インフラに公然かつ強 ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1b5jwk0",
+            "date": "2026-09-07T17:00:00.000Z",
+            "outlet": "Osservatorio sulla legalità e sui diritti",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Ricorso contro effetti del bando USA a associazione italiana",
+            "translatedTitle": "",
+            "url": "http://www.osservatoriosullalegalita.org/26/acom/09/08gianelleg.htm",
+            "imageUrl": "",
+            "summary": "Abbiamo questa mattina depositato per l'associazione Autistici/Inventati un ricorso in via d'urgenza alla Giustizia italiana, chiedendo che il Tribunale disponga il ripristino della operatività del co ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9767,7 +9799,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-08T18:32:17.904Z",
+        "socialCheckedAt": "2026-09-08T21:21:36.848Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9795,12 +9827,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 0
+            "count": 5
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-08T18:32:19.002Z",
-        "coverageArchiveCount": 134
+        "intelligenceCheckedAt": "2026-09-08T21:21:38.071Z",
+        "coverageArchiveCount": 136
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10002,7 +10034,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-08T18:32:28.910Z",
+        "automationCheckedAt": "2026-09-08T21:21:41.798Z",
         "coverageArchiveCount": 0
       }
     }
