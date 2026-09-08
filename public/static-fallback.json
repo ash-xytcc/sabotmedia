@@ -6293,6 +6293,16 @@
             "source": "Sabot Media publishing"
           },
           {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-ai-odv-presenta-ricorso-contro-banca-etica",
+            "date": "2026-09-08T12:13:00.000Z",
+            "title": "AI ODV presenta ricorso contro Banca Etica",
+            "body": "Comunicato stampa AI ODV, 8 settembre 2026 Abbiamo depositato davanti al Tribunale di Pisa un ricorso in via d&rsquo;urgenza ex art. 700 c.p.c. contro Banca Popolare Etica, per ottenere il ripristino immediato dell&rsquo;operatività del nostro conto corrente. Il 26 agosto l&rsquo;OFAC statunitense ha inserito Autistici/Inventati nella lista SDN di soggetti…",
+            "url": "https://keepitfree.ai/it/announcements/ai-odv-presenta-ricorso-contro-banca-etica/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
             "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-banchetto-al-festival-antirazzista-abba-vive",
             "date": "2026-09-06T16:30:00.000Z",
             "title": "Banchetto al festival antirazzista Abba Vive",
@@ -6468,16 +6478,6 @@
             "title": "Il servizio di posta è di nuovo attivo",
             "body": "Il servizio di posta funziona di nuovo. Ecco le istruzioni su come accedere alla tua casella: Se hai una mail @autistici.org, stiamo spostando la tua casella su un nuovo dominio (seguiranno aggiornamenti). Nel frattempo non potrai inviare o ricevere nuove mail, ma potrai comunque accedere al tuo account. Una volta dentro, troverai tutto il tuo archivio. Per…",
             "url": "https://keepitfree.ai/it/technical-updates/il-servizio-di-posta-%C3%A8-di-nuovo-attivo/",
-            "pinned": false,
-            "automated": true,
-            "source": "Autistici/Inventati"
-          },
-          {
-            "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-cartella-stampa",
-            "date": "2026-08-28T07:00:00.000Z",
-            "title": "Cartella stampa",
-            "body": "1. In breve Il 26 agosto 2026 il Dipartimento del Tesoro statunitense, tramite OFAC - il settore che gestisce e applica sanzioni economiche e finanziarie -, ha sanzionato Autistici/Inventati (A/I), collettivo italiano che dal 2001 fornisce infrastrutture digitali a movimenti e attivisti: email, hosting, mailing list, chat, videoconferenze, streaming e servi…",
-            "url": "https://keepitfree.ai/it/announcements/cartella-stampa/",
             "pinned": false,
             "automated": true,
             "source": "Autistici/Inventati"
@@ -7122,6 +7122,54 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-1ryxkeg",
+            "date": "2026-09-08T12:13:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "AI ODV presenta ricorso contro Banca Etica",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/announcements/ai-odv-presenta-ricorso-contro-banca-etica",
+            "imageUrl": "",
+            "summary": "Comunicato stampa AI ODV, 8 settembre 2026 Abbiamo depositato davanti al Tribunale di Pisa un ricorso in via d&rsquo;urgenza ex art. 700 c.p.c. contro Banca Popolare Etica, per ottenere il ripristino immediato dell&rsquo;operatività del nostro conto corrente. Il 26 agosto l&rsquo;OFAC statunitense ha inserito Autistic…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 12,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1esfjax",
+            "date": "2026-09-08T05:39:00.000Z",
+            "outlet": "NU.nl",
+            "language": "",
+            "languageCode": "",
+            "title": "Italiaanse activistische internetprovider stopt na Amerikaanse sancties",
+            "translatedTitle": "",
+            "url": "https://www.nu.nl/tweakers/6409026/italiaanse-activistische-internetprovider-stopt-na-amerikaanse-sancties.html",
+            "imageUrl": "",
+            "summary": "De Italiaanse internetprovider Autistici/Inventati (A/I) stopt na 25 jaar. De Amerikaanse regering zette de organisatie op een terroristenlijst. Daardoor raakte A/I onder meer haar domeinnaam en toega ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-saywg",
+            "date": "2026-09-08T03:26:00.000Z",
+            "outlet": "Secolo d'Italia",
+            "language": "",
+            "languageCode": "",
+            "title": "Autistici/Inventati chiude, FdI incalza Schlein e De Rosa: “Nemmeno una parola sull’inquietante rete di rapporti tra antagonismo violento, istituzioni Ue e Pd?”",
+            "translatedTitle": "",
+            "url": "https://www.secoloditalia.it/2026/09/autistici-inventati-chiude-fdi-incalza-schlein-e-de-rosa-nemmeno-una-parola-sullinquietante-rete-di-rapporti-tra-antagonismo-violento-istituzioni-ue-e-pd",
+            "imageUrl": "",
+            "summary": "Chiude Autistici/inventati il sito finito al centro dell'attenzione dell'anti-terrorismo americano. FdI incalza Schlein ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1y9ebs3",
             "date": "2026-09-08T02:16:00.000Z",
             "outlet": "Il Tempo",
@@ -7134,6 +7182,22 @@
             "summary": "Non è concluso il caso del collettivo hacker italiano Autistii/Inventati inserito dagli Usa tra i terroristi globali. Nelle scorse ore il ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-u17jt1",
+            "date": "2026-09-08T01:10:00.000Z",
+            "outlet": "Il Fatto Quotidiano",
+            "language": "",
+            "languageCode": "",
+            "title": "Benjamin Sonntag: “I stand in solidarity with Autistici/Inventati”",
+            "translatedTitle": "",
+            "url": "https://www.ilfattoquotidiano.it/2026/09/08/benjamin-sonntag-autistici-inventati-interview/8500600",
+            "imageUrl": "",
+            "summary": "French computer engineer and security expert Sonntag has worked and fought for digital rights for over two decades now. Il Fatto Quotidiano asked him to comment on the tiny Italian ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9582,14 +9646,14 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-08T11:07:06.515Z",
+        "socialCheckedAt": "2026-09-08T15:03:46.592Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
             "label": "A/I Keep It Free dispatches",
             "url": "https://keepitfree.ai/it/index.xml",
             "ok": true,
-            "count": 13
+            "count": 14
           },
           {
             "id": "official-ai-noblogs",
@@ -9610,12 +9674,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 4
+            "count": 5
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-08T11:07:07.604Z",
-        "coverageArchiveCount": 126
+        "intelligenceCheckedAt": "2026-09-08T15:03:46.987Z",
+        "coverageArchiveCount": 130
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9817,7 +9881,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-08T11:07:15.574Z",
+        "automationCheckedAt": "2026-09-08T15:03:59.275Z",
         "coverageArchiveCount": 0
       }
     }
