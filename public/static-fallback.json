@@ -7122,6 +7122,22 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-r6nq3s",
+            "date": "2026-09-07T20:30:00.000Z",
+            "outlet": "The Times of India",
+            "language": "",
+            "languageCode": "",
+            "title": "US designates 15-year-old Italian tech collective as terror organisation; forcing it to shut down; Company says: Day we discovered, ⁠we are ...",
+            "translatedTitle": "",
+            "url": "https://timesofindia.indiatimes.com/technology/tech-news/us-designates-15-year-old-italian-tech-collective-as-terror-organisation-forcing-it-to-shut-down-company-says-day-we-discovered-we-are-/articleshow/133905410.cms",
+            "imageUrl": "",
+            "summary": "For 15 years, Autistici/Inventati had operated as a volunteer-run refuge for activists and campaigners seeking alternatives to commercial online platforms. Then a US terrorism designation forced the ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 75,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-j7g1vf",
             "date": "2026-09-07T17:01:00.000Z",
             "outlet": "Il Fatto Quotidiano",
@@ -7198,6 +7214,22 @@
             "summary": "Sullo sfondo, ancora il caso di Autistici/Inventati, dove Paolo De Rosa risulta esser (stato) legato a Schlein ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 50,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-isef4v",
+            "date": "2026-09-07T08:01:00.000Z",
+            "outlet": "NRC",
+            "language": "",
+            "languageCode": "",
+            "title": "Zo bepalen de VS wie online mag bestaan – ook in Europa",
+            "translatedTitle": "",
+            "url": "https://www.nrc.nl/nieuws/2026/09/08/zo-bepalen-de-vs-wie-online-mag-bestaan-ook-in-europa-a4936115",
+            "imageUrl": "",
+            "summary": "Sinds de Verenigde Staten internetcollectief Autistici/Inventati labelde als terroristisch, kan de organisatie geen donaties meer ontvangen en wil de bank geen zaken meer met haar doen. Hoe groot is d ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 62,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9470,7 +9502,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-08T01:06:53.484Z",
+        "socialCheckedAt": "2026-09-08T05:54:30.968Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9502,8 +9534,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-08T01:06:56.129Z",
-        "coverageArchiveCount": 119
+        "intelligenceCheckedAt": "2026-09-08T05:54:32.125Z",
+        "coverageArchiveCount": 121
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9705,7 +9737,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-08T01:07:04.323Z",
+        "automationCheckedAt": "2026-09-08T05:54:40.041Z",
         "coverageArchiveCount": 0
       }
     }
