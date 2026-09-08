@@ -7122,6 +7122,54 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-j7g1vf",
+            "date": "2026-09-07T17:01:00.000Z",
+            "outlet": "Il Fatto Quotidiano",
+            "language": "",
+            "languageCode": "",
+            "title": "Autistici/Inventati affondato dagli Usa “Così troppi rischi”",
+            "translatedTitle": "",
+            "url": "https://www.ilfattoquotidiano.it/in-edicola/articoli/2026/09/08/autistici-inventati-affondato-dagli-usa-cosi-troppi-rischi/8499962",
+            "imageUrl": "",
+            "summary": "Leggi su Il Fatto Quotidiano l'articolo in edicola \"Autistici/Inventati affondato dagli Usa “Così troppi rischi”\" pubblicato il 8 Settembre 2026 a firma di Alessandro Mantovani e Stefania Maurizi ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1i09xgx",
+            "date": "2026-09-07T17:00:00.000Z",
+            "outlet": "GIGAZINE",
+            "language": "",
+            "languageCode": "",
+            "title": "デジタルインフラ提供元のA/I Collectiveをアメリカ政府がテロリストに指定、どんな影響が出たのか？",
+            "translatedTitle": "",
+            "url": "https://gigazine.net/news/20260908-autistici-inventati-case",
+            "imageUrl": "",
+            "summary": "アメリカ財務省外国資産管理局(OFAC)はイタリアのテクノロジー企業である Autistici/Inventati(A/I Collective)を「特別指定グローバルテロリスト(SDGT)」に指定しました。テロ行為の実行犯だけでなくテロ行為を可能にする技術インフラに対してもテロ対策制裁の対象としたことはA/I Collectiveの猛反発を招くとともに、物質的支援の論理を技術インフラに公然かつ強 ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1g45usy",
+            "date": "2026-09-07T15:00:00.000Z",
+            "outlet": "GIGAZINE on MSN",
+            "language": "",
+            "languageCode": "",
+            "title": "デジタルインフラ提供元のA/I Collectiveをアメリカ政府がテロリストに指定、どんな影響が出たのか?",
+            "translatedTitle": "",
+            "url": "https://www.msn.com/ja-jp/news/other/%E3%83%87%E3%82%B8%E3%82%BF%E3%83%AB%E3%82%A4%E3%83%B3%E3%83%95%E3%83%A9%E6%8F%90%E4%BE%9B%E5%85%83%E3%81%AEa-i-collective%E3%82%92%E3%82%A2%E3%83%A1%E3%83%AA%E3%82%AB%E6%94%BF%E5%BA%9C%E3%81%8C%E3%83%86%E3%83%AD%E3%83%AA%E3%82%B9%E3%83%88%E3%81%AB%E6%8C%87%E5%AE%9A-%E3%81%A9%E3%82%93%E3%81%AA%E5%BD%B1%E9%9F%BF%E3%81%8C%E5%87%BA%E3%81%9F%E3%81%AE%E3%81%8B/ar-AA2bLoz6",
+            "imageUrl": "",
+            "summary": "アメリカ財務省外国資産管理局(OFAC)はイタリアのテクノロジー企業である Autistici/Inventati(A/I Collective)を「特別指定グローバルテロリスト(SDGT)」に指定しました。テロ行為の実行犯だけでなくテロ行為を可能にする技術インフラに対してもテロ対策制裁の対象としたことはA/I Collectiveの猛反発を招くとともに、物質的支援の論理を技術インフラに公然かつ強 ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-fbodfy",
             "date": "2026-09-07T13:53:00.000Z",
             "outlet": "Domani",
@@ -9422,7 +9470,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-07T23:01:30.241Z",
+        "socialCheckedAt": "2026-09-08T01:06:53.484Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9454,8 +9502,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-07T23:01:28.541Z",
-        "coverageArchiveCount": 116
+        "intelligenceCheckedAt": "2026-09-08T01:06:56.129Z",
+        "coverageArchiveCount": 119
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9657,7 +9705,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-07T23:01:37.845Z",
+        "automationCheckedAt": "2026-09-08T01:07:04.323Z",
         "coverageArchiveCount": 0
       }
     }
