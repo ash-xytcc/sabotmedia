@@ -17,6 +17,26 @@ function slugify(value = '') {
     .slice(0, 80)
 }
 
+function shortLabel(label = '') {
+  const exact = {
+    'Campaign Identity': 'Identity',
+    'Build Your Campaign': 'Sections',
+    'Status + Countdown': 'Status',
+    'Donation Destination': 'Donate',
+    'Correspondence + Dispatches': 'Correspondence',
+    'Action Center': 'Actions',
+    'Letters + Reporting Resources': 'Resources',
+    'Campaign Graphics': 'Graphics',
+    'Campaign Updates': 'Updates',
+    'Manual Press + Coverage': 'Coverage',
+    'Primary Sources': 'Sources',
+    'Campaign Timeline': 'Timeline',
+    'Social Feed': 'Social',
+    'Revision History': 'Revisions',
+  }
+  return exact[label] || label.replace(/^Campaign\s+/i, '').trim() || 'Section'
+}
+
 function editorPanels(layout) {
   const seen = new Map()
   return [...layout.children]
@@ -33,22 +53,16 @@ function editorPanels(layout) {
     })
 }
 
-function removeToolbar() {
-  document.getElementById(TOOLBAR_ID)?.remove()
-  document.body.classList.remove('campaign-admin-section-tabs-active')
+function restorePanels() {
   document.querySelectorAll('.campaign-admin-layout > .wp-meta-box[hidden]').forEach((panel) => { panel.hidden = false })
 }
 
-function positionToolbar(toolbar, layout) {
-  const topbar = document.querySelector('.wp-admin-topbar')
-  const layoutRect = layout.getBoundingClientRect()
-  const topbarBottom = topbar?.getBoundingClientRect().bottom || 32
-  toolbar.style.left = `${Math.max(12, layoutRect.left)}px`
-  toolbar.style.width = `${Math.max(260, Math.min(layoutRect.width, window.innerWidth - Math.max(12, layoutRect.left) - 12))}px`
-  toolbar.style.top = `${Math.max(8, topbarBottom + 8)}px`
+function removeToolbar() {
+  document.getElementById(TOOLBAR_ID)?.remove()
+  restorePanels()
 }
 
-function selectPanel(key, { focusPanel = false } = {}) {
+function selectPanel(key, { moveToEditor = false } = {}) {
   selectedKey = key
   const layout = document.querySelector('.campaign-admin-layout')
   if (!layout) return
@@ -61,65 +75,65 @@ function selectPanel(key, { focusPanel = false } = {}) {
 
   const toolbar = document.getElementById(TOOLBAR_ID)
   if (toolbar) {
-    for (const button of toolbar.querySelectorAll('[role="tab"]')) {
-      const active = button.dataset.sectionKey === selectedKey
-      button.classList.toggle('is-active', active)
-      button.setAttribute('aria-selected', active ? 'true' : 'false')
-      button.tabIndex = active ? 0 : -1
+    for (const button of toolbar.querySelectorAll('[data-campaign-section-key]')) {
+      const active = button.dataset.campaignSectionKey === selectedKey
+      button.className = active ? 'button button--primary' : 'button'
+      button.setAttribute('aria-pressed', active ? 'true' : 'false')
     }
   }
 
-  if (focusPanel) {
-    selected.panel.scrollIntoView({ block: 'start', behavior: 'auto' })
-    window.scrollBy(0, -110)
+  if (moveToEditor) {
+    const top = layout.getBoundingClientRect().top + window.scrollY - 12
+    window.scrollTo({ top: Math.max(0, top), behavior: 'auto' })
   }
 }
 
 function buildToolbar(layout, panels) {
+  const actions = document.querySelector('.campaign-admin-page .wp-screen-header__actions')
+  if (!actions) return null
+
   let toolbar = document.getElementById(TOOLBAR_ID)
   if (!toolbar) {
-    toolbar = document.createElement('nav')
+    toolbar = document.createElement('span')
     toolbar.id = TOOLBAR_ID
     toolbar.className = 'campaign-admin-section-tabs'
-    toolbar.setAttribute('aria-label', 'Campaign editor sections')
-    toolbar.innerHTML = '<div class="campaign-admin-section-tabs__label">Edit section</div><div class="campaign-admin-section-tabs__buttons" role="tablist" aria-label="Campaign editor sections"></div>'
-    document.body.appendChild(toolbar)
+    toolbar.setAttribute('role', 'group')
+    toolbar.setAttribute('aria-label', 'Edit campaign section')
+    actions.prepend(toolbar)
   }
 
-  const buttons = toolbar.querySelector('.campaign-admin-section-tabs__buttons')
   const signature = panels.map((item) => `${item.key}:${item.label}`).join('|')
-  if (buttons.dataset.signature !== signature) {
-    buttons.dataset.signature = signature
-    buttons.replaceChildren(...panels.map((item) => {
+  if (toolbar.dataset.signature !== signature) {
+    toolbar.dataset.signature = signature
+    toolbar.replaceChildren(...panels.map((item) => {
       const button = document.createElement('button')
       button.type = 'button'
-      button.className = 'button campaign-admin-section-tabs__button'
-      button.setAttribute('role', 'tab')
+      button.className = 'button'
+      button.dataset.campaignSectionKey = item.key
       button.setAttribute('aria-controls', item.panel.id)
-      button.dataset.sectionKey = item.key
-      button.textContent = item.label
-      button.addEventListener('click', () => selectPanel(item.key, { focusPanel: true }))
+      button.setAttribute('aria-pressed', 'false')
+      button.title = `Edit ${item.label}`
+      button.textContent = shortLabel(item.label)
+      button.addEventListener('click', () => selectPanel(item.key, { moveToEditor: true }))
       return button
     }))
   }
 
-  buttons.onkeydown = (event) => {
+  toolbar.onkeydown = (event) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
-    const tabs = [...buttons.querySelectorAll('[role="tab"]')]
-    if (!tabs.length) return
-    const current = Math.max(0, tabs.indexOf(document.activeElement))
+    const buttons = [...toolbar.querySelectorAll('[data-campaign-section-key]')]
+    if (!buttons.length) return
+    const current = Math.max(0, buttons.indexOf(document.activeElement))
     let next = current
-    if (event.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length
-    if (event.key === 'ArrowRight') next = (current + 1) % tabs.length
+    if (event.key === 'ArrowLeft') next = (current - 1 + buttons.length) % buttons.length
+    if (event.key === 'ArrowRight') next = (current + 1) % buttons.length
     if (event.key === 'Home') next = 0
-    if (event.key === 'End') next = tabs.length - 1
+    if (event.key === 'End') next = buttons.length - 1
     event.preventDefault()
-    tabs[next].focus()
-    tabs[next].click()
+    buttons[next].focus()
+    buttons[next].click()
   }
 
-  document.body.classList.add('campaign-admin-section-tabs-active')
-  positionToolbar(toolbar, layout)
   return toolbar
 }
 
@@ -156,7 +170,6 @@ function scheduleSync() {
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   const observer = new MutationObserver(scheduleSync)
   observer.observe(document.documentElement, { childList: true, subtree: true })
-  window.addEventListener('resize', scheduleSync)
   window.addEventListener('popstate', scheduleSync)
   window.addEventListener('hashchange', scheduleSync)
   scheduleSync()
