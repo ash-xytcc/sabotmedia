@@ -1,0 +1,66 @@
+.campaign-admin-section-tabs {
+  position: fixed;
+  z-index: 10020;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #c3c4c7;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(8px);
+}
+
+.campaign-admin-section-tabs__label {
+  flex: 0 0 auto;
+  color: #50575e;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.campaign-admin-section-tabs__buttons {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 1px;
+}
+
+.campaign-admin-section-tabs__button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.campaign-admin-section-tabs__button.is-active {
+  background: #2271b1;
+  border-color: #2271b1;
+  color: #fff;
+}
+
+body.campaign-admin-section-tabs-active .campaign-admin-page {
+  margin-top: 58px !important;
+}
+
+.campaign-admin-layout > .wp-meta-box[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 782px) {
+  .campaign-admin-section-tabs {
+    gap: 6px;
+    padding: 7px 8px;
+  }
+
+  .campaign-admin-section-tabs__label {
+    display: none;
+  }
+
+  body.campaign-admin-section-tabs-active .campaign-admin-page {
+    margin-top: 54px !important;
+  }
+}
