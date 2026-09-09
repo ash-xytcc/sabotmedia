@@ -1,0 +1,10 @@
+const CAMPAIGN_URL = 'https://sabot.media/campaigns/food-not-bombs-gaza'
+
+export function buildCopy(event) { return {
+  event: `${event.title}\n${event.date} · ${event.venue} · ${event.location}\n${event.details}\n${event.admission}${event.url ? `\nEvent information: ${event.url}` : ''}\n\nWe are raising direct aid for Food Not Bombs Gaza, a Palestinian-led mutual-aid project preparing community meals for displaced families. Sabot Media takes no percentage. Donate and learn more: ${CAMPAIGN_URL}`,
+  venue: `Hi — I’m organizing ${event.title} to raise direct aid for Food Not Bombs Gaza. We would like to host it at your space. Could we discuss a date, capacity, accessibility, sound needs, and whether the venue can waive or reduce its fee? Campaign: ${CAMPAIGN_URL}`,
+  social: `${event.title} 🍉\n\n${event.date}\n${event.venue} · ${event.location}\n${event.details}\n${event.admission}${event.url ? `\nEvent information: ${event.url}` : ''}\n\nHelp move money directly toward Palestinian-led mutual aid. Donate / details: ${CAMPAIGN_URL}`,
+  mc: `Thank you for coming to ${event.title}. Tonight supports Food Not Bombs Gaza, a Palestinian-led mutual-aid project preparing community meals for displaced families. Donations use the verified fundraiser linked at ${CAMPAIGN_URL}. Sabot Media hosts the campaign and takes no percentage. Please donate what you can, share the permanent campaign link, and help us report the total raised after the event.`,
+  press: `MEDIA ADVISORY\n\nWHAT: ${event.title}\nWHEN: ${event.date}\nWHERE: ${event.venue}, ${event.location}\nWHY: A community benefit raising direct aid for Food Not Bombs Gaza.\nDETAILS: ${event.details}. ${event.admission}.\nCAMPAIGN: ${CAMPAIGN_URL}`,
+  followup: `BENEFIT REPORT\nEvent: ${event.title}\nDate: ${event.date}\nVenue / city: ${event.venue}, ${event.location}\nAttendance: \nGross raised: \nExpenses: \nNet transferred: \nTransfer date: \nPhotos approved for publication: \nOrganizer contact: \nNotes / lessons for future organizers: `,
+} }

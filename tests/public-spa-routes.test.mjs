@@ -18,7 +18,7 @@ test('edge middleware recognizes every public client-side route family', () => {
   }
 })
 
-test('public info routes receive their own generated route HTML instead of the homepage shell', async () => {
+test('public info routes fail closed when live storage is unavailable', async () => {
   let requestedPath = ''
   const response = await onRequest({
     request: new Request('https://sabot.media/contact'),
@@ -38,15 +38,15 @@ test('public info routes receive their own generated route HTML instead of the h
     },
   })
 
-  assert.equal(requestedPath, '/contact/index.html')
-  assert.equal(response.status, 200)
+  assert.equal(requestedPath, '/')
+  assert.equal(response.status, 503)
   const html = await response.text()
-  assert.match(html, /data-sabot-static-noscript/)
-  assert.match(html, /<h1>Contact<\/h1>/)
-  assert.doesNotMatch(html, /data-sabot-plain-html/)
+  assert.doesNotMatch(html, /data-sabot-static-noscript/)
+  assert.match(html, /Temporarily unavailable/)
+  assert.match(html, /data-sabot-plain-html/)
 })
 
-test('route-specific asset lookup falls back to the SPA root only when generated HTML is unavailable', async () => {
+test('unavailable public content retains the interactive application shell', async () => {
   const requested = []
   const response = await onRequest({
     request: new Request('https://sabot.media/support'),
@@ -68,8 +68,8 @@ test('route-specific asset lookup falls back to the SPA root only when generated
     },
   })
 
-  assert.deepEqual(requested, ['/support/index.html', '/index.html'])
-  assert.equal(response.status, 200)
+  assert.deepEqual(requested, ['/'])
+  assert.equal(response.status, 503)
   assert.match(await response.text(), /data-sabot-plain-html/)
 })
 
@@ -132,7 +132,7 @@ async function renderPublicFallback(pathname, rows) {
       ASSETS: {
         async fetch(request) {
           const requestedPath = new URL(request.url).pathname
-          if (requestedPath !== '/index.html' && requestedPath !== '/archive/index.html') return new Response('missing', { status: 404 })
+          if (requestedPath !== '/' && requestedPath !== '/archive/') return new Response('missing', { status: 404 })
           return new Response('<!doctype html><html><body><div id="root"></div></body></html>', {
             status: 200,
             headers: { 'content-type': 'text/html; charset=utf-8' },

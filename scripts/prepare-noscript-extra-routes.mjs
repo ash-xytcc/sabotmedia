@@ -70,6 +70,7 @@ function buildHtml(title, bodyFallback) {
 async function writeRoute(route, title, bodyFallback, { overwrite = false } = {}) {
   const cleanRoute = String(route || '').replace(/^\/+|\/+$/g, '')
   if (!cleanRoute) return false
+  if (await fs.stat(path.join(root, 'public', cleanRoute, 'index.html')).catch(() => null)) return false
   const dir = path.join(root, cleanRoute)
   const file = path.join(dir, 'index.html')
   const existing = await fs.stat(file).catch(() => null)

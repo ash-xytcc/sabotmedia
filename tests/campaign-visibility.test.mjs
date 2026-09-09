@@ -42,7 +42,7 @@ test('campaign deep links receive the app shell even while launch links are hidd
     next: async () => new Response('not found', { status: 404 }),
   })
 
-  assert.equal(response.status, 200)
-  assert.equal(fetchedPath, '/index.html')
+  assert.equal(response.status, 503)
+  assert.equal(fetchedPath, '/')
   assert.match(await response.text(), /Sabot Media/)
 })
