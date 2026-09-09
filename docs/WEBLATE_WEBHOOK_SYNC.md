@@ -6,7 +6,7 @@ Goal: remove manual JSON download/upload from the newsroom workflow while keepin
 
 Sabot supports two complementary sync paths:
 
-1. **Current-state sync:** opening the authenticated Sabot Translations admin triggers `POST /api/weblate-sync`, which asks Weblate for all languages currently present in the configured component and imports them into D1 as `in_review`. This is what picks up translations that were uploaded before webhook automation existed.
+1. **Current-state sync:** opening the authenticated Sabot Translations admin triggers `POST /api/weblate-sync`, which asks Weblate for all languages currently present in the configured component and imports them into D1 as `in_review`. This is what picks up translations that were uploaded before webhook automation existed. Because the Hosted Weblate project is public, this read-only pull can work without an API token. If `WEBLATE_API_TOKEN` is configured, Sabot uses it to avoid the lower anonymous API rate limit.
 2. **Future event sync:** Hosted Weblate sends signed Standard Webhooks to `POST https://sabot.media/weblate-webhook` for translation completion/upload events. Sabot fetches the current language file from Weblate and refreshes the corresponding D1 review record.
 
 Neither path publishes automatically.
@@ -17,7 +17,7 @@ The webhook endpoint:
 2. Rejects stale/replayed/invalid deliveries.
 3. Only accepts configured project/component mappings (`sabotpress` / `ai-server-called-paranoia` → `the-server-called-paranoia` initially).
 4. Handles `Translation completed`, `Translation uploaded`, and `Resource updated` events and safely ignores unrelated events.
-5. Fetches the current JSON translation file using `WEBLATE_API_TOKEN` and `GET /api/translations/{project}/{component}/{language}/file/`.
+5. Fetches the current JSON translation file using the read-only Weblate API. `WEBLATE_API_TOKEN` is used when present but is not required for this public project.
 6. Imports through the existing native translation schema with `status=in_review`, provider `weblate`, attribution/provenance, and an audit entry.
 7. Never publishes automatically.
 
@@ -25,8 +25,8 @@ The webhook endpoint:
 
 Cloudflare Pages production environment needs:
 
-- `WEBLATE_API_TOKEN`: Weblate API token used server-side only for listing languages and fetching translation files.
-- `WEBLATE_WEBHOOK_SECRET`: Standard Webhooks base64 secret shared with the Weblate Webhook add-on.
+- `WEBLATE_WEBHOOK_SECRET`: required for signed webhook deliveries from Weblate.
+- `WEBLATE_API_TOKEN`: optional but recommended. Read-only public Weblate API calls work without it, but anonymous access is more heavily rate-limited.
 - Optional `WEBLATE_BASE_URL`: defaults to `https://hosted.weblate.org`.
 
 Secrets must be configured as encrypted environment variables, never committed to the repository.
@@ -45,3 +45,12 @@ In the `A/I — The Server Called Paranoia` component, install the **Webhook** a
 ## Editorial behavior
 
 Every automatic Weblate import lands in Sabot as `in_review`. Editors still explicitly approve/publish from Publishing → Translations. Manual JSON import remains only as a fallback for outages or unusual external translation sources.
+
+The normal newsroom workflow is therefore:
+
+1. Translator finishes work in Weblate.
+2. Sabot receives it automatically through the webhook, or catches it on the next Translations-admin open through current-state sync.
+3. The language appears in Sabot as `in_review` with its Weblate provenance already attached.
+4. An editor reviews and publishes it.
+
+No routine download/upload or manual language metadata entry is required.
