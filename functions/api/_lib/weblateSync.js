@@ -17,8 +17,19 @@ function normalizeBaseUrl(value) {
 }
 
 function authHeaders(token, accept = 'application/json') {
-  if (!token) throw new Error('WEBLATE_API_TOKEN is not configured')
-  return { Authorization: `Token ${token}`, Accept: accept }
+  const headers = { Accept: accept }
+  // Hosted Weblate exposes read-only API access for public projects without
+  // authentication. Use a token when one is configured, but do not make a
+  // newsroom file pull depend on a secret that is unnecessary for public data.
+  if (token) headers.Authorization = `Token ${token}`
+  return headers
+}
+
+function describeWeblateFailure(prefix, response, token) {
+  if (response.status === 429 && !token) {
+    return `${prefix} (429: public API rate limit reached; configure WEBLATE_API_TOKEN for higher limits)`
+  }
+  return `${prefix} (${response.status})`
 }
 
 async function readBoundedText(response, maxBytes = MAX_JSON_BYTES) {
@@ -31,20 +42,28 @@ async function readBoundedText(response, maxBytes = MAX_JSON_BYTES) {
 
 export async function fetchWeblateTranslationFile({ env, project, component, language }) {
   const base = normalizeBaseUrl(env?.WEBLATE_BASE_URL)
+  const token = String(env?.WEBLATE_API_TOKEN || '').trim()
   const endpoint = `${base}/api/translations/${encodeURIComponent(project)}/${encodeURIComponent(component)}/${encodeURIComponent(language)}/file/`
-  const response = await fetch(endpoint, { headers: authHeaders(env?.WEBLATE_API_TOKEN, 'application/json') })
-  if (!response.ok) throw new Error(`Weblate translation fetch failed (${response.status})`)
+  const response = await fetch(endpoint, {
+    headers: authHeaders(token, 'application/json'),
+    cache: 'no-store',
+  })
+  if (!response.ok) throw new Error(describeWeblateFailure('Weblate translation fetch failed', response, token))
   const text = await readBoundedText(response)
   try { return JSON.parse(text) } catch { throw new Error('Weblate returned invalid translation JSON') }
 }
 
 export async function listWeblateTranslations({ env, project, component }) {
   const base = normalizeBaseUrl(env?.WEBLATE_BASE_URL)
+  const token = String(env?.WEBLATE_API_TOKEN || '').trim()
   let endpoint = `${base}/api/components/${encodeURIComponent(project)}/${encodeURIComponent(component)}/translations/`
   const results = []
   for (let page = 0; endpoint && page < 20; page += 1) {
-    const response = await fetch(endpoint, { headers: authHeaders(env?.WEBLATE_API_TOKEN) })
-    if (!response.ok) throw new Error(`Weblate translation list failed (${response.status})`)
+    const response = await fetch(endpoint, {
+      headers: authHeaders(token),
+      cache: 'no-store',
+    })
+    if (!response.ok) throw new Error(describeWeblateFailure('Weblate translation list failed', response, token))
     const payload = JSON.parse(await readBoundedText(response))
     results.push(...(Array.isArray(payload?.results) ? payload.results : []))
     endpoint = payload?.next ? String(payload.next) : ''
@@ -134,5 +153,9 @@ export async function syncWeblateComponent({ db, env, project, component }) {
     })
     if (result?.translation) imported.push({ language: code, status: result.translation.status, changed: result.changed })
   }
-  return { ok: true, imported }
+  return {
+    ok: true,
+    authMode: String(env?.WEBLATE_API_TOKEN || '').trim() ? 'token' : 'public-read',
+    imported,
+  }
 }
