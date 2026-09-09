@@ -8,6 +8,18 @@ export const FNB_GAZA_CAMPAIGN_ID = 'campaign-food-not-bombs-gaza'
 export const AI_CAMPAIGN_DEADLINE = '2026-09-25T04:01:00.000Z'
 const AI_CAMPAIGN_TIMELINE_SEED = [
   {
+    id: 'timeline-antifawatch-ai-infrastructure',
+    date: '2025-07-16',
+    title: 'AntifaWatch publicly identifies A/I as shared infrastructure',
+    body: 'A preserved July 16, 2025 AntifaWatch post identifies Autistici/Inventati as the web-services provider behind projects the account was tracking. The post predates Hudson Crozier’s October 2025 A/I reporting. This establishes an earlier public research trail, not that AntifaWatch supplied Crozier’s reporting.',
+  },
+  {
+    id: 'timeline-crozier-antifawatch-contact',
+    date: '2026-08-30',
+    title: 'Crozier publicly seeks more A/I research from AntifaWatch',
+    body: 'Hudson Crozier publicly tells AntifaWatch that he sent an email and DM, says he had already been covering A/I, and says he is interested in more of the account’s research. The contact is documented; transmission of any particular claim, or influence on Crozier’s earlier reporting or the federal designation, is not proven.',
+  },
+  {
     id: 'timeline-banca-etica',
     date: '2026-09-04',
     title: 'Banca Etica moves to close A/I’s account',
@@ -55,7 +67,7 @@ export function defaultFnbGazaCampaign() {
       publicQuestions: true,
       contributorLabel: 'Food Not Bombs Gaza',
       editorLabel: 'Ash / Sabot Media',
-      intro: 'This is a private conversation with Ash and Sabot Media. Send text, audio, video, or a photo whenever you have time.',
+      intro: 'This is a private conversation with Ash and Sabot Media. Send text, audio, video, or a photo whenever you have time and connectivity permit.',
     },
     actions: [
       { id: 'action-donate', title: 'Send direct aid', body: 'Money is the immediate need. Donate through the verified fundraiser.', href: 'https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza', label: 'Donate on Chuffed' },
@@ -157,7 +169,6 @@ export async function ensureCampaignsTable(db) {
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`).run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status)').run()
-  await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaigns_updated_at ON campaigns(updated_at DESC)').run()
   await db.prepare(`CREATE TABLE IF NOT EXISTS campaign_revisions (
     id TEXT PRIMARY KEY,
     campaign_id TEXT NOT NULL,
@@ -367,7 +378,7 @@ function normalizeDonation(value) {
 }
 
 function normalizeCorrespondence(value) {
-  const input = value && typeof value === 'object' ? value : {}
+  const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {}
   return { enabled: Boolean(input.enabled), publicQuestions: Boolean(input.publicQuestions), contributorLabel: String(input.contributorLabel || 'Field contributor'), editorLabel: String(input.editorLabel || 'Sabot Media'), intro: String(input.intro || '') }
 }
 
@@ -386,7 +397,8 @@ function normalizeAutomation(value) {
 
 function revisionRow(row) {
   let parsed = {}
-  try { parsed = JSON.parse(row.revision_json || '{}') } catch { parsed = {} }
+  try { parsed = JSON.parse(row.revision_json || '{}') } catch { parsed = {}
+  }
   return {
     id: String(row.id || ''),
     campaignId: String(row.campaign_id || ''),
