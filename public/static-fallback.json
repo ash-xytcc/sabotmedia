@@ -6325,6 +6325,16 @@
             "source": "Autistici/Inventati"
           },
           {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-assemblea-cittadina-contro-le-sanzioni-ad-autistici-inventati",
+            "date": "2026-09-10T16:31:00.000Z",
+            "title": "Assemblea cittadina contro le sanzioni ad Autistici/Inventati",
+            "body": "Dopo essere stata inserita nelle liste OFAC delle sanzioni USA, Autistici/Inventati ha annunciato il 06 settembre 2026 che cesserà tutti i propri servizi. Si chiude un&rsquo;infrastruttura di 25 anni, fatta di servizi autogestiti, nata dal basso in difesa della privacy e di una comunicazione libera e non commerciale. Il centro di questa storia è l&rsquo;eli…",
+            "url": "https://keepitfree.ai/it/events/assemblea-cittadina-contro-le-sanzioni-ad-autistici/inventati/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
             "id": "official-ai-keepitfree-https-keepitfree-ai-it-technical-updates-howto-tecnico-per-salvare-i-tuoi-dati-sui-servizi-a-i",
             "date": "2026-09-08T16:23:00.000Z",
             "title": "Howto tecnico per salvare i tuoi dati sui servizi A/I",
@@ -7223,6 +7233,102 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-go5shp",
+            "date": "2026-09-10T16:31:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Assemblea cittadina contro le sanzioni ad Autistici/Inventati",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/events/assemblea-cittadina-contro-le-sanzioni-ad-autistici/inventati",
+            "imageUrl": "",
+            "summary": "Dopo essere stata inserita nelle liste OFAC delle sanzioni USA, Autistici/Inventati ha annunciato il 06 settembre 2026 che cesserà tutti i propri servizi. Si chiude un&rsquo;infrastruttura di 25 anni, fatta di servizi autogestiti, nata dal basso in difesa della privacy e di una comunicazione libera e non commerciale.…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1uql6ne",
+            "date": "2026-09-09T02:54:00.000Z",
+            "outlet": "GLOBALINFO",
+            "language": "",
+            "languageCode": "",
+            "title": "Gevolg van Amerikaanse sancties: internetcollectief Autistici/Inventati stopt zijn activiteiten",
+            "translatedTitle": "",
+            "url": "https://www.globalinfo.nl/nieuws/gevolg-van-amerikaanse-sancties-internetcollectief-autistici-inventati-stopt-zijn-activiteiten",
+            "imageUrl": "",
+            "summary": "Nog geen twee weken nadat de Amerikaanse regering het Italiaanse internetcollectief Autistici/Inventati tot terroristische dreiging had verklaard, zetten de activisten hun gratis online diensten stop.",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-u4hr0y",
+            "date": "2026-09-09T01:28:00.000Z",
+            "outlet": "directa",
+            "language": "",
+            "languageCode": "",
+            "title": "El col·lectiu italià Autistici/Inventati tanca després de ser declarat \"terrorista\" pels Estats Units",
+            "translatedTitle": "",
+            "url": "https://directa.cat/collectiu-autistici-inventati-tanca-despres-ser-declarat-terrorista-estats-units",
+            "imageUrl": "",
+            "summary": "La decisió arriba onze dies després que el govern estatunidenc l’inclogués a la llista de terroristes globals, una designació que ha bloquejat el seu domini, congelat els seus fons i posat en risc pen ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-16437fg",
+            "date": "2026-09-09T01:10:00.000Z",
+            "outlet": "Gazeta Wyborcza",
+            "language": "",
+            "languageCode": "",
+            "title": "Włoski portal wpisany przez USA na listę terrorystów kończy działalność. \"Musimy chronić użytkowników\"",
+            "translatedTitle": "",
+            "url": "https://wyborcza.pl/7,75399,33011018,czy-za-zamkniecie-wloskiej-strony-informacyjnej-odpowiada-pentagon.html",
+            "imageUrl": "",
+            "summary": "Autistici/Inventati, włoska grupa informatyków, którą rząd USA pod koniec sierpnia wciągnął na listę organizacji terrorystycznych, po 25 latach zakończyła działalność.",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1qvnwx9",
+            "date": "2026-09-09T00:00:00.000Z",
+            "outlet": "Computable.nl",
+            "language": "",
+            "languageCode": "",
+            "title": "Washington straft linksradicale Italiaanse provider",
+            "translatedTitle": "",
+            "url": "https://www.computable.nl/2026/09/09/washington-straft-linksradicale-italiaanse-provider",
+            "imageUrl": "",
+            "summary": "Het Italiaanse Autistici/Inventati voelt zich gedwongen zijn digitale dienstverlening te staken, nu de regering Trump de internetprovider als een wereldwijde terroristische organisatie heeft bestempel ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1ocijbg",
+            "date": "2026-09-08T17:01:00.000Z",
+            "outlet": "contropiano",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Il Circolo Gap esprime solidarietà ad Autistici/Inventati",
+            "translatedTitle": "",
+            "url": "https://contropiano.org/news/politica-news/2026/09/09/il-circolo-gap-esprime-solidarieta-ad-autistici-inventati-0198440",
+            "imageUrl": "",
+            "summary": "Esprimiamo, come Circolo GAP, la nostra piena solidarietà al collettivo Autistici/Inventati, chiuso ieri dopo 25 anni di esperienza nella creazione di uno Il Circolo GAP esprime la sua piena solidarie ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1snnb6y",
             "date": "2026-09-08T16:23:00.000Z",
             "outlet": "Autistici/Inventati",
@@ -7299,22 +7405,6 @@
             "summary": "Elf Tage nach der Terroreinstufung durch die US-Regierung kündigt das italienische Kollektiv Autistici/Inventati (A/I) an, seine Tätigkeit einzustellen. Betroffen sind unter anderem der Hostingdienst ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 115,
-            "featured": false,
-            "editorialStatus": "automatic"
-          },
-          {
-            "id": "coverage-1qvnwx9",
-            "date": "2026-09-08T09:59:00.000Z",
-            "outlet": "Computable.nl",
-            "language": "",
-            "languageCode": "",
-            "title": "Washington straft linksradicale Italiaanse provider",
-            "translatedTitle": "",
-            "url": "https://www.computable.nl/2026/09/09/washington-straft-linksradicale-italiaanse-provider",
-            "imageUrl": "",
-            "summary": "Het Italiaanse Autistici/Inventati voelt zich gedwongen zijn digitale dienstverlening te staken, nu de regering Trump de internetprovider als een wereldwijde terroristische organisatie heeft bestempel ...",
-            "discoverySource": "live-discovery",
-            "relevanceScore": 62,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9871,14 +9961,14 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-09T06:35:48.480Z",
+        "socialCheckedAt": "2026-09-09T11:48:05.763Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
             "label": "A/I Keep It Free dispatches",
             "url": "https://keepitfree.ai/it/index.xml",
             "ok": true,
-            "count": 17
+            "count": 18
           },
           {
             "id": "official-ai-noblogs",
@@ -9899,12 +9989,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 5
+            "count": 3
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-09T06:35:50.408Z",
-        "coverageArchiveCount": 139
+        "intelligenceCheckedAt": "2026-09-09T11:48:06.190Z",
+        "coverageArchiveCount": 144
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10106,7 +10196,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-09T06:36:00.706Z",
+        "automationCheckedAt": "2026-09-09T11:48:16.090Z",
         "coverageArchiveCount": 0
       }
     }
