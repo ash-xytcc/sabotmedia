@@ -9799,7 +9799,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-08T23:27:47.651Z",
+        "socialCheckedAt": "2026-09-09T01:27:52.667Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9831,7 +9831,7 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-08T23:27:49.136Z",
+        "intelligenceCheckedAt": "2026-09-09T01:27:53.935Z",
         "coverageArchiveCount": 136
       },
       "food-not-bombs-gaza": {
@@ -10034,7 +10034,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-08T23:27:58.413Z",
+        "automationCheckedAt": "2026-09-09T01:28:04.321Z",
         "coverageArchiveCount": 0
       }
     }
