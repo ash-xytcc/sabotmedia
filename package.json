@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/prepare-flite-tts-assets.mjs && node scripts/prepare-noscript-fallback.mjs && node scripts/prepare-noscript-extra-routes.mjs",
+    "prebuild": "node scripts/prepare-course-lms.mjs && node scripts/prepare-flite-tts-assets.mjs && node scripts/prepare-noscript-fallback.mjs && node scripts/prepare-noscript-extra-routes.mjs",
     "build": "vite build",
     "test": "node --test tests/*.test.mjs",
     "check": "npm test && npm run build",
