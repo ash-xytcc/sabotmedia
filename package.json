@@ -7,7 +7,7 @@
     "dev": "vite",
     "prebuild": "node scripts/prepare-flite-tts-assets.mjs && node scripts/prepare-noscript-fallback.mjs && node scripts/prepare-noscript-extra-routes.mjs && node scripts/prepare-noscript-documents.mjs",
     "build": "vite build",
-    "test": "node --test tests/*.test.mjs",
+    "test": "node --import ./tests/helpers/register-json-imports.mjs --test tests/*.test.mjs",
     "check": "npm test && npm run build",
     "preview": "vite preview",
     "import:wordpress": "node scripts/import-wordpress.mjs",

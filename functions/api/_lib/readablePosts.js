@@ -1,5 +1,5 @@
-import imported from '../../../src/content/pieces.imported.json' with { type: 'json' }
-import overrides from '../../../src/content/piece-overrides.json' with { type: 'json' }
+import imported from '../../../src/content/pieces.imported.json'
+import overrides from '../../../src/content/piece-overrides.json'
 import { listNativeEntries, isPubliclyVisible } from './nativePublicContent.js'
 import { mergeNativeAndImportedPieces, getPublicPieceMergeKeys } from '../../../src/lib/publicPieceMerge.js'
 
