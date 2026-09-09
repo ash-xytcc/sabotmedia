@@ -13,7 +13,7 @@ try {
     page = await context.newPage()
   page.on('pageerror', (e) => errors.push(e.message))
   await page.goto(url)
-  await page.waitForSelector('[data-export]:visible')
+  await page.waitForSelector('.course-map:visible')
   assert.equal(await page.locator('.course-map>li').count(), 13)
   await page.locator('.course-map a[href="#map-your-dependencies"]').click()
   await page.locator('#map-your-dependencies [data-notes]').fill('Browser verification note')
