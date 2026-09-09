@@ -322,3 +322,21 @@ test('recovery expiry is enforced and settings need admin permission', async () 
     403,
   )
 })
+
+ test('legacy stored lesson aliases preserve authored prose and restore locked mapping', () => {
+  const legacy = structuredClone(seed)
+  delete legacy.schemaVersion
+  delete legacy.sections
+  legacy.lessons[9].slug = 'publish-for-survival'
+  legacy.lessons[10].slug = 'run-local-learn-network'
+  legacy.lessons[9].learn = 'Author edited this lesson before the LMS migration.'
+  const migrated = normalizeCourse(legacy)
+  assert.equal(migrated.lessons[9].learn, legacy.lessons[9].learn)
+  assert.equal(migrated.lessons[9].slug, seed.lessons[9].slug)
+  assert.equal(migrated.lessons[10].slug, seed.lessons[10].slug)
+})
+test('fresh public course hides unpublished working documents', async () => {
+  const f = await fixture()
+  assert.equal((await readCourse(f.env.BF_DB, seed.slug)).documents.length, 0)
+  assert.equal((await readCourse(f.env.BF_DB, seed.slug, true)).documents.length, 3)
+})

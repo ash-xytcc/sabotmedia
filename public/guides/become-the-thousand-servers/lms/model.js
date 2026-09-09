@@ -148,7 +148,9 @@ export function normalizeCourse(input) {
   for (const key of ['contentVersion', 'title', 'subtitle', 'deck', 'intro', 'taskHeading', 'taskIntro'])
     result[key] = str(c[key])
   result.lessons = list(c.lessons, 60).map((l, i) => {
-    const original = base.lessons.find((x) => x.slug === l.slug)
+    const aliases = { 'publish-for-survival': 'mirror-publish-survival', 'run-local-learn-network': 'local-network' }
+    const slug = legacy && input.slug === SLUG ? aliases[l.slug] || l.slug : l.slug
+    const original = base.lessons.find((x) => x.slug === slug)
     const merged =
       legacy && original
         ? {
@@ -159,7 +161,7 @@ export function normalizeCourse(input) {
           }
         : l
     return {
-      slug: id(l.slug),
+      slug: id(slug),
       number: i + 1,
       title: str(merged.title, 220),
       difficulty: str(merged.difficulty, 80),

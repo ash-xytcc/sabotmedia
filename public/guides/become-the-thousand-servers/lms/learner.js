@@ -265,6 +265,7 @@ async function api(body) {
 }
 $('[data-backup]').onclick = async () => {
   try {
+    if (!crypto.subtle) { message('Encrypted backup requires HTTPS. Export Progress still works here.'); return }
     message('Encrypting progress in this browser…')
     const { code, blob } = await encryptProgress(validateProgress(state))
     const result = await api({ action: 'create', ...blob })

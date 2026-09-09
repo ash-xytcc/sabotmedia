@@ -35,7 +35,7 @@ export async function readCourse(db, slug = SLUG, editor = false) {
       if (c.schemaVersion !== 2 && c.status === 'published') return publicCourse(normalizeCourse(c))
     }
   }
-  return slug === SLUG ? structuredClone(seed) : null
+  return slug === SLUG ? (editor ? structuredClone(seed) : publicCourse(seed)) : null
 }
 export async function saveCourse(db, input, permission) {
   await ensureCourseTables(db)

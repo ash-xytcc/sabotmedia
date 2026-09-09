@@ -20,8 +20,8 @@ function collectHtmlInputs(dir, base = process.cwd(), out = {}) {
   return out
 }
 
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig(async ({command}) => ({
+  plugins: [react(), ...(command === 'serve' && process.env.SABOT_COURSE_PREVIEW === '1' ? (await import('./tests/course-preview.config.mjs')).default.plugins : [])],
   build: {
     rollupOptions: {
       input: collectHtmlInputs(process.cwd()),
@@ -30,5 +30,6 @@ export default defineConfig({
   server: {
     port: 4173,
     host: true,
+    allowedHosts: ['terminal.local'],
   },
-})
+}))
