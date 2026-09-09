@@ -132,11 +132,12 @@ const rules = (v) => ({
   viewed: v?.viewed === true,
   activities: strings(v?.activities),
 })
+const invalid = (message) => Object.assign(new Error(message), {name: 'CourseValidationError'})
 export function normalizeCourse(input) {
-  if (!input || typeof input !== 'object' || Array.isArray(input)) throw Error('Invalid course')
-  if (JSON.stringify(input).length > 1800000) throw Error('Course is too large')
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw invalid('Invalid course')
+  if (JSON.stringify(input).length > 1800000) throw invalid('Course is too large')
   const base =
-    input.slug === SLUG ? seed : { ...seed, slug: id(input.slug), lessons: [], sections: [], documents: [] }
+    input.slug === SLUG ? seed : { ...seed, slug: id(input.slug), lessons: [], sections: [], activities: [], documents: [] }
   const legacy = input.schemaVersion !== 2
   const c = { ...base, ...input, schemaVersion: 2 }
   const result = {
@@ -198,12 +199,12 @@ export function normalizeCourse(input) {
           JSON.stringify(s.lessonSlugs) !== JSON.stringify(seed.sections[i].lessonSlugs),
       )
     )
-      throw Error('Keep G01–G13 and their locked lesson mapping')
+      throw invalid('Keep G01–G13 and their locked lesson mapping')
     if (result.lessons.length !== 12 || result.lessons.some((l, i) => l.slug !== seed.lessons[i].slug))
-      throw Error('Keep the twelve established lesson identifiers and order')
+      throw invalid('Keep the twelve established lesson identifiers and order')
   }
   result.activities = list(c.activities, 200).map((a) => {
-    if (!TYPES.includes(a.type)) throw Error('Unknown activity type')
+    if (!TYPES.includes(a.type)) throw invalid('Unknown activity type')
     const options = list(a.options, 30).map((o) => ({ id: id(o.id), label: str(o.label, 1000) }))
     return {
       id: id(a.id),
@@ -220,12 +221,12 @@ export function normalizeCourse(input) {
     }
   })
   for (const a of result.activities.filter((a) => a.status === 'published')) {
-    if (!a.title.trim() || !a.prompt.trim()) throw Error('Published activities need a title and prompt')
+    if (!a.title.trim() || !a.prompt.trim()) throw invalid('Published activities need a title and prompt')
     if (
       a.options.some((o) => !o.id || !o.label.trim()) ||
       new Set(a.options.map((o) => o.id)).size !== a.options.length
     )
-      throw Error('Activity options need distinct IDs and labels')
+      throw invalid('Activity options need distinct IDs and labels')
     if (
       ['multiple-choice', 'multiple-select', 'true-false', 'ordered-sequence', 'troubleshooting'].includes(
         a.type,
@@ -236,21 +237,46 @@ export function normalizeCourse(input) {
         a.answer.some((id) => !a.options.some((o) => o.id === id)) ||
         new Set(a.answer).size !== a.answer.length
       )
-        throw Error('Correct answers must reference distinct option IDs')
+        throw invalid('Correct answers must reference distinct option IDs')
       if (['multiple-choice', 'true-false', 'troubleshooting'].includes(a.type) && a.answer.length !== 1)
-        throw Error('This activity needs one correct answer')
+        throw invalid('This activity needs one correct answer')
       if (a.type === 'ordered-sequence' && a.answer.length !== a.options.length)
-        throw Error('An ordered activity needs every option in the answer')
+        throw invalid('An ordered activity needs every option in the answer')
     }
-    if (a.type === 'checklist' && !a.options.length) throw Error('A checklist needs at least one item')
+    if (a.type === 'checklist' && !a.options.length) throw invalid('A checklist needs at least one item')
     if (a.type === 'matching' && (!a.pairs.length || a.pairs.some((p) => !p.left.trim() || !p.right.trim())))
-      throw Error('Matching pairs cannot be empty')
+      throw invalid('Matching pairs cannot be empty')
   }
   for (const key of ['lessons', 'sections', 'activities']) {
     const keys = result[key].map((v) => v.id || v.slug)
     if (keys.some((v) => !v) || new Set(keys).size !== keys.length)
-      throw Error(`Duplicate or missing ${key} identifier`)
+      throw invalid(`Duplicate or missing ${key} identifier`)
   }
+  const units = [...result.sections, ...result.lessons]
+  const byId = new Map(units.map((u) => [u.id || u.slug, u]))
+  const activities = new Map(result.activities.map((a) => [a.id, a]))
+  for (const u of units) {
+    const required = u.completion.activities
+    for (const key of [...u.activities, ...required]) {
+      if (!activities.has(key)) throw invalid('Referenced activity does not exist: ' + key)
+      if (result.status === 'published' && u.status === 'published' && required.includes(key) && activities.get(key).status !== 'published') throw invalid('Required activities must be published: ' + key)
+    }
+    if (required.some((key) => !u.activities.includes(key))) throw invalid('A required activity must also be attached to its lesson or section')
+    for (const key of u.prerequisites) {
+      if (!byId.has(key)) throw invalid('Prerequisite does not exist: ' + key)
+      if (result.status === 'published' && u.status === 'published' && u.enforcePrerequisites && byId.get(key).status !== 'published') throw invalid('Enforced prerequisites must be published: ' + key)
+    }
+  }
+  const visiting = new Set(), visited = new Set()
+  function visit(u) {
+    const key = u.id || u.slug
+    if (visiting.has(key)) throw invalid('Enforced prerequisites cannot form a cycle')
+    if (visited.has(key)) return
+    visiting.add(key)
+    if (u.enforcePrerequisites) u.prerequisites.forEach((id) => visit(byId.get(id)))
+    visiting.delete(key); visited.add(key)
+  }
+  units.forEach(visit)
   result.documents = list(c.documents, 30).map((d) => ({
     id: id(d.id),
     title: str(d.title, 220),

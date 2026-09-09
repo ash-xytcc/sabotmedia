@@ -5,7 +5,9 @@ const $ = (s) => root.querySelector(s)
 const status = (t) => {
   $('[data-message]').textContent = t
 }
-let current = null
+let current = null, dirty = false
+root.addEventListener('input', (event) => { if (event.target.closest('[data-edit-form]')) dirty = true })
+addEventListener('beforeunload', (event) => { if (dirty) { event.preventDefault(); event.returnValue = '' } })
 async function api(body = null, extra = '') {
   const url =
     '/api/course-contributors' + (body ? '' : `?id=${encodeURIComponent(id)}&scope=${scope}${extra}`)
@@ -144,6 +146,7 @@ $('[data-edit-form]').onsubmit = async (e) => {
         status: $('[data-editorial-status]')?.value || 'review',
       }
     await api(body)
+    dirty = false
     await load()
     status('Saved.')
   } catch (e) {

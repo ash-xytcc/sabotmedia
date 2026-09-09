@@ -1,4 +1,4 @@
-import { SLUG, seed } from './model.js'
+import { SLUG, seed } from './model.js?v=audit-1'
 export const KEY = 'sabot.course.become-the-thousand-servers.v1'
 export const blank = () => ({
   course: SLUG,
@@ -65,7 +65,8 @@ export function validateProgress(x) {
 }
 export function evaluate(activity, answer) {
   const a = Array.isArray(answer) ? answer.map(String) : []
-  if (['short-reflection', 'teach-back'].includes(activity.type)) return a.some((x) => x.trim().length > 0)
+  if (activity.type === 'short-reflection') return a.some((x) => x.trim().length > 0)
+  if (activity.type === 'teach-back') return a.includes('__teachback_confirmed__') && a.some((x) => x !== '__teachback_confirmed__' && x.trim().length > 0)
   if (activity.type === 'practical') return a.includes('confirmed')
   if (activity.type === 'checklist')
     return activity.options.length > 0 && activity.options.every((o) => a.includes(o.id))
@@ -78,7 +79,8 @@ export function evaluate(activity, answer) {
 }
 export function activityPassed(c, s, id) {
   const a = c.activities.find((a) => a.id === id)
-  return !!a && !!s.activities[id]?.filter((t) => t.version === a.version).at(-1)?.passed
+  const last = s.activities[id]?.filter((t) => t.version === a?.version).at(-1)
+  return !!a && !!last?.passed && (a.type !== 'teach-back' || evaluate(a, last.answer))
 }
 export function complete(c, s, unit) {
   const key = unit.slug || unit.id,
@@ -97,4 +99,12 @@ export function unlocked(c, s, unit) {
     const p = [...c.lessons, ...c.sections].find((u) => (u.slug || u.id) === id)
     return p && complete(c, s, p)
   })
+}
+
+export function attemptFeedback(activity, attempt) {
+  if (!attempt) return ''
+  if (activity.type === 'short-reflection') return attempt.passed ? 'Response saved. This is not automatically graded.' : 'Response saved for further practice.'
+  if (activity.type === 'teach-back') return attempt.passed && evaluate(activity, attempt.answer) ? 'Teach-back self-confirmed.' : 'Response saved. Confirm after teaching this to someone.'
+  if (['practical', 'checklist'].includes(activity.type)) return attempt.passed ? 'Work self-confirmed.' : 'More practice needed.'
+  return attempt.passed ? 'Completed.' : 'Needs another attempt.'
 }

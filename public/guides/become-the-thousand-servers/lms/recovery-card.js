@@ -1,8 +1,8 @@
 import { encryptProgress, decryptProgress, parseCode, writeToken } from './recovery.js?v=card-1'
 const STORAGE = 'sabot.course.recovery-card.v1'
-export function mountRecoveryCard(getState, applyProgress) {
+export function mountRecoveryCard(getState, applyProgress, canBackup = () => true) {
   const $ = (s) => document.querySelector(s)
-  let meta = null, timer = null, busy = false, conflict = false, savedSnapshot = ''
+  let meta = null, timer = null, busy = false, conflict = false, savedSnapshot = '', generation = 0, lastAttemptAt = 0
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE) || 'null')
     if (value && Number.isInteger(value.revision)) { parseCode(value.code); meta = value }
@@ -29,18 +29,21 @@ export function mountRecoveryCard(getState, applyProgress) {
   function schedule() {
     if (!meta || busy || timer || conflict) return
     if (JSON.stringify(getState()) !== savedSnapshot) status('Changes waiting for encrypted backup. Keep the course open and online; updates run within a minute. Use Update backup to save now.')
-    timer = setTimeout(() => { timer = null; return backup(false) }, Math.max(3000, 60000 - (Date.now() - (meta.lastAt || 0))))
+    timer = setTimeout(() => { timer = null; return backup(false) }, Math.max(3000, 60000 - (Date.now() - Math.max(meta.lastAt || 0, lastAttemptAt))))
   }
   async function backup(manual = true) {
+    if (!canBackup()) { status('Recovery paused because saved local progress could not be read. Import a known backup before updating recovery.'); return }
     if (busy || conflict) { if (conflict) status('Automatic backup paused: restore the newer backup before updating from this device. Export first to keep local changes.'); return }
     if (!crypto.subtle) { status('Recovery needs HTTPS. Export Progress still works.'); return }
     busy = true
     clearTimeout(timer); timer = null
-    const snapshot = JSON.stringify(getState())
+    const snapshot = JSON.stringify(getState()), operation = generation
+    lastAttemptAt = Date.now()
     try {
       if (!manual && snapshot === savedSnapshot && Date.now() - (meta?.lastAt || 0) < 86400000) return
       status('Encrypting and updating your recovery backup…')
       const encrypted = await encryptProgress(JSON.parse(snapshot), meta?.code)
+      if (operation !== generation) return
       // Persist a new code before upload so an interrupted response cannot lose it.
       if (!meta) { meta = {code:encrypted.code,revision:0,lastAt:0}; persist() }
       const token = await writeToken(meta.code)
@@ -55,16 +58,18 @@ export function mountRecoveryCard(getState, applyProgress) {
         if (JSON.stringify(plain) !== snapshot || !Number.isInteger(remote.revision)) { e.status = 409; throw e }
         result = {revision:remote.revision,retentionDays:meta.retentionDays || 365}
       }
+      if (operation !== generation) return
       meta = {...meta,revision:result.revision,lastAt:Date.now(),retentionDays:result.retentionDays}
       savedSnapshot = snapshot
       persist(); showCard()
       status('Recovery backup saved. Your card and code stay the same. Changes back up automatically while this course is open and online.')
     } catch (e) {
+      if (operation !== generation) return
       conflict = e.status === 409
       status(conflict ? 'Another device has a newer backup. Export your local progress, then restore the newer backup before continuing here.' : 'Backup not saved yet. Your local progress is safe. Keep this page open to retry, or export a copy.')
     } finally {
       busy = false
-      if (meta && (JSON.stringify(getState()) !== savedSnapshot)) schedule()
+      if (operation === generation && meta && (JSON.stringify(getState()) !== savedSnapshot)) schedule()
     }
   }
   $('[data-backup]').onclick = () => backup(true)
@@ -75,18 +80,19 @@ export function mountRecoveryCard(getState, applyProgress) {
   $('[data-fetch-recovery]').onclick = async () => {
     if (busy) return
     busy = true; clearTimeout(timer); timer = null
+    const operation = generation
     try {
       const code = $('[data-recovery-code]').value.trim(), {id} = parseCode(code)
       const result = await api({action:'read',recoveryId:id})
       const next = await decryptProgress(code,result.blob)
-      if (!applyProgress(next)) return
+      if (operation !== generation || !applyProgress(next)) return
       conflict = false
       if (Number.isInteger(result.revision)) {
         meta = {code,revision:result.revision,lastAt:0,retentionDays:result.retentionDays || 365}
         savedSnapshot = JSON.stringify(getState()); persist(); showCard()
         status('Progress restored. This device will keep updating the same recovery card.')
       } else {
-        meta = null; persist()
+        meta = null; persist(); $('[data-card]').hidden = true; $('[data-print-card]').hidden = true; $('[data-backup]').textContent = 'Create my recovery card'
         status('Older snapshot restored. Create your reusable recovery card once to enable automatic updates.')
       }
       $('[data-recovery-code]').value = ''
@@ -106,5 +112,5 @@ export function mountRecoveryCard(getState, applyProgress) {
   if (meta) { showCard(); status('Your recovery card is connected. Automatic backup is enabled on this device.'); schedule() }
   if (location.hash === '#restore') $('[data-restore]').click()
   addEventListener('online', schedule)
-  return {changed:schedule, detach() {clearTimeout(timer);timer=null;meta=null;conflict=false;persist();$('[data-card]').hidden=true;$('[data-print-card]').hidden=true;status('Local recovery connection removed. Your printed card can still restore the saved backup.')}}
+  return {changed:schedule, detach() {generation++;clearTimeout(timer);timer=null;meta=null;conflict=false;persist();$('[data-card]').hidden=true;$('[data-print-card]').hidden=true;$('[data-card-code]').textContent='';$('[data-backup]').textContent='Create my recovery card';status('Local recovery connection removed. Your printed card can still restore the saved backup.')}}
 }

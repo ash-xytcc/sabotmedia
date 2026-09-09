@@ -64,7 +64,7 @@ export async function onRequest(context) {
     return json(
       {
         ok: false,
-        error: error.message.startsWith('Conflict')
+        error: error.name === 'CourseValidationError' || error.message.startsWith('Conflict')
           ? error.message
           : 'Unable to save or load course. Check content and reload before retrying.',
       },

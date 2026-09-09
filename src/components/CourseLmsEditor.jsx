@@ -10,7 +10,7 @@ export function CourseLmsEditor({ course, onChange }) {
     [history, setHistory] = useState([]),
     [name, setName] = useState(''),
     [id, setId] = useState(''),
-    [days, setDays] = useState(90)
+    [days, setDays] = useState(365)
   const update = (key, index, field, value) =>
     onChange({ ...course, [key]: course[key].map((v, i) => (i === index ? { ...v, [field]: value } : v)) })
   const field = (key, i, record, name, rows = 3) => (
@@ -277,9 +277,12 @@ export function CourseLmsEditor({ course, onChange }) {
       )}
       {tab === 'contributors' && (
         <>
+          <p><strong>{contributors.filter((p) => p.status === 'review').length} contributions awaiting review.</strong></p>
+          <button type="button" className="button" onClick={loadContributors}>Refresh review status</button>
           <ul>
             {contributors.map((p) => (
               <li key={p.id}>
+                {p.status && <strong>{p.status === 'review' ? 'REVIEW NEEDED' : p.status} · </strong>}
                 <a
                   href={`/guides/become-the-thousand-servers/contributors/${p.id}`}
                   target="_blank"

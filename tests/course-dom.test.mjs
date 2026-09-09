@@ -89,7 +89,7 @@ test('activity DOM saves local attempts and renders their feedback after reload'
   const b = mount(a.storage, '#map-your-dependencies')
   assert.match(
     b.document.querySelector('[data-activity="dependency-choice"] [data-feedback]').textContent,
-    /Completed on a previous attempt/,
+    /Completed/,
   )
 })
 test('invalid import leaves stored progress intact; valid import restores all local fields', async () => {
@@ -117,4 +117,20 @@ test('blocked storage never overwrites corrupt saved data', () => {
   a.document.querySelector('[data-unit="map-your-dependencies"] [data-complete]').onclick()
   assert.equal(s.get(KEY), 'bad-json')
   assert.match(a.document.querySelector('[data-message]').textContent, /not been overwritten/)
+})
+test('import refreshes quiz selections immediately, and clears answers absent from the import',async()=>{
+  const a=mount(new Map(),'#map-your-dependencies')
+  const form=a.document.querySelector('[data-activity="dependency-choice"]')
+  form.querySelector('[value="person"]').checked=true
+  form.onsubmit({preventDefault(){}})
+  const data=JSON.parse(a.storage.get(KEY))
+  data.activities={}
+  await a.document.querySelector('[data-file]').onchange({target:{files:[{size:100,text:async()=>JSON.stringify(data)}],value:''}})
+  assert.equal(form.querySelector('[value="person"]').checked,false)
+  assert.equal(form.querySelector('[data-feedback]').textContent,'')
+  assert.equal(form.querySelector('[data-retry]'),null)
+})
+test('malformed fragment does not prevent course initialization',()=>{
+  const a=mount(new Map(),'#%E0%A4%A')
+  assert.match(a.document.querySelector('[data-progress]').textContent,/0\/12/)
 })

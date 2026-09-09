@@ -106,7 +106,7 @@ test('each activity checks its own answer shape', () => {
           : a.type === 'practical'
             ? ['confirmed']
             : ['short-reflection', 'teach-back'].includes(a.type)
-              ? ['I taught someone']
+              ? (a.type === 'teach-back' ? ['I taught someone', '__teachback_confirmed__'] : ['A reflection'])
               : a.answer
     assert.ok(evaluate(a, answer), a.type)
     assert.equal(evaluate(a, []), false, a.type)
@@ -369,4 +369,37 @@ test('reusable card keeps its code and updates only with write authorization and
   await f.env.BF_DB.prepare('UPDATE course_recovery SET expires=0').run()
   assert.equal((await req(f, '/api/course-recovery', {action:'read',recoveryId:first.blob.recoveryId}, '', recovery)).r.status, 404)
   assert.equal((await req(f, '/api/course-recovery', {...body,revision:2}, '', recovery)).r.status, 200)
+})
+test('publication rejects missing requirements and prerequisite cycles with useful validation errors', () => {
+  const c = structuredClone(seed)
+  c.lessons[0].completion.activities = ['not-an-activity']
+  assert.throws(() => normalizeCourse(c), {name:'CourseValidationError',message:/does not exist/})
+  c.lessons[0].completion.activities = [c.lessons[0].activities[0]]
+  c.activities.find(a=>a.id===c.lessons[0].activities[0]).status='draft'
+  assert.throws(() => normalizeCourse(c), /Required activities must be published/)
+  const cycle=structuredClone(seed)
+  cycle.lessons[0].enforcePrerequisites=true;cycle.lessons[1].enforcePrerequisites=true
+  cycle.lessons[0].prerequisites=[cycle.lessons[1].slug];cycle.lessons[1].prerequisites=[cycle.lessons[0].slug]
+  assert.throws(()=>normalizeCourse(cycle),/cycle/)
+})
+test('legacy archived content never falls back to the public seed', async () => {
+  const f=await fixture(), old={...structuredClone(seed),schemaVersion:1,status:'archived'}
+  await readCourse(f.env.BF_DB,seed.slug)
+  await f.env.BF_DB.prepare('INSERT INTO course_content(slug,content_json) VALUES(?,?)').bind(seed.slug,JSON.stringify(old)).run()
+  assert.equal(await readCourse(f.env.BF_DB,seed.slug),null)
+})
+test('editor review list includes pending status without exposing it or draft answers publicly', async () => {
+  const f=await fixture(),cookie=await unlock(f,'puscii','edit')
+  await req(f,'/api/course-contributors',{id:'puscii',revision:0,item:{sharedAnswer:'Draft answer'}},cookie)
+  const editorial=await req(f,'/api/course-contributors',null,f.cookie)
+  assert.equal(editorial.data.items.find(x=>x.id==='puscii').status,'review')
+  const publicList=await req(f,'/api/course-contributors')
+  assert.equal(publicList.data.items.find(x=>x.id==='puscii').status,undefined)
+  assert.ok(!JSON.stringify(editorial.data).includes('Draft answer'))
+})
+test('teach-back needs explicit confirmation and a nonempty reflection',()=>{
+  const a=seed.activities.find(x=>x.type==='teach-back')
+  assert.equal(evaluate(a,['I explained it']),false)
+  assert.equal(evaluate(a,['','__teachback_confirmed__']),false)
+  assert.equal(evaluate(a,['I explained it','__teachback_confirmed__']),true)
 })

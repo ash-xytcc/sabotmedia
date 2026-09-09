@@ -29,8 +29,17 @@ export async function onRequest(context) {
       body = JSON.parse(raw)
     }
     await ensureContributors(db)
-    if (method === 'GET' && !url.searchParams.has('id'))
-      return json({ ok: true, items: await listContributors(db), editor, admin })
+    if (method === 'GET' && !url.searchParams.has('id')) {
+      let items = await listContributors(db)
+      if (editor) {
+        const rows = await db.prepare('SELECT id,draft_json,revision FROM course_contributors').all()
+        items = items.map((item) => {
+          const row = rows.results.find((r) => r.id === item.id)
+          return {...item, status: JSON.parse(row.draft_json).status, revision: row.revision}
+        })
+      }
+      return json({ ok: true, items, editor, admin })
+    }
     const project = id(body.id || url.searchParams.get('id')),
       scope = (body.scope || url.searchParams.get('scope')) === 'private' ? 'private' : 'edit'
     if (body.action === 'create') {

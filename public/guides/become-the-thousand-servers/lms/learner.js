@@ -1,6 +1,6 @@
 import { mountInlineEditor } from './editorial.js'
-import { KEY, blank, validateProgress, evaluate, complete, unlocked } from './progress.js'
-import { mountRecoveryCard } from './recovery-card.js?v=card-1'
+import { KEY, blank, validateProgress, evaluate, complete, unlocked, attemptFeedback } from './progress.js?v=audit-1'
+import { mountRecoveryCard } from './recovery-card.js?v=audit-1'
 const c = JSON.parse(document.querySelector('#course-data').textContent),
   units = [...c.sections, ...c.lessons]
 const $ = (s) => document.querySelector(s),
@@ -128,20 +128,19 @@ for (const u of units) {
     refresh()
   }
 }
+function hydrateActivity(form) {
+  const a = c.activities.find((a) => a.id === form.dataset.activity)
+  const last = state.activities[a.id]?.filter((t) => t.version === a.version).at(-1)
+  let index = 0
+  ;[...form.elements].filter((el) => el.name === 'answer').forEach((el) => {
+    if (['checkbox', 'radio'].includes(el.type)) el.checked = !!last?.answer.includes(el.value)
+    else el.value = last?.answer[index++] || ''
+  })
+  form.querySelector('[data-feedback]').textContent = attemptFeedback(a, last)
+}
 $$('[data-activity]').forEach((form) => {
-  const a = c.activities.find((a) => a.id === form.dataset.activity),
-    last = state.activities[a.id]?.filter((t) => t.version === a.version).at(-1)
-  if (last) {
-    ;[...form.elements]
-      .filter((el) => el.name === 'answer')
-      .forEach((el, i) => {
-        if (['checkbox', 'radio'].includes(el.type)) el.checked = last.answer.includes(el.value)
-        else el.value = last.answer[i] || ''
-      })
-    form.querySelector('[data-feedback]').textContent = last.passed
-      ? 'Completed on a previous attempt.'
-      : 'Needs another attempt.'
-  }
+  const a = c.activities.find((a) => a.id === form.dataset.activity)
+  hydrateActivity(form)
   const attempt = (passed) => {
     const answer = new FormData(form).getAll('answer').map(String)
     state.activities[a.id] = [
@@ -151,18 +150,20 @@ $$('[data-activity]').forEach((form) => {
     save()
     refresh()
     form.querySelector('[data-feedback]').textContent =
-      (state.activities[a.id].at(-1).passed ? 'Completed. ' : 'Needs another attempt. ') + (a.feedback || '')
+      attemptFeedback(a, state.activities[a.id].at(-1)) + ' ' + (a.feedback || '')
   }
   form.onsubmit = (e) => {
     e.preventDefault()
     attempt()
   }
-  form.querySelector('[data-retry]').onclick = () => attempt(false)
+  const retry = form.querySelector('[data-retry]')
+  if (retry) retry.onclick = () => attempt(false)
 })
 let active = '',
   routing = false
 function route() {
-  let key = decodeURIComponent(location.hash.slice(1))
+  let key = ''
+  try { key = decodeURIComponent(location.hash.slice(1)) } catch { /* Invalid links fall back to the course map. */ }
   const legacy = key.match(/^lesson-(\d+)$/)
   if (legacy) key = c.lessons.find((l) => l.number === Number(legacy[1]))?.slug || ''
   const u = units.find((u) => (u.slug || u.id) === key)
@@ -238,7 +239,8 @@ function restore(next) {
     if (p) p.checked = state.practical.includes(u.slug || u.id)
   }
   refresh()
-  message('Progress restored. Reload to show saved activity answers.')
+  $$('[data-activity]').forEach(hydrateActivity)
+  message('Progress restored, including saved activity answers.')
   return true
 }
 $('[data-import]').onclick = () => $('[data-file]').click()
@@ -256,7 +258,7 @@ $('[data-file]').onchange = async (e) => {
 $('[data-reset]').onclick = () => {
   if (restore(blank())) recoveryCard?.detach()
 }
-recoveryCard = mountRecoveryCard(() => validateProgress(state), restore)
+recoveryCard = mountRecoveryCard(() => validateProgress(state), restore, () => !storageBlocked)
 fetch('/api/course-content?edit=1', { credentials: 'same-origin', cache: 'no-store' })
   .then((r) => r.json())
   .then((data) => {

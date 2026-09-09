@@ -19,7 +19,7 @@ export const prose = (v) =>
 const resources = (rs) =>
   `<ul>${(rs || []).map((r) => `<li>${/^https?:\/\//i.test(r.url || '') ? `<a href="${esc(r.url)}" rel="noreferrer">${esc(r.title || r.url)}</a>` : esc(r.title)} ${esc(r.note)}</li>`).join('')}</ul>`
 export function shell(title, body, data = null) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><title>${esc(title)} · Sabot Media</title><link rel="stylesheet" href="${BASE}lms/course.css"><link rel="stylesheet" href="${BASE}lms/recovery-card.css?v=card-1"></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${BASE}">Become the Thousand Servers</a><span data-progress>Your progress belongs to you.</span><a href="${BASE}#tools">Progress tools</a></header><main id="main" class="wrap">${body}</main>${data ? `<script id="course-data" type="application/json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script><script type="module" src="${BASE}lms/learner.js?v=card-1"></script>` : ''}</body></html>`
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><title>${esc(title)} · Sabot Media</title><link rel="stylesheet" href="${BASE}lms/course.css"><link rel="stylesheet" href="${BASE}lms/recovery-card.css?v=card-1"></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${BASE}">Become the Thousand Servers</a><span data-progress>Your progress belongs to you.</span><a href="${BASE}#tools">Progress tools</a></header><main id="main" class="wrap">${body}</main>${data ? `<script id="course-data" type="application/json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script><script type="module" src="${BASE}lms/learner.js?v=audit-1"></script>` : ''}</body></html>`
 }
 function activity(a) {
   const options = a.options || []
@@ -55,7 +55,9 @@ function activity(a) {
       '<label><input type="checkbox" name="answer" value="confirmed"> I did this and verified it.</label>'
   else
     controls = '<label>Your reflection<textarea name="answer" maxlength="20000" rows="5"></textarea></label>'
-  return `<form data-activity="${esc(a.id)}" class="activity"><fieldset disabled><legend>${esc(a.title)} · ${esc(a.type)}</legend>${prose(a.prompt)}${controls}<button type="submit">Check / save attempt</button><button type="button" data-retry>Needs another attempt</button><p aria-live="polite" data-feedback></p></fieldset>${resources(a.sources)}</form>`
+  const selfAssessed = ['short-reflection', 'teach-back', 'practical', 'checklist'].includes(a.type)
+  if (a.type === 'teach-back') controls += '<label class="activity-option"><input type="checkbox" name="answer" value="__teachback_confirmed__"> I taught this to someone and checked their understanding.</label>'
+  return `<form data-activity="${esc(a.id)}" class="activity"><fieldset disabled><legend>${esc(a.title)} · ${esc(a.type)}</legend>${prose(a.prompt)}${controls}<button type="submit">${selfAssessed ? 'Save my work' : 'Check answers'}</button>${selfAssessed ? '<button type="button" data-retry>I need more practice</button>' : ''}<p aria-live="polite" data-feedback></p></fieldset>${resources(a.sources)}</form>`
 }
 export function renderCourse(c, contributors = []) {
   const nested = new Set(c.sections.flatMap((s) => s.lessonSlugs))

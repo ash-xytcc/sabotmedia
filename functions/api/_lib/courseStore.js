@@ -32,6 +32,7 @@ export async function readCourse(db, slug = SLUG, editor = false) {
     const old = await db.prepare('SELECT content_json FROM course_content WHERE slug=?').bind(slug).first()
     if (old) {
       const c = JSON.parse(old.content_json)
+      if (c.status === 'archived') return null
       if (c.schemaVersion !== 2 && c.status === 'published') return publicCourse(normalizeCourse(c))
     }
   }
