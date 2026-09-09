@@ -6,6 +6,8 @@ const STATIC_PUBLIC_PAGES = [
   { id: 'campaigns', label: 'Campaigns', path: '/campaigns', family: 'index' },
   { id: 'ai-campaign', label: 'A/I campaign', path: '/campaigns/autistici-inventati', family: 'campaign' },
   { id: 'ai-campaign-coverage', label: 'A/I coverage archive', path: '/campaigns/autistici-inventati/coverage', family: 'archive' },
+  { id: 'investigations', label: 'Investigations', path: '/investigations', family: 'index' },
+  { id: 'ai-investigation', label: 'From Kirk to A/I', path: '/investigations/autistici-inventati', family: 'content' },
   { id: 'feeds', label: 'Feeds', path: '/feeds', family: 'page' },
   { id: 'gallery', label: 'Aberdeen Local 1312 gallery', path: '/aberdeen-local-1312-gallery', family: 'archive' },
   { id: 'updates', label: 'Updates', path: '/updates', family: 'index' },
@@ -20,12 +22,17 @@ const STATIC_PUBLIC_PAGES = [
 
 const DYNAMIC_PUBLIC_PAGES = [
   { id: 'post', label: 'Post', pattern: /^\/post\/[^/]+$/, family: 'content' },
+  { id: 'piece-legacy', label: 'Legacy post', pattern: /^\/piece\/[^/]+$/, family: 'content' },
   { id: 'post-print', label: 'Post print view', pattern: /^\/post\/[^/]+\/print$/, family: 'template' },
   { id: 'print', label: 'Print view', pattern: /^\/print\/[^/]+$/, family: 'template' },
   { id: 'collection', label: 'Collection', pattern: /^\/collections\/[^/]+$/, family: 'content' },
   { id: 'campaign', label: 'Campaign', pattern: /^\/campaigns\/[^/]+$/, family: 'content' },
+  { id: 'investigation', label: 'Investigation', pattern: /^\/investigations\/[^/]+$/, family: 'content' },
+  { id: 'project', label: 'Project', pattern: /^\/project\/[^/]+$/, family: 'content' },
+  { id: 'project-legacy', label: 'Legacy project', pattern: /^\/projects\/[^/]+$/, family: 'content' },
   { id: 'publication', label: 'Publication', pattern: /^\/publications\/[^/]+$/, family: 'content' },
   { id: 'reader', label: 'Publication reader', pattern: /^\/reader\/[^/]+$/, family: 'template' },
+  { id: 'zine', label: 'Zine', pattern: /^\/zine\/[^/]+$/, family: 'content' },
 ]
 
 export const publicPageRegistry = Object.freeze(STATIC_PUBLIC_PAGES.map((page) => Object.freeze({ ...page })))
