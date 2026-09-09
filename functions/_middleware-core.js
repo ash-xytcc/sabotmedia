@@ -14,6 +14,8 @@ export const ADMIN_PREFIXES = [
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 const PAGE_METHODS = new Set(['GET', 'HEAD'])
 const PUBLIC_AUTH_API_PATHS = new Set([
+  '/api/course-contributors',
+  '/api/course-recovery',
   '/api/login',
   '/api/logout',
   '/api/session',

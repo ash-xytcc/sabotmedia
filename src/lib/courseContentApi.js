@@ -10,7 +10,7 @@ export function listCourses() {
 }
 
 export function loadCourseContent(slug = 'become-the-thousand-servers') {
-  return request(`/api/course-content?slug=${encodeURIComponent(slug)}`)
+  return request(`/api/course-content?slug=${encodeURIComponent(slug)}&edit=1`)
 }
 
 export function saveCourseContent(item) {

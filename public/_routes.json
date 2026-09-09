@@ -45,7 +45,8 @@
     "/investigations*",
     "/investigations/*",
     "/guides/become-the-thousand-servers/*",
-    "/archive.html"
+    "/archive.html",
+    "/guides/become-the-thousand-servers"
   ],
   "exclude": []
 }

@@ -39,6 +39,11 @@ await fs.writeFile(new URL('_reading/autistici-inventati.html',root),investigati
 
 const courseFile=new URL('guides/become-the-thousand-servers/index.html',root)
 const courseHtml=strip(await fs.readFile(courseFile,'utf8'))
+if (courseHtml.includes('id="course-data"')) {
+  const courseDoc=parseHTML(courseHtml).document
+  if(courseDoc.querySelectorAll('[data-unit]').length!==25) throw Error('Course reading projection is incomplete')
+  console.log('Prepared investigation reading view; modular course already contains full readable HTML.')
+} else {
 const start=courseHtml.indexOf('const L=['),end=courseHtml.indexOf('const def=',start)
 if(start<0||end<0) throw Error('Course lesson data not found')
 const {L,tasks,G}=vm.runInNewContext(`${courseHtml.slice(start,end)};({L,tasks,G})`,{},{timeout:1000})
@@ -53,3 +58,5 @@ for(const [i,x] of L.entries()) courseBody+=`<article id="lesson-${i+1}"><h2>${i
 courseBody+=`<h2>Glossary</h2><dl>${Object.entries(G).map(([term,text])=>`<dt>${e(term)}</dt><dd>${e(text)}</dd>`).join('')}</dl>`
 await fs.writeFile(courseFile,append(courseHtml,'Become the Thousand Servers',courseBody,'body > main,body > header'))
 console.log('Prepared full investigation and twelve-lesson course HTML reading views.')
+
+}
