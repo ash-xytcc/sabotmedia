@@ -1,3 +1,10 @@
+const WEBLATE_SYNC_EVENT = 'sabot:weblate-sync'
+
+function broadcastWeblateSync(detail) {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return
+  window.dispatchEvent(new CustomEvent(WEBLATE_SYNC_EVENT, { detail }))
+}
+
 export async function loadNativeTranslations({ slug, contentId, includeUnpublished = false, syncWeblate = true } = {}) {
   // Editors should not have to manually shuttle translation files into Sabot.
   // On the A/I translation dashboard, sync the current public Weblate component
@@ -23,6 +30,7 @@ export async function loadNativeTranslations({ slug, contentId, includeUnpublish
       weblateSync = { ok: false, error: String(error?.message || error) }
       console.warn('[SabotPress] Weblate sync unavailable:', weblateSync.error)
     }
+    broadcastWeblateSync(weblateSync)
   }
 
   const params = new URLSearchParams()
@@ -50,15 +58,21 @@ export async function exportWeblateSource({ slug, contentId } = {}) {
 }
 
 export async function syncWeblateTranslations() {
-  const response = await fetch('/api/weblate-sync', {
-    method: 'POST',
-    credentials: 'same-origin',
-    cache: 'no-store',
-    headers: { accept: 'application/json' },
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok || !data?.ok) throw new Error(data?.error || `Weblate sync failed (${response.status})`)
-  return data
+  try {
+    const response = await fetch('/api/weblate-sync', {
+      method: 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { accept: 'application/json' },
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok || !data?.ok) throw new Error(data?.error || `Weblate sync failed (${response.status})`)
+    broadcastWeblateSync(data)
+    return data
+  } catch (error) {
+    broadcastWeblateSync({ ok: false, error: String(error?.message || error) })
+    throw error
+  }
 }
 
 export async function saveNativeTranslation(payload = {}) {
