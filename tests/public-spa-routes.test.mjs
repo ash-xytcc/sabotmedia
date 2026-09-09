@@ -5,11 +5,12 @@ import { isPublicSpaPath, onRequest } from '../functions/_middleware.js'
 test('edge middleware recognizes every public client-side route family', () => {
   for (const path of [
     '/', '/archive', '/search', '/about', '/security', '/contact', '/submit', '/support', '/press', '/feeds',
-    '/collections', '/collections/example', '/publications', '/publications/example', '/reader/example', '/updates',
+    '/campaigns', '/collections', '/collections/example', '/publications', '/publications/example', '/reader/example', '/read/example', '/updates',
     '/updates/example', '/projects', '/projects/example', '/project/example', '/print/example', '/post/example/print',
-    '/piece/example/print', '/zine/example', '/aberdeen-local-1312-gallery', '/login', '/wp-login', '/logout',
+    '/piece/example/print', '/zine/example', '/investigations', '/investigations/example', '/gallery/crumbs', '/lounge', '/saboteur',
+    '/aberdeen-local-1312-gallery', '/login', '/wp-login', '/logout',
   ]) {
-    assert.equal(isPublicSpaPath(path), true, `${path} should receive the SPA shell`)
+    assert.equal(isPublicSpaPath(path), true, `${path} should receive the public HTML shell`)
   }
 
   for (const path of ['/api/session', '/assets/index.js', '/pgp.asc', '/definitely-not-a-page']) {
@@ -17,7 +18,7 @@ test('edge middleware recognizes every public client-side route family', () => {
   }
 })
 
-test('public info routes receive index.html from the asset binding', async () => {
+test('public info routes receive their own generated route HTML instead of the homepage shell', async () => {
   let requestedPath = ''
   const response = await onRequest({
     request: new Request('https://sabot.media/contact'),
@@ -25,7 +26,7 @@ test('public info routes receive index.html from the asset binding', async () =>
       ASSETS: {
         async fetch(request) {
           requestedPath = new URL(request.url).pathname
-          return new Response('<!doctype html><title>Sabot Media</title>', {
+          return new Response('<!doctype html><html><body><noscript data-sabot-static-noscript><h1>Contact</h1></noscript></body></html>', {
             status: 200,
             headers: { 'content-type': 'text/html; charset=utf-8' },
           })
@@ -37,9 +38,58 @@ test('public info routes receive index.html from the asset binding', async () =>
     },
   })
 
-  assert.equal(requestedPath, '/index.html')
+  assert.equal(requestedPath, '/contact/index.html')
   assert.equal(response.status, 200)
-  assert.match(await response.text(), /Sabot Media/)
+  const html = await response.text()
+  assert.match(html, /data-sabot-static-noscript/)
+  assert.match(html, /<h1>Contact<\/h1>/)
+  assert.doesNotMatch(html, /data-sabot-plain-html/)
+})
+
+test('route-specific asset lookup falls back to the SPA root only when generated HTML is unavailable', async () => {
+  const requested = []
+  const response = await onRequest({
+    request: new Request('https://sabot.media/support'),
+    env: {
+      ASSETS: {
+        async fetch(request) {
+          const pathname = new URL(request.url).pathname
+          requested.push(pathname)
+          if (pathname === '/support/index.html') return new Response('missing', { status: 404 })
+          return new Response('<!doctype html><html><body><div id="root"></div></body></html>', {
+            status: 200,
+            headers: { 'content-type': 'text/html; charset=utf-8' },
+          })
+        },
+      },
+    },
+    next() {
+      throw new Error('Support should stay inside the public route handler.')
+    },
+  })
+
+  assert.deepEqual(requested, ['/support/index.html', '/index.html'])
+  assert.equal(response.status, 200)
+  assert.match(await response.text(), /data-sabot-plain-html/)
+})
+
+test('trailing slashes on public reading routes canonicalize globally', async () => {
+  for (const [input, expected] of [
+    ['/post/example/', '/post/example'],
+    ['/piece/example/', '/piece/example'],
+    ['/campaigns/example/', '/campaigns/example'],
+    ['/collections/example/', '/collections/example'],
+    ['/investigations/example/', '/investigations/example'],
+    ['/about/', '/about'],
+  ]) {
+    const response = await onRequest({
+      request: new Request(`https://sabot.media${input}`),
+      env: {},
+      next() { throw new Error(`${input} should canonicalize before reaching route assets.`) },
+    })
+    assert.equal(response.status, 308)
+    assert.equal(new URL(response.headers.get('location')).pathname, expected)
+  }
 })
 
 test('plain HTML home respects homepage visibility while archive includes all public posts', async () => {
@@ -80,7 +130,9 @@ async function renderPublicFallback(pathname, rows) {
     env: {
       BF_DB: createNativeContentDb(rows),
       ASSETS: {
-        async fetch() {
+        async fetch(request) {
+          const requestedPath = new URL(request.url).pathname
+          if (requestedPath !== '/index.html' && requestedPath !== '/archive/index.html') return new Response('missing', { status: 404 })
           return new Response('<!doctype html><html><body><div id="root"></div></body></html>', {
             status: 200,
             headers: { 'content-type': 'text/html; charset=utf-8' },
@@ -89,7 +141,7 @@ async function renderPublicFallback(pathname, rows) {
       },
     },
     next() {
-      throw new Error(`${pathname} should receive the SPA shell.`)
+      throw new Error(`${pathname} should receive the public shell.`)
     },
   })
 
