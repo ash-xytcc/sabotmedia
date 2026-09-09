@@ -69,6 +69,12 @@ async function load() {
         add.before(box)
       }
       form.append(add)
+      if (current.item?.suggestedExercise) {
+        const suggestion = document.createElement('p')
+        suggestion.textContent =
+          'Suggested exercise (use, adapt, or replace): ' + current.item.suggestedExercise
+        form.append(suggestion)
+      }
       const exercise = field(
         'Each One, Teach One: use, modify, or replace the suggested practical exercise',
         current.item?.exercise,
@@ -123,6 +129,7 @@ $('[data-edit-form]').onsubmit = async (e) => {
       body.item = {
         sharedAnswer: $('[data-shared]').value,
         exercise: $('[data-exercise]').value,
+        suggestedExercise: current.item?.suggestedExercise || '',
         questions: [...root.querySelectorAll('[data-question]')].map((q) => ({
           question: q.querySelectorAll('textarea')[0].value,
           answer: q.querySelectorAll('textarea')[1].value,

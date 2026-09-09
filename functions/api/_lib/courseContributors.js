@@ -1,3 +1,4 @@
+import { contributionDraft } from './courseContributorPrompts.js'
 import {
   contributorNames,
   id,
@@ -18,11 +19,7 @@ export async function ensureContributors(db) {
     contributorNames.map((name) =>
       db
         .prepare('INSERT OR IGNORE INTO course_contributors(id,name,draft_json) VALUES(?,?,?)')
-        .bind(
-          id(name),
-          name,
-          JSON.stringify({ sharedAnswer: '', questions: [], exercise: '', status: 'draft' }),
-        ),
+        .bind(id(name), name, JSON.stringify(contributionDraft(id(name)))),
     ),
   )
 }
@@ -39,6 +36,7 @@ export function normalizeContribution(value = {}) {
       .slice(0, 8)
       .map((q) => ({ question: text(q.question), answer: text(q.answer) })),
     exercise: text(value.exercise),
+    suggestedExercise: text(value.suggestedExercise),
     status: ['draft', 'reporting needed', 'testing', 'review', 'published', 'archived'].includes(value.status)
       ? value.status
       : 'draft',
