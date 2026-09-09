@@ -1,0 +1,12 @@
+/post/:slug/ /post/:slug 301
+/piece/:slug/ /piece/:slug 301
+/print/:slug/ /print/:slug 301
+/zine/:slug/ /zine/:slug 301
+/updates/:slug/ /updates/:slug 301
+/collections/:slug/ /collections/:slug 301
+/publications/:slug/ /publications/:slug 301
+/reader/:slug/ /reader/:slug 301
+/project/:slug/ /project/:slug 301
+/projects/:slug/ /projects/:slug 301
+/campaigns/:slug/ /campaigns/:slug 301
+/investigations/:slug/ /investigations/:slug 301
