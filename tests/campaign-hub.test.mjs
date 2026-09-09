@@ -1,3 +1,4 @@
+import { findCampaignPieces } from '../src/lib/campaignPieces.js'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
@@ -104,12 +105,12 @@ test('campaign editor exposes reusable modules for all supported content types',
 })
 
 test('campaign reporting excludes body-only false positives and keeps explicit A/I relationships', () => {
-  assert.doesNotMatch(page, /piece\.body|piece\.bodyHtml|podcastSummary/)
-  assert.match(page, /exactSlugs/)
-  assert.match(page, /piece\.tags/)
-  assert.match(page, /piece\.campaigns/)
-  assert.match(page, /autistici/)
-  assert.doesNotMatch(page, /keywords\.some/)
+  const result = findCampaignPieces([
+    {slug:'unrelated',title:'Unrelated',body:'autistici inventati'},
+    {slug:'tagged',title:'Explicit relationship',tags:['autistici-inventati']},
+    {slug:'the-server-called-paranoia',title:'The Server Called Paranoia'},
+  ],{slug:'autistici-inventati'})
+  assert.deepEqual(new Set(result.map(item => item.slug)),new Set(['tagged','the-server-called-paranoia']))
 })
 
 test('campaign typography and navigation are bounded and anchor-safe', () => {
