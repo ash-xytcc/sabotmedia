@@ -26,7 +26,8 @@ const PUBLIC_AUTH_API_PATHS = new Set([
 ])
 const PUBLIC_SPA_EXACT_PATHS = new Set([
   '/', '/archive', '/search', '/about', '/security', '/contact', '/submit', '/support', '/press', '/feeds',
-  '/collections', '/publications', '/updates', '/projects', '/aberdeen-local-1312-gallery', '/login', '/wp-login', '/logout',
+  '/campaigns', '/collections', '/publications', '/updates', '/projects', '/investigations', '/lounge', '/saboteur',
+  '/gallery/crumbs', '/aberdeen-local-1312-gallery', '/login', '/wp-login', '/logout',
 ])
 
 const ADMIN_PAGE_CAPABILITIES = [
@@ -78,8 +79,10 @@ export function isAdminRoutePath(pathname = '') {
 export function isPublicSpaPath(pathname = '') {
   const normalized = pathname === '/' ? '/' : String(pathname || '').replace(/\/+$/, '')
   if (PUBLIC_SPA_EXACT_PATHS.has(normalized)) return true
-  return /^\/(?:project|projects|print|zine|collections|publications|reader|updates|contribute)\/[^/]+$/i.test(normalized)
+  return /^\/(?:project|projects|print|zine|collections|publications|reader|read|updates|contribute)\/[^/]+$/i.test(normalized)
     || /^\/(?:post|piece)\/[^/]+\/print$/i.test(normalized)
+    || /^\/investigations\/[a-z0-9-]+$/i.test(normalized)
+    || /^\/gallery\/[a-z0-9-]+$/i.test(normalized)
 }
 
 export async function onRequest(context) {
@@ -94,8 +97,16 @@ export async function onRequest(context) {
     return Response.redirect(new URL('/keys/info-sabot-media.asc', url.origin).toString(), 308)
   }
 
-  const pathname = url.pathname
   const method = String(context.request.method || 'GET').toUpperCase()
+  if (PAGE_METHODS.has(method) && url.pathname.length > 1 && url.pathname.endsWith('/')) {
+    const stripped = url.pathname.replace(/\/+$/, '')
+    if (isPublicPostPath(stripped) || isPublicCampaignPath(stripped) || isPublicSpaPath(stripped)) {
+      url.pathname = stripped
+      return Response.redirect(url.toString(), 308)
+    }
+  }
+
+  const pathname = url.pathname
   const isAdminRoute = isAdminRoutePath(pathname)
   const isApiWrite = pathname.startsWith('/api/') && WRITE_METHODS.has(method)
 
@@ -165,16 +176,21 @@ function isPublicPostPath(pathname) {
 }
 
 export function isPublicCampaignPath(pathname = '') {
-  return pathname === '/campaigns' || /^\/campaigns\/[a-z0-9-]+(?:\/(?:coverage|instagram-connect))?\/?$/i.test(pathname)
+  return pathname === '/campaigns' || /^\/campaigns\/[a-z0-9-]+(?:\/(?:coverage|benefit-kit|instagram-connect))?\/?$/i.test(pathname)
 }
 
 async function renderSpaShell(context, url) {
   if (!context.env?.ASSETS?.fetch) return context.next()
-  const indexUrl = new URL('/index.html', url.origin)
-  const response = await context.env.ASSETS.fetch(new Request(indexUrl, {
+
+  const normalizedPath = url.pathname === '/' ? '' : url.pathname.replace(/\/+$/, '')
+  const routeAssetPath = normalizedPath ? `${normalizedPath}/index.html` : '/index.html'
+  const requestAsset = async (assetPath) => context.env.ASSETS.fetch(new Request(new URL(assetPath, url.origin), {
     method: context.request.method === 'HEAD' ? 'HEAD' : 'GET',
     headers: { accept: 'text/html' },
   }))
+
+  let response = await requestAsset(routeAssetPath)
+  if (!response.ok && routeAssetPath !== '/index.html') response = await requestAsset('/index.html')
   if (!response.ok) return response
 
   const headers = new Headers(response.headers)
@@ -184,19 +200,21 @@ async function renderSpaShell(context, url) {
   }
 
   let html = await response.text()
-  let fallback = renderNoScriptGeneric(url)
 
+  // The build generates route-specific no-JS HTML for every public route. Preserve it.
+  // Dynamic home/archive data may replace that static snapshot when D1 is available.
   if ((url.pathname === '/' || url.pathname === '/archive') && context.env?.BF_DB) {
     try {
       const entries = await listNativeEntries(context.env.BF_DB, { status: 'published' })
       const visibleEntries = url.pathname === '/' ? entries.filter((entry) => entry.showOnHomepage !== false) : entries
-      fallback = renderNoScriptHome(visibleEntries, url)
+      html = injectNoScript(html, renderNoScriptHome(visibleEntries, url))
     } catch {
-      // Keep the generic fallback when storage is unavailable.
+      // Keep the generated static fallback when storage is unavailable.
     }
+  } else if (!html.includes('data-sabot-static-noscript') && !html.includes('data-sabot-plain-html')) {
+    html = injectNoScript(html, renderNoScriptGeneric(url))
   }
 
-  html = injectNoScript(html, fallback)
   headers.set('content-type', 'text/html; charset=utf-8')
   headers.delete('content-length')
   return new Response(html, { status: 200, headers })
