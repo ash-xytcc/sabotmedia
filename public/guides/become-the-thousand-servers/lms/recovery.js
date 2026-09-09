@@ -5,9 +5,10 @@ export const encode = (bytes) =>
     .replace(/=+$/, '')
 export const decode = (s) =>
   Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0))
-export async function encryptProgress(state) {
-  const id = encode(crypto.getRandomValues(new Uint8Array(32))),
-    keyBytes = crypto.getRandomValues(new Uint8Array(32)),
+export async function encryptProgress(state, existingCode = null) {
+  const existing = existingCode ? parseCode(existingCode) : null
+  const id = existing?.id || encode(crypto.getRandomValues(new Uint8Array(32))),
+    keyBytes = existing?.key || crypto.getRandomValues(new Uint8Array(32)),
     iv = crypto.getRandomValues(new Uint8Array(12))
   const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['encrypt'])
   const bytes = new Uint8Array(
@@ -21,7 +22,7 @@ export async function encryptProgress(state) {
   let binary = ''
   for (const b of bytes) binary += String.fromCharCode(b)
   return {
-    code: `sabot1.${id}.${encode(keyBytes)}`,
+    code: existingCode || `sabot1.${id}.${encode(keyBytes)}`,
     blob: { recoveryId: id, schemaVersion: 1, iv: encode(iv), ciphertext: btoa(binary) },
   }
 }
@@ -49,4 +50,13 @@ export async function decryptProgress(code, blob) {
     decode(blob.ciphertext),
   )
   return JSON.parse(new TextDecoder().decode(plain))
+}
+
+// A separate one-way derived capability permits writes without disclosing the AES key.
+export async function writeToken(code) {
+  const { key } = parseCode(code)
+  const label = new TextEncoder().encode('sabot-course-write-v1:')
+  const input = new Uint8Array(label.length + key.length)
+  input.set(label); input.set(key, label.length)
+  return encode(new Uint8Array(await crypto.subtle.digest('SHA-256', input)))
 }

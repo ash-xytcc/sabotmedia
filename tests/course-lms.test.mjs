@@ -16,6 +16,7 @@ import {
 import {
   encryptProgress,
   decryptProgress,
+  writeToken,
 } from '../public/guides/become-the-thousand-servers/lms/recovery.js'
 import { renderCourse } from '../public/guides/become-the-thousand-servers/lms/render.js'
 import { saveCourse, readCourse } from '../functions/api/_lib/courseStore.js'
@@ -341,4 +342,31 @@ test('fresh public course hides unpublished working documents', async () => {
   const f = await fixture()
   assert.equal((await readCourse(f.env.BF_DB, seed.slug)).documents.length, 0)
   assert.equal((await readCourse(f.env.BF_DB, seed.slug, true)).documents.length, 3)
+})
+
+test('reusable card keeps its code and updates only with write authorization and current revision', async () => {
+  const f = await fixture(), initial = blank()
+  const first = await encryptProgress(initial), token = await writeToken(first.code)
+  const create = await req(f, '/api/course-recovery', {action:'create',...first.blob,writeToken:token}, '', recovery)
+  assert.equal(create.r.status, 200)
+  assert.equal(create.data.revision, 1)
+  initial.notes[seed.lessons[0].slug] = 'A later lesson, same card'
+  const next = await encryptProgress(initial, first.code)
+  assert.equal(next.code, first.code)
+  assert.notEqual(next.blob.iv, first.blob.iv)
+  assert.ok(!JSON.stringify({...next.blob,writeToken:token}).includes(first.code.split('.')[2]))
+  const body = {action:'update',...next.blob,writeToken:token,revision:1}
+  assert.equal((await req(f, '/api/course-recovery', {...body,writeToken:'A'.repeat(43)}, '', recovery)).r.status, 403)
+  const update = await req(f, '/api/course-recovery', body, '', recovery)
+  assert.equal(update.r.status, 200)
+  assert.equal(update.data.revision, 2)
+  assert.equal((await req(f, '/api/course-recovery', body, '', recovery)).r.status, 409)
+  const read = await req(f, '/api/course-recovery', {action:'read',recoveryId:first.blob.recoveryId}, '', recovery)
+  assert.deepEqual(await decryptProgress(first.code, read.data.blob), initial)
+  assert.equal(read.data.revision, 2)
+  const stored = await f.env.BF_DB.prepare('SELECT token_hash FROM course_recovery_writers WHERE id=?').bind(first.blob.recoveryId).first()
+  assert.notEqual(stored.token_hash, token)
+  await f.env.BF_DB.prepare('UPDATE course_recovery SET expires=0').run()
+  assert.equal((await req(f, '/api/course-recovery', {action:'read',recoveryId:first.blob.recoveryId}, '', recovery)).r.status, 404)
+  assert.equal((await req(f, '/api/course-recovery', {...body,revision:2}, '', recovery)).r.status, 200)
 })

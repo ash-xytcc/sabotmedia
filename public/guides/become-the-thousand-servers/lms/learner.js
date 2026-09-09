@@ -1,10 +1,11 @@
 import { mountInlineEditor } from './editorial.js'
 import { KEY, blank, validateProgress, evaluate, complete, unlocked } from './progress.js'
-import { encryptProgress, decryptProgress, parseCode } from './recovery.js'
+import { mountRecoveryCard } from './recovery-card.js?v=card-1'
 const c = JSON.parse(document.querySelector('#course-data').textContent),
   units = [...c.sections, ...c.lessons]
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)]
+let recoveryCard = null
 let state = blank(),
   storageBlocked = false
 try {
@@ -26,6 +27,7 @@ function save() {
   }
   try {
     localStorage.setItem(KEY, JSON.stringify(state))
+    recoveryCard?.changed()
   } catch {
     message('This browser could not save progress. Export a copy before leaving.')
   }
@@ -223,8 +225,9 @@ $('[data-export]').onclick = () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 function restore(next) {
-  if (!confirm('Replace progress in this browser with this backup? Export first to keep both copies.')) return
-  state = validateProgress(next)
+  const validated = validateProgress(next)
+  if (!confirm('Replace progress in this browser with this backup? Export first to keep both copies.')) return false
+  state = validated
   storageBlocked = false
   active = ''
   save()
@@ -236,6 +239,7 @@ function restore(next) {
   }
   refresh()
   message('Progress restored. Reload to show saved activity answers.')
+  return true
 }
 $('[data-import]').onclick = () => $('[data-file]').click()
 $('[data-file]').onchange = async (e) => {
@@ -250,52 +254,9 @@ $('[data-file]').onchange = async (e) => {
   e.target.value = ''
 }
 $('[data-reset]').onclick = () => {
-  if (confirm('Reset local progress? Export a copy first if you need it.')) restore(blank())
+  if (restore(blank())) recoveryCard?.detach()
 }
-async function api(body) {
-  const res = await fetch('/api/course-recovery', {
-    method: 'POST',
-    credentials: 'omit',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  })
-  const data = await res.json()
-  if (!res.ok) throw Error(data.error || 'Recovery unavailable')
-  return data
-}
-$('[data-backup]').onclick = async () => {
-  try {
-    if (!crypto.subtle) { message('Encrypted backup requires HTTPS. Export Progress still works here.'); return }
-    message('Encrypting progress in this browser…')
-    const { code, blob } = await encryptProgress(validateProgress(state))
-    const result = await api({ action: 'create', ...blob })
-    $('[data-recovery-panel]').hidden = false
-    $('[data-recovery-code]').value = code
-    message(
-      `Encrypted backup saved for ${result.retentionDays} days. Keep this code somewhere safe. Each backup creates a new code.`,
-    )
-  } catch {
-    message('Backup unavailable. Local progress is unchanged; Export Progress still works.')
-  }
-}
-$('[data-restore]').onclick = () => {
-  $('[data-recovery-panel]').hidden = false
-  $('[data-recovery-code]').focus()
-}
-$('[data-fetch-recovery]').onclick = async () => {
-  try {
-    const code = $('[data-recovery-code]').value.trim(),
-      { id } = parseCode(code),
-      data = await api({ action: 'read', recoveryId: id })
-    const next = validateProgress(await decryptProgress(code, data.blob))
-    restore(next)
-    $('[data-recovery-code]').value = ''
-  } catch {
-    message(
-      'Could not restore that code. Check the code or try again later. Local progress was not replaced.',
-    )
-  }
-}
+recoveryCard = mountRecoveryCard(() => validateProgress(state), restore)
 fetch('/api/course-content?edit=1', { credentials: 'same-origin', cache: 'no-store' })
   .then((r) => r.json())
   .then((data) => {
