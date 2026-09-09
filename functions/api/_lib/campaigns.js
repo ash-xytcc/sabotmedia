@@ -90,7 +90,7 @@ export function defaultFnbGazaCampaign() {
     updates: [{ id: 'fnb-launch', date: '2026-08-31T00:00:00Z', title: 'Campaign space opened', body: 'Sabot Media opened this independent campaign and correspondence space for Food Not Bombs Gaza.', pinned: true }],
     sectionOrder: ['donate', 'socialArchive', 'dispatches', 'act', 'questions', 'benefit', 'reporting', 'updates', 'sources', 'faq'],
     hiddenSections: ['letters', 'graphics', 'timeline', 'coverage', 'translations', 'signatories', 'social', 'status'],
-    sectionTitles: { donate: 'The need is money', socialArchive: 'Food Not Bombs Gaza social archive', dispatches: 'Dispatches from Gaza', questions: 'Ask Food Not Bombbs Gaza', benefit: 'Turn your event into direct aid', act: 'Ways to act', reporting: 'Reporting and context', updates: 'Campaign log', sources: 'Verification and sources', faq: 'Questions about this campaign' },
+    sectionTitles: { donate: 'The need is money', socialArchive: 'Food Not Bombs Gaza social archive', dispatches: 'Dispatches from Gaza', questions: 'Ask Food Not Bombs Gaza', benefit: 'Turn your event into direct aid', act: 'Ways to act', reporting: 'Reporting and context', updates: 'Campaign log', sources: 'Verification and sources', faq: 'Questions about this campaign' },
     createdAt: '2026-08-31T00:00:00Z',
   })
 }
