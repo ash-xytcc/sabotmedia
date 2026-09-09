@@ -67,7 +67,7 @@ export function defaultFnbGazaCampaign() {
       publicQuestions: true,
       contributorLabel: 'Food Not Bombs Gaza',
       editorLabel: 'Ash / Sabot Media',
-      intro: 'This is a private conversation with Ash and Sabot Media. Send text, audio, video, or a photo whenever you have time and connectivity permit.',
+      intro: 'This is a private conversation with Ash and Sabot Media. Send text, audio, video, or a photo whenever you have time.',
     },
     actions: [
       { id: 'action-donate', title: 'Send direct aid', body: 'Money is the immediate need. Donate through the verified fundraiser.', href: 'https://chuffed.org/project/181554-send-direct-aid-to-food-not-bombs-gaza', label: 'Donate on Chuffed' },
@@ -90,7 +90,7 @@ export function defaultFnbGazaCampaign() {
     updates: [{ id: 'fnb-launch', date: '2026-08-31T00:00:00Z', title: 'Campaign space opened', body: 'Sabot Media opened this independent campaign and correspondence space for Food Not Bombs Gaza.', pinned: true }],
     sectionOrder: ['donate', 'socialArchive', 'dispatches', 'act', 'questions', 'benefit', 'reporting', 'updates', 'sources', 'faq'],
     hiddenSections: ['letters', 'graphics', 'timeline', 'coverage', 'translations', 'signatories', 'social', 'status'],
-    sectionTitles: { donate: 'The need is money', socialArchive: 'Food Not Bombs Gaza social archive', dispatches: 'Dispatches from Gaza', questions: 'Ask Food Not Bombs Gaza', benefit: 'Turn your event into direct aid', act: 'Ways to act', reporting: 'Reporting and context', updates: 'Campaign log', sources: 'Verification and sources', faq: 'Questions about this campaign' },
+    sectionTitles: { donate: 'The need is money', socialArchive: 'Food Not Bombs Gaza social archive', dispatches: 'Dispatches from Gaza', questions: 'Ask Food Not Bombbs Gaza', benefit: 'Turn your event into direct aid', act: 'Ways to act', reporting: 'Reporting and context', updates: 'Campaign log', sources: 'Verification and sources', faq: 'Questions about this campaign' },
     createdAt: '2026-08-31T00:00:00Z',
   })
 }
@@ -169,6 +169,7 @@ export async function ensureCampaignsTable(db) {
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`).run()
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaigns_status ON campaigns(status)').run()
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_campaigns_updated_at ON campaigns(updated_at DESC)').run()
   await db.prepare(`CREATE TABLE IF NOT EXISTS campaign_revisions (
     id TEXT PRIMARY KEY,
     campaign_id TEXT NOT NULL,
@@ -378,7 +379,7 @@ function normalizeDonation(value) {
 }
 
 function normalizeCorrespondence(value) {
-  const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+  const input = value && typeof value === 'object' ? value : {}
   return { enabled: Boolean(input.enabled), publicQuestions: Boolean(input.publicQuestions), contributorLabel: String(input.contributorLabel || 'Field contributor'), editorLabel: String(input.editorLabel || 'Sabot Media'), intro: String(input.intro || '') }
 }
 
@@ -397,8 +398,7 @@ function normalizeAutomation(value) {
 
 function revisionRow(row) {
   let parsed = {}
-  try { parsed = JSON.parse(row.revision_json || '{}') } catch { parsed = {}
-  }
+  try { parsed = JSON.parse(row.revision_json || '{}') } catch { parsed = {} }
   return {
     id: String(row.id || ''),
     campaignId: String(row.campaign_id || ''),
