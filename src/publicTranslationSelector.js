@@ -25,9 +25,11 @@ const ARTICLE_TRANSLATIONS = {
 }
 
 const SELECTOR_ATTR = 'data-sabot-language-selector'
+const SELECTOR_SIGNATURE_ATTR = 'data-sabot-language-signature'
 const LOCAL_TRANSLATION_ATTR = 'data-sabot-local-translation'
 const ORIGINAL_HERO_ATTR = 'data-sabot-original-hero'
 const ORIGINAL_META_ATTR = 'data-sabot-original-content'
+const TRANSLATION_CACHE_TTL_MS = 30 * 1000
 const translationCache = new Map()
 
 function normalizedPathname() {
@@ -79,10 +81,24 @@ function makeLanguageRow({ label, code, href = '', credit = '', current = false 
   return row
 }
 
+function selectorSignature(config) {
+  return JSON.stringify({
+    current: [config?.current?.code || '', config?.current?.label || ''],
+    translations: (config?.translations || []).map((item) => [
+      item?.code || '',
+      item?.label || '',
+      item?.href || '',
+      item?.credit || '',
+      item?.status || '',
+    ]),
+  })
+}
+
 function buildSelector(pathname, config) {
   const details = document.createElement('details')
   details.className = 'piece-language-switcher'
   details.setAttribute(SELECTOR_ATTR, pathname)
+  details.setAttribute(SELECTOR_SIGNATURE_ATTR, selectorSignature(config))
 
   const summary = document.createElement('summary')
   summary.className = 'piece-language-switcher__button'
@@ -108,12 +124,16 @@ function buildSelector(pathname, config) {
   return details
 }
 
-async function loadNativeTranslations(pathname) {
+async function loadNativeTranslations(pathname, { force = false } = {}) {
   const slug = slugFromPath(pathname)
   if (!slug) return null
-  if (translationCache.has(slug)) return translationCache.get(slug)
+
+  const now = Date.now()
+  const cached = translationCache.get(slug)
+  if (!force && cached && now - cached.fetchedAt < TRANSLATION_CACHE_TTL_MS) return cached.promise
 
   const request = fetch(`/api/native-translations?slug=${encodeURIComponent(slug)}`, {
+    cache: 'no-store',
     headers: { accept: 'application/json' },
     credentials: 'same-origin',
   })
@@ -124,7 +144,7 @@ async function loadNativeTranslations(pathname) {
     })
     .catch(() => null)
 
-  translationCache.set(slug, request)
+  translationCache.set(slug, { promise: request, fetchedAt: now })
   return request
 }
 
@@ -234,19 +254,24 @@ function applyLocalTranslation(translation) {
   const body = translation.translation
   const title = String(body.title || '').trim()
   const bodyHtml = String(body.bodyHtml || '').trim()
+  const sanitizedBodyHtml = bodyHtml ? sanitizeTranslatedHtml(bodyHtml) : ''
   const marker = `${translation.code}:${title.length}:${bodyHtml.length}:${String(body.heroImage || '').length}`
-  if (document.documentElement.getAttribute(LOCAL_TRANSLATION_ATTR) === marker) return true
+  const bodyMount = document.querySelector('.piece-body__content')
+  const titleNodes = Array.from(document.querySelectorAll('.piece-article-lead h1'))
+  const titleMatches = !title || (titleNodes.length > 0 && titleNodes.every((node) => node.textContent === title))
+  const bodyMatches = !sanitizedBodyHtml || Boolean(bodyMount && bodyMount.innerHTML === sanitizedBodyHtml)
+
+  if (document.documentElement.getAttribute(LOCAL_TRANSLATION_ATTR) === marker && titleMatches && bodyMatches) return true
 
   if (title) {
-    document.querySelectorAll('.piece-article-lead h1').forEach((node) => {
-      node.textContent = title
+    titleNodes.forEach((node) => {
+      if (node.textContent !== title) node.textContent = title
     })
     document.title = `${title} | Sabot Media`
   }
 
-  const bodyMount = document.querySelector('.piece-body__content')
-  if (bodyHtml && bodyMount) bodyMount.innerHTML = sanitizeTranslatedHtml(bodyHtml)
-  if (!bodyMount && bodyHtml) return false
+  if (sanitizedBodyHtml && bodyMount && bodyMount.innerHTML !== sanitizedBodyHtml) bodyMount.innerHTML = sanitizedBodyHtml
+  if (!bodyMount && sanitizedBodyHtml) return false
   applyTranslatedHero(body)
   applyTranslatedMeta(body, title)
 
@@ -290,34 +315,49 @@ function configForSelectedLanguage(pathname, baseConfig, nativeData) {
   }
 }
 
-async function refreshTranslationSelector() {
+async function refreshTranslationSelector({ force = false } = {}) {
   const pathname = normalizedPathname()
   clearStaleSelectors(pathname)
   const staticConfig = ARTICLE_TRANSLATIONS[pathname]
-  const nativeData = await loadNativeTranslations(pathname)
+  const nativeData = await loadNativeTranslations(pathname, { force })
   if (!staticConfig && !nativeData?.translations?.length) return
 
   const baseConfig = mergeTranslations(staticConfig, nativeData)
   const config = configForSelectedLanguage(pathname, baseConfig, nativeData)
   const mount = document.querySelector('.piece-article-lead__below')
-  if (!mount || mount.querySelector(`[${SELECTOR_ATTR}]`)) return
-  mount.appendChild(buildSelector(pathname, config))
+  if (!mount) return
+
+  const signature = selectorSignature(config)
+  const existing = mount.querySelector(`[${SELECTOR_ATTR}]`)
+  if (existing?.getAttribute(SELECTOR_SIGNATURE_ATTR) === signature) return
+
+  const next = buildSelector(pathname, config)
+  if (existing) existing.replaceWith(next)
+  else mount.appendChild(next)
 }
 
 let refreshQueued = false
-function queueRefresh() {
+let forceRefreshQueued = false
+function queueRefresh(force = false) {
+  if (force) forceRefreshQueued = true
   if (refreshQueued) return
   refreshQueued = true
   window.requestAnimationFrame(() => {
+    const forceThisRefresh = forceRefreshQueued
     refreshQueued = false
-    refreshTranslationSelector()
+    forceRefreshQueued = false
+    refreshTranslationSelector({ force: forceThisRefresh })
   })
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-  const observer = new MutationObserver(queueRefresh)
+  const observer = new MutationObserver(() => queueRefresh(false))
   observer.observe(document.documentElement, { childList: true, subtree: true })
-  window.addEventListener('popstate', queueRefresh)
-  window.addEventListener('pageshow', queueRefresh)
-  queueRefresh()
+  window.addEventListener('popstate', () => queueRefresh(true))
+  window.addEventListener('pageshow', () => queueRefresh(true))
+  window.addEventListener('focus', () => queueRefresh(true))
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') queueRefresh(true)
+  })
+  queueRefresh(true)
 }
