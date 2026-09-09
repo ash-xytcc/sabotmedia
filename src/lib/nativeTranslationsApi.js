@@ -1,10 +1,10 @@
-export async function loadNativeTranslations({ slug, contentId, includeUnpublished = false } = {}) {
+export async function loadNativeTranslations({ slug, contentId, includeUnpublished = false, syncWeblate = true } = {}) {
   // Editors should not have to manually shuttle translation files into Sabot.
   // On the A/I translation dashboard, sync the current public Weblate component
   // first, then load D1. A transient Weblate failure never blocks access to
   // already-saved translation records, but it is returned for diagnostics.
   let weblateSync = null
-  if (includeUnpublished && slug === 'the-server-called-paranoia') {
+  if (syncWeblate && includeUnpublished && slug === 'the-server-called-paranoia') {
     try {
       const syncResponse = await fetch('/api/weblate-sync', {
         method: 'POST',
