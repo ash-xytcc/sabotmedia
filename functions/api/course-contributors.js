@@ -43,20 +43,21 @@ export async function onRequest(context) {
     }
     const row = await db.prepare('SELECT * FROM course_contributors WHERE id=?').bind(project).first()
     if (body.action === 'login') {
-      if (!(await rateLimit(context, db, `contributor:${project}:${scope}`)))
+      if (!(await rateLimit(context, db, `contributor:${project}:edit`)))
         return json({ ok: false, error: 'Try again later' }, 429, { 'retry-after': '900' })
+      const loginScope = scope === 'private' ? 'edit' : scope
       const password = String(body.password || '').slice(0, 500),
-        stored = row?.[`${scope}_hash`] || '0'.repeat(43),
-        salt = row?.[`${scope}_salt`] || 'unconfigured-contributor'
+        stored = row?.[`${loginScope}_hash`] || '0'.repeat(43),
+        salt = row?.[`${loginScope}_salt`] || 'unconfigured-contributor'
       const hashed = await hashPassword(password, salt)
       if (!row?.enabled || !equal(hashed.hash, stored)) return denied()
       return json({ ok: true }, 200, {
-        'set-cookie': await sessionCookie(context.env, project, scope, row.epoch),
+        'set-cookie': await sessionCookie(context.env, project, loginScope, row.epoch),
       })
     }
     if (!row) return denied()
     const authorized =
-      editor || (row.enabled === 1 && (await verifySession(context, project, scope, row.epoch)))
+      editor || (row.enabled === 1 && (await verifySession(context, project, 'edit', row.epoch)))
     if (method === 'GET') {
       if (scope === 'private' && !authorized) return denied()
       if (url.searchParams.has('revisions')) {
@@ -83,10 +84,12 @@ export async function onRequest(context) {
           : { item: JSON.parse((authorized ? row.draft_json : row.published_json) || 'null') }),
       })
     }
-    if (body.action === 'logout')
-      return json({ ok: true }, 200, {
-        'set-cookie': `sabot_course_${scope}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict`,
-      })
+    if (body.action === 'logout') {
+      const response = json({ ok: true })
+      for (const name of ['edit', 'private'])
+        response.headers.append('set-cookie', `sabot_course_${name}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict`)
+      return response
+    }
     if (body.action === 'credentials') {
       if (!admin) return denied()
       if (body.disabled === true) {
@@ -96,23 +99,15 @@ export async function onRequest(context) {
           .run()
         return json({ ok: true })
       }
-      const edit = String(body.editPassword || ''),
-        privatePassword = String(body.privatePassword || '')
-      if (
-        edit.length < 20 ||
-        privatePassword.length < 20 ||
-        edit.length > 500 ||
-        privatePassword.length > 500 ||
-        edit === privatePassword
-      )
-        return json({ ok: false, error: 'Use two different passwords, each at least 20 characters.' }, 400)
-      const a = await hashPassword(edit),
-        b = await hashPassword(privatePassword)
+      const edit = String(body.editPassword || '')
+      if (edit.length < 20 || edit.length > 500)
+        return json({ ok: false, error: 'Use a project password with at least 20 characters.' }, 400)
+      const a = await hashPassword(edit)
       await db
         .prepare(
-          'UPDATE course_contributors SET edit_hash=?,edit_salt=?,private_hash=?,private_salt=?,enabled=1,epoch=epoch+1 WHERE id=?',
+          'UPDATE course_contributors SET edit_hash=?,edit_salt=?,private_hash=NULL,private_salt=NULL,enabled=1,epoch=epoch+1 WHERE id=?',
         )
-        .bind(a.hash, a.salt, b.hash, b.salt, project)
+        .bind(a.hash, a.salt, project)
         .run()
       return json({ ok: true })
     }

@@ -303,7 +303,7 @@ fetch('/api/course-content?edit=1', { credentials: 'same-origin', cache: 'no-sto
     mountInlineEditor(data.item)
     const p = document.createElement('p'),
       a = document.createElement('a')
-    a.href = '/#/wp-admin/pages?course=' + c.slug
+    a.href = '/wp-admin/pages?course=' + c.slug
     a.textContent = 'Edit course / review revisions'
     p.append(a)
     $('main').prepend(p)

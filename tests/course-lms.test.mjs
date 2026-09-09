@@ -60,7 +60,7 @@ async function unlock(f, id, scope) {
     action: 'login',
     id,
     scope,
-    password: scope === 'private' ? credentials.privatePassword : credentials.editPassword,
+    password: credentials.editPassword,
   })
   assert.equal(r.status, 200)
   return r.headers.get('set-cookie').split(';')[0]
@@ -166,12 +166,12 @@ test('anonymous cannot list editorial courses or history and public API cannot r
   const out = await req(f, '/api/course-content?edit=1', null, '', courseApi)
   assert.notEqual(out.data.item.intro, 'DO_NOT_PUBLISH')
 })
-test('contributor edit credential cannot access other projects, private comms, or SabotPress', async () => {
+test('one project credential opens own private comms but cannot access other projects or SabotPress', async () => {
   const f = await fixture(),
     cookie = await unlock(f, 'puscii', 'edit')
   const ctx = context(f, '/api/course-contributors', null, cookie)
   assert.equal((await resolvePublicSitePermission(ctx)).canEdit, false)
-  assert.equal((await req(f, '/api/course-contributors?id=puscii&scope=private', null, cookie)).r.status, 403)
+  assert.equal((await req(f, '/api/course-contributors?id=puscii&scope=private', null, cookie)).r.status, 200)
   const other = await req(f, '/api/course-contributors?id=bash', null, cookie)
   assert.equal(other.data.canEdit, false)
   const write = await req(
@@ -182,21 +182,23 @@ test('contributor edit credential cannot access other projects, private comms, o
   )
   assert.equal(write.r.status, 403)
 })
-test('private session cannot edit public contributions or another project private area', async () => {
-  const f = await fixture(),
-    cookie = await unlock(f, 'puscii', 'private')
+test('sign-in on private page opens the same project editor and keeps other projects private', async () => {
+  const f = await fixture(), cookie = await unlock(f, 'puscii', 'private')
   assert.equal((await req(f, '/api/course-contributors?id=bash&scope=private', null, cookie)).r.status, 403)
-  assert.equal(
-    (
-      await req(
-        f,
-        '/api/course-contributors',
-        { id: 'puscii', revision: 0, item: { sharedAnswer: 'bad' } },
-        cookie,
-      )
-    ).r.status,
-    403,
-  )
+  assert.equal((await req(f, '/api/course-contributors?id=puscii', null, cookie)).data.canEdit, true)
+  assert.equal((await req(f, '/api/course-contributors', { id: 'puscii', scope: 'private', revision: 0, text: 'Team conversation' }, cookie)).r.status, 200)
+  assert.equal((await req(f, '/api/course-contributors?id=puscii&scope=private', null, cookie)).data.text, 'Team conversation')
+})
+test('one password setup grants private workspace access and staff need no project password', async () => {
+  const f = await fixture()
+  assert.equal((await req(f, '/api/course-contributors?id=puscii&scope=private', null, f.cookie)).r.status, 200)
+  assert.equal((await req(f, '/api/course-contributors', { action: 'credentials', id: 'puscii', editPassword: credentials.editPassword }, f.cookie)).r.status, 200)
+  const login = await req(f, '/api/course-contributors', { action: 'login', id: 'puscii', password: credentials.editPassword })
+  const cookie = login.r.headers.get('set-cookie').split(';')[0]
+  assert.equal((await req(f, '/api/course-contributors?id=puscii&scope=private', null, cookie)).r.status, 200)
+  assert.equal((await req(f, '/api/course-contributors?id=puscii&scope=private')).r.status, 403)
+  const logout = await req(f, '/api/course-contributors', {action:'logout', id:'puscii', scope:'private'}, cookie)
+  assert.match(logout.r.headers.get('set-cookie'), /sabot_course_edit=;.*Max-Age=0/)
 })
 test('private communications never appear in public API or server HTML', async () => {
   const f = await fixture(),

@@ -98,15 +98,22 @@ async function load() {
       }
     }
     $('[data-admin]').hidden = !current.admin
+    if (current.editor && !root.querySelector('[data-course-admin-link]')) {
+      const link = document.createElement('a')
+      link.dataset.courseAdminLink = ''
+      link.href = '/wp-admin/pages?course=become-the-thousand-servers'
+      link.textContent = 'Open course administration'
+      root.prepend(link)
+    }
     status(
       scope === 'private'
-        ? 'Private workspace unlocked.'
+        ? (current.editor ? 'Private to the editorial team. Your staff sign-in provides access; no extra password is needed.' : 'Private workspace unlocked.')
         : 'Editing contribution. Contributor changes go to editorial review.',
     )
   } catch (e) {
     $('[data-login]').hidden = false
     $('[data-edit-form]').hidden = true
-    status(scope === 'private' ? 'Enter the separate Private Comms password to continue.' : e.message)
+    status(scope === 'private' ? 'Sign in with your project password to open this private conversation.' : e.message)
   }
 }
 $('[data-login]').hidden = false
@@ -174,11 +181,9 @@ $('[data-credentials]').onclick = async () => {
     await api({
       action: 'credentials',
       editPassword: $('[data-edit-password]').value,
-      privatePassword: $('[data-private-password]').value,
     })
     $('[data-edit-password]').value = ''
-    $('[data-private-password]').value = ''
-    status('Separate credentials set; older contributor sessions revoked.')
+    status('Contributor access updated; older contributor sessions revoked. Staff access uses your existing sign-in.')
   } catch (e) {
     status(e.message)
   }
