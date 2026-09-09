@@ -1,542 +1,493 @@
 export const legacySeed = {
-  "lessons": [
+  lessons: [
     {
-      "slug": "map-your-dependencies",
-      "number": 1,
-      "title": "Map Your Dependencies",
-      "difficulty": "Beginner",
-      "time": "45–90 min",
-      "status": "published",
-      "objectives": [
-        "Draw the dependency chain behind a website or project",
-        "Identify people as infrastructure dependencies",
-        "Find single points of failure before they become emergencies"
+      slug: 'map-your-dependencies',
+      number: 1,
+      title: 'Map Your Dependencies',
+      difficulty: 'Beginner',
+      time: '45–90 min',
+      status: 'published',
+      objectives: [
+        'Draw the dependency chain behind a website or project',
+        'Identify people as infrastructure dependencies',
+        'Find single points of failure before they become emergencies',
       ],
-      "learn": "Autonomous infrastructure begins with knowing what you already depend on. Not with buying a server. Not with a rack full of blinking equipment. Not with becoming the person everybody calls at 2:13 a.m.\n\nA useful first map is: person → registrar → domain → DNS → IP → server or host → web server → application → database and files. Then add email, repositories, shared files, backups, payments, mailing lists, social accounts, and every person who holds access or knowledge.\n\nIf one person possesses knowledge nobody else has, that person is infrastructure. That is not praise. It is a risk statement.",
-      "do": "Pick one real project you help maintain. On paper or in a local document, write every service it depends on.\n\nFor each dependency, write who controls it, how access is recovered, where billing goes, and who else understands it.\n\nCircle anything with only one administrator, one copy, one credential holder, or one recovery path.",
-      "test": "Can you identify who controls the registrar, DNS, hosting, repository, backups, and recovery credentials without asking the one person who usually does everything?",
-      "teach": "Give the blank dependency map to somebody else. Have them trace a project without your help. Every place they get stuck is documentation you do not actually have yet.",
-      "checks": [
-        "Registrar identified",
-        "DNS provider identified",
-        "Host/server identified",
-        "Repository and backups identified",
-        "At least two people can explain the map"
+      learn:
+        'Autonomous infrastructure begins with knowing what you already depend on. Not with buying a server. Not with a rack full of blinking equipment. Not with becoming the person everybody calls at 2:13 a.m.\n\nA useful first map is: person → registrar → domain → DNS → IP → server or host → web server → application → database and files. Then add email, repositories, shared files, backups, payments, mailing lists, social accounts, and every person who holds access or knowledge.\n\nIf one person possesses knowledge nobody else has, that person is infrastructure. That is not praise. It is a risk statement.',
+      do: 'Pick one real project you help maintain. On paper or in a local document, write every service it depends on.\n\nFor each dependency, write who controls it, how access is recovered, where billing goes, and who else understands it.\n\nCircle anything with only one administrator, one copy, one credential holder, or one recovery path.',
+      test: 'Can you identify who controls the registrar, DNS, hosting, repository, backups, and recovery credentials without asking the one person who usually does everything?',
+      teach:
+        'Give the blank dependency map to somebody else. Have them trace a project without your help. Every place they get stuck is documentation you do not actually have yet.',
+      checks: [
+        'Registrar identified',
+        'DNS provider identified',
+        'Host/server identified',
+        'Repository and backups identified',
+        'At least two people can explain the map',
       ],
-      "resources": [
+      resources: [
         {
-          "title": "ICANN Lookup",
-          "url": "https://lookup.icann.org/",
-          "note": "Domain registration and RDAP lookup."
-        }
+          title: 'ICANN Lookup',
+          url: 'https://lookup.icann.org/',
+          note: 'Domain registration and RDAP lookup.',
+        },
       ],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "read-dns",
-      "number": 2,
-      "title": "Read DNS and Investigate Your Domain",
-      "difficulty": "Beginner",
-      "time": "60–90 min",
-      "status": "published",
-      "objectives": [
-        "Distinguish registrar from DNS host",
-        "Read common DNS record types",
-        "Trace a domain toward the service it reaches"
+      slug: 'read-dns',
+      number: 2,
+      title: 'Read DNS and Investigate Your Domain',
+      difficulty: 'Beginner',
+      time: '60–90 min',
+      status: 'published',
+      objectives: [
+        'Distinguish registrar from DNS host',
+        'Read common DNS record types',
+        'Trace a domain toward the service it reaches',
       ],
-      "learn": "When something disappears, suddenly everybody discovers DNS. Better to discover it before the disappearance.\n\nThe registrar controls the registration of the name. The DNS host answers questions about that name. They may be the same company, but they are different jobs.\n\nA and AAAA records point toward IP addresses. CNAME aliases one name to another. MX handles mail routing. TXT carries policy and verification data. NS identifies authoritative nameservers. TTL controls how long answers may be cached.",
-      "do": "On Linux or macOS, try `dig example.org A`, `dig example.org MX`, and `dig example.org NS`.\n\nWith nslookup, try `nslookup -type=NS example.org` and `nslookup -type=MX example.org`.\n\nUse RDAP or your registrar panel to identify the registrar. Export or copy every DNS record before changing anything.",
-      "test": "Can you explain where the domain is registered, where its DNS is hosted, and which records send web and mail traffic where?",
-      "teach": "Give somebody a domain you do not administer. Ask them to identify registrar, nameservers, web records, and mail records, then explain the difference out loud.",
-      "checks": [
-        "Registrar identified",
-        "Nameservers identified",
-        "A/AAAA/CNAME checked",
-        "MX/TXT checked",
-        "DNS records copied somewhere safe"
+      learn:
+        'When something disappears, suddenly everybody discovers DNS. Better to discover it before the disappearance.\n\nThe registrar controls the registration of the name. The DNS host answers questions about that name. They may be the same company, but they are different jobs.\n\nA and AAAA records point toward IP addresses. CNAME aliases one name to another. MX handles mail routing. TXT carries policy and verification data. NS identifies authoritative nameservers. TTL controls how long answers may be cached.',
+      do: 'On Linux or macOS, try `dig example.org A`, `dig example.org MX`, and `dig example.org NS`.\n\nWith nslookup, try `nslookup -type=NS example.org` and `nslookup -type=MX example.org`.\n\nUse RDAP or your registrar panel to identify the registrar. Export or copy every DNS record before changing anything.',
+      test: 'Can you explain where the domain is registered, where its DNS is hosted, and which records send web and mail traffic where?',
+      teach:
+        'Give somebody a domain you do not administer. Ask them to identify registrar, nameservers, web records, and mail records, then explain the difference out loud.',
+      checks: [
+        'Registrar identified',
+        'Nameservers identified',
+        'A/AAAA/CNAME checked',
+        'MX/TXT checked',
+        'DNS records copied somewhere safe',
       ],
-      "resources": [
+      resources: [
         {
-          "title": "ICANN RDAP",
-          "url": "https://www.icann.org/rdap",
-          "note": "Background on Registration Data Access Protocol."
-        }
+          title: 'ICANN RDAP',
+          url: 'https://www.icann.org/rdap',
+          note: 'Background on Registration Data Access Protocol.',
+        },
       ],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "ssh-disposable-linux",
-      "number": 3,
-      "title": "SSH Into a Disposable Linux Machine",
-      "difficulty": "Beginner",
-      "time": "60–120 min",
-      "status": "published",
-      "objectives": [
-        "Connect with SSH keys",
-        "Understand ordinary user vs sudo/root",
-        "Orient yourself on Linux without touching production"
+      slug: 'ssh-disposable-linux',
+      number: 3,
+      title: 'SSH Into a Disposable Linux Machine',
+      difficulty: 'Beginner',
+      time: '60–120 min',
+      status: 'published',
+      objectives: [
+        'Connect with SSH keys',
+        'Understand ordinary user vs sudo/root',
+        'Orient yourself on Linux without touching production',
       ],
-      "learn": "Do not learn this by poking the production server. Human curiosity is charming right up until it deletes the database.\n\nUse a disposable virtual machine, an old laptop, or a cheap temporary VPS. Destroying it should be irritating, not catastrophic.",
-      "do": "Generate a key with `ssh-keygen -t ed25519` if you do not already have a suitable SSH key.\n\nConnect with `ssh user@example-host` after the machine has your public key.\n\nOrient yourself with `pwd`, `ls -la`, `whoami`, `id`, `df -h`, `ps aux`, and the service tools appropriate to your system.\n\nUse `sudo` only when a task actually requires elevation. Do not log in as root by habit.",
-      "test": "Can you log out, reconnect using your key, find your current directory, check disk space, and identify running services?",
-      "teach": "Have somebody else connect using their own account and their own key. No shared god-password.",
-      "checks": [
-        "Disposable machine used",
-        "SSH key authentication works",
-        "Ordinary user used",
-        "Disk/process/service basics inspected"
+      learn:
+        'Do not learn this by poking the production server. Human curiosity is charming right up until it deletes the database.\n\nUse a disposable virtual machine, an old laptop, or a cheap temporary VPS. Destroying it should be irritating, not catastrophic.',
+      do: 'Generate a key with `ssh-keygen -t ed25519` if you do not already have a suitable SSH key.\n\nConnect with `ssh user@example-host` after the machine has your public key.\n\nOrient yourself with `pwd`, `ls -la`, `whoami`, `id`, `df -h`, `ps aux`, and the service tools appropriate to your system.\n\nUse `sudo` only when a task actually requires elevation. Do not log in as root by habit.',
+      test: 'Can you log out, reconnect using your key, find your current directory, check disk space, and identify running services?',
+      teach: 'Have somebody else connect using their own account and their own key. No shared god-password.',
+      checks: [
+        'Disposable machine used',
+        'SSH key authentication works',
+        'Ordinary user used',
+        'Disk/process/service basics inspected',
       ],
-      "resources": [
+      resources: [
         {
-          "title": "OpenSSH manual",
-          "url": "https://www.openssh.com/manual.html",
-          "note": "Primary OpenSSH documentation."
-        }
+          title: 'OpenSSH manual',
+          url: 'https://www.openssh.com/manual.html',
+          note: 'Primary OpenSSH documentation.',
+        },
       ],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "first-disposable-page",
-      "number": 4,
-      "title": "Put Your First Disposable Page Online",
-      "difficulty": "Beginner",
-      "time": "60–120 min",
-      "status": "published",
-      "objectives": [
-        "Understand file → process → port → machine → DNS → TLS → browser",
-        "Serve a harmless static page",
-        "Verify it from another device"
+      slug: 'first-disposable-page',
+      number: 4,
+      title: 'Put Your First Disposable Page Online',
+      difficulty: 'Beginner',
+      time: '60–120 min',
+      status: 'published',
+      objectives: [
+        'Understand file → process → port → machine → DNS → TLS → browser',
+        'Serve a harmless static page',
+        'Verify it from another device',
       ],
-      "learn": "The point is not to become a web-hosting wizard in an afternoon. The point is to see the chain clearly enough that each piece stops being magic.\n\nNobody should fabricate their own fiber-optic cable because they have developed ideological concerns about Comcast. Autonomy is about understanding and choosing dependencies, not reproducing every layer of industrial civilization in a basement.",
-      "do": "Create a disposable directory and a small `index.html` that says something unmistakable like “this is the disposable test page.”\n\nUse a simple web server you understand. Caddy is friendly for automatic HTTPS; nginx is common and explicit. Follow current official installation documentation.\n\nConfirm the service is listening, then point a disposable subdomain at the test machine and verify HTTPS.",
-      "test": "Can another device reach the disposable page over HTTPS?",
-      "teach": "Ask somebody else to explain the request path from browser to DNS to machine to web server to file.",
-      "checks": [
-        "Static file created",
-        "Web service running",
-        "DNS points to disposable machine",
-        "HTTPS works",
-        "Second device can load page"
+      learn:
+        'The point is not to become a web-hosting wizard in an afternoon. The point is to see the chain clearly enough that each piece stops being magic.\n\nNobody should fabricate their own fiber-optic cable because they have developed ideological concerns about Comcast. Autonomy is about understanding and choosing dependencies, not reproducing every layer of industrial civilization in a basement.',
+      do: 'Create a disposable directory and a small `index.html` that says something unmistakable like “this is the disposable test page.”\n\nUse a simple web server you understand. Caddy is friendly for automatic HTTPS; nginx is common and explicit. Follow current official installation documentation.\n\nConfirm the service is listening, then point a disposable subdomain at the test machine and verify HTTPS.',
+      test: 'Can another device reach the disposable page over HTTPS?',
+      teach:
+        'Ask somebody else to explain the request path from browser to DNS to machine to web server to file.',
+      checks: [
+        'Static file created',
+        'Web service running',
+        'DNS points to disposable machine',
+        'HTTPS works',
+        'Second device can load page',
       ],
-      "resources": [
+      resources: [
         {
-          "title": "Caddy docs",
-          "url": "https://caddyserver.com/docs/",
-          "note": "Official documentation."
+          title: 'Caddy docs',
+          url: 'https://caddyserver.com/docs/',
+          note: 'Official documentation.',
         },
         {
-          "title": "nginx docs",
-          "url": "https://nginx.org/en/docs/",
-          "note": "Official documentation."
-        }
+          title: 'nginx docs',
+          url: 'https://nginx.org/en/docs/',
+          note: 'Official documentation.',
+        },
       ],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "understand-exposure",
-      "number": 5,
-      "title": "Understand What You Just Exposed",
-      "difficulty": "Intermediate",
-      "time": "60–90 min",
-      "status": "published",
-      "objectives": [
-        "Inspect listening services",
-        "Think about firewall, updates, permissions, logs, and certificates",
-        "Distinguish “it runs” from “we can maintain it”"
+      slug: 'understand-exposure',
+      number: 5,
+      title: 'Understand What You Just Exposed',
+      difficulty: 'Intermediate',
+      time: '60–90 min',
+      status: 'published',
+      objectives: [
+        'Inspect listening services',
+        'Think about firewall, updates, permissions, logs, and certificates',
+        'Distinguish “it runs” from “we can maintain it”',
       ],
-      "learn": "A working service is not automatically a responsibly maintained service. The internet is full of machines proving this every second.\n\nAttack surface includes every reachable service, administrative path, stale package, weak permission boundary, forgotten account, exposed secret, and neglected log or disk.",
-      "do": "Inspect listening sockets with `ss -tulpn` on Linux where available.\n\nCheck the firewall actually in use on your system and list active rules before changing them.\n\nCheck pending security updates, file ownership, certificate renewal, disk space, and recent service logs.\n\nWrite down which ports must be reachable publicly and why.",
-      "test": "Can you explain every publicly reachable port on the disposable machine and who is responsible for updates, logs, certificates, and recovery?",
-      "teach": "Have another learner inspect the same machine and compare your lists.",
-      "checks": [
-        "Listening ports reviewed",
-        "Firewall state understood",
-        "Updates checked",
-        "Permissions checked",
-        "Logs/certificates/disk checked"
+      learn:
+        'A working service is not automatically a responsibly maintained service. The internet is full of machines proving this every second.\n\nAttack surface includes every reachable service, administrative path, stale package, weak permission boundary, forgotten account, exposed secret, and neglected log or disk.',
+      do: 'Inspect listening sockets with `ss -tulpn` on Linux where available.\n\nCheck the firewall actually in use on your system and list active rules before changing them.\n\nCheck pending security updates, file ownership, certificate renewal, disk space, and recent service logs.\n\nWrite down which ports must be reachable publicly and why.',
+      test: 'Can you explain every publicly reachable port on the disposable machine and who is responsible for updates, logs, certificates, and recovery?',
+      teach: 'Have another learner inspect the same machine and compare your lists.',
+      checks: [
+        'Listening ports reviewed',
+        'Firewall state understood',
+        'Updates checked',
+        'Permissions checked',
+        'Logs/certificates/disk checked',
       ],
-      "resources": [],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      resources: [],
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "real-backup",
-      "number": 6,
-      "title": "Make a Real Backup",
-      "difficulty": "Intermediate",
-      "time": "90–180 min",
-      "status": "published",
-      "objectives": [
-        "Identify everything required for recovery",
-        "Create an independent backup",
-        "Restore instead of merely admiring the backup file"
+      slug: 'real-backup',
+      number: 6,
+      title: 'Make a Real Backup',
+      difficulty: 'Intermediate',
+      time: '90–180 min',
+      status: 'published',
+      objectives: [
+        'Identify everything required for recovery',
+        'Create an independent backup',
+        'Restore instead of merely admiring the backup file',
       ],
-      "learn": "A backup that has never been restored is a theory.\n\nA recovery set may include application files, database dumps, configuration, DNS records, version information, documentation, and carefully protected secrets or recovery information. Same-provider snapshots are convenient, but they are not enough by themselves.",
-      "do": "List every component needed to reconstruct the disposable service.\n\nCreate a backup outside the disposable machine. Encrypt it where confidentiality requires it.\n\nRecord versions and configuration needed to rebuild the service.\n\nRestore the backup into a clean disposable environment. Do not call the exercise finished until the restored copy works.",
-      "test": "Can you restore the backup into a clean environment?",
-      "teach": "Hand the backup and recovery notes to somebody else. Their questions are defects in the recovery procedure.",
-      "checks": [
-        "Files/config/database covered as applicable",
-        "Independent copy exists",
-        "Sensitive backup material protected",
-        "Restore tested",
-        "Restored service verified"
+      learn:
+        'A backup that has never been restored is a theory.\n\nA recovery set may include application files, database dumps, configuration, DNS records, version information, documentation, and carefully protected secrets or recovery information. Same-provider snapshots are convenient, but they are not enough by themselves.',
+      do: 'List every component needed to reconstruct the disposable service.\n\nCreate a backup outside the disposable machine. Encrypt it where confidentiality requires it.\n\nRecord versions and configuration needed to rebuild the service.\n\nRestore the backup into a clean disposable environment. Do not call the exercise finished until the restored copy works.',
+      test: 'Can you restore the backup into a clean environment?',
+      teach:
+        'Hand the backup and recovery notes to somebody else. Their questions are defects in the recovery procedure.',
+      checks: [
+        'Files/config/database covered as applicable',
+        'Independent copy exists',
+        'Sensitive backup material protected',
+        'Restore tested',
+        'Restored service verified',
       ],
-      "resources": [],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      resources: [],
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "destroy-and-rebuild",
-      "number": 7,
-      "title": "Destroy It and Rebuild It",
-      "difficulty": "Intermediate",
-      "time": "2–4 hours",
-      "status": "published",
-      "objectives": [
-        "Prove recovery is real",
-        "Turn undocumented knowledge into documentation",
-        "Make rebuild knowledge transferable"
+      slug: 'destroy-and-rebuild',
+      number: 7,
+      title: 'Destroy It and Rebuild It',
+      difficulty: 'Intermediate',
+      time: '2–4 hours',
+      status: 'published',
+      objectives: [
+        'Prove recovery is real',
+        'Turn undocumented knowledge into documentation',
+        'Make rebuild knowledge transferable',
       ],
-      "learn": "This is why the environment was disposable. You are going to break it on purpose, which is far more educational than breaking it accidentally at midnight.\n\nEvery undocumented step becomes documentation. Preferably a second person performs the rebuild.",
-      "do": "Confirm again that this is the disposable environment and production is not involved.\n\nDelete or recreate the disposable machine.\n\nRebuild using only the backup and documentation from Lesson 6.\n\nRecord every missing assumption, credential location, package, version, DNS step, or command. Update the documentation and repeat until it is boring.",
-      "test": "Can somebody other than the original administrator rebuild it from the documentation?",
-      "teach": "The rebuild itself is the teaching exercise. Do not rescue the second person immediately. Fix the instructions.",
-      "checks": [
-        "Only disposable environment destroyed",
-        "Rebuild completed from backup/docs",
-        "Missing steps documented",
-        "Second person can repeat process"
+      learn:
+        'This is why the environment was disposable. You are going to break it on purpose, which is far more educational than breaking it accidentally at midnight.\n\nEvery undocumented step becomes documentation. Preferably a second person performs the rebuild.',
+      do: 'Confirm again that this is the disposable environment and production is not involved.\n\nDelete or recreate the disposable machine.\n\nRebuild using only the backup and documentation from Lesson 6.\n\nRecord every missing assumption, credential location, package, version, DNS step, or command. Update the documentation and repeat until it is boring.',
+      test: 'Can somebody other than the original administrator rebuild it from the documentation?',
+      teach:
+        'The rebuild itself is the teaching exercise. Do not rescue the second person immediately. Fix the instructions.',
+      checks: [
+        'Only disposable environment destroyed',
+        'Rebuild completed from backup/docs',
+        'Missing steps documented',
+        'Second person can repeat process',
       ],
-      "resources": [],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      resources: [],
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "learn-to-leave",
-      "number": 8,
-      "title": "Learn to Leave: Migrate to Another Host",
-      "difficulty": "Intermediate",
-      "time": "2–4 hours",
-      "status": "published",
-      "objectives": [
-        "Prepare a destination before cutover",
-        "Move data and DNS with rollback available",
-        "Verify service externally"
+      slug: 'learn-to-leave',
+      number: 8,
+      title: 'Learn to Leave: Migrate to Another Host',
+      difficulty: 'Intermediate',
+      time: '2–4 hours',
+      status: 'published',
+      objectives: [
+        'Prepare a destination before cutover',
+        'Move data and DNS with rollback available',
+        'Verify service externally',
       ],
-      "learn": "The first technical skill of autonomous infrastructure is not hosting. It is leaving.\n\nProvider independence is not a slogan if migration has never been tested. Otherwise you have merely constructed another single point of failure with better politics.",
-      "do": "Prepare the destination first. Restore and test there before changing DNS.\n\nReview TTL values in advance. For stateful applications, plan a write window or synchronization method.\n\nSwitch DNS only after the destination is ready. Verify HTTPS, mail-related records, redirects, and application behavior.\n\nKeep a rollback path until the new service is proven. Verify from another device or network.",
-      "test": "Can you move the service and verify it from another network?",
-      "teach": "Have another administrator narrate the rollback plan before cutover.",
-      "checks": [
-        "Destination prepared first",
-        "Restore tested before DNS change",
-        "TTL/cutover planned",
-        "HTTPS and mail DNS checked",
-        "Rollback available",
-        "External verification completed"
+      learn:
+        'The first technical skill of autonomous infrastructure is not hosting. It is leaving.\n\nProvider independence is not a slogan if migration has never been tested. Otherwise you have merely constructed another single point of failure with better politics.',
+      do: 'Prepare the destination first. Restore and test there before changing DNS.\n\nReview TTL values in advance. For stateful applications, plan a write window or synchronization method.\n\nSwitch DNS only after the destination is ready. Verify HTTPS, mail-related records, redirects, and application behavior.\n\nKeep a rollback path until the new service is proven. Verify from another device or network.',
+      test: 'Can you move the service and verify it from another network?',
+      teach: 'Have another administrator narrate the rollback plan before cutover.',
+      checks: [
+        'Destination prepared first',
+        'Restore tested before DNS change',
+        'TTL/cutover planned',
+        'HTTPS and mail DNS checked',
+        'Rollback available',
+        'External verification completed',
       ],
-      "resources": [],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      resources: [],
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "stop-being-only-admin",
-      "number": 9,
-      "title": "Stop Being the Only Administrator",
-      "difficulty": "Intermediate",
-      "time": "60–120 min",
-      "status": "published",
-      "objectives": [
-        "Separate administrator identities",
-        "Distribute recovery knowledge",
-        "Plan offboarding and succession"
+      slug: 'stop-being-only-admin',
+      number: 9,
+      title: 'Stop Being the Only Administrator',
+      difficulty: 'Intermediate',
+      time: '60–120 min',
+      status: 'published',
+      objectives: [
+        'Separate administrator identities',
+        'Distribute recovery knowledge',
+        'Plan offboarding and succession',
       ],
-      "learn": "If the collective cannot recover the domain, DNS, hosting, backups, and repository without one specific human, that human is still the infrastructure.\n\nA thousand servers maintained by twelve exhausted people is not a thousand servers. It is twelve people with a very serious problem.",
-      "do": "Create separate administrator accounts where providers support them. Use individual SSH keys.\n\nDocument collective recovery methods and store them somewhere appropriate to their sensitivity.\n\nConfirm at least two people can reach domain, DNS, hosting, repository, and backup controls without sharing one master password.\n\nWrite an offboarding procedure: revoke keys, remove accounts, rotate shared recovery material where necessary, and preserve institutional knowledge.",
-      "test": "Can an administrator disappear without taking the organization’s infrastructure knowledge with them?",
-      "teach": "Run a tabletop disappearance drill. Pick an administrator and pretend they are unreachable. Find every place the project gets stuck.",
-      "checks": [
-        "Individual admin identities used where possible",
-        "No shared god-password",
-        "Recovery paths documented",
-        "At least two maintainers have required access",
-        "Offboarding/succession documented"
+      learn:
+        'If the collective cannot recover the domain, DNS, hosting, backups, and repository without one specific human, that human is still the infrastructure.\n\nA thousand servers maintained by twelve exhausted people is not a thousand servers. It is twelve people with a very serious problem.',
+      do: 'Create separate administrator accounts where providers support them. Use individual SSH keys.\n\nDocument collective recovery methods and store them somewhere appropriate to their sensitivity.\n\nConfirm at least two people can reach domain, DNS, hosting, repository, and backup controls without sharing one master password.\n\nWrite an offboarding procedure: revoke keys, remove accounts, rotate shared recovery material where necessary, and preserve institutional knowledge.',
+      test: 'Can an administrator disappear without taking the organization’s infrastructure knowledge with them?',
+      teach:
+        'Run a tabletop disappearance drill. Pick an administrator and pretend they are unreachable. Find every place the project gets stuck.',
+      checks: [
+        'Individual admin identities used where possible',
+        'No shared god-password',
+        'Recovery paths documented',
+        'At least two maintainers have required access',
+        'Offboarding/succession documented',
       ],
-      "resources": [],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      resources: [],
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "mirror-publish-survival",
-      "number": 10,
-      "title": "Mirror and Publish for Survival",
-      "difficulty": "Intermediate",
-      "time": "90–180 min",
-      "status": "published",
-      "objectives": [
-        "Preserve source material separately from presentation systems",
-        "Design survivable text, audio, and video publication",
-        "Reconstruct useful copies without the production CMS"
+      slug: 'mirror-publish-survival',
+      number: 10,
+      title: 'Mirror and Publish for Survival',
+      difficulty: 'Intermediate',
+      time: '90–180 min',
+      status: 'published',
+      objectives: [
+        'Preserve source material separately from presentation systems',
+        'Design survivable text, audio, and video publication',
+        'Reconstruct useful copies without the production CMS',
       ],
-      "learn": "Publishing systems are temporary. The work should not be.\n\nFor text, preserve source, web output, printable/downloadable versions, and mirror-ready copies. For audio, preserve masters, distribution copies, metadata, artwork, transcript, feed information, and independent copies. For video, preserve a high-quality source, captions, metadata, mirrors, and alternate distribution.",
-      "do": "Choose one published piece. Gather the source, media originals, metadata, transcripts or captions, and feed information needed to republish it.\n\nPut an independent copy somewhere that does not depend on the production CMS.\n\nAttempt reconstruction from that material alone.",
-      "test": "Can a useful independent copy be reconstructed without the production CMS?",
-      "teach": "Give another person the preservation bundle and ask them to reconstruct the piece somewhere disposable.",
-      "checks": [
-        "Source preserved",
-        "Media originals preserved",
-        "Metadata/transcripts/captions preserved",
-        "Independent copy exists",
-        "Reconstruction tested"
+      learn:
+        'Publishing systems are temporary. The work should not be.\n\nFor text, preserve source, web output, printable/downloadable versions, and mirror-ready copies. For audio, preserve masters, distribution copies, metadata, artwork, transcript, feed information, and independent copies. For video, preserve a high-quality source, captions, metadata, mirrors, and alternate distribution.',
+      do: 'Choose one published piece. Gather the source, media originals, metadata, transcripts or captions, and feed information needed to republish it.\n\nPut an independent copy somewhere that does not depend on the production CMS.\n\nAttempt reconstruction from that material alone.',
+      test: 'Can a useful independent copy be reconstructed without the production CMS?',
+      teach:
+        'Give another person the preservation bundle and ask them to reconstruct the piece somewhere disposable.',
+      checks: [
+        'Source preserved',
+        'Media originals preserved',
+        'Metadata/transcripts/captions preserved',
+        'Independent copy exists',
+        'Reconstruction tested',
       ],
-      "resources": [],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      resources: [],
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "local-network",
-      "number": 11,
-      "title": "Run Something Local and Learn the Network",
-      "difficulty": "Beginner–Intermediate",
-      "time": "90–180 min",
-      "status": "published",
-      "objectives": [
-        "Understand LAN addressing, gateway, and DNS",
-        "Distinguish local service from public exposure",
-        "Use a layered troubleshooting path"
+      slug: 'local-network',
+      number: 11,
+      title: 'Run Something Local and Learn the Network',
+      difficulty: 'Beginner–Intermediate',
+      time: '90–180 min',
+      status: 'published',
+      objectives: [
+        'Understand LAN addressing, gateway, and DNS',
+        'Distinguish local service from public exposure',
+        'Use a layered troubleshooting path',
       ],
-      "learn": "An old laptop, Raspberry Pi, or VM can teach more about networks than another hour of diagrams because you can watch each boundary become real.\n\nTroubleshoot in layers: device → link/Wi-Fi/Ethernet → local IP → gateway/router → upstream → DNS → remote service. Skipping directly to “the internet is broken” is emotionally satisfying but diagnostically weak.",
-      "do": "Run a simple service on a local-only machine or VM.\n\nFind its local IP and your network gateway. Confirm another device on the same LAN can reach it.\n\nConfirm the service is not publicly reachable unless you intentionally configured public exposure.\n\nBreak one layer at a time in a disposable setup and practice locating the fault.",
-      "test": "Can you explain the difference between the machine’s local address, the network’s public address, the gateway, and DNS?",
-      "teach": "Give somebody a deliberately broken local setup and have them work the troubleshooting chain in order.",
-      "checks": [
-        "Local service runs",
-        "Local IP identified",
-        "Gateway identified",
-        "Second LAN device connects",
-        "Public exposure checked",
-        "Troubleshooting path practiced"
+      learn:
+        'An old laptop, Raspberry Pi, or VM can teach more about networks than another hour of diagrams because you can watch each boundary become real.\n\nTroubleshoot in layers: device → link/Wi-Fi/Ethernet → local IP → gateway/router → upstream → DNS → remote service. Skipping directly to “the internet is broken” is emotionally satisfying but diagnostically weak.',
+      do: 'Run a simple service on a local-only machine or VM.\n\nFind its local IP and your network gateway. Confirm another device on the same LAN can reach it.\n\nConfirm the service is not publicly reachable unless you intentionally configured public exposure.\n\nBreak one layer at a time in a disposable setup and practice locating the fault.',
+      test: 'Can you explain the difference between the machine’s local address, the network’s public address, the gateway, and DNS?',
+      teach:
+        'Give somebody a deliberately broken local setup and have them work the troubleshooting chain in order.',
+      checks: [
+        'Local service runs',
+        'Local IP identified',
+        'Gateway identified',
+        'Second LAN device connects',
+        'Public exposure checked',
+        'Troubleshooting path practiced',
       ],
-      "resources": [],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      resources: [],
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
+      prerequisites: [],
+      enforcePrerequisites: false,
     },
     {
-      "slug": "connect-differently-teach",
-      "number": 12,
-      "title": "Connect Differently, Then Teach Someone Else",
-      "difficulty": "Intermediate",
-      "time": "Open-ended",
-      "status": "published",
-      "objectives": [
-        "Recognize that IP/DNS/client-server assumptions are not the only networking model",
-        "Study alternative network approaches without inventing claims",
-        "Teach a complete skill to another person"
+      slug: 'connect-differently-teach',
+      number: 12,
+      title: 'Connect Differently, Then Teach Someone Else',
+      difficulty: 'Intermediate',
+      time: 'Open-ended',
+      status: 'published',
+      objectives: [
+        'Recognize that IP/DNS/client-server assumptions are not the only networking model',
+        'Study alternative network approaches without inventing claims',
+        'Teach a complete skill to another person',
       ],
-      "learn": "This lesson will eventually include a BASH Reticulum/NomadNet worked example after the project’s technical details are verified. The course will not invent those details in the meantime.\n\nYou are not finished when you can do it. You are finished when somebody else can do it without you. Each One, Teach One is not a closing phrase. It is the final skill.",
-      "do": "Choose one skill from the course that you can now perform reliably.\n\nPrepare the smallest useful teaching version: what it is, why it matters, what can go wrong, how to test it, and how to recover.\n\nTeach another person. Let them operate the keyboard or equipment.\n\nAsk them to repeat the task without you. Improve your instructions from what fails.",
-      "test": "Can the person you taught perform the skill without you?",
-      "teach": "This lesson is the Teach section becoming the whole point.",
-      "checks": [
-        "One skill selected",
-        "Teaching notes prepared",
-        "Another person performed the task",
-        "They repeated it without you",
-        "Instructions updated from failure points"
+      learn:
+        'This lesson will eventually include a BASH Reticulum/NomadNet worked example after the project’s technical details are verified. The course will not invent those details in the meantime.\n\nYou are not finished when you can do it. You are finished when somebody else can do it without you. Each One, Teach One is not a closing phrase. It is the final skill.',
+      do: 'Choose one skill from the course that you can now perform reliably.\n\nPrepare the smallest useful teaching version: what it is, why it matters, what can go wrong, how to test it, and how to recover.\n\nTeach another person. Let them operate the keyboard or equipment.\n\nAsk them to repeat the task without you. Improve your instructions from what fails.',
+      test: 'Can the person you taught perform the skill without you?',
+      teach: 'This lesson is the Teach section becoming the whole point.',
+      checks: [
+        'One skill selected',
+        'Teaching notes prepared',
+        'Another person performed the task',
+        'They repeated it without you',
+        'Instructions updated from failure points',
       ],
-      "resources": [
+      resources: [
         {
-          "title": "Reticulum Network Stack",
-          "url": "https://reticulum.network/",
-          "note": "Official project documentation. BASH-specific implementation details remain reporting pending."
+          title: 'Reticulum Network Stack',
+          url: 'https://reticulum.network/',
+          note: 'Official project documentation. BASH-specific implementation details remain reporting pending.',
         },
         {
-          "title": "NomadNet source",
-          "url": "https://github.com/markqvist/NomadNet",
-          "note": "Project source and documentation. Contributor-specific claims remain pending review."
-        }
+          title: 'NomadNet source',
+          url: 'https://github.com/markqvist/NomadNet',
+          note: 'Project source and documentation. Contributor-specific claims remain pending review.',
+        },
       ],
-      "completion": {
-        "manual": true,
-        "practical": true,
-        "activities": []
+      completion: {
+        manual: true,
+        practical: true,
+        activities: [],
       },
-      "prerequisites": [],
-      "enforcePrerequisites": false
-    }
+      prerequisites: [],
+      enforcePrerequisites: false,
+    },
   ],
-  "tasks": [
-    [
-      "I need to understand where my website actually lives",
-      [
-        1,
-        2,
-        4
-      ]
-    ],
-    [
-      "I need to understand my domain",
-      [
-        1,
-        2
-      ]
-    ],
-    [
-      "I need to understand DNS",
-      [
-        2
-      ]
-    ],
-    [
-      "I need to make a real backup",
-      [
-        6,
-        7
-      ]
-    ],
-    [
-      "I need to move a website",
-      [
-        2,
-        6,
-        8
-      ]
-    ],
-    [
-      "I need to stop depending on one administrator",
-      [
-        1,
-        7,
-        9
-      ]
-    ],
-    [
-      "I need to publish so my work survives",
-      [
-        6,
-        10
-      ]
-    ],
-    [
-      "I want to run something myself",
-      [
-        3,
-        4,
-        5,
-        11
-      ]
-    ],
-    [
-      "I need to troubleshoot a network",
-      [
-        2,
-        5,
-        11
-      ]
-    ],
-    [
-      "I want to understand alternative networks",
-      [
-        11,
-        12
-      ]
-    ],
-    [
-      "I need to teach this to somebody else",
-      [
-        12
-      ]
-    ]
+  tasks: [
+    ['I need to understand where my website actually lives', [1, 2, 4]],
+    ['I need to understand my domain', [1, 2]],
+    ['I need to understand DNS', [2]],
+    ['I need to make a real backup', [6, 7]],
+    ['I need to move a website', [2, 6, 8]],
+    ['I need to stop depending on one administrator', [1, 7, 9]],
+    ['I need to publish so my work survives', [6, 10]],
+    ['I want to run something myself', [3, 4, 5, 11]],
+    ['I need to troubleshoot a network', [2, 5, 11]],
+    ['I want to understand alternative networks', [11, 12]],
+    ['I need to teach this to somebody else', [12]],
   ],
-  "glossary": {
-    "domain": "The human-readable name people use to reach a service.",
-    "registrar": "The company or organization where a domain is registered and controlled.",
-    "DNS": "The Domain Name System. It maps names to addresses and other service records.",
-    "nameserver": "A DNS server authoritative for a domain zone.",
-    "A record": "Maps a name to an IPv4 address.",
-    "AAAA": "Maps a name to an IPv6 address.",
-    "CNAME": "Makes one hostname an alias of another hostname.",
-    "MX": "Identifies mail servers for a domain.",
-    "TXT": "Carries text, commonly verification and mail policy.",
-    "TTL": "How long DNS resolvers may cache a record.",
-    "IP address": "A network address used to identify a device or service endpoint.",
-    "LAN": "Local area network.",
-    "WAN": "Wide area network.",
-    "SSH": "Secure Shell, used to securely administer remote machines.",
-    "root": "The all-powerful administrative account on Unix-like systems.",
-    "sudo": "Runs authorized commands with elevated privileges.",
-    "VPS": "Virtual private server.",
-    "TLS": "Transport Layer Security, the encryption used by HTTPS.",
-    "certificate": "A signed credential used by TLS to bind a public key to a name.",
-    "reverse proxy": "Receives requests and forwards them to another application.",
-    "port": "A numbered network endpoint used to distinguish services.",
-    "firewall": "Rules that allow, reject, or filter network traffic.",
-    "database": "Structured stored data used by an application.",
-    "backup": "An independent copy intended for recovery.",
-    "restore": "Rebuilding usable data or a service from a backup.",
-    "federation": "Independent servers interoperating through shared protocols.",
-    "mirror": "An independent copy kept available elsewhere.",
-    "RSS": "A feed format for subscribing to new published items."
+  glossary: {
+    domain: 'The human-readable name people use to reach a service.',
+    registrar: 'The company or organization where a domain is registered and controlled.',
+    DNS: 'The Domain Name System. It maps names to addresses and other service records.',
+    nameserver: 'A DNS server authoritative for a domain zone.',
+    'A record': 'Maps a name to an IPv4 address.',
+    AAAA: 'Maps a name to an IPv6 address.',
+    CNAME: 'Makes one hostname an alias of another hostname.',
+    MX: 'Identifies mail servers for a domain.',
+    TXT: 'Carries text, commonly verification and mail policy.',
+    TTL: 'How long DNS resolvers may cache a record.',
+    'IP address': 'A network address used to identify a device or service endpoint.',
+    LAN: 'Local area network.',
+    WAN: 'Wide area network.',
+    SSH: 'Secure Shell, used to securely administer remote machines.',
+    root: 'The all-powerful administrative account on Unix-like systems.',
+    sudo: 'Runs authorized commands with elevated privileges.',
+    VPS: 'Virtual private server.',
+    TLS: 'Transport Layer Security, the encryption used by HTTPS.',
+    certificate: 'A signed credential used by TLS to bind a public key to a name.',
+    'reverse proxy': 'Receives requests and forwards them to another application.',
+    port: 'A numbered network endpoint used to distinguish services.',
+    firewall: 'Rules that allow, reject, or filter network traffic.',
+    database: 'Structured stored data used by an application.',
+    backup: 'An independent copy intended for recovery.',
+    restore: 'Rebuilding usable data or a service from a backup.',
+    federation: 'Independent servers interoperating through shared protocols.',
+    mirror: 'An independent copy kept available elsewhere.',
+    RSS: 'A feed format for subscribing to new published items.',
   },
-  "intro": "Autistici/Inventati survived twenty-five years. Its shutdown is the historical catalyst for this manual, but the lesson is larger than any one project: movements need to understand the systems they depend on well enough to map them, maintain them, back them up, move them, reproduce them, and pass that knowledge on.\n\nThis is not a demand that every collective become an ISP. Nobody should fabricate their own fiber-optic cable because they have developed ideological concerns about Comcast. It is a demand that infrastructure stop being mysterious right up until the day it disappears.\n\nThe prose explains why. The lessons teach the foundations. Experienced projects teach what they know. You do the work. Then you teach somebody else."
+  intro:
+    'Autistici/Inventati survived twenty-five years. Its shutdown is the historical catalyst for this manual, but the lesson is larger than any one project: movements need to understand the systems they depend on well enough to map them, maintain them, back them up, move them, reproduce them, and pass that knowledge on.\n\nThis is not a demand that every collective become an ISP. Nobody should fabricate their own fiber-optic cable because they have developed ideological concerns about Comcast. It is a demand that infrastructure stop being mysterious right up until the day it disappears.\n\nThe prose explains why. The lessons teach the foundations. Experienced projects teach what they know. You do the work. Then you teach somebody else.',
 }
