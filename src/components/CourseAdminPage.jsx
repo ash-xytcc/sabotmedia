@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { CourseLmsEditor, Lines, Completion } from './CourseLmsEditor'
+import { STATUSES } from '../../public/guides/become-the-thousand-servers/lms/model.js'
 import { AdminFrame } from './AdminRail'
 import { createCourse, deleteCourse, listCourses, loadCourseContent, saveCourseContent } from '../lib/courseContentApi'
 
@@ -151,9 +153,10 @@ function CourseEditor({ slug }) {
         </div>
         <p className="description" aria-live="polite">{status}</p>
         {!course ? null : <>
+          <CourseLmsEditor course={course} onChange={setCourse} />
           <section className="wp-meta-box">
             <h2>Course settings and home copy</h2>
-            <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:'12px'}}><label>Title<input className="large-text" value={course.title || ''} onChange={(e) => patchCourse('title', e.target.value)} /></label><label>Status<select value={course.status || 'draft'} onChange={(e) => patchCourse('status', e.target.value)}><option value="draft">Draft</option><option value="published">Published</option><option value="archived">Archived</option></select></label></div>
+            <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:'12px'}}><label>Title<input className="large-text" value={course.title || ''} onChange={(e) => patchCourse('title', e.target.value)} /></label><label>Status<select value={course.status || 'draft'} onChange={(e) => patchCourse('status', e.target.value)}>{STATUSES.map(s=><option key={s} value={s}>{s}</option>)}</select></label></div>
             <p><label>Slug<br/><input className="large-text" value={course.slug || ''} readOnly /></label></p>
             <p><label>Subtitle<br/><input className="large-text" value={course.subtitle || ''} onChange={(e) => patchCourse('subtitle', e.target.value)} /></label></p>
             <p><label>Deck<br/><input className="large-text" value={course.deck || ''} onChange={(e) => patchCourse('deck', e.target.value)} /></label></p>
@@ -162,16 +165,17 @@ function CourseEditor({ slug }) {
             <p><label>Problem-navigation explanation<br/><textarea className="large-text" rows="3" value={course.taskIntro || ''} onChange={(e) => patchCourse('taskIntro', e.target.value)} /></label></p>
             <p><label>Content version<br/><input value={course.contentVersion || ''} onChange={(e) => patchCourse('contentVersion', e.target.value)} /></label></p>
           </section>
-          <div className="wp-screen-header"><div><h2>Lessons</h2><p className="description">{course.lessons.length} lessons</p></div><button className="button" type="button" onClick={addLesson}>Add Lesson</button></div>
+          <div className="wp-screen-header"><div><h2>Lessons</h2><p className="description">{course.lessons.length} lessons</p></div><button className="button" type="button" onClick={addLesson} disabled={slug===SEEDED_SLUG}>Add Lesson</button></div>
           {course.lessons.map((lesson,index) => (
             <details className="wp-meta-box" key={`${lesson.slug}-${index}`} open={index === 0}>
               <summary><strong>Lesson {index + 1}: {lesson.title}</strong> · {lesson.status}</summary>
               <div style={{paddingTop:'1rem'}}>
                 <p><label>Title<br/><input className="large-text" value={lesson.title || ''} onChange={(e) => patchLesson(index,'title',e.target.value)} /></label></p>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:'12px'}}><label>Slug<input value={lesson.slug || ''} onChange={(e) => patchLesson(index,'slug',slugify(e.target.value))} /></label><label>Status<input value={lesson.status || ''} onChange={(e) => patchLesson(index,'status',e.target.value)} /></label><label>Difficulty<input value={lesson.difficulty || ''} onChange={(e) => patchLesson(index,'difficulty',e.target.value)} /></label><label>Approx. time<input value={lesson.time || ''} onChange={(e) => patchLesson(index,'time',e.target.value)} /></label></div>
+                <Lines label="Learning objectives" value={lesson.objectives||[]} onChange={v=>patchLesson(index,'objectives',v)}/><Lines label="Practical verification checklist" value={lesson.checks||[]} onChange={v=>patchLesson(index,'checks',v)}/><Lines label="Activity IDs" value={lesson.activities||[]} onChange={v=>patchLesson(index,'activities',v)}/><Lines label="Prerequisite unit IDs" value={lesson.prerequisites||[]} onChange={v=>patchLesson(index,'prerequisites',v)}/><label><input type="checkbox" checked={!!lesson.enforcePrerequisites} onChange={e=>patchLesson(index,'enforcePrerequisites',e.target.checked)}/>Require prerequisites before activities/completion</label><Completion value={lesson.completion} onChange={v=>patchLesson(index,'completion',v)}/>
                 {['learn','do','test','teach'].map((field) => <p key={field}><label><strong>{field[0].toUpperCase()+field.slice(1)}</strong><br/><textarea className="large-text" rows="8" value={lesson[field] || ''} onChange={(e) => patchLesson(index,field,e.target.value)} placeholder={`Write the ${field} section here…`} /></label></p>)}
                 <p><label><strong>Resources</strong><br/><span className="description">One per line: Title | URL | note</span><br/><textarea className="large-text" rows="5" value={resourcesText(lesson.resources)} onChange={(e) => patchLesson(index,'resources',parseResources(e.target.value))} /></label></p>
-                <button className="button" type="button" onClick={() => removeLesson(index)}>Delete lesson</button>
+                <button className="button" type="button" onClick={() => removeLesson(index)} disabled={slug===SEEDED_SLUG}>Delete lesson</button>
               </div>
             </details>
           ))}
