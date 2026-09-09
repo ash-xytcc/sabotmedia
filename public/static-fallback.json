@@ -5810,6 +5810,12 @@
         "sources": [],
         "timeline": [
           {
+            "id": "timeline-antifawatch-ai-infrastructure",
+            "date": "2025-07-16",
+            "title": "AntifaWatch publicly identifies A/I as shared infrastructure",
+            "body": "A preserved July 16, 2025 AntifaWatch post identifies Autistici/Inventati as the web-services provider behind projects the account was tracking. The post predates Hudson Crozier’s October 2025 A/I reporting. This establishes an earlier public research trail, not that AntifaWatch supplied Crozier’s reporting."
+          },
+          {
             "id": "timeline-designation",
             "date": "2026-08-26",
             "title": "Designation announced",
@@ -5820,6 +5826,12 @@
             "date": "2026-08-28",
             "title": "Public campaign launched",
             "body": "Reporting, public letters, journalist outreach, graphics, and direct advocacy begin circulating."
+          },
+          {
+            "id": "timeline-crozier-antifawatch-contact",
+            "date": "2026-08-30",
+            "title": "Crozier publicly seeks more A/I research from AntifaWatch",
+            "body": "Hudson Crozier publicly tells AntifaWatch that he sent an email and DM, says he had already been covering A/I, and says he is interested in more of the account’s research. The contact is documented; transmission of any particular claim, or influence on Crozier’s earlier reporting or the federal designation, is not proven."
           },
           {
             "id": "timeline-banca-etica",
@@ -5895,7 +5907,7 @@
           "signatoriesUrl": ""
         },
         "createdAt": "2026-08-28T21:30:00Z",
-        "updatedAt": "2026-09-06T20:58:02.275Z"
+        "updatedAt": "2026-09-09T05:20:45.353Z"
       },
       {
         "id": "campaign-food-not-bombs-gaza",
@@ -6293,6 +6305,26 @@
             "source": "Sabot Media publishing"
           },
           {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-assemblea-pubblica-contro-le-sanzioni-ad-autistici-inventati",
+            "date": "2026-09-16T17:00:00.000Z",
+            "title": "Assemblea pubblica contro le sanzioni ad Autistici/Inventati",
+            "body": "Assemblea pubblica contro le sanzioni ad Autistici/Inventati Il 26 Agosto, il segretario di stato USA Marco Rubio accusa il collettivo Autistici/Inventati di fornire infrastruttura a gruppi &ldquo;terroristi&rdquo;, e lo inserisce nelle liste OFAC. Dieci giorni dopo, il collettivo annuncia la sua chiusura. La portata di questa mossa è enorme, e non si limit…",
+            "url": "https://keepitfree.ai/it/events/assemblea-pubblica-contro-le-sanzioni-ad-autistici/inventati/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-assemblea-di-aggiornamento-ed-helpdesk",
+            "date": "2026-09-11T17:00:00.000Z",
+            "title": "Assemblea di aggiornamento ed helpdesk",
+            "body": "Il collettivo Autistici/Inventati chiude dopo 25 anni di attività, dopo esser stato inserito, il 26 agosto, tra le organizzazioni terroristiche mondiali dal governo USA. L&rsquo;accusa è quella di fornire infrastrutture digitali a movimenti e militanti, in USA come in Europa e nel resto del mondo. L&rsquo;inserimento nella lista di organizzazioni terroristi…",
+            "url": "https://keepitfree.ai/it/events/assemblea-di-aggiornamento-ed-helpdesk/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
             "id": "official-ai-keepitfree-https-keepitfree-ai-it-technical-updates-howto-tecnico-per-salvare-i-tuoi-dati-sui-servizi-a-i",
             "date": "2026-09-08T16:23:00.000Z",
             "title": "Howto tecnico per salvare i tuoi dati sui servizi A/I",
@@ -6458,26 +6490,6 @@
             "title": "Your mail isn&#8217;t lost: info on how to get it back &#8211; No, non hai perso tutta la mail: ecco come accedere alla tua posta",
             "body": "[EN] Some hours ago the domain autistici.org became unreachable. Together with it, we also lost the mail server address mail.autistici.org and of course you won&#8217;t be able to receive any further emails on your @autistici.org email account. But not all is lost! If you have an @autistici.org email address, we will soon restore your mail address on a new…",
             "url": "https://cavallette.noblogs.org/2026/08/10094",
-            "pinned": false,
-            "automated": true,
-            "source": "Autistici/Inventati"
-          },
-          {
-            "id": "official-ai-keepitfree-https-keepitfree-ai-it-technical-updates-aggiornamento-sullo-stato-di-noblogs",
-            "date": "2026-08-29T13:26:00.000Z",
-            "title": "Aggiornamento sullo stato di Noblogs",
-            "body": "l 28 agosto 2026 qualcuno è riuscito ad avere accesso come utente privilegiato alla piattaforma noblogs.org, sfruttando una vulnerabilità del software che usiamo per fornire la piattaforma. L’accesso è durato per circa due ore, durante le quali è stata cambiata la homepage di noblogs.org e non possiamo escludere che l’autore possa aver avuto accesso al data…",
-            "url": "https://keepitfree.ai/it/technical-updates/aggiornamento-sullo-stato-di-noblogs/",
-            "pinned": false,
-            "automated": true,
-            "source": "Autistici/Inventati"
-          },
-          {
-            "id": "official-ai-noblogs-https-cavallette-noblogs-org-2026-08-10092",
-            "date": "2026-08-29T12:25:42.000Z",
-            "title": "Aggiornamento situazione Noblogs / Noblogs status update",
-            "body": "[IT] Il 28 agosto 2026 qualcuno è riuscito ad avere accesso come utente privilegiato alla piattaforma noblogs.org, sfruttando una vulnerabilità del software che usiamo per fornire la piattaforma. L&#8217;accesso è durato per circa due ore, durante le quali è stata cambiata la homepage di noblogs.org e non possiamo escludere che l&#8217;autore possa aver avu…",
-            "url": "https://cavallette.noblogs.org/2026/08/10092",
             "pinned": false,
             "automated": true,
             "source": "Autistici/Inventati"
@@ -7179,6 +7191,38 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-2foi56",
+            "date": "2026-09-16T17:00:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Assemblea pubblica contro le sanzioni ad Autistici/Inventati",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/events/assemblea-pubblica-contro-le-sanzioni-ad-autistici/inventati",
+            "imageUrl": "",
+            "summary": "Assemblea pubblica contro le sanzioni ad Autistici/Inventati Il 26 Agosto, il segretario di stato USA Marco Rubio accusa il collettivo Autistici/Inventati di fornire infrastruttura a gruppi &ldquo;terroristi&rdquo;, e lo inserisce nelle liste OFAC. Dieci giorni dopo, il collettivo annuncia la sua chiusura. La portata…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-u525ft",
+            "date": "2026-09-11T17:00:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Assemblea di aggiornamento ed helpdesk",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/events/assemblea-di-aggiornamento-ed-helpdesk",
+            "imageUrl": "",
+            "summary": "Il collettivo Autistici/Inventati chiude dopo 25 anni di attività, dopo esser stato inserito, il 26 agosto, tra le organizzazioni terroristiche mondiali dal governo USA. L&rsquo;accusa è quella di fornire infrastrutture digitali a movimenti e militanti, in USA come in Europa e nel resto del mondo. L&rsquo;inserimento…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1snnb6y",
             "date": "2026-09-08T16:23:00.000Z",
             "outlet": "Autistici/Inventati",
@@ -7255,6 +7299,22 @@
             "summary": "Elf Tage nach der Terroreinstufung durch die US-Regierung kündigt das italienische Kollektiv Autistici/Inventati (A/I) an, seine Tätigkeit einzustellen. Betroffen sind unter anderem der Hostingdienst ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 115,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1qvnwx9",
+            "date": "2026-09-08T09:59:00.000Z",
+            "outlet": "Computable.nl",
+            "language": "",
+            "languageCode": "",
+            "title": "Washington straft linksradicale Italiaanse provider",
+            "translatedTitle": "",
+            "url": "https://www.computable.nl/2026/09/09/washington-straft-linksradicale-italiaanse-provider",
+            "imageUrl": "",
+            "summary": "Het Italiaanse Autistici/Inventati voelt zich gedwongen zijn digitale dienstverlening te staken, nu de regering Trump de internetprovider als een wereldwijde terroristische organisatie heeft bestempel ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 62,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9686,10 +9746,22 @@
             "body": "The temporary U.S. authorization expires at 12:01 a.m. Eastern. Banks, hosts, registrars, certificate providers and other intermediaries may face pressure to cut services or over-comply."
           },
           {
+            "id": "timeline-antifawatch-ai-infrastructure",
+            "date": "2025-07-16",
+            "title": "AntifaWatch publicly identifies A/I as shared infrastructure",
+            "body": "A preserved July 16, 2025 AntifaWatch post identifies Autistici/Inventati as the web-services provider behind projects the account was tracking. The post predates Hudson Crozier’s October 2025 A/I reporting. This establishes an earlier public research trail, not that AntifaWatch supplied Crozier’s reporting."
+          },
+          {
             "id": "timeline-launch",
             "date": "2026-08-28",
             "title": "Public campaign launched",
             "body": "Reporting, public letters, journalist outreach, graphics, and direct advocacy begin circulating."
+          },
+          {
+            "id": "timeline-crozier-antifawatch-contact",
+            "date": "2026-08-30",
+            "title": "Crozier publicly seeks more A/I research from AntifaWatch",
+            "body": "Hudson Crozier publicly tells AntifaWatch that he sent an email and DM, says he had already been covering A/I, and says he is interested in more of the account’s research. The contact is documented; transmission of any particular claim, or influence on Crozier’s earlier reporting or the federal designation, is not proven."
           },
           {
             "id": "timeline-banca-etica",
@@ -9759,7 +9831,7 @@
           "signatoriesUrl": ""
         },
         "createdAt": "2026-08-28T21:30:00Z",
-        "updatedAt": "2026-09-06T20:58:02.275Z",
+        "updatedAt": "2026-09-09T05:20:45.353Z",
         "individualLetter": {
           "resourceId": "resource-individual-letter-pdf",
           "title": "Write to officials in your own voice",
@@ -9799,14 +9871,14 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-09T01:27:52.667Z",
+        "socialCheckedAt": "2026-09-09T06:35:48.480Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
             "label": "A/I Keep It Free dispatches",
             "url": "https://keepitfree.ai/it/index.xml",
             "ok": true,
-            "count": 15
+            "count": 17
           },
           {
             "id": "official-ai-noblogs",
@@ -9831,8 +9903,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-09T01:27:53.935Z",
-        "coverageArchiveCount": 136
+        "intelligenceCheckedAt": "2026-09-09T06:35:50.408Z",
+        "coverageArchiveCount": 139
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10034,7 +10106,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-09T01:28:04.321Z",
+        "automationCheckedAt": "2026-09-09T06:36:00.706Z",
         "coverageArchiveCount": 0
       }
     }
