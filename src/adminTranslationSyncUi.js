@@ -4,6 +4,7 @@ const UI_ATTR = 'data-sabot-weblate-sync-ui'
 const STATUS_ATTR = 'data-sabot-weblate-sync-status'
 const FALLBACK_ATTR = 'data-sabot-weblate-manual-fallback'
 const SYNC_EVENT = 'sabot:weblate-sync'
+const WORKFLOW_COPY = 'Finished Weblate languages are pulled into Sabot automatically when this page opens and land in editorial review. Review and publish here; manual JSON transfer is only a fallback.'
 
 let lastSync = null
 let syncing = false
@@ -32,11 +33,17 @@ function syncSummary(detail) {
 
 function renderStatus(node) {
   const failed = lastSync?.ok === false
-  node.className = failed ? 'notice notice-error' : 'notice notice-info'
-  node.setAttribute('role', failed ? 'alert' : 'status')
+  const nextClass = failed ? 'notice notice-error' : 'notice notice-info'
+  const nextRole = failed ? 'alert' : 'status'
+  const nextText = syncSummary(lastSync)
+  const currentText = node.querySelector('p')?.textContent || ''
+  if (node.className === nextClass && node.getAttribute('role') === nextRole && currentText === nextText) return
+
+  node.className = nextClass
+  node.setAttribute('role', nextRole)
   node.innerHTML = ''
   const paragraph = document.createElement('p')
-  paragraph.textContent = syncSummary(lastSync)
+  paragraph.textContent = nextText
   node.appendChild(paragraph)
 }
 
@@ -99,9 +106,7 @@ function installSyncUi() {
   const description = Array.from(section.querySelectorAll('.description')).find((node) =>
     node.closest('.wp-screen-header')
   )
-  if (description) {
-    description.textContent = 'Finished Weblate languages are pulled into Sabot automatically when this page opens and land in editorial review. Review and publish here; manual JSON transfer is only a fallback.'
-  }
+  if (description && description.textContent !== WORKFLOW_COPY) description.textContent = WORKFLOW_COPY
 
   const header = section.querySelector('.wp-screen-header')
   if (header && !header.querySelector(`[${UI_ATTR}]`)) {
