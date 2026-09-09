@@ -7249,6 +7249,38 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-ins086",
+            "date": "2026-09-09T10:10:00.000Z",
+            "outlet": "EL PAÍS",
+            "language": "",
+            "languageCode": "",
+            "title": "Un proveedor web italiano es acusado de terrorismo por Estados Unidos y se ve obligado a cerrar por el bloqueo de sus cuentas",
+            "translatedTitle": "",
+            "url": "https://elpais.com/internacional/2026-09-09/un-proveedor-web-italiano-es-acusado-de-terrorismo-por-estados-unidos-y-se-ve-obligado-a-cerrar-por-el-bloqueo-de-sus-cuentas.html",
+            "imageUrl": "",
+            "summary": "La Casa Blanca señala a Autistici/Inventati, un colectivo de izquierda que garantizaba el anonimato de sus usuarios, por alojar plataformas donde se han publicado reivindicaciones de atentados ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 75,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1y68atq",
+            "date": "2026-09-09T07:09:00.000Z",
+            "outlet": "ROCKIT",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici Inventati: la mia mail è diventata terrorista",
+            "translatedTitle": "",
+            "url": "https://www.rockit.it/articolo/autistici-inventati-mia-mail-diventata-terrorista",
+            "imageUrl": "",
+            "summary": "Con la chiusura del collettivo antifascista, colpito dalle sanzioni del governo americano, se ne va un pezzo di internet libero. Un viaggio ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1uql6ne",
             "date": "2026-09-09T02:54:00.000Z",
             "outlet": "GLOBALINFO",
@@ -7261,6 +7293,22 @@
             "summary": "Nog geen twee weken nadat de Amerikaanse regering het Italiaanse internetcollectief Autistici/Inventati tot terroristische dreiging had verklaard, zetten de activisten hun gratis online diensten stop.",
             "discoverySource": "live-discovery",
             "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-12g6qrq",
+            "date": "2026-09-09T02:09:00.000Z",
+            "outlet": "KPFA",
+            "language": "",
+            "languageCode": "",
+            "title": "The Situation with NoBlogs (feat. Sabot Media and CrimethInc)",
+            "translatedTitle": "",
+            "url": "https://kpfa.org/episode/the-final-straw-radio-september-9-2026",
+            "imageUrl": "",
+            "summary": "An interview with Sprout of Sabot.Media and a member of the CrimethInc Ex-Workers Collective about the recent designation of the Italian autonomous tech collective Autistici/Inventati as a terrorist o ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 97,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9961,7 +10009,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-09T15:21:06.608Z",
+        "socialCheckedAt": "2026-09-09T18:43:11.242Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9989,12 +10037,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 2
+            "count": 5
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-09T15:21:09.988Z",
-        "coverageArchiveCount": 144
+        "intelligenceCheckedAt": "2026-09-09T18:43:13.627Z",
+        "coverageArchiveCount": 147
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10196,7 +10244,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-09T15:21:14.051Z",
+        "automationCheckedAt": "2026-09-09T18:43:26.777Z",
         "coverageArchiveCount": 0
       }
     }
