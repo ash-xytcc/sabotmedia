@@ -1,3 +1,4 @@
+import { isReadablePath, renderReadingPage } from './api/_lib/readablePage.js'
 import { permissionHasCapability, resolvePublicSitePermission } from './api/_lib/publicSiteAuth.js'
 import { getNativeEntry, listNativeEntries } from './api/_lib/nativePublicContent.js'
 import { getCampaign, listCampaigns } from './api/_lib/campaigns.js'
@@ -95,11 +96,17 @@ export async function onRequest(context) {
     return Response.redirect(url.toString(), 308)
   }
 
+  if (url.pathname === '/archive.html') { url.pathname = '/archive'; return Response.redirect(url.toString(), 308) }
+
   if (url.pathname === '/pgp.asc') {
     return Response.redirect(new URL('/keys/info-sabot-media.asc', url.origin).toString(), 308)
   }
 
   const method = String(context.request.method || 'GET').toUpperCase()
+  if (PAGE_METHODS.has(method) && /\/index\.html$/.test(url.pathname)) {
+    const canonical = url.pathname.replace(/\/index\.html$/, '') || '/'
+    if (isReadablePath(canonical)) { url.pathname = canonical; return Response.redirect(url.toString(), 308) }
+  }
   if (PAGE_METHODS.has(method) && url.pathname.length > 1 && url.pathname.endsWith('/')) {
     const stripped = url.pathname.replace(/\/+$/, '')
     if (isPublicPostPath(stripped) || isPublicCampaignPath(stripped) || isPublicSpaPath(stripped)) {
@@ -113,6 +120,7 @@ export async function onRequest(context) {
   const isApiWrite = pathname.startsWith('/api/') && WRITE_METHODS.has(method)
 
   if (PUBLIC_AUTH_API_PATHS.has(pathname)) return context.next()
+  if (PAGE_METHODS.has(method) && isReadablePath(pathname)) return renderReadingPage(context, url)
   if (method === 'GET' && isPublicPostPath(pathname)) return renderPublicPost(context, url)
   if (PAGE_METHODS.has(method) && isPublicCampaignPath(pathname)) return renderPublicCampaign(context, url)
   if (PAGE_METHODS.has(method) && !isAdminRoute && isPublicSpaPath(pathname)) return renderSpaShell(context, url)
@@ -185,14 +193,14 @@ async function renderSpaShell(context, url) {
   if (!context.env?.ASSETS?.fetch) return context.next()
 
   const normalizedPath = url.pathname === '/' ? '' : url.pathname.replace(/\/+$/, '')
-  const routeAssetPath = normalizedPath ? `${normalizedPath}/index.html` : '/index.html'
+  const routeAssetPath = normalizedPath ? `${normalizedPath}/` : '/'
   const requestAsset = async (assetPath) => context.env.ASSETS.fetch(new Request(new URL(assetPath, url.origin), {
     method: context.request.method === 'HEAD' ? 'HEAD' : 'GET',
     headers: { accept: 'text/html' },
   }))
 
   let response = await requestAsset(routeAssetPath)
-  if (!response.ok && routeAssetPath !== '/index.html') response = await requestAsset('/index.html')
+  if (!response.ok && routeAssetPath !== '/') response = await requestAsset('/')
   if (!response.ok) return response
 
   const headers = new Headers(response.headers)

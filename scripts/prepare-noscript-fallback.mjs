@@ -76,12 +76,12 @@ function isPublicCollection(item) {
 function isPublicCampaign(item) {
   if (!item || !String(item.slug || '').trim()) return false
   const status = String(item.status || '').toLowerCase()
-  return status === 'published' || status === 'active' || item.published === true
+  return status === 'published'
 }
 
 function isPublicPublication(item) {
   if (!item || !String(item.slug || item.id || '').trim()) return false
-  return String(item.status || '').toLowerCase() === 'published' || ['public', 'unlisted'].includes(String(item.visibility || '').toLowerCase())
+  return item.status === 'published' && !['private', 'hidden'].includes(item.visibility)
 }
 
 function nav() {
@@ -134,7 +134,7 @@ function renderEntry(entry, heading = 'h2') {
 
 function renderListing(entries, { homepageOnly, title } = {}) {
   const heading = title || (homepageOnly ? 'Latest reporting' : 'Archive')
-  const items = entries.length ? entries.slice(0, 500).map((entry) => renderEntry(entry)).join('') : '<p>No published posts are available in the plain HTML view.</p>'
+  const items = entries.length ? entries.map((entry) => renderEntry(entry)).join('') : '<p>No published posts are available in the plain HTML view.</p>'
   return shell(`<h1>${escapeHtml(heading)}</h1>${items}`)
 }
 
@@ -230,7 +230,7 @@ function renderCollection(collection) {
 }
 
 function renderPublicationsIndex() {
-  const items = publications.length ? publications.map((item) => `<article class="ns-card"><h2><a href="/publications/${encodeURIComponent(item.slug || item.id)}/">${escapeHtml(cleanText(item.title) || titleFromSlug(item.slug || item.id))}</a></h2>${item.description || item.subtitle ? `<p>${escapeHtml(cleanText(item.description || item.subtitle))}</p>` : ''}<p class="ns-meta">${escapeHtml(cleanText(item.publicationType || 'publication'))}${Array.isArray(item.pages) ? ` · ${item.pages.length} pages` : ''}</p></article>`).join('') : '<p>No public publications are available in the static snapshot.</p>'
+  const items = publications.length ? publications.filter(item => item.visibility !== 'unlisted').map((item) => `<article class="ns-card"><h2><a href="/publications/${encodeURIComponent(item.slug || item.id)}/">${escapeHtml(cleanText(item.title) || titleFromSlug(item.slug || item.id))}</a></h2>${item.description || item.subtitle ? `<p>${escapeHtml(cleanText(item.description || item.subtitle))}</p>` : ''}<p class="ns-meta">${escapeHtml(cleanText(item.publicationType || 'publication'))}${Array.isArray(item.pages) ? ` · ${item.pages.length} pages` : ''}</p></article>`).join('') : '<p>No public publications are available in the static snapshot.</p>'
   return shell(`<h1>Publications</h1>${items}`)
 }
 
@@ -302,6 +302,8 @@ function inject(html, fallback, title = '') {
 async function writeRoute(route, fallback, title) {
   const cleanRoute = String(route || '').replace(/^\/+|\/+$/g, '')
   if (!cleanRoute) return
+  // Hand-authored public documents are already readable; never replace them with a SPA snapshot.
+  if (await fs.stat(path.join(root, 'public', cleanRoute, 'index.html')).catch(() => null)) return
   const dir = path.join(root, cleanRoute)
   await fs.mkdir(dir, { recursive: true })
   await fs.writeFile(path.join(dir, 'index.html'), inject(sourceIndex, fallback, title))
