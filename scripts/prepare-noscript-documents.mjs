@@ -31,7 +31,11 @@ const main = document.querySelector('main')
 if (!main || !document.getElementById('update-2026-09-08-antifawatch-trail') || !document.getElementById('people')) throw Error('Investigation reading projection is incomplete')
 const note='<p>Document links open full PDFs at the cited page where supported. The JavaScript highlight overlay is unavailable in this reading view.</p>'
 if (!html.includes('<base ')) html=html.replace('<head>','<head>\n  <base href="/investigations/autistici-inventati/">')
-await fs.writeFile(new URL('index.html',dir),append(html,document.title, note+readableBody(main.innerHTML),'body > main,body > header,body > footer,body > .story-nav'))
+const investigationHtml = append(html,document.title, note+readableBody(main.innerHTML),'body > main,body > header,body > footer,body > .story-nav')
+await fs.writeFile(new URL('index.html',dir),investigationHtml)
+// A flat asset avoids directory redirects when fetched through the Pages binding.
+await fs.mkdir(new URL('_reading/',root), {recursive:true})
+await fs.writeFile(new URL('_reading/autistici-inventati.html',root),investigationHtml)
 
 const courseFile=new URL('guides/become-the-thousand-servers/index.html',root)
 const courseHtml=strip(await fs.readFile(courseFile,'utf8'))

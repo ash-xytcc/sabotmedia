@@ -3,7 +3,8 @@ import { buildCopy } from '../../../src/content/campaignBenefitCopy.js'
 import { listReadingPosts } from './readablePosts.js'
 import { onRequestGet as collectionsGet } from '../collections.js'
 import { onRequestGet as publicationsGet } from '../publications.js'
-import { onRequestGet as campaignsGet } from '../campaigns.js'
+import { getCampaign, listCampaigns } from './campaigns.js'
+import { getEditablePage } from '../../../src/lib/editableContentRegistry.js'
 import { onRequestGet as translationsGet } from '../native-translations.js'
 import { onRequestGet as feedsGet } from '../feed-manifest.js'
 import { listMessages } from './campaignCorrespondence.js'
@@ -13,9 +14,9 @@ import { readPublicSiteConfig } from './publicSiteConfig.js'
 import { publicInfoCopy, getPublicInfoField } from '../../../src/content/publicInfoCopy.js'
 import { escapeHtml as e, link, paragraphs, readableBody, image, media, readingDocument } from './readableHtml.js'
 
-const infoRoutes = new Set(Object.keys(publicInfoCopy))
+const infoRoutes = new Set([...Object.keys(publicInfoCopy), 'security'])
 export function isReadablePath(path) {
-  return ['/', '/archive', '/search', '/updates', '/press', '/campaigns', '/collections', '/publications', '/projects', '/feeds', '/aberdeen-local-1312-gallery'].includes(path)
+  return ['/', '/archive', '/search', '/updates', '/press', '/campaigns', '/collections', '/publications', '/projects', '/feeds', '/aberdeen-local-1312-gallery', '/investigations'].includes(path)
     || infoRoutes.has(path.slice(1))
     || /^\/(post|piece|print|zine|updates|collections|publications|reader|read|project|projects)\/[^/]+(?:\/print)?$/.test(path)
     || /^\/campaigns\/[^/]+(?:\/(coverage|benefit-kit|instagram-connect))?$/.test(path)
@@ -59,7 +60,8 @@ export async function buildReadingPage(context, url) {
   }
   if (infoRoutes.has(family)) {
     const { config } = await readPublicSiteConfig(db)
-    const defaults = publicInfoCopy[family]
+    const registered = getEditablePage(family)
+    const defaults = publicInfoCopy[family] || Object.fromEntries(['title','body'].map(part => [part,registered?.[part]?.defaultText || '']))
     const field = part => config.text?.[getPublicInfoField(family, part)] ?? defaults[part] ?? ''
     return { title:field('title'), body:`<h1>${e(field('title'))}</h1>${paragraphs(field('body'))}${family === 'security' ? `<p>${link('/keys/info-sabot-media.asc','Download public PGP key')}</p>` : ''}${family === 'contact' ? ['info','tips','submit','press','support'].map(name => `<p>${link(`mailto:${name}@sabot.media`,`${name}@sabot.media`)}</p>`).join('') : ''}` }
   }
@@ -80,10 +82,15 @@ export async function buildReadingPage(context, url) {
     return {title:item.title,noindex:item.visibility === 'unlisted',body:`<h1>${e(item.title)}</h1>${paragraphs(item.description || item.subtitle)}${downloads.map(u => `<p>${link(u,'Download PDF')}</p>`).join('')}${rows(item.pages).map((p,i) => section(p.title || `Page ${i+1}`, rows(p.blocks).map(b => `${readableBody(b.html || b.text || b.content || '')}${b.type === 'image' ? image(b) : ''}`).join(''))).join('')}`}
   }
   if (family === 'campaigns' || family === 'contribute') {
-    const data = await publicRead(campaignsGet, context, `/api/campaigns${slug ? `?slug=${encodeURIComponent(slug)}` : ''}`)
+    // HTML reads use persisted editorial data, without waiting for remote social refreshes.
+    const data = slug ? { item: await getCampaign(db, slug) } : { items: await listCampaigns(db) }
     if (!slug) return {title:'Campaigns',body:`<h1>Campaigns</h1>${rows(data.items).filter(i => i.status === 'published').map(i => `<article><h2>${link(`/campaigns/${encodeURIComponent(i.slug)}`,i.title)}</h2>${paragraphs(i.summary || i.deck)}</article>`).join('')}`}
     const c = data.item
     if (!c || c.status !== 'published') return missing()
+    if (!rows(c.hiddenSections).includes('coverage')) {
+      const archive = await listAiCoverageArchive(db, { campaignSlug: slug, limit: 50 })
+      c.coverage = archive.items
+    }
     const base = `/campaigns/${encodeURIComponent(slug)}`
     if (family === 'contribute' || action === 'instagram-connect') return {title:'Campaign tools',body:`<h1>Campaign tools</h1><p>Signing in and editing require JavaScript.</p>${link(base,'Read the campaign')}`}
     if (action === 'coverage') {
@@ -118,6 +125,7 @@ export async function buildReadingPage(context, url) {
     const gallery = await getGallery(db,'aberdeen-local-1312')
     return gallery ? {title:gallery.title,body:`<h1>${e(gallery.title)}</h1>${paragraphs(gallery.description)}${rows(gallery.items).map(image).join('')}`} : missing()
   }
+  if (family === 'investigations') return {title:'Investigations',body:`<h1>Investigations</h1><article><h2>${link('/investigations/autistici-inventati','The Missing File')}</h2><p>How Autistici/Inventati became a U.S. counterterrorism target: reporting, evidence, sources, and updates.</p></article>`}
   if (family === 'feeds') {
     const manifest = await publicRead(feedsGet,context,'/api/feed-manifest')
     return {title:'Feeds',body:`<h1>Feeds</h1>${rows(manifest.files).map(name => `<p>${link(`/feeds/${name}`,name)}</p>`).join('')}`}

@@ -105,3 +105,36 @@ test('Pages asset reads use pretty URLs instead of redirecting index.html assets
  }
  const response=await onRequest(ctx);assert.equal(response.status,200);assert.match(await response.text(),/Plain HTML reading view/)
 })
+
+test('security and investigation index expose their actual reading content', async () => {
+  const security = await onRequest(context('/security'))
+  assert.equal(security.status, 200)
+  assert.match(await security.text(), /Quick guide[\s\S]*OpenPGP[\s\S]*Download public PGP key/)
+  const investigations = await onRequest(context('/investigations'))
+  assert.match(await investigations.text(), /href="\/investigations\/autistici-inventati"/)
+})
+
+test('campaign reading uses persisted public data without external refresh requests', async () => {
+  const ctx = context('/campaigns/food-not-bombs-gaza')
+  const campaign = {id:'gaza',slug:'food-not-bombs-gaza',title:'Gaza campaign',status:'published',summary:'Public campaign report',hiddenSections:['coverage'],donation:{url:'https://example.org/donate'}}
+  const prepare = ctx.env.BF_DB.prepare
+  ctx.env.BF_DB.prepare = sql => sql.includes('FROM campaigns WHERE') ? {bind:()=>({first:async()=>({id:campaign.id,slug:campaign.slug,title:campaign.title,status:campaign.status,campaign_json:JSON.stringify(campaign)})})} : prepare(sql)
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => {throw Error('HTML rendering must not request external services')}
+  try {
+    const response = await onRequest(ctx)
+    assert.equal(response.status,200)
+    assert.match(await response.text(), /Public campaign report/)
+    campaign.status='draft'
+    assert.equal((await onRequest(ctx)).status,404)
+  } finally {globalThis.fetch=originalFetch}
+})
+
+test('investigation fetch uses a flat asset and preserves its full no-JS content', async () => {
+  const ctx = context('/investigations/autistici-inventati')
+  ctx.env.ASSETS.fetch = async request => {
+    assert.equal(new URL(request.url).pathname,'/_reading/autistici-inventati')
+    return new Response('<html><body><noscript data-sabot-plain-html>Full investigation evidence</noscript></body></html>',{headers:{'content-type':'text/html'}})
+  }
+  assert.match(await (await onRequest(ctx)).text(), /Full investigation evidence/)
+})

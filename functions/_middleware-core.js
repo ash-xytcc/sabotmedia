@@ -191,7 +191,9 @@ async function renderSpaShell(context, url) {
   if (!context.env?.ASSETS?.fetch) return context.next()
 
   const normalizedPath = url.pathname === '/' ? '' : url.pathname.replace(/\/+$/, '')
-  const routeAssetPath = normalizedPath ? `${normalizedPath}/` : '/'
+  const routeAssetPath = normalizedPath === '/investigations/autistici-inventati'
+    ? '/_reading/autistici-inventati'
+    : normalizedPath ? `${normalizedPath}/` : '/'
   const requestAsset = async (assetPath) => context.env.ASSETS.fetch(new Request(new URL(assetPath, url.origin), {
     method: context.request.method === 'HEAD' ? 'HEAD' : 'GET',
     headers: { accept: 'text/html' },
