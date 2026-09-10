@@ -69,5 +69,8 @@ jobs:
             test-output.log
             build-output.log
             podcast-cover-probe.log
+            public/project-logos/molotov-now.svg
+            public/project-logos/the-child-and-its-enemies.svg
+            public/project-logos/get-to-know-your-neighborhood.svg
           if-no-files-found: ignore
           retention-days: 7
