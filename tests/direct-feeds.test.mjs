@@ -65,6 +65,13 @@ test('public feeds page links only to server manifest endpoints', () => {
   assert.match(manifest, /'podcasts\/all\.xml'/)
 })
 
+test('topic feeds stay available internally but are not advertised by the public directory', () => {
+  assert.match(publicPage, /!file\.startsWith\('topics\/'\)/)
+  assert.match(manifest, /!name\.startsWith\('topics\/'\)/)
+  assert.doesNotMatch(publicPage, /topics: 'topics'/)
+  assert.doesNotMatch(publicPage, /Follow subjects across formats and projects/)
+})
+
 test('public feeds are discoverable from site navigation and RSS-aware browsers', () => {
   assert.match(publicRegistry, /defaultLabel: 'Feeds'.*defaultHref: '\/feeds'/)
   assert.match(publicRegistry, /defaultLabel: 'Feeds \/ RSS'.*defaultHref: '\/feeds'/)
