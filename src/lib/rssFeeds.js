@@ -1,4 +1,17 @@
 import { loadFeedSettings, normalizeFeedTerm, slugifyFeedTerm } from './feedSettings.js'
+import { isGenericProject, resolveArchiveProject } from './projectCatalog.js'
+
+const KNOWN_SOURCE_FORMATS = new Set([
+  'article',
+  'audio',
+  'comic',
+  'dispatch',
+  'newsletter',
+  'note',
+  'podcast',
+  'print',
+  'zine',
+])
 
 function escapeXml(value = '') {
   return String(value || '')
@@ -13,10 +26,88 @@ function itemDate(item) {
   return Number.isFinite(d.getTime()) ? d.toUTCString() : new Date().toUTCString()
 }
 
+function normalizedKnownFormat(value, settings) {
+  const normalized = normalizeFeedTerm('format', value, settings).toLowerCase()
+  return KNOWN_SOURCE_FORMATS.has(normalized) ? normalized : ''
+}
+
+function sourceFormatHint(item, settings) {
+  for (const field of ['sourceContentType', 'sourcePostType', 'sourceLabel']) {
+    const format = normalizedKnownFormat(item?.[field], settings)
+    if (format) return format
+  }
+  return ''
+}
+
+function hasPodcastMedia(item) {
+  return Boolean(
+    String(item?.podcastAudioUrl || '').trim() ||
+    String(item?.podcastRssEnclosureUrl || '').trim() ||
+    String(item?.podcastDeliveryAudioUrl || '').trim() ||
+    String(item?.podcastMasterAudioUrl || '').trim() ||
+    String(item?.podcastDuration || '').trim()
+  )
+}
+
+function projectFormat(project) {
+  switch (project?.slug) {
+    case 'the-communique':
+      return 'newsletter'
+    case 'the-sabotuers':
+      return 'comic'
+    case 'black-cat-distro':
+    case 'zines-and-comics':
+      return 'print'
+    case 'molotov-now':
+    case 'the-child-and-its-enemies':
+      return 'podcast'
+    default:
+      return ''
+  }
+}
+
+export function resolveFeedProject(item, settings = loadFeedSettings()) {
+  const storedFormat = normalizedKnownFormat(item?.contentType || item?.type, settings)
+  const sourceFormat = sourceFormatHint(item, settings)
+  const typeHint = hasPodcastMedia(item) ? 'podcast' : sourceFormat || storedFormat || 'article'
+  const project = resolveArchiveProject(item, typeHint)
+  if (!project?.name || isGenericProject(project.name)) return ''
+  return project.name
+}
+
+export function resolveFeedFormat(item, settings = loadFeedSettings()) {
+  const storedFormat = normalizedKnownFormat(item?.contentType || item?.type, settings)
+  if (storedFormat === 'podcast' || hasPodcastMedia(item)) return 'podcast'
+
+  const sourceFormat = sourceFormatHint(item, settings)
+  const project = resolveArchiveProject(item, sourceFormat || storedFormat || 'article')
+  const canonicalProjectFormat = projectFormat(project)
+
+  // A real editorial project identity is more useful than the broad storage types
+  // used during the WordPress/native migration. This recovers newsletters, comics,
+  // print work and podcast episodes without rewriting the stored publication record.
+  if (canonicalProjectFormat) return canonicalProjectFormat
+
+  // Source-specific labels such as post/article are more informative than the
+  // migration buckets (dispatch, note and publicBlock).
+  if (sourceFormat) return sourceFormat
+
+  // Older imported material was intentionally squeezed into a small set of native
+  // storage types. Do not advertise those implementation buckets as editorial formats.
+  if (String(item?.sourceKind || item?.sourceType || '').toLowerCase() === 'imported') {
+    if (['dispatch', 'note'].includes(storedFormat) || String(item?.contentType || '').toLowerCase() === 'publicblock') {
+      return 'article'
+    }
+  }
+
+  if (String(item?.contentType || '').toLowerCase() === 'publicblock') return 'article'
+  return storedFormat || 'article'
+}
+
 function normalizeFeedItem(item, settings) {
   const slug = item.slug || item.id || ''
   const author = normalizeFeedTerm('author', item.author || item.byline || 'Sabot Media Collective', settings) || 'Sabot Media Collective'
-  const category = normalizeFeedTerm('format', item.contentType || item.type || 'article', settings) || 'article'
+  const category = normalizeFeedTerm('format', resolveFeedFormat(item, settings), settings) || 'article'
   return {
     title: item.title || slug || 'Untitled',
     link: slug ? `https://sabot.media/post/${slug}` : 'https://sabot.media/archive',
@@ -64,9 +155,11 @@ function groupBy(items, kind, getter, settings) {
   const groups = {}
   for (const item of items) {
     const keys = getter(item)
+    const seen = new Set()
     for (const key of Array.isArray(keys) ? keys : [keys]) {
       const clean = normalizeFeedTerm(kind, key, settings)
-      if (!clean) continue
+      if (!clean || seen.has(clean)) continue
+      seen.add(clean)
       groups[clean] = groups[clean] || []
       groups[clean].push(item)
     }
@@ -100,7 +193,9 @@ export function buildRssBundle(items = [], options = {}) {
 
   if (settings.exposeProjectFeeds !== false) addGroupedFeeds(bundle, {
     prefix: 'projects', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published content for',
-    groups: groupBy(visible, 'project', (item) => getValues(item, ['projects', 'primaryProject', 'categories']), settings), settings,
+    // Project RSS follows the same canonical identity used by the public archive.
+    // Generic WordPress categories such as General, podcast, article, etc. are not projects.
+    groups: groupBy(visible, 'project', (item) => resolveFeedProject(item, settings), settings), settings,
   })
   if (settings.exposeCollectionFeeds !== false) addGroupedFeeds(bundle, {
     prefix: 'collections', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published content in',
@@ -108,7 +203,7 @@ export function buildRssBundle(items = [], options = {}) {
   })
   if (settings.exposeFormatFeeds !== false) addGroupedFeeds(bundle, {
     prefix: 'formats', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published',
-    groups: groupBy(visible, 'format', (item) => item.contentType || item.type || 'article', settings), settings,
+    groups: groupBy(visible, 'format', (item) => resolveFeedFormat(item, settings), settings), settings,
   })
   if (settings.exposeAuthorFeeds !== false) addGroupedFeeds(bundle, {
     prefix: 'bylines', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published under the public byline label',
