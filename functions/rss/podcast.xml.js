@@ -1,4 +1,4 @@
-import { migratedPodcastMediaKey, podcastAudioPath, podcastAudioSource, podcastCoverPath, storedMediaKey } from '../../shared/podcastHosting.js'
+import { migratedPodcastMediaKey, podcastAudioPath, podcastAudioSource, podcastCoverPath } from '../../shared/podcastHosting.js'
 import { isAudiozineItem } from '../../src/lib/rssFeeds.js'
 import { ensureNativePublicContentTable, listNativeEntries } from '../api/_lib/nativePublicContent.js'
 import { databaseUnavailable, getBoundDb } from '../api/_lib/database.js'
@@ -128,10 +128,16 @@ export function podcastXmlResponse(body) {
   })
 }
 
+export function podcastEnclosureUrl(item, origin = 'https://sabot.media') {
+  const source = podcastAudioSource(item)
+  return migratedPodcastMediaKey(source, origin)
+    ? `${origin}${podcastAudioPath(item.id)}`
+    : absolutize(getAudioUrl(item), origin)
+}
+
 function itemXml(item, origin, channel = {}) {
   const delivery = getDeliveryAsset(item)
-  const source = podcastAudioSource(item)
-  const audioUrl = storedMediaKey(source, origin) ? `${origin}${podcastAudioPath(item.id)}` : absolutize(getAudioUrl(item), origin)
+  const audioUrl = podcastEnclosureUrl(item, origin)
   const slug = String(item.slug || item.id || '').trim()
   const link = `${origin}/post/${encodeURIComponent(slug)}`
   const mimeType = getMimeType(item)
