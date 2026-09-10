@@ -63,7 +63,10 @@ export function PublicationFooter() {
       </div>
 
       <div className="publication-footer__bottom">
-        <div>{'Ⓐ Intellectual property is bullshit - steal this website.'}</div>
+        <div>
+          Ⓐ Intellectual property is bullshit - steal this website. Site runs on{' '}
+          <a href="https://github.com/colophon-hub/colophon" target="_blank" rel="noreferrer">Colophon</a>. Build your own.
+        </div>
         {!isChecking && !isAuthenticated ? (
           <Link className="publication-footer__login-link" to="/login">Editor login</Link>
         ) : null}
