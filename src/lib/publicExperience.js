@@ -1,3 +1,4 @@
+import { podcastAudioPath, podcastAudioSource, storedMediaKey } from '../../shared/podcastHosting.js'
 import { getCollectionPieces } from './collections'
 
 export function estimateReadingTimeFromHtml(html = '', fallbackText = '') {
@@ -138,6 +139,10 @@ export function setStructuredArticleData(piece = {}, { url = '', image = '' } = 
 }
 
 export function getPodcastAudioUrl(piece = {}) {
+  const source = podcastAudioSource(piece)
+  if (piece.id && storedMediaKey(source)) return podcastAudioPath(piece.id)
+  const canonical = (piece.relatedAssets || []).find(asset => asset.role === 'canonical-audio')
+  if (isPublicPodcastAudioUrl(canonical?.url)) return canonical.url
   const delivery = getPodcastDeliveryAsset(piece)
   const deliveryUrl = delivery?.url || delivery?.publicUrl || delivery?.rssEnclosure?.url || piece.podcastDeliveryAudioUrl || ''
   if (isPublicPodcastAudioUrl(deliveryUrl)) return String(deliveryUrl).trim()
@@ -169,7 +174,7 @@ export function getPodcastAudioAsset(piece = {}) {
 export function isPublicPodcastAudioUrl(value = '') {
   const raw = String(value || '').trim()
   if (!raw || raw.startsWith('audiolab-local://')) return false
-  return /^https?:\/\//i.test(raw) || raw.startsWith('/api/audiolab/media')
+  return /^https?:\/\//i.test(raw) || raw.startsWith('/api/audiolab/media') || raw.startsWith('/api/media/files') || raw.startsWith('/api/podcasts/audio')
 }
 
 export function getPlainText(html = '') {

@@ -231,7 +231,7 @@ export function EpisodePublisherPage() {
   }
 
   function canonicalAssets() {
-    const preserved = (Array.isArray(draft?.relatedAssets) ? draft.relatedAssets : []).filter((asset) => !['canonical-audio', 'episode-artwork'].includes(String(asset?.role || '').toLowerCase()))
+    const preserved = (Array.isArray(draft?.relatedAssets) ? draft.relatedAssets : []).filter((asset) => !['canonical-audio', 'delivery', 'episode-artwork'].includes(String(asset?.role || '').toLowerCase()))
     const hosts = normalizeTags(hostsInput)
     const next = [...preserved]
     if (audio?.url) {
@@ -291,6 +291,8 @@ export function EpisodePublisherPage() {
       bodyHtml,
       podcastSummary: String(draft.podcastSummary || draft.excerpt || '').trim(),
       podcastTranscript: String(draft.podcastTranscript || ''),
+      audioSourceUrl: audio?.url || '',
+      podcastDeliveryAudioUrl: '',
       podcastAudioUrl: audio?.url || '',
       podcastRssEnclosureUrl: audio?.url || '',
       podcastAudioMediaId: audio?.id || '',

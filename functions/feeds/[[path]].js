@@ -95,3 +95,8 @@ function text(body, status) {
     },
   })
 }
+
+export async function onRequestHead(context) {
+  const response = await onRequestGet(context)
+  return new Response(null, { status: response.status, headers: response.headers })
+}

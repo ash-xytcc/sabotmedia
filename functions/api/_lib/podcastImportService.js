@@ -25,7 +25,12 @@ export async function importPodcastSource(db, {
   selectedKeys = null,
   syncExisting = true,
   importChannelSettings = true,
+  hostingMigration = false,
 }) {
+  const owner = await findPodcastShow(db, showId || feedUrl)
+  if (owner?.hostingMode === 'native' || (owner?.hostingMode === 'migrating' && !hostingMigration)) {
+    throw requestError('This show is managed by SabotPress; external RSS synchronization is disabled', 409)
+  }
   const feed = await fetchPodcastFeed(feedUrl)
   const existing = await listNativeEntries(db, { includeFuture: true })
   const show = showId ? await findPodcastShow(db, showId) : await findPodcastShow(db, feed.sourceUrl)
@@ -159,6 +164,10 @@ async function importEpisodes({ db, feed, show, episodes, existing, syncExisting
       podcastGuid: episode.guid,
     } : null
 
+    const ownership = await findPodcastShow(db, show.id)
+    if (ownership?.hostingMode === 'native' || (ownership?.hostingMode === 'migrating' && syncExisting)) {
+      throw requestError('Hosting ownership changed during import; no more external updates were applied', 409)
+    }
     const saved = await upsertNativeEntry(db, {
       ...(match || {}),
       id,

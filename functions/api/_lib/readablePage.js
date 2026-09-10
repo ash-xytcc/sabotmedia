@@ -1,3 +1,4 @@
+import { podcastAudioSource, podcastAudioPath, storedMediaKey } from '../../../shared/podcastHosting.js'
 import { findCampaignPieces } from '../../../src/lib/campaignPieces.js'
 import { articleSupplementHtml } from '../../../src/content/articleSupplements.js'
 import { buildCopy } from '../../../src/content/campaignBenefitCopy.js'
@@ -56,8 +57,10 @@ export async function buildReadingPage(context, url) {
     const translated = publicTranslations.find(t => t.code.toLowerCase() === lang.toLowerCase())
     if (lang !== 'en' && !translated) return missing()
     if (translated?.translation?.bodyHtml) post = { ...post, ...translated.translation }
+    const audioSource = podcastAudioSource(post)
+    const audioUrl = post.id && storedMediaKey(audioSource, url.origin) ? podcastAudioPath(post.id) : audioSource
     const languageNav = `<nav aria-label="Article languages">${link(base, 'English')} ${publicTranslations.map(t => link(t.href, t.label)).join(' ')}</nav>`
-    return { title: post.seoTitle || post.title, description:post.seoDescription || post.excerpt, image:post.featuredImage || post.heroImage, body: `${languageNav}<article lang="${e(lang)}" dir="auto"><h1>${e(post.title)}</h1>${paragraphs([post.author, post.publishedAt].filter(Boolean).join(' · '))}${translated ? paragraphs(translated.credit) : ''}${image({ imageUrl:post.featuredImage || post.heroImage, alt:post.featuredImageAlt || post.heroImageAlt })}${articleSupplementHtml(slug)}${readableBody(post.bodyHtml || post.body)}${media(post.podcastAudioUrl || post.audioSourceUrl, 'audio', 'Download audio')}${section('Audio summary',paragraphs(post.audioSummary))}${section('Transcript excerpt',paragraphs(post.transcriptExcerpt))}${section('Attachments',rows(post.relatedAssets).map(a => `<p>${link(a.url || a.src,a.title || a.label || 'Download attachment')}</p>`).join(''))}${link(post.sourceUrl, 'Original source')}${section('Related files', rows(post.relatedPrintLinks).map(i => `<p>${link(typeof i === 'string' ? i : i.url || i.href, i.title || i.label || 'Download')}</p>`).join(''))}</article>` }
+    return { title: post.seoTitle || post.title, description:post.seoDescription || post.excerpt, image:post.featuredImage || post.heroImage, body: `${languageNav}<article lang="${e(lang)}" dir="auto"><h1>${e(post.title)}</h1>${paragraphs([post.author, post.publishedAt].filter(Boolean).join(' · '))}${translated ? paragraphs(translated.credit) : ''}${image({ imageUrl:post.featuredImage || post.heroImage, alt:post.featuredImageAlt || post.heroImageAlt })}${articleSupplementHtml(slug)}${readableBody(post.bodyHtml || post.body)}${media(audioUrl, 'audio', 'Download audio')}${section('Audio summary',paragraphs(post.audioSummary))}${section('Transcript excerpt',paragraphs(post.transcriptExcerpt))}${section('Attachments',rows(post.relatedAssets).map(a => `<p>${link(a.url || a.src,a.title || a.label || 'Download attachment')}</p>`).join(''))}${link(post.sourceUrl, 'Original source')}${section('Related files', rows(post.relatedPrintLinks).map(i => `<p>${link(typeof i === 'string' ? i : i.url || i.href, i.title || i.label || 'Download')}</p>`).join(''))}</article>` }
   }
   if (infoRoutes.has(family)) {
     const { config } = await readPublicSiteConfig(db)

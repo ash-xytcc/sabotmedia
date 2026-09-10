@@ -18,6 +18,9 @@ export const PODCAST_SETTINGS_DEFAULTS = Object.freeze({
   ownerName: '',
   ownerEmail: '',
   copyright: '',
+  hostingMode: 'external',
+  hostingManifest: [],
+  hostingInventoryComplete: false,
   sourceFeedUrl: '',
   sourceFeedResolvedUrl: '',
   sourceFeedLastSyncedAt: '',
@@ -64,6 +67,9 @@ export function normalizePodcastSettings(input = {}) {
     ownerName: clean(value.ownerName, 200),
     ownerEmail: clean(value.ownerEmail, 254).toLowerCase(),
     copyright: clean(value.copyright, 500),
+    hostingMode: ['migrating', 'native'].includes(value.hostingMode) ? value.hostingMode : 'external',
+    hostingManifest: Array.isArray(value.hostingManifest) ? value.hostingManifest.map(String).slice(0, 1000) : [],
+    hostingInventoryComplete: value.hostingInventoryComplete === true,
     sourceFeedUrl,
     sourceFeedResolvedUrl: cleanUrl(value.sourceFeedResolvedUrl),
     sourceFeedLastSyncedAt: cleanDate(value.sourceFeedLastSyncedAt),
@@ -113,9 +119,16 @@ export async function upsertPodcastShow(db, input = {}, options = {}) {
   const now = new Date().toISOString()
   const usedSlugs = new Set(registry.shows.filter((show) => show !== existing).map((show) => show.slug))
   const proposedSlug = existing?.slug || uniqueShowSlug(slugifyShow(input.slug || input.podcastTitle || 'podcast'), usedSlugs)
+  const protectedHosting = {}
+  if (existing && !options.hostingTransition) {
+    for (const key of ['hostingMode', 'hostingManifest', 'hostingInventoryComplete', 'hostingCompletedAt']) {
+      if (key in existing) protectedHosting[key] = existing[key]
+    }
+  }
   const merged = normalizePodcastSettings({
     ...(existing || {}),
     ...input,
+    ...protectedHosting,
     id: existing?.id || proposedSlug,
     slug: proposedSlug,
     rssFeedUrl: podcastFeedUrl(proposedSlug),

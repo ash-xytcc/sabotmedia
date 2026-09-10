@@ -96,7 +96,7 @@ export function isPublicIpAddress(value) {
   return v6[0] >= 0x2000 && v6[0] <= 0x3fff
 }
 
-async function resolveHostnameWithDoh(hostname, fetcher) {
+export async function resolveHostnameWithDoh(hostname, fetcher) {
   const queries = [1, 28].map(async (type) => {
     const url = new URL(DOH_ENDPOINT)
     url.searchParams.set('name', hostname)

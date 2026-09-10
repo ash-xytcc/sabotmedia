@@ -1,3 +1,4 @@
+import { podcastAudioPath, podcastAudioSource, storedMediaKey } from '../../shared/podcastHosting.js'
 import { ensureNativePublicContentTable, listNativeEntries } from '../api/_lib/nativePublicContent.js'
 import { databaseUnavailable, getBoundDb } from '../api/_lib/database.js'
 import { podcastShowOwnsEntry, readPodcastShows } from '../api/_lib/podcastSettings.js'
@@ -84,7 +85,8 @@ export function podcastXmlResponse(body) {
 
 function itemXml(item, origin, channel = {}) {
   const delivery = getDeliveryAsset(item)
-  const audioUrl = absolutize(getAudioUrl(item), origin)
+  const source = podcastAudioSource(item)
+  const audioUrl = storedMediaKey(source, origin) ? `${origin}${podcastAudioPath(item.id)}` : absolutize(getAudioUrl(item), origin)
   const slug = String(item.slug || item.id || '').trim()
   const link = `${origin}/post/${encodeURIComponent(slug)}`
   const mimeType = getMimeType(item)
@@ -115,6 +117,8 @@ ${duration ? `      <itunes:duration>${escapeXml(duration)}</itunes:duration>\n`
 }
 
 function getAudioUrl(item = {}) {
+  const canonical = (item.relatedAssets || []).find(asset => asset.role === 'canonical-audio')
+  if (isPublicAudioUrl(canonical?.url)) return canonical.url
   const delivery = getDeliveryAsset(item)
   const deliveryUrl = delivery?.url || delivery?.publicUrl || delivery?.rssEnclosure?.url || item.podcastDeliveryAudioUrl || ''
   if (isPublicAudioUrl(deliveryUrl)) return String(deliveryUrl).trim()
@@ -142,6 +146,8 @@ function getFileSize(item = {}) {
 }
 
 function getDeliveryAsset(item = {}) {
+  const canonical = (item.relatedAssets || []).find(asset => asset.role === 'canonical-audio' && isPublicAudioUrl(asset.url))
+  if (canonical) return canonical
   return (Array.isArray(item.relatedAssets) ? item.relatedAssets : []).find((asset) => {
     const haystack = `${asset?.type || ''} ${asset?.role || ''} ${asset?.source || ''} ${asset?.mimeType || ''}`
     const url = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
@@ -200,4 +206,9 @@ function escapeXml(value = '') {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;')
+}
+
+export async function onRequestHead(context) {
+  const response = await onRequestGet(context)
+  return new Response(null, { status: response.status, headers: response.headers })
 }

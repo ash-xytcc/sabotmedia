@@ -18,6 +18,10 @@ export async function onRequestGet(context) {
   for (const source of SABOT_PODCAST_SOURCES) {
     try {
       const existing = await findPodcastShow(db, source.id) || await findPodcastShow(db, source.feedUrl)
+      if (['migrating', 'native'].includes(existing?.hostingMode)) {
+        results.push({ id: source.id, title: source.title, skipped: true, reason: 'SabotPress owns this show' })
+        continue
+      }
       const lastSynced = new Date(String(existing?.sourceFeedLastSyncedAt || '')).getTime()
       if (Number.isFinite(lastSynced) && Date.now() - lastSynced < MIN_REFRESH_INTERVAL_MS) {
         results.push({ id: source.id, title: source.title, skipped: true, reason: 'recently synced' })

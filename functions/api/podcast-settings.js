@@ -1,6 +1,6 @@
 import { inferActorFromRequest, writeAuditLog } from './_lib/auditLog.js'
 import { permissionHasCapability, resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
-import { readPodcastSettings, readPodcastShows, upsertPodcastShow } from './_lib/podcastSettings.js'
+import { findPodcastShow, readPodcastSettings, readPodcastShows, upsertPodcastShow } from './_lib/podcastSettings.js'
 
 export async function onRequestGet(context) {
   const permission = await resolvePublicSitePermission(context)
@@ -36,7 +36,14 @@ export async function onRequestPost(context) {
   try {
     const body = await context.request.json()
     const showId = String(body?.showId || body?.settings?.id || '').trim()
-    const result = await upsertPodcastShow(context.env.BF_DB, body?.settings || body || {}, {
+    const input = { ...(body?.settings || body || {}) }
+    const existing = showId ? await findPodcastShow(context.env.BF_DB, showId) : null
+    // Migration state can only be changed by the verified hosting workflow.
+    for (const key of ['hostingMode', 'hostingManifest', 'hostingInventoryComplete', 'hostingCompletedAt']) {
+      delete input[key]
+      if (existing && key in existing) input[key] = existing[key]
+    }
+    const result = await upsertPodcastShow(context.env.BF_DB, input, {
       showId,
       makeDefault: Boolean(body?.makeDefault),
     })

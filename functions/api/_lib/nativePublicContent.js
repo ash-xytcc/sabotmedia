@@ -1,3 +1,5 @@
+import { podcastAudioSource, storedMediaKey } from '../../../shared/podcastHosting.js'
+import { podcastEntryBelongsToShow } from '../../../shared/podcastShowMembership.js'
 const NATIVE_CONTENT_SCHEMA_VERSION = 3
 
 function normalizeBoolean(value, fallback = true) {
@@ -357,6 +359,18 @@ export async function upsertNativeEntry(db, entry) {
     updatedAt: new Date().toISOString(),
     publishedAt: computePublishedAt(entry),
   })
+
+  if (normalized.contentType === 'podcast' && ['published', 'scheduled'].includes(normalized.status)) {
+    const table = await db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'site_settings'").first()
+    if (table) {
+      const row = await db.prepare('SELECT value_json FROM site_settings WHERE setting_key = ?').bind('podcast-shows-v1').first()
+      const shows = row ? JSON.parse(row.value_json).shows || [] : []
+      const hostedShow = shows.find(show => show.hostingMode === 'native' && podcastEntryBelongsToShow(normalized, show))
+      if (hostedShow && (!storedMediaKey(podcastAudioSource(normalized)) || !Number(normalized.podcastFileSize))) {
+        throw new Error('This show is hosted by SabotPress. Choose an uploaded audio file with a known size before publishing.')
+      }
+    }
+  }
 
   const contentJson = JSON.stringify(normalized)
 

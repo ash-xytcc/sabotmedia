@@ -1,3 +1,4 @@
+import { PodcastHostingPanel } from './PodcastHostingPanel'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AdminFrame } from './AdminRail'
@@ -129,7 +130,7 @@ function PodcastAdminIndexPage() {
         <div className="wp-screen-header">
           <div>
             <h1>Podcasts</h1>
-            <p className="description">Each podcast is its own show with its own metadata, source RSS archive, episodes, and canonical Sabot RSS feed.</p>
+            <p className="description">Host, publish and measure each podcast in SabotPress, with a separate RSS feed for every show.</p>
           </div>
           <div className="review-card__actions">
             <Link className="button button--primary" to={`${adminRoutes.podcasts}?episode=new`}>New Episode</Link>
@@ -181,6 +182,8 @@ function PodcastAdminIndexPage() {
           </div>
           <p><Link className="button button--primary" to={`${adminRoutes.podcastSettings}?new=1`}>Add Podcast</Link></p>
         </section>
+
+        {shows.map(show => <PodcastHostingPanel key={`hosting-${show.id}`} show={show} />)}
 
         {showGroups.map(({ show, episodes }) => {
           const showDisplay = showTitleDisplayValue(episodes)
