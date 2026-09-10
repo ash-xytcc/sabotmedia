@@ -62,7 +62,7 @@ test('login supports individual identity first and preserves explicit emergency 
 })
 
 test('edge middleware enforces capability-specific writes', () => {
-  const middleware = fs.readFileSync(new URL('../functions/_middleware.js', import.meta.url), 'utf8')
+  const middleware = fs.readFileSync(new URL('../functions/_middleware-core.js', import.meta.url), 'utf8')
   for (const capability of ['users:manage', 'site:manage', 'content:write', 'media:write', 'publishing:write']) {
     assert.match(middleware, new RegExp(capability.replace(':', '\\:')))
   }
