@@ -52,6 +52,7 @@ export function PublicFeedsPage() {
     async function boot() {
       setState('loading')
       setErrors([])
+      // Load persisted public feed configuration alongside the authoritative live feed manifest.
       const [settingsResult, manifestResult] = await Promise.allSettled([
         loadFeedSettingsAsync(),
         loadFeedManifest(),
