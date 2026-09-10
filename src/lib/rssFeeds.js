@@ -41,9 +41,13 @@ function sourceFormatHint(item, settings) {
   return ''
 }
 
+export function isAudiozineItem(item = {}) {
+  return /\baudiozine\b/i.test(`${item?.title || ''} ${item?.sourceLabel || ''} ${item?.sourceNotes || ''}`)
+}
+
 function titleFormatHint(item) {
   const title = String(item?.title || '').trim().toLowerCase()
-  if (/\baudiozine\b/.test(title)) return 'audio'
+  if (isAudiozineItem(item)) return 'audio'
   if (/\bzine\b/.test(title)) return 'zine'
   return ''
 }
@@ -59,7 +63,7 @@ function assetLooksAudio(asset) {
 
 function hasLegacyAudio(item) {
   if (String(item?.audioSourceUrl || '').trim()) return true
-  if (/\baudiozine\b/i.test(`${item?.title || ''} ${item?.sourceLabel || ''}`)) return true
+  if (isAudiozineItem(item)) return true
   return (Array.isArray(item?.relatedAssets) ? item.relatedAssets : []).some(assetLooksAudio)
 }
 
@@ -95,6 +99,10 @@ function projectFormat(project) {
 }
 
 export function resolveFeedProject(item, settings = loadFeedSettings()) {
+  // Audiozines are a Molotov Now publishing lane even when older imports still carry
+  // Black Cat or generic WordPress taxonomy. Format stays audio; project/show home is Molotov Now.
+  if (isAudiozineItem(item)) return 'Molotov Now!'
+
   const storedFormat = normalizedKnownFormat(item?.contentType || item?.type, settings)
   const sourceFormat = sourceFormatHint(item, settings)
   const explicitFormat = titleFormatHint(item) || (hasLegacyAudio(item) ? 'audio' : '')
@@ -109,7 +117,7 @@ export function resolveFeedFormat(item, settings = loadFeedSettings()) {
   if (storedFormat === 'podcast' || hasPodcastMedia(item)) return 'podcast'
 
   // Explicit object identity answers "what is this?" before project identity answers
-  // "where does it live?". A Black Cat audiozine is audio, and a Black Cat zine is a zine.
+  // "where does it live?". Audiozines are audio as a format but live under Molotov Now.
   const titleHint = titleFormatHint(item)
   if (titleHint) return titleHint
   if (hasLegacyAudio(item)) return 'audio'
