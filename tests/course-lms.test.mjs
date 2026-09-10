@@ -326,7 +326,7 @@ test('recovery expiry is enforced and settings need admin permission', async () 
   )
 })
 
- test('legacy stored lesson aliases preserve authored prose and restore locked mapping', () => {
+test('legacy stored lesson aliases preserve authored prose and restore locked mapping', () => {
   const legacy = structuredClone(seed)
   delete legacy.schemaVersion
   delete legacy.sections
@@ -388,14 +388,17 @@ test('legacy archived content never falls back to the public seed', async () => 
   await f.env.BF_DB.prepare('INSERT INTO course_content(slug,content_json) VALUES(?,?)').bind(seed.slug,JSON.stringify(old)).run()
   assert.equal(await readCourse(f.env.BF_DB,seed.slug),null)
 })
-test('editor review list includes pending status without exposing it or draft answers publicly', async () => {
+test('editor review list includes exact pending submissions without exposing them publicly', async () => {
   const f=await fixture(),cookie=await unlock(f,'puscii','edit')
   await req(f,'/api/course-contributors',{id:'puscii',revision:0,item:{sharedAnswer:'Draft answer'}},cookie)
   const editorial=await req(f,'/api/course-contributors',null,f.cookie)
-  assert.equal(editorial.data.items.find(x=>x.id==='puscii').status,'review')
+  const item=editorial.data.items.find(x=>x.id==='puscii')
+  assert.equal(item.status,'review')
+  assert.equal(item.pendingCount,1)
+  assert.ok(JSON.stringify(item.pending).includes('Draft answer'))
   const publicList=await req(f,'/api/course-contributors')
   assert.equal(publicList.data.items.find(x=>x.id==='puscii').status,undefined)
-  assert.ok(!JSON.stringify(editorial.data).includes('Draft answer'))
+  assert.ok(!JSON.stringify(publicList.data).includes('Draft answer'))
 })
 test('teach-back needs explicit confirmation and a nonempty reflection',()=>{
   const a=seed.activities.find(x=>x.type==='teach-back')
