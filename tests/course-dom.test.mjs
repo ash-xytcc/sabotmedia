@@ -161,3 +161,15 @@ test('blog recovery completion shows only after required activities and remains 
  a.location.hash='#blog-recovery';a.events.hashchange();assert.equal(path.querySelector('[data-path-success]').hidden,false)
  path.querySelector('[data-path-choice="other"]').onclick();assert.equal(path.querySelector('[data-path-success]').hidden,true)
 })
+test('recovery navigation waits for destination and follows the self-host step order without empty bullets',()=>{
+ const a=mount(new Map(),'#blog-recovery'),path=a.document.querySelector('[data-pathway]')
+ const visible=()=>[...path.querySelectorAll('[data-path-step]')].filter((n)=>!n.parentElement.hidden).map((n)=>n.dataset.pathStep)
+ assert.deepEqual(visible(),['blog-xml','blog-destination'])
+ path.querySelector('[data-path-choice="self-hosted"]').onclick()
+ assert.deepEqual(visible(),seed.pathways[0].variants.find((v)=>v.id==='self-hosted').steps)
+})
+test('direct recovery step links select a compatible trail and show the requested module',()=>{
+ const a=mount(new Map(),'#blog-selfhost')
+ assert.equal(a.document.querySelector('[data-path-module="blog-selfhost"]').hidden,false)
+ assert.match(a.document.querySelector('[data-path-status]').textContent,/I want to self-host it/)
+})

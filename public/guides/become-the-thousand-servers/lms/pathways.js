@@ -13,12 +13,15 @@ export function mountPathways(c,getState,save,refresh) {
   function update() {
     for(const el of elements) {
       const p=c.pathways.find((p)=>p.id===el.dataset.pathway),s=getState(),saved=s.pathways[p.id]||{},variant=p.variants.find((v)=>v.id===saved.choice)
-      const ids=variant?.steps||[...new Set(p.variants.flatMap((v)=>v.steps))],selected=ids.includes(saved.lastStep)?saved.lastStep:ids[0]
+      const common=[]
+      for(const id of p.variants[0].steps){if(p.variants.every((v)=>v.steps[common.length]===id))common.push(id);else break}
+      const ids=variant?.steps||common,selected=ids.includes(saved.lastStep)?saved.lastStep:ids[0]
       const steps=variant?pathwaySteps(c,p,variant.id):[]
       const done=steps.filter((m)=>!m.unavailable&&m.activities.length&&m.activities.every((id)=>activityPassed(c,s,id))).length
       el.querySelector('[data-path-status]').textContent=variant?`${variant.title} · ${done}/${steps.length} steps self-confirmed. Recovery progress is separate from the broader course.`:'Choose a destination after reading the XML step. You can change your choice without deleting work.'
       el.querySelectorAll('[data-path-choice]').forEach((b)=>b.setAttribute('aria-pressed',String(b.dataset.pathChoice===saved.choice)))
-      el.querySelectorAll('[data-path-step]').forEach((a)=>{a.hidden=!ids.includes(a.dataset.pathStep);a.setAttribute('aria-current',a.dataset.pathStep===selected?'step':'false')})
+      el.querySelectorAll('[data-path-step]').forEach((a)=>{a.hidden=!ids.includes(a.dataset.pathStep);a.parentElement.hidden=a.hidden;a.setAttribute('aria-current',a.dataset.pathStep===selected?'step':'false')})
+      for(const id of ids){const link=el.querySelector(`[data-path-step="${id}"]`);if(link)link.parentElement.parentElement.append(link.parentElement)}
       el.querySelectorAll('[data-path-module]').forEach((m)=>{m.hidden=m.dataset.pathModule!==selected;const note=m.querySelector('[data-path-notes]');if(note&&document.activeElement!==note)note.value=saved.notes?.[m.dataset.pathModule]||''})
       const finished=pathwayComplete(c,s,p,saved.choice)
       el.querySelector('[data-path-success]').hidden=!finished
@@ -26,7 +29,7 @@ export function mountPathways(c,getState,save,refresh) {
       nav.hidden=current>=ids.length-1
       nav.textContent=current===0&&!variant?'Next: choose a destination':'Next step'
       nav.onclick=()=>go(p,ids[current+1])
-      el.querySelector('[data-path-position]').textContent=`Step ${current+1} of ${ids.length}${variant?'':' (all destinations shown until you choose)'}`
+      el.querySelector('[data-path-position]').textContent=`Step ${current+1} of ${ids.length}${variant?'':' (choose a destination to see the rest)'}`
       el.querySelectorAll('[data-path-step]').forEach((a)=>{const id=a.dataset.pathStep,m=c.modules.find((m)=>m.id===id);const badge=a.querySelector('[data-step-status]');if(badge)badge.textContent=m?.activities.length&&m.activities.every((id)=>activityPassed(c,s,id))?' · done':''})
     }
   }

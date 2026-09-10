@@ -44,11 +44,11 @@ The alternative-CMS/static route is an honest preservation/handoff boundary, not
 
 Untouched baseline `eb429b9447b0497c2cd5af75b1f209993697797c`: 480 tests passed, zero failed.
 
-Implementation full suite: 494 tests passed, zero failed, skipped or cancelled. Fourteen added tests cover the task map, branch completion, checkpoint requirements, independent completion state, history/version handling, migration/revision preservation, draft/private canaries, public and offline HTTP output, advisory testing placeholders, discovery source boundaries and DOM persistence/continuation.
+Implementation full suite: 496 tests passed, zero failed, skipped or cancelled. Sixteen added tests cover the task map, branch completion, checkpoint requirements, independent completion state, history/version handling, migration/revision preservation, draft/private canaries, public and offline HTTP output, advisory testing placeholders, discovery source boundaries and DOM persistence/continuation.
 
 Production build passed (prebuild generators plus Vite). The existing large-main-bundle warning remains. Generated unrelated reading pages are build output and are not part of the focused source commit.
 
-The cloud browser could not open the loopback preview (`ERR_BLOCKED_BY_CLIENT`). Local isolated VM/DOM tests and HTTP tests ran successfully. Production browser verification is recorded in the delivery report after deployment. Automated checklists simulate confirmation to test software behavior; they are not evidence that an actual blog was recovered.
+The cloud browser could not open the loopback preview (`ERR_BLOCKED_BY_CLIENT`). Local isolated VM/DOM tests and HTTP tests ran successfully. Production HTTP verification confirmed the new pathway and offline HTML, noindex/nofollow/noarchive headers, and exact preservation of existing published lessons, sections, activities and prose. A live browser check found a self-host navigation ordering defect; the follow-up fix aligns visible steps with the selected trail and keeps the initial trail at XML/destination until a choice is made. Regression tests cover both ordering and direct step links. Final browser verification is recorded in the delivery report. Automated checklists simulate confirmation to test software behavior; they are not evidence that an actual blog was recovered.
 
 ## Human acceptance execution sheet — NOT EXECUTED
 

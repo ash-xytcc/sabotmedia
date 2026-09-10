@@ -1,4 +1,4 @@
-import { mountPathways } from './pathways.js?v=blog-1'
+import { mountPathways } from './pathways.js?v=blog-2'
 import { mountInlineEditor } from './editorial.js'
 import { KEY, blank, validateProgress, evaluate, complete, unlocked, attemptFeedback } from './progress.js?v=blog-1'
 import { mountRecoveryCard } from './recovery-card.js?v=audit-1'
@@ -173,7 +173,7 @@ function route() {
   if(path && path.id!==key) {
     state.pathways[path.id]={...(state.pathways[path.id]||{}),lastStep:key}
     const selected=path.variants.find((v)=>v.id===state.pathways[path.id].choice)
-    if(selected&&!selected.steps.includes(key))state.pathways[path.id].choice=path.variants.find((v)=>v.steps.includes(key))?.id||''
+    if((selected&&!selected.steps.includes(key))||(!selected&&!path.variants.every((v)=>v.steps.includes(key))))state.pathways[path.id].choice=path.variants.find((v)=>v.steps.includes(key))?.id||''
     save()
   }
   const u = units.find((u) => (u.slug || u.id) === key)
