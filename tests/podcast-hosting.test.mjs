@@ -125,4 +125,6 @@ test('native output removes the automatic Acast footer while preserving authored
   const { withoutAcastFooter } = await import('../shared/podcastHosting.js')
   const footer = `<p style='color:grey'>Hosted on Acast. See <a href='https://acast.com/privacy'>acast.com/privacy</a> for more information.</p>`
   assert.equal(withoutAcastFooter('<p>We left Acast.</p>' + footer), '<p>We left Acast.</p>')
+  assert.equal(withoutAcastFooter('Solidarity Hosted on Acast. See acast.com/pri'), 'Solidarity')
+  assert.equal(withoutAcastFooter('Solidarity Hosted on Acast. See acast'), 'Solidarity')
 })
