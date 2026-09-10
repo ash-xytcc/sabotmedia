@@ -4,6 +4,12 @@ import { ensureNativePublicContentTable, listNativeEntries } from '../api/_lib/n
 import { databaseUnavailable, getBoundDb } from '../api/_lib/database.js'
 import { podcastShowOwnsEntry, readPodcastShows } from '../api/_lib/podcastSettings.js'
 
+const STATIC_PODCAST_COVER_FILES = Object.freeze({
+  'molotov-now': 'molotov-now.jpg',
+  'the-child-and-its-enemies': 'the-child-and-its-enemies.jpg',
+  'get-to-know-your-neighborhood': 'get-to-know-your-neighborhood.jpg',
+})
+
 export async function onRequestGet(context) {
   try {
     const db = getBoundDb(context)
@@ -47,14 +53,26 @@ export async function getPodcastFeedItems(db, show = null) {
     .sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0).getTime() - new Date(a.publishedAt || a.updatedAt || 0).getTime())
 }
 
+export function staticPodcastCoverPath(showKey = '') {
+  const slug = String(showKey || '').trim().toLowerCase()
+  const file = STATIC_PODCAST_COVER_FILES[slug]
+  return file ? `/podcast-covers/${file}` : ''
+}
+
 export function podcastChannelCoverUrl(settings = {}, origin = 'https://sabot.media') {
   const cleanOrigin = String(origin || 'https://sabot.media').replace(/\/+$/, '')
+  const staticPath = staticPodcastCoverPath(settings.slug || settings.id)
+
+  // Podcast directories are automated clients, and the site's dynamic Function
+  // routes can sit behind Cloudflare browser challenges. Current Sabot shows use
+  // ordinary static JPEGs so cover retrieval never depends on JS/challenge support.
+  if (staticPath) return `${cleanOrigin}${staticPath}`
+
   const source = safeAbsoluteUrl(settings.defaultCoverArt, cleanOrigin)
   if (!source) return ''
 
-  // A migrated Sabot cover should have one canonical public URL regardless of
-  // which hostname the migration request happened to use. This also keeps the
-  // object-storage key/query string out of directory-facing RSS.
+  // Preserve the dynamic canonical route as a fallback for shows that have not
+  // yet been assigned a static directory cover.
   if (migratedPodcastMediaKey(source, cleanOrigin)) {
     const path = podcastCoverPath(settings.slug || settings.id)
     if (path) return `${cleanOrigin}${path}`
@@ -127,7 +145,8 @@ function itemXml(item, origin, channel = {}) {
   const episode = String(item.podcastEpisodeNumber || '').trim()
   const season = String(item.podcastSeason || '').trim()
   const episodeType = String(item.podcastEpisodeType || delivery?.podcastEpisodeType || '').trim()
-  const coverArt = safeAbsoluteUrl(item.podcastCoverImage || item.featuredImage || item.heroImage || channel.coverArt, origin)
+  const episodeCover = safeAbsoluteUrl(item.podcastCoverImage || item.featuredImage || item.heroImage, origin)
+  const coverArt = episodeCover && !migratedPodcastMediaKey(episodeCover, origin) ? episodeCover : channel.coverArt
   const guid = String(item.sourceExternalId || delivery?.podcastGuid || item.id || link).trim()
   const bodyHtml = String(item.bodyHtml || item.body || '').trim()
 
