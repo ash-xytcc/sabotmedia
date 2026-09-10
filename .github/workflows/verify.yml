@@ -31,24 +31,35 @@ jobs:
         run: |
           set -o pipefail
           npm run build 2>&1 | tee build-output.log
-      - name: Probe live podcast cover endpoints
+      - name: Probe live podcast crawler endpoints
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           : > podcast-cover-probe.log
-          for slug in molotov-now the-child-and-its-enemies get-to-know-your-neighborhood; do
-            echo "=== $slug ===" | tee -a podcast-cover-probe.log
+          probe() {
+            label="$1"
+            url="$2"
+            safe="$(printf '%s' "$label" | tr -cs 'A-Za-z0-9._-' '_')"
+            echo "=== $label ===" | tee -a podcast-cover-probe.log
             curl --location --silent --show-error \
-              --output "/tmp/${slug}.cover" \
-              --dump-header "/tmp/${slug}.headers" \
+              --output "/tmp/${safe}.body" \
+              --dump-header "/tmp/${safe}.headers" \
               --write-out 'status=%{http_code} content_type=%{content_type} bytes=%{size_download} final_url=%{url_effective}\n' \
-              "https://sabot.media/podcast-covers/${slug}" | tee -a podcast-cover-probe.log || true
-            sed -n '1,20p' "/tmp/${slug}.headers" | tee -a podcast-cover-probe.log || true
-            file "/tmp/${slug}.cover" | tee -a podcast-cover-probe.log || true
+              "$url" | tee -a podcast-cover-probe.log || true
+            sed -n '1,20p' "/tmp/${safe}.headers" | tee -a podcast-cover-probe.log || true
+            file "/tmp/${safe}.body" | tee -a podcast-cover-probe.log || true
             echo | tee -a podcast-cover-probe.log
-          done
+          }
+          probe "feed molotov-now" "https://sabot.media/feeds/podcasts/molotov-now.xml"
+          probe "feed the-child-and-its-enemies" "https://sabot.media/feeds/podcasts/the-child-and-its-enemies.xml"
+          probe "feed get-to-know-your-neighborhood" "https://sabot.media/feeds/podcasts/get-to-know-your-neighborhood.xml"
+          probe "cover molotov-now" "https://sabot.media/podcast-covers/molotov-now"
+          probe "cover the-child-and-its-enemies" "https://sabot.media/podcast-covers/the-child-and-its-enemies"
+          probe "cover get-to-know-your-neighborhood" "https://sabot.media/podcast-covers/get-to-know-your-neighborhood"
+          probe "static project logo" "https://sabot.media/project-logos/molotov-now.svg"
+          probe "robots" "https://sabot.media/robots.txt"
       - name: Upload verification output
         if: always()
         uses: actions/upload-artifact@v4
