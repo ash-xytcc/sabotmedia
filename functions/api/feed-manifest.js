@@ -37,7 +37,7 @@ export async function onRequestGet(context) {
     const podcastFiles = podcastShows.map((show) => show.feedPath)
     const podcastDefaultAlias = podcastShows.length ? 'podcasts/all.xml' : ''
     const files = [...new Set([
-      ...Object.keys(runtime.bundle || {}),
+      ...Object.keys(runtime.bundle || {}).filter((name) => !name.startsWith('topics/')),
       ...(podcastDefaultAlias ? [podcastDefaultAlias] : []),
       ...podcastFiles,
       ...campaigns.map((campaign) => `campaigns/${campaign.slug}.xml`),
