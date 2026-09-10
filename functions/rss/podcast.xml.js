@@ -1,4 +1,5 @@
 import { podcastAudioPath, podcastAudioSource, storedMediaKey } from '../../shared/podcastHosting.js'
+import { isAudiozineItem } from '../../src/lib/rssFeeds.js'
 import { ensureNativePublicContentTable, listNativeEntries } from '../api/_lib/nativePublicContent.js'
 import { databaseUnavailable, getBoundDb } from '../api/_lib/database.js'
 import { podcastShowOwnsEntry, readPodcastShows } from '../api/_lib/podcastSettings.js'
@@ -24,13 +25,24 @@ export async function onRequestGet(context) {
   }
 }
 
+export function podcastFeedOwnsEntry(show, entry) {
+  if (!entry) return false
+  if (entry?.contentType === 'podcast') return !show || podcastShowOwnsEntry(show, entry)
+
+  // Audiozines are part of Molotov Now even when legacy imports still carry print/
+  // Black Cat metadata. They remain "audio" in general format feeds, but the actual
+  // Molotov show RSS must include them because that is their subscription home.
+  if (!isAudiozineItem(entry) || !show) return false
+  const showIdentity = `${show?.id || ''} ${show?.slug || ''} ${show?.podcastTitle || ''}`.toLowerCase()
+  return /\bmolotov[\s-]+now\b/.test(showIdentity)
+}
+
 export async function getPodcastFeedItems(db, show = null) {
   if (!db) throw new Error('BF_DB binding is required for podcast RSS')
   await ensureNativePublicContentTable(db)
   const entries = await listNativeEntries(db, {})
   return entries
-    .filter((entry) => entry?.contentType === 'podcast')
-    .filter((entry) => !show || podcastShowOwnsEntry(show, entry))
+    .filter((entry) => podcastFeedOwnsEntry(show, entry))
     .filter((entry) => isPublicAudioUrl(getAudioUrl(entry)))
     .sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0).getTime() - new Date(a.publishedAt || a.updatedAt || 0).getTime())
 }
