@@ -2,15 +2,15 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
 
-const runtime = fs.readFileSync(new URL('../src/adminFileMediaInsert.js', import.meta.url), 'utf8')
+const runtime = fs.readFileSync(new URL('../src/adminEditorInsertionController.js', import.meta.url), 'utf8')
 
-test('body media picker bookmarks the editor caret before the modal steals focus', () => {
+test('body media picker bookmarks the editor location before the modal steals focus', () => {
   assert.match(runtime, /native-content-editor__add-media/)
-  assert.match(runtime, /captureEditorSelection\(\{ withMarker: true \}\)/)
-  assert.match(runtime, /CARET_MARKER_ATTR = 'data-sabot-media-caret'/)
-  assert.match(runtime, /range\.setStartBefore\(caretMarker\)/)
+  assert.match(runtime, /captureVisualMediaBookmark\(\)/)
+  assert.match(runtime, /boundaryIndex/)
+  assert.match(runtime, /textOffset/)
   assert.match(runtime, /pendingBodyMediaPick = true/)
-  assert.match(runtime, /savedVisualRange = range\.cloneRange\(\)/)
+  assert.match(runtime, /mediaBookmark = visualEditor\(\) \? captureVisualMediaBookmark\(\) : captureTextBookmark\(\)/)
 })
 
 test('React Media Library selection is intercepted before the image-only editor handler', () => {
@@ -21,7 +21,8 @@ test('React Media Library selection is intercepted before the image-only editor 
   assert.match(runtime, /stopImmediatePropagation/)
 })
 
-test('featured-image selection is left to the normal React picker', () => {
-  assert.match(runtime, /choose from media/)
+test('non-body media selections are left to the normal React picker', () => {
+  assert.match(runtime, /if \(!pendingBodyMediaPick\) return/)
+  assert.match(runtime, /if \(!modal \|\| label !== 'use selected media'\) return/)
   assert.match(runtime, /pendingBodyMediaPick = false/)
 })
