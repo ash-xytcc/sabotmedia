@@ -23,12 +23,14 @@ jobs:
         run: npm ci
       - name: Run regression tests
         run: npm test 2>&1 | tee test-output.log
-      - name: Upload failed test output
-        if: failure()
+      - name: Build production bundle
+        run: npm run build 2>&1 | tee build-output.log
+      - name: Upload verification output
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: verify-test-output
-          path: test-output.log
+          name: verify-output
+          path: |
+            test-output.log
+            build-output.log
           retention-days: 7
-      - name: Build production bundle
-        run: npm run build
