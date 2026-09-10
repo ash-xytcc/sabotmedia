@@ -1,0 +1,100 @@
+name: Podcast live smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'functions/api/podcasts/audio.js'
+      - 'functions/rss/podcast.xml.js'
+      - 'shared/podcastHosting.js'
+      - 'tests/podcast-audio-delivery.test.mjs'
+      - '.github/workflows/podcast-live-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  live-podcast-delivery:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe one live Molotov enclosure end to end
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          feed_url='https://sabot.media/feeds/podcasts/molotov-now.xml'
+          user_agent='Sabot Podcast Smoke/1.0'
+
+          echo '== RSS feed =='
+          feed_status="$(curl --location --silent --show-error \
+            --user-agent "$user_agent" \
+            --output /tmp/molotov.xml \
+            --dump-header /tmp/feed.headers \
+            --write-out '%{http_code}' \
+            "$feed_url")"
+          cat /tmp/feed.headers
+          echo "status=$feed_status"
+          test "$feed_status" = '200'
+          grep -Eqi '^content-type: .*(rss|xml)' /tmp/feed.headers
+
+          audio_url="$(python - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse('/tmp/molotov.xml').getroot()
+          enclosure = root.find('./channel/item/enclosure')
+          if enclosure is None or not enclosure.get('url'):
+              raise SystemExit('No episode enclosure found in Molotov Now RSS')
+          print(enclosure.get('url'))
+          PY
+          )"
+          echo "enclosure=$audio_url"
+
+          echo '== HEAD =='
+          head_meta="$(curl --location --silent --show-error --head \
+            --user-agent "$user_agent" \
+            --output /dev/null \
+            --write-out $'status=%{http_code}\ncontent_type=%{content_type}\ncontent_length=%header{content-length}\naccept_ranges=%header{accept-ranges}\n' \
+            "$audio_url")"
+          printf '%s\n' "$head_meta"
+          head_status="$(printf '%s\n' "$head_meta" | sed -n 's/^status=//p')"
+          head_type="$(printf '%s\n' "$head_meta" | sed -n 's/^content_type=//p')"
+          head_length="$(printf '%s\n' "$head_meta" | sed -n 's/^content_length=//p' | tr -d '\r')"
+          head_ranges="$(printf '%s\n' "$head_meta" | sed -n 's/^accept_ranges=//p' | tr -d '\r')"
+          test "$head_status" = '200'
+          [[ "$head_type" == audio/* ]]
+          [[ "$head_length" =~ ^[0-9]+$ && "$head_length" -gt 0 ]]
+          test "$head_ranges" = 'bytes'
+
+          echo '== ordinary GET =='
+          get_meta="$(curl --location --silent --show-error \
+            --user-agent "$user_agent" \
+            --max-time 180 \
+            --output /dev/null \
+            --write-out $'status=%{http_code}\ncontent_type=%{content_type}\nbytes=%{size_download}\n' \
+            "$audio_url")"
+          printf '%s\n' "$get_meta"
+          get_status="$(printf '%s\n' "$get_meta" | sed -n 's/^status=//p')"
+          get_type="$(printf '%s\n' "$get_meta" | sed -n 's/^content_type=//p')"
+          get_bytes="$(printf '%s\n' "$get_meta" | sed -n 's/^bytes=//p')"
+          test "$get_status" = '200'
+          [[ "$get_type" == audio/* ]]
+          test "$get_bytes" = "$head_length"
+
+          echo '== byte range GET =='
+          range_meta="$(curl --location --silent --show-error \
+            --user-agent "$user_agent" \
+            --header 'Range: bytes=0-1023' \
+            --output /tmp/audio-range.bin \
+            --write-out $'status=%{http_code}\ncontent_type=%{content_type}\ncontent_range=%header{content-range}\nbytes=%{size_download}\n' \
+            "$audio_url")"
+          printf '%s\n' "$range_meta"
+          range_status="$(printf '%s\n' "$range_meta" | sed -n 's/^status=//p')"
+          range_type="$(printf '%s\n' "$range_meta" | sed -n 's/^content_type=//p')"
+          content_range="$(printf '%s\n' "$range_meta" | sed -n 's/^content_range=//p' | tr -d '\r')"
+          range_bytes="$(printf '%s\n' "$range_meta" | sed -n 's/^bytes=//p')"
+          test "$range_status" = '206'
+          [[ "$range_type" == audio/* ]]
+          [[ "$content_range" == bytes\ 0-1023/* ]]
+          test "$range_bytes" = '1024'
+
+          echo 'Podcast live delivery checks passed.'
