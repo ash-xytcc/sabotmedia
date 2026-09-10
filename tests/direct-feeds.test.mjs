@@ -107,25 +107,26 @@ test('format feeds recover editorial formats from lossy migration buckets', () =
       contentType: 'print', sourceKind: 'imported', sourceLabel: 'post', primaryProject: 'Black Cat Distro',
     },
     {
-      id: 'dispatch', slug: 'dispatch', title: 'New field dispatch', status: 'published',
+      id: 'dispatch-storage', slug: 'dispatch-storage', title: 'New article stored as dispatch', status: 'published',
       contentType: 'dispatch', sourceKind: 'manual', primaryProject: 'The Harbor Rat Report',
     },
   ]
 
-  assert.deepEqual(items.map((item) => resolveFeedFormat(item)), ['article', 'newsletter', 'comic', 'print', 'dispatch'])
+  assert.deepEqual(items.map((item) => resolveFeedFormat(item)), ['article', 'newsletter', 'comic', 'print', 'article'])
 
   const bundle = buildRssBundle(items)
   assert.match(bundle['formats/article.xml'], /Imported article/)
-  assert.doesNotMatch(bundle['formats/article.xml'], /The Communique Volume 13|The Saboteurs #33/)
+  assert.match(bundle['formats/article.xml'], /New article stored as dispatch/)
+  assert.doesNotMatch(bundle['formats/article.xml'], /The Communique Volume 13|The Saboteurs #33|A Black Cat pamphlet/)
   assert.match(bundle['formats/newsletter.xml'], /The Communique Volume 13/)
   assert.match(bundle['formats/comic.xml'], /The Saboteurs #33/)
   assert.match(bundle['formats/print.xml'], /A Black Cat pamphlet/)
-  assert.match(bundle['formats/dispatch.xml'], /New field dispatch/)
+  assert.equal(bundle['formats/dispatch.xml'], undefined)
   assert.match(bundle['all-content.xml'], /Imported article/)
   assert.match(bundle['all-content.xml'], /The Communique Volume 13/)
   assert.match(bundle['all-content.xml'], /The Saboteurs #33/)
   assert.match(bundle['all-content.xml'], /A Black Cat pamphlet/)
-  assert.match(bundle['all-content.xml'], /New field dispatch/)
+  assert.match(bundle['all-content.xml'], /New article stored as dispatch/)
 })
 
 test('manifest terms are derived from the same taxonomy as generated feeds', () => {
