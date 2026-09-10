@@ -14,17 +14,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Run regression tests
-        run: npm test 2>&1 | tee test-output.log
+        shell: bash
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-output.log
       - name: Build production bundle
-        run: npm run build 2>&1 | tee build-output.log
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee build-output.log
       - name: Upload verification output
         if: always()
         uses: actions/upload-artifact@v4
