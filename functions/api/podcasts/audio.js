@@ -1,6 +1,7 @@
 import { getNativeEntry } from '../_lib/nativePublicContent.js'
 import { detectMediaStorageBinding } from '../media/files.js'
-import { podcastAudioSource, podcastRange, storedMediaKey } from '../../../shared/podcastHosting.js'
+import { migratedPodcastMediaKey, podcastAudioSource, podcastRange } from '../../../shared/podcastHosting.js'
+import { isAudiozineItem } from '../../../src/lib/rssFeeds.js'
 import { recordPodcastDownload } from '../_lib/podcastAnalytics.js'
 
 export async function onRequestGet(context) { return serve(context, false) }
@@ -14,8 +15,8 @@ async function serve(context, headOnly) {
   if (!db || !binding) return failure('Podcast storage unavailable', 503)
   const url = new URL(context.request.url)
   const entry = await getNativeEntry(db, url.searchParams.get('id') || '')
-  if (!entry || entry.contentType !== 'podcast') return failure('Episode not found', 404)
-  const key = storedMediaKey(podcastAudioSource(entry), url.origin)
+  if (!entry || (entry.contentType !== 'podcast' && !isAudiozineItem(entry))) return failure('Episode not found', 404)
+  const key = migratedPodcastMediaKey(podcastAudioSource(entry), url.origin)
   if (!key) return failure('Episode audio has not been moved to SabotPress', 409)
   const bucket = context.env[binding]
   const object = await bucket.head(key)
