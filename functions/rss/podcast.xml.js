@@ -1,4 +1,4 @@
-import { podcastAudioPath, podcastAudioSource, storedMediaKey } from '../../shared/podcastHosting.js'
+import { migratedPodcastMediaKey, podcastAudioPath, podcastAudioSource, podcastCoverPath, storedMediaKey } from '../../shared/podcastHosting.js'
 import { isAudiozineItem } from '../../src/lib/rssFeeds.js'
 import { ensureNativePublicContentTable, listNativeEntries } from '../api/_lib/nativePublicContent.js'
 import { databaseUnavailable, getBoundDb } from '../api/_lib/database.js'
@@ -47,6 +47,21 @@ export async function getPodcastFeedItems(db, show = null) {
     .sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0).getTime() - new Date(a.publishedAt || a.updatedAt || 0).getTime())
 }
 
+export function podcastChannelCoverUrl(settings = {}, origin = 'https://sabot.media') {
+  const cleanOrigin = String(origin || 'https://sabot.media').replace(/\/+$/, '')
+  const source = safeAbsoluteUrl(settings.defaultCoverArt, cleanOrigin)
+  if (!source) return ''
+
+  // A migrated Sabot cover should have one canonical public URL regardless of
+  // which hostname the migration request happened to use. This also keeps the
+  // object-storage key/query string out of directory-facing RSS.
+  if (migratedPodcastMediaKey(source, cleanOrigin)) {
+    const path = podcastCoverPath(settings.slug || settings.id)
+    if (path) return `${cleanOrigin}${path}`
+  }
+  return source
+}
+
 export function buildPodcastFeedXml({ requestUrl, items = [], settings = {}, selfPath = '/rss/podcast.xml' }) {
   const url = new URL(requestUrl)
   const origin = url.origin
@@ -55,7 +70,7 @@ export function buildPodcastFeedXml({ requestUrl, items = [], settings = {}, sel
   const author = String(settings.author || 'Sabot Media').trim() || 'Sabot Media'
   const description = String(settings.description || `${title} podcast feed.`).trim()
   const websiteUrl = safeAbsoluteUrl(settings.websiteUrl, origin) || origin
-  const coverArt = safeAbsoluteUrl(settings.defaultCoverArt, origin)
+  const coverArt = podcastChannelCoverUrl(settings, origin)
   const language = String(settings.language || 'en-us').trim().toLowerCase() || 'en-us'
   const category = String(settings.category || 'News').trim() || 'News'
   const ownerName = String(settings.ownerName || '').trim()
@@ -74,7 +89,7 @@ export function buildPodcastFeedXml({ requestUrl, items = [], settings = {}, sel
     <language>${escapeXml(language)}</language>
 ${copyright ? `    <copyright>${escapeXml(copyright)}</copyright>\n` : ''}    <lastBuildDate>${escapeXml(new Date().toUTCString())}</lastBuildDate>
     <generator>SabotPress</generator>
-    <itunes:author>${escapeXml(author)}</itunes:author>
+${coverArt ? `    <image>\n      <url>${escapeXml(coverArt)}</url>\n      <title>${escapeXml(title)}</title>\n      <link>${escapeXml(websiteUrl)}</link>\n    </image>\n` : ''}    <itunes:author>${escapeXml(author)}</itunes:author>
     <itunes:summary>${escapeXml(description)}</itunes:summary>
     <itunes:explicit>${escapeXml(explicit)}</itunes:explicit>
     <itunes:type>episodic</itunes:type>

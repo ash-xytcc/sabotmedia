@@ -2,6 +2,15 @@ export function podcastAudioPath(id) {
   return `/api/podcasts/audio?id=${encodeURIComponent(id)}`
 }
 
+export function podcastCoverPath(slug) {
+  const clean = String(slug || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return clean ? `/podcast-covers/${clean}` : ''
+}
+
 export function storedMediaKey(value, origin = 'https://sabot.media') {
   try {
     const url = new URL(value, origin)
@@ -9,6 +18,25 @@ export function storedMediaKey(value, origin = 'https://sabot.media') {
     return url.origin === new URL(origin).origin && url.pathname === '/api/media/files'
       && key.startsWith('media/uploads/') && !key.includes('..') ? key : ''
   } catch { return '' }
+}
+
+// Podcast migrations may have been initiated from a Pages/preview hostname even
+// though the canonical public site is sabot.media. The object key is still ours.
+// Only trust cross-origin references for the dedicated migration namespace.
+export function migratedPodcastMediaKey(value, origin = 'https://sabot.media') {
+  const sameOrigin = storedMediaKey(value, origin)
+  if (sameOrigin) return sameOrigin
+  try {
+    const url = new URL(value, origin)
+    const key = url.searchParams.get('key') || ''
+    return url.pathname === '/api/media/files'
+      && key.startsWith('media/uploads/podcast-migration/') && !key.includes('..') ? key : ''
+  } catch { return '' }
+}
+
+export function isPodcastCoverMimeType(value = '') {
+  const mimeType = String(value || '').split(';')[0].trim().toLowerCase()
+  return mimeType === 'image/jpeg' || mimeType === 'image/png'
 }
 
 export function podcastAudioSource(item = {}) {

@@ -2,8 +2,9 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import { buildRssBundle, resolveFeedFormat, resolveFeedProject } from '../src/lib/rssFeeds.js'
+import { podcastFeedOwnsEntry } from '../functions/rss/podcast.xml.js'
 
-test('Black Cat audiozines stay audio while remaining in the Black Cat project', () => {
+test('audiozines live in Molotov Now while remaining audio as a format', () => {
   const audioUrl = 'https://sabot.media/media/organizing-the-unhoused.mp3'
   const item = {
     id: 'audiozine-organizing-unhoused',
@@ -16,18 +17,34 @@ test('Black Cat audiozines stay audio while remaining in the Black Cat project',
     primaryProject: 'Black Cat Distro',
     audioSourceUrl: audioUrl,
     // Server normalization mirrors generic audioSourceUrl here for backwards compatibility.
-    // That mirror alone must never promote an audiozine into the podcast format feed.
+    // That mirror alone must never promote arbitrary audio into a podcast show.
     podcastAudioUrl: audioUrl,
   }
 
-  assert.equal(resolveFeedProject(item), 'Black Cat Distro')
+  assert.equal(resolveFeedProject(item), 'Molotov Now!')
   assert.equal(resolveFeedFormat(item), 'audio')
 
   const bundle = buildRssBundle([item])
-  assert.match(bundle['projects/black-cat-distro.xml'], /Organizing the Unhoused/)
+  assert.match(bundle['projects/molotov-now.xml'], /Organizing the Unhoused/)
+  assert.equal(bundle['projects/black-cat-distro.xml'], undefined)
   assert.match(bundle['formats/audio.xml'], /Organizing the Unhoused/)
   assert.equal(bundle['formats/podcast.xml'], undefined)
   assert.equal(bundle['formats/print.xml'], undefined)
+})
+
+test('audiozines are owned by the actual Molotov Now podcast RSS only', () => {
+  const audiozine = {
+    title: '[AUDIOZINE] Organizing the Unhoused',
+    contentType: 'print',
+    primaryProject: 'Black Cat Distro',
+    audioSourceUrl: 'https://sabot.media/media/audiozine.mp3',
+  }
+  const molotov = { id: 'molotov-now', slug: 'molotov-now', podcastTitle: 'Molotov Now!' }
+  const tcaie = { id: 'the-child-and-its-enemies', slug: 'the-child-and-its-enemies', podcastTitle: 'The Child and Its Enemies' }
+
+  assert.equal(podcastFeedOwnsEntry(molotov, audiozine), true)
+  assert.equal(podcastFeedOwnsEntry(tcaie, audiozine), false)
+  assert.equal(podcastFeedOwnsEntry(molotov, { ...audiozine, title: 'Ordinary audio handout' }), false)
 })
 
 test('explicit zines stay zines while remaining in the Black Cat project', () => {
