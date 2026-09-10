@@ -7052,6 +7052,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-125s625",
+            "date": "2026-09-10T05:00:00.000Z",
+            "outlet": "Euronews",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati, dagli USA le sanzioni al collettivo italiano: cosa c’entra l’11 settembre",
+            "translatedTitle": "",
+            "url": "https://it.euronews.com/my-europe/2026/09/10/autisticiinventati-dagli-usa-le-sanzioni-al-collettivo-italiano-cosa-centra-l11-settembre",
+            "imageUrl": "",
+            "summary": "Autistici/Inventati sanzionato dagli USA come SDGT: la base giuridica nata dopo l’11 settembre, gli effetti in Italia e la denuncia di Marco Cappato #EuropeNews ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-lzdae2",
             "date": "2026-09-10T03:07:40.000Z",
             "outlet": "Euronews on MSN",
@@ -7060,6 +7076,22 @@
             "title": "Autistici/Inventati, dagli USA le sanzioni al collettivo italiano: cosa c’entra l’11 settembre",
             "translatedTitle": "",
             "url": "https://www.msn.com/it-it/notizie/other/autisticiinventati-dagli-usa-le-sanzioni-al-collettivo-italiano-cosa-c-entra-l-11-settembre/ar-AA2bW0fb",
+            "imageUrl": "",
+            "summary": "Autistici/Inventati sanzionato dagli USA come SDGT: la base giuridica nata dopo l’11 settembre, gli effetti in Italia e la denuncia di Marco Cappato View on euronews ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1o0l0cl",
+            "date": "2026-09-10T03:07:40.000Z",
+            "outlet": "Euronews on MSN",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati, dagli USA le sanzioni al collettivo italiano: cosa c’entra l’11 settembre",
+            "translatedTitle": "",
+            "url": "https://www.msn.com/it-it/notizie/other/autistici-inventati-dagli-usa-le-sanzioni-al-collettivo-italiano-cosa-c-entra-l-11-settembre/ar-AA2bW0fb",
             "imageUrl": "",
             "summary": "Autistici/Inventati sanzionato dagli USA come SDGT: la base giuridica nata dopo l’11 settembre, gli effetti in Italia e la denuncia di Marco Cappato View on euronews ...",
             "discoverySource": "live-discovery",
@@ -9269,7 +9301,7 @@
             "translatedTitle": "",
             "url": "https://keepitfree.ai/it/announcements/cartella-stampa",
             "imageUrl": "",
-            "summary": "1. In breve Il 26 agosto 2026 il Dipartimento del Tesoro statunitense, tramite OFAC - il settore che gestisce e applica sanzioni economiche e finanziarie -, ha sanzionato Autistici/Inventati (A/I), collettivo italiano che dal 2001 fornisce infrastrutture digitali a movimenti e attivisti: email, hosting, mailing list,…",
+            "summary": "1. In breve Il 26 agosto 2026 il Dipartimento del Tesoro statunitense, tramite OFAC - l&rsquo;ente che gestisce e applica sanzioni economiche e finanziarie -, ha sanzionato Autistici/Inventati (A/I), collettivo italiano che dal 2001 fornisce infrastrutture digitali a movimenti e attivisti: email, hosting, mailing list…",
             "discoverySource": "official-ai",
             "relevanceScore": 62,
             "featured": false,
@@ -9860,7 +9892,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-10T11:08:07.595Z",
+        "socialCheckedAt": "2026-09-10T15:01:09.351Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9892,8 +9924,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-10T11:08:08.871Z",
-        "coverageArchiveCount": 150
+        "intelligenceCheckedAt": "2026-09-10T15:01:09.755Z",
+        "coverageArchiveCount": 152
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10095,7 +10127,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-10T11:08:19.714Z",
+        "automationCheckedAt": "2026-09-10T15:01:21.007Z",
         "coverageArchiveCount": 0
       }
     }
