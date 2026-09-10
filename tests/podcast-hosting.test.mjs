@@ -119,3 +119,10 @@ test('migration streams, verifies and resumes a remote file without changing GUI
     await finishHosting(context, 'show')
   } finally { globalThis.fetch = previousFetch }
 })
+
+
+test('native output removes the automatic Acast footer while preserving authored mentions', async () => {
+  const { withoutAcastFooter } = await import('../shared/podcastHosting.js')
+  const footer = `<p style='color:grey'>Hosted on Acast. See <a href='https://acast.com/privacy'>acast.com/privacy</a> for more information.</p>`
+  assert.equal(withoutAcastFooter('<p>We left Acast.</p>' + footer), '<p>We left Acast.</p>')
+})

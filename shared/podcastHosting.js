@@ -37,3 +37,8 @@ export function podcastRange(header, size) {
   }
   return { start, end, length: end - start + 1 }
 }
+
+// Remove only Acast's automatically appended hosting/privacy sentence.
+export function withoutAcastFooter(value = '') {
+  return String(value).replace(/Hosted on Acast\.\s*See\s*(?:<a\b[^>]*>)?acast\.com\/privacy(?:<\/a>)?\s*for more information\./gi, '').replace(/<p\b[^>]*>\s*(?:&nbsp;\s*)*<\/p>/gi, '').trim()
+}

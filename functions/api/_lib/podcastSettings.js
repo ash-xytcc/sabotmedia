@@ -1,3 +1,4 @@
+import { withoutAcastFooter } from '../../../shared/podcastHosting.js'
 import { listNativeEntries } from './nativePublicContent.js'
 import { podcastEntryBelongsToShow } from '../../../shared/podcastShowMembership.js'
 
@@ -57,7 +58,7 @@ export function normalizePodcastSettings(input = {}) {
     rssFeedUrl: cleanUrl(value.rssFeedUrl) || podcastFeedUrl(slug),
     podcastTitle: clean(value.podcastTitle || PODCAST_SETTINGS_DEFAULTS.podcastTitle, 200),
     author: clean(value.author || PODCAST_SETTINGS_DEFAULTS.author, 200),
-    description: clean(value.description || PODCAST_SETTINGS_DEFAULTS.description, 4000),
+    description: clean(value.hostingMode === 'native' ? withoutAcastFooter(value.description || PODCAST_SETTINGS_DEFAULTS.description) : value.description || PODCAST_SETTINGS_DEFAULTS.description, 4000),
     defaultCoverArt: cleanUrl(value.defaultCoverArt),
     audioHostBaseUrl: cleanUrl(value.audioHostBaseUrl),
     websiteUrl: cleanUrl(value.websiteUrl || PODCAST_SETTINGS_DEFAULTS.websiteUrl),

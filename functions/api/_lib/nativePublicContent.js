@@ -1,4 +1,4 @@
-import { podcastAudioSource, storedMediaKey } from '../../../shared/podcastHosting.js'
+import { podcastAudioSource, storedMediaKey, withoutAcastFooter } from '../../../shared/podcastHosting.js'
 import { podcastEntryBelongsToShow } from '../../../shared/podcastShowMembership.js'
 const NATIVE_CONTENT_SCHEMA_VERSION = 3
 
@@ -108,7 +108,12 @@ export function slugify(value) {
 }
 
 export function normalizeNativeEntry(input) {
-  const raw = input || {}
+  const raw = { ...(input || {}) }
+  if (storedMediaKey(podcastAudioSource(raw))) {
+    for (const field of ['bodyHtml', 'body', 'excerpt', 'podcastSummary', 'audioSummary']) {
+      if (raw[field]) raw[field] = withoutAcastFooter(raw[field])
+    }
+  }
   const now = new Date().toISOString()
 
   const status = normalizeEnum(raw.status, ['draft', 'published', 'scheduled', 'archived', 'trash']) || 'draft'
