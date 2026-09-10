@@ -64,12 +64,16 @@ function hasLegacyAudio(item) {
 }
 
 function hasPodcastMedia(item) {
+  // The native normalizer historically mirrors audioSourceUrl into podcastAudioUrl,
+  // so podcastAudioUrl by itself cannot establish podcast identity.
   return Boolean(
-    String(item?.podcastAudioUrl || '').trim() ||
     String(item?.podcastRssEnclosureUrl || '').trim() ||
     String(item?.podcastDeliveryAudioUrl || '').trim() ||
     String(item?.podcastMasterAudioUrl || '').trim() ||
-    String(item?.podcastDuration || '').trim()
+    String(item?.podcastDuration || '').trim() ||
+    String(item?.podcastEpisodeNumber || '').trim() ||
+    String(item?.podcastSeason || '').trim() ||
+    String(item?.sourceKind || '').trim().toLowerCase() === 'manual-episode'
   )
 }
 
@@ -94,7 +98,7 @@ export function resolveFeedProject(item, settings = loadFeedSettings()) {
   const storedFormat = normalizedKnownFormat(item?.contentType || item?.type, settings)
   const sourceFormat = sourceFormatHint(item, settings)
   const explicitFormat = titleFormatHint(item) || (hasLegacyAudio(item) ? 'audio' : '')
-  const typeHint = hasPodcastMedia(item) ? 'podcast' : explicitFormat || sourceFormat || storedFormat || 'article'
+  const typeHint = storedFormat === 'podcast' || hasPodcastMedia(item) ? 'podcast' : explicitFormat || sourceFormat || storedFormat || 'article'
   const project = resolveArchiveProject(item, typeHint)
   if (!project?.name || isGenericProject(project.name)) return ''
   return project.name
@@ -236,7 +240,7 @@ export function buildRssBundle(items = [], options = {}) {
   })
   if (settings.exposeAuthorFeeds !== false) addGroupedFeeds(bundle, {
     prefix: 'bylines', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published under the public byline label',
-    groups: groupBy(visible, 'author', (item) => item.author || item.byline || 'Sabot Media Collective', settings), settings,
+    groups: groupBy(visible, 'author', (item) => item.author || item.byline || 'Sabot Media Collective', settings), settings), settings,
   })
   if (settings.exposeTopicFeeds !== false) addGroupedFeeds(bundle, {
     prefix: 'topics', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published content tagged',
