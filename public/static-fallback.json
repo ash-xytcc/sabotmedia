@@ -7116,6 +7116,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-9pctxb",
+            "date": "2026-09-09T22:00:00.000Z",
+            "outlet": "L'Indipendente",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Perché abbiamo obbedito alle sanzioni USA contro Autistici/Inventati: parla Banca Etica",
+            "translatedTitle": "",
+            "url": "https://www.lindipendente.online/2026/09/10/perche-abbiamo-obbedito-alle-sanzioni-usa-contro-autistici-inventati-parla-banca-etica",
+            "imageUrl": "",
+            "summary": "Nelle settimane scorse, un ordine esecutivo della Casa Bianca ha spinto il Dipartimento del Tesoro statunitense di inserire il collettivo italiano Autistici/Inventati, l’inglese Palestine Action e il ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-ins086",
             "date": "2026-09-09T10:10:00.000Z",
             "outlet": "EL PAÍS",
@@ -9892,7 +9908,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-10T15:01:09.351Z",
+        "socialCheckedAt": "2026-09-10T18:18:39.047Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9924,8 +9940,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-10T15:01:09.755Z",
-        "coverageArchiveCount": 152
+        "intelligenceCheckedAt": "2026-09-10T18:18:39.930Z",
+        "coverageArchiveCount": 153
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10127,7 +10143,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-10T15:01:21.007Z",
+        "automationCheckedAt": "2026-09-10T18:18:51.820Z",
         "coverageArchiveCount": 0
       }
     }
