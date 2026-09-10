@@ -15,16 +15,14 @@ async function fixture(){const env={BF_DB:testDb(),SABOT_SESSION_SECRET:'phase-t
 function context(f,path,body,cookie='',method=body?'POST':'GET',ip='203.0.113.9'){return{env:f.env,request:new Request(origin+path,{method,headers:{origin,'content-type':'application/json',cookie,'cf-connecting-ip':ip},...(body?{body:JSON.stringify(body)}:{})}),next:()=>new Response('asset')}}
 async function req(f,path,body,cookie='',handler=contributors,method,ip){const r=await handler(context(f,path,body,cookie,method,ip));let data=null;try{data=await r.json()}catch{}return{r,data}}
 async function unlock(f,id='puscii'){await req(f,'/api/course-contributors',{action:'credentials',id,editPassword:'phase-two-contributor-password-123'},f.cookie);const login=await req(f,'/api/course-contributors',{action:'login',id,password:'phase-two-contributor-password-123'});return login.r.headers.get('set-cookie').split(';')[0]}
-
 async function submit(f,cookie,id,revision,sharedAnswer,extra={}){return req(f,'/api/course-contributors',{id,revision,item:{sharedAnswer,questions:extra.questions||[],exercise:extra.exercise||'',suggestedExercise:extra.suggestedExercise||'',status:'published'}},cookie)}
 
-test('review dashboard gets exact pending content while ordinary editor list and public API do not',async()=>{
+test('staff review workspace gets exact pending content while public API does not',async()=>{
   const f=await fixture(),cookie=await unlock(f)
   assert.equal((await submit(f,cookie,'puscii',0,'PENDING_CANARY')).r.status,200)
-  const ordinary=await req(f,'/api/course-contributors',null,f.cookie)
-  assert.ok(!JSON.stringify(ordinary.data).includes('PENDING_CANARY'))
-  const review=await req(f,'/api/course-contributors?reviews=1',null,f.cookie)
+  const review=await req(f,'/api/course-contributors',null,f.cookie)
   assert.ok(JSON.stringify(review.data).includes('PENDING_CANARY'))
+  assert.equal(review.data.items.find((x)=>x.id==='puscii').pendingCount,1)
   const publicRead=await req(f,'/api/course-contributors?id=puscii')
   assert.ok(!JSON.stringify(publicRead.data).includes('PENDING_CANARY'))
 })
@@ -32,7 +30,7 @@ test('review dashboard gets exact pending content while ordinary editor list and
 test('approve publishes exact current submission with note and strips editorial status',async()=>{
   const f=await fixture(),cookie=await unlock(f)
   await submit(f,cookie,'puscii',0,'APPROVE_ME',{questions:[{question:'What changed?',answer:'This.'}],exercise:'Teach it.'})
-  const review=await req(f,'/api/course-contributors?reviews=1',null,f.cookie)
+  const review=await req(f,'/api/course-contributors',null,f.cookie)
   const submission=review.data.items.find((x)=>x.id==='puscii').pending[0]
   assert.ok(submission.comparison.some((x)=>x.kind==='added'))
   assert.equal((await req(f,'/api/course-contributors',{action:'review-decision',submissionId:submission.id,decision:'approved',reviewerNote:'Checked against the proposed text.'},f.cookie)).r.status,200)
@@ -48,14 +46,14 @@ test('approve publishes exact current submission with note and strips editorial 
 test('request changes and rejection preserve publication and submission history',async()=>{
   const f=await fixture(),cookie=await unlock(f)
   await submit(f,cookie,'puscii',0,'FIRST')
-  let review=await req(f,'/api/course-contributors?reviews=1',null,f.cookie)
+  let review=await req(f,'/api/course-contributors',null,f.cookie)
   let s=review.data.items.find((x)=>x.id==='puscii').pending[0]
   await req(f,'/api/course-contributors',{action:'review-decision',submissionId:s.id,decision:'changes-requested',reviewerNote:'Clarify the recovery step.'},f.cookie)
   assert.equal((await req(f,'/api/course-contributors?id=puscii')).data.item,null)
   let own=await req(f,'/api/course-contributors?id=puscii',null,cookie)
   assert.equal(own.data.submissions[0].status,'changes-requested')
   await submit(f,cookie,'puscii',own.data.revision,'SECOND')
-  review=await req(f,'/api/course-contributors?reviews=1',null,f.cookie)
+  review=await req(f,'/api/course-contributors',null,f.cookie)
   s=review.data.items.find((x)=>x.id==='puscii').pending[0]
   await req(f,'/api/course-contributors',{action:'review-decision',submissionId:s.id,decision:'rejected',reviewerNote:'Not suitable for publication.'},f.cookie)
   assert.equal((await req(f,'/api/course-contributors?id=puscii')).data.item,null)
@@ -68,13 +66,13 @@ test('older submission cannot be approved after contributor saves a newer revisi
   await submit(f,cookie,'puscii',0,'OLD')
   let own=await req(f,'/api/course-contributors?id=puscii',null,cookie)
   await submit(f,cookie,'puscii',own.data.revision,'NEW')
-  const review=await req(f,'/api/course-contributors?reviews=1',null,f.cookie)
+  const review=await req(f,'/api/course-contributors',null,f.cookie)
   const pending=review.data.items.find((x)=>x.id==='puscii').pending
   const old=pending.find((x)=>x.item.sharedAnswer==='OLD'), newer=pending.find((x)=>x.item.sharedAnswer==='NEW')
   const decision=await req(f,'/api/course-contributors',{action:'review-decision',submissionId:old.id,decision:'approved',reviewerNote:'Trying a stale approval.'},f.cookie)
   assert.equal(decision.r.status,409)
   assert.equal((await req(f,'/api/course-contributors?id=puscii')).data.item,null)
-  const still=await req(f,'/api/course-contributors?reviews=1',null,f.cookie)
+  const still=await req(f,'/api/course-contributors',null,f.cookie)
   assert.ok(still.data.items.find((x)=>x.id==='puscii').pending.some((x)=>x.id===newer.id))
 })
 
@@ -83,7 +81,7 @@ test('private comms canary is absent from reviews, publication and offline editi
   await req(f,'/api/course-contributors',{id:'puscii',scope:'private',revision:0,text:'PRIVATE_PHASE2_CANARY'},cookie)
   const own=await req(f,'/api/course-contributors?id=puscii',null,cookie)
   await submit(f,cookie,'puscii',own.data.revision,'PUBLIC_PHASE2')
-  const review=await req(f,'/api/course-contributors?reviews=1',null,f.cookie)
+  const review=await req(f,'/api/course-contributors',null,f.cookie)
   assert.ok(!JSON.stringify(review.data).includes('PRIVATE_PHASE2_CANARY'))
   const offline=await coursePage(context(f,'/guides/become-the-thousand-servers/offline',null,''))
   const html=await offline.text()
