@@ -18,7 +18,7 @@ function groupFeedFiles(files = []) {
 function groupLabel(group) {
   const labels = {
     'all-content.xml': 'everything', formats: 'formats', projects: 'projects', collections: 'collections',
-    bylines: 'public byline labels', authors: 'public byline labels', topics: 'topics', series: 'series',
+    bylines: 'public byline labels', authors: 'public byline labels', series: 'series',
     campaigns: 'campaigns',
   }
   return labels[group] || group.replace(/-/g, ' ')
@@ -32,7 +32,6 @@ function groupDescription(group) {
     collections: 'Follow curated bodies of work, campaigns, issues, readers, or publication packages.',
     bylines: 'Follow public byline labels. These may be collective names, pseudonyms, handles, or house labels.',
     authors: 'Follow public byline labels. These may be collective names, pseudonyms, handles, or house labels.',
-    topics: 'Follow subjects across formats and projects.',
     series: 'Follow recurring columns, comics, newsletters, shows, or other serial work.',
     campaigns: 'Follow updates from a specific published campaign hub.',
   }
@@ -83,7 +82,7 @@ export function PublicFeedsPage() {
     return () => { cancelled = true }
   }, [])
 
-  const grouped = useMemo(() => groupFeedFiles(files.filter((file) => !file.startsWith('podcasts/'))), [files])
+  const grouped = useMemo(() => groupFeedFiles(files.filter((file) => !file.startsWith('podcasts/') && !file.startsWith('topics/'))), [files])
   const mainFeedAvailable = files.includes('all-content.xml')
 
   return (
@@ -105,7 +104,7 @@ export function PublicFeedsPage() {
 
       <section className="feeds-public-page__panel">
         <EditableText as="h2" field="feeds.how.title">How this works</EditableText>
-        <EditableText as="div" field="feeds.how.body" multiline>{`For reading: copy the main RSS feed link into your feed reader. To follow a particular project, topic or kind of work, choose one of the feeds below.
+        <EditableText as="div" className="public-info-page__body" field="feeds.how.body" multiline>{`For reading: copy the main RSS feed link into your feed reader. To follow a particular project or kind of work, choose one of the feeds below.
 
 For listening: copy a named podcast feed into your podcast app. Look for “Add by RSS” or “Follow by URL.” Each show has its own feed, so you can subscribe to the ones you want.
 
