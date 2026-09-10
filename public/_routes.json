@@ -46,7 +46,10 @@
     "/investigations/*",
     "/guides/become-the-thousand-servers/*",
     "/archive.html",
-    "/guides/become-the-thousand-servers"
+    "/guides/become-the-thousand-servers",
+    "/login",
+    "/wp-login",
+    "/logout"
   ],
   "exclude": []
 }
