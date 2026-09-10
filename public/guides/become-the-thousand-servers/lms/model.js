@@ -1,5 +1,6 @@
 import { participatingContributor } from './participation.js'
 import { withRecoveryPathway } from './blog-recovery.js'
+import { withCmsChoices } from './cms-choices.js'
 import { legacySeed } from './seed.js'
 import { initialActivities } from './activities.js'
 export const SLUG = 'become-the-thousand-servers'
@@ -77,7 +78,7 @@ seed.sections[0].body = "The Anarchist's Guide to Losing Everyone's Email Becaus
 seed.sections[5].body = 'A thousand machines maintained by twelve exhausted people is not a thousand servers. It is twelve people with a very serious problem.'
 seed.sections[11].body = "The unit of resilience isn't the machine. It's the person who can reproduce the machine."
 seed.sections[12].body = 'Each one, teach one.'
-Object.assign(seed, withRecoveryPathway(seed))
+Object.assign(seed, withCmsChoices(withRecoveryPathway(seed)))
 
 const str = (v, max = 30000) => String(v ?? '').slice(0, max)
 const list = (v, max = 100) => (Array.isArray(v) ? v.slice(0, max) : [])
@@ -94,7 +95,7 @@ const feedbackMap = (value) => {
 export function normalizeCourse(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw invalid('Invalid course')
   if (JSON.stringify(input).length > 1800000) throw invalid('Course is too large')
-  input = withRecoveryPathway(input)
+  input = withCmsChoices(withRecoveryPathway(input))
   const base = input.slug === SLUG ? seed : {...seed,slug:id(input.slug),lessons:[],sections:[],activities:[],documents:[],testing:[],pathways:[],modules:[]}
   const legacy = input.schemaVersion !== 2
   const c = {...base,...input,schemaVersion:2}
