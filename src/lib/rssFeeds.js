@@ -240,7 +240,7 @@ export function buildRssBundle(items = [], options = {}) {
   })
   if (settings.exposeAuthorFeeds !== false) addGroupedFeeds(bundle, {
     prefix: 'bylines', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published under the public byline label',
-    groups: groupBy(visible, 'author', (item) => item.author || item.byline || 'Sabot Media Collective', settings), settings), settings,
+    groups: groupBy(visible, 'author', (item) => item.author || item.byline || 'Sabot Media Collective', settings), settings,
   })
   if (settings.exposeTopicFeeds !== false) addGroupedFeeds(bundle, {
     prefix: 'topics', titlePrefix: 'Sabot Media', descriptionPrefix: 'Published content tagged',
