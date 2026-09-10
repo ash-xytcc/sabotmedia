@@ -78,18 +78,18 @@ test('learner DOM initializes, routes, persists notes and practical completion t
   assert.equal(b.document.querySelector('[data-unit="' + id + '"] [data-notes]').value, 'kept through reload')
   assert.match(b.document.querySelector('[data-progress]').textContent, /1\/12 lessons/)
 })
-test('activity DOM saves local attempts and renders their feedback after reload', () => {
+test('activity DOM saves local attempts and renders explanatory feedback after reload', () => {
   const a = mount(new Map(), '#map-your-dependencies'),
     form = a.document.querySelector('[data-activity="dependency-choice"]')
   form.querySelector('[value="person"]').checked = true
   form.onsubmit({ preventDefault() {} })
-  assert.match(form.querySelector('[data-feedback]').textContent, /Completed/)
+  assert.match(form.querySelector('[data-feedback]').textContent, /Correct/)
   const state = JSON.parse(a.storage.get(KEY))
   assert.equal(state.activities['dependency-choice'][0].passed, true)
   const b = mount(a.storage, '#map-your-dependencies')
   assert.match(
     b.document.querySelector('[data-activity="dependency-choice"] [data-feedback]').textContent,
-    /Completed/,
+    /Correct/,
   )
 })
 test('invalid import leaves stored progress intact; valid import restores all local fields', async () => {
