@@ -73,7 +73,7 @@ export async function onRequest(context) {
         const published = JSON.stringify(publicContribution(JSON.parse(submission.content_json)))
         statements.push(
           db.prepare(`UPDATE course_contributors SET published_json=?, revision=revision+1 WHERE id=? AND revision=? AND draft_json=?`).bind(published, submission.project, submission.revision, submission.content_json),
-          db.prepare(`UPDATE course_contributor_submissions SET status='approved',decision='approved',decided_at=?,reviewer_id=?,reviewer_note=? WHERE id=? AND status='pending' AND EXISTS(SELECT 1 FROM course_contributors WHERE id=? AND revision=?)`).bind(now, permission.actor, reviewerNote, submissionId, submission.project, submission.revision + 1),
+          db.prepare(`UPDATE course_contributor_submissions SET status='approved',decision='approved',decided_at=?,reviewer_id=?,reviewer_note=? WHERE id=? AND status='pending' AND changes()=1`).bind(now, permission.actor, reviewerNote, submissionId),
           db.prepare(`INSERT INTO course_contributor_revisions(id,project,version,actor_type,actor_id,scope,status,content_json,created_at) SELECT ?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM course_contributor_submissions WHERE id=? AND status='approved')`).bind(crypto.randomUUID(), submission.project, submission.revision, 'editor', permission.actor, 'edit', 'published', submission.content_json, now, submissionId),
         )
       } else {
@@ -91,7 +91,6 @@ export async function onRequest(context) {
     if (method === 'GET' && !url.searchParams.has('id')) {
       let items = await listContributors(db)
       if (editor) {
-        const includeReviews = url.searchParams.get('reviews') === '1'
         const rows = await db.prepare('SELECT id,draft_json,revision,published_json FROM course_contributors').all()
         const pending = await db.prepare("SELECT * FROM course_contributor_submissions WHERE status='pending' ORDER BY submitted_at ASC").all()
         items = items.map((item) => {
@@ -102,12 +101,10 @@ export async function onRequest(context) {
             status: JSON.parse(row.draft_json).status,
             revision: row.revision,
             pendingCount: submissions.length,
-            ...(includeReviews ? {
-              pending: submissions.map((s) => ({
-                ...submissionView(s, true),
-                comparison: compareContribution(row.published_json ? JSON.parse(row.published_json) : {}, JSON.parse(s.content_json)),
-              })),
-            } : {}),
+            pending: submissions.map((s) => ({
+              ...submissionView(s, true),
+              comparison: compareContribution(row.published_json ? JSON.parse(row.published_json) : {}, JSON.parse(s.content_json)),
+            })),
           }
         })
       }
