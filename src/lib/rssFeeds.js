@@ -13,6 +13,8 @@ const KNOWN_SOURCE_FORMATS = new Set([
   'zine',
 ])
 
+const SPECIFIC_SOURCE_FORMATS = new Set(['audio', 'comic', 'newsletter', 'podcast', 'print', 'zine'])
+
 function escapeXml(value = '') {
   return String(value || '')
     .replaceAll('&', '&amp;')
@@ -37,6 +39,28 @@ function sourceFormatHint(item, settings) {
     if (format) return format
   }
   return ''
+}
+
+function titleFormatHint(item) {
+  const title = String(item?.title || '').trim().toLowerCase()
+  if (/^\[?audiozine\]?\b/.test(title)) return 'audio'
+  if (/^\[?zine\]?\b/.test(title)) return 'zine'
+  return ''
+}
+
+function assetLooksAudio(asset) {
+  if (!asset) return false
+  if (typeof asset === 'string') return /\.(?:mp3|m4a|ogg|oga|wav|flac)(?:$|[?#])/i.test(asset)
+  const text = [asset.type, asset.mediaType, asset.mimeType, asset.url, asset.href, asset.publicUrl, asset.filename]
+    .map((value) => String(value || ''))
+    .join(' ')
+  return /\baudio\b|audio\/|\.(?:mp3|m4a|ogg|oga|wav|flac)(?:\b|$)/i.test(text)
+}
+
+function hasLegacyAudio(item) {
+  if (String(item?.audioSourceUrl || '').trim()) return true
+  if (/\baudiozine\b/i.test(`${item?.title || ''} ${item?.sourceLabel || ''}`)) return true
+  return (Array.isArray(item?.relatedAssets) ? item.relatedAssets : []).some(assetLooksAudio)
 }
 
 function hasPodcastMedia(item) {
@@ -69,7 +93,8 @@ function projectFormat(project) {
 export function resolveFeedProject(item, settings = loadFeedSettings()) {
   const storedFormat = normalizedKnownFormat(item?.contentType || item?.type, settings)
   const sourceFormat = sourceFormatHint(item, settings)
-  const typeHint = hasPodcastMedia(item) ? 'podcast' : sourceFormat || storedFormat || 'article'
+  const explicitFormat = titleFormatHint(item) || (hasLegacyAudio(item) ? 'audio' : '')
+  const typeHint = hasPodcastMedia(item) ? 'podcast' : explicitFormat || sourceFormat || storedFormat || 'article'
   const project = resolveArchiveProject(item, typeHint)
   if (!project?.name || isGenericProject(project.name)) return ''
   return project.name
@@ -79,16 +104,23 @@ export function resolveFeedFormat(item, settings = loadFeedSettings()) {
   const storedFormat = normalizedKnownFormat(item?.contentType || item?.type, settings)
   if (storedFormat === 'podcast' || hasPodcastMedia(item)) return 'podcast'
 
+  // Explicit object identity answers "what is this?" before project identity answers
+  // "where does it live?". A Black Cat audiozine is audio, and a Black Cat zine is a zine.
+  const titleHint = titleFormatHint(item)
+  if (titleHint) return titleHint
+  if (hasLegacyAudio(item)) return 'audio'
+
   const sourceFormat = sourceFormatHint(item, settings)
+  if (SPECIFIC_SOURCE_FORMATS.has(sourceFormat)) return sourceFormat
+
   const project = resolveArchiveProject(item, sourceFormat || storedFormat || 'article')
   const canonicalProjectFormat = projectFormat(project)
 
-  // A real editorial project identity is more useful than the broad storage types
-  // used during the WordPress/native migration. This recovers newsletters, comics,
-  // print work and podcast episodes without rewriting the stored publication record.
+  // Project identity recovers formats that were lost to broad migration buckets:
+  // Communique -> newsletter, Sabotuers -> comic, Black Cat -> print by default.
   if (canonicalProjectFormat) return canonicalProjectFormat
 
-  // Source-specific labels such as post/article are more informative than the
+  // Generic source labels such as post/article are still more informative than the
   // migration buckets (dispatch, note and publicBlock).
   if (sourceFormat) return sourceFormat
 
