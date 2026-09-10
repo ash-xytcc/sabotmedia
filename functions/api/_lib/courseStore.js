@@ -1,3 +1,4 @@
+import { withoutWithdrawnAssignments } from '../../../public/guides/become-the-thousand-servers/lms/participation.js'
 import { withRecoveryPathway } from '../../../public/guides/become-the-thousand-servers/lms/blog-recovery.js'
 import {
   normalizeCourse,
@@ -28,7 +29,7 @@ export async function readCourse(db, slug = SLUG, editor = false) {
     .prepare(`SELECT content_json FROM ${editor ? 'course_content' : 'course_publications'} WHERE slug=?`)
     .bind(slug)
     .first()
-  if (row) return editor ? normalizeCourse(JSON.parse(row.content_json)) : withRecoveryPathway(JSON.parse(row.content_json), {publicOnly:true})
+  if (row) return editor ? normalizeCourse(JSON.parse(row.content_json)) : withoutWithdrawnAssignments(withRecoveryPathway(JSON.parse(row.content_json), {publicOnly:true}))
   if (!editor) {
     const old = await db.prepare('SELECT content_json FROM course_content WHERE slug=?').bind(slug).first()
     if (old) {

@@ -1,3 +1,4 @@
+import { participatingContributor, withoutWithdrawnAssignments } from './participation.js'
 import { renderPathways } from './pathway-render.js'
 import { legacySeed, sharedQuestion } from './model.js'
 export const BASE = '/guides/become-the-thousand-servers/'
@@ -17,6 +18,7 @@ function activity(a){
   return `<form data-activity="${esc(a.id)}" class="activity"><fieldset disabled><legend>${esc(a.title)} · ${esc(a.type)} · version ${a.version}</legend>${prose(a.prompt)}${a.completionHelp?`<p><strong>Before you start:</strong> ${esc(a.completionHelp)}</p>`:''}${controls}<button type="submit">${selfAssessed?'Save my work':'Check answers'}</button>${selfAssessed?'<button type="button" data-retry>I need more practice</button>':''}<p aria-live="polite" data-feedback></p></fieldset>${resources(a.sources)}</form>`
 }
 export function renderCourse(c,contributors=[]){
+  c=withoutWithdrawnAssignments(c); contributors=contributors.filter(participatingContributor)
   const nested=new Set(c.sections.flatMap((s)=>s.lessonSlugs));const units=[...c.sections.flatMap((s)=>[s,...s.lessonSlugs.map((slug)=>c.lessons.find((l)=>l.slug===slug)).filter(Boolean)]),...c.lessons.filter((l)=>!nested.has(l.slug))]
   const links=c.sections.map((s)=>`<li><a href="#${esc(s.id)}">${esc(s.id)}. ${esc(s.title)}</a> <span data-status="${esc(s.id)}"></span>${s.lessonSlugs.length?`<ul>${s.lessonSlugs.map((slug)=>{const l=c.lessons.find((x)=>x.slug===slug);return l?`<li><a href="#${esc(slug)}">Lesson ${l.number}: ${esc(l.title)}</a> <span data-status="${esc(slug)}"></span></li>`:''}).join('')}</ul>`:''}</li>`).join('')
   const unitHtml=units.map((u,i)=>{

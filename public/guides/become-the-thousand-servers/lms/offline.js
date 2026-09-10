@@ -1,9 +1,12 @@
+import { participatingContributor, withoutWithdrawnAssignments } from './participation.js'
 import { renderPathways } from './pathway-render.js'
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
 const prose = (v) => String(v || '').split(/\n\n+/).filter(Boolean).map((p)=>`<p>${esc(p).replace(/\n/g,'<br>')}</p>`).join('')
 const resources = (items=[]) => items.length ? `<ul>${items.map((r)=>`<li>${r.url?`<a href="${esc(r.url)}">${esc(r.title||r.url)}</a>`:esc(r.title)}${r.note?` — ${esc(r.note)}`:''}</li>`).join('')}</ul>` : ''
 
 export function renderOfflineEdition(course, contributions = [], generatedAt = new Date()) {
+  course=withoutWithdrawnAssignments(course)
+  contributions=contributions.filter(participatingContributor)
   const generated = generatedAt.toISOString()
   const sections = course.sections.map((s)=>{
     const lessons = s.lessonSlugs.map((slug)=>course.lessons.find((l)=>l.slug===slug)).filter(Boolean)

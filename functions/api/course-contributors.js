@@ -1,3 +1,4 @@
+import { participatingContributor } from '../../public/guides/become-the-thousand-servers/lms/participation.js'
 import { resolvePublicSitePermission, permissionHasCapability } from './_lib/publicSiteAuth.js'
 import { getBoundDb } from './_lib/database.js'
 import { json, sameOrigin } from './_lib/courseStore.js'
@@ -66,7 +67,7 @@ export async function onRequest(context) {
       const submission = await db.prepare('SELECT * FROM course_contributor_submissions WHERE id=?').bind(submissionId).first()
       if (!submission || submission.status !== 'pending') return json({ ok: false, error: 'This submission already has a decision' }, 409)
       const row = await db.prepare('SELECT * FROM course_contributors WHERE id=?').bind(submission.project).first()
-      if (!row) return denied()
+      if (!row || !participatingContributor(row)) return denied()
       const now = new Date().toISOString()
       const statements = []
       if (decision === 'approved') {
@@ -113,12 +114,14 @@ export async function onRequest(context) {
 
     const project = id(body.id || url.searchParams.get('id')),
       scope = (body.scope || url.searchParams.get('scope')) === 'private' ? 'private' : 'edit'
+    if (!participatingContributor(project) || (body.name && !participatingContributor(body.name))) return json({ok:false,error:'Contributor not available'},404)
     if (body.action === 'create') {
       if (!admin || !project || !body.name) return denied()
       await db.prepare('INSERT INTO course_contributors(id,name,draft_json) VALUES(?,?,?)').bind(project, String(body.name).slice(0, 220), JSON.stringify(normalizeContribution())).run()
       return json({ ok: true })
     }
     const row = await db.prepare('SELECT * FROM course_contributors WHERE id=?').bind(project).first()
+    if (row && !participatingContributor(row)) return json({ok:false,error:'Contributor not available'},404)
     if (body.action === 'login') {
       if (!(await rateLimit(context, db, `contributor:${project}:edit`))) return json({ ok: false, error: 'Try again later' }, 429, { 'retry-after': '900' })
       const loginScope = scope === 'private' ? 'edit' : scope

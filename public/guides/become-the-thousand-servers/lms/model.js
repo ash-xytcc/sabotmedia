@@ -1,3 +1,4 @@
+import { participatingContributor } from './participation.js'
 import { withRecoveryPathway } from './blog-recovery.js'
 import { legacySeed } from './seed.js'
 import { initialActivities } from './activities.js'
@@ -31,7 +32,7 @@ export const sectionMap = [
   ['EACH ONE, TEACH ONE', []],
 ]
 export const contributorNames = [
-  'Autistici/Inventati','Riseup','May First Movement Technology','Systemli','Immerda','SinDominio','CHATONS','Koumbit','Electric Embers','Aktivix','Anarchaserver','PUSCII','BASH','Rhizomatica','Detroit Community Technology Project','Sutty','Distributed Press','Indymedia NL','The Final Straw Radio','It’s Going Down','CrimethInc.','subMedia','Kolektiva',
+  'Riseup','May First Movement Technology','Immerda','SinDominio','CHATONS','Koumbit','Electric Embers','Aktivix','Anarchaserver','PUSCII','BASH','Rhizomatica','Detroit Community Technology Project','Sutty','Distributed Press','Indymedia NL','The Final Straw Radio','It’s Going Down','CrimethInc.','subMedia','Kolektiva',
 ]
 export const id = (v) => String(v || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '').slice(0, 120)
 export const sharedQuestion = 'If your project disappeared tomorrow, what would survive without you?'
@@ -117,7 +118,7 @@ export function normalizeCourse(input) {
       lastTestedDate:str(merged.lastTestedDate,40), lastTestedEnvironment:str(merged.lastTestedEnvironment,1000),
     }
   })
-  result.sections = list(c.sections,60).map((s) => ({id:str(s.id,120),title:str(s.title,220),body:str(s.body),status:status(s.status),lessonSlugs:strings(s.lessonSlugs),activities:strings(s.activities),sources:resources(s.sources),contributors:strings(s.contributors),prerequisites:strings(s.prerequisites),completion:rules(s.completion)}))
+  result.sections = list(c.sections,60).map((s) => ({id:str(s.id,120),title:str(s.title,220),body:str(s.body),status:status(s.status),lessonSlugs:strings(s.lessonSlugs),activities:strings(s.activities),sources:resources(s.sources),contributors:strings(s.contributors).filter(participatingContributor),prerequisites:strings(s.prerequisites),completion:rules(s.completion)}))
   if (result.slug === SLUG) {
     if (result.sections.length !== 13 || result.sections.some((s,i) => s.id !== seed.sections[i].id || JSON.stringify(s.lessonSlugs) !== JSON.stringify(seed.sections[i].lessonSlugs))) throw invalid('Keep G01–G13 and their locked lesson mapping')
     if (result.lessons.length !== 12 || result.lessons.some((l,i) => l.slug !== seed.lessons[i].slug)) throw invalid('Keep the twelve established lesson identifiers and order')

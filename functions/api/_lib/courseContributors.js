@@ -1,3 +1,4 @@
+import { participatingContributor } from '../../../public/guides/become-the-thousand-servers/lms/participation.js'
 import { contributionDraft } from './courseContributorPrompts.js'
 import {
   contributorNames,
@@ -45,7 +46,7 @@ export async function ensureContributors(db) {
 export async function listContributors(db) {
   await ensureContributors(db)
   const result = await db.prepare('SELECT id,name FROM course_contributors ORDER BY rowid').all()
-  return result.results || []
+  return (result.results || []).filter(participatingContributor)
 }
 
 export function normalizeContribution(value = {}) {
