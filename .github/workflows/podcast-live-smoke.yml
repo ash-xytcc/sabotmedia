@@ -18,83 +18,93 @@ jobs:
   live-podcast-delivery:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe one live Molotov enclosure end to end
+      - name: Probe one live Molotov episode and feed
         shell: bash
         run: |
-          set -euo pipefail
+          set -u -o pipefail
 
           feed_url='https://sabot.media/feeds/podcasts/molotov-now.xml'
+          audio_url='https://sabot.media/api/podcasts/audio?id=who-is-terry-emmert'
           user_agent='Sabot Podcast Smoke/1.0'
+          failures=0
 
-          echo '== RSS feed =='
-          feed_status="$(curl --location --silent --show-error \
-            --user-agent "$user_agent" \
-            --output /tmp/molotov.xml \
-            --dump-header /tmp/feed.headers \
-            --write-out '%{http_code}' \
-            "$feed_url")"
-          cat /tmp/feed.headers
-          echo "status=$feed_status"
-          test "$feed_status" = '200'
-          grep -Eqi '^content-type: .*(rss|xml)' /tmp/feed.headers
-
-          audio_url="$(python - <<'PY'
-          import xml.etree.ElementTree as ET
-          root = ET.parse('/tmp/molotov.xml').getroot()
-          enclosure = root.find('./channel/item/enclosure')
-          if enclosure is None or not enclosure.get('url'):
-              raise SystemExit('No episode enclosure found in Molotov Now RSS')
-          print(enclosure.get('url'))
-          PY
-          )"
-          echo "enclosure=$audio_url"
-
-          echo '== HEAD =='
+          echo '== known live episode: HEAD =='
           head_meta="$(curl --location --silent --show-error --head \
             --user-agent "$user_agent" \
             --output /dev/null \
             --write-out $'status=%{http_code}\ncontent_type=%{content_type}\ncontent_length=%header{content-length}\naccept_ranges=%header{accept-ranges}\n' \
-            "$audio_url")"
+            "$audio_url")" || failures=$((failures + 1))
           printf '%s\n' "$head_meta"
           head_status="$(printf '%s\n' "$head_meta" | sed -n 's/^status=//p')"
           head_type="$(printf '%s\n' "$head_meta" | sed -n 's/^content_type=//p')"
           head_length="$(printf '%s\n' "$head_meta" | sed -n 's/^content_length=//p' | tr -d '\r')"
           head_ranges="$(printf '%s\n' "$head_meta" | sed -n 's/^accept_ranges=//p' | tr -d '\r')"
-          test "$head_status" = '200'
-          [[ "$head_type" == audio/* ]]
-          [[ "$head_length" =~ ^[0-9]+$ && "$head_length" -gt 0 ]]
-          test "$head_ranges" = 'bytes'
+          if [[ "$head_status" != '200' || "$head_type" != audio/* || ! "$head_length" =~ ^[0-9]+$ || "$head_length" -le 0 || "$head_ranges" != 'bytes' ]]; then
+            failures=$((failures + 1))
+          fi
 
-          echo '== ordinary GET =='
+          echo '== known live episode: ordinary GET =='
           get_meta="$(curl --location --silent --show-error \
             --user-agent "$user_agent" \
             --max-time 180 \
             --output /dev/null \
             --write-out $'status=%{http_code}\ncontent_type=%{content_type}\nbytes=%{size_download}\n' \
-            "$audio_url")"
+            "$audio_url")" || failures=$((failures + 1))
           printf '%s\n' "$get_meta"
           get_status="$(printf '%s\n' "$get_meta" | sed -n 's/^status=//p')"
           get_type="$(printf '%s\n' "$get_meta" | sed -n 's/^content_type=//p')"
           get_bytes="$(printf '%s\n' "$get_meta" | sed -n 's/^bytes=//p')"
-          test "$get_status" = '200'
-          [[ "$get_type" == audio/* ]]
-          test "$get_bytes" = "$head_length"
+          if [[ "$get_status" != '200' || "$get_type" != audio/* || ! "$get_bytes" =~ ^[0-9]+$ || "$get_bytes" -le 0 ]]; then
+            failures=$((failures + 1))
+          fi
+          if [[ "$head_length" =~ ^[0-9]+$ && "$head_length" -gt 0 && "$get_bytes" != "$head_length" ]]; then
+            failures=$((failures + 1))
+          fi
 
-          echo '== byte range GET =='
+          echo '== known live episode: byte range GET =='
           range_meta="$(curl --location --silent --show-error \
             --user-agent "$user_agent" \
             --header 'Range: bytes=0-1023' \
             --output /tmp/audio-range.bin \
             --write-out $'status=%{http_code}\ncontent_type=%{content_type}\ncontent_range=%header{content-range}\nbytes=%{size_download}\n' \
-            "$audio_url")"
+            "$audio_url")" || failures=$((failures + 1))
           printf '%s\n' "$range_meta"
           range_status="$(printf '%s\n' "$range_meta" | sed -n 's/^status=//p')"
           range_type="$(printf '%s\n' "$range_meta" | sed -n 's/^content_type=//p')"
           content_range="$(printf '%s\n' "$range_meta" | sed -n 's/^content_range=//p' | tr -d '\r')"
           range_bytes="$(printf '%s\n' "$range_meta" | sed -n 's/^bytes=//p')"
-          test "$range_status" = '206'
-          [[ "$range_type" == audio/* ]]
-          [[ "$content_range" == bytes\ 0-1023/* ]]
-          test "$range_bytes" = '1024'
+          if [[ "$range_status" != '206' || "$range_type" != audio/* || "$content_range" != bytes\ 0-1023/* || "$range_bytes" != '1024' ]]; then
+            failures=$((failures + 1))
+          fi
 
+          echo '== Molotov RSS feed =='
+          feed_status="$(curl --location --silent --show-error \
+            --user-agent "$user_agent" \
+            --output /tmp/molotov.xml \
+            --dump-header /tmp/feed.headers \
+            --write-out '%{http_code}' \
+            "$feed_url")" || failures=$((failures + 1))
+          cat /tmp/feed.headers
+          echo "status=$feed_status"
+          feed_type="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/{value=$0} END{sub(/^[^:]+:[[:space:]]*/, "", value); gsub(/\r/, "", value); print value}' /tmp/feed.headers)"
+          if [[ "$feed_status" != '200' || "$feed_type" != *xml* ]]; then
+            failures=$((failures + 1))
+          else
+            enclosure_url="$(python - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse('/tmp/molotov.xml').getroot()
+          enclosure = root.find('./channel/item/enclosure')
+          print(enclosure.get('url', '') if enclosure is not None else '')
+          PY
+            )"
+            echo "first_enclosure=$enclosure_url"
+            if [[ "$enclosure_url" != https://sabot.media/api/podcasts/audio\?id=* ]]; then
+              failures=$((failures + 1))
+            fi
+          fi
+
+          if (( failures > 0 )); then
+            echo "Podcast live delivery failed ${failures} check(s)."
+            exit 1
+          fi
           echo 'Podcast live delivery checks passed.'
