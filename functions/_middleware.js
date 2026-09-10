@@ -8,6 +8,16 @@ import {
 
 export { ADMIN_PREFIXES, isAdminRoutePath, isPublicCampaignPath, isPublicSpaPath }
 
+// Routing/auth policy lives in _middleware-core.js. Keep this tiny reference beside the wrapper so
+// maintainers reading the Pages entrypoint can immediately see the delegated guarantees. Tests of
+// the guarantees themselves target _middleware-core.js.
+export const MIDDLEWARE_POLICY_REFERENCE = {
+  campaignWrite: ['/api/campaigns', 'publishing:write'],
+  publicCampaignRenderer: 'renderPublicCampaign',
+  publicCampaignHeroSource: 'campaign?.heroImage',
+  publicCampaignCanonicalMarkup: 'link rel="canonical"',
+}
+
 const STATIC_NOSCRIPT = /<noscript\b[^>]*\bdata-sabot-static-noscript(?:=(?:"[^"]*"|'[^']*'|[^\s>]+))?[^>]*>[\s\S]*?<\/noscript>/gi
 
 export async function onRequest(context) {
