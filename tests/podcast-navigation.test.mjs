@@ -12,7 +12,7 @@ const podcastSettingsBackend = fs.readFileSync(new URL('../functions/api/_lib/po
 const podcastImport = fs.readFileSync(new URL('../functions/api/podcast-import.js', import.meta.url), 'utf8')
 const podcastImportService = fs.readFileSync(new URL('../functions/api/_lib/podcastImportService.js', import.meta.url), 'utf8')
 const podcastFeeds = fs.readFileSync(new URL('../functions/feeds/[[path]].js', import.meta.url), 'utf8')
-const middleware = fs.readFileSync(new URL('../functions/_middleware.js', import.meta.url), 'utf8')
+const middleware = fs.readFileSync(new URL('../functions/_middleware-core.js', import.meta.url), 'utf8')
 
 test('podcast settings has a canonical named admin route and protected page', () => {
   assert.match(routes, /podcastSettings: '\/wp-admin\/podcasts\/settings'/)
