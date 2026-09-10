@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises'
+import { articleSupplementHtml } from '../src/content/articleSupplements.js'
 import path from 'node:path'
 import { publicInfoCopy } from '../src/content/publicInfoCopy.js'
 import { publicPageRegistry } from '../src/lib/publicPageRegistry.js'
@@ -143,7 +144,7 @@ function renderPost(entry) {
   const date = formatDate(entry.publishedAt || entry.updatedAt || entry.createdAt)
   const byline = cleanText(entry.author || entry.byline || '')
   const body = safePublishedBody(entry.body || entry.content || entry.excerpt || '')
-  return shell(`<article><p><a href="/archive">← Back to archive</a></p><h1>${escapeHtml(title)}</h1>${(date || byline) ? `<p class="ns-meta">${[byline, date].filter(Boolean).map(escapeHtml).join(' · ')}</p>` : ''}${body || '<p>This published item has no readable text body in the static snapshot.</p>'}</article>`)
+  return shell(`<article><p><a href="/archive">← Back to archive</a></p><h1>${escapeHtml(title)}</h1>${(date || byline) ? `<p class="ns-meta">${[byline, date].filter(Boolean).map(escapeHtml).join(' · ')}</p>` : ''}${articleSupplementHtml(entry.slug)}${body || '<p>This published item has no readable text body in the static snapshot.</p>'}</article>`)
 }
 
 function textToParagraphs(value) {

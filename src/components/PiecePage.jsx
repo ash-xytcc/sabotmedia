@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { articleSupplementHtml } from '../content/articleSupplements.js'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { PublicationTopbar } from './PublicationTopbar'
 import { PublicationFooter } from './PublicationFooter'
@@ -440,6 +441,7 @@ export function PiecePage({ pieces = [] }) {
           ) : null}
         </aside>
         <article className="piece-body-wrap piece-body-wrap--public-post">
+          {articleSupplementHtml(piece.slug) ? <div dangerouslySetInnerHTML={{ __html: articleSupplementHtml(piece.slug) }} /> : null}
           <div className="piece-body__content">
             {bodyNodes.length ? bodyNodes : <p className="post-body__paragraph">{displayExcerpt || ''}</p>}
           </div>
