@@ -7052,6 +7052,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-9pctxb",
+            "date": "2026-09-10T12:00:00.000Z",
+            "outlet": "L'Indipendente",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Perché abbiamo obbedito alle sanzioni USA contro Autistici/Inventati: parla Banca Etica",
+            "translatedTitle": "",
+            "url": "https://www.lindipendente.online/2026/09/10/perche-abbiamo-obbedito-alle-sanzioni-usa-contro-autistici-inventati-parla-banca-etica",
+            "imageUrl": "",
+            "summary": "Nelle settimane scorse, un ordine esecutivo della Casa Bianca ha spinto il Dipartimento del Tesoro statunitense di inserire il collettivo italiano Autistici/Inventati, l’inglese Palestine Action e il ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-125s625",
             "date": "2026-09-10T05:00:00.000Z",
             "outlet": "Euronews",
@@ -7112,22 +7128,6 @@
             "summary": "Una decisione amministrativa del presidente Usa Donald Trump voleva colpire gli Antifa americani, etichettandoli come gruppo terroristico. Ma il nodo della Rete, ospitato sul server di Autistici / Inv ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 92,
-            "featured": false,
-            "editorialStatus": "automatic"
-          },
-          {
-            "id": "coverage-9pctxb",
-            "date": "2026-09-09T22:00:00.000Z",
-            "outlet": "L'Indipendente",
-            "language": "Italian",
-            "languageCode": "it",
-            "title": "Perché abbiamo obbedito alle sanzioni USA contro Autistici/Inventati: parla Banca Etica",
-            "translatedTitle": "",
-            "url": "https://www.lindipendente.online/2026/09/10/perche-abbiamo-obbedito-alle-sanzioni-usa-contro-autistici-inventati-parla-banca-etica",
-            "imageUrl": "",
-            "summary": "Nelle settimane scorse, un ordine esecutivo della Casa Bianca ha spinto il Dipartimento del Tesoro statunitense di inserire il collettivo italiano Autistici/Inventati, l’inglese Palestine Action e il ...",
-            "discoverySource": "live-discovery",
-            "relevanceScore": 105,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9908,7 +9908,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-10T18:18:39.047Z",
+        "socialCheckedAt": "2026-09-10T20:56:49.860Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9936,11 +9936,11 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 4
+            "count": 5
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-10T18:18:39.930Z",
+        "intelligenceCheckedAt": "2026-09-10T20:56:51.392Z",
         "coverageArchiveCount": 153
       },
       "food-not-bombs-gaza": {
@@ -10143,7 +10143,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-10T18:18:51.820Z",
+        "automationCheckedAt": "2026-09-10T20:57:02.976Z",
         "coverageArchiveCount": 0
       }
     }
