@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test-and-build:
@@ -19,6 +19,47 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Materialize crawler-safe podcast cover files
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f public/podcast-covers/molotov-now.jpg ] || [ ! -f public/podcast-covers/the-child-and-its-enemies.jpg ] || [ ! -f public/podcast-covers/get-to-know-your-neighborhood.jpg ]; then
+            python3 -m pip install --quiet pillow
+            python3 - <<'PY'
+          import base64
+          import io
+          import re
+          from pathlib import Path
+          from PIL import Image
+
+          slugs = [
+              'molotov-now',
+              'the-child-and-its-enemies',
+              'get-to-know-your-neighborhood',
+          ]
+          out_dir = Path('public/podcast-covers')
+          out_dir.mkdir(parents=True, exist_ok=True)
+          for slug in slugs:
+              target = out_dir / f'{slug}.jpg'
+              if target.exists():
+                  continue
+              svg = Path(f'public/project-logos/{slug}.svg').read_text(encoding='utf-8')
+              match = re.search(r'href="data:image/webp;base64,([A-Za-z0-9+/=]+)"', svg)
+              if not match:
+                  raise SystemExit(f'Embedded WebP source missing for {slug}')
+              source = Image.open(io.BytesIO(base64.b64decode(match.group(1)))).convert('RGB')
+              image = source.resize((1280, 1280), Image.Resampling.LANCZOS)
+              image.save(target, 'JPEG', quality=82, optimize=True, progressive=True, subsampling=2)
+          PY
+            git add public/podcast-covers/*.jpg
+            if ! git diff --cached --quiet; then
+              git config user.name "Sabot Media"
+              git config user.email "info@sabot.media"
+              git commit -m "Add static podcast directory cover art"
+              git push origin HEAD:main
+            fi
+          fi
       - name: Install dependencies
         run: npm ci
       - name: Run regression tests
@@ -69,8 +110,5 @@ jobs:
             test-output.log
             build-output.log
             podcast-cover-probe.log
-            public/project-logos/molotov-now.svg
-            public/project-logos/the-child-and-its-enemies.svg
-            public/project-logos/get-to-know-your-neighborhood.svg
           if-no-files-found: ignore
           retention-days: 7
