@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import test from 'node:test'
 
-const middleware = fs.readFileSync(new URL('../functions/_middleware.js', import.meta.url), 'utf8')
+const middleware = fs.readFileSync(new URL('../functions/_middleware-core.js', import.meta.url), 'utf8')
 const worker = fs.readFileSync(new URL('../functions/api/episode-worker.js', import.meta.url), 'utf8')
 const credentials = fs.readFileSync(new URL('../functions/api/episode-worker-credentials.js', import.meta.url), 'utf8')
 const media = fs.readFileSync(new URL('../functions/api/episode-worker-media.js', import.meta.url), 'utf8')
@@ -15,6 +15,8 @@ test('worker-only API routes bypass editor-session middleware', () => {
   ]) {
     assert.match(middleware, new RegExp(path.replaceAll('/', '\\/')))
   }
+  assert.match(middleware, /PUBLIC_AUTH_API_PATHS/)
+  assert.match(middleware, /return context\.next\(\)/)
 })
 
 test('worker-only API routes still enforce the worker bearer token themselves', () => {
