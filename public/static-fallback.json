@@ -7052,6 +7052,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-1bzfdxw",
+            "date": "2026-09-10T13:58:00.000Z",
+            "outlet": "Altreconomia",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "“Perché Autistici/Inventati ha fatto causa a Banca Etica dopo la chiusura del conto”",
+            "translatedTitle": "",
+            "url": "https://altreconomia.it/perche-autistici-inventati-ha-fatto-causa-a-banca-etica-dopo-la-chiusura-del-conto",
+            "imageUrl": "",
+            "summary": "Fausto Gianelli, nel team legale dell'organizzazione sanzionata dall'amministrazione Trump a fine agosto, spiega le ragioni di diritto che hanno portato AI a presentare l'8 settembre un ricorso cautel ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-9pctxb",
             "date": "2026-09-10T12:00:00.000Z",
             "outlet": "L'Indipendente",
@@ -9908,7 +9924,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-10T20:56:49.860Z",
+        "socialCheckedAt": "2026-09-10T23:04:38.876Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9936,12 +9952,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 5
+            "count": 0
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-10T20:56:51.392Z",
-        "coverageArchiveCount": 153
+        "intelligenceCheckedAt": "2026-09-10T23:04:39.606Z",
+        "coverageArchiveCount": 154
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10143,7 +10159,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-10T20:57:02.976Z",
+        "automationCheckedAt": "2026-09-10T23:04:49.462Z",
         "coverageArchiveCount": 0
       }
     }
