@@ -1,164 +1,29 @@
 import { legacySeed, sharedQuestion } from './model.js'
 export const BASE = '/guides/become-the-thousand-servers/'
-export const esc = (v) =>
-  String(v ?? '').replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
-  )
-export const prose = (v) =>
-  String(v || '')
-    .split(/\n\n+/)
-    .filter(Boolean)
-    .map(
-      (p) =>
-        `<p>${esc(p)
-          .replace(/`([^`]+)`/g, '<code>$1</code>')
-          .replace(/\n/g, '<br>')}</p>`,
-    )
-    .join('')
-const resources = (rs) =>
-  `<ul>${(rs || []).map((r) => `<li>${/^https?:\/\//i.test(r.url || '') ? `<a href="${esc(r.url)}" rel="noreferrer">${esc(r.title || r.url)}</a>` : esc(r.title)} ${esc(r.note)}</li>`).join('')}</ul>`
-export function shell(title, body, data = null) {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><title>${esc(title)} · Sabot Media</title><link rel="stylesheet" href="${BASE}lms/course.css"><link rel="stylesheet" href="${BASE}lms/recovery-card.css?v=card-1"></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${BASE}">Become the Thousand Servers</a><span data-progress>Your progress belongs to you.</span><a href="${BASE}#tools">Progress tools</a></header><main id="main" class="wrap">${body}</main>${data ? `<script id="course-data" type="application/json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script><script type="module" src="${BASE}lms/learner.js?v=audit-1"></script>` : ''}</body></html>`
+export const esc = (v) => String(v ?? '').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+export const prose = (v) => String(v||'').split(/\n\n+/).filter(Boolean).map((p)=>`<p>${esc(p).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>')}</p>`).join('')
+const resources = (rs=[]) => `<ul>${rs.map((r)=>`<li>${/^https?:\/\//i.test(r.url||'')?`<a href="${esc(r.url)}" rel="noreferrer">${esc(r.title||r.url)}</a>`:esc(r.title)} ${esc(r.note)}</li>`).join('')}</ul>`
+export function shell(title,body,data=null){return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><title>${esc(title)} · Sabot Media</title><link rel="stylesheet" href="${BASE}lms/course.css"><link rel="stylesheet" href="${BASE}lms/recovery-card.css?v=card-1"></head><body><a class="skip" href="#main">Skip to content</a><header><a class="brand" href="${BASE}">Become the Thousand Servers</a><span data-progress>Your progress belongs to you.</span><a href="${BASE}#tools">Progress tools</a></header><main id="main" class="wrap">${body}</main>${data?`<script id="course-data" type="application/json">${JSON.stringify(data).replace(/</g,'\\u003c')}</script><script type="module" src="${BASE}lms/learner.js?v=review-2"></script>`:''}</body></html>`}
+function activity(a){
+  const options=a.options||[];let controls=''
+  if(['multiple-choice','multiple-select','true-false','troubleshooting','checklist'].includes(a.type)) controls=options.map((o)=>`<label class="activity-option"><input name="answer" type="${['multiple-select','checklist'].includes(a.type)?'checkbox':'radio'}" value="${esc(o.id)}"> ${esc(o.label)}</label>`).join('')
+  else if(a.type==='ordered-sequence') controls=options.map((_,i)=>`<label class="activity-option">Position ${i+1}<select name="answer"><option value="">Choose</option>${options.map((o)=>`<option value="${esc(o.id)}">${esc(o.label)}</option>`).join('')}</select></label>`).join('')
+  else if(a.type==='matching') controls=a.pairs.map((p)=>`<label class="activity-option">${esc(p.left)} <select name="answer"><option value="">Choose</option>${[...a.pairs].sort((x,y)=>x.right.localeCompare(y.right)).map((q)=>`<option>${esc(q.right)}</option>`).join('')}</select></label>`).join('')
+  else if(a.type==='practical') controls='<label><input type="checkbox" name="answer" value="confirmed"> I did this and verified it.</label>'
+  else controls='<label>Your reflection<textarea name="answer" maxlength="20000" rows="5"></textarea></label>'
+  const selfAssessed=['short-reflection','teach-back','practical','checklist'].includes(a.type)
+  if(a.type==='teach-back') controls+='<label class="activity-option"><input type="checkbox" name="answer" value="__teachback_confirmed__"> I taught this to someone and checked their understanding.</label>'
+  return `<form data-activity="${esc(a.id)}" class="activity"><fieldset disabled><legend>${esc(a.title)} · ${esc(a.type)} · version ${a.version}</legend>${prose(a.prompt)}${a.completionHelp?`<p><strong>Before you start:</strong> ${esc(a.completionHelp)}</p>`:''}${controls}<button type="submit">${selfAssessed?'Save my work':'Check answers'}</button>${selfAssessed?'<button type="button" data-retry>I need more practice</button>':''}<p aria-live="polite" data-feedback></p></fieldset>${resources(a.sources)}</form>`
 }
-function activity(a) {
-  const options = a.options || []
-  let controls = ''
-  if (['multiple-choice', 'multiple-select', 'true-false', 'troubleshooting', 'checklist'].includes(a.type))
-    controls = options
-      .map(
-        (o) =>
-          `<label class="activity-option"><input name="answer" type="${['multiple-select', 'checklist'].includes(a.type) ? 'checkbox' : 'radio'}" value="${esc(o.id)}"> ${esc(o.label)}</label>`,
-      )
-      .join('')
-  else if (a.type === 'ordered-sequence')
-    controls = options
-      .map(
-        (_, i) =>
-          `<label class="activity-option">Position ${i + 1}<select name="answer"><option value="">Choose</option>${options.map((o) => `<option value="${esc(o.id)}">${esc(o.label)}</option>`).join('')}</select></label>`,
-      )
-      .join('')
-  else if (a.type === 'matching')
-    controls = a.pairs
-      .map(
-        (p) =>
-          `<label class="activity-option">${esc(p.left)} <select name="answer"><option value="">Choose</option>${[
-            ...a.pairs,
-          ]
-            .sort((a, b) => a.right.localeCompare(b.right))
-            .map((q) => `<option>${esc(q.right)}</option>`)
-            .join('')}</select></label>`,
-      )
-      .join('')
-  else if (a.type === 'practical')
-    controls =
-      '<label><input type="checkbox" name="answer" value="confirmed"> I did this and verified it.</label>'
-  else
-    controls = '<label>Your reflection<textarea name="answer" maxlength="20000" rows="5"></textarea></label>'
-  const selfAssessed = ['short-reflection', 'teach-back', 'practical', 'checklist'].includes(a.type)
-  if (a.type === 'teach-back') controls += '<label class="activity-option"><input type="checkbox" name="answer" value="__teachback_confirmed__"> I taught this to someone and checked their understanding.</label>'
-  return `<form data-activity="${esc(a.id)}" class="activity"><fieldset disabled><legend>${esc(a.title)} · ${esc(a.type)}</legend>${prose(a.prompt)}${controls}<button type="submit">${selfAssessed ? 'Save my work' : 'Check answers'}</button>${selfAssessed ? '<button type="button" data-retry>I need more practice</button>' : ''}<p aria-live="polite" data-feedback></p></fieldset>${resources(a.sources)}</form>`
-}
-export function renderCourse(c, contributors = []) {
-  const nested = new Set(c.sections.flatMap((s) => s.lessonSlugs))
-  const units = [
-    ...c.sections.flatMap((s) => [
-      s,
-      ...s.lessonSlugs.map((slug) => c.lessons.find((l) => l.slug === slug)).filter(Boolean),
-    ]),
-    ...c.lessons.filter((l) => !nested.has(l.slug)),
-  ]
-  const links = c.sections
-    .map(
-      (s) =>
-        `<li><a href="#${esc(s.id)}">${esc(s.id)}. ${esc(s.title)}</a> <span data-status="${esc(s.id)}"></span>${
-          s.lessonSlugs.length
-            ? `<ul>${s.lessonSlugs
-                .map((slug) => {
-                  const l = c.lessons.find((l) => l.slug === slug)
-                  return l
-                    ? `<li><a href="#${esc(slug)}">Lesson ${l.number}: ${esc(l.title)}</a> <span data-status="${esc(slug)}"></span></li>`
-                    : ''
-                })
-                .join('')}</ul>`
-            : ''
-        }</li>`,
-    )
-    .join('')
-  const unitHtml = units
-    .map((u, i) => {
-      const key = u.slug || u.id,
-        lesson = !!u.slug,
-        requirements = u.completion || {}
-      const activityIds = lesson
-        ? [...new Set([...(u.activities || []), ...(requirements.activities || [])])]
-        : [...new Set([...(u.activities || []), ...(requirements.activities || [])])]
-      return `<article class="course-unit section" id="${esc(key)}" data-unit="${esc(key)}"><p class="eyebrow">${lesson ? `Practical Lesson ${u.number}` : esc(u.id)}</p><h2 tabindex="-1">${esc(u.title)}</h2><p>${esc(u.difficulty || 'Self-directed')} ${esc(u.time || 'Read at your pace')}</p><a href="#course-map">Course map</a><p data-unit-status></p>${u.prerequisites?.length ? `<p>Prerequisites: ${u.prerequisites.map((x) => `<a href="#${esc(x)}">${esc(x)}</a>`).join(', ')}</p>` : ''}${
-        lesson
-          ? `<section><h3>Learning objectives</h3><ul>${u.objectives.map((o) => `<li>${esc(o)}</li>`).join('')}</ul></section>${[
-              'learn',
-              'do',
-              'test',
-              'teach',
-            ]
-              .map(
-                (k) =>
-                  `<section class="lesson-section"><h3>${k.toUpperCase()}</h3>${
-                    k === 'do'
-                      ? `<ol>${String(u[k] || '')
-                          .split(/\n\n+/)
-                          .filter(Boolean)
-                          .map((step) => `<li>${prose(step)}</li>`)
-                          .join('')}</ol>`
-                      : prose(u[k])
-                  }${k === 'do' ? '<aside class="safety">Use the disposable environment. Know what you are about to do, what could go wrong, how you will know it worked, and how you will recover. Production is not the classroom.</aside>' : ''}</section>`,
-              )
-              .join(
-                '',
-              )}<ul>${u.checks.map((x) => `<li>${esc(x)}</li>`).join('')}</ul><h3>Resources</h3>${resources(u.resources)}`
-          : `${u.body ? prose(u.body) : '<p>Reporting and section prose are still being assembled.</p>'}${
-              u.lessonSlugs.length
-                ? `<h3>Practical lessons</h3><ul>${u.lessonSlugs
-                    .map((slug) => {
-                      const l = c.lessons.find((l) => l.slug === slug)
-                      return l
-                        ? `<li><a href="#${esc(slug)}">Lesson ${l.number}: ${esc(l.title)}</a></li>`
-                        : ''
-                    })
-                    .join('')}</ul>`
-                : ''
-            }${resources(u.sources)}${u.contributors?.length ? `<h3>Contributor material</h3><ul>${u.contributors.map((id) => `<li><a href="${BASE}contributors/${esc(id)}">${esc(contributors.find((p) => p.id === id)?.name || id)}</a></li>`).join('')}</ul>` : ''}`
-      }${activityIds
-        .map((id) => {
-          const a = c.activities.find((a) => a.id === id)
-          return a
-            ? activity(a)
-            : '<p>Required activity is not currently published. Completion is unavailable until it is restored.</p>'
-        })
-        .join(
-          '',
-        )}<div class="learner-controls" hidden><h3>Completion requirements</h3><p>${requirements.manual ? 'Mark complete after doing the work. ' : ''}${requirements.practical ? 'Confirm the practical task. ' : ''}${requirements.viewed ? 'Open this section. ' : ''}${requirements.activities?.length ? 'Pass the required activities above.' : ''}</p>${requirements.practical ? '<label><input type="checkbox" data-practical> I did the practical task and verified it.</label>' : ''}<p><button data-complete>Mark complete</button> <button data-bookmark>Bookmark</button></p><label>Local notes<textarea data-notes rows="5" maxlength="20000"></textarea></label><p>Your notes stay in this browser unless you export them or choose encrypted backup.</p></div><nav class="prevnext" aria-label="Previous and next">${i ? `<a href="#${esc(units[i - 1].slug || units[i - 1].id)}">← ${esc(units[i - 1].title)}</a>` : '<a href="#course-map">Course home</a>'}${i < units.length - 1 ? `<a href="#${esc(units[i + 1].slug || units[i + 1].id)}">${esc(units[i + 1].title)} →</a>` : '<a href="#course-map">Course home</a>'}</nav></article>`
-    })
-    .join('')
-  return shell(
-    c.title,
-    `<section class="hero"><p class="eyebrow">${esc(c.subtitle)}</p><h1>${esc(c.title)}</h1><p class="deck">${esc(c.deck)}</p><p><a href="#tools">Create one recovery card at the start. Keep it for the whole course.</a></p><a href="#G01" data-resume class="btn">Start course</a><p data-progress></p><progress max="100" value="0" aria-label="Overall course progress"></progress><p>Beginner to intermediate · Twelve practical lessons, roughly 14–30 hours, plus reading and teach-back.</p>${prose(c.intro)}</section><aside class="note"><h2>The Anarchist’s Guide to Losing Everyone’s Email Because Dave Forgot to Patch Debian</h2><p>When infrastructure depends on one exhausted keeper of secret knowledge, politics does not save it from ordinary failure. Don’t let Dave touch it. More importantly, don’t build a system where only Dave knows how.</p></aside><section id="course-map" class="section"><h2>Guide sections G01–G13</h2><ol class="course-map">${links}</ol></section><section class="section"><h2>Practical lessons 1–12</h2><div class="grid">${c.lessons.map((l) => `<a class="card" href="#${esc(l.slug)}"><span>Lesson ${l.number} · <span data-status="${esc(l.slug)}"></span></span><h3>${esc(l.title)}</h3><small>${esc(l.time)} · ${esc(l.difficulty)}</small></a>`).join('')}</div></section><section class="section"><h2>I need to…</h2>${legacySeed.tasks
-      .map(
-        ([t, ns]) =>
-          `<p>${esc(t)}: ${ns
-            .map((n) => {
-              const l = c.lessons.find((l) => l.number === n)
-              return l ? `<a href="#${esc(l.slug)}">Lesson ${n}</a>` : ''
-            })
-            .join(' · ')}</p>`,
-      )
-      .join(
-        '',
-      )}</section><section id="tools" class="section"><h2>Your progress belongs to you.</h2><noscript><p>The whole published course is readable below. Local progress and interactive checks need JavaScript. You can print this page and do the exercises on paper.</p></noscript><div class="learner-controls" hidden><p>No account, email, or profile. Clearing site data can erase progress. Export a copy.</p><div class="actions"><button data-export>Export Progress</button><button data-import>Import Progress</button><button data-backup>Create my recovery card</button><button data-print-card hidden>Print recovery card</button><button data-restore>Restore encrypted backup</button><button data-reset>Reset local progress</button></div><input type="file" data-file accept=".json,application/json" hidden><p data-message role="status"></p><p data-recovery-status role="status"></p><article class="recovery-card" data-card hidden><div class="card-terminal-bar">SABOT // RECOVERY SYSTEM v1.0 <span>[ OFFLINE KEY ]</span></div><div class="card-terminal-body"><p class="card-kicker">&gt; ACCESS IS KNOWLEDGE. KEEP YOURS.</p><h2>BECOME THE<br>THOUSAND SERVERS_</h2><p class="card-warning">RECOVERY KEY — DO NOT LOSE</p><div class="card-qr-row"><img src="https://sabot.media/guides/become-the-thousand-servers/lms/recovery-qr.svg" width="148" height="148" alt="QR link to the course recovery screen"><div><strong>01 / SCAN TO RECONNECT</strong><p>Open the recovery screen.<br>Enter the code below.<br>Restore your latest saved progress.</p><small>The QR contains only the course link. Your secret stays on this card.</small></div></div><div class="card-code-label">02 / YOUR PERSONAL RECOVERY CODE</div><code data-card-code></code><p class="card-retention" data-card-retention></p><p class="card-security">Anyone with this code can read and update your backup. Sabot cannot recover a lost key.</p><div class="card-terminal-footer">NO ACCOUNT. NO EMAIL. YOUR PROGRESS BELONGS TO YOU.</div><p class="card-url">sabot.media/guides/become-the-thousand-servers/#restore</p></div></article><div data-recovery-panel hidden><label>Recovery code<textarea data-recovery-code rows="3" autocomplete="off" spellcheck="false"></textarea></label><p>Anyone with this recovery code can restore this progress. Sabot cannot recover it for you.</p><button data-fetch-recovery>Restore this code (replace local progress)</button></div><h3>Bookmarks and notes</h3><div data-notebook></div></div></section><section class="section"><h2>Contributors</h2><p>${esc(sharedQuestion)}</p><ul>${contributors.map((p) => `<li><a href="${BASE}contributors/${esc(p.id)}">${esc(p.name)}</a></li>`).join('')}</ul></section>${unitHtml}<section class="section"><h2>Shared working documents</h2>${c.documents.map((d) => `<article><h3>${esc(d.title)}</h3>${prose(d.body)}${resources(d.sources)}</article>`).join('') || '<p>Working documents will appear here when published.</p>'}</section><section class="section"><h2>Glossary</h2><dl>${Object.entries(
-      legacySeed.glossary,
-    )
-      .map(([k, v]) => `<dt><strong>${esc(k)}</strong></dt><dd>${esc(v)}</dd>`)
-      .join('')}</dl></section>`,
-    c,
-  )
+export function renderCourse(c,contributors=[]){
+  const nested=new Set(c.sections.flatMap((s)=>s.lessonSlugs));const units=[...c.sections.flatMap((s)=>[s,...s.lessonSlugs.map((slug)=>c.lessons.find((l)=>l.slug===slug)).filter(Boolean)]),...c.lessons.filter((l)=>!nested.has(l.slug))]
+  const links=c.sections.map((s)=>`<li><a href="#${esc(s.id)}">${esc(s.id)}. ${esc(s.title)}</a> <span data-status="${esc(s.id)}"></span>${s.lessonSlugs.length?`<ul>${s.lessonSlugs.map((slug)=>{const l=c.lessons.find((x)=>x.slug===slug);return l?`<li><a href="#${esc(slug)}">Lesson ${l.number}: ${esc(l.title)}</a> <span data-status="${esc(slug)}"></span></li>`:''}).join('')}</ul>`:''}</li>`).join('')
+  const unitHtml=units.map((u,i)=>{
+    const key=u.slug||u.id,lesson=!!u.slug,requirements=u.completion||{},activityIds=[...new Set([...(u.activities||[]),...(requirements.activities||[])])]
+    const tested=lesson&&u.lastTestedDate?`<p class="tested"><strong>Last tested:</strong> ${esc(u.lastTestedDate)}${u.lastTestedEnvironment?` · ${esc(u.lastTestedEnvironment)}`:''}</p>`:''
+    const lessonBody=lesson?`<section><h3>Learning objectives</h3><ul>${u.objectives.map((o)=>`<li>${esc(o)}</li>`).join('')}</ul></section>${['learn','do','test','teach'].map((k)=>`<section class="lesson-section"><h3>${k.toUpperCase()}</h3>${k==='do'?`<ol>${String(u[k]||'').split(/\n\n+/).filter(Boolean).map((step)=>`<li>${prose(step)}</li>`).join('')}</ol>`:prose(u[k])}${k==='do'?'<aside class="safety">Use the disposable environment. Know what you are about to do, what could go wrong, how you will know it worked, and how you will recover. Production is not the classroom.</aside>':''}</section>`).join('')}<ul>${u.checks.map((x)=>`<li>${esc(x)}</li>`).join('')}</ul><h3>Resources</h3>${resources(u.resources)}`:`${u.body?prose(u.body):'<p>Reporting and section prose are still being assembled.</p>'}${u.lessonSlugs.length?`<h3>Practical lessons</h3><ul>${u.lessonSlugs.map((slug)=>{const l=c.lessons.find((x)=>x.slug===slug);return l?`<li><a href="#${esc(slug)}">Lesson ${l.number}: ${esc(l.title)}</a></li>`:''}).join('')}</ul>`:''}${resources(u.sources)}${u.contributors?.length?`<h3>Contributor material</h3><ul>${u.contributors.map((cid)=>`<li><a href="${BASE}contributors/${esc(cid)}">${esc(contributors.find((p)=>p.id===cid)?.name||cid)}</a></li>`).join('')}</ul>`:''}`
+    const completionText=`${requirements.manual?'Mark complete after doing the work. ':''}${requirements.practical?'Confirm the practical task. ':''}${requirements.viewed?'Open this section. ':''}${requirements.activities?.length?'Complete the required activities above. ':''}` || 'No automatic completion rule is configured.'
+    return `<article class="course-unit section" id="${esc(key)}" data-unit="${esc(key)}"><p class="eyebrow">${lesson?`Practical Lesson ${u.number}`:esc(u.id)}</p><h2 tabindex="-1">${esc(u.title)}</h2><p>${esc(u.difficulty||'Self-directed')} ${esc(u.time||'Read at your pace')}</p>${tested}<a href="#course-map">Course map</a><p data-unit-status></p>${u.prerequisites?.length?`<p>Prerequisites: ${u.prerequisites.map((x)=>`<a href="#${esc(x)}">${esc(x)}</a>`).join(', ')}</p>`:''}${lessonBody}${activityIds.map((aid)=>{const a=c.activities.find((x)=>x.id===aid);return a?activity(a):'<p>Required activity is not currently published. Completion is unavailable until it is restored.</p>'}).join('')}<div class="learner-controls" hidden><h3>Completion requirements</h3><p>${completionText}</p>${requirements.practical?'<label><input type="checkbox" data-practical> I did the practical task and verified it.</label>':''}<p><button data-complete>Mark complete</button> <button data-bookmark>Bookmark</button></p><label>Local notes<textarea data-notes rows="5" maxlength="20000"></textarea></label><p>Your notes stay in this browser unless you export them or choose encrypted backup.</p>${lesson?'<aside class="backup-inline"><strong>Encrypted backup</strong><p data-lesson-backup-status>Remote backup is optional. Local progress works without it.</p><p><button type="button" data-lesson-backup>Back up now</button> <a href="#tools">Recovery tools</a></p><small data-lesson-backup-time></small></aside>':''}</div><nav class="prevnext" aria-label="Previous and next">${i?`<a href="#${esc(units[i-1].slug||units[i-1].id)}">← ${esc(units[i-1].title)}</a>`:'<a href="#course-map">Course home</a>'}${i<units.length-1?`<a href="#${esc(units[i+1].slug||units[i+1].id)}">${esc(units[i+1].title)} →</a>`:'<a href="#course-map">Course home</a>'}</nav></article>`
+  }).join('')
+  return shell(c.title,`<section class="hero"><p class="eyebrow">${esc(c.subtitle)}</p><h1>${esc(c.title)}</h1><p class="deck">${esc(c.deck)}</p><p><a href="#tools">Create one recovery card at the start. Keep it for the whole course.</a> · <a href="${BASE}offline">Download the current published reading edition</a></p><a href="#G01" data-resume class="btn">Start course</a><p data-progress></p><progress max="100" value="0" aria-label="Overall course progress"></progress><p>Beginner to intermediate · Twelve practical lessons, roughly 14–30 hours, plus reading and teach-back.</p>${prose(c.intro)}</section><aside class="note"><h2>The Anarchist’s Guide to Losing Everyone’s Email Because Dave Forgot to Patch Debian</h2><p>When infrastructure depends on one exhausted keeper of secret knowledge, politics does not save it from ordinary failure. Don’t let Dave touch it. More importantly, don’t build a system where only Dave knows how.</p></aside><section id="course-map" class="section"><h2>Guide sections G01–G13</h2><ol class="course-map">${links}</ol></section><section class="section"><h2>Practical lessons 1–12</h2><div class="grid">${c.lessons.map((l)=>`<a class="card" href="#${esc(l.slug)}"><span>Lesson ${l.number} · <span data-status="${esc(l.slug)}"></span></span><h3>${esc(l.title)}</h3><small>${esc(l.time)} · ${esc(l.difficulty)}</small></a>`).join('')}</div></section><section class="section"><h2>I need to…</h2>${legacySeed.tasks.map(([t,ns])=>`<p>${esc(t)}: ${ns.map((n)=>{const l=c.lessons.find((x)=>x.number===n);return l?`<a href="#${esc(l.slug)}">Lesson ${n}</a>`:''}).join(' · ')}</p>`).join('')}</section><section id="tools" class="section"><h2>Your progress belongs to you.</h2><noscript><p>The whole published course is readable below. Local progress and interactive checks need JavaScript. You can also download the self-contained reading edition above.</p></noscript><div class="learner-controls" hidden><p>No account, email, or profile. Remote encrypted backup is optional. Clearing site data can erase local progress, so export a copy.</p><div class="actions"><button data-export>Export Progress</button><button data-import>Import Progress</button><button data-backup>Create my recovery card</button><button data-print-card hidden>Print recovery card</button><button data-restore>Restore encrypted backup</button><button data-reset>Reset local progress</button></div><input type="file" data-file accept=".json,application/json" hidden><p data-message role="status"></p><p data-recovery-status role="status"></p><p data-recovery-time></p><article class="recovery-card" data-card hidden><div class="card-terminal-bar">SABOT // RECOVERY SYSTEM v1.0 <span>[ OFFLINE KEY ]</span></div><div class="card-terminal-body"><p class="card-kicker">&gt; ACCESS IS KNOWLEDGE. KEEP YOURS.</p><h2>BECOME THE<br>THOUSAND SERVERS_</h2><p class="card-warning">RECOVERY KEY — DO NOT LOSE</p><div class="card-qr-row"><img src="https://sabot.media/guides/become-the-thousand-servers/lms/recovery-qr.svg" width="148" height="148" alt="QR link to the course recovery screen"><div><strong>01 / SCAN TO RECONNECT</strong><p>Open the recovery screen.<br>Enter the code below.<br>Restore your latest saved progress.</p><small>The QR contains only the course link. Your secret stays on this card.</small></div></div><div class="card-code-label">02 / YOUR PERSONAL RECOVERY CODE</div><code data-card-code></code><p class="card-retention" data-card-retention></p><p class="card-security">Anyone with this code can read and update your backup. Sabot cannot recover a lost key.</p><div class="card-terminal-footer">NO ACCOUNT. NO EMAIL. YOUR PROGRESS BELONGS TO YOU.</div><p class="card-url">sabot.media/guides/become-the-thousand-servers/#restore</p></div></article><div data-recovery-panel hidden><label>Recovery code<textarea data-recovery-code rows="3" autocomplete="off" spellcheck="false"></textarea></label><p>Anyone with this recovery code can restore this progress. Sabot cannot recover it for you.</p><button data-fetch-recovery>Restore this code (replace local progress)</button></div><h3>Bookmarks and notes</h3><div data-notebook></div></div></section><section class="section"><h2>Contributors</h2><p>${esc(sharedQuestion)}</p><ul>${contributors.map((p)=>`<li><a href="${BASE}contributors/${esc(p.id)}">${esc(p.name)}</a></li>`).join('')}</ul></section>${unitHtml}<section class="section"><h2>Shared working documents</h2>${c.documents.map((d)=>`<article><h3>${esc(d.title)}</h3>${prose(d.body)}${resources(d.sources)}</article>`).join('')||'<p>Working documents will appear here when published.</p>'}</section><section class="section"><h2>Glossary</h2><dl>${Object.entries(legacySeed.glossary).map(([k,v])=>`<dt><strong>${esc(k)}</strong></dt><dd>${esc(v)}</dd>`).join('')}</dl></section>`,c)
 }
