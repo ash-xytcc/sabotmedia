@@ -1,11 +1,13 @@
+import { mountPathways } from './pathways.js?v=blog-1'
 import { mountInlineEditor } from './editorial.js'
-import { KEY, blank, validateProgress, evaluate, complete, unlocked, attemptFeedback } from './progress.js?v=audit-1'
+import { KEY, blank, validateProgress, evaluate, complete, unlocked, attemptFeedback } from './progress.js?v=blog-1'
 import { mountRecoveryCard } from './recovery-card.js?v=audit-1'
 const c = JSON.parse(document.querySelector('#course-data').textContent),
   units = [...c.sections, ...c.lessons]
 const $ = (s) => document.querySelector(s),
   $$ = (s) => [...document.querySelectorAll(s)]
 let recoveryCard = null
+let pathways = null
 let state = blank(),
   storageBlocked = false
 try {
@@ -37,6 +39,7 @@ function toggle(list, id) {
   i < 0 ? list.push(id) : list.splice(i, 1)
 }
 function refresh() {
+  pathways?.update()
   const nl = c.lessons.filter((u) => complete(c, state, u)).length,
     ns = c.sections.filter((u) => complete(c, state, u)).length,
     total = c.lessons.length + c.sections.length
@@ -166,6 +169,13 @@ function route() {
   try { key = decodeURIComponent(location.hash.slice(1)) } catch { /* Invalid links fall back to the course map. */ }
   const legacy = key.match(/^lesson-(\d+)$/)
   if (legacy) key = c.lessons.find((l) => l.number === Number(legacy[1]))?.slug || ''
+  const path=(c.pathways||[]).find((p)=>p.id===key||p.variants.some((v)=>v.steps.includes(key)))
+  if(path && path.id!==key) {
+    state.pathways[path.id]={...(state.pathways[path.id]||{}),lastStep:key}
+    const selected=path.variants.find((v)=>v.id===state.pathways[path.id].choice)
+    if(selected&&!selected.steps.includes(key))state.pathways[path.id].choice=path.variants.find((v)=>v.steps.includes(key))?.id||''
+    save()
+  }
   const u = units.find((u) => (u.slug || u.id) === key)
   if (active) {
     state.scrollByLesson[active] = scrollY
@@ -175,7 +185,7 @@ function route() {
   routing = true
   $$('main > *').forEach((n) => {
     if (n.matches('.course-unit')) n.hidden = !!u && n.dataset.unit !== key
-    else n.hidden = !!u
+    else n.hidden = !!u || (!!path && n.dataset.pathway!==path.id)
   })
   if (u) {
     const started = u.slug ? state.startedLessons : state.startedSections
@@ -191,6 +201,7 @@ function route() {
     })
   } else {
     $$('.course-unit').forEach((n) => (n.hidden = true))
+    pathways?.update()
     const target = document.getElementById(key)
     if (target) target.scrollIntoView()
     else scrollTo(0, 0)
@@ -272,6 +283,7 @@ fetch('/api/course-content?edit=1', { credentials: 'same-origin', cache: 'no-sto
     $('main').prepend(p)
   })
   .catch(() => {})
+pathways = mountPathways(c, () => state, save, refresh)
 refresh()
 route()
 if (storageBlocked)

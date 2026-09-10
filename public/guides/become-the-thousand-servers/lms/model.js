@@ -1,3 +1,4 @@
+import { withRecoveryPathway } from './blog-recovery.js'
 import { legacySeed } from './seed.js'
 import { initialActivities } from './activities.js'
 export const SLUG = 'become-the-thousand-servers'
@@ -75,6 +76,7 @@ seed.sections[0].body = "The Anarchist's Guide to Losing Everyone's Email Becaus
 seed.sections[5].body = 'A thousand machines maintained by twelve exhausted people is not a thousand servers. It is twelve people with a very serious problem.'
 seed.sections[11].body = "The unit of resilience isn't the machine. It's the person who can reproduce the machine."
 seed.sections[12].body = 'Each one, teach one.'
+Object.assign(seed, withRecoveryPathway(seed))
 
 const str = (v, max = 30000) => String(v ?? '').slice(0, max)
 const list = (v, max = 100) => (Array.isArray(v) ? v.slice(0, max) : [])
@@ -91,7 +93,8 @@ const feedbackMap = (value) => {
 export function normalizeCourse(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw invalid('Invalid course')
   if (JSON.stringify(input).length > 1800000) throw invalid('Course is too large')
-  const base = input.slug === SLUG ? seed : {...seed,slug:id(input.slug),lessons:[],sections:[],activities:[],documents:[],testing:[]}
+  input = withRecoveryPathway(input)
+  const base = input.slug === SLUG ? seed : {...seed,slug:id(input.slug),lessons:[],sections:[],activities:[],documents:[],testing:[],pathways:[],modules:[]}
   const legacy = input.schemaVersion !== 2
   const c = {...base,...input,schemaVersion:2}
   const result = {slug:id(c.slug),schemaVersion:2,revision:Number.isSafeInteger(c.revision)?c.revision:0,status:status(c.status)}
@@ -164,6 +167,22 @@ export function normalizeCourse(input) {
     visiting.delete(key); visited.add(key)
   }
   units.forEach(visit)
+  result.pathwaySchemaVersion = 1
+  result.modules = list(c.modules,100).map((m)=>({id:id(m.id),title:str(m.title,220),body:str(m.body),sectionId:str(m.sectionId,120),status:status(m.status),version:Math.max(1,Number(m.version)||1),activities:strings(m.activities),lessonSlugs:strings(m.lessonSlugs),sources:resources(m.sources)}))
+  result.pathways = list(c.pathways,30).map((p)=>({id:id(p.id),title:str(p.title,220),intro:str(p.intro),status:status(p.status),version:Math.max(1,Number(p.version)||1),completionTitle:str(p.completionTitle,220),completionBody:str(p.completionBody),continueBody:str(p.continueBody),sources:resources(p.sources),variants:list(p.variants,10).map((v)=>({id:id(v.id),title:str(v.title,220),steps:strings(v.steps),outcome:v.outcome==='recovery'?'recovery':'handoff'}))}))
+  for(const key of ['pathways','modules']) {
+    if(result[key].some((x)=>!x.id)||new Set(result[key].map((x)=>x.id)).size!==result[key].length) throw invalid('Duplicate or missing '+key+' identifier')
+  }
+  for(const m of result.modules) {
+    if(!result.sections.some((s)=>s.id===m.sectionId)) throw invalid('Supporting module needs a guide section')
+    if(m.lessonSlugs.some((id)=>!result.lessons.some((l)=>l.slug===id))) throw invalid('Supporting module lesson does not exist')
+    if(m.activities.some((id)=>!activities.has(id))) throw invalid('Supporting module activity does not exist')
+    if(m.status==='published'&&(!m.title.trim()||!m.body.trim()||!m.activities.length)) throw invalid('Published supporting module needs content and a checkpoint')
+  }
+  for(const p of result.pathways) {
+    if(!p.variants.length||new Set(p.variants.map((v)=>v.id)).size!==p.variants.length) throw invalid('Pathway needs distinct destination variants')
+    for(const v of p.variants) if(!v.id||!v.steps.length||new Set(v.steps).size!==v.steps.length||v.steps.some((id)=>!result.modules.some((m)=>m.id===id))) throw invalid('Pathway steps must reference distinct supporting modules')
+  }
   result.documents = list(c.documents,30).map((d) => ({id:id(d.id),title:str(d.title,220),body:str(d.body),status:status(d.status),sources:resources(d.sources)}))
   const testingFields = ['id','targetType','targetId','exercise','contentVersion','activityVersion','reviewKind','technicalReviewer','practicalTester','operatingSystem','softwareVersions','equipment','startingConditions','steps','expected','actual','confusing','failedCommands','missingAssumptions','safetyConcerns','recoveryFailures','severity','responsible','status','requiredCorrection','retestOutcome','date','state','tester','environment','assumptions','worked','broke','unclear','hiddenAssumptions','concerns','changes','retest']
   result.testing = list(c.testing,500).map((t) => Object.fromEntries(testingFields.map((k) => [k,str(t[k],5000)])))
@@ -172,7 +191,8 @@ export function normalizeCourse(input) {
 
 export function publicCourse(c) {
   const out = normalizeCourse(c)
-  for (const key of ['lessons','sections','activities','documents']) out[key] = out[key].filter((x) => x.status === 'published')
+  for (const key of ['lessons','sections','activities','documents','pathways','modules']) out[key] = out[key].filter((x) => x.status === 'published')
+  out.modules = out.modules.map((m)=>({...m,lessonSlugs:m.lessonSlugs.filter((slug)=>out.lessons.some((l)=>l.slug===slug))}))
   out.testing = []
   delete out.readinessConfig
   return out

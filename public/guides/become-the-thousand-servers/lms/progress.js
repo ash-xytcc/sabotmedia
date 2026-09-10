@@ -1,9 +1,9 @@
-import { SLUG, seed } from './model.js?v=review-2'
+import { SLUG, seed } from './model.js?v=blog-1'
 export const KEY = 'sabot.course.become-the-thousand-servers.v1'
 export const blank = () => ({
   course: SLUG, version: 2, contentVersion: seed.contentVersion,
   completedLessons: [], startedLessons: [], completedSections: [], startedSections: [], viewed: [], practical: [],
-  lastLesson: '', lastUnit: '', scrollByLesson: {}, bookmarks: [], notes: {}, activities: {},
+  lastLesson: '', lastUnit: '', scrollByLesson: {}, bookmarks: [], notes: {}, activities: {}, pathways: {},
 })
 export function validateProgress(x) {
   if (!x || Array.isArray(x) || x.course !== SLUG || ![1,2].includes(x.version) || JSON.stringify(x).length > 2000000) throw Error('Invalid progress file for this course')
@@ -18,6 +18,12 @@ export function validateProgress(x) {
   for(const [k,attempts] of Object.entries(x.activities||{}).slice(0,200)) {
     if(!/^[a-z0-9-]{1,120}$/.test(k)||!Array.isArray(attempts)) continue
     out.activities[k]=attempts.slice(-20).filter((a)=>a&&typeof a==='object'&&typeof a.passed==='boolean').map((a)=>({version:Math.max(1,Number(a.version)||1),at:typeof a.at==='string'?a.at.slice(0,40):'',passed:a.passed,answer:Array.isArray(a.answer)?a.answer.slice(0,30).map((v)=>String(v).slice(0,20000)):[]}))
+  }
+  const safeId=(v)=>typeof v==='string'&&/^[a-z0-9-]{1,120}$/.test(v)
+  for(const [key,p] of Object.entries(x.pathways||{}).slice(0,30)) {
+    if(!safeId(key)||!p||typeof p!=='object'||Array.isArray(p))continue
+    out.pathways[key]={choice:safeId(p.choice)?p.choice:'',lastStep:safeId(p.lastStep)?p.lastStep:'',notes:{}}
+    for(const [id,note] of Object.entries(p.notes||{}).slice(0,100)) if(safeId(id)&&typeof note==='string'&&note.length<=20000)out.pathways[key].notes[id]=note
   }
   if(x.version===1) out.practical=[...out.completedLessons]
   return out

@@ -134,3 +134,30 @@ test('malformed fragment does not prevent course initialization',()=>{
   const a=mount(new Map(),'#%E0%A4%A')
   assert.match(a.document.querySelector('[data-progress]').textContent,/0\/12/)
 })
+
+test('blog pathway chooses hosted trail, persists notes and choice, and resumes without completing lessons',()=>{
+ const a=mount(new Map(),'#blog-recovery')
+ const path=a.document.querySelector('[data-pathway]')
+ path.querySelector('[data-path-choice="hosted"]').onclick()
+ assert.match(path.querySelector('[data-path-status]').textContent,/0\/9 steps/)
+ const nav=path.querySelector('[data-path-step="blog-xml"]');nav.onclick({preventDefault(){}})
+ const notes=path.querySelector('[data-path-notes="blog-xml"]');notes.value='Kept originals on drive';notes.oninput()
+ const stored=JSON.parse(a.storage.get(KEY));assert.equal(stored.pathways['blog-recovery'].choice,'hosted');assert.deepEqual(stored.completedLessons,[])
+ const b=mount(a.storage,'#blog-recovery')
+ assert.equal(b.document.querySelector('[data-path-notes="blog-xml"]').value,'Kept originals on drive')
+ assert.equal(b.document.querySelector('[data-path-module="blog-xml"]').hidden,false)
+ assert.equal(b.document.querySelector('[data-path-module="blog-selfhost"]').hidden,true)
+})
+test('blog recovery completion shows only after required activities and remains separate after continue',()=>{
+ const a=mount(new Map(),'#blog-recovery'),path=a.document.querySelector('[data-pathway]')
+ path.querySelector('[data-path-choice="hosted"]').onclick()
+ for(const id of seed.pathways[0].variants[0].steps){
+  const m=seed.modules.find((m)=>m.id===id)
+  for(const aid of m.activities){const form=path.querySelector(`[data-activity="${aid}"]`);form.querySelectorAll('[name="answer"]').forEach((x)=>x.checked=x.value!=='bytes');form.onsubmit({preventDefault(){}})}
+ }
+ assert.equal(path.querySelector('[data-path-success]').hidden,false)
+ const before=JSON.parse(a.storage.get(KEY));assert.deepEqual(before.completedLessons,[]);assert.deepEqual(before.completedSections,[])
+ a.location.hash='#G01';a.events.hashchange();assert.equal(a.document.getElementById('G01').hidden,false)
+ a.location.hash='#blog-recovery';a.events.hashchange();assert.equal(path.querySelector('[data-path-success]').hidden,false)
+ path.querySelector('[data-path-choice="other"]').onclick();assert.equal(path.querySelector('[data-path-success]').hidden,true)
+})
