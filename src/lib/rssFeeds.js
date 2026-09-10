@@ -43,8 +43,8 @@ function sourceFormatHint(item, settings) {
 
 function titleFormatHint(item) {
   const title = String(item?.title || '').trim().toLowerCase()
-  if (/^\[?audiozine\]?\b/.test(title)) return 'audio'
-  if (/^\[?zine\]?\b/.test(title)) return 'zine'
+  if (/\baudiozine\b/.test(title)) return 'audio'
+  if (/\bzine\b/.test(title)) return 'zine'
   return ''
 }
 
@@ -124,15 +124,12 @@ export function resolveFeedFormat(item, settings = loadFeedSettings()) {
   // migration buckets (dispatch, note and publicBlock).
   if (sourceFormat) return sourceFormat
 
-  // Older imported material was intentionally squeezed into a small set of native
-  // storage types. Do not advertise those implementation buckets as editorial formats.
-  if (String(item?.sourceKind || item?.sourceType || '').toLowerCase() === 'imported') {
-    if (['dispatch', 'note'].includes(storedFormat) || String(item?.contentType || '').toLowerCase() === 'publicblock') {
-      return 'article'
-    }
+  // Public reading routes already present native note/dispatch storage records as
+  // articles. RSS must follow that editorial type instead of exposing database buckets.
+  if (['dispatch', 'note'].includes(storedFormat) || String(item?.contentType || '').toLowerCase() === 'publicblock') {
+    return 'article'
   }
 
-  if (String(item?.contentType || '').toLowerCase() === 'publicblock') return 'article'
   return storedFormat || 'article'
 }
 
