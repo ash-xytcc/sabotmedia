@@ -1,9 +1,10 @@
 import fs from 'node:fs'
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { normalizeFeedRequestPath } from '../functions/api/_lib/feedRuntime.js'
+import { buildDetectedTerms, normalizeFeedRequestPath } from '../functions/api/_lib/feedRuntime.js'
 import { buildPodcastFeedXml } from '../functions/rss/podcast.xml.js'
-import { buildRssBundle } from '../src/lib/rssFeeds.js'
+import { buildRssBundle, resolveFeedFormat, resolveFeedProject } from '../src/lib/rssFeeds.js'
+import { normalizeFeedTerm } from '../src/lib/feedSettings.js'
 
 const directRoute = fs.readFileSync(new URL('../functions/feeds/[[path]].js', import.meta.url), 'utf8')
 const runtime = fs.readFileSync(new URL('../functions/api/_lib/feedRuntime.js', import.meta.url), 'utf8')
@@ -53,6 +54,113 @@ test('released scheduled work is included but future scheduled work is not', () 
   ], { settings, now })
   assert.match(bundle['all-content.xml'], /Past schedule/)
   assert.doesNotMatch(bundle['all-content.xml'], /Future schedule/)
+})
+
+test('project feeds use archive project identity instead of legacy generic categories', () => {
+  const items = [
+    {
+      id: 'harbor-story', slug: 'harbor-story', title: 'A Harbor story', status: 'published',
+      contentType: 'dispatch', sourceKind: 'imported', sourceLabel: 'post', primaryProject: 'General',
+      categories: ['General', 'article'], author: 'Sabot Media',
+    },
+    {
+      id: 'communique', slug: 'communique-volume-18', title: 'The Communique Volume 18', status: 'published',
+      contentType: 'dispatch', sourceKind: 'imported', sourceLabel: 'post', primaryProject: 'The Communique',
+      categories: ['The Communique', 'General'], author: 'Sabot Media',
+    },
+    {
+      id: 'generic-podcast-label', slug: 'generic-podcast-label', title: 'Ordinary written post', status: 'published',
+      contentType: 'dispatch', sourceKind: 'imported', sourceLabel: 'post', primaryProject: 'podcast',
+      categories: ['podcast'], author: 'Sabot Media',
+    },
+  ]
+
+  const bundle = buildRssBundle(items)
+  assert.equal(resolveFeedProject(items[0]), 'The Harbor Rat Report')
+  assert.equal(resolveFeedProject(items[1]), 'The Communique')
+  assert.equal(resolveFeedProject(items[2]), 'The Harbor Rat Report')
+  assert.ok(bundle['projects/the-harbor-rat-report.xml'])
+  assert.match(bundle['projects/the-harbor-rat-report.xml'], /A Harbor story/)
+  assert.match(bundle['projects/the-harbor-rat-report.xml'], /Ordinary written post/)
+  assert.ok(bundle['projects/the-communique.xml'])
+  assert.match(bundle['projects/the-communique.xml'], /The Communique Volume 18/)
+  assert.equal(bundle['projects/general.xml'], undefined)
+  assert.equal(bundle['projects/podcast.xml'], undefined)
+})
+
+test('format feeds recover editorial formats from lossy migration buckets', () => {
+  const items = [
+    {
+      id: 'article', slug: 'article', title: 'Imported article', status: 'published',
+      contentType: 'dispatch', sourceKind: 'imported', sourceLabel: 'post', primaryProject: 'The Harbor Rat Report',
+    },
+    {
+      id: 'newsletter', slug: 'newsletter', title: 'The Communique Volume 13', status: 'published',
+      contentType: 'dispatch', sourceKind: 'imported', sourceLabel: 'post', primaryProject: 'The Communique',
+    },
+    {
+      id: 'comic', slug: 'comic', title: 'The Saboteurs #33', status: 'published',
+      contentType: 'publicBlock', sourceKind: 'imported', sourceLabel: 'The Sabotuers', primaryProject: 'The Sabotuers',
+    },
+    {
+      id: 'print', slug: 'print', title: 'A Black Cat pamphlet', status: 'published',
+      contentType: 'print', sourceKind: 'imported', sourceLabel: 'post', primaryProject: 'Black Cat Distro',
+    },
+    {
+      id: 'dispatch', slug: 'dispatch', title: 'New field dispatch', status: 'published',
+      contentType: 'dispatch', sourceKind: 'manual', primaryProject: 'The Harbor Rat Report',
+    },
+  ]
+
+  assert.deepEqual(items.map((item) => resolveFeedFormat(item)), ['article', 'newsletter', 'comic', 'print', 'dispatch'])
+
+  const bundle = buildRssBundle(items)
+  assert.match(bundle['formats/article.xml'], /Imported article/)
+  assert.doesNotMatch(bundle['formats/article.xml'], /The Communique Volume 13|The Saboteurs #33/)
+  assert.match(bundle['formats/newsletter.xml'], /The Communique Volume 13/)
+  assert.match(bundle['formats/comic.xml'], /The Saboteurs #33/)
+  assert.match(bundle['formats/print.xml'], /A Black Cat pamphlet/)
+  assert.match(bundle['formats/dispatch.xml'], /New field dispatch/)
+  assert.match(bundle['all-content.xml'], /Imported article/)
+  assert.match(bundle['all-content.xml'], /The Communique Volume 13/)
+  assert.match(bundle['all-content.xml'], /The Saboteurs #33/)
+  assert.match(bundle['all-content.xml'], /A Black Cat pamphlet/)
+  assert.match(bundle['all-content.xml'], /New field dispatch/)
+})
+
+test('manifest terms are derived from the same taxonomy as generated feeds', () => {
+  const items = [
+    {
+      id: 'article', slug: 'article', title: 'Imported article', status: 'published',
+      contentType: 'dispatch', sourceKind: 'imported', sourceLabel: 'post', primaryProject: 'General', categories: ['General'],
+    },
+    {
+      id: 'comic', slug: 'comic', title: 'The Saboteurs #33', status: 'published',
+      contentType: 'publicBlock', sourceKind: 'imported', sourceLabel: 'The Sabotuers', primaryProject: 'The Sabotuers', categories: ['podcast'],
+    },
+  ]
+  const terms = buildDetectedTerms(items)
+  assert.deepEqual(terms.format, ['article', 'comic'])
+  assert.deepEqual(terms.project, ['The Harbor Rat Report', 'The Sabotuers'])
+  assert.ok(!terms.project.includes('General'))
+  assert.ok(!terms.project.includes('podcast'))
+})
+
+test('byline aliases are case-insensitive so one public identity gets one feed', () => {
+  assert.equal(normalizeFeedTerm('author', 'Sabot Media'), 'Sabot Media Collective')
+  assert.equal(normalizeFeedTerm('author', 'sabot media'), 'Sabot Media Collective')
+  assert.equal(normalizeFeedTerm('author', 'SABOT MEDIA'), 'Sabot Media Collective')
+
+  const bundle = buildRssBundle([
+    { id: 'one', slug: 'one', title: 'One', status: 'published', author: 'Sabot Media' },
+    { id: 'two', slug: 'two', title: 'Two', status: 'published', author: 'sabot media' },
+    { id: 'three', slug: 'three', title: 'Three', status: 'published', author: 'SABOT MEDIA' },
+  ])
+  const bylineFeeds = Object.keys(bundle).filter((name) => name.startsWith('bylines/'))
+  assert.deepEqual(bylineFeeds, ['bylines/sabot-media-collective.xml'])
+  assert.match(bundle[bylineFeeds[0]], /One/)
+  assert.match(bundle[bylineFeeds[0]], /Two/)
+  assert.match(bundle[bylineFeeds[0]], /Three/)
 })
 
 test('public feeds page links only to server manifest endpoints', () => {
