@@ -1,5 +1,5 @@
 import { ensureNativePublicContentTable, listNativeEntries } from './nativePublicContent.js'
-import { buildRssBundle } from '../../../src/lib/rssFeeds.js'
+import { buildRssBundle, resolveFeedFormat, resolveFeedProject } from '../../../src/lib/rssFeeds.js'
 import { mergeFeedSettings, normalizeFeedTerm } from '../../../src/lib/feedSettings.js'
 
 const SETTING_KEY = 'feed-settings-v1'
@@ -50,9 +50,9 @@ export function buildDetectedTerms(items = [], settings = {}) {
   }
 
   for (const item of items) {
-    addTerm(kinds.format, 'format', item?.contentType || item?.type || 'article', settings)
+    addTerm(kinds.format, 'format', resolveFeedFormat(item, settings), settings)
     addTerm(kinds.author, 'author', item?.author || item?.byline || 'Sabot Media Collective', settings)
-    addTerms(kinds.project, 'project', [item?.primaryProject, ...(item?.projects || []), ...(item?.categories || [])], settings)
+    addTerm(kinds.project, 'project', resolveFeedProject(item, settings), settings)
     addTerms(kinds.collection, 'collection', [item?.collection, ...(item?.collections || [])], settings)
     addTerms(kinds.topic, 'topic', [...(item?.topics || []), ...(item?.tags || [])], settings)
     addTerms(kinds.series, 'series', [item?.series, item?.seriesSlug], settings)
