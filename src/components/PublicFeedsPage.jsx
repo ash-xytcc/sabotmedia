@@ -26,7 +26,7 @@ function groupLabel(group) {
 
 function groupDescription(group) {
   const descriptions = {
-    'all-content.xml': 'The broad live feed for published server-backed Sabot Media content.',
+    'all-content.xml': 'New work from across Sabot Media, in one feed.',
     formats: 'Follow one kind of published website content, such as articles, comics, newsletters, print material, audio, or podcast posts.',
     projects: 'Follow work connected to a project or public organizing body.',
     collections: 'Follow curated bodies of work, campaigns, issues, readers, or publication packages.',
@@ -36,7 +36,7 @@ function groupDescription(group) {
     series: 'Follow recurring columns, comics, newsletters, shows, or other serial work.',
     campaigns: 'Follow updates from a specific published campaign hub.',
   }
-  return descriptions[group] || 'A live RSS feed generated from published server metadata.'
+  return descriptions[group] || 'Subscribe for new work in this part of the archive.'
 }
 
 export function PublicFeedsPage() {
@@ -91,8 +91,8 @@ export function PublicFeedsPage() {
       <PublicationTopbar />
       <section className="public-info-page__hero">
         <EditableText as="p" className="public-info-page__eyebrow" field="feeds.hero.eyebrow">feeds / syndication / archive</EditableText>
-        <EditableText as="h1" field="feeds.hero.title">{settings.feedsIntroTitle || 'Follow the Sabot Media archive'}</EditableText>
-        <EditableText as="div" className="public-info-page__body" field="feeds.hero.body" multiline>{settings.feedsIntroBody}</EditableText>
+        <EditableText as="h1" field="feeds.hero.title">{settings.feedsIntroTitle === 'Follow the Sabot Media archive' ? 'Follow Sabot on your own terms' : settings.feedsIntroTitle}</EditableText>
+        <EditableText as="div" className="public-info-page__body" field="feeds.hero.body" multiline>{String(settings.feedsIntroBody || '').startsWith('Sabot Media is built as a public archive, not just a front page') ? 'Get new articles, dispatches and podcast episodes in an app you choose. RSS is a simple way to follow our work without a social media account or an algorithm deciding what reaches you.' : settings.feedsIntroBody}</EditableText>
         {state === 'loading' ? <p className="description" role="status">Loading live feed endpoints…</p> : null}
         {errors.length ? (
           <div className="notice notice-error" role="alert">
@@ -105,23 +105,23 @@ export function PublicFeedsPage() {
 
       <section className="feeds-public-page__panel">
         <EditableText as="h2" field="feeds.how.title">How this works</EditableText>
-        <EditableText as="div" field="feeds.how.body" multiline>{`These are real RSS endpoints backed by the persisted public feed configuration, not download-package placeholders. A reader can subscribe with an RSS reader or compatible app, an archivist can mirror them, and another site can syndicate them.
+        <EditableText as="div" field="feeds.how.body" multiline>{`For reading: copy the main RSS feed link into your feed reader. To follow a particular project, topic or kind of work, choose one of the feeds below.
 
-Website-content feeds are generated from published native records and can be organized by format, project, collection, topic, series, or public byline. Scheduled work enters those feeds when it becomes publicly visible.
+For listening: copy a named podcast feed into your podcast app. Look for “Add by RSS” or “Follow by URL.” Each show has its own feed, so you can subscribe to the ones you want.
 
-Podcast shows use the same server-backed content records but have their own directory-grade RSS feeds with audio enclosures, stable episode GUIDs, artwork, and podcast metadata. Each show has a separate feed. A format feed such as formats/podcast.xml is a cross-show website-content lane; it is not the feed to submit to a podcast directory.
+Sabot Media hosts our podcast audio and publishes these RSS feeds directly. New episodes are published here and delivered to the apps following these feeds.
 
-Older imported archive pieces remain browseable on Sabot and enter live website feeds as they are migrated into native server-backed content.`}</EditableText>
+The podcast format feed (formats/podcast.xml) follows website posts across our shows. Use a named show feed for a podcast subscription. Older imported archive pieces may not yet appear in the live feeds; you can still find them in the archive.`}</EditableText>
       </section>
 
       <section className="feeds-public-page__panel">
-        <EditableText as="h2" field="feeds.available.title">Available live feeds</EditableText>
-        <p>{itemCount} published server-backed {itemCount === 1 ? 'entry is' : 'entries are'} currently eligible for the live feed system.</p>
+        <EditableText as="h2" field="feeds.available.title">Choose a feed</EditableText>
+        <p>{itemCount} published {itemCount === 1 ? 'entry is' : 'entries are'} available through these feeds.</p>
         <div className="feeds-public-page__grid">
           {podcastShows.length ? (
             <article className="feeds-public-page__group">
-              <h3>podcasts</h3>
-              <p>Directory-grade podcast feeds, one per show, with audio enclosures and podcast metadata.</p>
+              <h3>Listen to our podcasts</h3>
+              <p>Audio hosted by Sabot Media. Copy a show’s feed link into your podcast app to follow new episodes.</p>
               <ul>
                 {podcastShows.map((show) => (
                   <li key={show.id || show.slug}>
@@ -131,7 +131,7 @@ Older imported archive pieces remain browseable on Sabot and enter live website 
                   </li>
                 ))}
               </ul>
-              {podcastDefaultAlias ? <p className="description"><code>{podcastDefaultAlias}</code> remains available as a legacy alias for the default show; the named show feed above is the canonical subscription URL.</p> : null}
+              {podcastDefaultAlias ? <p className="description"><code>{podcastDefaultAlias}</code> is an older address for the default show, not a combined feed of every podcast. Use the named show links above when subscribing.</p> : null}
             </article>
           ) : null}
 
@@ -157,7 +157,7 @@ Older imported archive pieces remain browseable on Sabot and enter live website 
         <EditableText as="h2" field="feeds.privacy.title">Privacy and bylines</EditableText>
         <EditableText as="div" field="feeds.privacy.body" multiline>{`A feed byline is not required to be a legal name. It can be a collective name, a role, a handle, a house label, or a pseudonym. That choice belongs to the people publishing and to the safety needs of the work.
 
-Editors can rename or hide bad imported labels in the backend, and the same persisted rules are applied by the live website-content XML endpoints.`}</EditableText>
+The byline you see in a feed follows the public credit on the work.`}</EditableText>
       </section>
 
       <section className="feeds-public-page__panel">

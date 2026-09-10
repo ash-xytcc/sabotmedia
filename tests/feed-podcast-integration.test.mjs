@@ -33,9 +33,9 @@ test('feeds admin explains the boundary and links back to podcast show managemen
 })
 
 test('public feeds directory presents named podcast shows rather than a fake combined podcast feed', () => {
-  assert.match(publicFeeds, /Directory-grade podcast feeds, one per show/)
+  assert.match(publicFeeds, /Audio hosted by Sabot Media/)
   assert.match(publicFeeds, /podcastShows\.map/)
   assert.match(publicFeeds, /show\.feedPath/)
-  assert.match(publicFeeds, /legacy alias for the default show/)
+  assert.match(publicFeeds, /older address for the default show/)
   assert.match(publicFeeds, /formats\/podcast\.xml/)
 })
