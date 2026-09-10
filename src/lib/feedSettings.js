@@ -119,12 +119,20 @@ export async function resetFeedSettings() {
   return cloneDefaults()
 }
 
+function resolveAlias(aliasMap = {}, clean = '') {
+  if (Object.prototype.hasOwnProperty.call(aliasMap, clean)) return aliasMap[clean]
+  const lower = String(clean || '').toLowerCase()
+  if (Object.prototype.hasOwnProperty.call(aliasMap, lower)) return aliasMap[lower]
+  const matchingKey = Object.keys(aliasMap).find((key) => String(key || '').trim().toLowerCase() === lower)
+  return matchingKey ? aliasMap[matchingKey] : clean
+}
+
 export function normalizeFeedTerm(kind, value, settings = loadFeedSettings()) {
   const clean = String(value || '').trim()
   if (!clean) return ''
   const aliasMap = settings.aliases?.[kind] || {}
   const hidden = new Set((settings.hiddenTerms?.[kind] || []).map((term) => String(term).trim().toLowerCase()))
-  const mapped = String(aliasMap[clean] || aliasMap[clean.toLowerCase()] || clean).trim()
+  const mapped = String(resolveAlias(aliasMap, clean) || '').trim()
   if (!mapped || hidden.has(clean.toLowerCase()) || hidden.has(mapped.toLowerCase())) return ''
   return mapped
 }
