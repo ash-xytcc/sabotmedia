@@ -4,7 +4,7 @@ const choices = `Choosing publishing software is a separate decision from choosi
 
 Software options worth comparing:
 
-Colophon — Best fit when you want publishing software shaped around independent publications, editorial collectives, archives, podcasts, campaigns and translations. Its browser/PWA edition is local-first, so you can start a publication without an account, domain or server and deal with hosting later. Sabot Media uses and contributes to Colophon, which is maintained as a separate GPL-licensed project. We include it because it fits this use case, not because it is the only answer. For a NoBlogs/WXR archive, verify the current import or conversion path before choosing it as the destination.
+Colophon — Best fit when you want publishing software shaped around independent publications, editorial collectives, archives, podcasts, campaigns and translations. Its browser/PWA edition is local-first, so you can start a publication without an account, domain or server and deal with hosting later. For a NoBlogs/WXR archive, verify the current import or conversion path before choosing it as the destination.
 
 WriteFreely — A deliberately small publishing platform for blogs and writing, with ActivityPub support. Consider it when you want a lightweight writing-focused site rather than a large general-purpose CMS. Verify current import support for your archive before committing.
 
