@@ -7036,6 +7036,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-blsrqk",
+            "date": "2026-09-11T13:01:00.000Z",
+            "outlet": "Telset.id",
+            "language": "",
+            "languageCode": "",
+            "title": "AS Sanksi Autistici/Inventati, Layanan Privasi Global Tutup",
+            "translatedTitle": "",
+            "url": "https://telset.id/laptop-pc/as-sanksi-autistici-inventati-layanan-privasi-global-tutup",
+            "imageUrl": "",
+            "summary": "Telset.id - Autistici/Inventati (A/I), kolektif teknologi asal Italia yang menyediakan infrastruktur komunikasi non-komersial berbasis privasi, resmi menghe ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-ghgmrj",
             "date": "2026-09-11T04:21:00.000Z",
             "outlet": "YAHOO!",
@@ -7080,22 +7096,6 @@
             "summary": "Autistici/Inventati ha mostrato il suo volto. Da qualche giorno c’è una voce su Wikipedia che prima non c’era e l’ultimo aggiornamento risale a poche ore fa. Si legge che Autistici/Inventati è stato u ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 105,
-            "featured": false,
-            "editorialStatus": "automatic"
-          },
-          {
-            "id": "coverage-blsrqk",
-            "date": "2026-09-10T23:02:00.000Z",
-            "outlet": "Telset.id",
-            "language": "",
-            "languageCode": "",
-            "title": "AS Sanksi Autistici/Inventati, Layanan Privasi Global Tutup",
-            "translatedTitle": "",
-            "url": "https://telset.id/laptop-pc/as-sanksi-autistici-inventati-layanan-privasi-global-tutup",
-            "imageUrl": "",
-            "summary": "Telset.id - Autistici/Inventati (A/I), kolektif teknologi asal Italia yang menyediakan infrastruktur komunikasi non-komersial berbasis privasi, resmi menghe ...",
-            "discoverySource": "live-discovery",
-            "relevanceScore": 80,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9988,7 +9988,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-11T20:04:25.539Z",
+        "socialCheckedAt": "2026-09-11T22:29:06.705Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10020,7 +10020,7 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-11T20:04:26.984Z",
+        "intelligenceCheckedAt": "2026-09-11T22:29:07.377Z",
         "coverageArchiveCount": 158
       },
       "food-not-bombs-gaza": {
@@ -10223,7 +10223,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-11T20:04:33.216Z",
+        "automationCheckedAt": "2026-09-11T22:29:18.333Z",
         "coverageArchiveCount": 0
       }
     }
