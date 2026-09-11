@@ -13,7 +13,7 @@ test('recovery destination compares publishing software alongside hosting', () =
   const module = destination(course)
   assert.ok(module)
   for (const name of ['Colophon', 'WriteFreely', 'WordPress', 'Ghost', 'Grav']) assert.match(module.body, new RegExp(name))
-  assert.match(module.body, /Sabot Media uses and contributes to Colophon/)
+  assert.doesNotMatch(module.body, /Sabot Media uses and contributes to Colophon/)
   assert.match(module.body, /WordPress remains the direct path covered by this course/)
   assert.match(module.body, /verify the current import or conversion path/i)
   assert.deepEqual(course.sections.map((section) => section.id), Array.from({length: 13}, (_, index) => `G${String(index + 1).padStart(2, '0')}`))
