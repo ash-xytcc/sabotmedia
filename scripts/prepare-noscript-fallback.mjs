@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises'
-import { articleSupplementHtml } from '../src/content/articleSupplements.js'
+import { articleSupplementHtml, zineSupplementHtml } from '../src/content/articleSupplements.js'
 import path from 'node:path'
 import { publicInfoCopy } from '../src/content/publicInfoCopy.js'
 import { publicPageRegistry } from '../src/lib/publicPageRegistry.js'
@@ -139,14 +139,14 @@ function renderListing(entries, { homepageOnly, title } = {}) {
   return shell(`<h1>${escapeHtml(heading)}</h1>${items}`)
 }
 
-function renderPost(entry) {
+function renderPost(entry, surface = 'article') {
   const title = cleanText(entry.title) || titleFromSlug(entry.slug) || 'Untitled'
   const date = formatDate(entry.publishedAt || entry.updatedAt || entry.createdAt)
   const byline = cleanText(entry.author || entry.byline || '')
   const body = safePublishedBody(entry.body || entry.content || entry.excerpt || '')
-  return shell(`<article><p><a href="/archive">← Back to archive</a></p><h1>${escapeHtml(title)}</h1>${(date || byline) ? `<p class="ns-meta">${[byline, date].filter(Boolean).map(escapeHtml).join(' · ')}</p>` : ''}${articleSupplementHtml(entry.slug)}${body || '<p>This published item has no readable text body in the static snapshot.</p>'}</article>`)
+  const supplement = surface === 'zine' ? zineSupplementHtml(entry.slug) : articleSupplementHtml(entry.slug)
+  return shell(`<article><p><a href="/archive">← Back to archive</a></p><h1>${escapeHtml(title)}</h1>${(date || byline) ? `<p class="ns-meta">${[byline, date].filter(Boolean).map(escapeHtml).join(' · ')}</p>` : ''}${supplement}${body || '<p>This published item has no readable text body in the static snapshot.</p>'}</article>`)
 }
-
 function textToParagraphs(value) {
   return String(value || '').split(/\n{2,}/).map((part) => part.trim()).filter(Boolean).map((part) => `<p>${escapeHtml(part).replace(/\n/g, '<br>')}</p>`).join('')
 }
@@ -322,7 +322,7 @@ const collections = (Array.isArray(snapshot?.collections?.items) ? snapshot.coll
 const publications = (Array.isArray(snapshot?.publications?.items) ? snapshot.publications.items : []).filter(isPublicPublication)
 
 // Clear generated public directories so stale pages cannot survive after content is unpublished or renamed.
-const generatedRoots = ['post', 'piece', 'print', 'collections', 'campaigns', 'investigations', 'project', 'projects', 'publications', 'reader', 'updates']
+const generatedRoots = ['post', 'piece', 'print', 'zine', 'collections', 'campaigns', 'investigations', 'project', 'projects', 'publications', 'reader', 'updates']
 for (const route of generatedRoots) await removeGeneratedRoute(route)
 
 await fs.writeFile(indexPath, inject(sourceIndex, renderListing(homepageEntries, { homepageOnly: true })))
@@ -357,6 +357,7 @@ for (const entry of allEntries) {
   await writeRoute(`post/${slug}/print`, fallback, `${title} Print`)
   await writeRoute(`piece/${slug}/print`, fallback, `${title} Print`)
   await writeRoute(`print/${slug}`, fallback, `${title} Print`)
+  await writeRoute(`zine/${slug}`, renderPost(entry, 'zine'), `${title} Zine`)
 }
 
 // Every public campaign in the snapshot gets a concrete route, not only campaigns linked in navigation.

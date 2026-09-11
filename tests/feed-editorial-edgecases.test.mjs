@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { articleSupplementHtml } from '../src/content/articleSupplements.js'
+import { articleSupplementHtml, zineSupplementHtml } from '../src/content/articleSupplements.js'
 
 import { buildRssBundle, resolveFeedFormat, resolveFeedProject } from '../src/lib/rssFeeds.js'
 import { podcastFeedOwnsEntry } from '../functions/rss/podcast.xml.js'
@@ -96,8 +96,12 @@ test('ordinary Black Cat print remains print when no more specific format is pre
 
 
 test('the Catalan edition is attached to the zine surface, not the article translation', () => {
-  const html = articleSupplementHtml('server-called-paranoia')
-  assert.match(html, /https:\/\/vfc\.codeberg\.page\/Fanzinamel\//)
-  assert.match(html, /Catalan edition/)
+  for (const slug of ['server-called-paranoia', 'the-server-called-paranoia']) {
+    const html = zineSupplementHtml(slug)
+    assert.match(html, /https:\/\/vfc\.codeberg\.page\/Fanzinamel\//)
+    assert.match(html, /Catalan edition/)
+  }
+  assert.equal(articleSupplementHtml('server-called-paranoia'), '')
   assert.equal(articleSupplementHtml('the-server-called-paranoia'), '')
+  assert.equal(zineSupplementHtml('unrelated-post'), '')
 })

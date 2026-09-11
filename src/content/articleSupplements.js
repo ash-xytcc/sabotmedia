@@ -1,14 +1,17 @@
-// Repository-hosted editions accompany the article without changing its authored body.
-export function articleSupplementHtml(slug) {
-  if (slug === 'server-called-paranoia') {
-    const catalanEdition = 'https://vfc.codeberg.page/Fanzinamel/'
-    return `<section id="server-called-paranoia-editions" aria-labelledby="server-called-paranoia-editions-title" style="margin:1.5rem 0;padding:1rem;border:1px solid currentColor;max-width:100%;box-sizing:border-box">
+// Repository-hosted editions accompany the relevant public surface without changing authored bodies.
+const catalanEdition = 'https://vfc.codeberg.page/Fanzinamel/'
+const catalanZineSlugs = new Set(['server-called-paranoia', 'the-server-called-paranoia'])
+
+export function zineSupplementHtml(slug) {
+  if (!catalanZineSlugs.has(slug)) return ''
+  return `<section id="server-called-paranoia-editions" aria-labelledby="server-called-paranoia-editions-title" style="margin:1.5rem 0;padding:1rem;border:1px solid currentColor;max-width:100%;box-sizing:border-box">
 <h2 id="server-called-paranoia-editions-title">Other editions of this zine</h2>
 <p>A Catalan edition of the zine is now available to read online.</p>
 <p><a href="${catalanEdition}" target="_blank" rel="external noopener noreferrer">Read the Catalan edition · Català</a></p>
 </section>`
-  }
+}
 
+export function articleSupplementHtml(slug) {
   if (slug !== 'ai-shuts-down') return ''
   const pdf = '/downloads/thousand-server-black-wave-collective.pdf'
   return `<section id="thousand-server-zine" aria-labelledby="thousand-server-zine-title" style="margin:1.5rem 0;padding:1rem;border:1px solid currentColor;max-width:100%;box-sizing:border-box">

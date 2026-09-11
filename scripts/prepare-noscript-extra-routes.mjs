@@ -109,7 +109,7 @@ if (await ensureRoute(projectsPage)) generated += 1
 
 // Every published article receives all public aliases/templates from the same generated source.
 const postRoot = path.join(root, 'post')
-for (const family of ['piece', 'print', 'zine']) await fs.rm(path.join(root, family), { recursive: true, force: true })
+for (const family of ['piece', 'print']) await fs.rm(path.join(root, family), { recursive: true, force: true })
 try {
   const slugs = await fs.readdir(postRoot)
   for (const slug of slugs) {
@@ -120,7 +120,6 @@ try {
     for (const destination of [
       path.join(root, 'piece', slug, 'index.html'),
       path.join(root, 'print', slug, 'index.html'),
-      path.join(root, 'zine', slug, 'index.html'),
       path.join(root, 'post', slug, 'print', 'index.html'),
       path.join(root, 'piece', slug, 'print', 'index.html'),
     ]) {
