@@ -63,7 +63,10 @@ export function PublicationFooter() {
       </div>
 
       <div className="publication-footer__bottom">
-        <div>Ⓐ Intellectual property is bullshit - steal this website. Build your own publication.</div>
+        <div>
+          Ⓐ Intellectual property is bullshit - steal this website. Build your own publication.{' '}
+          <Link to="/guides/become-the-thousand-servers/">Start here.</Link>
+        </div>
         {!isChecking && !isAuthenticated ? (
           <Link className="publication-footer__login-link" to="/login">Editor login</Link>
         ) : null}
