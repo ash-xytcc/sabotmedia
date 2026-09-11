@@ -7036,6 +7036,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-p086i1",
+            "date": "2026-09-11T00:34:00.000Z",
+            "outlet": "Torino Cronaca",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati mostra il suo volto: ecco il collettivo sanzionato dagli Usa per terrorismo",
+            "translatedTitle": "",
+            "url": "https://www.torinocronaca.it/news/cronaca/693032/autistici-inventati-mostra-il-suo-volto-ecco-il-collettivo-sanzionato-dagli-usa-per-terrorismo.html",
+            "imageUrl": "",
+            "summary": "Autistici/Inventati ha mostrato il suo volto. Da qualche giorno c’è una voce su Wikipedia che prima non c’era e l’ultimo aggiornamento risale a poche ore fa. Si legge che Autistici/Inventati è stato u ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-go5shp",
             "date": "2026-09-10T16:31:00.000Z",
             "outlet": "Autistici/Inventati",
@@ -9333,7 +9349,7 @@
             "translatedTitle": "",
             "url": "https://keepitfree.ai/it/announcements/cartella-stampa",
             "imageUrl": "",
-            "summary": "1. In breve Il 26 agosto 2026 il Dipartimento del Tesoro statunitense, tramite OFAC - l&rsquo;ente che gestisce e applica sanzioni economiche e finanziarie -, ha sanzionato Autistici/Inventati (A/I), collettivo italiano che dal 2001 fornisce infrastrutture digitali a movimenti e attivisti: email, hosting, mailing list…",
+            "summary": "[Ultimo aggiornamento: 10 settembre 2026] 1. In breve Il 26 agosto 2026 il Dipartimento del Tesoro statunitense, tramite OFAC - l&rsquo;ente che gestisce e applica sanzioni economiche e finanziarie -, ha sanzionato Autistici/Inventati (A/I), collettivo italiano che dal 2001 fornisce infrastrutture digitali a movimenti…",
             "discoverySource": "official-ai",
             "relevanceScore": 62,
             "featured": false,
@@ -9924,7 +9940,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-11T05:48:57.847Z",
+        "socialCheckedAt": "2026-09-11T10:02:13.945Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9952,12 +9968,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 5
+            "count": 4
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-11T05:48:58.444Z",
-        "coverageArchiveCount": 154
+        "intelligenceCheckedAt": "2026-09-11T10:02:14.482Z",
+        "coverageArchiveCount": 155
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10159,7 +10175,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-11T05:49:10.122Z",
+        "automationCheckedAt": "2026-09-11T10:02:24.818Z",
         "coverageArchiveCount": 0
       }
     }
