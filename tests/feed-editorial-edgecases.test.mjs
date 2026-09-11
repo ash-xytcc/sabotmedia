@@ -95,12 +95,13 @@ test('ordinary Black Cat print remains print when no more specific format is pre
 })
 
 
-test('the Catalan edition is attached to the zine surface, not the article translation', () => {
-  for (const slug of ['server-called-paranoia', 'the-server-called-paranoia']) {
+test('the Catalan edition appears on the actual zine post, not the original article', () => {
+  for (const slug of ['server-called-paranoia', 'the-server-called-paranoia', 'zine-the-server-called-paranoia-defend-autistici-inventati-before-september-25']) {
     const html = zineSupplementHtml(slug)
     assert.match(html, /https:\/\/vfc\.codeberg\.page\/Fanzinamel\//)
     assert.match(html, /Catalan edition/)
   }
+  assert.match(articleSupplementHtml('zine-the-server-called-paranoia-defend-autistici-inventati-before-september-25'), /https:\/\/vfc\.codeberg\.page\/Fanzinamel\//)
   assert.equal(articleSupplementHtml('server-called-paranoia'), '')
   assert.equal(articleSupplementHtml('the-server-called-paranoia'), '')
   assert.equal(zineSupplementHtml('unrelated-post'), '')

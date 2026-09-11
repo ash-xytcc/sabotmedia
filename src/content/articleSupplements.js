@@ -1,6 +1,7 @@
 // Repository-hosted editions accompany the relevant public surface without changing authored bodies.
 const catalanEdition = 'https://vfc.codeberg.page/Fanzinamel/'
-const catalanZineSlugs = new Set(['server-called-paranoia', 'the-server-called-paranoia'])
+const catalanZineSlugs = new Set(['server-called-paranoia', 'the-server-called-paranoia', 'zine-the-server-called-paranoia-defend-autistici-inventati-before-september-25'])
+const catalanZinePostSlugs = new Set(['zine-the-server-called-paranoia-defend-autistici-inventati-before-september-25'])
 
 export function zineSupplementHtml(slug) {
   if (!catalanZineSlugs.has(slug)) return ''
@@ -12,6 +13,7 @@ export function zineSupplementHtml(slug) {
 }
 
 export function articleSupplementHtml(slug) {
+  if (catalanZinePostSlugs.has(slug)) return zineSupplementHtml(slug)
   if (slug !== 'ai-shuts-down') return ''
   const pdf = '/downloads/thousand-server-black-wave-collective.pdf'
   return `<section id="thousand-server-zine" aria-labelledby="thousand-server-zine-title" style="margin:1.5rem 0;padding:1rem;border:1px solid currentColor;max-width:100%;box-sizing:border-box">
