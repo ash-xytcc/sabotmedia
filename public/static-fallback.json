@@ -7036,6 +7036,38 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-ghgmrj",
+            "date": "2026-09-11T04:21:00.000Z",
+            "outlet": "YAHOO!",
+            "language": "",
+            "languageCode": "",
+            "title": "Infrastructure as a weapon: Why the US action against Italy’s Autistici/Inventati puts global digital rights on notice",
+            "translatedTitle": "",
+            "url": "https://tech.yahoo.com/cybersecurity/articles/infrastructure-weapon-why-us-action-112125358.html",
+            "imageUrl": "",
+            "summary": "The ease with which a single nation has been able to silence 25 years of fighting for independent, anonymous, and private communications should stand as a warning. If punishing the host of a private ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-3cshcc",
+            "date": "2026-09-11T03:15:00.000Z",
+            "outlet": "Vanity Fair Italia",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "La storia di Autistici/Inventati, perché il collettivo digitale italiano ha chiuso e cosa c’entra Donald Trump",
+            "translatedTitle": "",
+            "url": "https://www.vanityfair.it/article/autistici-inventati-lista-nera-americana",
+            "imageUrl": "",
+            "summary": "Un collettivo di volontari nato al G8 di Genova si scioglie sotto il peso di una sanzione del Tesoro americano. La stessa arma già usata contro Francesca Albanese. Per Banca Etica è «in discussione il ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-p086i1",
             "date": "2026-09-11T00:34:00.000Z",
             "outlet": "Torino Cronaca",
@@ -7048,6 +7080,22 @@
             "summary": "Autistici/Inventati ha mostrato il suo volto. Da qualche giorno c’è una voce su Wikipedia che prima non c’era e l’ultimo aggiornamento risale a poche ore fa. Si legge che Autistici/Inventati è stato u ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-blsrqk",
+            "date": "2026-09-10T23:02:00.000Z",
+            "outlet": "Telset.id",
+            "language": "",
+            "languageCode": "",
+            "title": "AS Sanksi Autistici/Inventati, Layanan Privasi Global Tutup",
+            "translatedTitle": "",
+            "url": "https://telset.id/laptop-pc/as-sanksi-autistici-inventati-layanan-privasi-global-tutup",
+            "imageUrl": "",
+            "summary": "Telset.id - Autistici/Inventati (A/I), kolektif teknologi asal Italia yang menyediakan infrastruktur komunikasi non-komersial berbasis privasi, resmi menghe ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9940,7 +9988,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-11T10:02:13.945Z",
+        "socialCheckedAt": "2026-09-11T14:17:19.418Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -9968,12 +10016,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 4
+            "count": 5
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-11T10:02:14.482Z",
-        "coverageArchiveCount": 155
+        "intelligenceCheckedAt": "2026-09-11T14:17:18.818Z",
+        "coverageArchiveCount": 158
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10175,7 +10223,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-11T10:02:24.818Z",
+        "automationCheckedAt": "2026-09-11T14:17:30.929Z",
         "coverageArchiveCount": 0
       }
     }
