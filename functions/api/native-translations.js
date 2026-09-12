@@ -1,6 +1,6 @@
 import { getBoundDb, databaseUnavailable } from './_lib/database.js'
 import { getExistingNativeEntry } from './_lib/nativePublicContent.js'
-import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
+import { permissionHasCapability, resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 import { bundledTranslationsForSlug } from './_lib/bundledNativeTranslations.js'
 import {
@@ -14,12 +14,13 @@ import {
 
 export async function onRequestOptions(context) {
   const permission = await resolvePublicSitePermission(context)
-  return json({ ok: true, canEdit: permission.canEdit })
+  return json({ ok: true, canEdit: permissionHasCapability(permission, 'publishing:write') })
 }
 
 export async function onRequestGet(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
+    const canManageTranslations = permissionHasCapability(permission, 'publishing:write')
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('content translations')
 
@@ -35,12 +36,12 @@ export async function onRequestGet(context) {
     if (!content) return json({ ok: false, error: 'content not found' }, 404)
 
     if (format === 'weblate-source') {
-      if (!permission.canEdit) return json({ ok: false, error: permission.reason, canEdit: false }, 403)
+      if (!canManageTranslations) return json({ ok: false, error: 'publishing permission required', canEdit: false }, 403)
       return json({ ok: true, bundle: buildWeblateSourceBundle(content) })
     }
 
     const storedTranslations = String(content.id).startsWith('bundled:') ? [] : await listTranslations(db, content.id, {
-      includeUnpublished: permission.canEdit && url.searchParams.get('includeUnpublished') === '1',
+      includeUnpublished: canManageTranslations && url.searchParams.get('includeUnpublished') === '1',
     })
     const bundledTranslations = bundledForRequestedSlug.length ? bundledForRequestedSlug : bundledTranslationsForSlug(content.slug)
     const merged = new Map()
@@ -70,7 +71,7 @@ export async function onRequestPut(context) {
 export async function onRequestDelete(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
-    if (!permission.canEdit) return json({ ok: false, error: permission.reason, canEdit: false }, 403)
+    if (!permissionHasCapability(permission, 'publishing:write')) return json({ ok: false, error: 'publishing permission required', canEdit: false }, 403)
 
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('content translation deletion')
@@ -85,7 +86,7 @@ export async function onRequestDelete(context) {
       action: 'native_translation.delete',
       entityType: 'native_translation',
       entityId: `${contentId}:${languageCode}`,
-      actor: inferActorFromRequest(context.request),
+      actor: permission.actor || inferActorFromRequest(context.request),
       detail: { contentId, languageCode },
     })
     return json(result)
@@ -97,7 +98,7 @@ export async function onRequestDelete(context) {
 async function handleWrite(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
-    if (!permission.canEdit) return json({ ok: false, error: permission.reason, canEdit: false }, 403)
+    if (!permissionHasCapability(permission, 'publishing:write')) return json({ ok: false, error: 'publishing permission required', canEdit: false }, 403)
 
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('content translation writes')
@@ -125,7 +126,7 @@ async function handleWrite(context) {
       action: 'native_translation.upsert',
       entityType: 'native_translation',
       entityId: saved.id,
-      actor: inferActorFromRequest(context.request),
+      actor: permission.actor || inferActorFromRequest(context.request),
       detail: {
         contentId: saved.nativeContentId,
         languageCode: saved.languageCode,
