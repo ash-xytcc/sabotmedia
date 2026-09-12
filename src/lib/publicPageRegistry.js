@@ -9,6 +9,7 @@ const STATIC_PUBLIC_PAGES = [
   { id: 'investigations', label: 'Investigations', path: '/investigations', family: 'index' },
   { id: 'ai-investigation', label: 'From Kirk to A/I', path: '/investigations/autistici-inventati', family: 'content' },
   { id: 'feeds', label: 'Feeds', path: '/feeds', family: 'page' },
+  { id: 'tcaie', label: 'The Child and Its Enemies', path: '/tcaie', family: 'content' },
   { id: 'gallery', label: 'Aberdeen Local 1312 gallery', path: '/aberdeen-local-1312-gallery', family: 'archive' },
   { id: 'updates', label: 'Updates', path: '/updates', family: 'index' },
   { id: 'press', label: 'Press', path: '/press', family: 'page' },
