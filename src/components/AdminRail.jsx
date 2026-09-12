@@ -217,8 +217,7 @@ export function AdminFrame({ children }) {
         [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > label:nth-of-type(2),
         [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > label:nth-of-type(3),
         [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > label:nth-of-type(4),
-        [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > .native-content-editor__check,
-        [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > .description { display: none !important; }
+        [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > .native-content-editor__check { display: none !important; }
       `}</style> : null}
       <AdminRail collapsed={railCollapsed} onToggleCollapsed={setCollapsed} />
       <div className="admin-frame__main">{children}</div>
