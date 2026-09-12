@@ -6118,6 +6118,16 @@
             "source": "Autistici/Inventati"
           },
           {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-andate-e-moltiplicatevi-10-100-1000-server-nascano",
+            "date": "2026-09-12T15:18:00.000Z",
+            "title": "Andate e moltiplicatevi! 10 100 1000 server nascano",
+            "body": "In questi giorni di repressione feroce, ideologica e senza alcuna base di realtà, ci avete spesso chiesto: &ldquo;Come possiamo aiutarvi?&rdquo;. La prima risposta alla domanda è immediata: se volete aiutarci, create nuovi spazi in rete. Di server liberi ce ne sono troppo pochi, che si tratti di mail, web hosting o qualunque altro servizio utile. E non l…",
+            "url": "https://keepitfree.ai/it/announcements/andate-e-moltiplicatevi-10-100-1000-server-nascano/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
             "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-assemblea-di-aggiornamento-ed-helpdesk",
             "date": "2026-09-11T17:00:00.000Z",
             "title": "Assemblea di aggiornamento ed helpdesk",
@@ -6298,14 +6308,24 @@
             "source": "Autistici/Inventati"
           },
           {
-            "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-teniamo-internet-libera",
-            "date": "2026-08-30T14:29:00.000Z",
-            "title": "⌦ Teniamo Internet libera!",
-            "body": "«La struttura del potere si comporta come un ragno che tesse la sua ragnatela per catturare gli insetti e immobilizzarli; ma quegli stessi insetti, muovendosi lungo i fili della stessa rete, possono usarla dal basso come uno strumento per mettersi in connessione tra loro, comunicare e organizzare la propria liberazione.» Aldo Braibanti C’era un sogno, all’i…",
-            "url": "https://keepitfree.ai/it/announcements/teniamo-internet-libera/",
+            "id": "official-social-mastodon-117258789873903967",
+            "date": "2026-09-12T15:32:20.412Z",
+            "title": "A/I public campaign update",
+            "body": "What do we have to say about the future? Go forth and multiply! May 10 - 100 - 1000 servers spark up! https:// keepitfree.ai/announcements/go -forth-and-multiply-may-10-100-1000-servers-spark-up/ # keepItFree # AutisticiInventati",
+            "url": "https://mastodon.bida.im/@cavallette/117258789873903967",
             "pinned": false,
             "automated": true,
-            "source": "Autistici/Inventati"
+            "source": "A/I official Mastodon"
+          },
+          {
+            "id": "official-social-mastodon-117258784670294370",
+            "date": "2026-09-12T15:31:01.009Z",
+            "title": "A/I public campaign update",
+            "body": "Quello che abbiamo da dire sul futuro? Andate e moltiplicatevi! 10 - 100 - 1000 server nascano! https:// keepitfree.ai/it/announcements /andate-e-moltiplicatevi-10-100-1000-server-nascano/ # keepItFree # AutisticiInventati",
+            "url": "https://mastodon.bida.im/@cavallette/117258784670294370",
+            "pinned": false,
+            "automated": true,
+            "source": "A/I official Mastodon"
           },
           {
             "id": "official-social-mastodon-117236457326532926",
@@ -6366,6 +6386,38 @@
           }
         ],
         "social": [
+          {
+            "id": "mastodon-117258789873903967",
+            "platform": "MASTODON",
+            "date": "2026-09-12T15:32:20.412Z",
+            "account": "cavallette",
+            "handle": "@cavallette",
+            "text": "What do we have to say about the future? Go forth and multiply! May 10 - 100 - 1000 servers spark up! https:// keepitfree.ai/announcements/go -forth-and-multiply-may-10-100-1000-servers-spark-up/ # keepItFree # AutisticiInventati",
+            "excerpt": "What do we have to say about the future? Go forth and multiply! May 10 - 100 - 1000 servers spark up! https:// keepitfree.ai/announcements/go -forth-and-multiply-may-10-100-1000-servers-spark-up/ # keepItFree # AutisticiInventati",
+            "url": "https://mastodon.bida.im/@cavallette/117258789873903967",
+            "images": [],
+            "imageUrl": "",
+            "language": "Italian",
+            "languageCode": "it",
+            "contentWarning": "",
+            "sourcePriority": 0
+          },
+          {
+            "id": "mastodon-117258784670294370",
+            "platform": "MASTODON",
+            "date": "2026-09-12T15:31:01.009Z",
+            "account": "cavallette",
+            "handle": "@cavallette",
+            "text": "Quello che abbiamo da dire sul futuro? Andate e moltiplicatevi! 10 - 100 - 1000 server nascano! https:// keepitfree.ai/it/announcements /andate-e-moltiplicatevi-10-100-1000-server-nascano/ # keepItFree # AutisticiInventati",
+            "excerpt": "Quello che abbiamo da dire sul futuro? Andate e moltiplicatevi! 10 - 100 - 1000 server nascano! https:// keepitfree.ai/it/announcements /andate-e-moltiplicatevi-10-100-1000-server-nascano/ # keepItFree # AutisticiInventati",
+            "url": "https://mastodon.bida.im/@cavallette/117258784670294370",
+            "images": [],
+            "imageUrl": "",
+            "language": "Italian",
+            "languageCode": "it",
+            "contentWarning": "",
+            "sourcePriority": 0
+          },
           {
             "id": "mastodon-117236457326532926",
             "platform": "MASTODON",
@@ -6642,51 +6694,6 @@
               }
             ],
             "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/214/999/097/497/934/original/41ad96e14f4d28a6.png",
-            "language": "English",
-            "languageCode": "en",
-            "contentWarning": "",
-            "sourcePriority": 2
-          },
-          {
-            "id": "mastodon-117214475626310554",
-            "platform": "MASTODON",
-            "date": "2026-09-04T19:42:38.656Z",
-            "account": "Sabot Media",
-            "handle": "@AberdeenLocal1312",
-            "text": "RE: https:// kolektiva.social/@AberdeenLoca l1312/117201292302112535 Please go listen to this exclusive interview with # AutisticiInventati before we publish our latest report. It will help with contextual understanding of the situation.",
-            "excerpt": "RE: https:// kolektiva.social/@AberdeenLoca l1312/117201292302112535 Please go listen to this exclusive interview with # AutisticiInventati before we publish our latest report. It will help with contextual understanding of the situation.",
-            "url": "https://kolektiva.social/@AberdeenLocal1312/117214475626310554",
-            "images": [],
-            "imageUrl": "",
-            "language": "English",
-            "languageCode": "en",
-            "contentWarning": "",
-            "sourcePriority": 2
-          },
-          {
-            "id": "mastodon-117212957945601882",
-            "platform": "MASTODON",
-            "date": "2026-09-04T13:16:40.689Z",
-            "account": "Sabot Media",
-            "handle": "@AberdeenLocal1312",
-            "text": "Three quotes. One very clear trajectory. Designate the movement. Recast infrastructure as “material support.” Then go after the services and networks that keep people connected, even when those services are otherwise lawful. That is what makes the Autistici/Inventati case bigger than one collective. Read. Share. Preserve. Organize. https:// sabot.media/",
-            "excerpt": "Three quotes. One very clear trajectory. Designate the movement. Recast infrastructure as “material support.” Then go after the services and networks that keep people connected, even when those services are otherwise lawful. That is what makes the Autistici/Inventati case bigger than one collective. Read. Share. Preserve. Organize. https:// sabot.media/",
-            "url": "https://kolektiva.social/@AberdeenLocal1312/117212957945601882",
-            "images": [
-              {
-                "url": "https://kolektiva.social/system/media_attachments/files/117/212/926/735/499/850/original/c771edd300609ac8.png",
-                "alt": "Cream, black, and red Sabot Media campaign graphic with a close-up photo of a man on the right. Quote reads: “And I think, maybe, perhaps the State Department should designate Antifa, its international arm as a foreign terrorist organization, FTO.” Attributed on the graphic to Andy Ngo, White House, Oct. 8, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer urges readers to “Read / Share / Preserve / Organize.”"
-              },
-              {
-                "url": "https://kolektiva.social/system/media_attachments/files/117/212/926/719/924/856/original/7b8bfc5200ac5794.png",
-                "alt": "Red, black, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large quote reads: “They would probably really struggle to go after these kinds of entities, since the services they provide are otherwise lawful.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”"
-              },
-              {
-                "url": "https://kolektiva.social/system/media_attachments/files/117/212/926/732/282/958/original/1fabe04e309f58f4.png",
-                "alt": "Black, red, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large red quote reads: “Going after organizations like this that provide material support would be job one.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”"
-              }
-            ],
-            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/212/926/735/499/850/original/c771edd300609ac8.png",
             "language": "English",
             "languageCode": "en",
             "contentWarning": "",
@@ -7016,6 +7023,22 @@
             "summary": "Assemblea pubblica contro le sanzioni ad Autistici/Inventati Il 26 Agosto, il segretario di stato USA Marco Rubio accusa il collettivo Autistici/Inventati di fornire infrastruttura a gruppi &ldquo;terroristi&rdquo;, e lo inserisce nelle liste OFAC. Dieci giorni dopo, il collettivo annuncia la sua chiusura. La portata…",
             "discoverySource": "official-ai",
             "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1vml1kw",
+            "date": "2026-09-12T15:18:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "",
+            "languageCode": "",
+            "title": "Andate e moltiplicatevi! 10 100 1000 server nascano",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/announcements/andate-e-moltiplicatevi-10-100-1000-server-nascano",
+            "imageUrl": "",
+            "summary": "In questi giorni di repressione feroce, ideologica e senza alcuna base di realtà, ci avete spesso chiesto: &ldquo;Come possiamo aiutarvi?&rdquo; . La prima risposta alla domanda è immediata: se volete aiutarci, create nuovi spazi in rete . Di server liberi ce ne sono troppo pochi , che si tratti di mail, web hosting o…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 0,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -9988,14 +10011,14 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-12T12:54:03.808Z",
+        "socialCheckedAt": "2026-09-12T16:11:38.430Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
             "label": "A/I Keep It Free dispatches",
             "url": "https://keepitfree.ai/it/index.xml",
             "ok": true,
-            "count": 18
+            "count": 19
           },
           {
             "id": "official-ai-noblogs",
@@ -10020,8 +10043,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-12T12:54:06.547Z",
-        "coverageArchiveCount": 158
+        "intelligenceCheckedAt": "2026-09-12T16:11:39.114Z",
+        "coverageArchiveCount": 159
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10223,7 +10246,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-12T12:54:12.132Z",
+        "automationCheckedAt": "2026-09-12T16:11:49.006Z",
         "coverageArchiveCount": 0
       }
     }
