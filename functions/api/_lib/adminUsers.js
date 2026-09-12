@@ -4,13 +4,14 @@ export const PASSWORD_ITERATIONS = 100_000
 const MAX_PASSWORD_ITERATIONS = 100_000
 const PASSWORD_MIN_LENGTH = 12
 
-export const ADMIN_USER_ROLES = Object.freeze(['owner', 'admin', 'editor', 'viewer'])
+export const ADMIN_USER_ROLES = Object.freeze(['owner', 'admin', 'editor', 'contributor', 'viewer'])
 export const ADMIN_USER_STATUSES = Object.freeze(['active', 'disabled'])
 
 const ROLE_CAPABILITIES = Object.freeze({
   owner: ['*'],
-  admin: ['content:write', 'media:write', 'publishing:write', 'site:manage', 'analytics:view', 'system:view', 'users:manage'],
-  editor: ['content:write', 'media:write', 'publishing:write', 'analytics:view'],
+  admin: ['content:write', 'media:write', 'publishing:write', 'review:manage', 'review:comment', 'site:manage', 'analytics:view', 'system:view', 'users:manage'],
+  editor: ['content:write', 'media:write', 'publishing:write', 'review:manage', 'review:comment', 'analytics:view'],
+  contributor: ['content:write', 'media:write', 'review:comment'],
   viewer: ['analytics:view'],
 })
 
@@ -136,7 +137,7 @@ export async function getAdminUserById(db, id) {
 export async function listAdminUsers(db) {
   await ensureAdminUsersTable(db)
   const result = await db.prepare(`SELECT id, email, display_name, role, status, created_at, updated_at, last_login_at
-    FROM admin_users ORDER BY CASE role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 WHEN 'editor' THEN 2 ELSE 3 END, email COLLATE NOCASE ASC`).all()
+    FROM admin_users ORDER BY CASE role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 WHEN 'editor' THEN 2 WHEN 'contributor' THEN 3 ELSE 4 END, email COLLATE NOCASE ASC`).all()
   return (result?.results || []).map(publicUser)
 }
 
