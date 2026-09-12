@@ -1,11 +1,11 @@
 import { getBoundDb, databaseUnavailable } from './_lib/database.js'
-import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
+import { permissionHasCapability, resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { syncWeblateComponent } from './_lib/weblateSync.js'
 
 export async function onRequestPost(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
-    if (!permission.canEdit) return json({ ok: false, error: permission.reason || 'authentication required' }, 403)
+    if (!permissionHasCapability(permission, 'publishing:write')) return json({ ok: false, error: 'publishing permission required' }, 403)
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('Weblate sync')
     const result = await syncWeblateComponent({
