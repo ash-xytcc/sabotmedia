@@ -13,22 +13,22 @@ const NAV_GROUPS = [
   {
     id: 'content', label: 'Content', icon: '✎',
     items: [
-      { to: adminRoutes.posts, label: 'Posts' },
+      { to: adminRoutes.posts, label: 'Posts', capability: 'content:write' },
       { to: adminRoutes.addNew, label: 'Add New', capability: 'content:write' },
-      { to: adminRoutes.pages, label: 'Pages', excludeCourseQuery: true },
-      { to: adminRoutes.collections, label: 'Collections' },
-      { to: adminRoutes.taxonomy, label: 'Taxonomy' },
+      { to: adminRoutes.pages, label: 'Pages', excludeCourseQuery: true, capability: 'publishing:write' },
+      { to: adminRoutes.collections, label: 'Collections', capability: 'publishing:write' },
+      { to: adminRoutes.taxonomy, label: 'Taxonomy', capability: 'publishing:write' },
     ],
   },
   {
     id: 'publishing', label: 'Publishing', icon: '↗',
     items: [
-      { to: adminRoutes.publications, label: 'Publications' },
+      { to: adminRoutes.publications, label: 'Publications', capability: 'publishing:write' },
       { to: adminRoutes.campaigns, label: 'Campaigns', capability: 'publishing:write' },
-      { to: adminRoutes.podcasts, label: 'Podcasts' },
+      { to: adminRoutes.podcasts, label: 'Podcasts', capability: 'publishing:write' },
       { to: adminRoutes.translations, label: 'Translations', capability: 'publishing:write' },
-      { to: adminRoutes.feeds, label: 'Feeds & Syndication' },
-      { to: adminRoutes.qa, label: 'Editorial QA' },
+      { to: adminRoutes.feeds, label: 'Feeds & Syndication', capability: 'publishing:write' },
+      { to: adminRoutes.qa, label: 'Editorial QA', capability: 'review:manage' },
     ],
   },
   {
@@ -40,9 +40,9 @@ const NAV_GROUPS = [
   {
     id: 'media', label: 'Media & Labs', icon: '▣',
     items: [
-      { to: adminRoutes.media, label: 'Media Library' },
-      { to: adminRoutes.printlab, label: 'Printlab' },
-      { to: adminRoutes.audiolab, label: 'AudioLab' },
+      { to: adminRoutes.media, label: 'Media Library', capability: 'media:write' },
+      { to: adminRoutes.printlab, label: 'Printlab', capability: 'publishing:write' },
+      { to: adminRoutes.audiolab, label: 'AudioLab', capability: 'media:write' },
     ],
   },
   {
@@ -157,7 +157,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
           {canCreate ? (
             <AdminBarMenu label="+ New">
               {hasCapability('content:write') ? <Link to={adminRoutes.addNew} className="wp-admin-topbar__dropdown-link">Post</Link> : null}
-              {hasCapability('content:write') ? <Link to={`${adminRoutes.nativeBridge}?new=podcast`} className="wp-admin-topbar__dropdown-link">Podcast Episode</Link> : null}
+              {hasCapability('publishing:write') ? <Link to={`${adminRoutes.nativeBridge}?new=podcast`} className="wp-admin-topbar__dropdown-link">Podcast Episode</Link> : null}
               {hasCapability('media:write') ? <Link to={adminRoutes.media} className="wp-admin-topbar__dropdown-link">Media</Link> : null}
               {hasCapability('publishing:write') ? <Link to={adminRoutes.collections} className="wp-admin-topbar__dropdown-link">Collection</Link> : null}
               {hasCapability('publishing:write') ? <Link to={adminRoutes.campaigns} className="wp-admin-topbar__dropdown-link">Campaign</Link> : null}
@@ -200,6 +200,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
 }
 
 export function AdminFrame({ children }) {
+  const { session } = useAdminAuth()
   const [railCollapsed, setRailCollapsed] = useState(() => {
     try { const stored = window.localStorage.getItem(RAIL_STATE_KEY); return stored === null ? true : stored === '1' } catch { return true }
   })
@@ -208,5 +209,19 @@ export function AdminFrame({ children }) {
     setRailCollapsed(value)
     try { window.localStorage.setItem(RAIL_STATE_KEY, value ? '1' : '0') } catch { /* UI preference only */ }
   }
-  return <div className={`admin-frame${railCollapsed ? ' admin-frame--rail-collapsed' : ''}`}><AdminRail collapsed={railCollapsed} onToggleCollapsed={setCollapsed} /><div className="admin-frame__main">{children}</div></div>
+  const contributor = session?.role === 'contributor'
+  return (
+    <div className={`admin-frame${railCollapsed ? ' admin-frame--rail-collapsed' : ''}`} data-admin-role={session?.role || ''}>
+      {contributor ? <style>{`
+        [data-admin-role="contributor"] .native-content-editor__actions > button:nth-of-type(n+4) { display: none !important; }
+        [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > label:nth-of-type(2),
+        [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > label:nth-of-type(3),
+        [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > label:nth-of-type(4),
+        [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > .native-content-editor__check,
+        [data-admin-role="contributor"] .native-bridge-sidebar .wp-meta-box:first-child > .description { display: none !important; }
+      `}</style> : null}
+      <AdminRail collapsed={railCollapsed} onToggleCollapsed={setCollapsed} />
+      <div className="admin-frame__main">{children}</div>
+    </div>
+  )
 }
