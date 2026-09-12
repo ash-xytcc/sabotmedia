@@ -1,14 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import '../podcast-analytics.css'
 
-function utcDayOffset(offset = 0) {
-  return new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10)
+const PODCAST_ANALYTICS_TIME_ZONE = 'America/Los_Angeles'
+
+function pacificDayOffset(offset = 0) {
+  const date = new Date(Date.now() + offset * 86400000)
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: PODCAST_ANALYTICS_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}`
 }
 
 function formatDay(day) {
   if (!day) return '—'
-  const date = new Date(`${day}T00:00:00Z`)
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' })
+  const date = new Date(`${day}T12:00:00Z`)
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: PODCAST_ANALYTICS_TIME_ZONE })
 }
 
 function pluralize(value, singular, plural = `${singular}s`) {
@@ -54,11 +64,11 @@ export function PodcastHostingPanel({ show }) {
   }
 
   const analytics = data?.analytics || []
-  const today = utcDayOffset(0)
-  const yesterday = utcDayOffset(-1)
-  const selectedCutoff = utcDayOffset(-(days - 1))
-  const sevenDayCutoff = utcDayOffset(-6)
-  const thirtyDayCutoff = utcDayOffset(-29)
+  const today = pacificDayOffset(0)
+  const yesterday = pacificDayOffset(-1)
+  const selectedCutoff = pacificDayOffset(-(days - 1))
+  const sevenDayCutoff = pacificDayOffset(-6)
+  const thirtyDayCutoff = pacificDayOffset(-29)
 
   function totalClientsSince(cutoff) {
     return analytics.reduce((total, row) => total + (row.day >= cutoff ? Number(row.clients || 0) : 0), 0)
@@ -92,7 +102,7 @@ export function PodcastHostingPanel({ show }) {
 
   const dailyRows = []
   for (let offset = 0; offset > -days; offset -= 1) {
-    const day = utcDayOffset(offset)
+    const day = pacificDayOffset(offset)
     const stat = dailyStats.get(day) || { downloads: 0, requests: 0 }
     dailyRows.push({ day, ...stat })
   }
@@ -107,7 +117,7 @@ export function PodcastHostingPanel({ show }) {
     <div className="podcast-analytics-header">
       <div>
         <h2>{show.podcastTitle}: Analytics</h2>
-        <p className="description">Daily download estimates from Sabot-hosted podcast audio. Days use UTC.</p>
+        <p className="description">Daily download estimates from Sabot-hosted podcast audio. Days use Pacific time.</p>
       </div>
       <button type="button" className="button" disabled={busy} onClick={() => request().catch(e => setError(e.message))}>Refresh</button>
     </div>
@@ -118,12 +128,12 @@ export function PodcastHostingPanel({ show }) {
         <article className="podcast-analytics-hero">
           <span>Downloads today</span>
           <strong>{todayDownloads.toLocaleString()}</strong>
-          <small>{formatDay(today)} UTC</small>
+          <small>{formatDay(today)} Pacific</small>
         </article>
         <article className="podcast-analytics-kpi">
           <span>Yesterday</span>
           <strong>{yesterdayDownloads.toLocaleString()}</strong>
-          <small>{formatDay(yesterday)} UTC</small>
+          <small>{formatDay(yesterday)} Pacific</small>
         </article>
         <article className="podcast-analytics-kpi">
           <span>Last 7 days</span>
@@ -194,7 +204,7 @@ export function PodcastHostingPanel({ show }) {
         </section>
       </div>
 
-      <p className="podcast-analytics-note">A “download” here is an estimated daily episode/client download bucket, not a confirmed human listen or an IAB-certified metric. Repeat range requests from the same episode/client/day are grouped. Known bots and HEAD checks are excluded; no raw IP addresses are saved. Data is retained for 90 days.</p>
+      <p className="podcast-analytics-note">A “download” here is an estimated daily episode/client download bucket, not a confirmed human listen or an IAB-certified metric. Repeat range requests from the same episode/client/Pacific day are grouped. Known bots and HEAD checks are excluded; no raw IP addresses are saved. Data is retained for 90 days.</p>
 
       <details className="podcast-hosting-details">
         <summary>Hosting &amp; feed details</summary>
