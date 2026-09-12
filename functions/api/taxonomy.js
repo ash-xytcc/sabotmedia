@@ -1,4 +1,4 @@
-import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
+import { permissionHasCapability, resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import {
   ensureTaxonomyTables,
   listTaxonomyTerms,
@@ -13,7 +13,7 @@ export async function onRequestOptions(context) {
 
   return json({
     ok: true,
-    canEdit: permission.canEdit,
+    canEdit: permissionHasCapability(permission, 'publishing:write'),
     authMode: permission.mode,
     authReason: permission.reason,
     mode: getBoundDb(context) ? 'd1' : 'unavailable',
@@ -41,8 +41,8 @@ export async function onRequestPost(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
 
-    if (!permission.canEdit) {
-      return json({ ok: false, error: permission.reason, canEdit: false }, 403)
+    if (!permissionHasCapability(permission, 'publishing:write')) {
+      return json({ ok: false, error: 'publishing permission required', canEdit: false }, 403)
     }
 
     const body = await context.request.json()
@@ -56,7 +56,7 @@ export async function onRequestPost(context) {
       action: 'taxonomy.upsert',
       entityType: 'taxonomy_term',
       entityId: saved.id,
-      actor: inferActorFromRequest(context.request),
+      actor: permission.actor || inferActorFromRequest(context.request),
       detail: saved,
     })
     return json({ ok: true, mode: 'd1', term: saved })
@@ -69,16 +69,14 @@ export async function onRequestDelete(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
 
-    if (!permission.canEdit) {
-      return json({ ok: false, error: permission.reason, canEdit: false }, 403)
+    if (!permissionHasCapability(permission, 'publishing:write')) {
+      return json({ ok: false, error: 'publishing permission required', canEdit: false }, 403)
     }
 
     const url = new URL(context.request.url)
     const id = url.searchParams.get('id') || ''
 
-    if (!id) {
-      return json({ ok: false, error: 'missing id' }, 400)
-    }
+    if (!id) return json({ ok: false, error: 'missing id' }, 400)
 
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('taxonomy deletion')
@@ -88,7 +86,7 @@ export async function onRequestDelete(context) {
       action: 'taxonomy.delete',
       entityType: 'taxonomy_term',
       entityId: id,
-      actor: inferActorFromRequest(context.request),
+      actor: permission.actor || inferActorFromRequest(context.request),
       detail: result,
     })
     return json({ ok: true, mode: 'd1', ...result })
