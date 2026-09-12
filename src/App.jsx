@@ -11,6 +11,7 @@ import { TranslationsAdminPage } from './components/TranslationsAdminPage'
 import { NativeUpdatesPage } from './components/NativeUpdatesPage'
 import { NativeDraftPreviewPage } from './components/NativeDraftPreviewPage'
 import { PublicSearchPage } from './components/PublicSearchPage'
+import { TcaieProjectPage } from './components/TcaieProjectPage'
 import { PublicDraftPage } from './components/PublicDraftPage'
 import { PrintLabPage } from './components/PrintLabPage'
 import { AudioLabPage } from './components/AudioLabPage'
@@ -160,6 +161,7 @@ function RouteMeta({ pieces = [] }) {
       '/investigations': ['Investigations', 'Sabot Media investigation hubs gathering source trails, timelines, archived evidence, reporting notes, and finished longform reporting.'],
       '/investigations/autistici-inventati': ['From Kirk to A/I', 'The reporting map behind Sabot Media’s investigation into the path from post-assassination anti-Antifa advocacy to the designation of Autistici/Inventati.'],
       '/feeds': ['Feeds', 'Subscribe to Sabot Media feeds for the whole archive, formats, projects, collections, and author labels.'],
+      '/tcaie': ['The Child and Its Enemies', 'The Child and Its Enemies project corner: episodes, posts, related project material, and the canonical podcast feed.'],
       '/aberdeen-local-1312-gallery': ['Aberdeen Local 1312 Gallery', 'Historical image archive from Aberdeen Local 1312, preserved by Sabot Media.'],
       '/search': ['Search', 'Search the Sabot Media archive.'],
       '/about': ['About', 'About Sabot Media and its public-interest media work.'],
@@ -290,6 +292,7 @@ export default function App() {
               <Route path="/projects" element={<Navigate to="/archive" replace />} />
               <Route path="/projects/:slug" element={<ProjectArchiveRedirect projectMap={projectMap} />} />
               <Route path={publicRoutes.project} element={<ProjectArchiveRedirect projectMap={projectMap} />} />
+              <Route path="/tcaie" element={<TcaieProjectPage pieces={pieces} />} />
               <Route path="/piece/:slug" element={<LegacyPieceRedirect />} />
               <Route path={publicRoutes.post} element={<PiecePage pieces={pieces} />} />
               <Route path="/post/:slug/print" element={<PrintPage pieces={pieces} />} />
@@ -436,6 +439,10 @@ function LegacyPrintRedirect() {
 
 function ProjectArchiveRedirect({ projectMap = [] }) {
   const { slug = '' } = useParams()
+  const normalizedSlug = String(slug || '').trim().toLowerCase()
+  if (normalizedSlug === 'the-child-and-its-enemies' || normalizedSlug === 'tcaie') {
+    return <Navigate to="/tcaie" replace />
+  }
   const match = projectMap.find((project) => project.slug === slug)
   const projectValue = match?.name || getProjectMeta(slug).name || slug
   return <Navigate to={`/archive?project=${encodeURIComponent(projectValue)}`} replace />
