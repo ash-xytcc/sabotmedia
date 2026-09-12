@@ -7043,6 +7043,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-3q5rj7",
+            "date": "2026-09-12T10:49:00.000Z",
+            "outlet": "Il Tempo on MSN",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati, l'ultimo appello contro il \"tecnofascismo\". E neanche una parola su D",
+            "translatedTitle": "",
+            "url": "https://www.msn.com/it-it/tecnologia/intelligenza-artificiale/autistici-inventati-l-ultimo-appello-contro-il-tecnofascismo-e-neanche-una-parola-su-d/ar-AA2c5tDm",
+            "imageUrl": "",
+            "summary": "Il collettivo italiano di \"hacktivitsi\" Autistici/Inventati (A/I) ha dismesso l'e attività da giorni dopo essere stato sanzionato come organizzazione terroristica globale da parte degli Stati Uniti. A ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1w530jx",
             "date": "2026-09-12T10:49:00.000Z",
             "outlet": "Il Tempo",
@@ -10027,7 +10043,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-12T18:27:15.468Z",
+        "socialCheckedAt": "2026-09-12T20:52:38.969Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10059,8 +10075,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-12T18:27:16.949Z",
-        "coverageArchiveCount": 160
+        "intelligenceCheckedAt": "2026-09-12T20:52:40.397Z",
+        "coverageArchiveCount": 161
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10262,7 +10278,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-12T18:27:22.577Z",
+        "automationCheckedAt": "2026-09-12T20:52:47.403Z",
         "coverageArchiveCount": 0
       }
     }
