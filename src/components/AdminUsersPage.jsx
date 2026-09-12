@@ -3,15 +3,16 @@ import { AdminFrame } from './AdminRail'
 import { useAdminAuth } from './AdminAuthContext'
 import { createAdminUserAccount, deleteAdminUserAccount, fetchAdminUsers, updateAdminUserAccount } from '../lib/adminUsersApi'
 
-const ROLES = ['owner', 'admin', 'editor', 'viewer']
+const ROLES = ['owner', 'admin', 'editor', 'contributor', 'viewer']
 const ROLE_HELP = {
   owner: 'Full control, including owners and account security.',
-  admin: 'Manage site operations and non-owner accounts.',
-  editor: 'Create, edit, publish, and manage media. No account or site settings.',
+  admin: 'Manage site operations, users, editorial review, publishing, and settings.',
+  editor: 'Review submissions, request changes, edit, schedule, publish, manage media, and view analytics.',
+  contributor: 'Write and edit their own unpublished work, upload media, submit for review, and respond to editorial comments. Cannot publish.',
   viewer: 'Read-only admin access and analytics.',
 }
 
-const EMPTY_FORM = { email: '', displayName: '', password: '', role: 'editor', status: 'active' }
+const EMPTY_FORM = { email: '', displayName: '', password: '', role: 'contributor', status: 'active' }
 
 export function AdminUsersPage() {
   const { session, refreshAuth } = useAdminAuth()
@@ -132,7 +133,7 @@ export function AdminUsersPage() {
 
         <section className="wp-meta-box">
           <h2>Create account</h2>
-          <p className="description">SabotPress currently provisions accounts directly. It does not pretend to send invitation email without a mail service. Give the person their temporary password through a separate secure channel.</p>
+          <p className="description">SabotPress currently provisions accounts directly. Give the person their temporary password through a separate secure channel. Use Contributor for people who should be able to write and submit without publishing authority.</p>
           <form className="wp-settings-form admin-users-create" onSubmit={createUser}>
             <label><span>Email</span><input type="email" autoComplete="off" value={form.email} onChange={(e) => setForm((current) => ({ ...current, email: e.target.value }))} required /></label>
             <label><span>Display name</span><input value={form.displayName} onChange={(e) => setForm((current) => ({ ...current, displayName: e.target.value }))} /></label>
