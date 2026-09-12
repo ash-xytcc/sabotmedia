@@ -5,7 +5,7 @@
     "items": [
       {
         "id": "podcast-rss-b926cc15353b4a883a25",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -99,7 +99,7 @@
       },
       {
         "id": "podcast-rss-9ec538c61bf40e19e9cd",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -193,7 +193,7 @@
       },
       {
         "id": "podcast-rss-3a1834a3f74033702aaf",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -287,7 +287,7 @@
       },
       {
         "id": "podcast-rss-a32d80d9144e95d81ae2",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -381,7 +381,7 @@
       },
       {
         "id": "podcast-rss-b5eef6afe499c6e22256",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -475,7 +475,7 @@
       },
       {
         "id": "podcast-rss-2c9e51b50f11b018966c",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -569,7 +569,7 @@
       },
       {
         "id": "podcast-rss-9b0b0479e10dd3c0f3a1",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -663,7 +663,7 @@
       },
       {
         "id": "podcast-rss-ee8c2780ae3c07c3cbe4",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -757,7 +757,7 @@
       },
       {
         "id": "podcast-rss-99eca5a6c195ab1dcd19",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -851,7 +851,7 @@
       },
       {
         "id": "podcast-rss-964be656760f56deeeff",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -945,7 +945,7 @@
       },
       {
         "id": "podcast-rss-69b628729d6b7498882c",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1039,7 +1039,7 @@
       },
       {
         "id": "podcast-rss-905229995b15ed3942a9",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1133,7 +1133,7 @@
       },
       {
         "id": "podcast-rss-bcab16fa0adea64c6c97",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1227,7 +1227,7 @@
       },
       {
         "id": "podcast-rss-ecb949f19b460c8a87e0",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1321,7 +1321,7 @@
       },
       {
         "id": "podcast-rss-e4f8ec703da21a03cca7",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1415,7 +1415,7 @@
       },
       {
         "id": "podcast-rss-207aca48e671cefa5fc6",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1509,7 +1509,7 @@
       },
       {
         "id": "podcast-rss-fc5816e11a9e1d0e730b",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1603,7 +1603,7 @@
       },
       {
         "id": "podcast-rss-5ab5c774eb356f5a6744",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1697,7 +1697,7 @@
       },
       {
         "id": "podcast-rss-30c123cf71829d8b13c9",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1791,7 +1791,7 @@
       },
       {
         "id": "podcast-rss-5f1d90c73521bd13de39",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1885,7 +1885,7 @@
       },
       {
         "id": "podcast-rss-235bfe0dc2980bde9571",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -1979,7 +1979,7 @@
       },
       {
         "id": "podcast-rss-55d48c1c042ad8919c6d",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2069,7 +2069,7 @@
       },
       {
         "id": "podcast-rss-59bac412294d07573f22",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2159,7 +2159,7 @@
       },
       {
         "id": "podcast-rss-3916f71ae8c847046ede",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2249,7 +2249,7 @@
       },
       {
         "id": "podcast-rss-211ac84a6b441b476c9e",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2339,7 +2339,7 @@
       },
       {
         "id": "podcast-rss-2253bea968870c1b0a97",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2429,7 +2429,7 @@
       },
       {
         "id": "podcast-rss-9207f31825151e6f308f",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2519,7 +2519,7 @@
       },
       {
         "id": "podcast-rss-75c10d165ad722baa85a",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2609,7 +2609,7 @@
       },
       {
         "id": "podcast-rss-6fd1f4f9ce4fc6caf21a",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2699,7 +2699,7 @@
       },
       {
         "id": "podcast-rss-13d89df8c62e18fdab23",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2789,7 +2789,7 @@
       },
       {
         "id": "podcast-rss-60d9c3e66c7ac246f4bd",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2879,7 +2879,7 @@
       },
       {
         "id": "podcast-rss-a9322473fc82a5c570ec",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -2969,7 +2969,7 @@
       },
       {
         "id": "podcast-rss-4122315fa5136bce6fe7",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3059,7 +3059,7 @@
       },
       {
         "id": "podcast-rss-c87070e0072cd8e6bdb1",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3149,7 +3149,7 @@
       },
       {
         "id": "podcast-rss-37ce2bff4c84068c0e0b",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3239,7 +3239,7 @@
       },
       {
         "id": "podcast-rss-5b375f4b5170d9df5bdc",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3329,7 +3329,7 @@
       },
       {
         "id": "podcast-rss-def4a4cd2e58d18993f6",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3429,7 +3429,7 @@
       },
       {
         "id": "podcast-rss-365bcb27c9408699f788",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3523,7 +3523,7 @@
       },
       {
         "id": "podcast-rss-1783919df24a0ddb8167",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3617,7 +3617,7 @@
       },
       {
         "id": "podcast-rss-979d25fb10ebc385c0f7",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3711,7 +3711,7 @@
       },
       {
         "id": "podcast-rss-50e582697d563948f0e6",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3805,7 +3805,7 @@
       },
       {
         "id": "podcast-rss-a24ed93dc37ecbf167ff",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3899,7 +3899,7 @@
       },
       {
         "id": "podcast-rss-8f5a58b13cab34cc444c",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -3993,7 +3993,7 @@
       },
       {
         "id": "podcast-rss-183f4ec73637f1bf346d",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -4087,7 +4087,7 @@
       },
       {
         "id": "podcast-rss-f866794c56fc3fd25344",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -4184,7 +4184,7 @@
       },
       {
         "id": "podcast-rss-3b00f5f19c66909ae531",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "podcast",
         "status": "published",
         "target": "general",
@@ -4313,7 +4313,7 @@
       },
       {
         "id": "native-y7hi0va0",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -4393,7 +4393,7 @@
       },
       {
         "id": "native-f8ex3r6z",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -4473,7 +4473,7 @@
       },
       {
         "id": "native-rwddnkqj",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -4553,7 +4553,7 @@
       },
       {
         "id": "native-a5x7yyh1",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -4631,7 +4631,7 @@
       },
       {
         "id": "native-d1uexbpp",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -4711,7 +4711,7 @@
       },
       {
         "id": "native-aan9gbld",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -4783,7 +4783,7 @@
       },
       {
         "id": "native-7mzpqyuw",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -4863,7 +4863,7 @@
       },
       {
         "id": "native-ribfo506",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -4943,7 +4943,7 @@
       },
       {
         "id": "native-5nrodxdc",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -5023,7 +5023,7 @@
       },
       {
         "id": "native-ozp7u3tf",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -5103,7 +5103,7 @@
       },
       {
         "id": "native-j8bzrppi",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -5181,7 +5181,7 @@
       },
       {
         "id": "native-2tof3tip",
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "contentType": "dispatch",
         "status": "published",
         "target": "general",
@@ -7137,7 +7137,7 @@
             "outlet": "L'Indipendente",
             "language": "Italian",
             "languageCode": "it",
-            "title": "Perché abbiamo obbedito alle sanzioni USA contro Autistici/Inventati: parla Banca Etica",
+            "title": "Perché non abbiamo potuto opporci alle sanzioni USA contro Autistici/Inventati: parla Banca Etica",
             "translatedTitle": "",
             "url": "https://www.lindipendente.online/2026/09/10/perche-abbiamo-obbedito-alle-sanzioni-usa-contro-autistici-inventati-parla-banca-etica",
             "imageUrl": "",
@@ -9988,7 +9988,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-12T04:56:32.171Z",
+        "socialCheckedAt": "2026-09-12T09:11:18.169Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10020,7 +10020,7 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-12T04:56:33.565Z",
+        "intelligenceCheckedAt": "2026-09-12T09:11:19.021Z",
         "coverageArchiveCount": 158
       },
       "food-not-bombs-gaza": {
@@ -10223,7 +10223,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-12T04:56:42.348Z",
+        "automationCheckedAt": "2026-09-12T09:11:28.539Z",
         "coverageArchiveCount": 0
       }
     }
