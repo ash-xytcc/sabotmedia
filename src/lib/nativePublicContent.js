@@ -9,7 +9,7 @@ import { getDefaultFeaturedTitleDisplayForContentType, normalizeFeaturedTitleDis
 
 const FALLBACK_STORAGE_KEY = 'sabot-native-public-content-v1'
 
-export const NATIVE_CONTENT_SCHEMA_VERSION = 3
+export const NATIVE_CONTENT_SCHEMA_VERSION = 4
 
 function normalizeBoolean(value, fallback = false) {
   if (typeof value === 'boolean') return value
@@ -37,6 +37,18 @@ export function createEmptyNativeEntry() {
     body: '',
     richBody: [],
     author: '',
+    createdByUserId: '',
+    createdByEmail: '',
+    createdByDisplayName: '',
+    lastEditedByUserId: '',
+    lastEditedByEmail: '',
+    submittedAt: '',
+    reviewedAt: '',
+    reviewedByUserId: '',
+    reviewedByEmail: '',
+    reviewDecision: '',
+    assignedEditorId: '',
+    assignedEditorEmail: '',
     sourceType: 'manual',
     sourceKind: 'manual',
     sourceLabel: '',
@@ -92,7 +104,7 @@ export function normalizeNativeEntry(input) {
   const raw = input || {}
   const status = normalizeEnum(raw.status, ['draft', 'published', 'scheduled', 'archived', 'trash']) || 'draft'
   const workflowState =
-    normalizeEnum(raw.workflowState, ['draft', 'in_review', 'needs_revision', 'ready', 'scheduled', 'published', 'archived']) ||
+    normalizeEnum(raw.workflowState, ['draft', 'in_review', 'needs_revision', 'ready', 'declined', 'scheduled', 'published', 'archived', 'trash']) ||
     inferWorkflowState(raw, status)
   const display = normalizeNativeDisplaySettings(raw)
 
@@ -110,6 +122,18 @@ export function normalizeNativeEntry(input) {
     body: String(raw.body || ''),
     richBody: Array.isArray(raw.richBody) ? raw.richBody : [],
     author: String(raw.author || ''),
+    createdByUserId: String(raw.createdByUserId || ''),
+    createdByEmail: String(raw.createdByEmail || ''),
+    createdByDisplayName: String(raw.createdByDisplayName || ''),
+    lastEditedByUserId: String(raw.lastEditedByUserId || ''),
+    lastEditedByEmail: String(raw.lastEditedByEmail || ''),
+    submittedAt: normalizeDateString(raw.submittedAt || ''),
+    reviewedAt: normalizeDateString(raw.reviewedAt || ''),
+    reviewedByUserId: String(raw.reviewedByUserId || ''),
+    reviewedByEmail: String(raw.reviewedByEmail || ''),
+    reviewDecision: String(raw.reviewDecision || ''),
+    assignedEditorId: String(raw.assignedEditorId || ''),
+    assignedEditorEmail: String(raw.assignedEditorEmail || ''),
     sourceType: String(raw.sourceType || 'manual'),
     sourceKind: String(raw.sourceKind || raw.sourceType || 'manual'),
     sourceLabel: String(raw.sourceLabel || ''),
@@ -342,6 +366,7 @@ function isScheduledVisible(item) {
 }
 
 function inferWorkflowState(raw, status) {
+  if (status === 'trash') return 'trash'
   if (status === 'archived') return 'archived'
   if (status === 'published') {
     const scheduled = normalizeDateString(raw?.scheduledFor || '')
