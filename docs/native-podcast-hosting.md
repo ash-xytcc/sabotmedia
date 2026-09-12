@@ -21,7 +21,7 @@ Use the existing Episode Publisher to upload/select audio and artwork, set metad
 
 RSS and the website player use the same measured endpoint for native uploaded audio. Delivery supports GET, HEAD, valid byte ranges (including suffix ranges), ETags and If-Range. Draft/future/private visibility follows the existing public-content checks. The endpoint returns no-store so a CDN response cannot silently skip request accounting. Direct media-library URLs are unmeasured; published podcast links use the measured endpoint.
 
-Reports show daily-client estimates and request totals for 7, 30 or 90 UTC days, per episode. Repeat range requests share one daily episode/client bucket. Known bots and HEAD requests are excluded. A secret-key HMAC of day, episode, IP and user agent is stored instead of raw IP or user agent. Records expire after 90 days. These are requests, not confirmed listens, completed transfers or IAB-certified downloads; preloads can count and podcast-app caching can hide listening. Analytics failures do not block audio delivery.
+Reports show daily-client estimates and request totals for 7, 30 or 90 Pacific calendar days, per episode, using the `America/Los_Angeles` time zone so daylight-saving changes are handled automatically. Repeat range requests share one daily episode/client bucket. Known bots and HEAD requests are excluded. A secret-key HMAC of day, episode, IP and user agent is stored instead of raw IP or user agent. Records expire after 90 days. These are requests, not confirmed listens, completed transfers or IAB-certified downloads; preloads can count and podcast-app caching can hide listening. Analytics failures do not block audio delivery.
 
 ## Limits and recovery
 
