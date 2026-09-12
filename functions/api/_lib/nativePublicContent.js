@@ -1,6 +1,6 @@
 import { podcastAudioSource, storedMediaKey, withoutAcastFooter } from '../../../shared/podcastHosting.js'
 import { podcastEntryBelongsToShow } from '../../../shared/podcastShowMembership.js'
-const NATIVE_CONTENT_SCHEMA_VERSION = 3
+const NATIVE_CONTENT_SCHEMA_VERSION = 4
 
 function normalizeBoolean(value, fallback = true) {
   if (typeof value === 'boolean') return value
@@ -122,6 +122,7 @@ export function normalizeNativeEntry(input) {
     'in_review',
     'needs_revision',
     'ready',
+    'declined',
     'scheduled',
     'published',
     'archived',
@@ -146,6 +147,18 @@ export function normalizeNativeEntry(input) {
     body: String(raw.body || ''),
     richBody: Array.isArray(raw.richBody) ? raw.richBody : [],
     author: String(raw.author || ''),
+    createdByUserId: String(raw.createdByUserId || raw.created_by_user_id || ''),
+    createdByEmail: String(raw.createdByEmail || raw.created_by_email || ''),
+    createdByDisplayName: String(raw.createdByDisplayName || raw.created_by_display_name || ''),
+    lastEditedByUserId: String(raw.lastEditedByUserId || raw.last_edited_by_user_id || ''),
+    lastEditedByEmail: String(raw.lastEditedByEmail || raw.last_edited_by_email || ''),
+    submittedAt: normalizeDateString(raw.submittedAt || raw.submitted_at || ''),
+    reviewedAt: normalizeDateString(raw.reviewedAt || raw.reviewed_at || ''),
+    reviewedByUserId: String(raw.reviewedByUserId || raw.reviewed_by_user_id || ''),
+    reviewedByEmail: String(raw.reviewedByEmail || raw.reviewed_by_email || ''),
+    reviewDecision: String(raw.reviewDecision || raw.review_decision || ''),
+    assignedEditorId: String(raw.assignedEditorId || raw.assigned_editor_id || ''),
+    assignedEditorEmail: String(raw.assignedEditorEmail || raw.assigned_editor_email || ''),
     sourceType: String(raw.sourceType || 'manual'),
     sourceKind: String(raw.sourceKind || raw.sourceType || 'manual'),
     sourceLabel: String(raw.sourceLabel || ''),
@@ -240,6 +253,11 @@ export async function listNativeEntries(db, options = {}) {
   if (options.workflowState) {
     clauses.push(`json_extract(content_json, '$.workflowState') = ?`)
     binds.push(options.workflowState)
+  }
+
+  if (options.createdByUserId) {
+    clauses.push(`json_extract(content_json, '$.createdByUserId') = ?`)
+    binds.push(options.createdByUserId)
   }
 
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
@@ -520,6 +538,7 @@ export function isPubliclyVisible(item) {
   if (!['published', 'scheduled'].includes(status)) return false
   if (item.workflowState === 'archived') return false
   if (item.workflowState === 'trash') return false
+  if (item.workflowState === 'declined') return false
   if (item.workflowState && !['published', 'scheduled', 'ready'].includes(item.workflowState)) return false
 
   const now = Date.now()
