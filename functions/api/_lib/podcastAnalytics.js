@@ -1,5 +1,23 @@
 import { ensureSiteSettingsTable } from './podcastSettings.js'
 
+const PODCAST_ANALYTICS_TIME_ZONE = 'America/Los_Angeles'
+
+export function pacificAnalyticsDay(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: PODCAST_ANALYTICS_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]))
+  return `${values.year}-${values.month}-${values.day}`
+}
+
+export function pacificAnalyticsDayOffset(offset = 0, now = new Date()) {
+  const probe = new Date(now.getTime() + offset * 86400000)
+  return pacificAnalyticsDay(probe)
+}
+
 export async function ensurePodcastAnalytics(db) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS podcast_downloads (
     day TEXT NOT NULL, episode_id TEXT NOT NULL, client_hash TEXT NOT NULL,
@@ -31,7 +49,7 @@ export async function recordPodcastDownload(context, episodeId, bytes) {
     .bind('podcast-analytics-secret-v1', JSON.stringify(crypto.randomUUID())).run()
   const secret = await db.prepare('SELECT value_json FROM site_settings WHERE setting_key = ?')
     .bind('podcast-analytics-secret-v1').first()
-  const day = new Date().toISOString().slice(0, 10)
+  const day = pacificAnalyticsDay()
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret.value_json), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
   const digest = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${day}\n${episodeId}\n${ip}\n${ua.slice(0, 500)}`))
   const hash = [...new Uint8Array(digest)].map(x => x.toString(16).padStart(2, '0')).join('')
@@ -39,6 +57,7 @@ export async function recordPodcastDownload(context, episodeId, bytes) {
     VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(day, episode_id, client_hash) DO UPDATE SET
     requests = requests + 1, requested_bytes = requested_bytes + excluded.requested_bytes`)
     .bind(day, episodeId, hash, bytes, podcastApp(ua), String(context.request.cf?.country || '').slice(0, 2)).run()
-  // Retain daily deduplication records for 90 days; no raw IP or user agent is stored.
-  await db.prepare("DELETE FROM podcast_downloads WHERE day < date('now', '-89 days')").run()
+  // Retain daily deduplication records for 90 Pacific calendar days; no raw IP or user agent is stored.
+  const retentionCutoff = pacificAnalyticsDayOffset(-89)
+  await db.prepare('DELETE FROM podcast_downloads WHERE day < ?').bind(retentionCutoff).run()
 }
