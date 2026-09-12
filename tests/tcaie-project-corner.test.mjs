@@ -6,6 +6,7 @@ import { getPublicPageMeta } from '../src/lib/publicPageRegistry.js'
 
 const app = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
 const page = fs.readFileSync(new URL('../src/components/TcaieProjectPage.jsx', import.meta.url), 'utf8')
+const redirects = fs.readFileSync(new URL('../public/_redirects', import.meta.url), 'utf8')
 
 test('TCAIE has a canonical shareable project corner', () => {
   assert.match(app, /path="\/tcaie" element=\{<TcaieProjectPage pieces=\{pieces\} \/>\}/)
@@ -20,6 +21,10 @@ test('TCAIE is registered as a static public route for direct Cloudflare request
     path: '/tcaie',
     family: 'content',
   })
+})
+
+test('TCAIE does not fight Cloudflare directory canonicalization with a trailing-slash redirect', () => {
+  assert.doesNotMatch(redirects, /^\/tcaie\/\s+\/tcaie\s+30[1278]$/m)
 })
 
 test('TCAIE project corner uses the canonical project identity and podcast feed', () => {

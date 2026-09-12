@@ -10,4 +10,3 @@
 /projects/:slug/ /projects/:slug 301
 /campaigns/:slug/ /campaigns/:slug 301
 /investigations/:slug/ /investigations/:slug 301
-/tcaie/ /tcaie 301
