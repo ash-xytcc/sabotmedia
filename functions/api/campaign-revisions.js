@@ -1,4 +1,4 @@
-import { resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
+import { permissionHasCapability, resolvePublicSitePermission } from './_lib/publicSiteAuth.js'
 import { writeAuditLog, inferActorFromRequest } from './_lib/auditLog.js'
 import { databaseUnavailable, getBoundDb } from './_lib/database.js'
 import { listAllCampaignRevisions, listCampaignRevisions, restoreCampaignRevision } from './_lib/campaigns.js'
@@ -6,7 +6,7 @@ import { listAllCampaignRevisions, listCampaignRevisions, restoreCampaignRevisio
 export async function onRequestGet(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
-    if (!permission.canEdit) return json({ ok: false, error: permission.reason || 'authentication required' }, 403)
+    if (!permissionHasCapability(permission, 'publishing:write')) return json({ ok: false, error: 'publishing permission required' }, 403)
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('campaign revision reads')
     const url = new URL(context.request.url)
@@ -26,7 +26,7 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   try {
     const permission = await resolvePublicSitePermission(context)
-    if (!permission.canEdit) return json({ ok: false, error: permission.reason || 'authentication required' }, 403)
+    if (!permissionHasCapability(permission, 'publishing:write')) return json({ ok: false, error: 'publishing permission required' }, 403)
     const db = getBoundDb(context)
     if (!db) return databaseUnavailable('campaign revision restore')
     const body = await context.request.json()
@@ -37,7 +37,7 @@ export async function onRequestPost(context) {
       action: 'campaigns.revision.restore',
       entityType: 'campaign',
       entityId: item.id,
-      actor: inferActorFromRequest(context.request),
+      actor: permission.actor || inferActorFromRequest(context.request),
       detail: { revisionId, slug: item.slug },
     })
     return json({ ok: true, mode: 'd1', item })
