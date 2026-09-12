@@ -7043,6 +7043,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-1w530jx",
+            "date": "2026-09-12T10:49:00.000Z",
+            "outlet": "Il Tempo",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati, l'ultimo appello contro il \"tecnofascismo\". E neanche una parola su De Rosa e il Pd",
+            "translatedTitle": "",
+            "url": "https://www.iltempo.it/attualita/2026/09/12/news/anarchici-autistici-inventati-contro-tecnofascismo-neanche-una-parola-su-de-rosa-49121208",
+            "imageUrl": "",
+            "summary": "Il collettivo italiano di \"hacktivitsi\" Autistici/Inventati (A/I) ha dismesso l'e attività da giorni dopo essere stato ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-u525ft",
             "date": "2026-09-11T17:00:00.000Z",
             "outlet": "Autistici/Inventati",
@@ -10011,7 +10027,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-12T16:11:38.430Z",
+        "socialCheckedAt": "2026-09-12T18:27:15.468Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10043,8 +10059,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-12T16:11:39.114Z",
-        "coverageArchiveCount": 159
+        "intelligenceCheckedAt": "2026-09-12T18:27:16.949Z",
+        "coverageArchiveCount": 160
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10246,7 +10262,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-12T16:11:49.006Z",
+        "automationCheckedAt": "2026-09-12T18:27:22.577Z",
         "coverageArchiveCount": 0
       }
     }
