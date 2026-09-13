@@ -10043,7 +10043,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-12T22:57:09.397Z",
+        "socialCheckedAt": "2026-09-13T00:49:35.293Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10071,11 +10071,11 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 0
+            "count": 5
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-12T22:57:10.465Z",
+        "intelligenceCheckedAt": "2026-09-13T00:49:41.414Z",
         "coverageArchiveCount": 161
       },
       "food-not-bombs-gaza": {
@@ -10278,7 +10278,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-12T22:57:19.344Z",
+        "automationCheckedAt": "2026-09-13T00:49:50.176Z",
         "coverageArchiveCount": 0
       }
     }
