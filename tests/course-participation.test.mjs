@@ -44,8 +44,8 @@ test('old contributor links, public API, login and previously issued sessions ca
  const html=await (await page(ctx(env,'/guides/become-the-thousand-servers/'))).text();assert.doesNotMatch(html,/contributors\/(?:systemli|autistici-inventati)/)
  const offline=await (await page(ctx(env,'/guides/become-the-thousand-servers/offline'))).text();assert.doesNotMatch(offline,/WITHDRAWN-(?:PUBLIC|EXERCISE)-CANARY|PRIVATE-PRESERVED/)
 })
-test('staff cannot recreate or publish withdrawn participation via old submissions',async()=>{
- const env=await fixture(),cookie=(await createAdminSessionCookie(ctx(env,'/'),'staff')).split(';')[0]
+test('editors cannot recreate or publish withdrawn participation via old submissions',async()=>{
+ const env=await fixture(),cookie=(await createAdminSessionCookie(ctx(env,'/'),'editor')).split(';')[0]
  assert.equal((await api(ctx(env,'/api/course-contributors',{action:'create',id:'systemli-org',name:'Systemli.org'},cookie))).status,404)
  await env.BF_DB.prepare('INSERT INTO course_contributor_submissions(id,project,revision,content_json,status) VALUES(?,?,?,?,?)').bind('old-submission','systemli',0,'{}','pending').run()
  const r=await api(ctx(env,'/api/course-contributors',{action:'review-decision',submissionId:'old-submission',decision:'approved',reviewerNote:'old review'},cookie));assert.equal(r.status,403)
