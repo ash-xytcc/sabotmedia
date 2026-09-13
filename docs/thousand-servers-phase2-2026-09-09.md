@@ -13,9 +13,9 @@ This document records implementation details, test boundaries, content status, a
 - No learner accounts, email addresses, grades, rankings, certificates, or surveillance dashboard.
 - Validated JSON progress import/export.
 - One reusable recovery card/code, client-side encryption, QR without the recovery secret, and explicit opt-in to server backup.
-- One project credential opens that project's contribution editor and Private Comms. Project sessions are not SabotPress staff sessions.
+- One project credential opens that project's contribution editor and Private Comms. Project sessions are not SabotPress editor sessions.
 - Private Comms remain a separate storage scope and are excluded from contributor comparisons, publication data, public HTML, the offline download, and course publication payloads.
-- Existing SabotPress owner/admin/editor authorization remains authoritative for staff actions.
+- Existing SabotPress owner/admin/editor authorization remains authoritative for editor actions.
 - Public course reading remains server-rendered and usable without JavaScript. Interactive progress/editing/recovery features still require JavaScript.
 
 ## Editorial review workflow
@@ -121,7 +121,7 @@ Current content status by guide section:
 | G09 THIS IS NOT A SERVER GUIDE | none | Connective prose exists in supplied working material. Editorial draft needed; do not substitute a slogan for a finished section. |
 | G10 THE HUMAN INFRASTRUCTURE | none | Supplied material identifies care, burnout, knowledge transfer and social maintenance as core topics. Reporting/operator testimony remains incomplete. |
 | G11 THE WEB OF PARTIAL KNOWLEDGE | none | Authored conceptual material exists. Needs synthesis with contributor answers and explicit sourcing where factual claims are made. |
-| G12 WHAT SURVIVES WITHOUT YOU? | none | Central thesis and supplied prose exist, including the resilience/person formulation. Contributor answers and final synthesis remain human reporting work. |
+| G12 WHAT SURVIVES WITHOUT YOU? | none | Central thesis and supplied prose exists, including the resilience/person formulation. Contributor answers and final synthesis remain human reporting work. |
 | G13 EACH ONE, TEACH ONE | none | Closing/teach-back concept exists. Final prose should be assembled after testing because it needs to reflect what learners actually can reproduce and teach. |
 
 ### Known reporting gaps
@@ -144,7 +144,7 @@ No contributor response, quote, endorsement, successful exercise result, or expe
 The regression suite must cover and remain green for:
 
 - locked course map and publication projection;
-- staff/contributor/other-project/anonymous permissions;
+- editor/contributor/other-project/anonymous permissions;
 - private-content canaries absent from public API/HTML/review/offline download;
 - immutable contributor submissions, decisions, required notes and stale-approval conflicts;
 - publication unchanged on rejection/change request;
@@ -156,7 +156,7 @@ The regression suite must cover and remain green for:
 
 ### Real browser / HTTP
 
-Before claiming production live, verify the deployed canonical URL and offline URL, noindex/noarchive headers/meta, readable server-rendered course, absence from public discovery surfaces, and staff course route availability. Interactive browser acceptance should verify review controls, contributor decision visibility, local progress/import hydration and recovery flows where a browser environment with the production D1 binding is available.
+Before claiming production live, verify the deployed canonical URL and offline URL, noindex/noarchive headers/meta, readable server-rendered course, absence from public discovery surfaces, and editor course route availability. Interactive browser acceptance should verify review controls, contributor decision visibility, local progress/import hydration and recovery flows where a browser environment with the production D1 binding is available.
 
 ### Physical / expert participation still required
 
