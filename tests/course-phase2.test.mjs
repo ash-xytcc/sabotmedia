@@ -17,7 +17,7 @@ async function req(f,path,body,cookie='',handler=contributors,method,ip){const r
 async function unlock(f,id='puscii'){await req(f,'/api/course-contributors',{action:'credentials',id,editPassword:'phase-two-contributor-password-123'},f.cookie);const login=await req(f,'/api/course-contributors',{action:'login',id,password:'phase-two-contributor-password-123'});return login.r.headers.get('set-cookie').split(';')[0]}
 async function submit(f,cookie,id,revision,sharedAnswer,extra={}){return req(f,'/api/course-contributors',{id,revision,item:{sharedAnswer,questions:extra.questions||[],exercise:extra.exercise||'',suggestedExercise:extra.suggestedExercise||'',status:'published'}},cookie)}
 
-test('staff review workspace gets exact pending content while public API does not',async()=>{
+test('editor review workspace gets exact pending content while public API does not',async()=>{
   const f=await fixture(),cookie=await unlock(f)
   assert.equal((await submit(f,cookie,'puscii',0,'PENDING_CANARY')).r.status,200)
   const review=await req(f,'/api/course-contributors',null,f.cookie)
