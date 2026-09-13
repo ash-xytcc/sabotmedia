@@ -190,7 +190,7 @@ test('sign-in on private page opens the same project editor and keeps other proj
   assert.equal((await req(f, '/api/course-contributors', { id: 'puscii', scope: 'private', revision: 0, text: 'Team conversation' }, cookie)).r.status, 200)
   assert.equal((await req(f, '/api/course-contributors?id=puscii&scope=private', null, cookie)).data.text, 'Team conversation')
 })
-test('one password setup grants private workspace access and staff need no project password', async () => {
+test('one password setup grants private workspace access and editors need no project password', async () => {
   const f = await fixture()
   assert.equal((await req(f, '/api/course-contributors?id=puscii&scope=private', null, f.cookie)).r.status, 200)
   assert.equal((await req(f, '/api/course-contributors', { action: 'credentials', id: 'puscii', editPassword: credentials.editPassword }, f.cookie)).r.status, 200)
