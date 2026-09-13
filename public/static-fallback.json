@@ -6108,6 +6108,16 @@
             "source": "Sabot Media publishing"
           },
           {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-assemblea-cittadina-call-for-action",
+            "date": "2026-09-19T12:30:00.000Z",
+            "title": "Assemblea cittadina, call for action",
+            "body": "Assemblea cittadina, call for action sabato 19 settembre alle 15:30 Assemblea cittadina, call for action Questo è il momento di rilanciare l’autogestione virtuale, sostenendola attraverso una responsabilità distribuita. Perché, come la sproporzione della vicenda che ha toccato A/I ci ricorda: chi possiede il server è importante, chi controlla il dominio è i…",
+            "url": "https://keepitfree.ai/it/events/assemblea-cittadina-call-for-action/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
             "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-assemblea-pubblica-contro-le-sanzioni-ad-autistici-inventati",
             "date": "2026-09-16T17:00:00.000Z",
             "title": "Assemblea pubblica contro le sanzioni ad Autistici/Inventati",
@@ -6293,16 +6303,6 @@
             "title": "Banca Etica limita l'operatività del conto dell'Associazione AI ODV",
             "body": "Comunicato stampa Autistici/Inventati, 2 settembre 2026 Cominciamo dai fatti. A seguito dell’iscrizione del Collettivo A/I e dell’Associazione AI ODV nella lista delle organizzazioni terroristiche globali, dopo alcune telefonate informali Banca Etica ha limitato l’operatività del conto bancario dell’Associazione nella giornata di martedì 1 settembre 2026 al…",
             "url": "https://keepitfree.ai/it/announcements/banca-etica-limita-loperativit%C3%A0-del-conto-dellassociazione-ai-odv/",
-            "pinned": false,
-            "automated": true,
-            "source": "Autistici/Inventati"
-          },
-          {
-            "id": "official-ai-keepitfree-https-keepitfree-ai-it-announcements-lettera-aperta",
-            "date": "2026-08-31T14:29:00.000Z",
-            "title": "Lettera Aperta",
-            "body": "Difendiamo Autistici/Inventati e il diritto di costruire una comunicazione resistente Il 26 agosto 2026 gli Stati Uniti hanno designato il collettivo di tecnologia italiano Autistici/Inventati come Specially Designated Global Terrorist inserendolo nelle liste dei Specially Designated Nationals ai sensi dell’Executive Order 13224. Alle 00:01 (Eastern time) d…",
-            "url": "https://keepitfree.ai/it/announcements/lettera-aperta/",
             "pinned": false,
             "automated": true,
             "source": "Autistici/Inventati"
@@ -7011,6 +7011,22 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-1mx10tc",
+            "date": "2026-09-19T12:30:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Assemblea cittadina, call for action",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/events/assemblea-cittadina-call-for-action",
+            "imageUrl": "",
+            "summary": "Assemblea cittadina, call for action sabato 19 settembre alle 15:30 Assemblea cittadina, call for action Questo è il momento di rilanciare l’autogestione virtuale, sostenendola attraverso una responsabilità distribuita. Perché, come la sproporzione della vicenda che ha toccato A/I ci ricorda: chi possiede il server è…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 0,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-2foi56",
             "date": "2026-09-16T17:00:00.000Z",
             "outlet": "Autistici/Inventati",
@@ -7023,6 +7039,22 @@
             "summary": "Assemblea pubblica contro le sanzioni ad Autistici/Inventati Il 26 Agosto, il segretario di stato USA Marco Rubio accusa il collettivo Autistici/Inventati di fornire infrastruttura a gruppi &ldquo;terroristi&rdquo;, e lo inserisce nelle liste OFAC. Dieci giorni dopo, il collettivo annuncia la sua chiusura. La portata…",
             "discoverySource": "official-ai",
             "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-ezop18",
+            "date": "2026-09-13T04:11:57.000Z",
+            "outlet": "Il Tirreno on MSN",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Pisa, l’associazione nel mirino USA alza bandiera bianca e chiude",
+            "translatedTitle": "",
+            "url": "https://www.msn.com/it-it/notizie/other/pisa-l-associazione-nel-mirino-usa-alza-bandiera-bianca-e-chiude/ar-AA2c7BKS",
+            "imageUrl": "",
+            "summary": "PISA. Alla fine il presidente degli Stati Uniti Donald Trump otterrà quanto voleva: il collettivo Autistici/Inventati e l’associazione pisana che lo gestisce, l’AI Odv, chiuderanno i battenti. E lo fa ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -10043,14 +10075,14 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-13T17:43:40.773Z",
+        "socialCheckedAt": "2026-09-13T19:51:51.880Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
             "label": "A/I Keep It Free dispatches",
             "url": "https://keepitfree.ai/it/index.xml",
             "ok": true,
-            "count": 19
+            "count": 20
           },
           {
             "id": "official-ai-noblogs",
@@ -10075,8 +10107,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-13T17:43:42.213Z",
-        "coverageArchiveCount": 161
+        "intelligenceCheckedAt": "2026-09-13T19:51:53.464Z",
+        "coverageArchiveCount": 163
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10278,7 +10310,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-13T17:43:47.386Z",
+        "automationCheckedAt": "2026-09-13T19:51:59.194Z",
         "coverageArchiveCount": 0
       }
     }
