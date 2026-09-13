@@ -121,7 +121,7 @@ async function load() {
       const link = document.createElement('a'); link.dataset.courseAdminLink=''; link.href='/wp-admin/pages?course=become-the-thousand-servers'; link.textContent='Open course administration'; root.prepend(link)
     }
     renderSubmissions()
-    status(scope === 'private' ? (current.editor ? 'Private to the editorial team. Your staff sign-in provides access; no extra password is needed.' : 'Private workspace unlocked.') : 'Editing contribution. Contributor saves create review submissions; the currently published version stays unchanged until an editor approves one.')
+    status(scope === 'private' ? (current.editor ? 'Private to the editorial team. Your editor sign-in provides access; no extra password is needed.' : 'Private workspace unlocked.') : 'Editing contribution. Contributor saves create review submissions; the currently published version stays unchanged until an editor approves one.')
   } catch (e) {
     $('[data-login]').hidden = false; $('[data-edit-form]').hidden = true
     status(scope === 'private' ? 'Sign in with your project password to open this private conversation.' : e.message)
@@ -164,6 +164,6 @@ $('[data-history]').onclick = async () => {
     }
   } catch(e){status(e.message)}
 }
-$('[data-credentials]').onclick = async () => { try { await api({action:'credentials',editPassword:$('[data-edit-password]').value}); $('[data-edit-password]').value=''; status('Contributor access updated; older contributor sessions revoked. Staff access uses your existing sign-in.') } catch(e){status(e.message)} }
+$('[data-credentials]').onclick = async () => { try { await api({action:'credentials',editPassword:$('[data-edit-password]').value}); $('[data-edit-password]').value=''; status('Contributor access updated; older contributor sessions revoked. Editor access uses your existing sign-in.') } catch(e){status(e.message)} }
 $('[data-disable]').onclick = async () => { if(!confirm('Disable this contributor’s access and revoke sessions?'))return; try{await api({action:'credentials',disabled:true});status('Contributor access disabled.')}catch(e){status(e.message)} }
 load()
