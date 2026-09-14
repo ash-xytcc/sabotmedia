@@ -7043,6 +7043,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-163mctx",
+            "date": "2026-09-13T13:30:00.000Z",
+            "outlet": "MilanoToday",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Da un ambulatorio medico di Milano alla blacklist antiterrorismo Usa: il collettivo italiano Autistici/Inventati costretto a chiudere",
+            "translatedTitle": "",
+            "url": "https://www.milanotoday.it/dossier/sociale/collettivo-autistici-inventati-chiude.html",
+            "imageUrl": "",
+            "summary": "L'amministrazione Usa ha sanzionato per terrorismo il collettivo informatico che da 20 anni fornisce servizi digitali alle reti sociali. Il collettivo è stato costretto a chiudere e ha presentato un r ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-ezop18",
             "date": "2026-09-13T04:11:57.000Z",
             "outlet": "Il Tirreno on MSN",
@@ -10075,7 +10091,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-13T23:38:46.053Z",
+        "socialCheckedAt": "2026-09-14T01:44:20.557Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10103,12 +10119,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 0
+            "count": 6
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-13T23:30:03.556Z",
-        "coverageArchiveCount": 163
+        "intelligenceCheckedAt": "2026-09-14T01:44:22.937Z",
+        "coverageArchiveCount": 164
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10310,7 +10326,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-13T23:38:55.241Z",
+        "automationCheckedAt": "2026-09-14T01:44:33.929Z",
         "coverageArchiveCount": 0
       }
     }
