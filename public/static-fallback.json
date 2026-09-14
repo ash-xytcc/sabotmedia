@@ -6118,6 +6118,16 @@
             "source": "Autistici/Inventati"
           },
           {
+            "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-helpdesk-a-i-exploit-pisa",
+            "date": "2026-09-17T16:00:00.000Z",
+            "title": "Helpdesk A/I @ Exploit Pisa",
+            "body": "Autistici/Inventati è un collettivo di hacker che forniva servizi online gratuiti incentrati sulla privacy e che non monetizza i dati degli utenti. Da marzo 2001 il loro scopo è quello di promuovere un’idea di internet diversa da quella a cui oggi siamo abituatə. Il 26 agosto il governo Trump ha designato, con accuse totalmente infondate, A/I come un’organi…",
+            "url": "https://keepitfree.ai/it/events/helpdesk-a/i-@-exploit-pisa/",
+            "pinned": false,
+            "automated": true,
+            "source": "Autistici/Inventati"
+          },
+          {
             "id": "official-ai-keepitfree-https-keepitfree-ai-it-events-assemblea-pubblica-contro-le-sanzioni-ad-autistici-inventati",
             "date": "2026-09-16T17:00:00.000Z",
             "title": "Assemblea pubblica contro le sanzioni ad Autistici/Inventati",
@@ -6293,16 +6303,6 @@
             "title": "Presentiamo https://keepitfree.ai",
             "body": "Dal 26 agosto, quando il Dipartimento del Tesoro statunitense, tramite OFAC, ci ha sanzionato come &ldquo;Specially Designated Global Terrorist&rdquo; (SDGT), sono successe tante cose, tanto si è mosso. Ed è solo l&rsquo;inizio. Il 28 agosto il dominio autistici.org è sparito dalla faccia del globo terracqueo. Tutto questo, è bene sottolinearlo ogni volta,…",
             "url": "https://keepitfree.ai/it/announcements/presentiamo-https/keepitfree.ai/",
-            "pinned": false,
-            "automated": true,
-            "source": "Autistici/Inventati"
-          },
-          {
-            "id": "official-ai-noblogs-https-cavallette-noblogs-org-2026-09-10095",
-            "date": "2026-09-02T09:49:32.000Z",
-            "title": "Banca Etica limita l&#8217;operatività del conto dell&#8217;Associazione AI ODV / Banca Etica temporarily suspends A/I bank account",
-            "body": "[IT] Cominciamo dai fatti. A seguito dell’iscrizione del Collettivo A/I e dell’Associazione AI ODV nella lista delle organizzazioni terroristiche globali, dopo alcune telefonate informali Banca Etica ha limitato l’operatività del conto bancario dell’Associazione nella giornata di martedì 1 settembre 2026 alle 9 di mattina. La comunicazione rispetto a tale l…",
-            "url": "https://cavallette.noblogs.org/2026/09/10095",
             "pinned": false,
             "automated": true,
             "source": "Autistici/Inventati"
@@ -7023,6 +7023,22 @@
             "summary": "Assemblea cittadina, call for action sabato 19 settembre alle 15:30 Assemblea cittadina, call for action Questo è il momento di rilanciare l’autogestione virtuale, sostenendola attraverso una responsabilità distribuita. Perché, come la sproporzione della vicenda che ha toccato A/I ci ricorda: chi possiede il server è…",
             "discoverySource": "official-ai",
             "relevanceScore": 0,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-1rkbes",
+            "date": "2026-09-17T16:00:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Helpdesk A/I @ Exploit Pisa",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/events/helpdesk-a/i-@-exploit-pisa",
+            "imageUrl": "",
+            "summary": "Autistici/Inventati è un collettivo di hacker che forniva servizi online gratuiti incentrati sulla privacy e che non monetizza i dati degli utenti. Da marzo 2001 il loro scopo è quello di promuovere un’idea di internet diversa da quella a cui oggi siamo abituatə. Il 26 agosto il governo Trump ha designato, con accuse…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 62,
             "featured": false,
             "editorialStatus": "automatic"
           },
@@ -10155,14 +10171,14 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-14T14:10:58.427Z",
+        "socialCheckedAt": "2026-09-14T19:26:37.916Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
             "label": "A/I Keep It Free dispatches",
             "url": "https://keepitfree.ai/it/index.xml",
             "ok": true,
-            "count": 20
+            "count": 21
           },
           {
             "id": "official-ai-noblogs",
@@ -10187,8 +10203,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-14T14:10:59.043Z",
-        "coverageArchiveCount": 168
+        "intelligenceCheckedAt": "2026-09-14T19:26:38.480Z",
+        "coverageArchiveCount": 169
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10390,7 +10406,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-14T14:11:10.547Z",
+        "automationCheckedAt": "2026-09-14T19:26:48.818Z",
         "coverageArchiveCount": 0
       }
     }
