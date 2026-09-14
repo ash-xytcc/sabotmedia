@@ -7043,6 +7043,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-l5qri",
+            "date": "2026-09-14T00:00:00.000Z",
+            "outlet": "lantidiplomatico",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "“L’antifascismo non è terrorismo” Appello in sostegno di Autistici/Inventati",
+            "translatedTitle": "",
+            "url": "https://www.lantidiplomatico.it/dettnews-lantifascismo_non__terrorismo_appello_in_sostegno_di_autisticiinventati/45289_68885",
+            "imageUrl": "",
+            "summary": "“ L’antifascismo non è terrorismo”. Noi, docenti, ricercatrici, ricercatori e persone che lavorano nel mondo dell’università, della ricerca e della cultura, esprimiamo la nostra solidarietà al ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-163mctx",
             "date": "2026-09-13T13:30:00.000Z",
             "outlet": "MilanoToday",
@@ -10091,7 +10107,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-14T01:44:20.557Z",
+        "socialCheckedAt": "2026-09-14T07:10:13.911Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10119,12 +10135,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 6
+            "count": 5
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-14T01:44:22.937Z",
-        "coverageArchiveCount": 164
+        "intelligenceCheckedAt": "2026-09-14T07:10:15.528Z",
+        "coverageArchiveCount": 165
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10326,7 +10342,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-14T01:44:33.929Z",
+        "automationCheckedAt": "2026-09-14T07:10:26.385Z",
         "coverageArchiveCount": 0
       }
     }
