@@ -7059,6 +7059,38 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-nj6svy",
+            "date": "2026-09-14T16:59:00.000Z",
+            "outlet": "contropiano",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Autistici/Inventati presenta ricorso verso Banca Etica: “non chiudeteci il conto”",
+            "translatedTitle": "",
+            "url": "https://contropiano.org/news/politica-news/2026/09/15/autistici-inventati-presenta-ricorso-verso-banca-etica-non-chiudeteci-il-conto-0198596",
+            "imageUrl": "",
+            "summary": "Il collettivo informatico Autistici/Inventati, nei giorni scorsi, ha dichiarato chiusa la propria esperienza dopo 25 anni di servizi digitali liberi, a causa dell’editto Trump /Rubio del 26 agosto ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-k1wgn",
+            "date": "2026-09-14T16:59:00.000Z",
+            "outlet": "radiocittafujiko",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Porpora Marcasciano finita nella lista di proscrizione di antifascisti della destra Usa",
+            "translatedTitle": "",
+            "url": "https://www.radiocittafujiko.it/porpora-marcasciano-finita-nella-lista-di-proscrizione-di-antifascisti-della-destra-usa",
+            "imageUrl": "",
+            "summary": "Dopo la vicenda Autistici/Inventati, che ha portato alla chiusura dell’infrastruttura digitale attiva da 25 anni, c’è una nuova vittima della caccia alle streghe trumpiana contro i dissidenti e gli ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-d4678y",
             "date": "2026-09-14T02:21:00.000Z",
             "outlet": "Agenda Digitale",
@@ -10171,7 +10203,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-15T00:57:59.611Z",
+        "socialCheckedAt": "2026-09-15T06:03:15.385Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10199,12 +10231,12 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 2
+            "count": 1
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-15T00:58:01.871Z",
-        "coverageArchiveCount": 169
+        "intelligenceCheckedAt": "2026-09-15T06:03:16.325Z",
+        "coverageArchiveCount": 171
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10406,7 +10438,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-15T00:58:12.462Z",
+        "automationCheckedAt": "2026-09-15T06:03:22.167Z",
         "coverageArchiveCount": 0
       }
     }
