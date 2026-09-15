@@ -6308,46 +6308,6 @@
             "source": "Autistici/Inventati"
           },
           {
-            "id": "official-social-mastodon-117258789873903967",
-            "date": "2026-09-12T15:32:20.412Z",
-            "title": "A/I public campaign update",
-            "body": "What do we have to say about the future? Go forth and multiply! May 10 - 100 - 1000 servers spark up! https:// keepitfree.ai/announcements/go -forth-and-multiply-may-10-100-1000-servers-spark-up/ # keepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117258789873903967",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117258784670294370",
-            "date": "2026-09-12T15:31:01.009Z",
-            "title": "A/I public campaign update",
-            "body": "Quello che abbiamo da dire sul futuro? Andate e moltiplicatevi! 10 - 100 - 1000 server nascano! https:// keepitfree.ai/it/announcements /andate-e-moltiplicatevi-10-100-1000-server-nascano/ # keepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117258784670294370",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117236457326532926",
-            "date": "2026-09-08T16:52:52.782Z",
-            "title": "A/I public campaign update",
-            "body": "Here comes the post you've all been waiting for: how to make backups of your A/I services data https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
-            "url": "https://mastodon.bida.im/@cavallette/117236457326532926",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
-            "id": "official-social-mastodon-117236455143449479",
-            "date": "2026-09-08T16:52:19.468Z",
-            "title": "A/I public campaign update",
-            "body": "Il post che stavate tutti aspettando. Come fare backup dei vostri dati per i vari servizi di A/I https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
-            "url": "https://mastodon.bida.im/@cavallette/117236455143449479",
-            "pinned": false,
-            "automated": true,
-            "source": "A/I official Mastodon"
-          },
-          {
             "id": "update-launch",
             "date": "2026-08-28T21:30:00Z",
             "title": "Campaign hub launched",
@@ -6376,70 +6336,6 @@
           }
         ],
         "social": [
-          {
-            "id": "mastodon-117258789873903967",
-            "platform": "MASTODON",
-            "date": "2026-09-12T15:32:20.412Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "What do we have to say about the future? Go forth and multiply! May 10 - 100 - 1000 servers spark up! https:// keepitfree.ai/announcements/go -forth-and-multiply-may-10-100-1000-servers-spark-up/ # keepItFree # AutisticiInventati",
-            "excerpt": "What do we have to say about the future? Go forth and multiply! May 10 - 100 - 1000 servers spark up! https:// keepitfree.ai/announcements/go -forth-and-multiply-may-10-100-1000-servers-spark-up/ # keepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117258789873903967",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117258784670294370",
-            "platform": "MASTODON",
-            "date": "2026-09-12T15:31:01.009Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Quello che abbiamo da dire sul futuro? Andate e moltiplicatevi! 10 - 100 - 1000 server nascano! https:// keepitfree.ai/it/announcements /andate-e-moltiplicatevi-10-100-1000-server-nascano/ # keepItFree # AutisticiInventati",
-            "excerpt": "Quello che abbiamo da dire sul futuro? Andate e moltiplicatevi! 10 - 100 - 1000 server nascano! https:// keepitfree.ai/it/announcements /andate-e-moltiplicatevi-10-100-1000-server-nascano/ # keepItFree # AutisticiInventati",
-            "url": "https://mastodon.bida.im/@cavallette/117258784670294370",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117236457326532926",
-            "platform": "MASTODON",
-            "date": "2026-09-08T16:52:52.782Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Here comes the post you've all been waiting for: how to make backups of your A/I services data https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
-            "excerpt": "Here comes the post you've all been waiting for: how to make backups of your A/I services data https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
-            "url": "https://mastodon.bida.im/@cavallette/117236457326532926",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
-          {
-            "id": "mastodon-117236455143449479",
-            "platform": "MASTODON",
-            "date": "2026-09-08T16:52:19.468Z",
-            "account": "cavallette",
-            "handle": "@cavallette",
-            "text": "Il post che stavate tutti aspettando. Come fare backup dei vostri dati per i vari servizi di A/I https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
-            "excerpt": "Il post che stavate tutti aspettando. Come fare backup dei vostri dati per i vari servizi di A/I https:// cavallette.noblogs.org/2026/09 /10099 # AutisticiInventati # KeepITFree",
-            "url": "https://mastodon.bida.im/@cavallette/117236455143449479",
-            "images": [],
-            "imageUrl": "",
-            "language": "Italian",
-            "languageCode": "it",
-            "contentWarning": "",
-            "sourcePriority": 0
-          },
           {
             "id": "mastodon-117237412271779070",
             "platform": "MASTODON",
@@ -6684,6 +6580,56 @@
             "url": "https://kolektiva.social/@AberdeenLocal1312/117214475626310554",
             "images": [],
             "imageUrl": "",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
+          },
+          {
+            "id": "mastodon-117212957945601882",
+            "platform": "MASTODON",
+            "date": "2026-09-04T13:16:40.689Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "Three quotes. One very clear trajectory. Designate the movement. Recast infrastructure as “material support.” Then go after the services and networks that keep people connected, even when those services are otherwise lawful. That is what makes the Autistici/Inventati case bigger than one collective. Read. Share. Preserve. Organize. https:// sabot.media/",
+            "excerpt": "Three quotes. One very clear trajectory. Designate the movement. Recast infrastructure as “material support.” Then go after the services and networks that keep people connected, even when those services are otherwise lawful. That is what makes the Autistici/Inventati case bigger than one collective. Read. Share. Preserve. Organize. https:// sabot.media/",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117212957945601882",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/212/926/735/499/850/original/c771edd300609ac8.png",
+                "alt": "Cream, black, and red Sabot Media campaign graphic with a close-up photo of a man on the right. Quote reads: “And I think, maybe, perhaps the State Department should designate Antifa, its international arm as a foreign terrorist organization, FTO.” Attributed on the graphic to Andy Ngo, White House, Oct. 8, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer urges readers to “Read / Share / Preserve / Organize.”"
+              },
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/212/926/719/924/856/original/7b8bfc5200ac5794.png",
+                "alt": "Red, black, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large quote reads: “They would probably really struggle to go after these kinds of entities, since the services they provide are otherwise lawful.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”"
+              },
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/212/926/732/282/958/original/1fabe04e309f58f4.png",
+                "alt": "Black, red, and cream Sabot Media campaign graphic with a photo of a bald man speaking at a microphone. Large red quote reads: “Going after organizations like this that provide material support would be job one.” Attributed on the graphic to Kyle Shideler, Senate Judiciary Committee, Oct. 16, 2025. Header: “Autistici/Inventati Campaign — Urgent / Sept 4, 2026.” Footer: “Read / Share / Preserve / Organize” and “Independently published / not affiliated with A/I.”"
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/212/926/735/499/850/original/c771edd300609ac8.png",
+            "language": "English",
+            "languageCode": "en",
+            "contentWarning": "",
+            "sourcePriority": 2
+          },
+          {
+            "id": "mastodon-117212259262588749",
+            "platform": "MASTODON",
+            "date": "2026-09-04T10:18:59.627Z",
+            "account": "Sabot Media",
+            "handle": "@AberdeenLocal1312",
+            "text": "URGENT: We’re opening a new investigation into the Aug. 26 designation of Autistici/Inventati. The question: how did the U.S. government get there? We’re tracing the decision tree through records, timelines, agency actions, source documents, and the gaps still left unanswered.",
+            "excerpt": "URGENT: We’re opening a new investigation into the Aug. 26 designation of Autistici/Inventati. The question: how did the U.S. government get there? We’re tracing the decision tree through records, timelines, agency actions, source documents, and the gaps still left unanswered.",
+            "url": "https://kolektiva.social/@AberdeenLocal1312/117212259262588749",
+            "images": [
+              {
+                "url": "https://kolektiva.social/system/media_attachments/files/117/212/253/230/792/187/original/758528ecd70a2ad5.png",
+                "alt": "Alt text: Red, black, and cream campaign graphic reading, “Coming Soon: Investigation: How did the US govt get to Aug 26?” Below: “Tracing the decision tree behind the designation of Autistici/Inventati.” Footer reads, “Read / Share / Preserve / Organize,” with sabot.media branding and a note that the publisher is not affiliated with A/I."
+              }
+            ],
+            "imageUrl": "https://kolektiva.social/system/media_attachments/files/117/212/253/230/792/187/original/758528ecd70a2ad5.png",
             "language": "English",
             "languageCode": "en",
             "contentWarning": "",
@@ -10185,7 +10131,7 @@
             "account": "@cavallette@mastodon.bida.im",
             "url": "https://mastodon.bida.im/@cavallette",
             "note": "Official Autistici/Inventati account · primarily Italian, with some bilingual posts",
-            "ok": true
+            "ok": false
           },
           {
             "platform": "mastodon",
@@ -10204,12 +10150,17 @@
         ],
         "socialErrors": [
           {
+            "platform": "mastodon",
+            "account": "@cavallette@mastodon.bida.im",
+            "message": "Mastodon account lookup returned 502"
+          },
+          {
             "platform": "bluesky",
             "account": "@sabotmedia.bsky.social",
-            "message": "Bluesky returned 400"
+            "message": "The operation was aborted"
           }
         ],
-        "socialCheckedAt": "2026-09-15T19:15:58.840Z",
+        "socialCheckedAt": "2026-09-15T22:17:45.957Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10229,7 +10180,7 @@
             "id": "official-ai-mastodon",
             "label": "A/I official Mastodon dispatches",
             "url": "https://mastodon.bida.im/@cavallette.rss",
-            "ok": true,
+            "ok": false,
             "count": 0
           },
           {
@@ -10237,11 +10188,16 @@
             "label": "International news coverage",
             "url": "https://www.bing.com/news",
             "ok": true,
-            "count": 1
+            "count": 2
           }
         ],
-        "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-15T19:15:58.749Z",
+        "intelligenceErrors": [
+          {
+            "source": "A/I official Mastodon dispatches",
+            "message": "feed request failed: 502"
+          }
+        ],
+        "intelligenceCheckedAt": "2026-09-15T22:17:37.561Z",
         "coverageArchiveCount": 172
       },
       "food-not-bombs-gaza": {
@@ -10444,7 +10400,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-15T19:16:09.557Z",
+        "automationCheckedAt": "2026-09-15T22:18:16.708Z",
         "coverageArchiveCount": 0
       }
     }
