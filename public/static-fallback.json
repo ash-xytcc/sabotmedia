@@ -7059,6 +7059,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-x378r2",
+            "date": "2026-09-15T02:32:00.000Z",
+            "outlet": "MilanoToday",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "L'Ambulatorio popolare' perde tutto: il collettivo italiano Autistici/Inventati costretto a chiudere, finisce nella blacklist dell'antiterrorismo Usa",
+            "translatedTitle": "",
+            "url": "https://www.milanotoday.it/dossier/sociale/ambulatorio-popolare-collettivo-autistici-inventati-chiude.html",
+            "imageUrl": "",
+            "summary": "L'amministrazione Usa ha sanzionato per terrorismo il collettivo informatico Autistici/Inventati che da 20 anni fornisce servizi digitali alle reti sociali. Il collettivo è stato costretto a chiudere ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-nj6svy",
             "date": "2026-09-14T16:59:00.000Z",
             "outlet": "contropiano",
@@ -7068,7 +7084,7 @@
             "translatedTitle": "",
             "url": "https://contropiano.org/news/politica-news/2026/09/15/autistici-inventati-presenta-ricorso-verso-banca-etica-non-chiudeteci-il-conto-0198596",
             "imageUrl": "",
-            "summary": "Il collettivo informatico Autistici/Inventati, nei giorni scorsi, ha dichiarato chiusa la propria esperienza dopo 25 anni di servizi digitali liberi, a causa dell’editto Trump /Rubio del 26 agosto ...",
+            "summary": "Il collettivo informatico Autistici/Inventati, nei giorni scorsi, ha dichiarato chiusa la propria esperienza dopo 25 anni di servizi digitali liberi, a ...",
             "discoverySource": "live-discovery",
             "relevanceScore": 80,
             "featured": false,
@@ -10203,7 +10219,7 @@
             "message": "Bluesky returned 400"
           }
         ],
-        "socialCheckedAt": "2026-09-15T11:36:24.677Z",
+        "socialCheckedAt": "2026-09-15T15:40:21.889Z",
         "intelligenceSources": [
           {
             "id": "official-ai-keepitfree",
@@ -10235,8 +10251,8 @@
           }
         ],
         "intelligenceErrors": [],
-        "intelligenceCheckedAt": "2026-09-15T11:36:23.693Z",
-        "coverageArchiveCount": 171
+        "intelligenceCheckedAt": "2026-09-15T15:40:22.766Z",
+        "coverageArchiveCount": 172
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -10438,7 +10454,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-15T11:36:28.816Z",
+        "automationCheckedAt": "2026-09-15T15:40:35.022Z",
         "coverageArchiveCount": 0
       }
     }
