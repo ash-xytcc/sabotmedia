@@ -1,0 +1,266 @@
+import { migratedPodcastMediaKey, podcastAudioPath, podcastAudioSource, podcastCoverPath } from '../../shared/podcastHosting.js'
+import { isAudiozineItem } from '../../src/lib/rssFeeds.js'
+import { ensureNativePublicContentTable, listNativeEntries } from '../api/_lib/nativePublicContent.js'
+import { databaseUnavailable, getBoundDb } from '../api/_lib/database.js'
+import { podcastShowOwnsEntry, readPodcastShows } from '../api/_lib/podcastSettings.js'
+
+const STATIC_PODCAST_COVER_FILES = Object.freeze({
+  'molotov-now': 'molotov-now.jpg',
+  'the-child-and-its-enemies': 'the-child-and-its-enemies.jpg',
+  'get-to-know-your-neighborhood': 'get-to-know-your-neighborhood.jpg',
+})
+
+export async function onRequestGet(context) {
+  try {
+    const db = getBoundDb(context)
+    if (!db) return databaseUnavailable('podcast RSS')
+    const registry = await readPodcastShows(db)
+    const show = registry.shows.find((candidate) => candidate.id === registry.defaultShowId) || registry.shows[0] || null
+    if (!show) return new Response('Podcast feed not configured.', { status: 404 })
+    const items = await getPodcastFeedItems(db, show)
+    return podcastXmlResponse(buildPodcastFeedXml({
+      requestUrl: context.request.url,
+      items,
+      settings: show,
+    }))
+  } catch (error) {
+    return new Response(`RSS feed error: ${String(error?.message || error)}`, {
+      status: 500,
+      headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+    })
+  }
+}
+
+export function podcastFeedOwnsEntry(show, entry) {
+  if (!entry) return false
+  if (entry?.contentType === 'podcast') return !show || podcastShowOwnsEntry(show, entry)
+
+  // Audiozines are part of Molotov Now even when legacy imports still carry print/
+  // Black Cat metadata. They remain "audio" in general format feeds, but the actual
+  // Molotov show RSS must include them because that is their subscription home.
+  if (!isAudiozineItem(entry) || !show) return false
+  const showIdentity = `${show?.id || ''} ${show?.slug || ''} ${show?.podcastTitle || ''}`.toLowerCase()
+  return /\bmolotov[\s-]+now\b/.test(showIdentity)
+}
+
+export async function getPodcastFeedItems(db, show = null) {
+  if (!db) throw new Error('BF_DB binding is required for podcast RSS')
+  await ensureNativePublicContentTable(db)
+  const entries = await listNativeEntries(db, {})
+  return entries
+    .filter((entry) => podcastFeedOwnsEntry(show, entry))
+    .filter((entry) => isPublicAudioUrl(getAudioUrl(entry)))
+    .sort((a, b) => new Date(b.publishedAt || b.updatedAt || 0).getTime() - new Date(a.publishedAt || a.updatedAt || 0).getTime())
+}
+
+export function staticPodcastCoverPath(showKey = '') {
+  const slug = String(showKey || '').trim().toLowerCase()
+  const file = STATIC_PODCAST_COVER_FILES[slug]
+  return file ? `/podcast-covers/${file}` : ''
+}
+
+export function podcastChannelCoverUrl(settings = {}, origin = 'https://sabot.media') {
+  const cleanOrigin = String(origin || 'https://sabot.media').replace(/\/+$/, '')
+  const staticPath = staticPodcastCoverPath(settings.slug || settings.id)
+
+  // Podcast directories are automated clients, and the site's dynamic Function
+  // routes can sit behind Cloudflare browser challenges. Current Sabot shows use
+  // ordinary static JPEGs so cover retrieval never depends on JS/challenge support.
+  if (staticPath) return `${cleanOrigin}${staticPath}`
+
+  const source = safeAbsoluteUrl(settings.defaultCoverArt, cleanOrigin)
+  if (!source) return ''
+
+  // Preserve the dynamic canonical route as a fallback for shows that have not
+  // yet been assigned a static directory cover.
+  if (migratedPodcastMediaKey(source, cleanOrigin)) {
+    const path = podcastCoverPath(settings.slug || settings.id)
+    if (path) return `${cleanOrigin}${path}`
+  }
+  return source
+}
+
+export function buildPodcastFeedXml({ requestUrl, items = [], settings = {}, selfPath = '/rss/podcast.xml' }) {
+  const url = new URL(requestUrl)
+  const origin = url.origin
+  const selfUrl = `${origin}${selfPath}`
+  const title = String(settings.podcastTitle || 'Podcast').trim() || 'Podcast'
+  const author = String(settings.author || 'Sabot Media').trim() || 'Sabot Media'
+  const description = String(settings.description || `${title} podcast feed.`).trim()
+  const websiteUrl = safeAbsoluteUrl(settings.websiteUrl, origin) || origin
+  const coverArt = podcastChannelCoverUrl(settings, origin)
+  const language = String(settings.language || 'en-us').trim().toLowerCase() || 'en-us'
+  const category = String(settings.category || 'News').trim() || 'News'
+  const ownerName = String(settings.ownerName || '').trim()
+  const ownerEmail = String(settings.ownerEmail || '').trim()
+  const copyright = String(settings.copyright || '').trim()
+  const explicit = settings.explicit ? 'yes' : 'no'
+  const body = items.map((item) => itemXml(item, origin, { author, coverArt, explicit })).join('\n')
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>${escapeXml(title)}</title>
+    <description>${escapeXml(description)}</description>
+    <link>${escapeXml(websiteUrl)}</link>
+    <atom:link href="${escapeXml(selfUrl)}" rel="self" type="application/rss+xml" />
+    <language>${escapeXml(language)}</language>
+${copyright ? `    <copyright>${escapeXml(copyright)}</copyright>\n` : ''}    <lastBuildDate>${escapeXml(new Date().toUTCString())}</lastBuildDate>
+    <generator>SabotPress</generator>
+${coverArt ? `    <image>\n      <url>${escapeXml(coverArt)}</url>\n      <title>${escapeXml(title)}</title>\n      <link>${escapeXml(websiteUrl)}</link>\n    </image>\n` : ''}    <itunes:author>${escapeXml(author)}</itunes:author>
+    <itunes:summary>${escapeXml(description)}</itunes:summary>
+    <itunes:explicit>${escapeXml(explicit)}</itunes:explicit>
+    <itunes:type>episodic</itunes:type>
+    <itunes:category text="${escapeXml(category)}" />
+${coverArt ? `    <itunes:image href="${escapeXml(coverArt)}" />\n` : ''}${ownerEmail ? `    <itunes:owner>\n      <itunes:name>${escapeXml(ownerName || author)}</itunes:name>\n      <itunes:email>${escapeXml(ownerEmail)}</itunes:email>\n    </itunes:owner>\n` : ''}${body}
+  </channel>
+</rss>`
+}
+
+export function podcastXmlResponse(body) {
+  return new Response(body, {
+    status: 200,
+    headers: {
+      'content-type': 'application/rss+xml; charset=utf-8',
+      'cache-control': 'public, max-age=300',
+      'x-sabot-feed-source': 'native-d1',
+    },
+  })
+}
+
+export function podcastEnclosureUrl(item, origin = 'https://sabot.media') {
+  const source = podcastAudioSource(item)
+  return migratedPodcastMediaKey(source, origin)
+    ? `${origin}${podcastAudioPath(item.id)}`
+    : absolutize(getAudioUrl(item), origin)
+}
+
+function itemXml(item, origin, channel = {}) {
+  const delivery = getDeliveryAsset(item)
+  const audioUrl = podcastEnclosureUrl(item, origin)
+  const slug = String(item.slug || item.id || '').trim()
+  const link = `${origin}/post/${encodeURIComponent(slug)}`
+  const mimeType = getMimeType(item)
+  const size = getFileSize(item)
+  const pubDate = safeDate(item.publishedAt || item.scheduledFor || item.updatedAt || item.createdAt)
+  const description = item.podcastSummary || item.excerpt || stripHtml(item.bodyHtml || item.body || '')
+  const duration = String(item.podcastDuration || '').trim()
+  const storedExplicit = item.podcastExplicit == null ? delivery?.podcastExplicit : item.podcastExplicit
+  const explicit = storedExplicit == null ? channel.explicit : storedExplicit ? 'yes' : 'no'
+  const author = String(item.author || item.byline || channel.author || 'Sabot Media').trim()
+  const episode = String(item.podcastEpisodeNumber || '').trim()
+  const season = String(item.podcastSeason || '').trim()
+  const episodeType = String(item.podcastEpisodeType || delivery?.podcastEpisodeType || '').trim()
+  const episodeCover = safeAbsoluteUrl(item.podcastCoverImage || item.featuredImage || item.heroImage, origin)
+  const coverArt = episodeCover && !migratedPodcastMediaKey(episodeCover, origin) ? episodeCover : channel.coverArt
+  const guid = String(item.sourceExternalId || delivery?.podcastGuid || item.id || link).trim()
+  const bodyHtml = String(item.bodyHtml || item.body || '').trim()
+
+  return `    <item>
+      <title>${escapeXml(item.title || 'Untitled episode')}</title>
+      <description>${escapeXml(description)}</description>
+${bodyHtml ? `      <content:encoded><![CDATA[${safeCdata(bodyHtml)}]]></content:encoded>\n` : ''}      <link>${escapeXml(link)}</link>
+      <guid isPermaLink="false">${escapeXml(guid)}</guid>
+      <pubDate>${escapeXml(pubDate)}</pubDate>
+      <enclosure url="${escapeXml(audioUrl)}" type="${escapeXml(mimeType)}" length="${escapeXml(String(size || 0))}" />
+      <itunes:author>${escapeXml(author)}</itunes:author>
+${duration ? `      <itunes:duration>${escapeXml(duration)}</itunes:duration>\n` : ''}${episode ? `      <itunes:episode>${escapeXml(episode)}</itunes:episode>\n` : ''}${season ? `      <itunes:season>${escapeXml(season)}</itunes:season>\n` : ''}${episodeType ? `      <itunes:episodeType>${escapeXml(episodeType)}</itunes:episodeType>\n` : ''}${coverArt ? `      <itunes:image href="${escapeXml(coverArt)}" />\n` : ''}      <itunes:explicit>${escapeXml(explicit || 'no')}</itunes:explicit>
+    </item>`
+}
+
+function getAudioUrl(item = {}) {
+  const canonical = (item.relatedAssets || []).find(asset => asset.role === 'canonical-audio')
+  if (isPublicAudioUrl(canonical?.url)) return canonical.url
+  const delivery = getDeliveryAsset(item)
+  const deliveryUrl = delivery?.url || delivery?.publicUrl || delivery?.rssEnclosure?.url || item.podcastDeliveryAudioUrl || ''
+  if (isPublicAudioUrl(deliveryUrl)) return String(deliveryUrl).trim()
+  const direct = String(item.podcastRssEnclosureUrl || item.podcastAudioUrl || item.audioSourceUrl || '').trim()
+  if (isPublicAudioUrl(direct)) return direct
+  const asset = getAudioAsset(item)
+  const assetUrl = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
+  return isPublicAudioUrl(assetUrl) ? String(assetUrl).trim() : ''
+}
+
+function getMimeType(item = {}) {
+  const delivery = getDeliveryAsset(item)
+  if (delivery?.mimeType || delivery?.rssEnclosure?.type) return String(delivery.mimeType || delivery.rssEnclosure.type)
+  if (item.podcastMimeType) return String(item.podcastMimeType)
+  const asset = getAudioAsset(item)
+  return String(asset?.mimeType || asset?.type || 'audio/mpeg')
+}
+
+function getFileSize(item = {}) {
+  const delivery = getDeliveryAsset(item)
+  if (delivery?.size || delivery?.length || delivery?.rssEnclosure?.length) return Number(delivery.size || delivery.length || delivery.rssEnclosure.length || 0)
+  if (item.podcastFileSize) return Number(item.podcastFileSize || 0)
+  const asset = getAudioAsset(item)
+  return Number(asset?.size || asset?.length || 0)
+}
+
+function getDeliveryAsset(item = {}) {
+  const canonical = (item.relatedAssets || []).find(asset => asset.role === 'canonical-audio' && isPublicAudioUrl(asset.url))
+  if (canonical) return canonical
+  return (Array.isArray(item.relatedAssets) ? item.relatedAssets : []).find((asset) => {
+    const haystack = `${asset?.type || ''} ${asset?.role || ''} ${asset?.source || ''} ${asset?.mimeType || ''}`
+    const url = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
+    return /delivery|compressed|opus|mp3|m4a|webm/i.test(haystack) && isPublicAudioUrl(url)
+  }) || null
+}
+
+function getAudioAsset(item = {}) {
+  return (Array.isArray(item.relatedAssets) ? item.relatedAssets : []).find((asset) => {
+    const haystack = `${asset?.type || ''} ${asset?.source || ''} ${asset?.mimeType || ''}`
+    const url = asset?.url || asset?.publicUrl || asset?.rssEnclosure?.url || ''
+    return /audiolab|audio/i.test(haystack) && isPublicAudioUrl(url)
+  }) || null
+}
+
+function isPublicAudioUrl(value = '') {
+  const raw = String(value || '').trim()
+  if (!raw || raw.startsWith('audiolab-local://')) return false
+  return /^https?:\/\//i.test(raw) || raw.startsWith('/api/audiolab/media') || raw.startsWith('/api/media/files')
+}
+
+function absolutize(value = '', origin = '') {
+  const raw = String(value || '')
+  if (/^https?:\/\//i.test(raw)) return raw
+  if (raw.startsWith('/')) return `${origin}${raw}`
+  return raw
+}
+
+function safeAbsoluteUrl(value, origin) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  try {
+    return new URL(raw, origin).toString()
+  } catch {
+    return ''
+  }
+}
+
+function safeDate(value) {
+  const date = new Date(String(value || ''))
+  return Number.isFinite(date.getTime()) ? date.toUTCString() : new Date().toUTCString()
+}
+
+function stripHtml(value = '') {
+  return String(value || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function safeCdata(value = '') {
+  return String(value || '').replace(/\]\]>/g, ']]]]><![CDATA[>')
+}
+
+function escapeXml(value = '') {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+export async function onRequestHead(context) {
+  const response = await onRequestGet(context)
+  return new Response(null, { status: response.status, headers: response.headers })
+}

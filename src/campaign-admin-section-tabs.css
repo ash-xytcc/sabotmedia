@@ -1,0 +1,7 @@
+.campaign-admin-section-tabs {
+  display: contents;
+}
+
+.campaign-admin-layout > .wp-meta-box[hidden] {
+  display: none !important;
+}

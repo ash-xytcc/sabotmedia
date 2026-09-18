@@ -1,0 +1,3 @@
+Sabot deployment test
+Marker: cf-cache-check-2026-09-10-a
+Purpose: verify that a new successful production deployment becomes immediately visible on sabot.media without manually toggling deployment settings or purging cache.

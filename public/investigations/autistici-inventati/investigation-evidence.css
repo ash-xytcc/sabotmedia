@@ -1,0 +1,172 @@
+.role-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  margin-top: 16px;
+}
+.role-strip a {
+  position: relative;
+  display: grid;
+  align-content: end;
+  gap: 5px;
+  min-height: 360px;
+  padding: 22px;
+  overflow: hidden;
+  border: 1px solid #594d42;
+  background-color: #211e1a;
+  background-position: center;
+  background-size: cover;
+  color: #fffdf8;
+  text-decoration: none;
+  box-shadow: inset 0 -170px 95px -35px rgba(10,8,6,.96);
+  transition: transform .2s ease, border-color .2s ease, filter .2s ease;
+}
+.role-strip a::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(18,15,12,.04) 18%, rgba(18,15,12,.18) 46%, rgba(18,15,12,.94) 100%);
+  pointer-events: none;
+}
+.role-strip a:first-child {
+  background-image: url('https://centerforsecuritypolicy.org/wp-content/uploads/2020/02/Kyle-Headshot-1-200x300.jpg');
+  background-position: center 22%;
+}
+.role-strip a:nth-child(2) {
+  background-image: url('https://cdn01.dailycaller.com/wp-content/uploads/2025/03/Screenshot-2025-03-20-at-10.07.37-AM.png');
+  background-position: center 18%;
+}
+.role-strip a > * { position: relative; z-index: 1; }
+.role-strip a:hover,
+.role-strip a:focus-visible {
+  border-color: #d8b54e;
+  transform: translateY(-3px);
+  filter: saturate(.92) contrast(1.03);
+}
+.role-strip span { color: #e45b56; font: 900 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .1em; }
+.role-strip strong { font: 900 28px/.95 Arial, Helvetica, sans-serif; text-transform: uppercase; }
+.role-strip small { max-width: 32rem; color: #eee6dc; font-size: 13px; line-height: 1.42; }
+
+.evidence-gallery {
+  padding: 70px 0 78px;
+  background: #e8dfd0;
+}
+.evidence-gallery__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+.evidence-doc {
+  min-width: 0;
+  border: 1px solid #a89d8b;
+  background: #fffdf8;
+  box-shadow: 8px 8px 0 rgba(21,19,16,.08);
+}
+.evidence-doc__meta {
+  display: grid;
+  gap: 5px;
+  padding: 14px 15px;
+  border-bottom: 1px solid #a89d8b;
+}
+.evidence-doc__meta span { color: #a51d20; font: 900 9px/1 Arial, Helvetica, sans-serif; letter-spacing: .1em; }
+.evidence-doc__meta strong { font: 900 20px/1 Arial, Helvetica, sans-serif; text-transform: uppercase; }
+.evidence-doc__viewer {
+  position: relative;
+  height: clamp(680px, 78vh, 980px);
+  overflow: hidden;
+  background: #d3cbbc;
+  border-bottom: 1px solid #a89d8b;
+}
+.evidence-doc__viewer::after {
+  content: 'LIVE SOURCE';
+  position: absolute;
+  right: 9px;
+  top: 9px;
+  padding: 5px 6px;
+  background: rgba(21,19,16,.88);
+  color: #fff;
+  pointer-events: none;
+  font: 900 8px/1 Arial, Helvetica, sans-serif;
+  letter-spacing: .08em;
+}
+.evidence-doc iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+.evidence-doc > p { margin: 0; padding: 15px 16px 8px; font-size: 14px; line-height: 1.5; }
+.evidence-doc__actions { display: flex; gap: 12px; align-items: center; padding: 8px 16px 16px; }
+.evidence-doc__actions button,
+.evidence-doc__actions a {
+  border: 0;
+  background: transparent;
+  color: #6e1115;
+  padding: 0;
+  cursor: pointer;
+  font: 900 10px/1.2 Arial, Helvetica, sans-serif;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.evidence-doc__actions button:hover,
+.evidence-doc__actions a:hover { color: #a51d20; }
+
+.chain-node { padding-bottom: 45px; }
+.chain-node__badge {
+  position: absolute;
+  left: 17px;
+  bottom: 14px;
+  display: inline-flex;
+  padding: 4px 6px;
+  background: #eee6d7;
+  color: #5c554c;
+  font: 900 8px/1 Arial, Helvetica, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.chain-node-open .chain-node__badge { background: #a51d20; color: white; }
+
+.doc-modal {
+  width: min(1280px, calc(100vw - 24px));
+  height: min(96vh, 1040px);
+  padding: 0;
+  border: 2px solid #151310;
+  background: #d8d1c4;
+  box-shadow: 0 25px 80px rgba(0,0,0,.42);
+}
+.doc-modal::backdrop { background: rgba(8,7,6,.78); }
+.doc-modal__bar {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 14px;
+  background: #151310;
+  color: white;
+  font: 900 10px/1 Arial, Helvetica, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.doc-modal__bar button {
+  border: 1px solid #786d62;
+  background: transparent;
+  color: white;
+  padding: 7px 10px;
+  cursor: pointer;
+  font: inherit;
+}
+.doc-modal__bar button:hover { background: #a51d20; border-color: #a51d20; }
+.doc-modal iframe { width: 100%; height: calc(100% - 48px); border: 0; background: white; }
+
+@media (max-width: 800px) {
+  .role-strip { grid-template-columns: 1fr; }
+  .role-strip a { min-height: 330px; }
+  .evidence-doc__viewer { height: 620px; }
+  .doc-modal { width: calc(100vw - 12px); height: calc(100vh - 12px); }
+}
+
+@media (max-width: 560px) {
+  .evidence-doc__viewer { height: 520px; }
+}
+
+@media print {
+  .evidence-gallery,
+  .doc-modal { display: none !important; }
+}

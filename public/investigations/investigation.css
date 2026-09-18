@@ -1,0 +1,2 @@
+/* Compatibility shim for investigation URLs served without a trailing slash. */
+@import url('/investigations/autistici-inventati/investigation.css');

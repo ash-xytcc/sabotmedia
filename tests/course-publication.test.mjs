@@ -1,0 +1,167 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { seed, publicCourse } from '../public/guides/become-the-thousand-servers/lms/model.js'
+import { restorePublishedCourse } from '../public/guides/become-the-thousand-servers/lms/publication-shape.js'
+import { renderCourse } from '../public/guides/become-the-thousand-servers/lms/render.js'
+import { renderOfflineEdition } from '../public/guides/become-the-thousand-servers/lms/offline.js'
+import { recoveryModules } from '../public/guides/become-the-thousand-servers/lms/blog-recovery.js'
+
+test('partial and stale publication snapshots are repaired to the complete reviewed G01-G13 course', () => {
+  const partial = publicCourse(seed)
+  partial.sections = partial.sections.map((section) => ({ ...section, body: '', lessonSlugs: [] }))
+  partial.lessons = partial.lessons.map((lesson) => ({ ...lesson, learn: '', do: '', test: '', teach: '' }))
+  const restored = restorePublishedCourse(partial)
+
+  assert.equal(restored.sections.length, 13)
+  assert.equal(restored.lessons.length, 12)
+  assert.deepEqual(restored.sections.find((section) => section.id === 'G05').lessonSlugs, ['real-backup','destroy-and-rebuild','learn-to-leave'])
+  assert.match(restored.sections.find((section) => section.id === 'G01').body, /A server disappears/)
+  assert.match(restored.sections.find((section) => section.id === 'G10').body, /Servers do not maintain themselves/)
+  assert.match(restored.sections.find((section) => section.id === 'G13').body, /It ends when knowledge moves/)
+  assert.match(restored.lessons[0].learn, /Autonomous infrastructure starts with an inventory/)
+  assert.match(restored.lessons[1].learn, /RDAP the definitive registration-data service/)
+  assert.match(restored.lessons[2].learn, /fingerprint of the host key/)
+  assert.match(restored.lessons[5].learn, /full backup normally requires both the database and files/)
+  assert.match(restored.lessons[11].learn, /Reticulum is one concrete system to study/)
+  assert.match(restored.lessons[11].teach, /teach-back is the final practical/)
+})
+
+test('web edition is expanded, sober, course-first, and hides unpublished outreach', () => {
+  const html = renderCourse(publicCourse(seed), [])
+  assert.match(html, /A server disappears/)
+  assert.match(html, /Servers do not maintain themselves/)
+  assert.match(html, /It ends when knowledge moves/)
+  assert.match(html, /Autonomy is a capability, not a hosting ideology/)
+  assert.match(html, /Recovery Point Objective/)
+  assert.match(html, /authoritative nameservers/)
+  assert.match(html, /host-key fingerprint/)
+  assert.match(html, /Reticulum/)
+  assert.doesNotMatch(html, /Reporting and section prose are still being assembled/)
+  assert.doesNotMatch(html, /Dave Forgot|god-password|fucking vacation|better politics|spectacularly unreliable hardware/)
+  assert.doesNotMatch(html, /Published contributor responses/)
+  assert.doesNotMatch(html, /contributors\/riseup|contributors\/may-first|contributors\/puscii/)
+  assert.ok(html.indexOf('id="G01"') < html.indexOf('id="G13"'))
+  assert.ok(html.indexOf('id="G13"') < html.indexOf('id="blog-recovery"'))
+})
+
+
+test('section contributor links only render identities supplied as published', () => {
+  const course = publicCourse(seed)
+  course.sections[1].contributors = ['pending-alpha','published-alpha']
+  const pendingHtml = renderCourse(course, [])
+  assert.doesNotMatch(pendingHtml, /pending-alpha|published-alpha/)
+  const publishedHtml = renderCourse(course, [{id:'published-alpha',name:'Published Alpha'}])
+  assert.doesNotMatch(publishedHtml, /pending-alpha/)
+  assert.match(publishedHtml, /Published Alpha/)
+  assert.match(publishedHtml, /contributors\/published-alpha/)
+})
+
+test('supplemental recovery canonical source contains the reviewed technical copy', () => {
+  const byId = (id) => recoveryModules.find((module) => module.id === id)
+  assert.match(byId('blog-destination').body, /Choosing publishing software is a separate decision/)
+  assert.match(byId('blog-destination').body, /Colophon — Best fit/)
+  assert.match(byId('blog-server').body, /unattended security updates by default/)
+  assert.match(byId('blog-selfhost').body, /PHP 8\.3 or newer/)
+  assert.doesNotMatch(byId('blog-selfhost').body, /python3-certbot-apache/)
+  assert.match(byId('blog-selfhost').body, /\/usr\/local\/bin\/certbot/)
+  assert.match(byId('blog-selfhost').body, /a2dissite 000-default/)
+  assert.match(byId('blog-backup').body, /database dump and filesystem archive as one backup set/)
+  assert.match(byId('blog-backup').body, /remove the temporary database\/archive copies/)
+  assert.match(byId('blog-domain').body, /does not retroactively shorten an answer already cached elsewhere/)
+  assert.match(byId('blog-finish').body, /handoff defect to fix/)
+})
+
+test('supplemental WordPress recovery receives current technical corrections', () => {
+  const restored = restorePublishedCourse(publicCourse(seed))
+  const selfhost = restored.modules.find((module) => module.id === 'blog-selfhost')
+  const backup = restored.modules.find((module) => module.id === 'blog-backup')
+  const domain = restored.modules.find((module) => module.id === 'blog-domain')
+  const finish = restored.modules.find((module) => module.id === 'blog-finish')
+
+  assert.match(selfhost.body, /PHP 8\.3 or newer/)
+  assert.match(selfhost.body, /MariaDB 10\.11 or newer/)
+  assert.match(selfhost.body, /sudo snap install --classic certbot/)
+  assert.match(selfhost.body, /\/usr\/local\/bin\/certbot/)
+  assert.match(selfhost.body, /a2dissite 000-default/)
+  assert.doesNotMatch(selfhost.body, /python3-certbot-apache/)
+  assert.match(backup.body, /database dump and filesystem archive as one backup set/)
+  assert.match(backup.body, /normal InnoDB tables used by WordPress/)
+  assert.match(backup.body, /remove the temporary database\/archive copies/)
+  assert.match(domain.body, /does not retroactively shorten an answer already cached elsewhere/)
+  assert.doesNotMatch(finish.body, /Dave/)
+  assert.match(finish.body, /handoff defect to fix/)
+})
+
+test('canonical renderer keeps reviewed G01-G03 prose and revised DNS/SSH lessons', () => {
+  const html = renderCourse(publicCourse(seed), [])
+  assert.match(html, /failure domains/)
+  assert.match(html, /registrar is not normally a hop/)
+  assert.match(html, /parent zone delegates/)
+  assert.match(html, /failed ping alone does not prove/)
+  assert.match(html, /ssh-keygen -F/)
+  assert.match(html, /changed-host-key response/)
+})
+
+test('canonical renderer keeps reviewed G04-G05 server, backup, rebuild, and migration copy', () => {
+  const html = renderCourse(publicCourse(seed), [])
+  assert.match(html, /HTTP\/3 carries HTTP over QUIC/)
+  assert.match(html, /world-writable/)
+  assert.match(html, /curl -4 -I/)
+  assert.match(html, /needrestart/)
+  assert.match(html, /supported backup or dump mechanism/)
+  assert.match(html, /single “latest” backup/)
+  assert.match(html, /changed-host-key warning/)
+  assert.match(html, /curl --resolve/)
+  assert.match(html, /Changing DNS back is not enough/)
+})
+
+test('canonical renderer keeps reviewed G06-G07 access and preservation copy', () => {
+  const html = renderCourse(publicCourse(seed), [])
+  assert.match(html, /personal recovery codes/)
+  assert.match(html, /bot accounts, service accounts, OAuth applications, and deploy keys/)
+  assert.match(html, /least experienced authorized maintainer/)
+  assert.match(html, /preservation manifest/)
+  assert.match(html, /--warc-file/)
+  assert.match(html, /Robot Exclusion/)
+  assert.match(html, /localhost/)
+})
+
+test('canonical renderer keeps reviewed G08-G09 local-network, Reticulum, and hosting-judgment copy', () => {
+  const html = renderCourse(publicCourse(seed), [])
+  assert.match(html, /Unique Local Addresses/)
+  assert.match(html, /ip route get/)
+  assert.match(html, /16-byte \(128-bit\) hashes/)
+  assert.match(html, /29716/)
+  assert.match(html, /ip -6 addr show scope link/)
+  assert.doesNotMatch(html, /BASH-specific/)
+  assert.match(html, /Self-hosting moves responsibility/)
+  assert.match(html, /Data you never collect/)
+  assert.match(html, /hybrid arrangement/)
+})
+
+test('canonical renderer keeps reviewed G10-G13 maintenance, knowledge, continuity, and teach-back copy', () => {
+  const html = renderCourse(publicCourse(seed), [])
+  assert.match(html, /maintenance debt explicitly/)
+  assert.match(html, /alerts go to an abandoned inbox/)
+  assert.match(html, /every critical capability has more than one route/)
+  assert.match(html, /Write for the person who was not in the room/)
+  assert.match(html, /continue, restore, preserve, transfer, or retire\/delete/)
+  assert.match(html, /Do not count inaccessible material as survival/)
+  assert.match(html, /A handoff is not complete/)
+  assert.match(html, /The thousand servers are the distributed capacity/)
+})
+
+test('offline reader is a complete expanded course-first snapshot, not a NoBlogs-only manual', () => {
+  const html = renderOfflineEdition(publicCourse(seed), [], new Date('2026-09-17T00:00:00Z'))
+  assert.match(html, /complete read-only snapshot of the published course/i)
+  assert.match(html, /G01\. WHY BECOME THE THOUSAND SERVERS/)
+  assert.match(html, /Practical Lesson 1: Map Your Dependencies/)
+  assert.match(html, /Practical Lesson 12: Connect Differently, Then Teach Someone Else/)
+  assert.match(html, /G13\. EACH ONE, TEACH ONE/)
+  assert.match(html, /Recovery Point Objective/)
+  assert.match(html, /Reticulum/)
+  assert.doesNotMatch(html, /Dave Forgot|god-password|fucking vacation|better politics/)
+  assert.doesNotMatch(html, /Published contributor responses/)
+  assert.ok(html.indexOf('id="G01"') < html.indexOf('id="G13"'))
+  assert.ok(html.indexOf('id="G13"') < html.indexOf('id="blog-recovery"'))
+})

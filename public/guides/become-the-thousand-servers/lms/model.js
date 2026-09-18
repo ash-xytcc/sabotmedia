@@ -1,0 +1,895 @@
+import { participatingContributor } from './participation.js'
+import { withRecoveryPathway, recoveryModules } from './blog-recovery.js'
+import { withCmsChoices } from './cms-choices.js'
+import { legacySeed } from './seed.js'
+import { initialActivities } from './activities.js'
+export const SLUG = 'become-the-thousand-servers'
+export const STATUSES = ['draft', 'reporting needed', 'testing', 'review', 'published', 'archived']
+export const TYPES = [
+  'multiple-choice',
+  'multiple-select',
+  'true-false',
+  'ordered-sequence',
+  'matching',
+  'short-reflection',
+  'checklist',
+  'practical',
+  'troubleshooting',
+  'teach-back',
+]
+export const sectionMap = [
+  ['WHY BECOME THE THOUSAND SERVERS?', []],
+  ['A SERVER IS NOT JUST A MACHINE', [1]],
+  ['LEARN WHAT IS ACTUALLY HAPPENING', [2, 3]],
+  ['YOUR FIRST SERVER DOESN’T NEED TO SERVE ANYONE', [4, 5]],
+  ['“I HAVE A SERVER” IS NOT RESILIENCE', [6, 7, 8]],
+  ['TECHNICALLY DECENTRALIZED, SOCIALLY CENTRALIZED', [9]],
+  ['PUBLISH FOR DISAPPEARANCE', [10]],
+  ['THE INTERNET IS NOT THE ONLY NETWORK', [11, 12]],
+  ['THIS IS NOT A SERVER GUIDE', []],
+  ['THE HUMAN INFRASTRUCTURE', []],
+  ['THE WEB OF PARTIAL KNOWLEDGE', []],
+  ['WHAT SURVIVES WITHOUT YOU?', []],
+  ['EACH ONE, TEACH ONE', []],
+]
+
+export const G01_PREVIOUS_BODY = "A server disappears.\n\nMaybe a provider closes an account. Maybe a domain stops resolving. Maybe hardware fails. Maybe the administrator burns out. Maybe equipment is seized. Maybe a project loses funding, a building, or the people who knew how everything fit together. The specific cause changes. The pattern is familiar: people discover, under pressure, how much work depended on infrastructure they could use but could not explain, reproduce, or move.\n\nAutistici/Inventati survived twenty-five years of pressure and infrastructure disruption before its shutdown became the historical catalyst for this course. The useful lesson is not simply that movements should find another unusually committed technical collective and move everything there. Replacing one indispensable provider with another can reproduce the same structural weakness.\n\nThe deeper problem is concentration of capacity. When years of publications, communications, domains, archives, operational knowledge, and recovery procedures are concentrated in a small number of organizations or individual administrators, the disappearance of any one of them creates an emergency far beyond that one project.\n\n“Become the thousand servers” therefore does not literally mean that every collective should buy a VPS. A thousand poorly maintained machines operated by a tiny group of specialists would still be fragile. What needs to multiply is capacity: people who can understand what their projects depend on, people who can administer appropriately scoped systems, people who can restore backups, people who can move services, people who can preserve publications, and people who can teach those skills to somebody else.\n\nInfrastructure is broader than the machine serving a page. It includes the domain registration, authoritative DNS, hosting account, application, database, storage, email, repository, payment method, deployment process, backups, account recovery, documentation, and the relationships between the people who hold access to those things. Most organizations already operate inside a complicated technical system. They often experience that system as a collection of dashboards and logins rather than as infrastructure.\n\nThat distinction matters because interfaces hide dependencies. A button that says “publish” can depend on a registrar, DNS provider, CDN, storage service, build system, API token, database, and one person's recovery email. When all of those pieces work, the dependency chain is invisible. When one piece disappears, the abstraction breaks.\n\nAutonomy is not the elimination of dependence. No project can manufacture every computer, cable, chip, operating system, network, and protocol it uses. Autonomy means retaining meaningful control over continuity. You should know what you depend on, why you chose it, what data and access you can recover, and how the project continues when a dependency fails.\n\nSelf-hosting can increase that control, but it can also reduce it. A competently maintained shared service with documented exports, independent backups, and several trained administrators may be more resilient than a self-hosted system only one person understands. The measure is not ideological purity. The measure is whether the capability survives loss.\n\nThroughout this course, every technical exercise returns to the same questions: What exists? Who controls it? Can it be backed up? Can it be restored? Can it be moved? Can another person operate it? Can the work survive when the current machine, provider, domain, or administrator is gone?\n\nThose are the foundations of distributed infrastructure."
+export const G01_BODY = "A server disappears.\n\nMaybe a provider closes an account. Maybe a domain stops resolving. Maybe hardware fails. Maybe the administrator burns out. Maybe equipment is seized. Maybe a project loses funding, a building, or the people who knew how everything fit together. The specific cause changes. The operational pattern is familiar: people discover, under pressure, how much work depended on infrastructure they could use but could not explain, reproduce, recover, or move.\n\nAutistici/Inventati was founded in 2001 and operated for roughly twenty-five years before its 2026 shutdown. Its shutdown is the historical catalyst for this course, but the useful lesson is not simply that movements should find another unusually committed technical collective and move everything there. Replacing one indispensable provider with another can reproduce the same structural weakness.\n\nThe deeper problem is concentration of capacity, access, and institutional memory. When years of publications, communications, domains, archives, credentials, operational knowledge, and recovery procedures are concentrated in a small number of organizations or individual administrators, the disappearance of any one of them creates an emergency far beyond that one project.\n\n“Become the thousand servers” therefore does not literally mean that every collective should buy a VPS. A thousand poorly maintained machines operated by the same handful of specialists would still be fragile. So would a thousand services whose domains, backups, billing, or account recovery all depend on the same person. What needs to multiply is capacity: people who can understand what their projects depend on, administer appropriately scoped systems, restore backups, move services, preserve publications, recover access, document what they did, and teach those skills to somebody else.\n\nIt helps to think in terms of failure domains. A failure domain is any boundary inside which one failure can disable several things at once. Ten services may look decentralized while sharing one registrar account, one recovery email, one payment method, one administrator, or one undocumented deployment process. Counting servers does not tell you how many independent ways the system can survive.\n\nInfrastructure is broader than the machine serving a page. It includes the domain registration and registrar account, authoritative DNS and its records, hosting or server account, application and runtime, database and storage, email and identity accounts, source repository, build and deployment process, secrets and API tokens, payment method, backups, recovery channels, documentation, and the relationships between the people who hold access to those things. Most organizations already operate inside a complicated technical system. They often experience that system as a collection of dashboards and logins rather than as infrastructure.\n\nThat distinction matters because interfaces hide dependencies. A button that says “publish” can depend on a registrar, DNS provider, CDN, storage service, build system, repository, API token, database, identity provider, and one person's recovery email. When all of those pieces work, the dependency chain is invisible. When one piece disappears, the abstraction breaks. A service can still be online while the people responsible for it have already lost the ability to administer, recover, or migrate it.\n\nAutonomy is not the elimination of dependence. No project can manufacture every computer, cable, chip, operating system, network, and protocol it uses. Autonomy means retaining meaningful control over continuity: knowing what you depend on, why you chose it, where the authoritative state lives, which credentials and recovery paths matter, what independent copies exist, and how the project continues when a dependency fails.\n\nSelf-hosting can increase that control, but it can also reduce it. Self-hosting moves responsibility; it does not automatically create resilience. A competently maintained shared service with documented exports, independent backups, tested restores, and several trained administrators may be more resilient than a self-hosted system only one person understands. A backup that has never been restored is only a hypothesis. The measure is not ideological purity. The measure is whether the capability survives loss.\n\nThroughout this course, every technical exercise returns to the same questions: What exists? Where is the authoritative copy? Who controls it? Who can recover access? Can it be backed up independently? Has that backup actually been restored? Can the service be moved? Can another person operate it from the documentation? Can the work survive when the current machine, provider, domain, account, or administrator is gone?\n\nThose are the foundations of distributed infrastructure: not merely more machines, but more people with the knowledge, access, copies, and recovery capacity required to keep the work alive."
+
+export const G02_PREVIOUS_BODY = "A server is not just a machine because the useful thing people depend on is almost never contained in one machine.\n\nA website may depend on a domain registered through one company, DNS hosted by another, a virtual server somewhere else, a code repository, an object-storage bucket, a database, an email provider, a payment card, a password manager, and several human beings with different pieces of access. A publication can remain online while becoming impossible to administer. A perfectly healthy server can become unreachable because the domain expired. A complete database can become useless if the media files were never backed up.\n\nThe first task is therefore not deployment. It is discovery.\n\nMap both technical and administrative dependencies. For each component, distinguish at least five things: who owns it, who can access it, who pays for it, where its data lives, and how it can be recovered or exported. These are often different answers. An organization may believe it “owns” a domain while the registration is in a former member's personal account and the renewal goes to an abandoned email address.\n\nMap people as seriously as services. If only one person can use the registrar account, only one person recognizes the DNS configuration, or only one person knows which backup actually restores, that person is a single point of failure. This is not an argument for making everyone an administrator. Excess privilege creates its own risks. It is an argument for intentional overlap: enough people with enough access and understanding that the project can survive one person's absence.\n\nKnowledge does not have to be uniform. One person may be good at Linux. Another may understand DNS. Another may keep documentation current. Another may know the publishing workflow. Resilience comes from overlap and handoff, not from demanding that everybody master the whole stack.\n\nThe dependency map also gives technical work a purpose. Later lessons on DNS, SSH, backups, migration, mirroring, and alternative networks are not isolated skills. They are tools for reducing specific weaknesses you can now see. If the domain is the only thing you cannot recover, work there. If the only backup is a provider snapshot, work there. If every administrator uses one shared credential, work there.\n\nBefore adding new infrastructure, understand the infrastructure you already have."
+export const G02_BODY = "A server is not just a machine because the useful thing people depend on is almost never contained in one machine.\n\nA website may depend on a domain registration, authoritative DNS, a hosting account, a virtual machine or managed platform, a CDN or reverse proxy, a source repository, a build system, object storage, a database, email, identity and recovery accounts, payment, backups, and several human beings with different pieces of access and knowledge. A publication can remain online while becoming impossible to administer. A healthy server can become unreachable because a domain registration lapses or its DNS delegation changes. A complete database can be insufficient for recovery if uploaded media, configuration, or secrets were never backed up.\n\nThe first task is therefore not deployment. It is discovery.\n\nDraw two overlapping maps. The first is the service path: what has to work for a reader, member, or administrator to use the service. The second is the control and recovery path: what has to work for your organization to renew the domain, change DNS, deploy code, recover an account, restore data, or move the service somewhere else. These are not the same path. A registrar, for example, is an essential control-plane dependency for a registered domain, but it is not normally queried every time somebody visits the site.\n\nFor each component, record more than a vendor name. Identify the account holder or organizational owner, the people with administrative access, billing and renewal responsibility, where authoritative data lives, what independent export or backup exists, how account recovery works, where documentation lives, and who could take over. These are often different answers. An organization may think it controls a domain while the registrar account belongs to a former member, renewal notices go to an abandoned inbox, and the only second factor lives on one person's phone.\n\nMap people as seriously as services. If only one person can use the registrar account, only one person understands the DNS configuration, or only one person knows which backup actually restores, that person is a single point of failure. The answer is not to give everybody administrator privileges or to share one master password. Prefer individual accounts, least privilege, more than one authorized recovery path where the service supports it, and enough overlap that one person's absence does not stop recovery.\n\nKnowledge does not have to be uniform. One person may be good at Linux. Another may understand DNS. Another may maintain documentation. Another may know the publishing workflow. Resilience comes from overlap, documentation, and handoff, not from demanding that everybody master the whole stack.\n\nUnknown is a legitimate entry on a dependency map. An honest unknown is actionable. An invented answer is not. If nobody knows where the authoritative DNS is hosted, whether the provider snapshot includes the database, or which account owns the deployment token, write that down and verify it later.\n\nThe dependency map gives technical work a purpose. Later lessons on DNS, SSH, backups, migration, mirroring, and alternative networks are not isolated skills. They are tools for reducing specific weaknesses you can now see. If the domain is the only thing you cannot recover, work there. If the only backup is a provider snapshot, work there. If several services fail when one payment card, recovery inbox, administrator, or provider disappears, work there.\n\nBefore adding new infrastructure, understand the infrastructure you already have."
+export const G02_PREVIOUS_LESSON = {"objectives":["Draw the full dependency chain behind a real website or project","Distinguish ownership, access, billing, data custody, and recovery responsibility","Identify technical and human single points of failure before an emergency","Define what must be recoverable and how much loss or downtime is acceptable"],"learn":"Autonomous infrastructure starts with an inventory, not a purchase. Most projects already depend on a substantial stack: domain registration, authoritative DNS, hosting, web software, databases, file storage, email, repositories, identity providers, payment systems, backups, and the people who know how to operate them.\n\nA dependency map should show more than vendor names. For each component, record who owns the account, who can administer it, where recovery messages go, who pays for it, where the data actually lives, how the data can be exported, and what another person would need to take over. Ownership and access are not the same thing. A domain can be legally registered to one person, billed to another card, administered through a third person's account, and recovered through an email inbox nobody else can reach.\n\nMap the path a request follows. A common website chain is: human → domain → registrar/registry relationship → authoritative DNS → A/AAAA/CNAME record → network address → host or server → web server or reverse proxy → application → database and files. Then add dependencies that are not on the request path but are still required for survival: source repositories, secrets, build systems, backups, monitoring, payment, documentation, and recovery contacts.\n\nPeople belong on the map. If only one person understands DNS, only one person holds the second factor for the registrar, or only one person knows which backup is actually restorable, the project has a human single point of failure. The answer is not that everyone must become an expert. The answer is overlapping access, usable documentation, and deliberate succession.\n\nTwo recovery ideas are useful even for small projects. Recovery Point Objective (RPO) means how much recent data you can afford to lose. Recovery Time Objective (RTO) means how long the service can reasonably remain unavailable. You do not need corporate paperwork around those terms. You do need to know whether losing one hour, one day, or one month of work would be acceptable, and whether recovery needs to take minutes, hours, or days. Those answers determine how often you back up and how much preparation is justified.","do":"Pick one real project you help maintain. Draw every service, account, machine, provider, and person that the project depends on. Include domain registration, DNS, hosting, application, database/files, email, repository, backups, payments, monitoring, and recovery channels where they exist.\n\nFor each dependency, record: who owns it; who has administrative access; how access is recovered; where multi-factor authentication or recovery codes live; who pays; what data it holds; how that data can be exported; and who else understands how to operate it. Do not put passwords or private recovery codes in the map itself.\n\nTrace at least one real user action end to end. For a website, start with the domain name and follow it through DNS to the machine and application. For email, follow the domain's MX records to the mail provider. If you cannot explain a handoff between two boxes on the map, mark it as unknown instead of guessing.\n\nMark every dependency that has only one administrator, one credential holder, one copy, one provider, one payment method, one recovery address, or one person with the necessary knowledge. Then write one practical reduction for each high-impact single point of failure.\n\nWrite a simple recovery target for the project: how much recent work could be lost without becoming a serious problem, and how long the service could reasonably be unavailable. Use those answers later when deciding backup frequency and recovery procedure.","test":"Without asking the person who normally handles everything, can another maintainer identify who controls the registrar, authoritative DNS, hosting, repository, backups, and account recovery, and can they explain which failures would cause permanent data loss versus temporary downtime?","teach":"Give the map to another person who did not make it. Ask them to trace the project from domain to running service and then explain how they would recover the most important account. Every place they have to ask what a box means is a documentation gap.","checks":["Registrar, authoritative DNS, hosting, application, data, repository, and backups are mapped","Ownership, administrative access, billing, recovery, and export paths are recorded","Human single points of failure are marked","At least one real request or service path has been traced end to end","A simple acceptable data-loss and downtime target has been recorded","Another person can explain the map without relying on the original maintainer"],"resources":[{"title":"ICANN Lookup","url":"https://lookup.icann.org/","note":"RDAP-based registration lookup for generic top-level domains."}]}
+
+export const G03_PREVIOUS_BODY = "Modern infrastructure is designed to be easy to consume. That is useful, but it can make the systems underneath it difficult to reason about.\n\nYou register a name, click deploy, connect a repository, and receive a working site. None of that requires you to see the DNS delegation, network route, TLS certificate, listening socket, application process, or database connection underneath the interface. The abstraction is doing its job. The problem begins when a project has no way to look beneath that abstraction when something fails or needs to move.\n\nThis section develops enough technical literacy to trace what is actually happening.\n\nA domain name is a name, not a server. The registrar manages the registration relationship; authoritative DNS publishes records for the name. A record can point to an address where a machine or service is reachable. A web server listens for requests and may return static files or pass requests to an application. An application may read from a database and storage that live somewhere else entirely. Each layer can fail independently.\n\nThe same principle applies to remote administration. SSH is not “the server.” It is one encrypted protocol for reaching an account on a machine. Your SSH key proves your identity to the remote system; the server's host key helps prove its identity to you. Once connected, ordinary Linux inspection tools let you ask concrete questions: who am I, where am I, what is running, what is listening, how much storage remains, and which service produced an error?\n\nThe goal is not memorization. Commands are searchable and change over time. The durable skill is forming a model of the system and knowing which observation answers which question.\n\nIf a site fails, you should be able to separate: Does the name resolve? Does it resolve to the intended address? Can the address be reached? Is the intended port open? Is a process listening? Is TLS valid for this hostname? Is the web server returning a response? Is the application healthy? Is its data available?\n\nThat sequence replaces guesswork with diagnosis. It also makes migrations and recovery safer because you understand which layer you are changing and which layers should remain untouched."
+export const G03_BODY = "Modern infrastructure is designed to be easy to consume. That is useful, but it can make the systems underneath it difficult to reason about.\n\nYou register a name, click deploy, connect a repository, and receive a working site. None of that requires you to see the domain delegation, recursive DNS lookup, authoritative answer, network connection, TLS handshake, listening socket, reverse proxy, application process, or database connection underneath the interface. The abstraction is doing its job. The problem begins when a project has no way to look beneath that abstraction when something fails or needs to move.\n\nThis section develops enough technical literacy to trace what is actually happening without requiring you to memorize the whole internet.\n\nA domain name is a name, not a server. Registration determines who controls the name and which nameservers are delegated authority for it. DNS turns names into records that lead clients toward services. A web request may then reach a CDN or reverse proxy before it reaches the machine or application you think of as “the server.” That application may depend on databases, object storage, identity providers, or other services somewhere else entirely. Each layer can fail independently, and several layers can be healthy while the overall service is still unusable.\n\nThe same principle applies to remote administration. SSH is not “the server.” It is an encrypted protocol used to establish a connection to an account on a machine. Your authentication key can prove your identity to the remote system; the server's host key lets your client check the identity of the machine it reached. Once connected, ordinary Linux inspection tools let you ask concrete questions: what system is this, who am I, where am I, what is running, what is listening, how much storage remains, and which service produced an error?\n\nThe goal is not memorization. Commands are searchable, software changes, and different systems expose the same information in different ways. The durable skill is forming a model of the system and choosing an observation that can distinguish one failure from another.\n\nIf a website fails, separate the questions. Does DNS return an answer? Is it the answer you intended? Can the client establish a connection to the service endpoint and port? Does the TLS handshake succeed for the hostname? Does the web server or reverse proxy return an HTTP response? Is the application healthy? Can it reach the data and services it depends on? A failed ping alone does not prove that a web service is down; ICMP may be filtered while HTTPS works normally.\n\nWork from the outside inward and change one layer at a time. Diagnosis is evidence gathering, not a sequence of increasingly desperate button presses. The same habit makes migrations and recovery safer because you know which layer you are changing, what should remain untouched, and what observation will tell you whether the change worked."
+export const G03_PREVIOUS_LESSON_2 = {"objectives":["Distinguish registrar, registry, authoritative DNS, resolver, and web host","Read the DNS records that commonly control web and mail delivery","Use RDAP and DNS tools to trace control without changing anything","Understand TTL well enough to plan and verify a later migration"],"learn":"DNS is a distributed naming system. It does not contain your website, and the company where you registered a domain is not necessarily the company answering DNS queries for it.\n\nThe registrar is the organization through which the registrant manages a domain registration. The registry operates the database for a top-level domain such as .org or .media. Authoritative nameservers publish the DNS records for a domain. Recursive resolvers, such as the one provided by your network or a public resolver, ask authoritative servers for answers and cache them. A web host is where the website or application runs. One company may perform several of these jobs, but the jobs remain distinct.\n\nFor generic top-level domains, ICANN made RDAP the definitive registration-data service in January 2025, replacing the old WHOIS service as the standard source. ICANN Lookup is an RDAP-based place to identify the registrar and available registration information.\n\nCommon records have specific jobs. A maps a hostname to an IPv4 address. AAAA maps it to an IPv6 address. CNAME makes one hostname an alias of another name; it is not an IP address. MX identifies mail exchangers for a domain and includes priority values. TXT carries arbitrary text and is widely used for verification and mail policy such as SPF, DKIM, and DMARC. NS identifies authoritative nameservers. CAA can restrict which certificate authorities may issue certificates for a domain. TTL is the time a DNS answer may remain cached.\n\nTTL is not a countdown that forces every resolver to refresh at exactly the same moment. If you lower a TTL before a migration, caches that already stored the old record may continue using the old TTL until that cached answer expires. Lower it far enough in advance for the old TTL to age out before relying on the shorter value.\n\nDNS troubleshooting works best when you separate questions. First ask which nameservers are authoritative. Then ask those authoritative servers what they say. Then compare that with what a recursive resolver returns. A mismatch can tell you whether the problem is in the authoritative zone, delegation, or cached answers.","do":"Pick a domain you control or are authorized to inspect. Use ICANN Lookup to identify the registrar and record the authoritative nameservers. Do not change anything yet.\n\nOn a system with dig, run commands such as `dig example.org NS`, `dig example.org A`, `dig example.org AAAA`, `dig example.org MX`, and `dig example.org TXT`. Use `dig +short` when you want a compact answer, but keep at least one full result so you can see TTL and authority information. On systems without dig, use nslookup or another trusted DNS inspection tool.\n\nTake one authoritative nameserver from the NS result and query it directly, for example `dig @ns1.example.net example.org A`. Compare that answer with the normal recursive answer. You are learning which system is actually authoritative, not merely whether a browser happens to load.\n\nCopy or export the complete DNS zone before a future change. Include A, AAAA, CNAME, MX, TXT, NS, CAA, SRV, and any other records that exist. Keep mail-related records even when you are only moving the website.\n\nWrite down the current TTL for records you may later change. For a planned migration, note when you would lower TTL and how long the previous TTL must be allowed to expire before the shorter value can be trusted.","test":"Can you identify the registrar, authoritative nameservers, web records, and mail records; explain which provider controls each; and tell the difference between an authoritative answer and a cached recursive answer?","teach":"Give another learner a domain they do not administer. Have them identify the registrar with RDAP, find its authoritative nameservers, query a web record and an MX record, and explain each result without logging into any provider account.","checks":["Registrar identified with RDAP or the registrar panel","Authoritative nameservers identified","A, AAAA, CNAME, MX, and relevant TXT records inspected","At least one authoritative nameserver queried directly","Existing DNS records copied before any future change","TTL behavior and migration timing understood"],"resources":[{"title":"ICANN RDAP","url":"https://www.icann.org/rdap","note":"Background and current registration-data access guidance."},{"title":"ICANN Lookup","url":"https://lookup.icann.org/","note":"RDAP-based registration lookup."}]}
+export const G03_PREVIOUS_LESSON_3 = {"objectives":["Create and protect a modern SSH key pair","Verify a server host key instead of blindly accepting identity changes","Connect as an ordinary user and use sudo deliberately","Inspect a Linux machine without changing production systems"],"learn":"SSH gives you an encrypted remote terminal and can authenticate you with a public/private key pair. The private key remains on your device and must be protected. The public key, normally the file ending in .pub, can be placed in the remote account's authorized_keys file. Knowing the public key does not reveal the private key.\n\nCurrent OpenSSH uses Ed25519 as the default key type when ssh-keygen is run without a type, and `ssh-keygen -t ed25519` is an explicit, widely supported choice. Protect a human login key with a passphrase unless you have a specific reason not to. If a private key is stolen, its passphrase is another barrier between possession of the file and use of the credential.\n\nSSH also authenticates the server to you. On first connection, the client shows a host-key fingerprint. Verify that fingerprint through a channel you trust when the machine matters. After acceptance, the key is stored in known_hosts. A later warning that the host key changed can be legitimate after a rebuild, but it can also indicate that you are reaching the wrong machine or that the connection is being intercepted. Do not suppress the warning until you know why the key changed.\n\nUse a normal account for routine administration and elevate individual commands with sudo when necessary. Root access removes many safety boundaries. The goal is not to avoid administrative privileges forever; it is to know when you are using them.\n\nA few read-only commands make an unfamiliar Linux machine much less mysterious: `whoami` and `id` show your identity; `pwd` and `ls -la` orient you in the filesystem; `df -h` shows filesystem usage; `free -h` shows memory on systems that provide it; `ps aux` shows processes; `ss -tulpn` shows listening sockets when permissions allow; `systemctl --type=service --state=running` shows running systemd services; and `journalctl -u SERVICE` inspects a service's log history.","do":"Create a disposable Linux VM, old laptop, or temporary VPS. Make sure you have an out-of-band recovery method such as a provider console before experimenting with remote access.\n\nOn your own computer, generate a key with `ssh-keygen -t ed25519`. Give the private key a passphrase. Identify which file is private and which .pub file is safe to install remotely. Do not send the private key to the server.\n\nAdd the public key to the disposable account using your provider's setup flow, `ssh-copy-id` where available, or a documented manual authorized_keys method. Connect with `ssh user@example-host`. On the first connection, verify the host-key fingerprint from the provider console or another trusted source when possible before accepting it.\n\nRun `whoami`, `id`, `pwd`, `ls -la`, `df -h`, `ps aux`, and the system/service inspection commands appropriate to the machine. Use `sudo` for a harmless command that actually needs elevation, and note the difference between your ordinary identity and the elevated command.\n\nLog out and reconnect. Then, from the provider console, locate the machine's SSH host-key fingerprints so you know how you would investigate a future changed-host-key warning rather than deleting known_hosts entries automatically.","test":"Can you reconnect using your own key, explain which file is private, verify the server's identity when needed, inspect disk/process/service state, and distinguish your normal account from an elevated command?","teach":"Create a separate ordinary account for another learner where appropriate and have them connect with their own key. Have them verify the server fingerprint, locate a service, and explain why sharing one private key between administrators is a bad recovery model.","checks":["Disposable machine and out-of-band recovery path are available","Ed25519 key pair created and private key protected","Only the public key was installed on the server","Server host-key verification was understood and tested","Ordinary user used for normal work","Disk, process, socket, and service state inspected"],"resources":[{"title":"OpenSSH manual","url":"https://www.openssh.com/manual.html","note":"Primary OpenSSH documentation and manual-page links."},{"title":"ssh-keygen manual","url":"https://man.openbsd.org/ssh-keygen","note":"Current key-generation behavior and key-file details."}]}
+
+export const G04_PREVIOUS_BODY = "Infrastructure is learned best in an environment where failure is allowed.\n\nDo not begin by experimenting on a production service that holds somebody else's writing, membership list, communications, or only copy of important data. Create a disposable machine or virtual environment whose destruction would be an inconvenience rather than a crisis.\n\nThen make the smallest complete service you can understand.\n\nA static page is enough. One file lets you see the entire request path: a browser asks DNS for the hostname, receives an address, connects to a network port, negotiates TLS for HTTPS, sends an HTTP request, and receives a file from a web server. Once that path is visible, the words domain, address, port, certificate, process, and file stop being separate vocabulary items and become parts of one working system.\n\nAfter the page works, inspect the consequences of making it reachable. Which address is the service bound to? Which TCP ports are listening? Are those ports allowed through a provider firewall, host firewall, or both? Does the machine have public IPv6 as well as IPv4? Who updates the web server? Where are its logs? How are certificates renewed? What happens if the disk fills?\n\nThis is also where you should begin resisting unnecessary complexity. A project that needs to publish a handful of durable pages may not need a database, plugin ecosystem, build service, authentication system, and five external APIs. Another project may genuinely need a dynamic application with multiple editors, forms, search, private areas, or structured data.\n\nChoose complexity because it provides a required capability, not because it was present in the last system you inherited.\n\nAutonomy is a spectrum. A group can learn to control its domain while continuing to use managed hosting. It can maintain independent backups without running its own server. It can self-host a simple site while outsourcing email. It can operate a VPS but rely on a competent datacenter and upstream network. Each step can increase control if the people involved understand and can maintain it.\n\nThe objective of the disposable server is therefore not to prove that you can put a page on the internet. It is to make the layers observable, breakable, and recoverable while the stakes are low."
+export const G04_BODY = "Infrastructure is learned best in an environment where failure is allowed and bounded.\n\nDo not begin by experimenting on a production service that holds somebody else's writing, membership list, communications, credentials, or only copy of important data. Create a disposable machine or virtual environment whose destruction would be an inconvenience rather than a crisis. Do not reuse unique production data or irreplaceable secrets merely to make the lab feel realistic. If destroying the machine would create an emergency, it is not disposable.\n\nThen make the smallest complete service you can understand.\n\nA static page is enough. One file lets you see the path from a name to a visible result: DNS returns an address, a client establishes a connection to a service endpoint, HTTPS establishes an authenticated encrypted session, the client sends an HTTP request, and a web server returns a file. For the conventional HTTP/1.1 and HTTP/2 path this normally means TCP port 443. Modern HTTP/3 carries HTTP over QUIC, usually on UDP 443. You do not need to master all three protocols in this lesson, but you should not be surprised later when a web server is listening on both TCP and UDP.\n\nPublic exposure is not required for every experiment. You can first serve the page locally and prove that the web server works. When you deliberately make it public, use a disposable hostname, publish no sensitive information, and know how you will recover access if a firewall or SSH change locks you out.\n\nOnce the page works, inspect what making it reachable actually created. Which addresses is the service listening on? Which TCP and UDP ports exist? Which provider firewall, host firewall, router, or security group can block or permit them? Does the machine have working public IPv6 as well as IPv4? Who updates the web server? Where are its logs and persistent certificate data? How will you notice a full disk or failed renewal?\n\nThis is also where you should begin resisting unnecessary complexity. A project that needs to publish a handful of durable pages may not need a database, plugin ecosystem, build service, authentication system, and five external APIs. Another project may genuinely need a dynamic application with multiple editors, forms, search, private areas, structured data, or an API.\n\nChoose complexity because it provides a required capability, not because it was present in the last system you inherited. Every additional runtime, account, database, plugin, build step, and secret is another thing that has to be maintained, backed up, recovered, and taught.\n\nAutonomy is a spectrum. A group can control its domain while continuing to use managed hosting. It can maintain independent backups without running its own server. It can self-host a simple site while outsourcing email. It can operate a VPS while relying on a competent datacenter and upstream network. Each step can increase meaningful control if the people involved understand the dependency and know how to leave it.\n\nThe objective of the disposable server is therefore not to prove that you can put a page on the internet. It is to make the layers observable, breakable, diagnosable, and recoverable while the stakes are low."
+export const G04_PREVIOUS_LESSON_4 = {
+    objectives: [
+      'Trace a browser request through DNS, transport, TLS, and a web server',
+      'Serve a harmless static page from a disposable machine',
+      'Understand what automatic HTTPS does and what it still depends on',
+      'Choose the simplest publishing stack that satisfies a real need',
+    ],
+    learn: `A small static page is enough to make the web's layers visible. The browser starts with a hostname. DNS supplies an address. The client opens a network connection to the server, normally TCP port 443 for HTTPS. TLS authenticates the hostname and encrypts the connection. A web server accepts the HTTP request and either returns a file or forwards the request to an application.
+
+Those layers can fail separately. A valid DNS record can point to a machine with no service listening. A service can work by IP while the hostname points somewhere else. Port 443 can be blocked even though SSH works. A web server can answer HTTP while certificate issuance fails. Treat each layer as a separate question when troubleshooting.
+
+Caddy is useful for a first public static site because a configuration containing a qualifying public hostname can automatically obtain and renew a certificate and redirect HTTP to HTTPS. That automation still has prerequisites. For normal public certificate issuance, the hostname's A or AAAA record must point to the server, ports 80 and 443 must be reachable as required by the ACME challenge, Caddy must be able to bind or receive forwarded traffic on those ports, and its data directory must be persistent and writable. Local hostnames and IP addresses use a different local-CA trust model and should not be confused with publicly trusted certificates.
+
+nginx is another good choice and makes configuration explicit, but TLS certificate management is a separate concern unless you add tooling for it. The lesson is not about choosing a winner. It is about understanding the path well enough that the server is no longer a black box.
+
+Also consider whether you need a dynamic application at all. If a project only publishes documents and updates occasionally, static files or a simple publishing system may reduce the number of databases, runtimes, plugins, secrets, and update paths you must maintain. Simpler is not automatically better, but unnecessary complexity is another dependency.`,
+    do: `Create a directory on the disposable server, such as \`/srv/disposable-site\`, and put an \`index.html\` in it with unmistakable test content. Keep the page free of sensitive information.
+
+Choose one web server and follow its current official installation documentation. With Caddy, a minimal Caddyfile can name your test hostname and serve files from the chosen directory using the root and file_server directives. With nginx, use its official beginner documentation to define a server that serves that directory. Do not run two web servers on the same public ports unless you deliberately understand the proxying arrangement.
+
+Before changing DNS, confirm the service is running and identify which ports it is listening on. Then point only a disposable hostname at the test machine. If using Caddy with a public hostname, make sure DNS is correct and ports 80/443 are externally reachable so automatic HTTPS can complete.
+
+Load the page over HTTPS from a second device or network. Inspect the certificate in the browser and confirm it is issued for the hostname you opened. If it fails, troubleshoot in order: DNS answer, network reachability, listening socket, firewall, web-server logs, then certificate issuance.
+
+For one real project, write the minimum publishing features it actually needs: static pages, multiple editors, media library, search, comments, forms, subscriptions, private content, or an API. Compare those needs with its current stack and identify any component that exists only because it was inherited rather than required.`,
+    test: `Can another device load the disposable page over HTTPS, can you explain every hop from hostname to file, and can you identify which parts of the stack are essential versus merely convenient?`,
+    teach: `Have another person trace a successful request from the browser through DNS, the server address, port 443, TLS, the web server, and the file. Then give them one intentionally broken layer and have them identify it without changing unrelated components.`,
+    checks: [
+      'Static file created on a disposable system',
+      'Exactly one intended web service is listening on the expected ports',
+      'Disposable DNS record points to the correct machine',
+      'Public HTTPS prerequisites or local trust model are understood',
+      'Second device or network can load the page',
+      'Minimum adequate publishing stack for a real project was identified',
+    ],
+    resources: [
+      {title:'Caddy automatic HTTPS',url:'https://caddyserver.com/docs/automatic-https',note:'Certificate automation, redirects, and public-hostname requirements.'},
+      {title:'Caddy HTTPS quick start',url:'https://caddyserver.com/docs/quick-starts/https',note:'Minimal public HTTPS examples.'},
+      {title:'nginx beginner guide',url:'https://nginx.org/en/docs/beginners_guide.html',note:'Official static serving and configuration basics.'},
+    ],
+}
+export const G04_PREVIOUS_LESSON_5 = {
+    objectives: [
+      'Identify which processes are listening and which interfaces they bind to',
+      'Distinguish host firewall, provider firewall, application access controls, and network exposure',
+      'Verify update, log, certificate, storage, and recovery responsibilities',
+      'Recognize IPv4 and IPv6 as separate exposure paths',
+    ],
+    learn: `A service working once is not the same as a service you can maintain. Before anyone depends on a machine, you should be able to account for what is reachable, what must be updated, where failures are recorded, and how access can be recovered.
+
+A listening socket tells you that a process is accepting traffic on an address and port. Binding to 127.0.0.1 or ::1 normally limits a service to the local machine. Binding to 0.0.0.0 or :: can make it available on network interfaces, subject to firewall and routing rules. Do not inspect only IPv4. A machine with a public IPv6 address can expose a service even when an IPv4 NAT arrangement made you assume it was private.
+
+Firewalls exist at more than one layer. A cloud provider may filter traffic before it reaches the VM. The operating system may run nftables, iptables, UFW, firewalld, or another ruleset. An application can also enforce its own authentication or source restrictions. Before changing firewall rules, identify which system is actually active and preserve the access path you need for recovery.
+
+Updates are an operational process, not a one-time hardening step. Ubuntu Server installs unattended-upgrades by default for automatic security updates, but administrators still need to know what repositories are covered, whether a reboot is required, whether services were restarted, and how failures are detected. Third-party repositories are not automatically covered merely because they are installed.
+
+Certificate maintenance depends on the software. Caddy manages certificates it provisions and renews them automatically when its data directory persists and validation continues to work. Certbot installations normally include a timer or cron job and can be checked with \`certbot renew --dry-run\`. Do not schedule a second competing renewal system for the same certificate without a reason.
+
+Logs and disk space are part of availability. A service can fail because a filesystem fills, a database exhausts storage, a certificate renewal fails, or a daemon repeatedly crashes. Decide who notices those conditions and how.`,
+    do: `On the disposable Linux machine, run \`sudo ss -tulpn\` and record each listening TCP/UDP port, the process using it, and whether it is bound to loopback, a specific interface, or all interfaces. Explain why every publicly reachable listener exists.
+
+Identify the provider-level firewall or security group, if any, and the host firewall actually in use. If UFW is installed and active, \`sudo ufw status verbose\` is useful; if it is not the active firewall, do not pretend its empty output describes the machine. Compare inbound rules with the listeners you found.
+
+Check both IPv4 and IPv6 addressing and rules. From another machine, test only the ports that are supposed to be reachable. Do not use an internet-wide scanner against systems you do not control.
+
+Run \`sudo apt update\` and inspect pending updates with a non-destructive method appropriate to Ubuntu, then inspect unattended-upgrades configuration and logs if that is your update mechanism. Record whether reboots or service restarts need an explicit maintenance plan.
+
+Check filesystem use with \`df -h\`, recent service logs with \`journalctl -u SERVICE\`, file ownership for the served content, and certificate status/renewal using the tool that actually manages the certificate. Write down who is responsible for each recurring check and how another person recovers administrative access.`,
+    test: `Can you account for every network listener, explain whether it is reachable over IPv4 and IPv6, identify which firewall layers affect it, and show how updates, logs, certificates, disk space, and administrator recovery are maintained?`,
+    teach: `Have another learner independently inspect the same disposable machine and compare their exposure inventory with yours. Resolve disagreements by checking the actual socket, firewall, and network state rather than choosing the more reassuring answer.`,
+    checks: [
+      'Listening sockets and owning processes reviewed',
+      'Loopback versus public/interface bindings understood',
+      'Provider and host firewall state identified',
+      'IPv4 and IPv6 exposure checked',
+      'Security-update mechanism and reboot/restart implications reviewed',
+      'Logs, storage, certificate renewal, permissions, and recovery ownership checked',
+    ],
+    resources: [
+      {title:'Ubuntu automatic updates',url:'https://ubuntu.com/server/docs/how-to/software/automatic-updates/',note:'How unattended-upgrades is scheduled and configured.'},
+      {title:'Ubuntu security suggestions',url:'https://ubuntu.com/server/docs/explanation/security/security_suggestions/',note:'General current server-maintenance guidance.'},
+      {title:'Caddy automatic HTTPS',url:'https://caddyserver.com/docs/automatic-https',note:'Certificate lifecycle for Caddy-managed sites.'},
+      {title:'Certbot Apache instructions',url:'https://certbot.eff.org/instructions?ws=apache&os=snap',note:'Current installation and renewal testing workflow.'},
+    ],
+}
+export const G05_PREVIOUS_BODY = "A service that works today is not automatically resilient.\n\nResilience begins when the project can lose a component and still recover the capability that component provided.\n\nThat requires a clearer vocabulary. A backup is a copy intended for recovery. An archive is material preserved for future access. A mirror reproduces public material somewhere else. A replica may keep a second live copy synchronized. A provider snapshot captures a machine or volume at a point in time. A migration moves a service or its content. One copy can sometimes serve more than one purpose, but those purposes are not interchangeable.\n\nA public mirror, for example, may preserve every article readers can see while losing unpublished drafts, accounts, database state, server configuration, and original media. A virtual-machine snapshot may restore a broken system quickly while still disappearing if the hosting account is terminated. A database dump can preserve posts and settings while omitting uploaded files. The recovery plan must match the thing you are trying to survive.\n\nA real recovery set includes every necessary component and exists on failure domains that do not all disappear together. For an application, that can mean database, user files, application/source, configuration, dependency versions, DNS information, documentation, and a protected route to required secrets. For a simple static site, it may be much smaller.\n\nDo not trust a backup because the backup job reported success. Restore it into a clean environment. Open the service. Inspect important data. Verify media. Check permissions and configuration. Record how long recovery took and every assumption that was missing from the instructions.\n\nThen remove the original disposable environment and rebuild it again. This tests something a simple restore does not: whether the project can recreate the surrounding system, not merely unpack a file.\n\nFinally, migrate it. Prepare another destination first, restore or deploy there, decide how to handle writes, change only the necessary DNS records, verify from outside the server, and keep a rollback path until the new system is proven.\n\nPortability is evidence. If you know how to leave, a provider is a dependency rather than a trap."
+export const G05_BODY = "A service that works today is not automatically resilient.\n\nResilience begins when the project can lose a component and still recover the capability that component provided within a useful amount of time and without silently losing unacceptable amounts of data.\n\nThat requires a clearer vocabulary. A backup is a copy intended for recovery. An archive preserves material for future access. A mirror reproduces public material somewhere else. A replica keeps another live or near-live copy synchronized. A provider snapshot captures a machine, volume, or service state at a point in time. A migration moves a service or its content. These can overlap, but they solve different failures.\n\nA replica is not automatically a backup because deletion, corruption, or malicious changes can be replicated too. A provider snapshot may restore a broken VM quickly while still disappearing with the provider account. A public mirror may preserve every article a reader can see while losing drafts, accounts, database state, server configuration, and unlinked originals. A database dump may preserve posts and settings while omitting uploaded files. The recovery method has to match the capability and failure you are trying to survive.\n\nA real recovery set contains every necessary component and exists across failure domains that do not all disappear together. For an application, that can mean an application-consistent database backup, user files, application/source, configuration, dependency versions, DNS information, documentation, and a protected route to required secrets. It also needs enough history to recover from a problem discovered late. A single “latest” backup can faithfully preserve yesterday's corruption.\n\nDo not trust a backup because the job reported success or because a checksum matches. Restore it into a clean environment. Open the service. Inspect important data. Verify media, permissions, configuration, and application behavior. Measure the actual recovery point and recovery time. Every missing assumption becomes work to fix.\n\nThen remove the original disposable environment and rebuild it again. This tests something a simple restore does not: whether the project can recreate the surrounding system, recover account and network configuration, handle new machine identity, and follow documentation without relying on the old server.\n\nFinally, migrate it. Prepare another destination first, decide how state and writes will move, test the destination before public cutover, change only the necessary DNS records, verify from outside the server, and keep a rollback path that accounts for any writes accepted during the transition. Changing DNS back is not enough if the new system has already collected state the old system does not have.\n\nRestore tests recovery. Rebuilds test reproducibility. Migrations test portability. Together they provide much stronger evidence than “the server is up.”\n\nPortability is evidence. If you know how to leave, a provider is a dependency rather than a trap."
+export const G05_PREVIOUS_LESSON_6 = {
+    objectives: [
+      'Distinguish backup, archive, snapshot, replica, and migration',
+      'Create an independent recovery set containing every necessary component',
+      'Protect sensitive backup material and verify its integrity',
+      'Restore into a clean environment and measure actual recovery',
+    ],
+    learn: `A backup is useful because it can be restored, not because a file with the word backup exists somewhere.
+
+Different copies solve different problems. A provider snapshot is convenient for rolling a VM back, but it can disappear with the provider account. A replica can improve availability, but corruption or deletion may replicate too. A public mirror preserves public material but normally lacks private data, configuration, database state, and credentials. An archive preserves material for long-term access. A migration copy is prepared to move a service. These can overlap, but none should be silently treated as equivalent.
+
+A recovery set must contain everything needed to reconstruct the capability you care about. For a typical application that can mean database dump, uploaded/user files, application or source code, configuration, dependency/version information, DNS records, documentation, and a secure route to required secrets. For WordPress specifically, the official documentation is explicit that a full backup normally requires both the database and files. The database contains content and settings; files contain themes, plugins, uploads, wp-config.php, and other filesystem material.
+
+Independence matters. A useful heuristic is to keep multiple copies on different failure domains, including at least one copy outside the live machine and provider. The familiar 3-2-1 rule is a planning heuristic, not a law: three copies, on two kinds or locations of storage, with one off-site/off-provider. Adapt it to the actual threat model. The important property is that one account closure, disk failure, theft, ransomware event, or administrator mistake does not destroy every copy at once.
+
+Backups may contain more sensitive information than the live public service because they aggregate databases, configuration, private files, and secrets. Encrypt sensitive backups at rest, restrict access, and make sure the decryption/recovery key itself has a survivable handoff. Checksums can help detect accidental corruption, but a matching checksum does not prove the application can be restored.
+
+RPO and RTO become concrete here. If a project can lose at most one day of changes, a weekly backup is inadequate. If recovery must happen in two hours, a process that takes two days to understand is inadequate. A timed restore test gives you evidence instead of assumptions.`,
+    do: `Define what this backup must recover and your rough RPO/RTO: maximum acceptable recent data loss and maximum acceptable recovery time.
+
+Inventory every component of the disposable service. Copy the data, configuration, application/source, version information, DNS information, and recovery documentation needed to rebuild it. Keep required secrets out of ordinary documentation and protect them appropriately.
+
+Store the recovery set outside the disposable machine and outside the same provider account. Keep another independent copy when the consequences justify it. If the backup contains private data or credentials, encrypt it and document how an authorized successor obtains the decryption material.
+
+Record a checksum for large or important backup artifacts if useful, then verify that the files can be read. This detects some storage corruption, but do not stop there.
+
+Create a clean disposable environment and restore from the independent copy, not from a snapshot still attached to the original machine. Time the recovery. Verify the actual service, a sample of important data, permissions, and configuration. Record every undocumented dependency that blocks the restore.
+
+Finally, compare a public mirror/export with the recovery set. List what the public copy would preserve if administrative access vanished and what it cannot preserve.`,
+    test: `Can you restore the service from a copy that survives loss of the original machine/provider, demonstrate that the important data is usable, and explain how the recovery time and recoverable point compare with the targets you wrote down?`,
+    teach: `Hand the recovery set and documentation to another authorized person in a clean environment. Do not coach them through hidden assumptions. Every question that requires undocumented knowledge becomes a concrete repair to the recovery procedure.`,
+    checks: [
+      'Recovery scope and acceptable data-loss/downtime targets recorded',
+      'Application/source, data, files, configuration, versions, DNS, and documentation covered as applicable',
+      'At least one independent off-machine/off-provider copy exists',
+      'Sensitive backup material and recovery keys are protected',
+      'Backup artifacts were checked for readability/integrity',
+      'Clean-environment restore completed and timed',
+      'Restored service and important data verified',
+      'Backup, archive, mirror, snapshot, and migration roles are not being confused',
+    ],
+    resources: [
+      {title:'WordPress backups',url:'https://developer.wordpress.org/advanced-administration/security/backup/',note:'Clear example of why application files and database must be treated as one recovery set.'},
+    ],
+}
+export const G05_PREVIOUS_LESSON_7 = {
+    objectives: [
+      'Prove the recovery procedure does not depend on the original machine',
+      'Expose undocumented credentials, versions, paths, and assumptions',
+      'Make a rebuild procedure usable by somebody other than its author',
+      'Separate a successful recovery test from an unsafe production experiment',
+    ],
+    learn: `A restore test proves that a copy can recover data. A destroy-and-rebuild exercise tests something broader: whether the service can be reproduced after the original environment is gone.
+
+Only do this to an environment whose loss is acceptable. Label the disposable system clearly before you begin. Confirm its hostname, provider/project, IP address, and any attached storage so that a destructive command cannot be confused with production. If the environment contains unique data, it is not disposable and this exercise stops until that is corrected.
+
+A reproducible rebuild has four parts: a known starting environment; an independent recovery set; instructions that do not rely on memory; and a verification procedure. The verification procedure matters because “the process exited without an error” does not prove that DNS, TLS, application behavior, media, permissions, or data are correct.
+
+Time is also useful evidence. If recovery requires finding an old laptop, waiting for one particular person, and rediscovering ten undocumented commands, the project has learned something important even if the server eventually comes back.`,
+    do: `Write a destruction scope statement before touching anything: the exact disposable machine, data you expect to lose, independent backup you will use, and how you will confirm production is not involved.
+
+Record the current test service's observable behavior: hostname, expected page or application response, relevant data sample, and any health checks. This becomes the acceptance test after the rebuild.
+
+Delete, reprovision, or otherwise recreate only the disposable environment. Do not reuse the original filesystem merely to make the exercise easier.
+
+Give the backup and written procedure to a second person if possible. Rebuild from the documented starting point. Record every missing package, version, path, permission, account, DNS step, secret location, or provider setting that the instructions failed to mention.
+
+Run the acceptance checks from another device or network. Update the documentation, then repeat enough of the procedure to show that the corrected instructions are actually sufficient. Record the elapsed recovery time and compare it with the recovery target from Lesson 6.`,
+    test: `Can another authorized person recreate the disposable service from the independent recovery set and documentation, pass the same external checks as the original, and do it without relying on the original administrator's memory?`,
+    teach: `The second operator is the test. Let them work from the procedure. If they cannot continue safely, repair the procedure instead of turning the exercise back into a demonstration by the original maintainer.`,
+    checks: [
+      'Disposable target was positively identified before destruction',
+      'Independent recovery copy existed before the test',
+      'Original environment was actually recreated rather than merely repaired',
+      'Missing assumptions were captured as documentation defects',
+      'External acceptance checks passed after rebuild',
+      'Second person can repeat the documented process',
+      'Measured recovery time was recorded',
+    ],
+    resources: [],
+}
+export const G05_PREVIOUS_LESSON_8 = {
+    objectives: [
+      'Prepare and verify a destination before a public cutover',
+      'Move state without silently losing writes',
+      'Change DNS while preserving unrelated services such as mail',
+      'Define verification and rollback criteria before the migration begins',
+    ],
+    learn: `Portability becomes real only when you have moved something. A provider-independent service is one whose data, configuration, names, and operational knowledge can be transferred without starting from zero.
+
+Separate migration into preparation, data synchronization, cutover, verification, and rollback. The destination should be ready before DNS changes. Restore or deploy there, verify the application locally or on a temporary hostname, and make sure TLS can be issued for the final hostname when the cutover occurs.
+
+Stateful services need a plan for writes. If users can keep posting to the old system while you copy its database, the two systems diverge. Options include a short maintenance/read-only window, a final synchronization step, database replication designed for the application, or an application-specific migration tool. The correct method depends on the system; pretending state does not exist is not a method.
+
+DNS changes do not need to disturb every service on the domain. Preserve the complete zone first. Web migrations usually change A, AAAA, or CNAME records for web hostnames. MX, mail-authentication TXT records, validation records, and unrelated hostnames should remain unless the migration intentionally includes them.
+
+Lowering TTL can reduce how long new answers remain cached during cutover, but lower it far enough in advance that caches holding the old, longer TTL have time to expire. Keep the old service available during the transition when possible because different resolvers can see old and new answers for a while.
+
+Rollback is a decision made before the change, not an improvised feeling afterward. Define what will cause rollback: failed HTTPS, missing data, application errors, broken authentication, unacceptable error rate, or mail impact. Keep the old environment and a way to restore the old DNS/application state until the destination has passed the agreed checks.`,
+    do: `Export or record the complete current DNS zone and identify exactly which records the web migration should change. Include A, AAAA, CNAME, MX, TXT, CAA, and any other records present.
+
+Record the current TTL values. If you plan to lower a TTL, do it before migration and wait at least the previous TTL before assuming the shorter value is active in caches.
+
+Build the destination and restore/deploy the service there before cutover. Verify data, media, authentication, application behavior, logs, and storage. Use a temporary hostname or controlled local name resolution if necessary rather than moving public DNS merely to test.
+
+Choose a state strategy: maintenance/read-only window, final sync, replication, or application-specific migration. Write the exact point at which writes stop on the old service and when they resume on the new one.
+
+Prepare the final hostname/TLS configuration. At cutover, change only the intended web records. Query the authoritative nameserver directly and also check one or more recursive resolvers. Then verify HTTPS and application behavior from a network that is not the server itself.
+
+Keep the old environment intact until the destination is proven. If a rollback condition occurs, restore the saved records and prior application state, account for writes made during the transition, and investigate before retrying.`,
+    test: `Can you move the disposable service to a different host, preserve its data and unrelated DNS services, verify it externally, and execute the written rollback path if a deliberate test failure is introduced?`,
+    teach: `Before cutover, have another administrator read the plan and narrate preparation, write freeze/synchronization, DNS change, verification, and rollback. If they cannot tell when rollback should happen, the plan is incomplete.`,
+    checks: [
+      'Complete DNS zone and existing TTL values preserved',
+      'Destination built and tested before public cutover',
+      'Stateful-write strategy documented',
+      'Only intended web DNS records changed',
+      'Authoritative and recursive DNS answers checked',
+      'HTTPS and application behavior verified externally',
+      'Rollback conditions and procedure were written in advance',
+      'Old environment retained until verification completed',
+    ],
+    resources: [
+      {title:'WordPress migration guidance',url:'https://developer.wordpress.org/advanced-administration/upgrade/migrating/',note:'A concrete example of preserving files/database and handling URL changes safely.'},
+    ],
+}
+
+export const G06_PREVIOUS_BODY = "Technical decentralization can conceal social centralization.\n\nA project can operate many servers and still depend completely on one person. That person may hold the registrar account, root keys, backup encryption key, billing account, deployment knowledge, or simply the undocumented memory of why the system was built the way it was.\n\nThe problem is not that people are unreliable. People have lives, changing capacities, conflicting responsibilities, and the right to leave. Infrastructure should be designed around that ordinary reality rather than requiring permanent availability from particular individuals.\n\nUse individual administrative identities where systems support them. Individual accounts make access review and offboarding possible. Use one SSH key per person rather than copying the same private key between machines. Use strong multi-factor authentication, but make sure account recovery does not quietly become dependent on one person's phone.\n\nDistribute access according to role. The person publishing articles may not need server-root access. The person maintaining the server may not need to control organizational billing. Least privilege reduces the impact of compromise and makes responsibilities legible.\n\nThen distribute knowledge. Two people with administrator accounts are not redundant if only one knows how restoration works. Documentation, pairing, teach-backs, and recovery exercises create overlapping understanding.\n\nA useful test is temporary disappearance. Choose one administrator and assume they are unreachable. Can the remaining authorized people renew the domain, reach DNS, access hosting, locate the repository, restore a backup, and understand the first response to an outage? Every point where the answer is no identifies a real dependency.\n\nThe objective is not to eliminate specialization. Specialized knowledge is useful. The objective is to keep specialization from becoming captivity for either the project or the specialist."
+export const G06_BODY = "Technical decentralization can conceal social centralization.\n\nA project can operate many servers and still depend completely on one person. That person may hold the registrar account, the only organization-owner role, root access, backup decryption material, billing control, deployment knowledge, or simply the undocumented memory of why the system was built the way it was. Ten machines do not create resilience if one human disappearance removes the ability to operate all ten.\n\nThe problem is not that people are unreliable. People have lives, changing capacities, conflicting responsibilities, illnesses, burned-out phones, lost devices, vacations, conflicts, and the right to leave. Infrastructure should be designed around that ordinary reality rather than requiring permanent availability from particular individuals.\n\nUse individual administrative identities wherever systems support them. Individual identities make access review, attribution, selective revocation, and offboarding possible. For SSH, each administrator should use their own key rather than copying one private key between people. For hosting, repositories, DNS, and other control panels, prefer separate accounts and role assignments over one shared owner login.\n\nAuthentication redundancy is not the same thing as sharing authenticators. Strong multi-factor authentication or passkeys protect individual accounts, but an organization should not become dependent on one person's phone, security key, email address, or personal recovery codes. Each administrator should have a survivable recovery method for their own identity. Organizational continuity should come primarily from multiple authorized identities and documented transfer/recovery procedures, not from everyone possessing the recovery secrets for somebody else's personal account.\n\nDistribute access according to role. The person publishing articles may not need server-root access. The person maintaining the web server may not need billing ownership. The person paying an invoice may not need the ability to change DNS. Least privilege reduces the impact of compromise and makes responsibilities legible. Redundancy does not require giving everybody maximum privilege; it requires making sure every critical capability has an intentional successor or alternate path.\n\nSome systems still force awkward concentration: one registrant contact, one billing owner, one primary account, or one recovery address. Treat those constraints as named dependencies. Use organizational rather than disposable personal contact points where appropriate, document how control is transferred, and make sure another authorized person knows the procedure before an emergency.\n\nThen distribute knowledge. Two people with administrator accounts are not redundant if only one knows how restoration works. Documentation, pairing, teach-backs, recovery drills, and periodic role rotation create overlapping understanding without pretending everybody must become equally expert at everything.\n\nService accounts, bots, deploy keys, and API tokens need ownership too. They should not become immortal credentials nobody remembers creating. Record what uses them, what privilege they have, who is responsible for them, where their secrets are stored, and what happens when the human maintainer leaves.\n\nA useful test is temporary disappearance. Choose one administrator and assume they are unreachable. Can the remaining authorized people renew or transfer the domain, reach DNS, access hosting, locate the repository, restore a backup, recover required secrets through the authorized process, and understand the first response to an outage? Every point where the answer is no identifies a real dependency.\n\nThe objective is not to eliminate specialization. Specialized knowledge is useful. The objective is to keep specialization from becoming captivity for either the project or the specialist."
+export const G06_PREVIOUS_LESSON_9 = {
+    objectives: [
+      'Use individual administrator identities instead of shared credentials',
+      'Distribute access, recovery capability, and operational knowledge',
+      'Apply least privilege without making emergency recovery impossible',
+      'Create an offboarding and periodic access-review process',
+    ],
+    learn: `Technical redundancy does not help much if every path still ends at one person's account.
+
+Separate identities create accountability and make revocation possible. Where a provider supports multiple administrators, give each maintainer their own account. For SSH, give each person their own key. For repositories, DNS, and hosting, prefer role-based access over one shared owner password. Shared emergency credentials may sometimes be unavoidable, but they should be the exception, protected appropriately, and auditable through a documented process.
+
+Use the least privilege necessary for routine work. Someone who only publishes content does not automatically need DNS or server-root access. Someone who maintains the server may not need billing ownership. Reducing unnecessary privilege limits the impact of account compromise and makes responsibilities clearer.
+
+Multi-factor authentication strengthens provider accounts, but it can also create a new single point of failure if the only second factor lives on one person's phone. Store recovery codes or emergency access material so that an authorized successor can use them without making them casually available to everyone.
+
+Succession is part of access design. Projects need to know how to add a maintainer, remove one, rotate credentials or keys when necessary, transfer billing/ownership, and preserve documentation. An access roster should be reviewed periodically because abandoned accounts quietly accumulate privilege.
+
+Knowledge needs the same redundancy as credentials. Two people having root access is not useful if only one understands the backup system. Pair access distribution with teach-back and recovery drills.`,
+    do: `List every administrative surface from Lesson 1: registrar, DNS, hosting, server, repository, backup storage, identity provider, payment/billing, and any monitoring or deployment service. Record who currently has access and at what privilege level.
+
+Replace shared routine accounts with individual accounts where the service supports them. Replace shared SSH private keys with one key per administrator. Enable strong multi-factor authentication or passkeys where supported and record the authorized recovery process without placing secrets in ordinary documentation.
+
+Review privileges. Remove permissions people do not need for their role while preserving at least two viable recovery paths for critical infrastructure.
+
+Create an offboarding checklist: revoke provider sessions/tokens, remove SSH keys, remove repository/DNS/hosting roles, transfer ownership or billing where necessary, rotate genuinely shared recovery material, and preserve non-secret institutional documentation.
+
+Run a disappearance drill. Pick one current administrator and assume they are unreachable. Without using their devices or accounts, prove that another authorized person can reach the critical controls, locate the latest recoverable backup, and explain the first recovery actions.`,
+    test: `Can the project lose any one administrator without losing control of the domain, DNS, hosting, repository, backup recovery, or the knowledge required to use them?`,
+    teach: `Run the access and recovery drill with the person who has the least infrastructure experience among the authorized maintainers. Their difficulty finding a control or understanding a recovery step is useful evidence about where access or documentation is still centralized.`,
+    checks: [
+      'Critical administrative surfaces and current access roster recorded',
+      'Individual identities and SSH keys used where supported',
+      'Strong authentication has a survivable recovery path',
+      'Routine privileges reviewed for least privilege',
+      'At least two authorized people can reach critical recovery controls',
+      'Offboarding and credential/key revocation procedure documented',
+      'Administrator-disappearance drill completed',
+    ],
+    resources: [],
+}
+export const G07_PREVIOUS_BODY = "Publication systems are temporary. Published work should be designed to outlive them.\n\nA website is a delivery system, not automatically an archive. A social-media account is a distribution channel, not an archive. A CMS database is useful operational state, but it is not sufficient preservation by itself.\n\nPreservation starts with the source. Keep writing, original images, audio masters, video source files, transcripts, captions, artwork, authorship, dates, metadata, and feed information somewhere that does not depend entirely on the production publishing system. Preserve enough context that another person can identify and republish the material later.\n\nFor public material, static mirrors add another kind of survivability. If a production site disappears, a static copy can preserve readable pages and files without reproducing the original CMS. If administrative access is lost while the public site remains reachable, a mirror can sometimes preserve what is still public before it disappears.\n\nBut a mirror has strict limits. It normally cannot recover private drafts, account data, server configuration, database-only relationships, unlinked originals, or interactive server-side behavior. JavaScript-heavy applications may expose only a fraction of their content to a conventional crawler. Externally hosted assets may remain external unless they are explicitly captured.\n\nThat is why the course separates backup from preservation. A backup is meant to recover a working system or its data. A mirror is meant to preserve a useful public representation. A source archive preserves material independently of the current presentation. Strong publication practice can use all three.\n\nVerification matters here too. Disconnect the mirror from the live service and browse it locally. Search for URLs that still point to the production host. Open PDFs. Play audio. Check images and styles. Record what no longer functions.\n\nThen try to reconstruct one published piece using only the preservation bundle. If you cannot identify its title, date, author, media, and text without opening the production CMS, the preservation set is incomplete."
+export const G07_BODY = "Publication systems are temporary. Published work should be designed to outlive them.\n\nA website is a delivery system, not automatically an archive. A social-media account is a distribution channel, not an archive. A CMS database is operational state, not sufficient preservation by itself. A static mirror is useful, but it is still only one representation of what happened to be publicly reachable.\n\nPreservation starts with the source. Keep writing, original images, audio masters, video source files, transcripts, captions, artwork, authorship, publication dates, identifiers, licenses where relevant, descriptive metadata, and feed information somewhere that does not depend entirely on the production publishing system. Preserve enough context that another person can identify, understand, and republish the material later.\n\nThe preservation bundle should also explain itself. A future maintainer should not have to infer which file is the audio master, which image belongs to which article, or whether a timestamp is an upload date or publication date. A small manifest or structured metadata file can record titles, canonical URLs, authorship, dates, relationships, filenames, formats, and checksums for important artifacts.\n\nFor public material, static mirrors add another kind of survivability. If a production site disappears, a static copy can preserve readable pages and public files without reproducing the original CMS. If administrative access is lost while the public site remains reachable, a mirror can sometimes preserve what is still exposed before it disappears.\n\nBut a mirror has strict limits. It normally cannot recover private drafts, accounts, server configuration, database-only relationships, unlinked originals, private media, or interactive server-side behavior. JavaScript-heavy applications may expose only a fraction of their meaningful state to a conventional crawler. Search, comments, forms, authentication, APIs, pagination, generated feeds, and streaming behavior may need separate preservation. Third-party assets may remain on third-party systems unless they are deliberately and lawfully captured.\n\nThat is why the course separates backup from preservation. A recovery backup is meant to restore a working system or its data. A source archive preserves original material and context independently of a presentation system. A static mirror preserves a useful public representation. A web-archive format such as WARC can preserve HTTP retrieval records and responses for archival tooling. None is automatically a substitute for the others.\n\nVerification matters here too. A successful crawler exit code is not enough. Make the live origin unavailable to your test environment and browse the copy locally. Open PDFs. Play audio. Check images and styles. Follow internal links. Search the downloaded material for references to the production hostname and external domains. Record what no longer functions and what still depends on something outside the preservation set.\n\nThen try to reconstruct one published piece using only the preservation bundle. If you cannot identify its title, date, author, text, media, captions or transcript where applicable, and the relationship between those files without opening the production CMS, the preservation set is incomplete.\n\nPublishing for disappearance means preserving meaning, material, and enough structure to make the work useful after the current interface is gone."
+export const G07_PREVIOUS_LESSON_10 = {
+    objectives: [
+      'Distinguish a public mirror from a real recovery backup',
+      'Preserve source material and metadata independently of the production CMS',
+      'Create and verify a static copy of an authorized public site',
+      'Document the dynamic or external capabilities a static mirror cannot preserve',
+      'Reconstruct published material without relying on the production system',
+    ],
+    learn: `Publication and preservation are different jobs. A production CMS is optimized for editing and serving current material. An archive or mirror is optimized for surviving changes to that production system.
+
+Preserve the source material separately from the presentation layer. For text, keep editable source where possible, exported/public output, media, and enough metadata to reconstruct titles, authors, dates, links, and relationships. For audio, keep masters, distribution copies, artwork, metadata, transcripts, and feed information. For video, keep high-quality source, captions, metadata, and distribution copies. A public page without its media or attribution can be a poor archive even when the HTML survives.
+
+If administrative access is gone but the public site is still reachable, a crawler such as Wget can sometimes preserve the public surface. That is not equivalent to a backup. It normally cannot recover private drafts, database-only state, server configuration, user accounts, original files that are not publicly linked, or interactive server-side behavior.
+
+GNU Wget's \`--mirror\` enables recursive mirroring and timestamping. \`--convert-links\` rewrites links for local viewing, \`--adjust-extension\` can give HTML responses useful local extensions, and \`--page-requisites\` retrieves assets needed to display HTML pages. Recursive retrieval can consume substantial bandwidth and storage, and it can load the target server. Use it only on public material you control or have permission to preserve, keep the scope narrow, and add a delay such as \`--wait=1\` when that is appropriate for the target.
+
+JavaScript-heavy applications, APIs, search, comments, forms, authentication, streaming systems, and third-party assets can remain incomplete in a static crawl. Verification therefore has to happen offline. If a mirror still reaches back to the live site for crucial assets, it is not yet independent for those assets.`,
+    do: `Choose one published piece and gather its editable source where available, original media, author/date/title metadata, captions or transcript, and any feed information needed to publish it elsewhere. Store an independent copy outside the production CMS.
+
+Use a harmless public site you control or are authorized to preserve. From a disposable working directory, a starting command for a conventional public site is \`wget --mirror --convert-links --adjust-extension --page-requisites --no-parent --wait=1 https://example.org/\`. Substitute the authorized target and narrow the starting path when you do not need the entire site. Read the Wget output for errors and stop if the retrieval causes load or rate-limit problems.
+
+After the crawl, disconnect from the network or otherwise block access to the live hostname. Open the mirrored pages locally and follow representative internal links. Check images, stylesheets, PDFs, audio, and other important assets. Search the downloaded files for the live hostname to find dependencies that still point outward.
+
+Write a limitations list: forms that no longer submit, search that no longer works, API-driven content that is absent, comments or pagination that were missed, external media that remains external, or JavaScript content that did not render into static files.
+
+Using only the independent source/preservation bundle, reconstruct the chosen published piece in another disposable publishing environment. Compare that exercise with restoring the recovery backup from Lesson 6 and document what each method can recover that the other cannot.`,
+    test: `Can you browse the important mirrored material with the live site unavailable, identify what the mirror did not preserve, and reconstruct a representative published item from independent source and media?`,
+    teach: `Give another person the mirror plus the source/preservation bundle. Ask them to identify which parts are merely static copies, which are original source, and which capabilities would require a database or running application to restore.`,
+    checks: [
+      'Editable source and important media preserved independently',
+      'Metadata, transcripts/captions, and feed information preserved where applicable',
+      'Mirror created only from an authorized public target',
+      'Recursive retrieval scoped and paced to avoid unnecessary load',
+      'Mirror tested with the live site unavailable',
+      'External/dynamic dependencies and missing capabilities documented',
+      'Mirror explicitly distinguished from a recovery backup',
+      'Representative content reconstructed from independent preservation material',
+    ],
+    resources: [
+      {title:'GNU Wget manual',url:'https://www.gnu.org/software/wget/manual/wget.html',note:'Official documentation for recursive retrieval, mirroring, requisites, link conversion, and request pacing.'},
+    ],
+}
+
+export const G08_PREVIOUS_BODY = "The public internet is one network architecture, not the only possible relationship between computers.\n\nMost people encounter networking through a familiar stack: an application uses a hostname, DNS resolves it, IP routes packets to an address, and a client connects to a service listening on a known port. That model is important and this course teaches it first because it underlies most infrastructure people currently depend on.\n\nLocal networks make the model easier to see. A machine has one or more interface addresses. A route determines where packets go. A default gateway carries traffic toward networks that are not directly connected. Firewalls permit or reject traffic. DNS gives names to destinations but is not required for two local machines to communicate by address.\n\nIPv4 and IPv6 also behave differently enough that both need attention. A home IPv4 network often hides several private addresses behind network address translation. IPv6 can give devices globally routable addresses without the same NAT arrangement. A service that seems “local” because of its IPv4 setup can still be reachable over IPv6 if routing and firewall rules permit it.\n\nOnce you understand that conventional stack, alternative systems become easier to evaluate without mystifying them. Reticulum, for example, describes application endpoints as cryptographically derived destinations and can use different underlying transports. It can operate across ordinary IP links, local network interfaces, and other carriers, but it presents a different application-facing model from “hostname plus IP address plus TCP port.”\n\nAlternative networking does not eliminate operational security, endpoint security, transport metadata, physical-layer constraints, or the need for testing. No protocol name is a substitute for a threat model.\n\nThe practical purpose of this section is to make networking less rigid in your head. First run and troubleshoot something on a LAN. Then study a different network abstraction. Compare what changes and what remains: physical connectivity, interface configuration, local firewalls, identity, routing, application behavior, and the people who have to understand it.\n\nA network becomes useful to a community when more than one person can operate and explain it. That brings the technical exercise back to the course's central theme: capability has to move between people."
+export const G08_BODY = "The public internet is the dominant network people use every day, but it is not the only possible relationship between computers.\n\nMost people encounter networking through a familiar stack: an application uses a name, DNS may translate that name into addresses, IP routing chooses a path toward an address, a transport protocol carries traffic, and an application listens or sends on top of that transport. This course teaches that model first because it underlies most of the infrastructure people currently depend on.\n\nA local network makes those layers easier to see. A device has interfaces. Interfaces can have several addresses and address scopes. Routes determine which destinations are directly reachable and which require a router. A default route is the fallback used when no more specific route matches. DNS supplies names, but two machines do not need DNS in order to communicate by address.\n\nIPv4 and IPv6 need to be examined separately. Common home IPv4 networks use private RFC 1918 addresses and often use NAT when reaching the public internet. IPv6 does not imply one universal kind of address: an interface may have link-local addresses, Unique Local Addresses intended for limited networks, globally routed addresses, or several of these at the same time. A globally scoped IPv6 address also does not mean an inbound service is necessarily reachable; routing and firewall policy still decide that. NAT and firewalling are different mechanisms.\n\n“On the same Wi-Fi” does not always mean “able to talk directly.” Guest networks, VLANs, wireless client isolation, host firewalls, and routing policy can separate devices that appear physically close. The network you actually have matters more than the label on the access point.\n\nOnce you understand the conventional stack, alternative network systems become easier to evaluate without mystifying them. Reticulum, for example, exposes application endpoints as destinations represented by 128-bit hashes derived from destination identifying information. It can use many different underlying interface types. Its AutoInterface can discover nearby peers over Ethernet or Wi-Fi using IPv6 link-local functionality and UDP transport without requiring ordinary router or DHCP infrastructure.\n\nThat different abstraction does not abolish the underlying world. Reticulum still runs over physical or virtual interfaces with finite bandwidth, firewall behavior, link conditions, software, endpoints, and operators. Other Reticulum interfaces can themselves run over conventional IP networks. An alternative addressing or routing model does not automatically provide anonymity, endpoint security, safe applications, or protection from transport metadata.\n\nThe practical purpose of this section is to make networking less rigid in your head. First run and troubleshoot something on a LAN while observing address scope, routes, listeners, and firewalls. Then inspect a different network abstraction and ask what it changes, what it hides, and what still exists underneath.\n\nA network becomes useful to a community when more than one person can operate and explain it. That returns the technical exercise to the course's central theme: capability has to move between people."
+export const G08_PREVIOUS_LESSON_11 = {
+    objectives: [
+      'Identify local interface addresses, subnet, route, and default gateway',
+      'Distinguish local reachability from internet reachability',
+      'Understand the roles of routing, NAT, firewalls, DNS, IPv4, and IPv6',
+      'Troubleshoot a network path from the nearest layer outward',
+    ],
+    learn: `A local network is a good place to learn because you can see each boundary without immediately exposing a service to the public internet.
+
+An interface can have several addresses. In common IPv4 home networks, private address ranges such as 10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16 are not routed across the public internet. A router often performs network address translation (NAT) for outgoing IPv4 traffic. NAT is not a substitute for understanding firewall state. IPv6 commonly gives interfaces globally routable addresses without the same IPv4 NAT pattern, so never infer “not public” from an IPv4 address alone.
+
+The default gateway is the router a device uses when a destination is outside the directly connected local network. DNS translates names, but a broken DNS lookup does not mean the underlying IP path is broken. Test the network path and name resolution as separate layers.
+
+On Linux, \`ip addr\` shows interface addresses and \`ip route\` shows routes including the default gateway. \`ss -tulpn\` shows listening services. Other operating systems have equivalent tools. The point is to answer concrete questions: what address does this device have, what network is it on, where does it send non-local traffic, what process is listening, and what firewall rules affect that path?
+
+A useful troubleshooting order is: device/service process → local interface/link → local IP/subnet → local firewall → same-LAN reachability → gateway/routing → upstream internet path → DNS → remote application. The exact order can change with the symptom, but beginning close to the failing component avoids changing distant systems that were never broken.`,
+    do: `Run a simple service on a local-only disposable machine or VM. Bind it deliberately to the address/interface you intend. Record the listening address and port with the operating system's socket-inspection tool.
+
+On the server, identify its local IPv4 and IPv6 addresses with \`ip addr\` or the platform equivalent. Identify the default gateway and local routes with \`ip route\`. Note which address another device on the LAN should use.
+
+From a second device on the same LAN, connect to the local service by address. If it fails, inspect the listener, subnet, client isolation, and host firewall before changing the router or DNS.
+
+Determine whether the service is publicly reachable. Check router port-forwarding, provider/router firewall rules, host firewall rules, and IPv6 exposure separately. Do not intentionally publish the service for this lesson unless you understand and need that exposure.
+
+Create controlled failures one at a time: stop the service, block its port locally, or use an incorrect name. For each failure, work from the closest relevant layer outward and record the symptom that distinguished it from the other failures.`,
+    test: `Can you explain the server's local addresses, subnet, default gateway, public-facing address situation, and DNS role, and can you locate a deliberately introduced fault without randomly changing multiple layers?`,
+    teach: `Give another learner a deliberately broken local service and a blank troubleshooting sheet. Ask them to record what they tested at each layer and why before they make any change.`,
+    checks: [
+      'Local service and listening address/port identified',
+      'IPv4 and IPv6 interface addresses inspected',
+      'Default gateway and routes identified',
+      'Second LAN device can reach the intended local service',
+      'Public exposure checked separately for IPv4 and IPv6',
+      'At least two controlled failure modes diagnosed systematically',
+    ],
+    resources: [],
+}
+export const G08_PREVIOUS_LESSON_12 = {
+    objectives: [
+      'Recognize that IP/DNS/client-server assumptions are not the only networking model',
+      'Describe verified Reticulum concepts without treating them as security guarantees',
+      'Inspect a disposable Reticulum installation using current project tools',
+      'Compare an alternative network model with the conventional IP model used earlier',
+      'Teach one complete infrastructure skill to another person',
+    ],
+    learn: `Alternative networking is useful here because it forces you to separate concepts that ordinary internet use often bundles together. A network does not have to begin with global DNS names, centrally allocated IP addresses, and a conventional client contacting a server on a known port.
+
+Reticulum is one concrete system to study. Its current documentation describes a network stack that can operate over several underlying transports and identifies application endpoints as destinations. Destinations are derived from cryptographic identity information rather than allocated from a central address space. The project can use ordinary IP links as transports, but Reticulum's application-facing model is not “connect to this host's IP address and TCP port.”
+
+That distinction does not make every deployment anonymous, untraceable, or safe against every adversary. Transport metadata, endpoint compromise, application behavior, radio characteristics, bridge configuration, and operational mistakes still matter. Treat project security properties as part of a threat model, not as a slogan.
+
+On recent Debian and Ubuntu systems, the Reticulum documentation recommends pipx for installing its command-line programs in an isolated Python environment because the system Python is externally managed. A documented path is \`sudo apt install pipx\`, then \`pipx ensurepath\`, then \`pipx install rns\`. Other operating systems have different documented installation methods. The installation provides tools including rnstatus and rnsd.
+
+Reticulum's AutoInterface can discover peers on a compatible local Ethernet or Wi-Fi segment using link-local mechanisms. Its documentation notes that local firewall or access-point client-isolation settings can prevent peer discovery. That makes it a useful lab for seeing how an alternative network model still depends on physical/link-layer reality.
+
+This course still does not publish unverified BASH-specific procedures. A project-specific worked example should be added only after its exact configuration, hardware assumptions, and failure modes have been tested. The verified exercise here is deliberately smaller: install Reticulum in a disposable environment, inspect what it creates, read the official model, and compare it with the IP/DNS model you already learned.`,
+    do: `Read the Reticulum getting-started and “Building Networks” documentation before installing anything. Write down three differences between its destination model and the IP/DNS model from earlier lessons.
+
+On a disposable Debian/Ubuntu user environment, follow the current documented pipx route: install pipx through the operating system package manager, run \`pipx ensurepath\`, start a new shell if needed, and install Reticulum with \`pipx install rns\`. On another operating system, use the project's documented method for that platform instead of copying Debian-specific commands.
+
+Run \`rnstatus\` and inspect the interfaces Reticulum reports. Locate the user configuration directory described by the project documentation and read the configuration before changing it. Do not expose or bridge an interface to a public network merely to complete the exercise.
+
+If you have two disposable devices on the same LAN and the local network allows peer-to-peer traffic, follow the current Reticulum documentation to observe local discovery. If discovery fails, check the documented AutoInterface prerequisites, including local IPv6 support, host firewall rules, and Wi-Fi client isolation. Do not disable broad firewall protections permanently just to make the lab pass.
+
+Compare the exercise with Lessons 2 and 11. Write down what still depends on the underlying link or IP transport, what Reticulum abstracts away, how a destination differs from a DNS name plus IP address, and which security questions remain outside the network stack.
+
+Finally, choose one skill from anywhere in the course that you can now perform reliably. Prepare a compact teaching procedure containing purpose, prerequisites, steps, verification, common failure modes, and recovery. Have another person perform it without you touching the keyboard.`,
+    test: `Can you explain, in your own words, how a Reticulum destination differs from the hostname/IP/port model, show the interfaces reported by a disposable installation, identify the local-network conditions required for the exercise you attempted, and teach another person one complete infrastructure task without taking over?`,
+    teach: `The teach-back is the final practical. The learner should operate the system, explain how they know the task succeeded, and recover from at least one safe failure. Revise the written procedure wherever they depended on information that existed only in your head.`,
+    checks: [
+      'Current Reticulum documentation read before installation',
+      'Destination model compared with IP/DNS addressing',
+      'Reticulum installed only in a disposable/user environment using a documented platform method',
+      'rnstatus output and configured interfaces inspected',
+      'Local discovery prerequisites or limitations documented if tested',
+      'No anonymity or security guarantee inferred merely from using an alternative network',
+      'BASH-specific procedures remain unpublished until independently verified',
+      'Another person successfully completed one taught infrastructure skill',
+    ],
+    resources: [
+      {title:'Reticulum Network Stack manual',url:'https://reticulum.network/manual/',note:'Official project documentation.'},
+      {title:'Reticulum getting started',url:'https://reticulum.network/manual/gettingstartedfast.html',note:'Current platform-specific installation guidance.'},
+      {title:'Reticulum: Building Networks',url:'https://reticulum.network/manual/networks.html',note:'Destinations, routing concepts, and network construction.'},
+      {title:'Reticulum interfaces',url:'https://reticulum.network/manual/interfaces.html',note:'Interface and AutoInterface behavior and prerequisites.'},
+    ],
+}
+export const G09_PREVIOUS_BODY = "This is not a server guide in the sense that its conclusion is “host everything yourself.”\n\nThat would replace one kind of dependence with another and, in many cases, increase risk.\n\nSome services have maintenance burdens that are easy to underestimate. Email is a strong example. Running a mail system is not only installing SMTP software. Reliable operation can involve sender reputation, spam and abuse handling, SPF, DKIM, DMARC, TLS, queues, storage, account security, patching, monitoring, backups, restore testing, and the risk that an error affects private communications. A successful installation does not establish that a small organization should depend on that installation.\n\nDatabases, identity systems, encrypted collaboration platforms, and services containing sensitive personal information can raise similar questions. The cost of a mistake is not measured only in downtime.\n\nAutonomy therefore includes the ability to decide not to self-host a component. A competent provider can be a deliberate dependency when the project keeps portable data, understands account recovery, maintains independent backups, and has a tested exit.\n\nIt also includes reducing the amount of infrastructure you need. Do not collect information merely because software makes collection easy. Do not add an application when static files solve the problem. Do not add administrator accounts people do not need. Every unnecessary dataset, service, plugin, and credential is another thing to secure, update, back up, and eventually migrate.\n\nThe useful question is not “Can we run this ourselves?” It is “What arrangement gives us enough control, safety, maintainability, and ability to leave for the actual stakes of this service?”\n\nSometimes the answer is self-hosting. Sometimes it is shared cooperative infrastructure. Sometimes it is a commercial managed service with strong export and recovery. Sometimes the correct answer is to stop running the service at all.\n\nThe course is teaching judgment as much as command-line skill."
+export const G09_BODY = "This is not a server guide in the sense that its conclusion is “host everything yourself.”\n\nSelf-hosting moves responsibility. It does not eliminate dependency, and it does not automatically increase safety, autonomy, or resilience. A project that replaces a competent managed service with a machine nobody has time to patch has not escaped dependence. It has changed which failures it owns.\n\nSome services carry operational burdens that are easy to underestimate. Email is a strong example. Running a mail system is not merely installing SMTP and creating accounts. Reliable operation can involve DNS authentication such as SPF, DKIM, and DMARC; TLS; queues; storage; spam and abuse handling; sender reputation and deliverability; account recovery; patching; monitoring; backups; restore testing; and incident response. A server successfully sending one test message does not establish that an organization should depend on it for private communications.\n\nIdentity systems, databases containing sensitive records, collaborative platforms, payment systems, and services holding legal or personal information raise similar questions. The cost of a failure may include disclosure, irreversible data loss, account takeover, missed communications, or harm to people, not merely an unavailable page.\n\nAutonomy therefore includes the ability to choose a provider deliberately. A managed or shared service can be a reasonable dependency when the project understands who controls the account, can recover access without one irreplaceable person, keeps appropriate independent copies, knows what can be exported and in what format, documents the configuration that matters, and has a believable exit path.\n\nThe same standard applies to self-hosting. Ask what happens when the administrator leaves, the machine fails, the hosting account closes, the software needs an urgent security update, the backup does not restore, or the service grows beyond the available time and skill. Running the machine yourself does not make those questions disappear.\n\nReduce the problem before deciding where to host it. Do not collect information merely because software makes collection easy. Do not retain information longer than the project needs it. Do not add an application when durable static files solve the problem. Do not create administrator accounts, plugins, integrations, analytics, databases, or secrets that provide no necessary capability. Data you never collect cannot later be leaked from your server, trapped in a provider export, or forgotten in an old backup.\n\nThen evaluate the arrangement against the real stakes. How damaging is downtime? How damaging is disclosure? How much recent data can be lost? Who can maintain the system when the primary operator is unavailable? Can the organization export its data in usable forms? Are backups independent and tested? Can the service be rebuilt or migrated? Is the operational labor sustainable? Does the provider or self-hosted design introduce a failure domain the project has accepted consciously?\n\nSometimes the resulting answer is self-hosting. Sometimes it is infrastructure shared among several organizations. Sometimes it is a cooperative or nonprofit provider. Sometimes it is a commercial managed service with strong recovery and export. Sometimes a hybrid arrangement makes sense: control the domain and source archive, keep independent backups, but pay somebody else to operate the mail system or database. Sometimes the correct answer is to stop running a service whose benefit no longer justifies the data, labor, or risk.\n\nThe useful question is not “Can we run this ourselves?” It is “Which arrangement gives this project enough control, safety, recoverability, maintainability, and ability to leave for the consequences that actually matter?”\n\nThe command line is the easy part to demonstrate. The harder skill is judgment."
+
+export const G10_PREVIOUS_BODY = "Servers do not maintain themselves.\n\nSomeone applies updates. Someone reads an alert. Someone notices a disk filling. Someone tests the backup. Someone renews the domain. Someone reviews access. Someone migrates an old application. Someone answers a user who cannot log in. Someone documents what changed.\n\nInfrastructure therefore has a labor model whether the project acknowledges it or not.\n\nWhen maintenance is informal, the work tends to accumulate around whoever notices failures first or has the most technical confidence. Over time that person can become both indispensable and exhausted. The project then has two coupled risks: the technical service and the sustainability of the person maintaining it.\n\nTreat maintenance as collective operational work. For every production service, write down routine responsibilities and their cadence: operating-system and application updates, security advisories, storage checks, backup jobs, restore tests, TLS certificates, domain renewal, billing, account review, dependency upgrades, log/monitoring review, and documentation changes.\n\nNot every task needs a rigid schedule. Some systems automate certificate renewal or security updates. Automation changes the job from “perform this manually” to “verify that the automation still works and that somebody notices when it does not.” An automatic backup that has silently failed for six months is not reduced labor; it is hidden failure.\n\nMake ownership visible without making it singular. A task can have a primary maintainer and a second person who knows how to perform or verify it. Rotate work when appropriate. Pair newer maintainers with experienced ones. Include infrastructure labor in planning instead of treating it as free background capacity.\n\nDocument exceptional knowledge: why a strange configuration exists, what cannot be upgraded casually, which provider limitation shaped a decision, and what rollback procedure was tested. This context prevents future maintainers from having to reverse-engineer every historical choice.\n\nResilient infrastructure is not only infrastructure that can survive hardware failure. It is infrastructure whose care can be sustained, transferred, and shared."
+export const G10_BODY = "Servers do not maintain themselves.\n\nSomeone applies updates. Someone reads an alert. Someone notices a disk filling. Someone tests the backup. Someone renews the domain. Someone reviews access. Someone migrates an old application. Someone answers the person who cannot log in. Someone documents what changed. Someone eventually decides that a service should be retired.\n\nInfrastructure therefore has a labor model whether the project acknowledges it or not.\n\nWhen maintenance is informal, work tends to accumulate around whoever notices failures first, has the most technical confidence, or has historically rescued the system. That person can become both indispensable and exhausted. The project then has two coupled single points of failure: the technical service and the sustainability of the person maintaining it.\n\nMake the labor visible. For every production service, record the recurring work required to keep it trustworthy: operating-system and application updates, security advisories, storage and inode checks, backup jobs, restore tests, certificate renewal, domain renewal, billing, account review, dependency upgrades, log and monitoring review, incident follow-up, documentation changes, and periodic decisions about whether the service should continue to exist at all.\n\nNot every responsibility belongs on a rigid calendar. Separate scheduled work from event-driven work. Domain renewal may have a known date. Access review may happen quarterly and whenever somebody joins, leaves, loses a device, or changes role. Security updates happen when updates are released. Incident review happens after an incident. The maintenance plan should make both kinds of work visible.\n\nAutomation changes the labor; it does not erase it. An automated certificate renewal still needs somebody to notice when it fails. An automated backup still needs restore tests. An unattended-upgrade process still needs somebody to understand when a reboot or service restart is required. A monitoring system whose alerts go to an abandoned inbox is not monitoring. Every automation needs an owner, an observable success or failure signal, and a recovery procedure.\n\nAvoid turning monitoring into permanent alarm. An alert should correspond to something a person can meaningfully investigate or act on. If a system emits so many unactionable warnings that maintainers routinely ignore it, the alerting system has created noise rather than resilience.\n\nMake ownership visible without making it singular. A task can have a primary maintainer and at least one second person who can perform it, verify it, or take over. The second person does not need identical expertise, but they need enough access, documentation, and practice that “backup maintainer” means more than a name in a spreadsheet.\n\nTrack maintenance debt explicitly. Deferred upgrades, unsupported software, undocumented workarounds, expiring hardware, untested restore paths, and one-person procedures are liabilities even while the service appears healthy. Naming them makes it possible to decide whether to repair, replace, simplify, or retire the system before an emergency makes the decision for you.\n\nDocument exceptional knowledge: why a strange configuration exists, what cannot be upgraded casually, which provider limitation shaped a decision, what dependencies must move together, and what rollback procedure was actually tested. Record decisions as well as commands. Future maintainers need to know not only what the system looks like but why it looks that way.\n\nAfter an outage or near miss, update the operating model. If the incident exposed a missing alert, undocumented credential, impossible recovery target, or task only one person knew how to perform, the corrective action is not complete until the responsibility, documentation, and recovery procedure have changed.\n\nInfrastructure labor belongs in project planning. If nobody has time to maintain a service, that is a design constraint, not a moral failure. The honest options are to simplify it, pay or collaborate for competent maintenance, reduce its scope, or retire it.\n\nResilient infrastructure is not only infrastructure that survives hardware failure. It is infrastructure whose care can be sustained, observed, transferred, and shared without quietly consuming the person who understands it best."
+export const G11_PREVIOUS_BODY = "The objective is not to turn every participant into a full system administrator.\n\nThe objective is a web of partial, overlapping knowledge strong enough that no necessary capability disappears with one person.\n\nOne person may know domains and DNS. Another may know Linux administration. Another may understand publishing workflows. Another may be good at backup verification. Another may write excellent documentation. Another may understand the local network or hardware. None of them needs complete mastery for the group to become more capable.\n\nPartial knowledge becomes dangerous when it is isolated. If the DNS person cannot explain enough for anybody else to make a safe change, or the backup person is the only person who knows where copies live, the knowledge does not overlap. Documentation, shared exercises, and teach-backs create those overlaps.\n\nProjects can also overlap with other projects. A small group does not need to reproduce the expertise of a large hosting collective. It can know whom to ask, what information to provide, what parts it remains responsible for, and how to leave if that relationship stops working. Mutual technical support becomes stronger when both sides have enough literacy to communicate clearly.\n\nGood documentation is part of that network. Documentation should tell a future maintainer what exists, why it exists, where to look, what can safely be changed, how to verify a change, and how to recover. A transcript of commands with no explanation is difficult to adapt. A conceptual essay with no operational details is difficult to use during an outage. Useful documentation connects the two.\n\nTeaching creates a second form of verification. When another person tries to follow an instruction, they expose hidden assumptions that the author no longer sees. If the learner cannot reproduce the task, the problem may be in the teaching material rather than in the learner.\n\nOver time, the goal is a community where people know enough to maintain their own dependencies, enough to assist one another, and enough to recognize when a task exceeds their current expertise and needs outside help.\n\nThat is a more durable form of decentralization than simply multiplying machines."
+export const G11_BODY = "The objective is not to turn every participant into a full system administrator.\n\nThe objective is a web of partial, overlapping knowledge strong enough that no necessary capability disappears with one person.\n\nOne person may understand domains and DNS. Another may know Linux administration. Another may understand publishing workflows. Another may be good at backup verification. Another may write excellent documentation. Another may understand local networking or hardware. Another may know the organization's accounts, billing relationships, or data-retention decisions. None of them needs complete mastery for the group to become more capable.\n\nThe important question is not whether knowledge is distributed. It is whether critical knowledge overlaps.\n\nPartial knowledge becomes dangerous when it is isolated. If the DNS person cannot explain enough for anybody else to make or verify a safe change, if the backup person is the only person who knows where copies live, or if the publication workflow exists only as muscle memory in one editor's head, the project still has a single point of failure. Documentation, pairing, shared exercises, and teach-backs create overlap.\n\nA useful target is not “everyone knows everything.” It is that every critical capability has more than one route through the group. One person may be able to perform the task directly, another may be able to follow the runbook and verify it, and a third may know when to stop and call for help. Those are different levels of knowledge, and all can contribute to resilience.\n\nMake the knowledge map visible. Alongside the dependency and access maps, record which people can operate, verify, recover, or teach each important capability. This exposes strange asymmetries: five people may have administrator accounts while only one has ever restored a backup; three people may know the CMS while nobody besides the domain holder understands DNS.\n\nGood documentation is part of the network, but “documentation” is not one thing. A future maintainer may need an overview explaining what exists and why; a runbook for routine operations; a recovery procedure for emergencies; and a decision record explaining non-obvious constraints. A transcript of commands with no explanation is difficult to adapt. A conceptual essay with no operational detail is difficult to use during an outage. Useful documentation connects purpose, procedure, verification, and recovery.\n\nWrite for the person who was not in the room. Name the service, account, path, expected result, and stopping condition. Explain which steps are safe to repeat, which actions are destructive, which assumptions must be checked first, and how the operator knows the procedure succeeded. Keep secrets out of ordinary documentation while documenting where authorized recovery material is held.\n\nTeaching creates a second form of verification. When another person follows an instruction, they expose hidden assumptions that the author no longer sees. If the learner cannot reproduce the task, the first question should not be whether the learner failed. Ask whether the procedure depended on an unstated path, account, permission, vocabulary term, or piece of historical knowledge.\n\nProjects can overlap with other projects too. A small group does not need to reproduce the expertise of a large hosting collective, network cooperative, or specialist administrator. It can retain enough literacy to describe its problem accurately, understand what the specialist controls, provide useful diagnostics, maintain independent copies, and know how to leave if the relationship stops working. Mutual technical support becomes stronger when neither side has to treat the other as magic.\n\nKnowing when not to proceed is also knowledge. A maintainer who recognizes that a failing disk, corrupted database, compromised credential, or unfamiliar mail system exceeds their current expertise can prevent a difficult problem from becoming a catastrophic one. Escalation should be documented like any other operational path: who can help, what information they need, and what should not be changed before they look.\n\nReview the knowledge map over time. People leave. Systems change. Documentation ages. A task that had three competent operators two years ago may have one today. Overlap has to be maintained, not merely achieved once.\n\nThe goal is a community where people know enough to maintain their own dependencies, enough to assist one another, enough to learn from documentation, and enough to recognize when a task requires outside help.\n\nThat is a more durable form of decentralization than simply multiplying machines."
+export const G12_PREVIOUS_BODY = "Ask the question directly:\n\nIf your project disappeared tomorrow, what would survive without you?\n\nWould the source code still exist somewhere another person can access? Would published writing and media remain readable? Would the domain be recoverable? Would a backup exist outside the provider that disappeared? Would anybody know how to restore it? Would important contacts, documentation, and operational knowledge survive the loss of one person's laptop or account?\n\nThe point is not to imagine one dramatic catastrophe. Ordinary failures are enough: an expired payment card, a forgotten renewal, a provider policy change, an inaccessible email account, corrupted storage, an administrator leaving, a project dissolving, a legal dispute, or a building losing power.\n\nResilience is demonstrated by what happens after the loss.\n\nA service that never fails can conceal fragility for years. A project that has repeatedly restored backups, moved providers, rotated administrators, exported its data, and taught new maintainers has evidence that it can continue even when individual components fail.\n\nSome things should survive as working infrastructure. Others should survive only as records. A discontinued publication may not need a permanently running CMS; static archives and source material may be enough. A defunct organization may need to preserve minutes and public history while securely destroying sensitive member data. Survival does not mean keeping every database online forever.\n\nDecide what deserves continuity, what deserves preservation, what should be transferable, and what should eventually be deleted. These are governance decisions as much as technical ones.\n\nThen test the answer. Remove one dependency at a time on disposable systems or through tabletop exercises. Assume the registrar account holder is unreachable. Assume the hosting provider is gone. Assume the repository disappears. Assume the server is seized or the disk fails. Ask what copy, credential, documentation, and person takes over next.\n\nThe unit of resilience isn't the machine. It's the person who can reproduce the machine, the material that allows them to do it, and the community that can carry the work when circumstances change."
+export const G12_BODY = "Ask the question directly:\n\nIf your project disappeared tomorrow, what would survive without you?\n\nWould the source code still exist somewhere another authorized person can access? Would published writing and media remain readable? Would the domain be recoverable? Would a tested backup exist outside the provider that disappeared? Would anybody know how to decrypt and restore it? Would important contacts, documentation, decisions, and operational knowledge survive the loss of one person's laptop or account?\n\nThe point is not to imagine one spectacular catastrophe. Ordinary failures are enough: an expired payment card, a forgotten renewal, a provider policy change, an inaccessible email account, corrupted storage, a stolen device, an administrator leaving, a project dissolving, a dispute over control, a building losing power, or simply nobody remembering how an old system works.\n\nResilience is demonstrated by what happens after the loss.\n\nA service that never fails can conceal fragility for years. A project that has repeatedly restored backups, moved providers, rotated administrators, exported its data, reconstructed publications from source, and taught new maintainers has evidence that it can continue when components disappear. Evidence is stronger than confidence.\n\nNot everything should survive in the same way.\n\nSome capabilities deserve continuity: the service should keep operating or be recoverable quickly.\n\nSome material deserves preservation: the live application may disappear while publications, records, source material, or history remain readable.\n\nSome things need transfer: ownership, domains, repositories, archives, or responsibilities should move to another person or organization.\n\nSome things should expire or be deleted: credentials, unnecessary personal data, obsolete account exports, old access, or records the project no longer has a reason to retain.\n\nThose categories should be decided deliberately. “Keep everything forever” is not a resilience strategy. It creates its own security, privacy, storage, governance, and interpretive problems. Likewise, “delete it” is not complete until the project knows which production copies, backups, replicas, exports, archives, and provider retention paths actually contain the material and what deletion is realistically possible in each system.\n\nMake a continuity and disposition inventory. For every important service or dataset, choose an intended outcome: continue, restore, preserve, transfer, or retire/delete. Record the responsible people, authoritative source, independent copies, recovery or export method, approximate retention expectations, and the event that should trigger review.\n\nThen test the answer.\n\nUse disposable systems for technical failure tests and tabletop exercises for organizational failures that cannot safely be simulated. Assume the registrar account holder is unreachable. Assume the hosting provider is gone. Assume the repository is unavailable. Assume the production database is corrupted. Assume the primary administrator's device is seized, destroyed, or simply inaccessible. Assume the project decides to dissolve rather than recover.\n\nFor each scenario, ask the same questions: What authoritative copy remains? What independent copy remains? Which authorized identity can act? Which documentation explains the next step? Which person or outside relationship can perform it? What data might be lost? What should not be restored because the correct outcome is preservation or deletion instead?\n\nDo not count inaccessible material as survival. A backup encrypted with a key nobody else can recover is not a usable continuity plan. A repository in a personal account nobody can access is not organizational source control. An archive whose filenames and metadata nobody can interpret has survived physically while losing much of its meaning.\n\nAlso test time. If a domain can technically be recovered but only after weeks of account-recovery escalation, that may be acceptable for an archive and unacceptable for an active emergency service. If a publication can be reconstructed eventually but not within the stated RTO, the difference should be visible rather than disguised by the word “backup.”\n\nEnd-of-life is part of resilience too. A discontinued publication may not need a permanently running CMS; static archives and source material may be enough. A dissolved organization may preserve public history while removing unnecessary private records and revoking access. A retired server should not remain online indefinitely merely because nobody was assigned to turn it off.\n\nThe final test is not whether every machine survives.\n\nIt is whether the project has decided what deserves to continue, what deserves to remain readable, what must be transferable, what should disappear, and whether another authorized person can carry out those decisions without the people who originally built the system."
+export const G13_PREVIOUS_BODY = "The course ends where infrastructure becomes transmissible.\n\nA machine you can administer is useful. A machine you can restore is better. A service another person can restore without you is a different level of resilience.\n\nIt ends when knowledge moves.\n\nChoose one skill you now understand well enough to perform reliably. It may be reading DNS, connecting with SSH, inspecting exposed ports, restoring a backup, migrating a site, creating a static mirror, diagnosing a local network, or explaining an alternative networking model.\n\nWrite the smallest complete teaching version. Include what the task accomplishes, what the learner needs before beginning, the steps, how to verify success, the most common failure modes, and how to recover safely. Then give control of the keyboard or equipment to the learner.\n\nDo not measure teaching by whether the explanation sounded clear. Measure it by whether the other person can perform the task, explain why it worked, and recognize when it failed.\n\nThen have them teach it again when possible. Knowledge becomes infrastructure when it has a route through the community rather than a permanent home in one person's memory.\n\nThe same standard applies to projects. Build things that can be handed over. Keep data portable. Prefer documented interfaces and open formats when they fit. Maintain exits. Preserve source. Test restores. Use individual accounts. Make responsibilities visible. Reduce unnecessary complexity. Know which dependencies you are intentionally accepting.\n\nThis does not require every group to become a hosting provider. A healthy ecosystem may include excellent cooperative providers, specialist collectives, managed services, local infrastructure, community networks, and ordinary organizations that understand just enough to retain control of their own continuity.\n\nThe direction is what matters: fewer mysterious dependencies, fewer irreplaceable administrators, more recoverable data, more tested migrations, more durable publications, and more people capable of helping the next person learn.\n\nThat is what it means to become the thousand servers."
+export const G13_BODY = "The course ends where infrastructure becomes transmissible.\n\nA machine you can administer is useful. A machine you can restore is better. A service another person can restore without you is a different level of resilience.\n\nIt ends when knowledge moves.\n\nChoose one skill you now understand well enough to perform reliably. It may be reading DNS, connecting with SSH, inspecting exposed ports, restoring a backup, migrating a site, creating a static mirror, diagnosing a local network, explaining Reticulum's network model, reviewing administrative access, or deciding whether a service should be simplified rather than self-hosted.\n\nWrite the smallest complete teaching version.\n\nState what the task accomplishes and what it does not accomplish. List the prerequisites. Give the steps. Name the expected observations. Explain how to verify success. Include at least one common or safe failure and its recovery path. Mark destructive boundaries. Identify where current documentation should be checked because a provider, operating system, or application can change.\n\nThen give control of the keyboard or equipment to the learner.\n\nDo not measure teaching by whether the explanation sounded clear. Measure it by whether the learner can perform the task, explain why it worked, identify the evidence that it worked, recognize when it failed, and recover without the original operator silently taking over.\n\nWatch what they ask. Every question may reveal an assumption the written procedure hid: an unexplained term, an unnamed account, a path that existed only on your laptop, a permission you forgot you had, a step whose success looked obvious only because you had seen it before. Fix the procedure rather than treating those questions as noise.\n\nThen change the conditions slightly. Use another disposable machine. Change a hostname. Restore into a clean directory. Ask the learner to locate the necessary documentation instead of handing it to them. The goal is not rote repetition of one exact sequence. It is enough understanding to adapt safely while preserving the important invariants.\n\nWhen possible, have the learner teach the skill to a third person. Knowledge becomes infrastructure when it has a route through the community rather than a permanent home in one person's memory.\n\nUse the same standard for whole projects. A project that can be handed over should have an intelligible dependency map, individual access, recoverable organizational control, tested backups, portable source and data, preservation material, operational documentation, maintenance ownership, known failure domains, and an exit path. The transfer should not require the departing maintainer to remember one final secret.\n\nA handoff is not complete when somebody receives a folder of files and a password. The receiving person should be able to locate authoritative state, access the necessary systems through their own identity, perform a routine operation, verify a backup, understand unresolved risks, and know which outside relationships or providers matter.\n\nOpen and documented formats can help because they reduce the number of special tools required to interpret the work later, but portability should be demonstrated rather than assumed. Export the data. Open it somewhere else. Restore the service. Render the publication. Hand the documentation to somebody who did not write it. Evidence keeps returning because evidence is what separates resilience from optimism.\n\nThis does not require every group to become a hosting provider. A healthy ecosystem may include cooperative providers, specialist collectives, managed services, local infrastructure, community networks, independent maintainers, and ordinary organizations that understand enough to retain control of their own continuity.\n\nNor does “become the thousand servers” mean multiplying machines for their own sake. A thousand servers controlled by ten exhausted people would simply distribute hardware while preserving the same concentration of capacity.\n\nThe direction is what matters: fewer mysterious dependencies, fewer irreplaceable administrators, more recoverable data, more tested exits, more durable publications, more visible maintenance work, more overlapping knowledge, and more people capable of teaching the next person.\n\nThe thousand servers are the distributed capacity to understand, recover, preserve, move, maintain, and teach the infrastructure people actually depend on.\n\nThat is what it means to become the thousand servers."
+
+export const repositoryCourseRevisions = [
+  {
+    id: '2026-09-17-g01-revision-1',
+    section: { id: 'G01', from: G01_PREVIOUS_BODY, to: G01_BODY },
+  },
+  {
+    id: '2026-09-17-g02-revision-1',
+    section: { id: 'G02', from: G02_PREVIOUS_BODY, to: G02_BODY },
+    lesson: { slug: 'map-your-dependencies', from: G02_PREVIOUS_LESSON },
+    activities: [
+      {
+        id: 'map-your-dependencies-verify',
+        from: {
+          prompt: G02_PREVIOUS_LESSON.test,
+          options: G02_PREVIOUS_LESSON.checks.map((label, i) => ({ id: `check-${i + 1}`, label })),
+          sources: G02_PREVIOUS_LESSON.resources,
+        },
+      },
+      { id: 'map-your-dependencies-teach', from: { prompt: G02_PREVIOUS_LESSON.teach } },
+      {
+        id: 'dependency-choice',
+        from: {
+          prompt: 'Only one person can recover the registrar account. What does the dependency map need to include?',
+          options: [
+            { id: 'person', label: 'That person and the recovery process' },
+            { id: 'server', label: 'Only the web server' },
+          ],
+          answer: ['person'],
+        },
+      },
+    ],
+  },
+  {
+    id: '2026-09-17-g03-revision-1',
+    section: { id: 'G03', from: G03_PREVIOUS_BODY, to: G03_BODY },
+    lessons: [
+      { slug: 'read-dns', from: G03_PREVIOUS_LESSON_2 },
+      { slug: 'ssh-disposable-linux', from: G03_PREVIOUS_LESSON_3 },
+    ],
+    activities: [
+      {
+        id: 'read-dns-verify',
+        from: {
+          version: 1,
+          prompt: G03_PREVIOUS_LESSON_2.test,
+          options: G03_PREVIOUS_LESSON_2.checks.map((label, i) => ({ id: `check-${i + 1}`, label })),
+          sources: G03_PREVIOUS_LESSON_2.resources,
+        },
+      },
+      { id: 'read-dns-teach', from: { version: 1, prompt: G03_PREVIOUS_LESSON_2.teach } },
+      {
+        id: 'dns-select',
+        from: {
+          version: 1,
+          prompt: 'Select the record types that point a hostname directly to an IP address.',
+          options: [
+            { id: 'a', label: 'A' },
+            { id: 'aaaa', label: 'AAAA' },
+            { id: 'mx', label: 'MX' },
+            { id: 'txt', label: 'TXT' },
+          ],
+          answer: ['a', 'aaaa'],
+        },
+      },
+      {
+        id: 'dns-match',
+        from: {
+          version: 1,
+          prompt: 'Match each term to its role.',
+          pairs: [
+            { left: 'Registrar', right: 'Controls the domain registration' },
+            { left: 'DNS host', right: 'Answers queries about domain records' },
+            { left: 'Web server', right: 'Serves the requested web content' },
+          ],
+        },
+      },
+      {
+        id: 'ssh-disposable-linux-verify',
+        from: {
+          version: 1,
+          prompt: G03_PREVIOUS_LESSON_3.test,
+          options: G03_PREVIOUS_LESSON_3.checks.map((label, i) => ({ id: `check-${i + 1}`, label })),
+          sources: G03_PREVIOUS_LESSON_3.resources,
+        },
+      },
+      { id: 'ssh-disposable-linux-teach', from: { version: 1, prompt: G03_PREVIOUS_LESSON_3.teach } },
+    ],
+  },
+  {
+    id: '2026-09-17-g04-revision-1',
+    section: { id: 'G04', from: G04_PREVIOUS_BODY, to: G04_BODY },
+    lessons: [
+      { slug: 'first-disposable-page', from: G04_PREVIOUS_LESSON_4 },
+      { slug: 'understand-exposure', from: G04_PREVIOUS_LESSON_5 },
+    ],
+    activities: [
+      { id: 'first-disposable-page-verify', from: { version: 1, prompt: G04_PREVIOUS_LESSON_4.test, options: G04_PREVIOUS_LESSON_4.checks.map((label, i) => ({ id: `check-${i + 1}`, label })), sources: G04_PREVIOUS_LESSON_4.resources } },
+      { id: 'first-disposable-page-teach', from: { version: 1, prompt: G04_PREVIOUS_LESSON_4.teach } },
+      { id: 'understand-exposure-verify', from: { version: 1, prompt: G04_PREVIOUS_LESSON_5.test, options: G04_PREVIOUS_LESSON_5.checks.map((label, i) => ({ id: `check-${i + 1}`, label })), sources: G04_PREVIOUS_LESSON_5.resources } },
+      { id: 'understand-exposure-teach', from: { version: 1, prompt: G04_PREVIOUS_LESSON_5.teach } },
+      {
+        id: 'request-sequence',
+        from: {
+          version: 1,
+          prompt: 'Put this simplified request path in order. Assume the browser needs a fresh DNS lookup.',
+          options: [
+            { id: 'browser', label: 'Browser requests a hostname' },
+            { id: 'file', label: 'Server reads the requested file' },
+            { id: 'dns', label: 'DNS lookup returns an address' },
+            { id: 'connect', label: 'Browser connects to the server' },
+          ],
+          answer: ['browser', 'dns', 'connect', 'file'],
+        },
+      },
+      { id: 'exposure-reflection', from: { version: 1, prompt: 'Which ports did you find open, why are they reachable, and who maintains each service?' } },
+    ],
+  },
+  {
+    id: '2026-09-17-g05-revision-1',
+    section: { id: 'G05', from: G05_PREVIOUS_BODY, to: G05_BODY },
+    lessons: [
+      { slug: 'real-backup', from: G05_PREVIOUS_LESSON_6 },
+      { slug: 'destroy-and-rebuild', from: G05_PREVIOUS_LESSON_7 },
+      { slug: 'learn-to-leave', from: G05_PREVIOUS_LESSON_8 },
+    ],
+    activities: [
+      { id: 'real-backup-verify', from: { version: 1, prompt: G05_PREVIOUS_LESSON_6.test, options: G05_PREVIOUS_LESSON_6.checks.map((label, i) => ({ id: `check-${i + 1}`, label })), sources: G05_PREVIOUS_LESSON_6.resources } },
+      { id: 'real-backup-teach', from: { version: 1, prompt: G05_PREVIOUS_LESSON_6.teach } },
+      { id: 'destroy-and-rebuild-verify', from: { version: 1, prompt: G05_PREVIOUS_LESSON_7.test, options: G05_PREVIOUS_LESSON_7.checks.map((label, i) => ({ id: `check-${i + 1}`, label })), sources: G05_PREVIOUS_LESSON_7.resources } },
+      { id: 'destroy-and-rebuild-teach', from: { version: 1, prompt: G05_PREVIOUS_LESSON_7.teach } },
+      { id: 'learn-to-leave-verify', from: { version: 1, prompt: G05_PREVIOUS_LESSON_8.test, options: G05_PREVIOUS_LESSON_8.checks.map((label, i) => ({ id: `check-${i + 1}`, label })), sources: G05_PREVIOUS_LESSON_8.resources } },
+      { id: 'learn-to-leave-teach', from: { version: 1, prompt: G05_PREVIOUS_LESSON_8.teach } },
+      {
+        id: 'restore-practical',
+        from: { version: 1, prompt: 'Rebuild the disposable service in a clean environment and verify that it works before confirming.' },
+      },
+      {
+        id: 'backup-scenario',
+        from: {
+          version: 1,
+          prompt: 'Your only backup file lives on the same machine as the service. What should you do before destroying that machine?',
+          options: [
+            { id: 'restore', label: 'Copy the recovery set independently and test a restore' },
+            { id: 'delete', label: 'Destroy the machine and trust the backup filename' },
+          ],
+          answer: ['restore'],
+        },
+      },
+    ],
+  },
+  {
+    id: '2026-09-17-g06-revision-1',
+    section: { id: 'G06', from: G06_PREVIOUS_BODY, to: G06_BODY },
+    lessons: [
+      { slug: 'stop-being-only-admin', from: G06_PREVIOUS_LESSON_9 },
+    ],
+    activities: [
+      { id: 'stop-being-only-admin-verify', from: { version: 1, prompt: G06_PREVIOUS_LESSON_9.test, options: G06_PREVIOUS_LESSON_9.checks.map((label, i) => ({ id: `check-${i + 1}`, label })), sources: G06_PREVIOUS_LESSON_9.resources } },
+      { id: 'stop-being-only-admin-teach', from: { version: 1, prompt: G06_PREVIOUS_LESSON_9.teach } },
+    ],
+  },
+  {
+    id: '2026-09-17-g07-revision-1',
+    section: { id: 'G07', from: G07_PREVIOUS_BODY, to: G07_BODY },
+    lessons: [
+      { slug: 'mirror-publish-survival', from: G07_PREVIOUS_LESSON_10 },
+    ],
+    activities: [
+      { id: 'mirror-publish-survival-verify', from: { version: 1, prompt: G07_PREVIOUS_LESSON_10.test, options: G07_PREVIOUS_LESSON_10.checks.map((label, i) => ({ id: `check-${i + 1}`, label })), sources: G07_PREVIOUS_LESSON_10.resources } },
+      { id: 'mirror-publish-survival-teach', from: { version: 1, prompt: G07_PREVIOUS_LESSON_10.teach } },
+    ],
+  },
+  {
+    id: '2026-09-17-g08-revision-1',
+    section: { id: 'G08', from: G08_PREVIOUS_BODY, to: G08_BODY },
+    lessons: [
+      { slug: 'local-network', from: G08_PREVIOUS_LESSON_11 },
+      { slug: 'connect-differently-teach', from: G08_PREVIOUS_LESSON_12 },
+    ],
+    activities: [
+      { id: 'local-network-verify', from: { version: 1, prompt: G08_PREVIOUS_LESSON_11.test, options: G08_PREVIOUS_LESSON_11.checks.map((label, i) => ({ id: `check-${i + 1}`, label })), sources: G08_PREVIOUS_LESSON_11.resources } },
+      { id: 'local-network-teach', from: { version: 1, prompt: G08_PREVIOUS_LESSON_11.teach } },
+      { id: 'connect-differently-teach-verify', from: { version: 1, prompt: G08_PREVIOUS_LESSON_12.test, options: G08_PREVIOUS_LESSON_12.checks.map((label, i) => ({ id: `check-${i + 1}`, label })), sources: G08_PREVIOUS_LESSON_12.resources } },
+      { id: 'connect-differently-teach-teach', from: { version: 1, prompt: G08_PREVIOUS_LESSON_12.teach } },
+    ],
+  },
+  {
+    id: '2026-09-17-g09-revision-1',
+    section: { id: 'G09', from: G09_PREVIOUS_BODY, to: G09_BODY },
+  },
+  {
+    id: '2026-09-17-g10-revision-1',
+    section: { id: 'G10', from: G10_PREVIOUS_BODY, to: G10_BODY },
+  },
+  {
+    id: '2026-09-17-g11-revision-1',
+    section: { id: 'G11', from: G11_PREVIOUS_BODY, to: G11_BODY },
+  },
+  {
+    id: '2026-09-17-g12-revision-1',
+    section: { id: 'G12', from: G12_PREVIOUS_BODY, to: G12_BODY },
+  },
+  {
+    id: '2026-09-17-g13-revision-1',
+    section: { id: 'G13', from: G13_PREVIOUS_BODY, to: G13_BODY },
+  },
+  {
+    id: '2026-09-17-blog-recovery-revision-1',
+    modules: [
+      { id: 'blog-destination', fromBodyHash: 'a7e52bb8' },
+      { id: 'blog-server', fromBodyHash: '104d1ae0' },
+      { id: 'blog-selfhost', fromBodyHash: 'dd60e065' },
+      { id: 'blog-backup', fromBodyHash: 'e5fe89e1' },
+      { id: 'blog-domain', fromBodyHash: '641ee73e' },
+      { id: 'blog-finish', fromBodyHash: '5ea02aad' },
+    ],
+  }
+]
+export function applyRepositoryCourseRevisions(input) {
+  const course = structuredClone(input)
+  const applied = []
+  if (course?.slug !== SLUG || !Array.isArray(course.sections)) return { course, applied }
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
+  const canonicalActivities = new Map(initialActivities(legacySeed.lessons).map((activity) => [activity.id, activity]))
+  const canonicalModules = new Map(recoveryModules.map((module) => [module.id, {
+    id: module.id,
+    title: module.title,
+    body: module.body,
+    sectionId: module.sectionId,
+    status: module.status,
+    version: module.version,
+    activities: module.activities,
+    lessonSlugs: module.lessonSlugs,
+    sources: module.sources,
+  }]))
+  const bodyHash = (value) => {
+    let hash = 2166136261
+    const text = String(value || '')
+    for (let i = 0; i < text.length; i++) {
+      hash ^= text.charCodeAt(i)
+      hash = Math.imul(hash, 16777619)
+    }
+    return (hash >>> 0).toString(16).padStart(8, '0')
+  }
+  for (const revision of repositoryCourseRevisions) {
+    let changed = false
+    if (revision.section) {
+      const section = course.sections.find((item) => item.id === revision.section.id)
+      if (section?.body === revision.section.from) {
+        section.body = revision.section.to
+        changed = true
+      }
+    }
+    for (const lessonPatch of revision.lessons || (revision.lesson ? [revision.lesson] : [])) {
+      const lesson = course.lessons?.find((item) => item.slug === lessonPatch.slug)
+      const canonical = legacySeed.lessons.find((item) => item.slug === lessonPatch.slug)
+      if (lesson && canonical && Object.entries(lessonPatch.from).every(([key, value]) => same(lesson[key], value))) {
+        for (const key of Object.keys(lessonPatch.from)) lesson[key] = structuredClone(canonical[key])
+        changed = true
+      }
+    }
+    for (const patch of revision.activities || []) {
+      const activity = course.activities?.find((item) => item.id === patch.id)
+      const canonical = canonicalActivities.get(patch.id)
+      if (activity && canonical && Object.entries(patch.from).every(([key, value]) => same(activity[key], value))) {
+        for (const key of Object.keys(patch.from)) activity[key] = structuredClone(canonical[key])
+        changed = true
+      }
+    }
+    for (const patch of revision.modules || []) {
+      const module = course.modules?.find((item) => item.id === patch.id)
+      const canonical = canonicalModules.get(patch.id)
+      if (module && canonical && bodyHash(module.body) === patch.fromBodyHash && !same(module, canonical)) {
+        Object.assign(module, structuredClone(canonical))
+        changed = true
+      }
+    }
+    if (changed) applied.push(revision.id)
+  }
+  return { course, applied }
+}
+// Outreach targets are private operational data. Existing contributor workspaces live in D1;
+// new respondents are created through the authenticated editorial workflow, never seeded here.
+export const contributorNames = []
+export const id = (v) => String(v || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '').slice(0, 120)
+export const sharedQuestion = 'If your project disappeared tomorrow, what would survive without you?'
+export const seed = {
+  slug: SLUG,
+  schemaVersion: 2,
+  revision: 0,
+  contentVersion: '2026.09-lms-2',
+  status: 'published',
+  title: 'Become the Thousand Servers',
+  subtitle: 'A self-paced field course in autonomous infrastructure',
+  deck: 'Learn it. Break it. Rebuild it. Teach someone else.',
+  intro: legacySeed.intro,
+  taskHeading: 'Start with the problem you are trying to solve',
+  taskIntro: '',
+  lessons: legacySeed.lessons,
+  sections: sectionMap.map(([title, nums], i) => ({
+    id: `G${String(i + 1).padStart(2, '0')}`,
+    title,
+    body: i === 0 ? G01_BODY : i === 1 ? G02_BODY : i === 2 ? G03_BODY : i === 3 ? G04_BODY : i === 4 ? G05_BODY : i === 5 ? G06_BODY : i === 6 ? G07_BODY : i === 7 ? G08_BODY : i === 8 ? G09_BODY : i === 9 ? G10_BODY : i === 10 ? G11_BODY : i === 11 ? G12_BODY : i === 12 ? G13_BODY : '',
+    status: 'published',
+    lessonSlugs: nums.map((n) => legacySeed.lessons[n - 1].slug),
+    activities: [], sources: [], contributors: [],
+    completion: { manual: true, activities: [] }, prerequisites: [],
+  })),
+  activities: initialActivities(legacySeed.lessons),
+  documents: [
+    { id: 'open-questions', title: 'Open Questions + Disagreements', body: '', status: 'draft' },
+    { id: 'sources', title: 'Sources + Technical References', body: '', status: 'draft' },
+    { id: 'exercise-testing', title: 'Exercise Testing', body: '', status: 'draft' },
+  ],
+  testing: [],
+  readinessConfig: {
+    requireTechnicalReview: true,
+    requirePracticalTest: true,
+    blockingSeverities: ['blocking', 'high'],
+  },
+}
+const extraActivities = {1:['dependency-choice'],2:['dns-select','dns-match'],3:['ssh-true-false'],4:['request-sequence'],5:['exposure-reflection'],6:['backup-scenario','restore-practical']}
+seed.lessons = seed.lessons.map((l) => ({...l,activities:[`${l.slug}-verify`,`${l.slug}-teach`,...(extraActivities[l.number] || [])]}))
+Object.assign(seed, withCmsChoices(withRecoveryPathway(seed)))
+
+const str = (v, max = 30000) => String(v ?? '').slice(0, max)
+const list = (v, max = 100) => (Array.isArray(v) ? v.slice(0, max) : [])
+const strings = (v) => list(v).map((x) => str(x, 500)).filter((x) => x.trim())
+const status = (v) => (STATUSES.includes(v) ? v : 'draft')
+const resources = (v) => list(v).map((r) => ({title:str(r.title,220),url:/^https?:\/\//i.test(r.url || '') ? str(r.url,2000) : '',note:str(r.note,1000)}))
+const rules = (v) => ({manual:v?.manual !== false, practical:v?.practical === true, viewed:v?.viewed === true, activities:strings(v?.activities)})
+const invalid = (message) => Object.assign(new Error(message), {name:'CourseValidationError'})
+const feedbackMap = (value) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+  return Object.fromEntries(Object.entries(value).slice(0,60).map(([k,v]) => [id(k),str(v,3000)]).filter(([k,v]) => k && v.trim()))
+}
+
+export function normalizeCourse(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw invalid('Invalid course')
+  if (JSON.stringify(input).length > 1800000) throw invalid('Course is too large')
+  input = withCmsChoices(withRecoveryPathway(input))
+  const base = input.slug === SLUG ? seed : {...seed,slug:id(input.slug),lessons:[],sections:[],activities:[],documents:[],testing:[],pathways:[],modules:[]}
+  const legacy = input.schemaVersion !== 2
+  const c = {...base,...input,schemaVersion:2}
+  const result = {slug:id(c.slug),schemaVersion:2,revision:Number.isSafeInteger(c.revision)?c.revision:0,status:status(c.status)}
+  for (const key of ['contentVersion','title','subtitle','deck','intro','taskHeading','taskIntro']) result[key] = str(c[key])
+  result.readinessConfig = {
+    requireTechnicalReview: c.readinessConfig?.requireTechnicalReview !== false,
+    requirePracticalTest: c.readinessConfig?.requirePracticalTest !== false,
+    blockingSeverities: strings(c.readinessConfig?.blockingSeverities || ['blocking','high']).map((x) => x.toLowerCase()),
+  }
+  result.lessons = list(c.lessons,60).map((l,i) => {
+    const aliases = {'publish-for-survival':'mirror-publish-survival','run-local-learn-network':'local-network'}
+    const slug = legacy && input.slug === SLUG ? aliases[l.slug] || l.slug : l.slug
+    const original = base.lessons.find((x) => x.slug === slug)
+    const merged = legacy && original ? {...original,...Object.fromEntries(Object.entries(l).filter(([,v]) => v !== '' && (!Array.isArray(v) || v.length)))} : l
+    return {
+      slug:id(slug), number:i+1, title:str(merged.title,220), difficulty:str(merged.difficulty,80), time:str(merged.time,80),
+      status:status(legacy ? 'published' : merged.status),
+      ...Object.fromEntries(['learn','do','test','teach'].map((k) => [k,str(merged[k])])),
+      objectives:strings(merged.objectives), checks:strings(merged.checks), resources:resources(merged.resources), activities:strings(merged.activities), prerequisites:strings(merged.prerequisites), enforcePrerequisites:merged.enforcePrerequisites === true, completion:rules(merged.completion),
+      lastTestedDate:str(merged.lastTestedDate,40), lastTestedEnvironment:str(merged.lastTestedEnvironment,1000),
+    }
+  })
+  result.sections = list(c.sections,60).map((s) => ({id:str(s.id,120),title:str(s.title,220),body:str(s.body),status:status(s.status),lessonSlugs:strings(s.lessonSlugs),activities:strings(s.activities),sources:resources(s.sources),contributors:strings(s.contributors).filter(participatingContributor),prerequisites:strings(s.prerequisites),completion:rules(s.completion)}))
+  if (result.slug === SLUG) {
+    if (result.sections.length !== 13 || result.sections.some((s,i) => s.id !== seed.sections[i].id || JSON.stringify(s.lessonSlugs) !== JSON.stringify(seed.sections[i].lessonSlugs))) throw invalid('Keep G01–G13 and their locked lesson mapping')
+    if (result.lessons.length !== 12 || result.lessons.some((l,i) => l.slug !== seed.lessons[i].slug)) throw invalid('Keep the twelve established lesson identifiers and order')
+  }
+  result.activities = list(c.activities,200).map((a) => {
+    if (!TYPES.includes(a.type)) throw invalid('Unknown activity type')
+    const options = list(a.options,30).map((o) => ({id:id(o.id),label:str(o.label,1000)}))
+    return {id:id(a.id),type:a.type,version:Math.max(1,Number(a.version)||1),title:str(a.title,220),prompt:str(a.prompt,5000),status:status(a.status),options,answer:strings(a.answer),pairs:list(a.pairs,30).map((p) => ({left:str(p.left,1000),right:str(p.right,1000)})),feedback:str(a.feedback,5000),feedbackCorrect:str(a.feedbackCorrect,3000),feedbackIncorrect:str(a.feedbackIncorrect,3000),feedbackByAnswer:feedbackMap(a.feedbackByAnswer),completionHelp:str(a.completionHelp,3000),sources:resources(a.sources)}
+  })
+  for (const a of result.activities.filter((a) => a.status === 'published')) {
+    if (!a.title.trim() || !a.prompt.trim()) throw invalid('Published activities need a title and prompt')
+    if (a.options.some((o) => !o.id || !o.label.trim()) || new Set(a.options.map((o) => o.id)).size !== a.options.length) throw invalid('Activity options need distinct IDs and labels')
+    if (['multiple-choice','multiple-select','true-false','ordered-sequence','troubleshooting'].includes(a.type)) {
+      if (!a.answer.length || a.answer.some((key) => !a.options.some((o) => o.id === key)) || new Set(a.answer).size !== a.answer.length) throw invalid('Correct answers must reference distinct option IDs')
+      if (['multiple-choice','true-false','troubleshooting'].includes(a.type) && a.answer.length !== 1) throw invalid('This activity needs one correct answer')
+      if (a.type === 'ordered-sequence' && a.answer.length !== a.options.length) throw invalid('An ordered activity needs every option in the answer')
+    }
+    if (a.type === 'checklist' && !a.options.length) throw invalid('A checklist needs at least one item')
+    if (a.type === 'matching' && (!a.pairs.length || a.pairs.some((p) => !p.left.trim() || !p.right.trim()))) throw invalid('Matching pairs cannot be empty')
+  }
+  for (const key of ['lessons','sections','activities']) {
+    const keys = result[key].map((v) => v.id || v.slug)
+    if (keys.some((v) => !v) || new Set(keys).size !== keys.length) throw invalid(`Duplicate or missing ${key} identifier`)
+  }
+  const units = [...result.sections,...result.lessons]
+  const byId = new Map(units.map((u) => [u.id || u.slug,u]))
+  const activities = new Map(result.activities.map((a) => [a.id,a]))
+  for (const u of units) {
+    const required = u.completion.activities
+    for (const key of [...u.activities,...required]) {
+      if (!activities.has(key)) throw invalid('Referenced activity does not exist: ' + key)
+      if (result.status === 'published' && u.status === 'published' && required.includes(key) && activities.get(key).status !== 'published') throw invalid('Required activities must be published: ' + key)
+    }
+    if (required.some((key) => !u.activities.includes(key))) throw invalid('A required activity must also be attached to its lesson or section')
+    for (const key of u.prerequisites) {
+      if (!byId.has(key)) throw invalid('Prerequisite does not exist: ' + key)
+      if (result.status === 'published' && u.status === 'published' && u.enforcePrerequisites && byId.get(key).status !== 'published') throw invalid('Enforced prerequisites must be published: ' + key)
+    }
+  }
+  const visiting = new Set(), visited = new Set()
+  function visit(u) {
+    const key = u.id || u.slug
+    if (visiting.has(key)) throw invalid('Enforced prerequisites cannot form a cycle')
+    if (visited.has(key)) return
+    visiting.add(key)
+    if (u.enforcePrerequisites) u.prerequisites.forEach((key) => visit(byId.get(key)))
+    visiting.delete(key); visited.add(key)
+  }
+  units.forEach(visit)
+  result.pathwaySchemaVersion = 1
+  result.modules = list(c.modules,100).map((m)=>({id:id(m.id),title:str(m.title,220),body:str(m.body),sectionId:str(m.sectionId,120),status:status(m.status),version:Math.max(1,Number(m.version)||1),activities:strings(m.activities),lessonSlugs:strings(m.lessonSlugs),sources:resources(m.sources)}))
+  result.pathways = list(c.pathways,30).map((p)=>({id:id(p.id),title:str(p.title,220),intro:str(p.intro),status:status(p.status),version:Math.max(1,Number(p.version)||1),completionTitle:str(p.completionTitle,220),completionBody:str(p.completionBody),continueBody:str(p.continueBody),sources:resources(p.sources),variants:list(p.variants,10).map((v)=>({id:id(v.id),title:str(v.title,220),steps:strings(v.steps),outcome:v.outcome==='recovery'?'recovery':'handoff'}))}))
+  for(const key of ['pathways','modules']) {
+    if(result[key].some((x)=>!x.id)||new Set(result[key].map((x)=>x.id)).size!==result[key].length) throw invalid('Duplicate or missing '+key+' identifier')
+  }
+  for(const m of result.modules) {
+    if(!result.sections.some((s)=>s.id===m.sectionId)) throw invalid('Supporting module needs a guide section')
+    if(m.lessonSlugs.some((id)=>!result.lessons.some((l)=>l.slug===id))) throw invalid('Supporting module lesson does not exist')
+    if(m.activities.some((id)=>!activities.has(id))) throw invalid('Supporting module activity does not exist')
+    if(m.status==='published'&&(!m.title.trim()||!m.body.trim()||!m.activities.length)) throw invalid('Published supporting module needs content and a checkpoint')
+  }
+  for(const p of result.pathways) {
+    if(!p.variants.length||new Set(p.variants.map((v)=>v.id)).size!==p.variants.length) throw invalid('Pathway needs distinct destination variants')
+    for(const v of p.variants) if(!v.id||!v.steps.length||new Set(v.steps).size!==v.steps.length||v.steps.some((id)=>!result.modules.some((m)=>m.id===id))) throw invalid('Pathway steps must reference distinct supporting modules')
+  }
+  result.documents = list(c.documents,30).map((d) => ({id:id(d.id),title:str(d.title,220),body:str(d.body),status:status(d.status),sources:resources(d.sources)}))
+  const testingFields = ['id','targetType','targetId','exercise','contentVersion','activityVersion','reviewKind','technicalReviewer','practicalTester','operatingSystem','softwareVersions','equipment','startingConditions','steps','expected','actual','confusing','failedCommands','missingAssumptions','safetyConcerns','recoveryFailures','severity','responsible','status','requiredCorrection','retestOutcome','date','state','tester','environment','assumptions','worked','broke','unclear','hiddenAssumptions','concerns','changes','retest']
+  result.testing = list(c.testing,500).map((t) => Object.fromEntries(testingFields.map((k) => [k,str(t[k],5000)])))
+  return result
+}
+
+export function publicCourse(c) {
+  const out = normalizeCourse(c)
+  for (const key of ['lessons','sections','activities','documents','pathways','modules']) out[key] = out[key].filter((x) => x.status === 'published')
+  out.modules = out.modules.map((m)=>({...m,lessonSlugs:m.lessonSlugs.filter((slug)=>out.lessons.some((l)=>l.slug===slug))}))
+  out.testing = []
+  delete out.readinessConfig
+  return out
+}
+export { legacySeed }

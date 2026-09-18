@@ -1,0 +1,48 @@
+name: Refresh Thousand Servers static course
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/course-static-refresh.yml'
+      - 'scripts/prepare-course-lms.mjs'
+      - 'public/guides/become-the-thousand-servers/lms/**'
+      - 'functions/guides/become-the-thousand-servers/**'
+      - 'functions/api/_lib/courseContributors.js'
+      - 'functions/api/course-contributors.js'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: thousand-servers-static-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate complete static course
+        run: node scripts/prepare-course-lms.mjs
+
+      - name: Save generated course when changed
+        run: |
+          if git diff --quiet -- public/guides/become-the-thousand-servers/index.html; then
+            echo "Course snapshot is already current."
+            exit 0
+          fi
+          git config user.name "ash.budding"
+          git config user.email "bjgarr@gmail.com"
+          git add public/guides/become-the-thousand-servers/index.html
+          git commit -m "refresh Thousand Servers course snapshot"
+          git push

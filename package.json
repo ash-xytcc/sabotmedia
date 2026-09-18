@@ -1,0 +1,28 @@
+{
+  "name": "sabot-media-starter",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "prebuild": "node scripts/prepare-course-lms.mjs && node scripts/prepare-flite-tts-assets.mjs && node scripts/prepare-noscript-fallback.mjs && node scripts/prepare-noscript-extra-routes.mjs && node scripts/prepare-noscript-documents.mjs",
+    "build": "vite build",
+    "test": "node --import ./tests/helpers/register-json-imports.mjs --test tests/*.test.mjs",
+    "check": "npm test && npm run build",
+    "preview": "vite preview",
+    "import:wordpress": "node scripts/import-wordpress.mjs",
+    "segmentation:dev": "cd services/printlab-segmentation && uvicorn app:app --reload --port 8000"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0",
+    "openpgp": "^6.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "linkedom": "^0.18.12",
+    "vite": "^5.4.21"
+  }
+}

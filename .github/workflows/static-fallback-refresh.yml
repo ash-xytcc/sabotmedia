@@ -1,0 +1,49 @@
+name: Refresh static fallback snapshot
+
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/static-fallback-refresh.yml'
+      - 'scripts/sync-static-fallback.mjs'
+      - 'public/static-fallback.js'
+      - 'index.html'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: static-fallback-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build last-known-good public snapshot
+        run: node scripts/sync-static-fallback.mjs
+
+      - name: Save snapshot when public content changed
+        run: |
+          if git diff --quiet -- public/static-fallback.json; then
+            echo "Fallback snapshot is already current."
+            exit 0
+          fi
+          git config user.name "ash.budding"
+          git config user.email "bjgarr@gmail.com"
+          git add public/static-fallback.json
+          git commit -m "refresh public fallback snapshot"
+          git push
