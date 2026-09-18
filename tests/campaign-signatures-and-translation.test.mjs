@@ -82,6 +82,10 @@ test('10. existing manual A/I signers are preserved and typed', () => {
   assert.equal(seeds.find((item) => item.name === 'Jeremy Beausoleil Smith')?.signerType, 'individual')
   assert.match(signatureLib, /verified_manual/)
   assert.match(signatureLib, /existingByName/)
+  assert.match(signatureLib, /public_statement/)
+  assert.match(signatureLib, /item\?\.statement \|\| item\?\.publicStatement/)
+  assert.match(signatureLib, /UPDATE campaign_signatures SET public_statement = \?/)
+  assert.match(signatureLib, /publicStatement && !clean\(existing\.public_statement, 1200\)/)
 })
 
 test('11. Italian interview is complete, cleaned and keeps all 23 numbered questions', () => {

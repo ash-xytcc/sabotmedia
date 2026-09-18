@@ -101,17 +101,25 @@ export async function importManualSignatories(db, campaignId, signatories = []) 
     if (!displayName) continue
     const legacyId = clean(item?.id || `legacy-${slugify(displayName)}`, 180)
     const id = `manual-${campaignId}-${legacyId}`
-    const existingById = await db.prepare('SELECT id FROM campaign_signatures WHERE id = ? LIMIT 1').bind(id).first()
-    const existingByName = await db.prepare(`SELECT id FROM campaign_signatures WHERE campaign_id = ? AND verification_method = 'verified_manual' AND lower(COALESCE(NULLIF(organization_name, ''), display_name)) = lower(?) LIMIT 1`).bind(campaignId, displayName).first()
-    if (existingById || existingByName) continue
+    const existingById = await db.prepare('SELECT id, public_statement FROM campaign_signatures WHERE id = ? LIMIT 1').bind(id).first()
+    const existingByName = await db.prepare(`SELECT id, public_statement FROM campaign_signatures WHERE campaign_id = ? AND verification_method = 'verified_manual' AND lower(COALESCE(NULLIF(organization_name, ''), display_name)) = lower(?) LIMIT 1`).bind(campaignId, displayName).first()
+    const publicStatement = clean(item?.statement || item?.publicStatement, 1200)
+    const existing = existingById || existingByName
+    if (existing) {
+      if (publicStatement && !clean(existing.public_statement, 1200)) {
+        await db.prepare('UPDATE campaign_signatures SET public_statement = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(publicStatement, existing.id).run()
+        imported += 1
+      }
+      continue
+    }
     const now = new Date().toISOString()
     const signerType = item?.signerType === 'individual' ? 'individual' : 'organization'
     const organizationName = signerType === 'organization' ? displayName : ''
     await db.prepare(`INSERT INTO campaign_signatures (
-      id, campaign_id, signer_type, display_name, affiliation, organization_name, contact_name, role, website,
+      id, campaign_id, signer_type, display_name, affiliation, organization_name, contact_name, role, website, public_statement,
       email, email_hash, status, verification_method, verified_at, published_at, duplicate_flags_json, abuse_flags_json, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, '', '', ?, '', ?, 'approved', 'verified_manual', ?, ?, '[]', '[]', ?, ?)`)
-      .bind(id, campaignId, signerType, displayName, clean(item?.location, 180), organizationName, safeWebsite(item?.url), await sha256(`manual:${campaignId}:${legacyId}`), now, now, now, now).run()
+    ) VALUES (?, ?, ?, ?, ?, ?, '', '', ?, ?, '', ?, 'approved', 'verified_manual', ?, ?, '[]', '[]', ?, ?)`)
+      .bind(id, campaignId, signerType, displayName, clean(item?.location, 180), organizationName, safeWebsite(item?.url), publicStatement, await sha256(`manual:${campaignId}:${legacyId}`), now, now, now, now).run()
     imported += 1
   }
   return imported
