@@ -51,13 +51,15 @@ export async function ensureContributors(db) {
     ])
   }
 
-  await db.batch(
-    contributorNames.map((name) =>
-      db
-        .prepare('INSERT OR IGNORE INTO course_contributors(id,name,draft_json) VALUES(?,?,?)')
-        .bind(id(name), name, JSON.stringify(contributionDraft(id(name)))),
-    ),
-  )
+  if (contributorNames.length) {
+    await db.batch(
+      contributorNames.map((name) =>
+        db
+          .prepare('INSERT OR IGNORE INTO course_contributors(id,name,draft_json) VALUES(?,?,?)')
+          .bind(id(name), name, JSON.stringify(contributionDraft(id(name)))),
+      ),
+    )
+  }
 }
 
 export async function listContributors(db) {
