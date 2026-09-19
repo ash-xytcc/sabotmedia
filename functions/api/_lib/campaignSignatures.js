@@ -222,11 +222,28 @@ export async function updateManagedSignature(db, token, patch = {}) {
 
 export async function listPublicSignatures(db, campaignId) {
   await ensureCampaignSignatureTables(db)
-  const result = await db.prepare(`SELECT id, signer_type, display_name, affiliation, organization_name, role, website, public_statement, published_at, verification_method FROM campaign_signatures WHERE campaign_id = ? AND status = 'approved' ORDER BY datetime(COALESCE(published_at, created_at)) ASC`).bind(campaignId).all()
-  const items = (result.results || []).map(publicRow)
+  const result = await db.prepare(`SELECT id, signer_type, display_name, affiliation, organization_name, role, website, public_statement, email_hash, created_at, updated_at, published_at, verification_method FROM campaign_signatures WHERE campaign_id = ? AND status = 'approved' ORDER BY datetime(COALESCE(published_at, created_at)) ASC`).bind(campaignId).all()
+  const items = dedupePublicSignatureRows(result.results || []).map(publicRow)
   const organizations = items.filter((item) => item.signerType === 'organization')
   const individuals = items.filter((item) => item.signerType === 'individual')
   return { items, organizations, individuals, counts: { total: items.length, organizations: organizations.length, individuals: individuals.length } }
+}
+
+export function dedupePublicSignatureRows(rows = []) {
+  const visible = new Map()
+  for (const row of rows) {
+    const signerType = row?.signer_type === 'organization' ? 'organization' : 'individual'
+    const publicName = signerType === 'organization'
+      ? String(row?.organization_name || row?.display_name || '').trim()
+      : String(row?.display_name || '').trim()
+    const emailHash = String(row?.email_hash || '').trim()
+    const identity = emailHash && publicName
+      ? `${signerType}|${emailHash}|${publicName.toLocaleLowerCase()}`
+      : `id:${String(row?.id || '')}`
+    const existing = visible.get(identity)
+    if (!existing || signatureRowFreshness(row) >= signatureRowFreshness(existing)) visible.set(identity, row)
+  }
+  return [...visible.values()]
 }
 
 export async function listModerationQueue(db, campaignId, status = 'all') {
@@ -318,6 +335,10 @@ export function signaturePublicDisplay(item) {
   return item.displayName
 }
 
+function signatureRowFreshness(row) {
+  const values = [row?.updated_at, row?.published_at, row?.created_at].map((value) => Date.parse(String(value || ''))).filter(Number.isFinite)
+  return values.length ? Math.max(...values) : 0
+}
 function publicRow(row) {
   return {
     id: row.id,

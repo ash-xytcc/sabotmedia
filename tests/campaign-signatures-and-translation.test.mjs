@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import { bundledTranslationsForSlug } from '../functions/api/_lib/bundledNativeTranslations.js'
 import { signatureSeedsForCampaign } from '../functions/api/_lib/bundledCampaignSignatureSeeds.js'
-import { compareEmailAndWebsiteDomain } from '../functions/api/_lib/campaignSignatures.js'
+import { compareEmailAndWebsiteDomain, dedupePublicSignatureRows } from '../functions/api/_lib/campaignSignatures.js'
 
 const signatureLib = fs.readFileSync(new URL('../functions/api/_lib/campaignSignatures.js', import.meta.url), 'utf8')
 const signatureApi = fs.readFileSync(new URL('../functions/api/campaign-signatures.js', import.meta.url), 'utf8')
@@ -123,6 +123,19 @@ test('14. Italian hero and social image are separate from English assets', () =>
   assert.ok(fs.existsSync(new URL('../public/campaigns/autistici-inventati/graphics/a-network-called-resistance-it.svg', import.meta.url)))
   assert.ok(fs.existsSync(new URL('../public/campaigns/autistici-inventati/graphics/a-network-called-resistance-it.png', import.meta.url)))
   assert.match(selector, /body\?\.socialImage \|\| body\?\.heroImage/)
+})
+
+test('approved duplicate signatures show the most recently edited copy without hiding distinct identities', () => {
+  const rows = [
+    { id: 'first', signer_type: 'individual', display_name: 'Example Signer', affiliation: 'Corrected affiliation', email_hash: 'same-email', created_at: '2026-09-17T12:00:00Z', published_at: '2026-09-17T13:00:00Z', updated_at: '2026-09-18T08:00:00Z' },
+    { id: 'duplicate', signer_type: 'individual', display_name: 'Example Signer', affiliation: 'Old affiliation', email_hash: 'same-email', created_at: '2026-09-17T12:05:00Z', published_at: '2026-09-17T13:05:00Z', updated_at: '2026-09-17T13:05:00Z' },
+    { id: 'organization', signer_type: 'organization', organization_name: 'Example Collective', display_name: 'Example Collective', affiliation: '', email_hash: 'same-email', created_at: '2026-09-17T12:10:00Z', published_at: '2026-09-17T13:10:00Z', updated_at: '2026-09-17T13:10:00Z' },
+  ]
+  const visible = dedupePublicSignatureRows(rows)
+  assert.equal(visible.length, 2)
+  assert.equal(visible.find((item) => item.signer_type === 'individual')?.id, 'first')
+  assert.equal(visible.find((item) => item.signer_type === 'individual')?.affiliation, 'Corrected affiliation')
+  assert.equal(visible.find((item) => item.signer_type === 'organization')?.id, 'organization')
 })
 
 test('organization domain comparison is only a signal and handles common host variants', () => {
