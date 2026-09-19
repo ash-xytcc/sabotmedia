@@ -34,6 +34,23 @@ export async function ensureContributors(db) {
       )`,
     )
     .run()
+  // Repair the one known legacy workspace that was created with CrimethInc's
+  // URL identifier even though the project itself is BASH. Guard on the stored
+  // project name so a genuine CrimethInc workspace is never renamed.
+  const legacyBash = await db
+    .prepare("SELECT id FROM course_contributors WHERE id='crimethinc' AND (LOWER(name) LIKE 'bash%' OR LOWER(name) LIKE '%boise autonomous solidarity hub%')")
+    .first()
+  const canonicalBash = legacyBash
+    ? await db.prepare("SELECT id FROM course_contributors WHERE id='bash'").first()
+    : null
+  if (legacyBash && !canonicalBash) {
+    await db.batch([
+      db.prepare("UPDATE course_contributor_revisions SET project='bash' WHERE project='crimethinc'"),
+      db.prepare("UPDATE course_contributor_submissions SET project='bash' WHERE project='crimethinc'"),
+      db.prepare("UPDATE course_contributors SET id='bash' WHERE id='crimethinc'"),
+    ])
+  }
+
   await db.batch(
     contributorNames.map((name) =>
       db
