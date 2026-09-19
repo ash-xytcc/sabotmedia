@@ -164,6 +164,43 @@ $('[data-history]').onclick = async () => {
     }
   } catch(e){status(e.message)}
 }
-$('[data-credentials]').onclick = async () => { try { await api({action:'credentials',editPassword:$('[data-edit-password]').value}); $('[data-edit-password]').value=''; status('Contributor access updated; older contributor sessions revoked. Editor access uses your existing sign-in.') } catch(e){status(e.message)} }
-$('[data-disable]').onclick = async () => { if(!confirm('Disable this contributor’s access and revoke sessions?'))return; try{await api({action:'credentials',disabled:true});status('Contributor access disabled.')}catch(e){status(e.message)} }
+const accessStatus = (message) => {
+  const local = $('[data-access-message]')
+  if (local) local.textContent = message
+  status(message)
+}
+$('[data-credentials]').onclick = async () => {
+  const input = $('[data-edit-password]'), button = $('[data-credentials]')
+  const password = input.value
+  if (password.length < 20) {
+    accessStatus('Project password must be at least 20 characters.')
+    input.focus()
+    return
+  }
+  button.disabled = true
+  accessStatus('Updating project password…')
+  try {
+    await api({action:'credentials',editPassword:password})
+    input.value = ''
+    accessStatus('Project password updated. Existing contributor sessions were revoked; editor access still uses your SabotPress sign-in.')
+  } catch(e) {
+    accessStatus(e.message)
+  } finally {
+    button.disabled = false
+  }
+}
+$('[data-disable]').onclick = async () => {
+  if(!confirm('Disable this contributor’s access and revoke sessions?')) return
+  const button = $('[data-disable]')
+  button.disabled = true
+  accessStatus('Disabling contributor access…')
+  try {
+    await api({action:'credentials',disabled:true})
+    accessStatus('Contributor access disabled and existing contributor sessions revoked.')
+  } catch(e) {
+    accessStatus(e.message)
+  } finally {
+    button.disabled = false
+  }
+}
 load()
