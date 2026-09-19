@@ -26,6 +26,12 @@ test('opted-out groups are no longer seeded or assigned; lesson work is unchange
  assert.doesNotMatch(html,/contributors\/(?:systemli|autistici-inventati)/);assert.match(html,/contributors\/respondent-alpha/)
  assert.match(html,/shutdown is the historical catalyst/)
 })
+test('zero seeded outreach targets never issue an empty D1 batch',async()=>{
+ const base=testDb()
+ const db={...base,batch:async(statements)=>{assert.ok(statements.length>0,'D1 batch must not be empty');return base.batch(statements)}}
+ await ensureContributors(db)
+ assert.deepEqual(await listContributors(db),[])
+})
 test('legacy BASH workspace is moved from the CrimethInc slug without touching a real CrimethInc workspace',async()=>{
  const db=testDb();await ensureContributors(db)
  const draft=JSON.stringify({sharedAnswer:'',questions:[],exercise:'',status:'reporting needed'})
