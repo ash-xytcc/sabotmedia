@@ -6447,6 +6447,38 @@
             "editorialStatus": "featured"
           },
           {
+            "id": "coverage-1aryijl",
+            "date": "2026-09-25T18:00:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Corteo contro le sanzioni USA",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/events/corteo-contro-le-sanzioni-usa",
+            "imageUrl": "",
+            "summary": "Il 25 Settembre saremo in piazza contro le sanzioni Usa ad Autistici/Inventati, Francesca Albanese, Palestine Action. Nel mirino Dopo essere stata inserita nelle liste OFAC delle sanzioni USA, Autistici/Inventati ha annunciato il 6 settembre 2026 che cesserà tutti i propri servizi. Si chiude un&rsquo;infrastruttura di…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 75,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-egtbcj",
+            "date": "2026-09-25T15:30:00.000Z",
+            "outlet": "Autistici/Inventati",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Presidio davanti al consolato USA",
+            "translatedTitle": "",
+            "url": "https://keepitfree.ai/it/events/presidio-davanti-al-consolato-usa",
+            "imageUrl": "",
+            "summary": "Presidio a Firenze, di fronte al Consolato USA venerdì 25 settembre - ore 17.30 Nel mirino Dopo essere stata inserita nelle liste OFAC delle sanzioni USA, Autistici/Inventati ha annunciato il 6 settembre 2026 che cesserà tutti i propri servizi. Si chiude un&rsquo;infrastruttura di 25 anni, fatta di servizi autogestiti…",
+            "discoverySource": "official-ai",
+            "relevanceScore": 62,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1mx10tc",
             "date": "2026-09-19T12:30:00.000Z",
             "outlet": "Autistici/Inventati",
@@ -9631,7 +9663,7 @@
         "intelligenceSources": [],
         "intelligenceErrors": [],
         "intelligenceCheckedAt": "",
-        "coverageArchiveCount": 172
+        "coverageArchiveCount": 174
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9833,7 +9865,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-20T06:52:40.578Z",
+        "automationCheckedAt": "2026-09-20T12:13:59.861Z",
         "coverageArchiveCount": 0
       }
     }
