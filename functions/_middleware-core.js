@@ -19,6 +19,7 @@ const PUBLIC_AUTH_API_PATHS = new Set([
   '/api/login',
   '/api/logout',
   '/api/session',
+  '/api/bondfire-sso/redeem',
   '/api/analytics/collect',
   '/api/campaign-contributor-auth',
   '/api/campaign-correspondence',
