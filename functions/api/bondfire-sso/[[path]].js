@@ -112,12 +112,16 @@ async function consume(context) {
     .bind(String(handoff.subject)).first()
   if (linked?.admin_user_id) row = await getAdminUserById(db, linked.admin_user_id)
 
-  if (!row && handoff.email) row = await getAdminUserByEmail(db, handoff.email)
-
+  // First-time pairing should bind the accounts the person is actually using,
+  // not assume the two services share an email address.
   if (!row) {
     const current = await resolvePublicSitePermission(context)
     if (current?.canAccessAdmin && current?.user?.id) row = await getAdminUserById(db, current.user.id)
   }
+
+  // Email matching is only a fallback for browsers that do not already have a
+  // valid Sabot editor session at the moment of the first handoff.
+  if (!row && handoff.email) row = await getAdminUserByEmail(db, handoff.email)
 
   if (!row || !canAccessAdmin(row)) {
     return errorPage(
