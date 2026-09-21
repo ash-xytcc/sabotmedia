@@ -154,6 +154,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
             {canManageSite ? <Link to={adminRoutes.settings} className="wp-admin-topbar__dropdown-link">Site Settings</Link> : null}
           </AdminBarMenu>
           <Link to="/" className="wp-admin-topbar__link wp-admin-topbar__brand-logo-link" aria-label="Sabot Media home"><img src={mastheadLogo} alt="Sabot Media" className="wp-admin-topbar__brand-logo" /></Link>
+          <a href={`/api/bondfire-sso/start?returnTo=${encodeURIComponent(`${location.pathname}${location.search || ''}`)}`} className="wp-admin-topbar__link" data-connected-workspace="bondfire">Bondfire</a>
           {canCreate ? (
             <AdminBarMenu label="+ New">
               {hasCapability('content:write') ? <Link to={adminRoutes.addNew} className="wp-admin-topbar__dropdown-link">Post</Link> : null}
