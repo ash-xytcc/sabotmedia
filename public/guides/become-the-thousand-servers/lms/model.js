@@ -655,6 +655,14 @@ export const repositoryCourseRevisions = [
     section: { id: 'G13', from: G13_PREVIOUS_BODY, to: G13_BODY },
   },
   {
+    id: '2026-09-22-submedia-integration-1',
+    lessons: [
+      { slug: 'map-your-dependencies', fromHashes: { learn: '83223350', do: 'cb08019b' } },
+      { slug: 'real-backup', fromHashes: { learn: '5576cf30', do: '2846d81f' } },
+      { slug: 'mirror-publish-survival', fromHashes: { learn: '1c833669', do: '6e2ff316' } },
+    ],
+  },
+  {
     id: '2026-09-17-blog-recovery-revision-1',
     modules: [
       { id: 'blog-destination', fromBodyHash: 'a7e52bb8' },
@@ -704,8 +712,13 @@ export function applyRepositoryCourseRevisions(input) {
     for (const lessonPatch of revision.lessons || (revision.lesson ? [revision.lesson] : [])) {
       const lesson = course.lessons?.find((item) => item.slug === lessonPatch.slug)
       const canonical = legacySeed.lessons.find((item) => item.slug === lessonPatch.slug)
-      if (lesson && canonical && Object.entries(lessonPatch.from).every(([key, value]) => same(lesson[key], value))) {
-        for (const key of Object.keys(lessonPatch.from)) lesson[key] = structuredClone(canonical[key])
+      const fromFields = lessonPatch.from || null
+      const fromHashes = lessonPatch.fromHashes || null
+      const fieldsMatch = fromFields && Object.entries(fromFields).every(([key, value]) => same(lesson?.[key], value))
+      const hashesMatch = fromHashes && Object.entries(fromHashes).every(([key, value]) => bodyHash(lesson?.[key]) === value)
+      if (lesson && canonical && (fieldsMatch || hashesMatch)) {
+        const keys = fromFields ? Object.keys(fromFields) : Object.keys(fromHashes)
+        for (const key of keys) lesson[key] = structuredClone(canonical[key])
         changed = true
       }
     }

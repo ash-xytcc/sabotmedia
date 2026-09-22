@@ -19,6 +19,7 @@ import {
   G12_BODY,
   G13_BODY,
   repositoryCourseRevisions,
+  applyRepositoryCourseRevisions,
   TYPES,
 } from '../public/guides/become-the-thousand-servers/lms/model.js'
 import {
@@ -242,6 +243,34 @@ test('repository course revisions apply once, preserve other sections, and enter
   await readCourse(db, seed.slug, true)
   rows = await db.prepare("SELECT * FROM course_revisions WHERE actor_type='repository'").all()
   assert.equal(rows.results.length, 1)
+})
+test('hash-scoped repository lesson revisions update only matching fields', () => {
+  const hash = (value) => {
+    let result = 2166136261
+    const source = String(value || '')
+    for (let i = 0; i < source.length; i++) {
+      result ^= source.charCodeAt(i)
+      result = Math.imul(result, 16777619)
+    }
+    return (result >>> 0).toString(16).padStart(8, '0')
+  }
+  const revision = {
+    id: 'test-hash-scoped-lesson-revision',
+    lessons: [{ slug: 'map-your-dependencies', fromHashes: { learn: hash('LEGACY_HASHED_LEARN') } }],
+  }
+  repositoryCourseRevisions.push(revision)
+  try {
+    const old = structuredClone(seed)
+    const lesson = old.lessons.find((item) => item.slug === 'map-your-dependencies')
+    lesson.learn = 'LEGACY_HASHED_LEARN'
+    lesson.do = 'KEEP_UNRELATED_DO_FIELD'
+    const { course, applied } = applyRepositoryCourseRevisions(old)
+    assert.ok(applied.includes(revision.id))
+    assert.equal(course.lessons.find((item) => item.slug === 'map-your-dependencies').learn, seed.lessons.find((item) => item.slug === 'map-your-dependencies').learn)
+    assert.equal(course.lessons.find((item) => item.slug === 'map-your-dependencies').do, 'KEEP_UNRELATED_DO_FIELD')
+  } finally {
+    repositoryCourseRevisions.pop()
+  }
 })
 test('G02 repository revision updates the dependency lesson and derived activities without clobbering unrelated content', async () => {
   const db = testDb()
