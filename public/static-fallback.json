@@ -6479,6 +6479,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-1snvr8x",
+            "date": "2026-09-22T01:25:00.000Z",
+            "outlet": "Canarias-semanal",
+            "language": "",
+            "languageCode": "",
+            "title": "LA HAINE, TUMBADA POR LA OFENSIVA DE TRUMP CONTRA SERVIDORES DE MEDIOS ANTICAPITALISTAS",
+            "translatedTitle": "",
+            "url": "https://canarias-semanal.org/art/37019/la-haine-tumbada-por-la-ofensiva-de-trump-contra-servidores-de-medios-anticapitalistas",
+            "imageUrl": "",
+            "summary": "El filósofo argentino Néstor Kohan denuncia la ofensiva impulsada desde la Administración Trump contra Autistici/Inventati, una infraestructura digital que alojaba miles de espacios alternativos, anti ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1mx10tc",
             "date": "2026-09-19T12:30:00.000Z",
             "outlet": "Autistici/Inventati",
@@ -9663,7 +9679,7 @@
         "intelligenceSources": [],
         "intelligenceErrors": [],
         "intelligenceCheckedAt": "",
-        "coverageArchiveCount": 174
+        "coverageArchiveCount": 175
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9865,7 +9881,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-22T06:01:53.246Z",
+        "automationCheckedAt": "2026-09-22T11:25:50.990Z",
         "coverageArchiveCount": 0
       }
     }
