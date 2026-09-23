@@ -157,7 +157,7 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
           <a href={`/api/bondfire-sso/start?returnTo=${encodeURIComponent(`${location.pathname}${location.search || ''}`)}`} className="wp-admin-topbar__link" data-connected-workspace="bondfire">Bondfire</a>
           <AdminBarMenu label="Device access">
             <p style={{padding:'8px 12px',maxWidth:280,whiteSpace:'normal'}}>Bondfire signs you in with your Sabot account. To open encrypted files on a new phone or browser, open Bondfire Settings → Security → Encryption keys &amp; recovery.</p>
-            <p style={{padding:'8px 12px',maxWidth:280,whiteSpace:'normal'}}>Without your recovery passphrase, generate a device request and approve it from the same Bondfire account on a device where Drive already works. Then check approval on the new device.</p>
+            <p style={{padding:'8px 12px',maxWidth:280,whiteSpace:'normal'}}>Without your recovery passphrase, send an approval request. Keep Bondfire open on a device where Drive works, signed in to the same account. An Approve / Deny prompt appears there automatically, and your new device unlocks after approval.</p>
           </AdminBarMenu>
           {canCreate ? (
             <AdminBarMenu label="+ New">
