@@ -155,6 +155,10 @@ export function AdminRail({ collapsed, onToggleCollapsed }) {
           </AdminBarMenu>
           <Link to="/" className="wp-admin-topbar__link wp-admin-topbar__brand-logo-link" aria-label="Sabot Media home"><img src={mastheadLogo} alt="Sabot Media" className="wp-admin-topbar__brand-logo" /></Link>
           <a href={`/api/bondfire-sso/start?returnTo=${encodeURIComponent(`${location.pathname}${location.search || ''}`)}`} className="wp-admin-topbar__link" data-connected-workspace="bondfire">Bondfire</a>
+          <AdminBarMenu label="Device access">
+            <p style={{padding:'8px 12px',maxWidth:280,whiteSpace:'normal'}}>Bondfire signs you in with your Sabot account. To open encrypted files on a new phone or browser, open Bondfire Settings → Security → Encryption keys &amp; recovery.</p>
+            <p style={{padding:'8px 12px',maxWidth:280,whiteSpace:'normal'}}>Without your recovery passphrase, generate a device request and approve it from the same Bondfire account on a device where Drive already works. Then check approval on the new device.</p>
+          </AdminBarMenu>
           {canCreate ? (
             <AdminBarMenu label="+ New">
               {hasCapability('content:write') ? <Link to={adminRoutes.addNew} className="wp-admin-topbar__dropdown-link">Post</Link> : null}
