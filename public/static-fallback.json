@@ -6479,6 +6479,38 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-7oggo6",
+            "date": "2026-09-22T23:21:00.000Z",
+            "outlet": "kaosenlared.net",
+            "language": "",
+            "languageCode": "",
+            "title": "La Haine, tumbada por la ofensiva de Trump contra servidores de medios anticapitalistas",
+            "translatedTitle": "",
+            "url": "https://kaosenlared.net/la-haine-tumbada-por-la-ofensiva-de-trump-contra-servidores-de-medios-anticapitalistas",
+            "imageUrl": "",
+            "summary": "El filósofo argentino Néstor Kohan denuncia la ofensiva impulsada desde la Administración Trump contra Autistici/Inventati, una infraestructura digital que alojaba miles de espacios alternativos, anti ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 50,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-ddk743",
+            "date": "2026-09-22T17:00:00.000Z",
+            "outlet": "radiopopolare",
+            "language": "",
+            "languageCode": "",
+            "title": "Trump attacca le libertà civili in Europa, l'Unione sta zitta: il caso Autistici/Inventati",
+            "translatedTitle": "",
+            "url": "https://www.radiopopolare.it/puntata/popolare-clip/clip_23_09_2026_10_56",
+            "imageUrl": "",
+            "summary": "L’amministrazione USA sta procedendo con accuse e restrizioni nei confronti di reti, associazioni e persone legate a movimenti di diritti umani, ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1snvr8x",
             "date": "2026-09-22T01:25:00.000Z",
             "outlet": "Canarias-semanal",
@@ -9679,7 +9711,7 @@
         "intelligenceSources": [],
         "intelligenceErrors": [],
         "intelligenceCheckedAt": "",
-        "coverageArchiveCount": 175
+        "coverageArchiveCount": 177
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9881,7 +9913,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-23T18:58:05.402Z",
+        "automationCheckedAt": "2026-09-23T22:11:39.461Z",
         "coverageArchiveCount": 0
       }
     }
