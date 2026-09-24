@@ -6479,6 +6479,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-1qq9zz4",
+            "date": "2026-09-24T03:52:00.000Z",
+            "outlet": "Resumen Latinoamericano",
+            "language": "",
+            "languageCode": "",
+            "title": "Italia. El imperio extraterritorial: el caso Autistici/Inventati y la sumisión digital y financiera de Europa",
+            "translatedTitle": "",
+            "url": "https://www.resumenlatinoamericano.org/2026/09/24/italia-el-imperio-extraterritorial-el-caso-autistici-inventati-y-la-sumision-digital-y-financiera-de-europa",
+            "imageUrl": "",
+            "summary": "Por Geraldina Colotti, Resumen Latinoamericano, 24 de septiembre de 2026. La reciente decisión del Departamento del Tesoro de los Estados Unidos de incluir al histórico colectivo de hacktivismo y cont ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 80,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-7oggo6",
             "date": "2026-09-22T23:21:00.000Z",
             "outlet": "kaosenlared.net",
@@ -9711,7 +9727,7 @@
         "intelligenceSources": [],
         "intelligenceErrors": [],
         "intelligenceCheckedAt": "",
-        "coverageArchiveCount": 177
+        "coverageArchiveCount": 178
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9913,7 +9929,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-24T19:00:51.417Z",
+        "automationCheckedAt": "2026-09-24T22:13:21.542Z",
         "coverageArchiveCount": 0
       }
     }
