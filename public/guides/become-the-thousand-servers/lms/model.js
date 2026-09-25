@@ -699,6 +699,12 @@ export const repositoryCourseRevisions = [
       { id: 'blog-domain', fromBodyHash: '641ee73e' },
       { id: 'blog-finish', fromBodyHash: '5ea02aad' },
     ],
+  },
+  {
+    id: '2026-09-25-software-options-revision-1',
+    modules: [
+      { id: 'blog-destination', fromBodyHash: '022718fe' },
+    ],
   }
 ]
 export function applyRepositoryCourseRevisions(input) {
