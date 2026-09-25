@@ -27,7 +27,9 @@ module('destination','Choose where your blog will live','G02',`A server is a com
 
 A. Someone else hosts it for me. Shared hosting puts several customers on one server. Managed WordPress hosting includes some maintenance, but “managed” is not a fixed promise. Before paying, confirm: a WordPress installation; administrator access; WXR import through their supported tool; your XML file size; ability to fetch old attachments; enough media storage; HTTPS; custom-domain support if needed; downloadable content AND media backups; how restore works; updates/support responsibilities; recurring price and cancellation/export terms. HTTPS is an encrypted browser connection, with a certificate showing it belongs to the address you opened.
 
-There is no verified Sabot host comparison grid attached to this pathway yet. Political alignment alone does not establish WordPress compatibility. Use the provider’s own plan documentation and ask only for unanswered fields. Record provider, exact plan, price, support URL and confirmed import/backup limits below. Do not infer a VPS offer includes managed WordPress. If a host cannot explain how you will export files and recover elsewhere, choose another plan/provider.
+[[HOST_COMPARISON_GRID]]
+
+This comparison is a starting point, not an endorsement. Political alignment alone does not establish WordPress compatibility. Verify the exact plan you intend to use against the provider’s current documentation and ask only for unanswered fields. Record provider, exact plan, price, support URL and confirmed import/backup limits below. Do not infer a VPS offer includes managed WordPress. If a host cannot explain how you will export files and recover elsewhere, choose another plan/provider.
 
 B. I want to self-host it. A VPS (virtual private server) is a rented slice of a computer where you administer the operating system. You take on updates, security, backups and outages. Follow the linked infrastructure lessons and the specific WordPress practical before importing. Budget for ongoing maintenance, not just the first install.
 
