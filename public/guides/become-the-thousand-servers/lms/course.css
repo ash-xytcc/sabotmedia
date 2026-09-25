@@ -94,3 +94,11 @@
 .software-options__noblogs{border-left:5px solid var(--red);padding:.85rem 1rem;margin-top:1rem}
 .software-options__noblogs h5{margin:0 0 .4rem;font-size:1.05rem}
 @media(max-width:740px){.software-options__grid{grid-template-columns:1fr}}
+
+
+.software-option__facts{margin:.75rem 0;border-block:1px solid rgba(23,23,23,.25)}
+.software-option__facts>div{display:grid;grid-template-columns:7.5rem 1fr;gap:.75rem;padding:.6rem 0;border-top:1px solid rgba(23,23,23,.18)}
+.software-option__facts>div:first-child{border-top:0}
+.software-option__facts dt{font-weight:800}
+.software-option__facts dd{margin:0}
+@media(max-width:520px){.software-option__facts>div{grid-template-columns:1fr;gap:.2rem}}
