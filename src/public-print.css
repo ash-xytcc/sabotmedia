@@ -1,0 +1,49 @@
+.print-page:not(.print-page--zine) {
+  page: sabot-article-print;
+}
+
+.print-page--zine {
+  page: sabot-zine-print;
+}
+
+.print-page__zine-frame {
+  display: block;
+  width: 100%;
+  height: calc(100vh - 7rem);
+  min-height: 70vh;
+  border: 0;
+  background: #fff;
+}
+
+@page sabot-article-print {
+  size: auto;
+  margin: 0;
+}
+
+@page sabot-zine-print {
+  size: auto;
+  margin: 0;
+}
+
+@media print {
+  .skip-link,
+  .print-page--zine .print-header--zine {
+    display: none !important;
+  }
+
+  .print-page:not(.print-page--zine) {
+    box-sizing: border-box;
+    padding: 1.5rem;
+  }
+
+  .print-page--zine {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-page__zine-frame {
+    width: 100%;
+    height: 100vh;
+    min-height: 0;
+  }
+}

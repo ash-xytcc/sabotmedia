@@ -8,12 +8,40 @@ import { attachPostAssets } from '../assets/assetSystem'
 import { normalizePost } from '../models/publication'
 import { DEFAULT_PRINT_OPTIONS, PrintLayouts, printEngine } from '../print/printEngine'
 import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
+import { loadPublicationsAsync } from '../lib/publications'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
 import { EditableText } from './EditableText'
 import { EditableLink } from './EditableLink'
 
 function getPieceBySlug(pieces, slug) {
   return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
+}
+
+function isZinePiece(piece) {
+  const type = [piece?.type, piece?.contentType, piece?.sourcePostType].join(' ').toLowerCase()
+  return /\bzine\b/.test(type) || /^\s*\[zine\]/i.test(String(piece?.title || ''))
+}
+
+function getImposedPdfFromAssets(assets = []) {
+  const candidates = (Array.isArray(assets) ? assets : [])
+    .map((asset) => ({ asset, title: String(asset?.title || asset?.label || '').toLowerCase(), url: asset?.url || asset?.href || '' }))
+    .filter(({ title, url }) => /impos|printer.?friendly/.test(title) && /^https?:\/\//i.test(url))
+  const selected = candidates.find(({ title }) => /printer.?friendly/.test(title)) || candidates.find(({ title }) => /impos/.test(title))
+  return selected?.url || ''
+}
+
+function getImposedZinePdf(piece, publications = []) {
+  const piecePdf = getImposedPdfFromAssets([
+    ...(Array.isArray(piece?.relatedPrintLinks) ? piece.relatedPrintLinks : []),
+    ...(Array.isArray(piece?.relatedAssets) ? piece.relatedAssets : []),
+  ])
+  if (piecePdf) return piecePdf
+
+  const publication = (Array.isArray(publications) ? publications : []).find((item) =>
+    ['public', 'published'].includes(String(item?.visibility || item?.status || '').toLowerCase()) &&
+    (item?.pieceSlugs || []).includes(piece?.slug)
+  )
+  return publication?.assets?.imposedPdf || publication?.printEditions?.find((edition) => edition?.imposedPdf)?.imposedPdf || ''
 }
 
 function formatMetaType(value) {
@@ -31,9 +59,15 @@ function getTitleLengthClass(value) {
   return 'title-length-short'
 }
 
+function openBrowserPrintDialog() {
+  if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+  window.print()
+}
+
 export function PrintPage({ pieces = [] }) {
   const { slug = '' } = useParams()
   const [nativePieces, setNativePieces] = useState(null)
+  const [publications, setPublications] = useState(null)
   const [printOptions, setPrintOptions] = useState(DEFAULT_PRINT_OPTIONS)
   const autoPrintedSlug = useRef('')
   const printLayout = PrintLayouts.ARTICLE
@@ -54,6 +88,14 @@ export function PrintPage({ pieces = [] }) {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    loadPublicationsAsync()
+      .then((loaded) => { if (!cancelled) setPublications(Array.isArray(loaded) ? loaded : []) })
+      .catch(() => { if (!cancelled) setPublications([]) })
+    return () => { cancelled = true }
+  }, [])
+
   const wordpressFeed = useWordPressPieces(pieces)
   const livePieces = wordpressFeed.pieces || pieces
   const mergedPieces = useMemo(
@@ -63,13 +105,15 @@ export function PrintPage({ pieces = [] }) {
 
   const piece = getPieceBySlug(mergedPieces, slug)
   const pageTitle = piece?.title || piece?.slug || ''
+  const isZine = isZinePiece(piece)
+  const imposedZinePdf = isZine ? getImposedZinePdf(piece, publications || []) : ''
 
   useEffect(() => {
-    if (!piece || !getPieceDisplaySettings(piece).enablePrintMode) return
+    if (!piece || isZinePiece(piece) || !getPieceDisplaySettings(piece).enablePrintMode) return
     if (autoPrintedSlug.current === piece.slug) return
 
     autoPrintedSlug.current = piece.slug
-    const printTimer = window.setTimeout(() => window.print(), 250)
+    const printTimer = window.setTimeout(openBrowserPrintDialog, 250)
     return () => window.clearTimeout(printTimer)
   }, [piece?.slug])
 
@@ -96,6 +140,48 @@ export function PrintPage({ pieces = [] }) {
       ? 'experience'
       : resolveFirstReadableMode(displaySettings)
     return <Navigate to={nextMode === 'experience' ? `/post/${piece.slug}?mode=experience` : `/post/${piece.slug}`} replace />
+  }
+
+  if (isZine && !imposedZinePdf && publications === null) {
+    return <main className="page print-page print-page--loading" aria-live="polite"><p>Preparing imposed zine edition…</p></main>
+  }
+
+  if (isZine) {
+    if (!imposedZinePdf) {
+      return (
+        <main className="page print-page print-page--zine">
+          <header className="print-header">
+            <h1>{piece.title || 'Zine'}</h1>
+            <p>No imposed print PDF is attached to this zine yet.</p>
+            <a href={`/post/${encodeURIComponent(piece.slug)}`}>Back to the zine</a>
+          </header>
+        </main>
+      )
+    }
+
+    const printImposedZine = () => {
+      if (autoPrintedSlug.current === piece.slug) return
+      autoPrintedSlug.current = piece.slug
+      window.setTimeout(openBrowserPrintDialog, 350)
+    }
+
+    return (
+      <main className="page print-page print-page--zine">
+        <header className="print-header print-header--zine">
+          <h1>{piece.title || 'Zine'} — imposed print edition</h1>
+          <div className="print-header__actions">
+            <a href={imposedZinePdf} target="_blank" rel="noreferrer">Open imposed PDF</a>
+            <button type="button" onClick={openBrowserPrintDialog}>Print imposed zine</button>
+          </div>
+        </header>
+        <iframe
+          className="print-page__zine-frame"
+          src={imposedZinePdf}
+          title={`${piece.title || 'Zine'} imposed print edition`}
+          onLoad={printImposedZine}
+        />
+      </main>
+    )
   }
 
   const post = attachPostAssets(normalizePost(piece))
