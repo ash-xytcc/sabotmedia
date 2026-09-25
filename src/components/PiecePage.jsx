@@ -415,7 +415,9 @@ export function PiecePage({ pieces = [] }) {
           ) : null}
 
           {displaySettings.enablePrintMode ? (
-            <EditableLink className="piece-article-lead__print-link" labelField={`post.${piece.slug}.actions.print.label`} hrefField={`post.${piece.slug}.actions.print.href`} defaultLabel="Print" defaultHref={`/post/${piece.slug}/print`} />
+            <Link className="piece-article-lead__print-link" to={`/post/${encodeURIComponent(piece.slug)}/print`}>
+              <EditableText as="span" field={`post.${piece.slug}.actions.print.label`}>Print</EditableText>
+            </Link>
           ) : null}
         </div>
       </section>

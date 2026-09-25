@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { renderImportedBody } from '../lib/renderImportedBody'
 import { loadPublishedNativePieces, mergeNativeAndImportedPieces } from '../lib/nativePublicFeed'
@@ -33,15 +33,20 @@ function getTitleLengthClass(value) {
 
 export function PrintPage({ pieces = [] }) {
   const { slug = '' } = useParams()
-  const [nativePieces, setNativePieces] = useState([])
+  const [nativePieces, setNativePieces] = useState(null)
   const [printOptions, setPrintOptions] = useState(DEFAULT_PRINT_OPTIONS)
+  const autoPrintedSlug = useRef('')
   const printLayout = PrintLayouts.ARTICLE
 
   useEffect(() => {
     let cancelled = false
     async function boot() {
-      const loaded = await loadPublishedNativePieces()
-      if (!cancelled) setNativePieces(loaded)
+      try {
+        const loaded = await loadPublishedNativePieces()
+        if (!cancelled) setNativePieces(Array.isArray(loaded) ? loaded : [])
+      } catch {
+        if (!cancelled) setNativePieces([])
+      }
     }
     boot()
     return () => {
@@ -60,9 +65,26 @@ export function PrintPage({ pieces = [] }) {
   const pageTitle = piece?.title || piece?.slug || ''
 
   useEffect(() => {
+    if (!piece || !getPieceDisplaySettings(piece).enablePrintMode) return
+    if (autoPrintedSlug.current === piece.slug) return
+
+    autoPrintedSlug.current = piece.slug
+    const printTimer = window.setTimeout(() => window.print(), 250)
+    return () => window.clearTimeout(printTimer)
+  }, [piece?.slug])
+
+  useEffect(() => {
     if (!pageTitle) return
     document.title = `${pageTitle} | Sabot Media Print`
   }, [pageTitle])
+
+  if (!piece && nativePieces === null) {
+    return (
+      <main className="page print-page print-page--loading" aria-live="polite">
+        <p>Preparing print view…</p>
+      </main>
+    )
+  }
 
   if (!piece) {
     return <Navigate to="/archive" replace />
