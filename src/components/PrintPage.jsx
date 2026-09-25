@@ -101,6 +101,11 @@ export function PrintPage({ pieces = [] }) {
     document.title = `${pageTitle} | Sabot Media Print`
   }, [pageTitle])
 
+  useEffect(() => {
+    if (!isZine || !imposedZinePdf) return
+    window.location.replace(imposedZinePdf)
+  }, [isZine, imposedZinePdf])
+
   if (!piece && nativePieces === null) {
     return (
       <main className="page print-page print-page--loading" aria-live="polite">
@@ -138,27 +143,9 @@ export function PrintPage({ pieces = [] }) {
       )
     }
 
-    const printImposedZine = () => {
-      if (autoPrintedSlug.current === piece.slug) return
-      autoPrintedSlug.current = piece.slug
-      window.setTimeout(openBrowserPrintDialog, 350)
-    }
-
     return (
-      <main className="page print-page print-page--zine">
-        <header className="print-header print-header--zine">
-          <h1>{piece.title || 'Zine'} — imposed print edition</h1>
-          <div className="print-header__actions">
-            <a href={imposedZinePdf} target="_blank" rel="noreferrer">Open imposed PDF</a>
-            <button type="button" onClick={openBrowserPrintDialog}>Print imposed zine</button>
-          </div>
-        </header>
-        <iframe
-          className="print-page__zine-frame"
-          src={imposedZinePdf}
-          title={`${piece.title || 'Zine'} imposed print edition`}
-          onLoad={printImposedZine}
-        />
+      <main className="page print-page print-page--zine" aria-live="polite">
+        <p>Opening the imposed PDF…</p>
       </main>
     )
   }

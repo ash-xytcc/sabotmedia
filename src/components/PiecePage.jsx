@@ -16,6 +16,7 @@ import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
 import { buildPostMeta, setDocumentMeta } from '../lib/documentMeta'
 import { loadCollectionsAsync } from '../lib/collections'
 import { loadPublicationsAsync } from '../lib/publications'
+import { getImposedZinePdf } from '../lib/imposedZinePdf'
 import { EditableText } from './EditableText'
 import { EditableLink } from './EditableLink'
 import {
@@ -40,6 +41,11 @@ function getPreferredMode(searchParams) {
 
 function getPieceBySlug(pieces, slug) {
   return (Array.isArray(pieces) ? pieces : []).find((piece) => piece?.slug === slug) || null
+}
+
+function isZinePiece(piece) {
+  const type = [piece?.type, piece?.contentType, piece?.sourcePostType].join(' ').toLowerCase()
+  return /\bzine\b/.test(type) || /^\s*\[zine\]/i.test(String(piece?.title || ''))
 }
 
 function getOrderedPieces(pieces) {
@@ -225,6 +231,7 @@ export function PiecePage({ pieces = [] }) {
   const orderedPieces = useMemo(() => getOrderedPieces(mergedPieces), [mergedPieces])
   const piece = useMemo(() => getPieceBySlug(orderedPieces, slug), [orderedPieces, slug])
   const displaySettings = useMemo(() => getPieceDisplaySettings(piece), [piece])
+  const zinePrintPdf = isZinePiece(piece) ? getImposedZinePdf(piece, publications) : ''
   const mode = useMemo(() => {
     if (!piece) return 'read'
     const explicit = getPreferredMode(searchParams)
@@ -415,9 +422,15 @@ export function PiecePage({ pieces = [] }) {
           ) : null}
 
           {displaySettings.enablePrintMode ? (
-            <Link className="piece-article-lead__print-link" to={`/post/${encodeURIComponent(piece.slug)}/print`}>
-              <EditableText as="span" field={`post.${piece.slug}.actions.print.label`}>Print</EditableText>
-            </Link>
+            zinePrintPdf ? (
+              <a className="piece-article-lead__print-link" href={zinePrintPdf} target="_blank" rel="noopener noreferrer">
+                <EditableText as="span" field={`post.${piece.slug}.actions.print.label`}>Print</EditableText>
+              </a>
+            ) : (
+              <Link className="piece-article-lead__print-link" to={`/post/${encodeURIComponent(piece.slug)}/print`}>
+                <EditableText as="span" field={`post.${piece.slug}.actions.print.label`}>Print</EditableText>
+              </Link>
+            )
           ) : null}
         </div>
       </section>
