@@ -61,10 +61,16 @@ function captureVisualMediaBookmark() {
 
   const collapsed = range.cloneRange()
   collapsed.collapse(false)
+  const selection = window.getSelection && window.getSelection()
+  if (selection) {
+    selection.removeAllRanges()
+    selection.addRange(collapsed)
+  }
 
   if (collapsed.startContainer === editor) {
     return {
       kind: 'visual',
+      range: collapsed.cloneRange(),
       boundaryIndex: collapsed.startOffset,
       textOffset: textOffset(editor, collapsed.startContainer, collapsed.startOffset) || 0,
     }
@@ -78,6 +84,7 @@ function captureVisualMediaBookmark() {
   if (blockIndex < 0) {
     return {
       kind: 'visual',
+      range: collapsed.cloneRange(),
       boundaryIndex: children.length,
       textOffset: Number.isFinite(globalOffset) ? globalOffset : 0,
     }
@@ -85,6 +92,7 @@ function captureVisualMediaBookmark() {
 
   return {
     kind: 'visual',
+    range: collapsed.cloneRange(),
     boundaryIndex: isEmptyBlock(block) ? blockIndex : blockIndex + 1,
     textOffset: Number.isFinite(globalOffset) ? globalOffset : 0,
     blockText: String(block.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 120),
@@ -207,28 +215,44 @@ function resolveBoundaryIndex(editor, bookmark) {
 function insertVisualMarkup(markup, bookmark) {
   const editor = visualEditor()
   if (!editor || !markup) return false
-  const fragment = createFragment(markup)
-  const insertedNodes = Array.from(fragment.childNodes)
-  if (!insertedNodes.length) return false
+  const savedRange = bookmark && bookmark.range
+  const selection = window.getSelection && window.getSelection()
+  const rangeIsValid = savedRange
+    && savedRange.startContainer?.isConnected
+    && savedRange.endContainer?.isConnected
+    && editor.contains(savedRange.startContainer)
+    && editor.contains(savedRange.endContainer)
 
-  const boundaryIndex = resolveBoundaryIndex(editor, bookmark)
-  const reference = editor.childNodes[boundaryIndex] || null
-  if (reference) editor.insertBefore(fragment, reference)
-  else editor.appendChild(fragment)
-
-  let landing = null
-  for (const node of insertedNodes) {
-    if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'P' && isEmptyBlock(node)) landing = node
+  editor.focus({ preventScroll: true })
+  if (selection) {
+    selection.removeAllRanges()
+    if (rangeIsValid) selection.addRange(savedRange)
+    else {
+      const boundaryIndex = resolveBoundaryIndex(editor, bookmark)
+      const fallback = document.createRange()
+      fallback.setStart(editor, boundaryIndex)
+      fallback.collapse(true)
+      selection.addRange(fallback)
+    }
   }
-  if (!landing) {
-    landing = document.createElement('p')
-    landing.appendChild(document.createElement('br'))
-    const last = insertedNodes[insertedNodes.length - 1]
-    if (last && last.parentNode) last.parentNode.insertBefore(landing, last.nextSibling)
-    else editor.appendChild(landing)
-  }
 
-  placeCaretAtStart(editor, landing)
+  // insertHTML is still the most reliable cross-browser way to create a
+  // contentEditable undo transaction. Keep the Range fallback for browsers
+  // that do not implement it.
+  const inserted = document.execCommand?.('insertHTML', false, markup)
+  if (!inserted && selection?.rangeCount) {
+    const range = selection.getRangeAt(0)
+    range.deleteContents()
+    const fragment = createFragment(markup)
+    const lastNode = fragment.lastChild
+    range.insertNode(fragment)
+    if (lastNode) {
+      range.setStartAfter(lastNode)
+      range.collapse(true)
+      selection.removeAllRanges()
+      selection.addRange(range)
+    }
+  }
   dispatchEditorSync(editor, 'insertHTML')
   return true
 }
@@ -248,11 +272,15 @@ function insertTextMarkup(markup, bookmark) {
   const prefix = start > 0 && textarea.value[start - 1] !== '\n' ? '\n' : ''
   const suffix = end < textarea.value.length && textarea.value[end] !== '\n' ? '\n' : ''
   const inserted = prefix + markup + suffix
-  setTextareaValue(textarea, textarea.value.slice(0, start) + inserted + textarea.value.slice(end))
-  const cursor = start + inserted.length
-  textarea.selectionStart = cursor
-  textarea.selectionEnd = cursor
   textarea.focus()
+  textarea.selectionStart = start
+  textarea.selectionEnd = end
+  if (!document.execCommand?.('insertText', false, inserted)) {
+    setTextareaValue(textarea, textarea.value.slice(0, start) + inserted + textarea.value.slice(end))
+    const cursor = start + inserted.length
+    textarea.selectionStart = cursor
+    textarea.selectionEnd = cursor
+  }
   return true
 }
 
@@ -271,18 +299,23 @@ function insertVisualLink(href, bookmark) {
   anchor.rel = 'noopener noreferrer'
 
   if (range.collapsed) anchor.textContent = href
-  else anchor.appendChild(range.extractContents())
-  range.insertNode(anchor)
-
+  else anchor.appendChild(range.cloneContents())
   const selection = window.getSelection && window.getSelection()
-  if (selection) {
-    const after = document.createRange()
-    after.setStartAfter(anchor)
-    after.collapse(true)
-    selection.removeAllRanges()
-    selection.addRange(after)
-  }
   if (editor.focus) editor.focus({ preventScroll: true })
+  if (selection) {
+    selection.removeAllRanges()
+    selection.addRange(range)
+  }
+  if (!document.execCommand?.('insertHTML', false, anchor.outerHTML)) {
+    range.insertNode(anchor)
+    if (selection) {
+      const after = document.createRange()
+      after.setStartAfter(anchor)
+      after.collapse(true)
+      selection.removeAllRanges()
+      selection.addRange(after)
+    }
+  }
   dispatchEditorSync(editor, 'insertLink')
   return true
 }
@@ -295,11 +328,15 @@ function insertTextLink(href, bookmark) {
   const selected = textarea.value.slice(start, end)
   const label = selected || href
   const markup = '[' + label + '](' + href + ')'
-  setTextareaValue(textarea, textarea.value.slice(0, start) + markup + textarea.value.slice(end))
-  const cursor = start + markup.length
-  textarea.selectionStart = cursor
-  textarea.selectionEnd = cursor
   textarea.focus()
+  textarea.selectionStart = start
+  textarea.selectionEnd = end
+  if (!document.execCommand?.('insertText', false, markup)) {
+    setTextareaValue(textarea, textarea.value.slice(0, start) + markup + textarea.value.slice(end))
+    const cursor = start + markup.length
+    textarea.selectionStart = cursor
+    textarea.selectionEnd = cursor
+  }
   return true
 }
 

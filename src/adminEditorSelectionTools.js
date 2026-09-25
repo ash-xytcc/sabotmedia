@@ -225,6 +225,11 @@ function handleEditorShortcut(event) {
     runCommand('redo', null, 'historyRedo')
     return
   }
+  if (key === 'x') {
+    event.preventDefault()
+    runCommand('cut', null, 'deleteByCut')
+    return
+  }
   if (key === 'b') {
     event.preventDefault()
     runCommand('bold', null, 'formatBold')

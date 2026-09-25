@@ -22,6 +22,8 @@ test('visual editor exposes working undo redo bold italic and link keyboard shor
   assert.match(runtime, /historyUndo/)
   assert.match(runtime, /historyRedo/)
   assert.match(runtime, /key === 'y'/)
+  assert.match(runtime, /key === 'x'/)
+  assert.match(runtime, /runCommand\('cut', null, 'deleteByCut'\)/)
   assert.match(runtime, /key === 'b'/)
   assert.match(runtime, /formatBold/)
   assert.match(runtime, /key === 'i'/)

@@ -7,10 +7,20 @@ const runtime = fs.readFileSync(new URL('../src/adminEditorInsertionController.j
 test('body media picker bookmarks the editor location before the modal steals focus', () => {
   assert.match(runtime, /native-content-editor__add-media/)
   assert.match(runtime, /captureVisualMediaBookmark\(\)/)
+  assert.match(runtime, /range: collapsed\.cloneRange\(\)/)
   assert.match(runtime, /boundaryIndex/)
   assert.match(runtime, /textOffset/)
   assert.match(runtime, /pendingBodyMediaPick = true/)
   assert.match(runtime, /mediaBookmark = visualEditor\(\) \? captureVisualMediaBookmark\(\) : captureTextBookmark\(\)/)
+})
+
+test('media insertion restores the saved caret and uses the browser undo transaction', () => {
+  const insert = runtime.slice(runtime.indexOf('function insertVisualMarkup'), runtime.indexOf('function setTextareaValue'))
+  assert.match(insert, /selection\.addRange\(savedRange\)/)
+  assert.match(insert, /execCommand\?\.\('insertHTML'/)
+  assert.match(runtime, /execCommand\?\.\('insertText'/)
+  assert.match(runtime, /range\.cloneContents\(\)/)
+  assert.match(runtime, /execCommand\?\.\('insertHTML', false, anchor\.outerHTML\)/)
 })
 
 test('React Media Library selection is intercepted before the image-only editor handler', () => {
