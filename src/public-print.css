@@ -31,6 +31,7 @@ body:has(.print-page:not(.print-page--zine)) {
 
 @media print {
   .skip-link,
+  .public-accessibility,
   .wp-public-admin-bar,
   .wp-admin-topbar,
   .admin-rail,
