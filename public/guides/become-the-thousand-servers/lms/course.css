@@ -81,3 +81,16 @@
 .host-comparison .score{white-space:nowrap;font-weight:800;text-align:center}
 .host-comparison__note{margin:.65rem 0 0}
 @media(max-width:700px){.host-comparison table{min-width:900px}.host-comparison th,.host-comparison td{padding:.6rem;font-size:.88rem}}
+
+
+/* Publishing-software choices inside the NoBlogs recovery pathway. */
+.software-options{margin:2rem 0}
+.software-options>h4{margin-bottom:.45rem;font-size:1.2rem}
+.software-options__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1rem 0}
+.software-option{border:1px solid currentColor;padding:1rem;background:var(--paper)}
+.software-option h5{margin:0 0 .6rem;font-size:1.08rem}
+.software-option p{margin:.55rem 0;line-height:1.5}
+.software-option__links{font-size:.9rem;font-weight:700}
+.software-options__noblogs{border-left:5px solid var(--red);padding:.85rem 1rem;margin-top:1rem}
+.software-options__noblogs h5{margin:0 0 .4rem;font-size:1.05rem}
+@media(max-width:740px){.software-options__grid{grid-template-columns:1fr}}
