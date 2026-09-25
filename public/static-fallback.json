@@ -6479,6 +6479,22 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-18rhhpx",
+            "date": "2026-09-24T05:05:00.000Z",
+            "outlet": "il manifesto",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Con Autistici/Inventati, la battaglia scende in piazza",
+            "translatedTitle": "",
+            "url": "https://ilmanifesto.it/con-autistici-inventati-la-battaglia-scende-in-piazza",
+            "imageUrl": "",
+            "summary": "Dati in pasto Oggi sit-in a Roma e Firenze contro le sanzioni di Washington che hanno soffocato il collettiv ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 92,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-1qq9zz4",
             "date": "2026-09-24T03:52:00.000Z",
             "outlet": "Resumen Latinoamericano",
@@ -9727,7 +9743,7 @@
         "intelligenceSources": [],
         "intelligenceErrors": [],
         "intelligenceCheckedAt": "",
-        "coverageArchiveCount": 178
+        "coverageArchiveCount": 179
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9929,7 +9945,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-25T00:35:16.424Z",
+        "automationCheckedAt": "2026-09-25T05:19:08.505Z",
         "coverageArchiveCount": 0
       }
     }
