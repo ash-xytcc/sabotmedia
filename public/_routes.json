@@ -51,7 +51,8 @@
     "/guides/become-the-thousand-servers",
     "/login",
     "/wp-login",
-    "/logout"
+    "/logout",
+    "/courses/*"
   ],
   "exclude": []
 }

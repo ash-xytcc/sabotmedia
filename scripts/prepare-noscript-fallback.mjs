@@ -86,7 +86,7 @@ function isPublicPublication(item) {
 }
 
 function nav() {
-  return '<nav aria-label="Plain HTML navigation"><strong><a href="/">Sabot Media</a></strong> <a href="/archive">Archive</a> <a href="/guides/become-the-thousand-servers/">COURSES</a> <a href="/campaigns">Campaigns</a> <a href="/investigations">Investigations</a> <a href="/collections">Collections</a> <a href="/publications">Publications</a> <a href="/updates">Updates</a> <a href="/press">Press</a> <a href="/about">About</a> <a href="/contact">Contact</a> <a href="/feeds">Feeds</a></nav>'
+  return '<nav aria-label="Plain HTML navigation"><strong><a href="/">Sabot Media</a></strong> <a href="/archive">Archive</a> <a href="/courses">Courses</a> <a href="/campaigns">Campaigns</a> <a href="/investigations">Investigations</a> <a href="/collections">Collections</a> <a href="/publications">Publications</a> <a href="/updates">Updates</a> <a href="/press">Press</a> <a href="/about">About</a> <a href="/contact">Contact</a> <a href="/feeds">Feeds</a></nav>'
 }
 
 function sharedStyle() {

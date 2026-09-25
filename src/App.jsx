@@ -18,6 +18,7 @@ import { AudioLabPage } from './components/AudioLabPage'
 import { PublicationLandingPage, PublicationReaderPage, PublicationsIndexPage } from './components/PublicationReaderPage'
 import { PublicationSystemPage } from './components/PublicationSystemPage'
 import { CollectionsIndexPage } from './components/CollectionsIndexPage'
+import { CoursesIndexPage } from './components/CoursesIndexPage'
 import { CollectionPage } from './components/CollectionPage'
 import { CollectionsAdminPage } from './components/CollectionsAdminPage'
 import { CampaignPage } from './components/CampaignPage'
@@ -43,7 +44,6 @@ import { buildProjectMap, getFeaturedPiece, getLatestPieces, getProjectMeta } fr
 import { getPieces } from './lib/pieces'
 import { PublicSurfacePage } from './components/PublicSurfacePage'
 import { PublicInfoPage } from './components/PublicInfoPage'
-import { CoursesPage } from './components/CoursesPage'
 import { AdminNoticeProvider } from './components/WpAdminNotices'
 import { MediaLibraryPage } from './components/MediaLibraryPage'
 import { AnalyticsPage } from './components/AnalyticsPage'
@@ -155,7 +155,6 @@ function RouteMeta({ pieces = [] }) {
     const routeMeta = {
       '/': ['Sabot Media', 'Independent reporting, essays, comics, podcasts, zines, and project-based archive work.'],
       '/archive': ['Archive', 'Browse the Sabot Media archive by search, project, format, and date.'],
-      '/courses': ['Courses', 'Self-paced courses from Sabot Media for sharing practical skills and knowledge.'],
       '/collections': ['Collections', 'Browse Sabot Media bodies of work by timeline, downloads, gallery, and related pieces.'],
       '/campaigns': ['Campaigns', 'Sabot Media campaign hubs gathering reporting, sources, live updates, and public action materials.'],
       '/campaigns/autistici-inventati': ['Communications Infrastructure Is Not Terrorism', 'Campaign hub for reporting, open letters, graphics, live updates, source material, and infrastructure status related to Autistici/Inventati.'],
@@ -301,6 +300,7 @@ export default function App() {
               <Route path={publicRoutes.print} element={<PrintPage pieces={pieces} />} />
               <Route path="/piece/:slug/print" element={<LegacyPrintRedirect />} />
               <Route path={publicRoutes.collections} element={<CollectionsIndexPage pieces={pieces} />} />
+              <Route path="/courses" element={<CoursesIndexPage />} />
               <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
               <Route path={publicRoutes.campaigns} element={<CampaignsIndexPage />} />
               <Route path={publicRoutes.investigations} element={<InvestigationsIndexPage />} />
@@ -312,7 +312,6 @@ export default function App() {
               <Route path={publicRoutes.aiCampaignCoverage} element={<CampaignCoverageArchivePage />} />
               <Route path={publicRoutes.campaign} element={<CampaignRoute />} />
               <Route path={publicRoutes.feeds} element={<PublicFeedsPage />} />
-              <Route path={publicRoutes.courses} element={<CoursesPage />} />
               <Route path={publicRoutes.gallery} element={<GalleryArchivePage />} />
 
               <Route path="/review" element={protect(<Navigate to={adminRoutes.qa} replace />)} />
