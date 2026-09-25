@@ -1,7 +1,7 @@
 const STATIC_PUBLIC_PAGES = [
   { id: 'home', label: 'Home', path: '/', family: 'page' },
   { id: 'archive', label: 'Archive', path: '/archive', family: 'page' },
-  { id: 'courses', label: 'Courses', path: '/courses', family: 'index' },
+  { id: 'guides', label: 'Guides', path: '/guides', family: 'index' },
   { id: 'search', label: 'Search', path: '/search', family: 'page' },
   { id: 'collections', label: 'Collections', path: '/collections', family: 'index' },
   { id: 'campaigns', label: 'Campaigns', path: '/campaigns', family: 'index' },

@@ -4,19 +4,19 @@ import './courses-index.css'
 
 const COURSE_URL = '/guides/become-the-thousand-servers/'
 const OFFLINE_URL = '/guides/become-the-thousand-servers/offline'
-const FEATURE_IMAGE = '/media/courses/each-one-teach-one.webp'
+const FEATURE_IMAGE = '/images/courses/become-the-thousand-servers.png'
 
 export function CoursesIndexPage() {
   return (
     <main className="page courses-page">
       <PublicationTopbar />
       <section className="courses-hero">
-        <p className="courses-hero__eyebrow">Sabot Media / Courses</p>
-        <h1>Courses</h1>
+        <p className="courses-hero__eyebrow">Sabot Media / Guides</p>
+        <h1>Guides</h1>
         <p>Self-directed field courses built to be used, broken, repaired, printed, shared, and taught forward. No account required to start.</p>
       </section>
 
-      <section className="courses-list" aria-label="Courses">
+      <section className="courses-list" aria-label="Guides">
         <article className="course-feature">
           <a className="course-feature__image" href={COURSE_URL}>
             <img

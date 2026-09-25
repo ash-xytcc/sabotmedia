@@ -1,7 +1,7 @@
 export const editableContentRegistry = {
   nav: [
     { id: 'archive', labelField: 'nav.archive.label', hrefField: 'nav.archive.href', defaultLabel: 'Archive', defaultHref: '/archive' },
-    { id: 'courses', labelField: 'nav.courses.label', hrefField: 'nav.courses.href', defaultLabel: 'Courses', defaultHref: '/courses' },
+    { id: 'guides', labelField: 'nav.guides.label', hrefField: 'nav.guides.href', defaultLabel: 'Guides', defaultHref: '/guides' },
     { id: 'feeds', labelField: 'nav.feeds.label', hrefField: 'nav.feeds.href', defaultLabel: 'Feeds', defaultHref: '/feeds' },
     { id: 'about', labelField: 'nav.about.label', hrefField: 'nav.about.href', defaultLabel: 'About', defaultHref: '/about' },
   ],

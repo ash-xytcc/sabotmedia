@@ -30,7 +30,7 @@ const PUBLIC_AUTH_API_PATHS = new Set([
 ])
 const PUBLIC_SPA_EXACT_PATHS = new Set([
   '/', '/archive', '/search', '/about', '/security', '/contact', '/submit', '/support', '/press', '/feeds',
-  '/campaigns', '/collections', '/courses', '/publications', '/updates', '/projects', '/investigations', '/lounge', '/saboteur',
+  '/campaigns', '/collections', '/courses', '/guides', '/publications', '/updates', '/projects', '/investigations', '/lounge', '/saboteur',
   '/gallery/crumbs', '/aberdeen-local-1312-gallery', '/login', '/wp-login', '/logout',
 ])
 

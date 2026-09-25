@@ -155,6 +155,7 @@ function RouteMeta({ pieces = [] }) {
     const routeMeta = {
       '/': ['Sabot Media', 'Independent reporting, essays, comics, podcasts, zines, and project-based archive work.'],
       '/archive': ['Archive', 'Browse the Sabot Media archive by search, project, format, and date.'],
+      '/guides': ['Guides', 'Field guides and courses for sharing practical skills and knowledge.'],
       '/collections': ['Collections', 'Browse Sabot Media bodies of work by timeline, downloads, gallery, and related pieces.'],
       '/campaigns': ['Campaigns', 'Sabot Media campaign hubs gathering reporting, sources, live updates, and public action materials.'],
       '/campaigns/autistici-inventati': ['Communications Infrastructure Is Not Terrorism', 'Campaign hub for reporting, open letters, graphics, live updates, source material, and infrastructure status related to Autistici/Inventati.'],
@@ -300,7 +301,8 @@ export default function App() {
               <Route path={publicRoutes.print} element={<PrintPage pieces={pieces} />} />
               <Route path="/piece/:slug/print" element={<LegacyPrintRedirect />} />
               <Route path={publicRoutes.collections} element={<CollectionsIndexPage pieces={pieces} />} />
-              <Route path="/courses" element={<CoursesIndexPage />} />
+              <Route path={publicRoutes.guides} element={<CoursesIndexPage />} />
+              <Route path="/courses" element={<Navigate to={publicRoutes.guides} replace />} />
               <Route path={publicRoutes.collection} element={<CollectionPage pieces={pieces} />} />
               <Route path={publicRoutes.campaigns} element={<CampaignsIndexPage />} />
               <Route path={publicRoutes.investigations} element={<InvestigationsIndexPage />} />

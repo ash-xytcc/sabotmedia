@@ -21,6 +21,7 @@
     "/archive*",
     "/archive/*",
     "/courses*",
+    "/guides",
     "/search*",
     "/updates*",
     "/updates/*",
