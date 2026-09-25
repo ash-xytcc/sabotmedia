@@ -9,6 +9,7 @@ import { normalizePost } from '../models/publication'
 import { DEFAULT_PRINT_OPTIONS, PrintLayouts, printEngine } from '../print/printEngine'
 import { resolveFeaturedTitleDisplay } from '../lib/featuredTitleDisplay'
 import { loadPublicationsAsync } from '../lib/publications'
+import { getImposedZinePdf } from '../lib/imposedZinePdf'
 import mastheadLogo from '../assets/sabot-masthead-logo.png'
 import { EditableText } from './EditableText'
 import { EditableLink } from './EditableLink'
@@ -20,28 +21,6 @@ function getPieceBySlug(pieces, slug) {
 function isZinePiece(piece) {
   const type = [piece?.type, piece?.contentType, piece?.sourcePostType].join(' ').toLowerCase()
   return /\bzine\b/.test(type) || /^\s*\[zine\]/i.test(String(piece?.title || ''))
-}
-
-function getImposedPdfFromAssets(assets = []) {
-  const candidates = (Array.isArray(assets) ? assets : [])
-    .map((asset) => ({ asset, title: String(asset?.title || asset?.label || '').toLowerCase(), url: asset?.url || asset?.href || '' }))
-    .filter(({ title, url }) => /impos|printer.?friendly/.test(title) && /^https?:\/\//i.test(url))
-  const selected = candidates.find(({ title }) => /printer.?friendly/.test(title)) || candidates.find(({ title }) => /impos/.test(title))
-  return selected?.url || ''
-}
-
-function getImposedZinePdf(piece, publications = []) {
-  const piecePdf = getImposedPdfFromAssets([
-    ...(Array.isArray(piece?.relatedPrintLinks) ? piece.relatedPrintLinks : []),
-    ...(Array.isArray(piece?.relatedAssets) ? piece.relatedAssets : []),
-  ])
-  if (piecePdf) return piecePdf
-
-  const publication = (Array.isArray(publications) ? publications : []).find((item) =>
-    ['public', 'published'].includes(String(item?.visibility || item?.status || '').toLowerCase()) &&
-    (item?.pieceSlugs || []).includes(piece?.slug)
-  )
-  return publication?.assets?.imposedPdf || publication?.printEditions?.find((edition) => edition?.imposedPdf)?.imposedPdf || ''
 }
 
 function formatMetaType(value) {
