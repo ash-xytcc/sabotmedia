@@ -20,6 +20,7 @@
     "/index.html",
     "/archive*",
     "/archive/*",
+    "/courses*",
     "/search*",
     "/updates*",
     "/updates/*",

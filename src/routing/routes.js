@@ -1,6 +1,7 @@
 export const publicRoutes = Object.freeze({
   post: '/post/:slug',
   archive: '/archive',
+  courses: '/courses',
   collections: '/collections',
   collection: '/collections/:slug',
   campaigns: '/campaigns',
