@@ -38,6 +38,50 @@ function applySettings(settings) {
   root.dataset.sabotA11yReducedMotion = settings.reducedMotion ? 'on' : 'off'
 }
 
+function syncTextSize(size) {
+  const main = document.getElementById('main-content')
+  if (!main) return
+
+  const scaled = main.querySelectorAll('[data-sabot-a11y-scaled]')
+  scaled.forEach((element) => {
+    element.removeAttribute('data-sabot-a11y-scaled')
+    element.style.removeProperty('--sabot-a11y-base-font-size')
+    element.style.removeProperty('--sabot-a11y-scaled-font-size')
+  })
+  if (size !== 'large' && size !== 'larger') {
+    return
+  }
+
+  // Scale the actual text-bearing elements from their own computed baseline.
+  // This preserves the site's type hierarchy and avoids compounding size in
+  // nested paragraphs, list items, and inline spans.
+  const targets = new Set()
+  const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT)
+  let textNode = walker.nextNode()
+  while (textNode) {
+    const element = textNode.parentElement
+    if (String(textNode.nodeValue || '').trim() && element
+      && !element.closest('script, style, noscript, textarea, input, select, button, [hidden], [aria-hidden="true"], .public-accessibility, .wp-public-admin-bar, .public-edit-panel')) {
+      targets.add(element)
+    }
+    textNode = walker.nextNode()
+  }
+
+  const baselines = Array.from(targets).map((element) => [element, window.getComputedStyle(element).fontSize])
+  for (const [element, fontSize] of baselines) {
+    element.style.setProperty('--sabot-a11y-base-font-size', fontSize)
+    element.setAttribute('data-sabot-a11y-scaled', 'true')
+  }
+
+  const factor = size === 'larger' ? 1.3 : 1.15
+  main.querySelectorAll('[data-sabot-a11y-scaled="true"]').forEach((element) => {
+    const baseSize = Number.parseFloat(element.style.getPropertyValue('--sabot-a11y-base-font-size'))
+    if (Number.isFinite(baseSize)) {
+      element.style.setProperty('--sabot-a11y-scaled-font-size', `${(baseSize * factor).toFixed(2)}px`)
+    }
+  })
+}
+
 function syncImageDescriptions(enabled) {
   document.querySelectorAll('[data-sabot-generated-image-description]').forEach((node) => node.remove())
   if (!enabled) return
@@ -52,6 +96,7 @@ function syncImageDescriptions(enabled) {
     const note = document.createElement('span')
     note.className = 'public-a11y-image-description'
     note.dataset.sabotGeneratedImageDescription = 'true'
+    note.setAttribute('role', 'note')
     note.textContent = `Image description: ${alt}`
     const anchor = image.closest('picture') || image
     anchor.insertAdjacentElement('afterend', note)
@@ -418,6 +463,7 @@ export function PublicAccessibilityPanel() {
     applySettings(settings)
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)) } catch { /* storage may be blocked */ }
     syncImageDescriptions(settings.imageDescriptions)
+    syncTextSize(settings.textSize)
   }, [settings, location.pathname])
 
   useEffect(() => {
@@ -522,24 +568,24 @@ export function PublicAccessibilityPanel() {
               <span>Text size</span>
               <select value={settings.textSize} onChange={(event) => updateSetting('textSize', event.target.value)}>
                 <option value="default">Default</option>
-                <option value="large">Large</option>
-                <option value="larger">Larger</option>
+                <option value="large">Large · 115%</option>
+                <option value="larger">Larger · 130%</option>
               </select>
             </label>
             <label>
               <span>Line spacing</span>
               <select value={settings.lineSpacing} onChange={(event) => updateSetting('lineSpacing', event.target.value)}>
                 <option value="default">Default</option>
-                <option value="relaxed">Relaxed</option>
-                <option value="spacious">Spacious</option>
+                <option value="relaxed">Relaxed · 1.75</option>
+                <option value="spacious">Spacious · 1.95</option>
               </select>
             </label>
             <label>
               <span>Reading width</span>
               <select value={settings.readingWidth} onChange={(event) => updateSetting('readingWidth', event.target.value)}>
                 <option value="default">Default</option>
-                <option value="narrow">Narrow</option>
-                <option value="wide">Wide</option>
+                <option value="narrow">Narrow · 46rem</option>
+                <option value="wide">Wide · 76rem</option>
               </select>
             </label>
           </div>
@@ -547,16 +593,16 @@ export function PublicAccessibilityPanel() {
           <div className="public-accessibility__toggles">
             <label><input type="checkbox" checked={settings.contrast} onChange={(event) => updateSetting('contrast', event.target.checked)} /><span>High contrast</span></label>
             <label><input type="checkbox" checked={settings.lowGlare} onChange={(event) => updateSetting('lowGlare', event.target.checked)} /><span>Low-glare colors</span></label>
-            <label><input type="checkbox" checked={settings.plainReading} onChange={(event) => updateSetting('plainReading', event.target.checked)} /><span>Plain reading type</span></label>
+            <label><input type="checkbox" checked={settings.plainReading} onChange={(event) => updateSetting('plainReading', event.target.checked)} /><span>Plain sans-serif type</span></label>
             <label><input type="checkbox" checked={settings.reducedMotion} onChange={(event) => updateSetting('reducedMotion', event.target.checked)} /><span>Reduce motion</span></label>
-            <label><input type="checkbox" checked={settings.imageDescriptions} onChange={(event) => updateSetting('imageDescriptions', event.target.checked)} /><span>Show image descriptions</span></label>
+            <label><input type="checkbox" checked={settings.imageDescriptions} onChange={(event) => updateSetting('imageDescriptions', event.target.checked)} /><span>Show available image descriptions</span></label>
           </div>
 
           <div className="public-accessibility__settings-actions">
             {hasTranscript ? <button type="button" onClick={jumpToTranscript}>Jump to transcript</button> : null}
             <button type="button" onClick={resetSettings}>Reset reading settings</button>
           </div>
-          <p className="public-accessibility__privacy-note">Read aloud is synthesized on your device with deterministic formant speech. Page text stays in your browser.</p>
+          <p className="public-accessibility__privacy-note">These settings change this page in your browser. Image descriptions use available alt text. Your browser’s reduced-motion preference is also respected. Read aloud is synthesized on your device; page text stays here.</p>
         </section>
       ) : null}
     </div>

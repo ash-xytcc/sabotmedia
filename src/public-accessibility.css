@@ -280,77 +280,94 @@
   outline-offset: 3px !important;
 }
 
-/* Reading size controls. These intentionally outrank the final typography guard. */
-html[data-sabot-a11y-text-size="large"] .public-route-shell #main-content :where(p, li, blockquote, dd, dt, figcaption, .post-body__paragraph, .post-body__block, .post-body__list-item, .post-body__link) {
-  font-size: 16px !important;
+/* Scale each text-bearing node from its own original computed size. */
+.public-route-shell #main-content [data-sabot-a11y-scaled="true"] {
+  font-size: var(--sabot-a11y-scaled-font-size) !important;
 }
-html[data-sabot-a11y-text-size="larger"] .public-route-shell #main-content :where(p, li, blockquote, dd, dt, figcaption, .post-body__paragraph, .post-body__block, .post-body__list-item, .post-body__link) {
-  font-size: 18px !important;
-}
-html[data-sabot-a11y-text-size="large"] .public-route-shell #main-content :where(h2, .post-body__heading) { font-size: 24px !important; }
-html[data-sabot-a11y-text-size="larger"] .public-route-shell #main-content :where(h2, .post-body__heading) { font-size: 27px !important; }
-html[data-sabot-a11y-text-size="large"] .public-route-shell #main-content h3 { font-size: 20px !important; }
-html[data-sabot-a11y-text-size="larger"] .public-route-shell #main-content h3 { font-size: 23px !important; }
 
-html[data-sabot-a11y-line-spacing="relaxed"] .public-route-shell #main-content :where(p, li, blockquote, dd, dt, .post-body__paragraph, .post-body__block, .post-body__list-item) {
+html[data-sabot-a11y-line-spacing="relaxed"] .public-route-shell #main-content :where(h1, h2, h3, h4, h5, h6, p, li, blockquote, dd, dt, figcaption, .post-body__paragraph, .post-body__block, .post-body__list-item) {
   line-height: 1.75 !important;
 }
-html[data-sabot-a11y-line-spacing="spacious"] .public-route-shell #main-content :where(p, li, blockquote, dd, dt, .post-body__paragraph, .post-body__block, .post-body__list-item) {
+html[data-sabot-a11y-line-spacing="spacious"] .public-route-shell #main-content :where(h1, h2, h3, h4, h5, h6, p, li, blockquote, dd, dt, figcaption, .post-body__paragraph, .post-body__block, .post-body__list-item) {
   line-height: 1.95 !important;
 }
 html[data-sabot-a11y-line-spacing="relaxed"] .public-route-shell #main-content :where(p, .post-body__paragraph, .post-body__block) { margin-bottom: 1.15rem !important; }
 html[data-sabot-a11y-line-spacing="spacious"] .public-route-shell #main-content :where(p, .post-body__paragraph, .post-body__block) { margin-bottom: 1.4rem !important; }
 
-html[data-sabot-a11y-reading-width="narrow"] .piece-page :where(.piece-article-lead, .piece-layout, .piece-layout.piece-layout--with-meta) {
-  max-width: 660px !important;
+/* Reading width applies to each route's main content shell, not just article pages. */
+html[data-sabot-a11y-reading-width="narrow"] .public-route-shell #main-content > :where(main, article, section, .page, .piece-page, .campaign-page, .investigation-page, [data-readable-content]) {
+  box-sizing: border-box !important;
+  width: min(calc(100% - 2rem), 46rem) !important;
+  max-width: 46rem !important;
+  margin-inline: auto !important;
 }
-html[data-sabot-a11y-reading-width="wide"] .piece-page :where(.piece-article-lead, .piece-layout, .piece-layout.piece-layout--with-meta) {
-  max-width: 960px !important;
+html[data-sabot-a11y-reading-width="wide"] .public-route-shell #main-content > :where(main, article, section, .page, .piece-page, .campaign-page, .investigation-page, [data-readable-content]) {
+  box-sizing: border-box !important;
+  width: min(calc(100% - 2rem), 76rem) !important;
+  max-width: 76rem !important;
+  margin-inline: auto !important;
 }
-html[data-sabot-a11y-reading-width="narrow"] .public-route-shell #main-content article { max-width: 660px; margin-inline: auto; }
-html[data-sabot-a11y-reading-width="wide"] .public-route-shell #main-content article { max-width: 960px; margin-inline: auto; }
 
-html[data-sabot-a11y-plain-reading="on"] .public-route-shell #main-content :where(p, li, blockquote, dd, dt, figcaption, .post-body__paragraph, .post-body__block, .post-body__list-item, .post-body__link) {
+html[data-sabot-a11y-plain-reading="on"] .public-route-shell #main-content * {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
 }
 
 html[data-sabot-a11y-contrast="on"] .public-route-shell #main-content {
-  --text: #fff;
-  --text-dim: #eee;
-  --paper: #fff;
-  --paper-ink: #000;
-  color: #fff !important;
   background: #000 !important;
+  color: #fff !important;
+  color-scheme: dark;
 }
-html[data-sabot-a11y-contrast="on"] .public-route-shell #main-content :where(main, article, section, .piece-body-wrap, .panel, .card) {
-  border-color: rgba(255, 255, 255, .7) !important;
+html[data-sabot-a11y-contrast="on"] .public-route-shell {
+  background: #000 !important;
+  color: #fff !important;
 }
-html[data-sabot-a11y-contrast="on"] .public-route-shell #main-content :where(p, li, blockquote, h1, h2, h3, h4, strong, small, span) {
-  color: inherit;
+html[data-sabot-a11y-contrast="on"] .public-route-shell #main-content * {
+  background-color: transparent !important;
+  border-color: #fff !important;
+  box-shadow: none !important;
+  color: #fff !important;
 }
-html[data-sabot-a11y-contrast="on"] .public-route-shell #main-content a {
+html[data-sabot-a11y-contrast="on"] .public-route-shell #main-content a,
+html[data-sabot-a11y-contrast="on"] .public-route-shell #main-content a * {
   color: #ffdc55 !important;
   text-decoration: underline !important;
   text-decoration-thickness: .12em !important;
   text-underline-offset: .16em !important;
 }
+html[data-sabot-a11y-contrast="on"] .public-route-shell #main-content::selection,
+html[data-sabot-a11y-contrast="on"] .public-route-shell #main-content *::selection {
+  color: #000 !important;
+  background: #ffdc55 !important;
+}
 
 html[data-sabot-a11y-low-glare="on"] .public-route-shell #main-content {
-  --text: #e2d7c7;
-  --text-dim: #c4b8a7;
-  --paper: #d8cdbd;
-  --paper-ink: #1b1815;
-  color: #e2d7c7 !important;
   background: #171411 !important;
+  color: #f0e5d4 !important;
+  color-scheme: dark;
 }
-html[data-sabot-a11y-low-glare="on"] .public-route-shell #main-content :where(.piece-body-wrap, article, section) {
+html[data-sabot-a11y-low-glare="on"] .public-route-shell {
+  background: #171411 !important;
+  color: #f0e5d4 !important;
+}
+html[data-sabot-a11y-low-glare="on"] .public-route-shell #main-content * {
+  background-color: transparent !important;
+  border-color: #766d60 !important;
+  color: #f0e5d4 !important;
   box-shadow: none !important;
 }
+html[data-sabot-a11y-low-glare="on"] .public-route-shell #main-content a,
+html[data-sabot-a11y-low-glare="on"] .public-route-shell #main-content a * {
+  color: #f0c96a !important;
+  text-decoration: underline !important;
+  text-underline-offset: .16em !important;
+}
 
-html[data-sabot-a11y-reduced-motion="on"] .public-route-shell *,
-html[data-sabot-a11y-reduced-motion="on"] .public-accessibility * {
+html[data-sabot-a11y-reduced-motion="on"],
+html[data-sabot-a11y-reduced-motion="on"] *,
+html[data-sabot-a11y-reduced-motion="on"] *::before,
+html[data-sabot-a11y-reduced-motion="on"] *::after {
   scroll-behavior: auto !important;
   animation-duration: .001ms !important;
   animation-iteration-count: 1 !important;
