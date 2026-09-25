@@ -6479,6 +6479,38 @@
             "editorialStatus": "automatic"
           },
           {
+            "id": "coverage-bwdnd2",
+            "date": "2026-09-24T23:12:00.000Z",
+            "outlet": "gonews.it",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Firenze, corteo contro le sanzioni Usa ad Autistici/Inventati: in 200 davanti al consolato",
+            "translatedTitle": "",
+            "url": "https://www.gonews.it/2026/09/25/firenze-corteo-contro-sanzioni-autistici-inventati",
+            "imageUrl": "",
+            "summary": "Corteo di protesta sul lungarno Vespucci, a Firenze, dove un gruppo di circa 200 manifestanti si è riunito di fronte alla sede del consolato degli Stati ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
+            "id": "coverage-ofvab",
+            "date": "2026-09-24T17:00:00.000Z",
+            "outlet": "firenzedintorni",
+            "language": "Italian",
+            "languageCode": "it",
+            "title": "Sanzioni ad Autistici/Inventati, corteo di protesta a Firenze",
+            "translatedTitle": "",
+            "url": "https://www.firenzedintorni.it/it/articolo/47527/sanzioni-ad-autistici-inventati-corteo-di-protesta-a-firenze-circa-200-persone-partite-dal-lungarno-vespucci.html",
+            "imageUrl": "",
+            "summary": "Un corteo di 200 persone è partito dal lungarno Vespucci a Firenze, di fronte alla sede del consolato degli Stati Uniti, per sfilare lungo le vie del centro della città contro le sanzioni statunitensi ...",
+            "discoverySource": "live-discovery",
+            "relevanceScore": 105,
+            "featured": false,
+            "editorialStatus": "automatic"
+          },
+          {
             "id": "coverage-18rhhpx",
             "date": "2026-09-24T05:05:00.000Z",
             "outlet": "il manifesto",
@@ -9743,7 +9775,7 @@
         "intelligenceSources": [],
         "intelligenceErrors": [],
         "intelligenceCheckedAt": "",
-        "coverageArchiveCount": 179
+        "coverageArchiveCount": 181
       },
       "food-not-bombs-gaza": {
         "id": "campaign-food-not-bombs-gaza",
@@ -9945,7 +9977,7 @@
         "socialSources": [],
         "socialErrors": [],
         "automationErrors": [],
-        "automationCheckedAt": "2026-09-25T15:19:15.001Z",
+        "automationCheckedAt": "2026-09-25T19:19:40.411Z",
         "coverageArchiveCount": 0
       }
     }
