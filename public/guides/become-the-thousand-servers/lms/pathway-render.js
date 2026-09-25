@@ -1,4 +1,5 @@
 const HOST_COMPARISON_MARKER = '[[HOST_COMPARISON_GRID]]'
+const SOFTWARE_OPTIONS_MARKER = '[[SOFTWARE_OPTIONS]]'
 const HOST_COMPARISON_ROWS = [
   {
     provider: '1984 Hosting',
@@ -75,11 +76,59 @@ function hostComparisonTable(esc) {
 </section>`
 }
 
+const SOFTWARE_OPTIONS = [
+  {
+    name: 'Colophon',
+    url: 'https://github.com/colophon-hub/colophon',
+    docsUrl: 'https://github.com/colophon-hub/colophon',
+    docsLabel: 'Project and documentation',
+    summary: 'Publishing software shaped around independent publications, editorial collectives, archives and related media work. Its browser/PWA edition is local-first, so you can begin without first setting up a domain or server.',
+    migration: 'For a NoBlogs/WXR archive, this course has not yet verified a direct WXR import path. Treat migration as something to test before choosing it as the destination.',
+  },
+  {
+    name: 'WriteFreely',
+    url: 'https://writefreely.org/',
+    docsUrl: 'https://writefreely.org/docs',
+    docsLabel: 'Official documentation',
+    summary: 'A deliberately small, writing-first publishing platform with ActivityPub support. It fits a simple blog or federated writing site better than a large general-purpose CMS.',
+    migration: 'The current main documentation does not advertise a direct WordPress/WXR importer. If WXR is all you have, assume conversion or manual migration is required until you verify a current tool.',
+  },
+  {
+    name: 'WordPress',
+    url: 'https://wordpress.org/',
+    docsUrl: 'https://developer.wordpress.org/advanced-administration/wordpress/import/',
+    docsLabel: 'Official import guide',
+    summary: 'The direct destination for a NoBlogs WXR export because NoBlogs used WordPress and this recovery pathway is built around WordPress’s own export/import model.',
+    migration: 'The official importer accepts WXR, maps authors and can fetch referenced attachments when the old files remain reachable. Hosting limits and missing source media can still interrupt an otherwise valid import.',
+  },
+  {
+    name: 'Ghost',
+    url: 'https://ghost.org/',
+    docsUrl: 'https://ghost.org/help/imports/',
+    docsLabel: 'Official import and migration guide',
+    summary: 'Publishing software centered on publications, newsletters and memberships. It is useful when those editorial and subscription workflows matter more than WordPress compatibility.',
+    migration: 'Ghost provides import and platform-migration tooling, including WordPress migration guidance. Verify that the route matches the archive and media you actually possess before committing.',
+  },
+  {
+    name: 'Grav',
+    url: 'https://getgrav.org/',
+    docsUrl: 'https://learn.getgrav.org/2/migration/migrating-to-grav',
+    docsLabel: 'Official WordPress migration guide',
+    summary: 'A flat-file CMS: core content lives in files rather than a SQL database. It can be attractive when you want a comparatively lightweight conventional site with portable content files.',
+    migration: 'Grav documents a WordPress migration path, but its current workflow assumes access to a working WordPress installation, WP-CLI and the uploads directory. A WXR-only NoBlogs archive may therefore need a different conversion path.',
+  },
+]
+
+function softwareOptionsSection(esc) {
+  const cards = SOFTWARE_OPTIONS.map((item) => `<article class="software-option"><h5><a href="${esc(item.url)}" rel="noreferrer">${esc(item.name)}</a></h5><p>${esc(item.summary)}</p><p><strong>Migration reality:</strong> ${esc(item.migration)}</p><p class="software-option__links"><a href="${esc(item.url)}" rel="noreferrer">Project site</a> · <a href="${esc(item.docsUrl)}" rel="noreferrer">${esc(item.docsLabel)}</a></p></article>`).join('')
+  return `<section class="software-options" aria-labelledby="software-options-heading"><h4 id="software-options-heading">Software options worth comparing</h4><p>A host and a publishing system are separate choices. Compare the software by what you can actually import, operate, back up, restore and move, not by the length of its feature list.</p><div class="software-options__grid">${cards}</div><aside class="software-options__noblogs"><h5>Coming from NoBlogs?</h5><p>If your immediate priority is recovering a WXR archive with the fewest conversion steps, WordPress is the direct path covered and tested by this recovery guide. Other systems can still be good destinations, but test one representative post, page, author/category case and media item before moving the whole publication. Preserve the untouched WXR either way.</p></aside></section>`
+}
 function moduleProse(m, prose, esc) {
   const body = String(m?.body || '')
-  if (!body.includes(HOST_COMPARISON_MARKER)) return prose(body)
-  const parts = body.split(HOST_COMPARISON_MARKER)
-  return `${prose(parts.shift())}${hostComparisonTable(esc)}${prose(parts.join(HOST_COMPARISON_MARKER))}`
+  return body.split(HOST_COMPARISON_MARKER).map((hostPart, hostIndex) => {
+    const withSoftware = hostPart.split(SOFTWARE_OPTIONS_MARKER).map((part, softwareIndex) => `${softwareIndex ? softwareOptionsSection(esc) : ''}${prose(part)}`).join('')
+    return `${hostIndex ? hostComparisonTable(esc) : ''}${withSoftware}`
+  }).join('')
 }
 
 export function renderPathways(c,{esc,prose,resources,activity},offline=false) {
