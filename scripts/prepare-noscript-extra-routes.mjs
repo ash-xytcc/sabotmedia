@@ -22,7 +22,7 @@ function fallback(title, description, extra = '') {
       [data-sabot-static-noscript] .ns-note{padding:12px;border:1px solid #777;background:#f4f4f4}
     </style>
     <div class="ns-wrap">
-      <nav aria-label="Plain HTML navigation"><strong><a href="/">Sabot Media</a></strong> <a href="/archive">Archive</a> <a href="/campaigns">Campaigns</a> <a href="/investigations">Investigations</a> <a href="/collections">Collections</a> <a href="/publications">Publications</a> <a href="/updates">Updates</a> <a href="/press">Press</a> <a href="/about">About</a> <a href="/contact">Contact</a> <a href="/feeds">Feeds</a></nav>
+      <nav aria-label="Plain HTML navigation"><strong><a href="/">Sabot Media</a></strong> <a href="/archive">Archive</a> <a href="/guides/become-the-thousand-servers/">COURSES</a> <a href="/campaigns">Campaigns</a> <a href="/investigations">Investigations</a> <a href="/collections">Collections</a> <a href="/publications">Publications</a> <a href="/updates">Updates</a> <a href="/press">Press</a> <a href="/about">About</a> <a href="/contact">Contact</a> <a href="/feeds">Feeds</a></nav>
       <main>
         <p class="ns-note">JavaScript is disabled. This is the plain HTML reading view.</p>
         <h1>${escapeHtml(title)}</h1>

@@ -9,6 +9,7 @@ export function AppHeader() {
       </Link>
       <nav className="header-nav" aria-label="Primary">
         <Link to="/archive">Archive</Link>
+        <a href="/guides/become-the-thousand-servers/">COURSES</a>
         <Link to="/about">About</Link>
       </nav>
     </header>

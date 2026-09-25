@@ -45,7 +45,7 @@ export function media(url, type = '', label = 'Download media') {
   return `${tag ? `<${tag} controls preload="metadata" src="${escapeHtml(src)}"></${tag}>` : ''}<p>${link(src, label)}</p>`
 }
 export function readingDocument(title, body) {
-  const nav = [['/','Sabot Media'],['/archive','Archive'],['/campaigns','Campaigns'],['/investigations','Investigations'],['/collections','Collections'],['/publications','Publications'],['/aberdeen-local-1312-gallery','Gallery'],['/updates','Updates'],['/press','Press'],['/about','About'],['/contact','Contact'],['/submit','Submit'],['/support','Support'],['/security','Security'],['/feeds','Feeds']]
+  const nav = [['/','Sabot Media'],['/archive','Archive'],['/guides/become-the-thousand-servers/','COURSES'],['/campaigns','Campaigns'],['/investigations','Investigations'],['/collections','Collections'],['/publications','Publications'],['/aberdeen-local-1312-gallery','Gallery'],['/updates','Updates'],['/press','Press'],['/about','About'],['/contact','Contact'],['/submit','Submit'],['/support','Support'],['/security','Security'],['/feeds','Feeds']]
   return `<noscript data-sabot-plain-html><style>
   [data-sabot-plain-html] .ns-wrap{box-sizing:border-box;max-width:900px;margin:auto;padding:24px;font:1rem/1.65 system-ui,sans-serif;color:#111;background:#fff;overflow-wrap:anywhere}
   [data-sabot-plain-html] *{box-sizing:border-box} [data-sabot-plain-html] a{color:inherit;text-decoration:underline} [data-sabot-plain-html] a:focus-visible{outline:3px solid #b00;outline-offset:3px}
