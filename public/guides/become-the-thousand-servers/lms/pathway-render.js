@@ -82,6 +82,10 @@ const SOFTWARE_OPTIONS = [
     url: 'https://github.com/colophon-hub/colophon',
     docsUrl: 'https://github.com/colophon-hub/colophon',
     docsLabel: 'Project and documentation',
+    price: 'Free software. Browser/PWA, desktop, and self-hosted editions cost $0 for the software; a shared public server still has whatever infrastructure costs you choose.',
+    pricingUrl: 'https://github.com/colophon-hub/colophon',
+    openSource: 'Yes — GPL-3.0',
+    licenseUrl: 'https://github.com/colophon-hub/colophon/blob/main/LICENSE',
     summary: 'Publishing software shaped around independent publications, editorial collectives, archives and related media work. Its browser/PWA edition is local-first, so you can begin without first setting up a domain or server.',
     migration: 'For a NoBlogs/WXR archive, this course has not yet verified a direct WXR import path. Treat migration as something to test before choosing it as the destination.',
   },
@@ -90,6 +94,10 @@ const SOFTWARE_OPTIONS = [
     url: 'https://writefreely.org/',
     docsUrl: 'https://writefreely.org/docs',
     docsLabel: 'Official documentation',
+    price: 'Free to self-host. Managed personal hosting through Write.as starts at $6/month when paid yearly.',
+    pricingUrl: 'https://writefreely.org/services/hosting',
+    openSource: 'Yes — AGPL-3.0',
+    licenseUrl: 'https://writefreely.org/about',
     summary: 'A deliberately small, writing-first publishing platform with ActivityPub support. It fits a simple blog or federated writing site better than a large general-purpose CMS.',
     migration: 'The current main documentation does not advertise a direct WordPress/WXR importer. If WXR is all you have, assume conversion or manual migration is required until you verify a current tool.',
   },
@@ -98,6 +106,10 @@ const SOFTWARE_OPTIONS = [
     url: 'https://wordpress.org/',
     docsUrl: 'https://developer.wordpress.org/advanced-administration/wordpress/import/',
     docsLabel: 'Official import guide',
+    price: 'Free to self-host. WordPress.com has a free hosted tier; paid hosting starts at $4/month billed annually, or $2.75/month on a three-year term.',
+    pricingUrl: 'https://wordpress.com/pricing/',
+    openSource: 'Yes — GPL-2.0-or-later',
+    licenseUrl: 'https://wordpress.org/about/license/',
     summary: 'The direct destination for a NoBlogs WXR export because NoBlogs used WordPress and this recovery pathway is built around WordPress’s own export/import model.',
     migration: 'The official importer accepts WXR, maps authors and can fetch referenced attachments when the old files remain reachable. Hosting limits and missing source media can still interrupt an otherwise valid import.',
   },
@@ -106,6 +118,10 @@ const SOFTWARE_OPTIONS = [
     url: 'https://ghost.org/',
     docsUrl: 'https://ghost.org/help/imports/',
     docsLabel: 'Official import and migration guide',
+    price: 'Free to self-host. Ghost(Pro) managed hosting starts at $18/month billed yearly.',
+    pricingUrl: 'https://ghost.org/pricing/',
+    openSource: 'Yes — MIT',
+    licenseUrl: 'https://github.com/TryGhost/Ghost/blob/main/LICENSE',
     summary: 'Publishing software centered on publications, newsletters and memberships. It is useful when those editorial and subscription workflows matter more than WordPress compatibility.',
     migration: 'Ghost provides import and platform-migration tooling, including WordPress migration guidance. Verify that the route matches the archive and media you actually possess before committing.',
   },
@@ -114,14 +130,18 @@ const SOFTWARE_OPTIONS = [
     url: 'https://getgrav.org/',
     docsUrl: 'https://learn.getgrav.org/2/migration/migrating-to-grav',
     docsLabel: 'Official WordPress migration guide',
+    price: 'Free to self-host. Grav has no required hosted plan; you supply hosting, and the project notes it can run on a roughly $5 VPS. Optional premium plugins or themes may cost extra.',
+    pricingUrl: 'https://getgrav.org/about',
+    openSource: 'Yes — MIT',
+    licenseUrl: 'https://github.com/getgrav/grav/blob/develop/LICENSE.txt',
     summary: 'A flat-file CMS: core content lives in files rather than a SQL database. It can be attractive when you want a comparatively lightweight conventional site with portable content files.',
     migration: 'Grav documents a WordPress migration path, but its current workflow assumes access to a working WordPress installation, WP-CLI and the uploads directory. A WXR-only NoBlogs archive may therefore need a different conversion path.',
   },
 ]
 
 function softwareOptionsSection(esc) {
-  const cards = SOFTWARE_OPTIONS.map((item) => `<article class="software-option"><h5><a href="${esc(item.url)}" rel="noreferrer">${esc(item.name)}</a></h5><p>${esc(item.summary)}</p><p><strong>Migration reality:</strong> ${esc(item.migration)}</p><p class="software-option__links"><a href="${esc(item.url)}" rel="noreferrer">Project site</a> · <a href="${esc(item.docsUrl)}" rel="noreferrer">${esc(item.docsLabel)}</a></p></article>`).join('')
-  return `<section class="software-options" aria-labelledby="software-options-heading"><h4 id="software-options-heading">Software options worth comparing</h4><p>A host and a publishing system are separate choices. Compare the software by what you can actually import, operate, back up, restore and move, not by the length of its feature list.</p><div class="software-options__grid">${cards}</div><aside class="software-options__noblogs"><h5>Coming from NoBlogs?</h5><p>If your immediate priority is recovering a WXR archive with the fewest conversion steps, WordPress is the direct path covered and tested by this recovery guide. Other systems can still be good destinations, but test one representative post, page, author/category case and media item before moving the whole publication. Preserve the untouched WXR either way.</p></aside></section>`
+  const cards = SOFTWARE_OPTIONS.map((item) => `<article class="software-option"><h5><a href="${esc(item.url)}" rel="noreferrer">${esc(item.name)}</a></h5><dl class="software-option__facts"><div><dt>Price</dt><dd>${esc(item.price)} <a href="${esc(item.pricingUrl)}" rel="noreferrer">Pricing/source</a></dd></div><div><dt>Open source</dt><dd>${esc(item.openSource)} · <a href="${esc(item.licenseUrl)}" rel="noreferrer">License/source</a></dd></div></dl><p>${esc(item.summary)}</p><p><strong>Migration reality:</strong> ${esc(item.migration)}</p><p class="software-option__links"><a href="${esc(item.url)}" rel="noreferrer">Project site</a> · <a href="${esc(item.docsUrl)}" rel="noreferrer">${esc(item.docsLabel)}</a></p></article>`).join('')
+  return `<section class="software-options" aria-labelledby="software-options-heading"><h4 id="software-options-heading">Software options worth comparing</h4><p>A host and a publishing system are separate choices. The software price below is not the whole operating cost: domains, hosting, storage, email, premium add-ons, and administrator labor can still cost money. Compare what you can actually import, operate, back up, restore and move, not by the length of its feature list.</p><div class="software-options__grid">${cards}</div><aside class="software-options__noblogs"><h5>Coming from NoBlogs?</h5><p>If your immediate priority is recovering a WXR archive with the fewest conversion steps, WordPress is the direct path covered and tested by this recovery guide. Other systems can still be good destinations, but test one representative post, page, author/category case and media item before moving the whole publication. Preserve the untouched WXR either way.</p></aside></section>`
 }
 function moduleProse(m, prose, esc) {
   const body = String(m?.body || '')
